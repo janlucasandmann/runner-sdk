@@ -1135,6 +1135,9 @@ const html = `<!doctype html>
       }
 
       .playground-content-shell {
+        --playground-content-nav-height: 50px;
+        --playground-thread-task-detail-width: min(42vw, 520px);
+        position: relative;
         height: 100%;
         min-height: 0;
         display: flex;
@@ -1146,7 +1149,14 @@ const html = `<!doctype html>
         grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: center;
         gap: 16px;
+        min-height: 56px;
         padding: 6px 12px 12px;
+        box-sizing: border-box;
+        transition: padding-right 280ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .playground-content-shell.is-thread-task-detail-open > .playground-content-nav {
+        padding-right: calc(12px + var(--playground-thread-task-detail-width));
       }
 
       .playground-content-title {
@@ -1169,6 +1179,12 @@ const html = `<!doctype html>
         display: flex;
         align-items: center;
         justify-content: flex-end;
+      }
+
+      .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-center,
+      .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-right {
+        opacity: 0;
+        pointer-events: none;
       }
 
       .content-mode-switch {
@@ -1245,6 +1261,32 @@ const html = `<!doctype html>
         min-height: 0;
         position: relative;
         overflow: hidden;
+      }
+
+      .playground-thread-task-drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 12;
+        width: var(--playground-thread-task-detail-width);
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        background: transparent;
+        opacity: 0;
+        transform: translateX(100%);
+        pointer-events: none;
+        transition:
+          transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+          opacity 220ms ease;
+      }
+
+      .playground-thread-task-drawer.is-open {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
       }
 
       .playground-thread-welcome {
@@ -1386,6 +1428,11 @@ const html = `<!doctype html>
         inset: 0;
         min-width: 0;
         min-height: 0;
+        transition: right 280ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .playground-content-body.is-thread-task-detail-open .playground-view-pane {
+        right: var(--playground-thread-task-detail-width);
       }
 
       .playground-view-pane.is-hidden {
@@ -8456,6 +8503,50 @@ const html = `<!doctype html>
         min-height: 0;
       }
 
+      .playground-tasks-page.is-inline-detail {
+        width: 100%;
+        height: 100%;
+      }
+
+      .playground-thread-detail-shell {
+        height: 100%;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 0px;
+        transition: grid-template-columns 240ms ease;
+      }
+
+      .playground-thread-detail-shell.is-task-detail-open {
+        grid-template-columns: minmax(0, 1fr) minmax(440px, 520px);
+      }
+
+      .playground-thread-detail-main {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        transition: transform 240ms ease;
+      }
+
+      .playground-thread-detail-panel {
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateX(24px);
+        pointer-events: none;
+        transition: opacity 240ms ease, transform 240ms ease;
+        background: transparent;
+      }
+
+      .playground-thread-detail-shell.is-task-detail-open .playground-thread-detail-panel {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+        margin-top: calc(-1 * var(--playground-content-nav-height, 50px));
+        height: calc(100% + var(--playground-content-nav-height, 50px));
+      }
+
       .playground-tasks-shell {
         height: 100%;
         min-height: 0;
@@ -8499,6 +8590,23 @@ const html = `<!doctype html>
         transform: translateX(0);
         pointer-events: auto;
         border-left-color: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-tasks-detail-panel.is-inline-detail {
+        height: 100%;
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        border-left-color: rgba(255, 255, 255, 0.08);
+        background: transparent;
+      }
+
+      .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail {
+        border-left: 0;
+      }
+
+      .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail .playground-tasks-detail-navbar {
+        padding-top: 10px;
       }
 
       .playground-tasks-detail-shell {
@@ -23684,7 +23792,10 @@ const html = `<!doctype html>
         openTaskRequest,
         onRequireAuth,
         onRequestSidebarCollapse,
+        detailOnly,
+        onCloseDetailOnly,
       }) {
+        const isDetailOnlyMode = Boolean(detailOnly);
         const editorDirtyRef = useRef(false);
         const taskAutosaveInFlightRef = useRef(false);
         const taskAutosaveQueuedRef = useRef(null);
@@ -27413,7 +27524,7 @@ const html = `<!doctype html>
           setTaskSkillsPopoverOpen(false);
           setTaskParentPickerState(null);
           setSelectedTaskId(taskId);
-          if ((taskView === "backlog" || taskView === "board") && typeof onRequestSidebarCollapse === "function") {
+          if (!isDetailOnlyMode && (taskView === "backlog" || taskView === "board") && typeof onRequestSidebarCollapse === "function") {
             onRequestSidebarCollapse();
           }
         }
@@ -27875,6 +27986,9 @@ const html = `<!doctype html>
             taskScheduleDialogTimerRef.current = null;
           }
           setSelectedTaskId("");
+          if (typeof onCloseDetailOnly === "function") {
+            onCloseDetailOnly();
+          }
         }
 
         function handleOpenTaskThreadChanges(task) {
@@ -31157,6 +31271,29 @@ const html = `<!doctype html>
 
         function renderTaskDetail() {
           if (!draftTask) {
+            if (taskLoadState.status === "loading" || pendingExternalTaskOpenRequest) {
+              return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-detail-empty" },
+                React.createElement("div", { className: "playground-tasks-loading-state" },
+                  React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                  React.createElement("div", { className: "playground-tasks-loading-copy" }, "Loading ticket…")
+                )
+              );
+            }
+            if (taskLoadState.status === "error") {
+              return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-detail-empty" },
+                React.createElement("div", { className: "playground-tasks-empty" },
+                  React.createElement("div", { className: "playground-tasks-empty-title" }, "Ticket unavailable"),
+                  React.createElement("div", { className: "playground-tasks-empty-copy" }, taskLoadState.error || "The task details could not be loaded."),
+                  selectedProjectId
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button is-primary",
+                        onClick: () => void loadProjectWorkspace(selectedProjectId),
+                      }, "Retry")
+                    : null
+                )
+              );
+            }
             return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-detail-empty" },
               React.createElement("div", { className: "playground-tasks-empty" },
                 React.createElement("div", { className: "playground-tasks-empty-title" }, "Pick a task"),
@@ -31821,6 +31958,20 @@ const html = `<!doctype html>
         const isDetailOpen = isTaskDetailOpen || isScheduleDetailOpen;
         const isTaskAttachmentPreviewOpen = Boolean(isTaskDetailOpen && previewedTaskAttachment);
 
+        if (isDetailOnlyMode) {
+          return React.createElement("div", { className: "playground-tasks-page is-inline-detail" },
+            React.createElement("aside", { className: "playground-environments-detail playground-tasks-detail-panel is-inline-detail" },
+              renderTaskDetail()
+            ),
+            renderTaskEnvironmentFilePicker(),
+            renderTaskConnectorBrowser(),
+            renderTaskParentPickerDialog(),
+            renderTaskEnvironmentChangeDialog(),
+            renderTaskDeleteDialog(),
+            renderProjectComposerDialog()
+          );
+        }
+
         return React.createElement("div", { className: "playground-tasks-page" },
           React.createElement("div", { className: "playground-tasks-shell" + (isDetailOpen ? " is-detail-open" : "") + (isTaskAttachmentPreviewOpen ? " is-preview-open" : "") },
             React.createElement("section", { className: "playground-tasks-main" },
@@ -31944,6 +32095,7 @@ const html = `<!doctype html>
         const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
         const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
         const [taskOpenRequest, setTaskOpenRequest] = useState(null);
+        const [threadTaskOpenRequest, setThreadTaskOpenRequest] = useState(null);
         const [settingsSection, setSettingsSection] = useState("costs-plans");
         const [contentMode, setContentMode] = useState("chat");
         const [changesNavigationTarget, setChangesNavigationTarget] = useState(null);
@@ -38421,6 +38573,40 @@ const html = `<!doctype html>
             setAgentId(selectedThreadTaskPreview.assigneeAgentId);
           }
         }, [activePage, selectedThreadTaskPreview]);
+
+        useEffect(() => {
+          if (!threadTaskOpenRequest) {
+            return;
+          }
+          if (activePage !== "thread") {
+            setThreadTaskOpenRequest(null);
+            return;
+          }
+          if (threadTaskOpenRequest.threadId && activeRunnerThreadId && threadTaskOpenRequest.threadId !== activeRunnerThreadId) {
+            setThreadTaskOpenRequest(null);
+          }
+        }, [activePage, activeRunnerThreadId, threadTaskOpenRequest]);
+
+        useEffect(() => {
+          if (!threadTaskOpenRequest) {
+            return undefined;
+          }
+
+          function handleThreadTaskDetailEscape(event) {
+            if (event.key === "Escape") {
+              setThreadTaskOpenRequest(null);
+            }
+          }
+
+          window.addEventListener("keydown", handleThreadTaskDetailEscape);
+          return () => window.removeEventListener("keydown", handleThreadTaskDetailEscape);
+        }, [threadTaskOpenRequest]);
+
+        useEffect(() => {
+          if (activePage === "thread" && threadTaskOpenRequest && sidebarOpen) {
+            setSidebarOpen(false);
+          }
+        }, [activePage, sidebarOpen, threadTaskOpenRequest]);
         const threadActionTarget = useMemo(() => {
           if (!threadActionMenuState?.threadId) {
             return null;
@@ -38441,6 +38627,7 @@ const html = `<!doctype html>
               ? "Checking your account..."
               : "Sign in to load your threads."
             : "No threads yet.";
+        const isThreadTaskDetailOpen = activePage === "thread" && Boolean(threadTaskOpenRequest) && hasRealAccess;
 
         function renderAuthGate() {
           return React.createElement("div", { className: "playground-auth-panel" },
@@ -39132,13 +39319,13 @@ const html = `<!doctype html>
                 }, renderCollapsedSidebarRail())
               ),
               React.createElement("main", { className: "playground-main" },
-                React.createElement("div", { className: "playground-content-shell" },
+                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") },
                   activePage === "settings" || activePage === "files" || activePage === "environments" || activePage === "agents" || activePage === "tasks" || showInitialThreadWelcome
                     ? null
                     : React.createElement("div", { className: "playground-content-nav" },
                         React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle),
                         React.createElement("div", { className: "playground-content-nav-center" },
-                          activePage === "thread"
+                          activePage === "thread" && !isThreadTaskDetailOpen
                             ? React.createElement("div", { className: "content-mode-switch" },
                                 React.createElement("button", {
                                   type: "button",
@@ -39158,7 +39345,7 @@ const html = `<!doctype html>
                             : null
                         ),
                         React.createElement("div", { className: "playground-content-nav-right" },
-                          activePage === "thread"
+                          activePage === "thread" && !isThreadTaskDetailOpen
                             ? React.createElement("button", {
                                 type: "button",
                                 className: "playground-content-menu-button",
@@ -39167,7 +39354,7 @@ const html = `<!doctype html>
                             : null
                         )
                       ),
-                  React.createElement("div", { className: "playground-content-body" },
+                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") },
                     activePage === "settings"
                       ? renderSettingsPage()
                       : activePage === "files"
@@ -39316,12 +39503,13 @@ const html = `<!doctype html>
                                       if (!taskPreview?.taskId || !taskPreview?.projectId) {
                                         return;
                                       }
-                                      setTaskOpenRequest({
+                                      setSidebarOpen(false);
+                                      setThreadTaskOpenRequest({
                                         projectId: taskPreview.projectId,
                                         taskId: taskPreview.taskId,
+                                        threadId: activeRunnerThreadId || currentThreadId || "",
                                         token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                                       });
-                                      setActivePage("tasks");
                                     },
                                     onThreadIdChange: (threadId) => {
                                       setActivePage("thread");
@@ -39389,6 +39577,78 @@ const html = `<!doctype html>
                           )
                         )
                   )
+                  ,
+                  activePage === "thread" && hasRealAccess
+                    ? React.createElement("aside", { className: "playground-thread-task-drawer" + (threadTaskOpenRequest ? " is-open" : "") },
+                        threadTaskOpenRequest
+                          ? React.createElement(PlaygroundTasksPage, {
+                              backendUrl: proxyBackendBase,
+                              requestHeaders: authRequestHeaders,
+                              agents: runtimeAgents,
+                              environments: runtimeEnvironments,
+                              initialEnvironmentId: resolvedEnvironmentId || "",
+                              initialAgentId: resolvedAgentId || "",
+                              apiKey: apiKey,
+                              upstreamUrl: resolvedUpstreamUrl,
+                              speechToTextUrl: speechToTextUrl || "",
+                              computerAgents: demoComputerAgents,
+                              skills: demoSkills,
+                              currentUserName: hasSessionAuth ? accountName : "Computer Agents",
+                              currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+                              canStartThreads: hasRealAccess,
+                              openTaskRequest: threadTaskOpenRequest,
+                              onTaskRunStateChange: applyTaskRunState,
+                              onThreadStarted: (threadId, options = {}) => {
+                                if (options?.threadRecord?.id) {
+                                  setRealThreads((current) => {
+                                    const normalizedThread = normalizeThreadItem(options.threadRecord);
+                                    const existingIndex = current.findIndex((thread) => thread.id === normalizedThread.id);
+                                    if (existingIndex === -1) {
+                                      return [normalizedThread].concat(current);
+                                    }
+                                    return current.map((thread) => thread.id === normalizedThread.id ? normalizedThread : thread);
+                                  });
+                                }
+                                if (options?.taskPreview?.environmentId) {
+                                  setEnvironmentId(options.taskPreview.environmentId);
+                                }
+                                if (options?.taskPreview?.assigneeAgentId) {
+                                  setAgentId(options.taskPreview.assigneeAgentId);
+                                }
+                                if (options?.taskRunRequest?.prompt) {
+                                  setPendingThreadRunRequest({
+                                    token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                                    threadId,
+                                    prompt: options.taskRunRequest.prompt,
+                                    attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                                    githubRepo: options.taskRunRequest.githubRepo || null,
+                                    enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                    environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                  });
+                                } else {
+                                  setPendingThreadRunRequest(null);
+                                }
+                                setThreadTaskOpenRequest(null);
+                                setActivePage("thread");
+                                setCurrentThreadId(threadId);
+                                setContentMode(options?.contentMode === "changes" ? "changes" : "chat");
+                                setThreadListMode("threads");
+                                setChangesNavigationTarget(null);
+                                setRunnerRenderKey((current) => current + 1);
+                                void refreshThreads();
+                              },
+                              onRequireAuth: handleSignInWithComputerAgents,
+                              onRequestSidebarCollapse: () => {
+                                setSidebarOpen(false);
+                              },
+                              detailOnly: true,
+                              onCloseDetailOnly: () => {
+                                setThreadTaskOpenRequest(null);
+                              },
+                            })
+                          : null
+                      )
+                    : null
                 ),
               React.createElement("div", { className: "playground-shell-status-indicators" },
                 React.createElement(StatusIndicatorStack, {
