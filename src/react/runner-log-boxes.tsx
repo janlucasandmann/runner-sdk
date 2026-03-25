@@ -2834,6 +2834,224 @@ function ImageGenerationLogBox({
   );
 }
 
+type BrowserSkillElement = {
+  selector?: string;
+  text?: string;
+  role?: string;
+  tag?: string;
+};
+
+type BrowserSkillResult = {
+  ok: boolean;
+  action: string;
+  url?: string;
+  title?: string;
+  selector?: string | null;
+  text?: string | null;
+  key?: string | null;
+  timeoutMs?: number;
+  error?: string;
+  textExcerpt?: string;
+  elements: BrowserSkillElement[];
+  screenshotPaths: string[];
+};
+
+function isBrowserSkillCommand(command?: string): boolean {
+  if (!command) return false;
+  return command.includes(".claude/skills/browser/") || command.includes("browser.mjs");
+}
+
+function normalizeBrowserSkillWorkspacePath(filePath?: string | null): string | null {
+  const normalized = String(filePath || "").trim().replace(/^\/workspace\//, "").replace(/^workspace\//, "");
+  return normalized ? normalized : null;
+}
+
+function guessBrowserSkillAction(command?: string): string {
+  if (!command) return "browser";
+  const match = command.match(/browser\.mjs\s+([a-z-]+)/i);
+  return match?.[1] || "browser";
+}
+
+function parseBrowserSkillOutput(output?: string, command?: string): BrowserSkillResult {
+  const marker = "BROWSER_SKILL_RESULT::";
+  const normalizedOutput = typeof output === "string" ? output : "";
+  let parsed: Record<string, unknown> | null = null;
+
+  if (normalizedOutput.includes(marker)) {
+    const payload = normalizedOutput
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line.startsWith(marker));
+    if (payload) {
+      try {
+        parsed = JSON.parse(payload.slice(marker.length)) as Record<string, unknown>;
+      } catch {
+        parsed = null;
+      }
+    }
+  }
+
+  const explicitPath =
+    normalizeBrowserSkillWorkspacePath(typeof parsed?.screenshotPath === "string" ? parsed.screenshotPath : null) ||
+    normalizeBrowserSkillWorkspacePath(extractWorkspaceImagePathFromOutput(normalizedOutput));
+  const listedPaths = Array.isArray(parsed?.screenshotPaths)
+    ? parsed.screenshotPaths
+        .map((value) => normalizeBrowserSkillWorkspacePath(typeof value === "string" ? value : null))
+        .filter((value): value is string => Boolean(value))
+    : [];
+  const screenshotPaths = Array.from(new Set([explicitPath, ...listedPaths].filter((value): value is string => Boolean(value))));
+
+  return {
+    ok: parsed?.ok !== false,
+    action: typeof parsed?.action === "string" && parsed.action.trim() ? parsed.action.trim() : guessBrowserSkillAction(command),
+    url: typeof parsed?.url === "string" ? parsed.url : undefined,
+    title: typeof parsed?.title === "string" ? parsed.title : undefined,
+    selector: typeof parsed?.selector === "string" ? parsed.selector : null,
+    text: typeof parsed?.text === "string" ? parsed.text : null,
+    key: typeof parsed?.key === "string" ? parsed.key : null,
+    timeoutMs: typeof parsed?.timeoutMs === "number" ? parsed.timeoutMs : undefined,
+    error: typeof parsed?.error === "string" ? parsed.error : undefined,
+    textExcerpt: typeof parsed?.textExcerpt === "string" ? parsed.textExcerpt : undefined,
+    elements: Array.isArray(parsed?.elements)
+      ? parsed.elements
+          .filter((item) => item && typeof item === "object")
+          .map((item) => {
+            const entry = item as Record<string, unknown>;
+            return {
+              selector: typeof entry.selector === "string" ? entry.selector : undefined,
+              text: typeof entry.text === "string" ? entry.text : undefined,
+              role: typeof entry.role === "string" ? entry.role : undefined,
+              tag: typeof entry.tag === "string" ? entry.tag : undefined,
+            };
+          })
+      : [],
+    screenshotPaths,
+  };
+}
+
+function formatBrowserSkillAction(action: string): string {
+  return action
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function BrowserSkillLogBox({
+  log,
+  timeLabel,
+  backendUrl,
+  environmentId,
+  requestHeaders,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  backendUrl?: string;
+  environmentId?: string | null;
+  requestHeaders?: HeadersInit;
+}) {
+  const command = log.metadata?.command || log.message || "";
+  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const parsed = useMemo(() => parseBrowserSkillOutput(output || log.message, command), [command, log.message, output]);
+  const isRunning = log.metadata?.status === "running" || log.metadata?.status === "started";
+  const imageSources = parsed.screenshotPaths
+    .map((filePath) => buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath))
+    .filter((value): value is string => Boolean(value));
+
+  return (
+    <ImagePreviewLogCard
+      icon={<Eye className="tb-log-card-small-icon" strokeWidth={1.5} />}
+      label="Browser"
+      title={parsed.title || formatBrowserSkillAction(parsed.action)}
+      timeLabel={timeLabel}
+      meta={isRunning ? <span className="tb-log-card-status">running...</span> : null}
+      body={
+        parsed.error && !isRunning ? (
+          <div className="tb-log-card-state tb-log-card-state-error">{parsed.error}</div>
+        ) : (
+          <>
+            {imageSources.length > 0 ? (
+              <div className="tb-log-image-grid">
+                {imageSources.slice(0, 2).map((src, index) => (
+                  <RunnerImagePreviewSurface
+                    key={`${src}-${index}`}
+                    src={src}
+                    alt={parsed.title || parsed.url || `Browser screenshot ${index + 1}`}
+                    fetchHeaders={requestHeaders}
+                    loadStrategy="visible"
+                  />
+                ))}
+              </div>
+            ) : null}
+            <div className="tb-log-checklist">
+              <div className="tb-log-checklist-item">
+                <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
+                <span className="tb-log-checklist-text">{formatBrowserSkillAction(parsed.action)}</span>
+              </div>
+              {parsed.url ? (
+                <div className="tb-log-checklist-item">
+                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
+                  <span className="tb-log-checklist-text">{parsed.url}</span>
+                </div>
+              ) : null}
+              {parsed.selector ? (
+                <div className="tb-log-checklist-item">
+                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
+                  <span className="tb-log-checklist-text">{parsed.selector}</span>
+                </div>
+              ) : null}
+              {parsed.text ? (
+                <div className="tb-log-checklist-item">
+                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
+                  <span className="tb-log-checklist-text">{parsed.text}</span>
+                </div>
+              ) : null}
+              {parsed.key ? (
+                <div className="tb-log-checklist-item">
+                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
+                  <span className="tb-log-checklist-text">Key: {parsed.key}</span>
+                </div>
+              ) : null}
+              {typeof parsed.timeoutMs === "number" ? (
+                <div className="tb-log-checklist-item">
+                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
+                  <span className="tb-log-checklist-text">Timeout: {parsed.timeoutMs}ms</span>
+                </div>
+              ) : null}
+            </div>
+            {parsed.elements.length > 0 ? (
+              <div className="tb-log-checklist">
+                {parsed.elements.slice(0, 8).map((element, index) => (
+                  <div key={`${element.selector || element.text || index}`} className="tb-log-checklist-item">
+                    <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
+                    <span className="tb-log-checklist-text">
+                      {element.text || element.tag || "Element"}
+                      {element.selector ? ` -> ${element.selector}` : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {parsed.textExcerpt ? (
+              <div className="tb-log-file-preview-frame tb-log-terminal-frame">
+                <div className="tb-log-file-preview-topbar">
+                  <span className="tb-log-file-preview-language">Visible text</span>
+                </div>
+                <div className="tb-log-terminal-body">
+                  <RunnerAnsiOutput content={parsed.textExcerpt.slice(0, 800)} />
+                </div>
+              </div>
+            ) : null}
+            {!parsed.error && !isRunning && imageSources.length === 0 && !parsed.url && parsed.elements.length === 0 ? (
+              <div className="tb-log-card-empty">No browser output was parsed.</div>
+            ) : null}
+          </>
+        )
+      }
+    />
+  );
+}
+
 function TodoListLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   const [collapsed, setCollapsed] = useState(false);
   const todos = Array.isArray((log.metadata as { todos?: Array<{ text: string; completed: boolean }> } | undefined)?.todos)
@@ -2998,6 +3216,9 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
     const output = String(log.metadata?.output || "");
     if (isWebSearchCommand(command) || isWebSearchOutput(output)) return <WebSearchLogBox log={log} timeLabel={timeLabel} />;
     if (isMemoryCommand(command)) return <MemoryLogBox log={log} timeLabel={timeLabel} />;
+    if (isBrowserSkillCommand(command)) {
+      return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+    }
     if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;
     if (isReadFileCommand(command)) {
       return (

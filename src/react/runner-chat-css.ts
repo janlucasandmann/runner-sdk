@@ -1035,31 +1035,15 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: 12px;
+  gap: 0;
+  padding: 16px 18px;
+  border-radius: 15px;
   border: 0;
   background: rgba(255, 255, 255, 0.05);
   color: white;
   text-align: left;
   cursor: pointer;
   transition: background 140ms ease, transform 140ms ease;
-}
-
-.tb-runner-chat .tb-task-preview-card::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  border-radius: 12px;
-  padding: 1px;
-  background: var(--tb-runner-input-border);
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
 }
 
 .tb-runner-chat .tb-task-preview-card:hover {
@@ -1078,26 +1062,6 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-task-preview-card:focus-visible {
   outline: 2px solid rgba(102, 166, 255, 0.45);
   outline-offset: 2px;
-}
-
-.tb-runner-chat .tb-task-preview-card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  min-width: 0;
-}
-
-.tb-runner-chat .tb-task-preview-card-title-wrap {
-  min-width: 0;
-  max-width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1 1 auto;
-  flex-wrap: wrap;
-  row-gap: 4px;
 }
 
 .tb-runner-chat .tb-task-preview-type-badge {
@@ -1149,17 +1113,17 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-task-preview-ticket {
   color: rgba(102, 166, 255, 1);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   flex: 0 0 auto;
 }
 
 .tb-runner-chat .tb-task-preview-title {
   min-width: 0;
-  flex: 1 1 auto;
   color: white;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
+  line-height: 1.35;
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
@@ -1167,39 +1131,54 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   overflow-wrap: anywhere;
 }
 
+.tb-runner-chat .tb-task-preview-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-task-preview-card-meta-left {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
 .tb-runner-chat .tb-task-preview-status {
   flex: 0 0 auto;
-  border-radius: 5px;
-  padding: 2px 6px;
-  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
   line-height: 1.2;
   font-weight: 400;
 }
 
 .tb-runner-chat .tb-task-preview-status-todo {
-  color: rgba(102, 166, 255, 1);
-  background: rgba(102, 166, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .tb-runner-chat .tb-task-preview-status-in_progress {
-  color: rgba(79, 209, 130, 1);
-  background: rgba(79, 209, 130, 0.15);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .tb-runner-chat .tb-task-preview-status-blocked {
-  color: rgba(255, 122, 122, 1);
-  background: rgba(255, 122, 122, 0.15);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .tb-runner-chat .tb-task-preview-status-done {
-  color: rgba(255, 255, 255, 0.88);
-  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .tb-runner-chat .tb-task-preview-card-description {
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 11px;
-  line-height: 1.4;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 400;
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;

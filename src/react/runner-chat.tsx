@@ -29,6 +29,7 @@ import {
   MessageCircle as LucideMessageCircle,
   MessageSquare as LucideMessageSquare,
   Minimize2 as LucideMinimize2,
+  Monitor as LucideMonitor,
   LoaderCircle as LucideLoaderCircle,
   Package as LucidePackage,
   Palette as LucidePalette,
@@ -566,13 +567,14 @@ const DEFAULT_COMPUTER_AGENT_SKILLS: RunnerChatSkill[] = [
   { id: "image_generation", name: "Image Generation", enabled: true },
   { id: "web_search", name: "Web Search", enabled: true },
   { id: "research", name: "Research", enabled: true },
+  { id: "browser", name: "Browser", enabled: true },
   { id: "pdf", name: "PDF Processing", enabled: true },
   { id: "frontend_design", name: "Frontend Design", enabled: true },
   { id: "pptx", name: "PowerPoint/PPTX", enabled: true },
   { id: "memory", name: "Memory", enabled: true },
   { id: "task_management", name: "Task Management", enabled: true },
 ];
-const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "research", "memory", "task_management"] as const;
+const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "research", "browser", "memory", "task_management"] as const;
 const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v1";
 
 const DEFAULT_SCHEDULE_PRESETS: RunnerChatSchedulePreset[] = [
@@ -1812,6 +1814,7 @@ function customSkillIconComponent(icon?: string | null) {
     cloud: LucideCloud,
     server: LucideServer,
     cpu: LucideCpu,
+    monitor: LucideMonitor,
     git: LucideGitBranch,
     package: LucidePackage,
     list: LucideListTodo,
@@ -1825,6 +1828,7 @@ function buildEnabledSkillsPayload(enabledSkillIds: string[], displayedSkills: R
     image_generation: "imageGeneration",
     web_search: "webSearch",
     research: "research",
+    browser: "browser",
     pdf: "pdf",
     frontend_design: "frontendDesign",
     pptx: "pptx",
@@ -8071,6 +8075,7 @@ export function RunnerChat({
     if (skill.id === "image_generation") return <LucideImages className={className} strokeWidth={1.75} />;
     if (skill.id === "web_search") return <LucideGlobe className={className} strokeWidth={1.75} />;
     if (skill.id === "research") return <LucideTelescope className={className} strokeWidth={1.75} />;
+    if (skill.id === "browser") return <LucideMonitor className={className} strokeWidth={1.75} />;
     if (skill.id === "pdf") return <LucideFileText className={className} strokeWidth={1.75} />;
     if (skill.id === "frontend_design") return <LucidePalette className={className} strokeWidth={1.75} />;
     if (skill.id === "pptx") return <LucideLayers className={className} strokeWidth={1.75} />;
@@ -9300,23 +9305,23 @@ export function RunnerChat({
                           }
                         }}
                       >
-                        <div className="tb-task-preview-card-top">
-                          <div className="tb-task-preview-card-title-wrap">
+                        <div className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</div>
+                        <div className="tb-task-preview-card-description">
+                          {String(taskPreviewForTurn.description || "").trim() || "No description"}
+                        </div>
+                        <div className="tb-task-preview-card-bottom">
+                          <div className="tb-task-preview-card-meta-left">
                             <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
                               {normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask"
                                 ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
                                 : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
                             </div>
                             {renderRunnerTaskPreviewPriorityIcon(taskPreviewForTurn.priority, "tb-task-preview-priority-icon")}
-                            <span className="tb-task-preview-ticket">{taskPreviewForTurn.ticketNumber}</span>
-                            <span className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</span>
+                            <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreviewForTurn.status)}`.trim()}>
+                              {getRunnerTaskPreviewStatusLabel(taskPreviewForTurn.status)}
+                            </span>
                           </div>
-                          <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreviewForTurn.status)}`.trim()}>
-                            {getRunnerTaskPreviewStatusLabel(taskPreviewForTurn.status)}
-                          </span>
-                        </div>
-                        <div className="tb-task-preview-card-description">
-                          {String(taskPreviewForTurn.description || "").trim() || "No description"}
+                          <span className="tb-task-preview-ticket">{taskPreviewForTurn.ticketNumber}</span>
                         </div>
                       </button>
                     </div>
@@ -9454,26 +9459,24 @@ export function RunnerChat({
                                 }
                               }}
                             >
-                          <div className="tb-task-preview-card-top">
-                            <div className="tb-task-preview-card-title-wrap">
-                              <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
-                                {normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask"
-                                  ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
-                                  : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
+                              <div className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</div>
+                              <div className="tb-task-preview-card-description">
+                                {String(taskPreviewForTurn.description || "").trim() || "No description"}
                               </div>
-                              {renderRunnerTaskPreviewPriorityIcon(taskPreviewForTurn.priority, "tb-task-preview-priority-icon")}
-                              <span className="tb-task-preview-ticket">{taskPreviewForTurn.ticketNumber}</span>
-                              <span className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</span>
-                            </div>
-                            <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreviewForTurn.status)}`.trim()}>
-                              {getRunnerTaskPreviewStatusLabel(taskPreviewForTurn.status)}
-                            </span>
-                          </div>
-                          <div className="tb-task-preview-card-meta">
-                            {taskPreviewForTurn.assigneeName ? <span>{taskPreviewForTurn.assigneeName}</span> : null}
-                            {taskPreviewForTurn.environmentName ? <span>{taskPreviewForTurn.environmentName}</span> : null}
-                            <span className="tb-task-preview-open">Open ticket</span>
-                          </div>
+                              <div className="tb-task-preview-card-bottom">
+                                <div className="tb-task-preview-card-meta-left">
+                                  <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
+                                    {normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask"
+                                      ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
+                                      : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
+                                  </div>
+                                  {renderRunnerTaskPreviewPriorityIcon(taskPreviewForTurn.priority, "tb-task-preview-priority-icon")}
+                                  <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreviewForTurn.status)}`.trim()}>
+                                    {getRunnerTaskPreviewStatusLabel(taskPreviewForTurn.status)}
+                                  </span>
+                                </div>
+                                <span className="tb-task-preview-ticket">{taskPreviewForTurn.ticketNumber}</span>
+                              </div>
                             </button>
                           );
                         })()

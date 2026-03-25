@@ -1187,6 +1187,18 @@ const html = `<!doctype html>
         pointer-events: none;
       }
 
+      .playground-content-shell.is-thread-task-detail-open .tb-runner-chat .tb-task-preview-card {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-content-shell.is-thread-task-detail-open .tb-runner-chat .tb-task-preview-card:hover:enabled {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .playground-content-shell.is-thread-task-detail-open .tb-runner-chat .tb-task-preview-card:disabled:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
       .content-mode-switch {
         display: flex;
         gap: 8px;
@@ -1787,10 +1799,17 @@ const html = `<!doctype html>
 
       .changes-empty-state,
       .changes-loading-state {
-        padding: 18px 16px;
         color: rgba(255, 255, 255, 0.56);
         font-size: 12px;
         line-height: 1.5;
+      }
+
+      .changes-empty-state {
+        padding: 0;
+      }
+
+      .changes-loading-state {
+        padding: 18px 16px;
       }
 
       .changes-detail-header,
@@ -2664,6 +2683,18 @@ const html = `<!doctype html>
         to {
           opacity: 0;
           transform: translateY(10px);
+        }
+      }
+
+      @keyframes playground-tasks-toolbar-popup-fade-down-in {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
       }
 
@@ -7834,6 +7865,101 @@ const html = `<!doctype html>
         gap: 6px;
       }
 
+      .playground-environments-editor-main {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-environments-editor-navbar {
+        flex-shrink: 0;
+      }
+
+      .playground-environments-editor-navbar-title {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .playground-environments-editor-navbar-icon {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-environments-editor-navbar-copy {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-environments-editor-title-input {
+        height: auto;
+        padding: 0;
+      }
+
+      .playground-environments-editor-navbar-subtitle {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-environments-editor-navbar-actions {
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .playground-environments-editor-scroll {
+        gap: 14px;
+      }
+
+      .playground-environments-editor-notice {
+        margin-top: -2px;
+      }
+
+      .playground-environments-editor-facts {
+        padding-bottom: 4px;
+      }
+
+      .playground-environments-editor-fact-value {
+        max-width: 100%;
+        margin-left: auto;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        line-height: 1.35;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-environments-editor-fact-value.is-id {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 11px;
+      }
+
+      .playground-environments-editor-description-input {
+        min-height: 72px;
+        padding-bottom: 0;
+      }
+
       .playground-environments-action-button,
       .playground-environments-add-button {
         min-height: 34px;
@@ -8015,7 +8141,9 @@ const html = `<!doctype html>
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-section-title {
-        font-size: 12px;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.3;
       }
 
       .playground-environments-section-copy {
@@ -8026,7 +8154,7 @@ const html = `<!doctype html>
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-section-copy {
-        font-size: 11px;
+        font-size: 12px;
       }
 
       .playground-environments-section-toggle {
@@ -8039,6 +8167,22 @@ const html = `<!doctype html>
       .playground-environments-section-body {
         padding: 0 18px 18px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-section,
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-mcp-card {
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-section-header {
+        padding: 0 0 10px;
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-section-body {
+        padding: 0;
+        border-top: 0;
       }
 
       .playground-environments-field-grid {
@@ -8099,6 +8243,11 @@ const html = `<!doctype html>
         flex-direction: column;
         gap: 12px;
         padding-top: 16px;
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-field-grid,
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-stack {
+        padding-top: 0;
       }
 
       .playground-environments-subsection {
@@ -8679,6 +8828,14 @@ const html = `<!doctype html>
       .playground-tasks-detail-scroll {
         padding: 9px 18px 28px;
         gap: 12px;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .playground-tasks-detail-scroll::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
       }
 
       .playground-tasks-detail-navbar {
@@ -10273,6 +10430,77 @@ const html = `<!doctype html>
         color: #ffb0b0;
       }
 
+      .playground-tasks-release-modal {
+        width: min(560px, 100%);
+        padding: 18px 20px 20px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: linear-gradient(180deg, rgba(20, 20, 24, 0.98), rgba(16, 16, 18, 0.98));
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+      }
+
+      .playground-tasks-release-modal-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .playground-tasks-release-modal-title-block {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .playground-tasks-release-modal-title {
+        font-size: 17px;
+        line-height: 1.2;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-tasks-release-modal-copy {
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-tasks-release-modal-field {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-tasks-release-modal-date-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .playground-tasks-release-modal-input {
+        width: 100%;
+        height: 42px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        color: rgba(255, 255, 255, 0.94);
+        font: inherit;
+        font-size: 14px;
+        outline: none;
+      }
+
+      .playground-tasks-release-modal-input::placeholder {
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-tasks-release-modal-textarea {
+        min-height: 110px;
+      }
+
       .playground-tasks-project-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -10554,6 +10782,118 @@ const html = `<!doctype html>
         justify-content: flex-end;
       }
 
+      .playground-tasks-release-control-row {
+        gap: 8px;
+      }
+
+      .playground-tasks-toolbar-popup-shell {
+        position: relative;
+        z-index: 31;
+      }
+
+      .playground-tasks-toolbar-popup-shell .tb-popup-menu {
+        position: absolute;
+        z-index: 32;
+        min-width: 240px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: #323232;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+      }
+
+      .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu {
+        top: calc(100% + 8px);
+        bottom: auto;
+        left: auto;
+        right: 0;
+        width: 260px;
+        min-width: 260px;
+        max-height: min(360px, calc(100vh - 180px));
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        transform-origin: top right;
+      }
+
+      .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu-wide {
+        width: 272px;
+        min-width: 272px;
+      }
+
+      .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu-animate-down-in {
+        animation: playground-tasks-toolbar-popup-fade-down-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .playground-tasks-toolbar-popup-shell .tb-popup-menu-title {
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 12px;
+        line-height: 1.2;
+      }
+
+      .playground-tasks-toolbar-popup-shell .tb-popup-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border: 0;
+        background: transparent;
+        color: white;
+        cursor: pointer;
+        text-align: left;
+        transition: background-color 160ms ease;
+      }
+
+      .playground-tasks-toolbar-popup-shell .tb-popup-row:hover,
+      .playground-tasks-toolbar-popup-shell .tb-popup-row.selected {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tasks-toolbar-popup-shell .tb-popup-row-select.selected {
+        background: transparent;
+      }
+
+      .playground-tasks-toolbar-popup-shell .tb-popup-icon {
+        color: rgba(255, 255, 255, 0.6);
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-toolbar-popup-shell .tb-popup-check-slot {
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .playground-tasks-toolbar-popup-shell .tb-popup-check {
+        color: white;
+      }
+
+      .playground-tasks-toolbar-popup-item-copy {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .playground-tasks-toolbar-popup-item-copy span:first-child {
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tasks-toolbar-popup-item-copy span + span {
+        font-size: 11px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
       .playground-tasks-backlog-list {
         flex: 1;
         min-height: 0;
@@ -10561,7 +10901,7 @@ const html = `<!doctype html>
         flex-direction: column;
         overflow: auto;
         gap: 8px;
-        padding-top: 10px;
+        padding-top: 12px;
       }
 
       .playground-tasks-backlog-item {
@@ -10658,6 +10998,36 @@ const html = `<!doctype html>
         gap: 5px;
       }
 
+      .playground-tasks-backlog-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-tasks-backlog-section + .playground-tasks-backlog-section {
+        margin-top: 8px;
+      }
+
+      .playground-tasks-backlog-section-header {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-tasks-backlog-section-title {
+        color: rgba(255, 255, 255, 1);
+        font-size: 14px;
+        line-height: 1.35;
+        font-weight: 500;
+      }
+
+      .playground-tasks-backlog-section-copy {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        line-height: 1.4;
+        font-weight: 400;
+      }
+
       .playground-tasks-backlog-project-icon {
         width: 20px;
         height: 20px;
@@ -10689,36 +11059,6 @@ const html = `<!doctype html>
         font-size: 12px;
         font-weight: 500;
         line-height: 1;
-      }
-
-      .playground-tasks-backlog-check {
-        width: 18px;
-        height: 18px;
-        flex: 0 0 auto;
-        padding: 0;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 999px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.42);
-        cursor: pointer;
-        transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
-      }
-
-      .playground-tasks-backlog-check:hover:not(:disabled) {
-        border-color: rgba(255, 255, 255, 0.22);
-        background: transparent;
-      }
-
-      .playground-tasks-backlog-check:disabled {
-        opacity: 0.48;
-        cursor: not-allowed;
-      }
-
-      .playground-tasks-backlog-check.is-complete {
-        color: rgba(255, 255, 255, 0.9);
       }
 
       .playground-tasks-backlog-item:hover {
@@ -10896,6 +11236,97 @@ const html = `<!doctype html>
         cursor: not-allowed;
       }
 
+      .playground-tasks-release-item {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.92);
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 160ms ease, background-color 160ms ease;
+      }
+
+      .playground-tasks-release-item:hover {
+        border-color: rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-tasks-release-item-main {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .playground-tasks-release-item-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-tasks-release-item-title {
+        min-width: 0;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.3;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tasks-release-item-copy {
+        font-size: 13px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.64);
+      }
+
+      .playground-tasks-release-item-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 12px;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-tasks-release-status {
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-release-backlog-header-main {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .playground-tasks-release-backlog-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .playground-tasks-release-name-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .playground-tasks-release-backlog-copy {
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
       .playground-tasks-backlog-empty {
         min-height: 260px;
         border: 1px dashed rgba(255, 255, 255, 0.08);
@@ -10980,8 +11411,7 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-card,
-      .playground-tasks-calendar-entry,
-      .playground-tasks-lane-card {
+      .playground-tasks-calendar-entry {
         width: 100%;
         display: flex;
         flex-direction: column;
@@ -10997,17 +11427,39 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-card:hover,
-      .playground-tasks-calendar-entry:hover,
-      .playground-tasks-lane-card:hover {
+      .playground-tasks-calendar-entry:hover {
         border-color: rgba(255, 255, 255, 0.14);
         background: rgba(255, 255, 255, 0.05);
       }
 
       .playground-tasks-card.is-active,
-      .playground-tasks-calendar-entry.is-active,
-      .playground-tasks-lane-card.is-active {
+      .playground-tasks-calendar-entry.is-active {
         border-color: rgba(138, 214, 255, 0.42);
         background: rgba(71, 166, 255, 0.12);
+      }
+
+      .playground-tasks-lane-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 16px 18px;
+        border: 0;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.92);
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .playground-tasks-lane-card:hover {
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .playground-tasks-lane-card.is-active {
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 0 0 1px rgba(102, 166, 255, 0.35);
       }
 
       .playground-tasks-card-header,
@@ -11022,15 +11474,29 @@ const html = `<!doctype html>
       .playground-tasks-lane-card-title {
         font-size: 14px;
         line-height: 1.35;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.98);
+        font-weight: 500;
+        color: white;
+        min-width: 0;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        word-break: break-word;
+        overflow-wrap: anywhere;
       }
 
       .playground-tasks-card-copy,
       .playground-tasks-lane-card-copy {
-        font-size: 12px;
-        line-height: 1.5;
-        color: rgba(255, 255, 255, 0.52);
+        font-size: 14px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 400;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      .playground-tasks-lane-card-copy {
+        margin-top: 4px;
       }
 
       .playground-tasks-card-meta,
@@ -11078,6 +11544,79 @@ const html = `<!doctype html>
       .playground-tasks-meta-copy {
         font-size: 11px;
         color: rgba(255, 255, 255, 0.44);
+      }
+
+      .playground-tasks-lane-card-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+        margin-top: 10px;
+      }
+
+      .playground-tasks-lane-card-meta-left {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1 1 auto;
+      }
+
+      .playground-tasks-lane-card-type-badge {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        flex: 0 0 auto;
+        color: white;
+      }
+
+      .playground-tasks-lane-card-type-badge svg {
+        width: 12px;
+        height: 12px;
+        filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
+      }
+
+      .playground-tasks-lane-card-type-badge.is-task {
+        background: linear-gradient(180deg, #39b877 0%, #2b8b59 100%);
+      }
+
+      .playground-tasks-lane-card-type-badge.is-subtask {
+        background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
+      }
+
+      .playground-tasks-lane-card-priority {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-tasks-lane-card-priority .playground-tasks-priority-value-icon {
+        width: 13px;
+        height: 13px;
+      }
+
+      .playground-tasks-lane-card-status {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+
+      .playground-tasks-lane-card-ticket {
+        flex: 0 0 auto;
+        color: rgba(102, 166, 255, 1);
+        font-size: 14px;
+        font-weight: 500;
       }
 
       .playground-tasks-board-toolbar,
@@ -11153,17 +11692,31 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 12px;
-        padding: 12px;
+        padding: 0;
         border: 0;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05);
+        background: transparent;
         min-height: 320px;
+        transition: background-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .playground-tasks-lane.is-drop-target {
+        background: rgba(102, 166, 255, 0.12);
+        box-shadow: inset 0 0 0 1px rgba(102, 166, 255, 0.28);
       }
 
       .playground-tasks-lane-list {
         display: flex;
         flex-direction: column;
         gap: 10px;
+      }
+
+      .playground-tasks-lane-card.is-draggable {
+        cursor: grab;
+      }
+
+      .playground-tasks-lane-card.is-dragging {
+        opacity: 0.5;
       }
 
       .playground-tasks-empty {
@@ -12383,7 +12936,7 @@ const html = `<!doctype html>
       import { format, getDay, parse, startOfWeek } from "date-fns";
       import * as enUSLocale from "date-fns/locale/en-US";
       import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Key, Layers, LayoutGrid, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Key, Layers, LayoutGrid, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -13824,7 +14377,6 @@ const html = `<!doctype html>
         { id: "calendar", label: "Calendar", icon: Clock },
       ];
       const PLAYGROUND_TASK_STATUS_OPTIONS = [
-        { id: "backlog", label: "Backlog" },
         { id: "todo", label: "To do" },
         { id: "in_progress", label: "In doing" },
         { id: "blocked", label: "Blocked" },
@@ -13912,6 +14464,8 @@ const html = `<!doctype html>
           activeThreadsCount: 0,
           tasksCount: 0,
           openTasksCount: 0,
+          releaseCount: 0,
+          activeReleaseCount: 0,
           sprintCount: 0,
           activeSprintCount: 0,
         };
@@ -13950,6 +14504,7 @@ const html = `<!doctype html>
         return {
           id: "",
           projectId: null,
+          releaseId: null,
           ticketNumber: "",
           taskType: "task",
           parentTaskId: null,
@@ -13973,6 +14528,26 @@ const html = `<!doctype html>
           completedAt: null,
           sortOrder: Date.now(),
           metadata: null,
+          createdAt: now,
+          updatedAt: now,
+        };
+      }
+
+      function buildPlaygroundDefaultReleaseDraft() {
+        const now = new Date().toISOString();
+        return {
+          id: "",
+          projectId: null,
+          name: "",
+          description: "",
+          startAt: null,
+          endAt: null,
+          sortOrder: Date.now(),
+          metadata: null,
+          taskCount: 0,
+          openTaskCount: 0,
+          taskIds: [],
+          status: "planned",
           createdAt: now,
           updatedAt: now,
         };
@@ -14890,7 +15465,9 @@ const html = `<!doctype html>
         const runnerPlaygroundMetadata = getPlaygroundTaskRunnerMetadata(task);
         const normalizedLinkedThreadIds = normalizePlaygroundIdList(task.linkedThreadIds);
         const normalizedLastStartedThreadId = typeof task.lastStartedThreadId === "string" && task.lastStartedThreadId.trim() ? task.lastStartedThreadId.trim() : null;
-        const rawStatus = PLAYGROUND_TASK_STATUS_OPTIONS.some((option) => option.id === task.status) ? task.status : draft.status;
+        const rawStatus = task.status === "backlog"
+          ? "todo"
+          : (PLAYGROUND_TASK_STATUS_OPTIONS.some((option) => option.id === task.status) ? task.status : draft.status);
         const status = rawStatus === "in_progress" && !normalizedLastStartedThreadId && normalizedLinkedThreadIds.length === 0
           ? "todo"
           : rawStatus;
@@ -14938,6 +15515,7 @@ const html = `<!doctype html>
           ...task,
           id: typeof task.id === "string" ? task.id : draft.id,
           projectId: typeof task.projectId === "string" && task.projectId.trim() ? task.projectId.trim() : null,
+          releaseId: typeof task.releaseId === "string" && task.releaseId.trim() ? task.releaseId.trim() : null,
           ticketNumber,
           taskType: parentTaskId ? taskType : "task",
           parentTaskId,
@@ -14993,6 +15571,66 @@ const html = `<!doctype html>
         };
       }
 
+      function getPlaygroundTaskReleaseStatus(release) {
+        if (!release || typeof release !== "object") {
+          return "planned";
+        }
+
+        if (typeof release.status === "string" && release.status.trim()) {
+          return release.status.trim();
+        }
+
+        const nowMs = Date.now();
+        const startAtMs = release.startAt ? Date.parse(release.startAt) : null;
+        const endAtMs = release.endAt ? Date.parse(release.endAt) : null;
+
+        if (Number.isFinite(endAtMs) && endAtMs < nowMs) {
+          return "completed";
+        }
+        if (Number.isFinite(startAtMs) && startAtMs > nowMs) {
+          return "planned";
+        }
+        return "active";
+      }
+
+      function formatPlaygroundTaskReleaseDateRange(release) {
+        const startLabel = release?.startAt ? formatPlaygroundFileDate(release.startAt) : "";
+        const endLabel = release?.endAt ? formatPlaygroundFileDate(release.endAt) : "";
+        if (startLabel && endLabel) {
+          return startLabel + " - " + endLabel;
+        }
+        return startLabel || endLabel || "No dates";
+      }
+
+      function normalizePlaygroundTaskReleaseRecord(release) {
+        if (!release || typeof release !== "object") {
+          return buildPlaygroundDefaultReleaseDraft();
+        }
+
+        const draft = buildPlaygroundDefaultReleaseDraft();
+        const createdAt = typeof release.createdAt === "string" && release.createdAt ? release.createdAt : draft.createdAt;
+        const updatedAt = typeof release.updatedAt === "string" && release.updatedAt ? release.updatedAt : createdAt;
+
+        return {
+          ...draft,
+          ...release,
+          id: typeof release.id === "string" ? release.id : draft.id,
+          projectId: typeof release.projectId === "string" && release.projectId.trim() ? release.projectId.trim() : null,
+          name: typeof release.name === "string" ? release.name : draft.name,
+          description: typeof release.description === "string" ? release.description : draft.description,
+          startAt: typeof release.startAt === "string" && release.startAt ? release.startAt : null,
+          endAt: typeof release.endAt === "string" && release.endAt ? release.endAt : null,
+          sortOrder: Number.isFinite(release.sortOrder) ? Number(release.sortOrder) : draft.sortOrder,
+          metadata: release.metadata && typeof release.metadata === "object" && !Array.isArray(release.metadata) ? release.metadata : null,
+          taskCount: Number.isFinite(release.taskCount) ? Number(release.taskCount) : 0,
+          openTaskCount: Number.isFinite(release.openTaskCount) ? Number(release.openTaskCount) : 0,
+          taskIds: normalizePlaygroundIdList(release.taskIds),
+          status: getPlaygroundTaskReleaseStatus(release),
+          createdAt,
+          updatedAt,
+        };
+      }
+
       function normalizePlaygroundProjectRecord(project) {
         if (!project || typeof project !== "object") {
           return buildPlaygroundDefaultProjectDraft();
@@ -15028,6 +15666,8 @@ const html = `<!doctype html>
             activeThreadsCount: Number(summary.activeThreadsCount) || 0,
             tasksCount: Number(summary.tasksCount) || 0,
             openTasksCount: Number(summary.openTasksCount) || 0,
+            releaseCount: Number(summary.releaseCount) || 0,
+            activeReleaseCount: Number(summary.activeReleaseCount) || 0,
             sprintCount: Number(summary.sprintCount) || 0,
             activeSprintCount: Number(summary.activeSprintCount) || 0,
           },
@@ -15155,6 +15795,24 @@ const html = `<!doctype html>
           : null;
       }
 
+      function parsePlaygroundTaskReleaseListResponse(data) {
+        const items = Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.releases)
+            ? data.releases
+            : Array.isArray(data?.items)
+              ? data.items
+              : [];
+        return items.map(normalizePlaygroundTaskReleaseRecord);
+      }
+
+      function getPlaygroundTaskReleaseResponseRecord(data) {
+        const source = data?.release || data?.data || data;
+        return source && typeof source === "object" && typeof source.id === "string"
+          ? normalizePlaygroundTaskReleaseRecord(source)
+          : null;
+      }
+
       function parsePlaygroundProjectListResponse(data) {
         const items = Array.isArray(data?.data)
           ? data.data
@@ -15184,10 +15842,26 @@ const html = `<!doctype html>
         return localDate.toISOString().slice(0, 16);
       }
 
+      function toPlaygroundDateInputValue(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+        return localDate.toISOString().slice(0, 10);
+      }
+
       function fromPlaygroundDatetimeLocalValue(value) {
         const normalized = String(value || "").trim();
         if (!normalized) return null;
         const date = new Date(normalized);
+        return Number.isNaN(date.getTime()) ? null : date.toISOString();
+      }
+
+      function fromPlaygroundDateInputValue(value, options = {}) {
+        const normalized = String(value || "").trim();
+        if (!normalized) return null;
+        const timeSuffix = options.endOfDay ? "T23:59:59.999" : "T00:00:00.000";
+        const date = new Date(normalized + timeSuffix);
         return Number.isNaN(date.getTime()) ? null : date.toISOString();
       }
 
@@ -15550,7 +16224,10 @@ const html = `<!doctype html>
       }
 
       function getPlaygroundTaskStatusLabel(status) {
-        return PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === status)?.label || "Backlog";
+        if (status === "backlog") {
+          return "To do";
+        }
+        return PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === status)?.label || "To do";
       }
 
       function getPlaygroundTaskPriorityLabel(priority) {
@@ -21885,75 +22562,53 @@ const html = `<!doctype html>
             : "-";
           const gitTokenIsSet = existingSecretKeys.has("GITHUB_TOKEN");
           const gitTokenValue = getDraftGitTokenValue();
-
-          const generalSection = React.createElement("div", { className: "playground-environments-field-grid" },
-            React.createElement("label", { className: "playground-environments-field" },
-              React.createElement("span", { className: "playground-environments-field-label" }, "Environment Name"),
-              React.createElement("input", {
-                type: "text",
-                className: "playground-environments-input",
-                value: draftEnvironment.name,
-                onChange: (event) => updateEnvironmentField("name", event.target.value),
-                placeholder: "Production, Development, Staging...",
-              })
+          const environmentStatusLabel = draftEnvironment.isDefault
+            ? "Default"
+            : draftEnvironment.isSystem
+              ? "System"
+              : "Custom";
+          const renderEnvironmentFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
+            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
+            React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+          );
+          const environmentFactsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
+            renderEnvironmentFactRow("ID",
+              React.createElement("span", {
+                className: "playground-environments-editor-fact-value is-id",
+                title: draftEnvironment.id || "Unsaved environment",
+              }, draftEnvironment.id || "Unsaved environment")
             ),
-            React.createElement("label", { className: "playground-environments-field playground-environments-field-span" },
-              React.createElement("span", { className: "playground-environments-field-label" }, "Description"),
-              React.createElement("textarea", {
-                className: "playground-environments-textarea",
-                rows: 3,
-                value: draftEnvironment.description || "",
-                onChange: (event) => updateEnvironmentField("description", event.target.value),
-                placeholder: "Describe this environment...",
-              })
+            renderEnvironmentFactRow("Created",
+              React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftEnvironment.createdAt))
+            ),
+            renderEnvironmentFactRow("Updated",
+              React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftEnvironment.updatedAt))
+            ),
+            renderEnvironmentFactRow("Storage",
+              React.createElement("span", { className: "playground-environments-editor-fact-value" }, storageDisplay)
+            ),
+            renderEnvironmentFactRow("Internet",
+              React.createElement("button", {
+                type: "button",
+                className: "playground-environments-toggle" + (draftEnvironment.internetAccess ? " is-active" : ""),
+                onClick: () => updateEnvironmentField("internetAccess", !draftEnvironment.internetAccess),
+                "aria-pressed": draftEnvironment.internetAccess ? "true" : "false",
+                title: draftEnvironment.internetAccess ? "Internet access enabled" : "Internet access disabled",
+              }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+            ),
+            renderEnvironmentFactRow("Status",
+              React.createElement("span", { className: "playground-environments-editor-fact-value" }, environmentStatusLabel)
             )
           );
-
-          const overviewSection = React.createElement("div", { className: "playground-environments-summary-grid" },
-            React.createElement("div", { className: "playground-environments-summary-card" },
-              React.createElement("div", { className: "playground-environments-summary-title" }, "Information"),
-              React.createElement("div", { className: "playground-environments-summary-row" },
-                React.createElement("span", null, "ID"),
-                React.createElement("span", null, draftEnvironment.id || "Unsaved environment")
-              ),
-              React.createElement("div", { className: "playground-environments-summary-row" },
-                React.createElement("span", null, "Created"),
-                React.createElement("span", null, formatPlaygroundFileDate(draftEnvironment.createdAt))
-              ),
-              React.createElement("div", { className: "playground-environments-summary-row" },
-                React.createElement("span", null, "Updated"),
-                React.createElement("span", null, formatPlaygroundFileDate(draftEnvironment.updatedAt))
-              ),
-              React.createElement("div", { className: "playground-environments-summary-row" },
-                React.createElement("span", null, "Storage"),
-                React.createElement("span", null, storageDisplay)
-              )
-            ),
-            React.createElement("div", { className: "playground-environments-summary-card" },
-              React.createElement("div", { className: "playground-environments-summary-title" }, "Access"),
-              React.createElement("div", { className: "playground-environments-toggle-row" },
-                React.createElement("div", { className: "playground-environments-toggle-copy" },
-                  React.createElement("div", { className: "playground-environments-subtitle" }, "Internet access for agents"),
-                  React.createElement("div", { className: "playground-environments-muted" }, "Matches the aiOS environment setting.")
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-toggle" + (draftEnvironment.internetAccess ? " is-active" : ""),
-                  onClick: () => updateEnvironmentField("internetAccess", !draftEnvironment.internetAccess),
-                  "aria-pressed": draftEnvironment.internetAccess ? "true" : "false",
-                }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-              ),
-              React.createElement("div", { className: "playground-environments-summary-row" },
-                React.createElement("span", null, "Status"),
-                React.createElement("span", null,
-                  draftEnvironment.isDefault
-                    ? "Default"
-                    : draftEnvironment.isSystem
-                      ? "System"
-                      : "Custom"
-                )
-              )
-            )
+          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
+            React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+            React.createElement("textarea", {
+              className: "playground-tasks-detail-description-input playground-environments-editor-description-input",
+              rows: 3,
+              value: draftEnvironment.description || "",
+              onChange: (event) => updateEnvironmentField("description", event.target.value),
+              placeholder: "Describe this environment...",
+            })
           );
 
           const runtimesSection = React.createElement("div", { className: "playground-environments-stack" },
@@ -22350,20 +23005,30 @@ const html = `<!doctype html>
                 )
           );
 
-          return React.createElement("div", { className: "playground-environments-detail-scroll" },
-            React.createElement("div", { className: "playground-environments-detail-header" },
-              React.createElement("div", { className: "playground-environments-detail-header-copy" },
-                React.createElement("div", { className: "playground-environments-detail-title-row" },
-                  React.createElement("div", { className: "playground-environments-detail-title" }, draftEnvironment.name || "Environment"),
-                  draftEnvironment.isDefault
-                    ? React.createElement("span", { className: "playground-environments-badge" }, "Default")
-                    : null
+          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
+            React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
+              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-icon" },
+                  React.createElement(HardDrive, { width: 15, height: 15, strokeWidth: 1.8 })
                 ),
-                React.createElement("div", { className: "playground-environments-detail-subtitle" },
-                  draftEnvironment.description || (draftEnvironment.id ? draftEnvironment.id : "Unsaved environment")
+                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input",
+                    value: draftEnvironment.name || "",
+                    placeholder: "Environment",
+                    "aria-label": "Environment name",
+                    title: draftEnvironment.name || "Environment",
+                    onChange: (event) => updateEnvironmentField("name", event.target.value),
+                  }),
+                  React.createElement("div", { className: "playground-environments-editor-navbar-subtitle" },
+                    draftEnvironment.id || "Unsaved environment"
+                  )
                 )
               ),
-              React.createElement("div", { className: "playground-environments-detail-actions" },
+              React.createElement("div", { className: "playground-content-nav-center" }),
+              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+                React.createElement("span", { className: "playground-environments-badge" }, environmentStatusLabel),
                 React.createElement("button", {
                   type: "button",
                   className: "playground-environments-action-button",
@@ -22403,27 +23068,29 @@ const html = `<!doctype html>
                   : null
               )
             ),
-            saveState.error
-              ? React.createElement("div", { className: "playground-environments-error" }, saveState.error)
-              : saveState.message
-                ? React.createElement("div", { className: "playground-environments-success" }, saveState.message)
-                : editorDirtyRef.current
-                  ? React.createElement("div", { className: "playground-environments-muted" }, "Unsaved changes")
-                  : null,
-            renderEditorSection("overview", "Overview", "The same core environment info shown in aiOS, adapted to the playground shell.", overviewSection),
-            renderEditorSection("general", "General Info", "Configure your environment's name and description.", generalSection),
-            renderEditorSection("runtimes", "Runtime Versions", "Configure language runtime versions for your environment.", runtimesSection),
-            renderEditorSection("packages", "Packages", "Install system, Python, and Node.js packages.", React.createElement("div", { className: "playground-environments-stack" },
-              renderPackageGroup("system", "System", "ffmpeg, curl, imagemagick..."),
-              renderPackageGroup("python", "Python", "numpy, pandas, flask..."),
-              renderPackageGroup("node", "Node.js", "express, typescript, axios...")
-            )),
-            renderEditorSection("variables", "Environment Variables & Secrets", "Configure environment variables and secret values.", variablesSection),
-            renderEditorSection("mcp", "MCP Servers", "Configure Model Context Protocol servers for your environment.", mcpSection),
-            renderEditorSection("scripts", "Setup Scripts", "Configure commands to run when setting up the environment.", setupScriptsSection),
-            renderEditorSection("git", "Git Repository", "Clone a repository into the environment on startup.", gitSection),
-            renderEditorSection("docs", "Context Files", "Files that give your agent context about this environment.", contextFilesSection),
-            renderEditorSection("dockerfile", "Dockerfile", "View and customize the generated Dockerfile for your environment.", dockerfileSection)
+            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+              saveState.error
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
+                : saveState.message
+                  ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, saveState.message)
+                  : editorDirtyRef.current
+                    ? React.createElement("div", { className: "playground-environments-muted playground-environments-editor-notice" }, "Unsaved changes")
+                    : null,
+              environmentFactsSection,
+              descriptionSection,
+              renderEditorSection("runtimes", "Runtime Versions", "Configure language runtime versions for your environment.", runtimesSection),
+              renderEditorSection("packages", "Packages", "Install system, Python, and Node.js packages.", React.createElement("div", { className: "playground-environments-stack" },
+                renderPackageGroup("system", "System", "ffmpeg, curl, imagemagick..."),
+                renderPackageGroup("python", "Python", "numpy, pandas, flask..."),
+                renderPackageGroup("node", "Node.js", "express, typescript, axios...")
+              )),
+              renderEditorSection("variables", "Environment Variables & Secrets", "Configure environment variables and secret values.", variablesSection),
+              renderEditorSection("mcp", "MCP Servers", "Configure Model Context Protocol servers for your environment.", mcpSection),
+              renderEditorSection("scripts", "Setup Scripts", "Configure commands to run when setting up the environment.", setupScriptsSection),
+              renderEditorSection("git", "Git Repository", "Clone a repository into the environment on startup.", gitSection),
+              renderEditorSection("docs", "Context Files", "Files that give your agent context about this environment.", contextFilesSection),
+              renderEditorSection("dockerfile", "Dockerfile", "View and customize the generated Dockerfile for your environment.", dockerfileSection)
+            )
           );
         }
 
@@ -23877,6 +24544,8 @@ const html = `<!doctype html>
         const projectSidebarActionsRef = useRef(null);
         const backlogToolbarActionsRef = useRef(null);
         const boardToolbarActionsRef = useRef(null);
+        const releaseToolbarActionsRef = useRef(null);
+        const releaseBacklogToolbarActionsRef = useRef(null);
         const taskDetailActionsRef = useRef(null);
         const taskSkillsActionsRef = useRef(null);
         const taskDetailMainRef = useRef(null);
@@ -23921,11 +24590,18 @@ const html = `<!doctype html>
         const [backlogFilterMode, setBacklogFilterMode] = useState("open");
         const [backlogSortMode, setBacklogSortMode] = useState("default");
         const [boardToolbarPopover, setBoardToolbarPopover] = useState("");
+        const [releaseToolbarPopover, setReleaseToolbarPopover] = useState("");
+        const [releaseBacklogToolbarPopover, setReleaseBacklogToolbarPopover] = useState("");
         const [taskDetailPopover, setTaskDetailPopover] = useState("");
         const [taskSkillsPopoverOpen, setTaskSkillsPopoverOpen] = useState(false);
         const [taskSkillsTab, setTaskSkillsTab] = useState("system");
         const [boardFilterMode, setBoardFilterMode] = useState("all");
+        const [releaseFilterMode, setReleaseFilterMode] = useState("all");
+        const [releaseSortMode, setReleaseSortMode] = useState("default");
+        const [releaseBacklogFilterMode, setReleaseBacklogFilterMode] = useState("open");
+        const [releaseBacklogSortMode, setReleaseBacklogSortMode] = useState("default");
         const [tasks, setTasks] = useState([]);
+        const [releases, setReleases] = useState([]);
         const [sprints, setSprints] = useState([]);
         const [schedules, setSchedules] = useState([]);
         const [scheduleLoadState, setScheduleLoadState] = useState({
@@ -23944,6 +24620,13 @@ const html = `<!doctype html>
         const [scheduleCalendarDate, setScheduleCalendarDate] = useState(() => new Date());
         const allowedScheduleCalendarViews = ["month", "week", "day"];
         const activeScheduleCalendarView = allowedScheduleCalendarViews.includes(scheduleCalendarView) ? scheduleCalendarView : "month";
+        const [selectedReleaseId, setSelectedReleaseId] = useState("");
+        const [releaseComposerOpen, setReleaseComposerOpen] = useState(false);
+        const [releaseDraft, setReleaseDraft] = useState(buildPlaygroundDefaultReleaseDraft());
+        const [releaseSaveState, setReleaseSaveState] = useState({
+          isSaving: false,
+          error: "",
+        });
         const [selectedTaskId, setSelectedTaskId] = useState("");
         const [draftTask, setDraftTask] = useState(null);
         const [taskTitleInputValue, setTaskTitleInputValue] = useState("");
@@ -23951,6 +24634,9 @@ const html = `<!doctype html>
         const [backlogTitleInputValue, setBacklogTitleInputValue] = useState("");
         const [backlogDraggingTaskId, setBacklogDraggingTaskId] = useState("");
         const [backlogDropTargetKey, setBacklogDropTargetKey] = useState("");
+        const [boardDraggingTaskId, setBoardDraggingTaskId] = useState("");
+        const [boardDropLaneId, setBoardDropLaneId] = useState("");
+        const [boardBlockedPickerState, setBoardBlockedPickerState] = useState(null);
         const [taskCommentInputValue, setTaskCommentInputValue] = useState("");
         const [previewedTaskAttachmentId, setPreviewedTaskAttachmentId] = useState("");
         const [taskLoadState, setTaskLoadState] = useState({
@@ -24089,12 +24775,14 @@ const html = `<!doctype html>
           if (selectedProjectId && taskLoadState.status === "ready") {
             nextSummary.tasksCount = tasks.length;
             nextSummary.openTasksCount = tasks.filter((task) => task.status !== "done").length;
+            nextSummary.releaseCount = releases.length;
+            nextSummary.activeReleaseCount = releases.filter((release) => getPlaygroundTaskReleaseStatus(release) === "active").length;
             nextSummary.sprintCount = sprints.length;
             nextSummary.activeSprintCount = sprints.filter((sprint) => sprint.status === "active").length;
           }
 
           return nextSummary;
-        }, [selectedProject, selectedProjectDetail, selectedProjectId, sprints, taskLoadState.status, tasks]);
+        }, [releases, selectedProject, selectedProjectDetail, selectedProjectId, sprints, taskLoadState.status, tasks]);
 
         const selectedProjectEnvironments = useMemo(() => {
           return selectedProjectDetail?.project?.id === selectedProjectId
@@ -24654,6 +25342,15 @@ const html = `<!doctype html>
           return next;
         }, [tasks]);
 
+        const releasesById = useMemo(() => {
+          const next = {};
+          releases.forEach((release) => {
+            if (!release?.id) return;
+            next[release.id] = release;
+          });
+          return next;
+        }, [releases]);
+
         const taskTicketNumbersById = useMemo(() => buildPlaygroundTaskTicketNumberMap(tasks), [tasks]);
         function resolveTaskAttachmentApiUrl(rawUrl, attachmentId = "") {
           const normalizedUrl = typeof rawUrl === "string" ? rawUrl.trim() : "";
@@ -24776,7 +25473,7 @@ const html = `<!doctype html>
 
         const summary = useMemo(() => {
           return {
-            backlog: tasks.filter((task) => task.status === "backlog").length,
+            backlog: tasks.filter((task) => task.status === "backlog" || task.status === "todo").length,
             active: tasks.filter((task) => task.status === "in_progress" || task.status === "blocked").length,
             scheduled: tasks.filter((task) => task.scheduledStartAt || task.dueAt).length,
             completed: tasks.filter((task) => task.status === "done").length,
@@ -24801,6 +25498,13 @@ const html = `<!doctype html>
           { id: "blocked", label: "Blocked", description: "Only show tasks currently blocked" },
           { id: "done", label: "Finished", description: "Only show finished tasks" },
         ];
+        const releaseFilterOptions = [
+          { id: "all", label: "All Releases", description: "Show every release in this project" },
+          { id: "active", label: "Active", description: "Only show releases currently in progress" },
+          { id: "planned", label: "Planned", description: "Only show upcoming releases" },
+          { id: "completed", label: "Completed", description: "Only show releases whose date range has ended" },
+          { id: "open", label: "Needs Work", description: "Only show releases with open tasks remaining" },
+        ];
         const backlogSortOptions = [
           { id: "default", label: "Default Order" },
           { id: "recent-desc", label: "Recently Updated" },
@@ -24808,9 +25512,20 @@ const html = `<!doctype html>
           { id: "priority-desc", label: "Highest Priority" },
           { id: "title-asc", label: "Title (A-Z)" },
         ];
+        const releaseSortOptions = [
+          { id: "default", label: "Default Order" },
+          { id: "start-asc", label: "Earliest Start" },
+          { id: "end-asc", label: "Earliest End" },
+          { id: "recent-desc", label: "Recently Updated" },
+          { id: "title-asc", label: "Name (A-Z)" },
+        ];
         const activeBacklogFilterOption = backlogFilterOptions.find((option) => option.id === backlogFilterMode) || backlogFilterOptions[0];
         const activeBoardFilterOption = boardFilterOptions.find((option) => option.id === boardFilterMode) || boardFilterOptions[0];
         const activeBacklogSortOption = backlogSortOptions.find((option) => option.id === backlogSortMode) || backlogSortOptions[0];
+        const activeReleaseFilterOption = releaseFilterOptions.find((option) => option.id === releaseFilterMode) || releaseFilterOptions[0];
+        const activeReleaseSortOption = releaseSortOptions.find((option) => option.id === releaseSortMode) || releaseSortOptions[0];
+        const activeReleaseBacklogFilterOption = backlogFilterOptions.find((option) => option.id === releaseBacklogFilterMode) || backlogFilterOptions[0];
+        const activeReleaseBacklogSortOption = backlogSortOptions.find((option) => option.id === releaseBacklogSortMode) || backlogSortOptions[0];
 
         function taskHasStartedThread(task) {
           return Boolean(task?.lastStartedThreadId || (Array.isArray(task?.linkedThreadIds) && task.linkedThreadIds.length > 0));
@@ -25022,10 +25737,10 @@ const html = `<!doctype html>
           if (task?.status === "done" || task?.status === "blocked") {
             return task.status;
           }
-          if (taskHasStartedThread(task)) {
-            return "in_progress";
+          if (task?.status === "in_progress") {
+            return taskHasStartedThread(task) ? "in_progress" : "todo";
           }
-          return task?.status === "backlog" ? "backlog" : "todo";
+          return "todo";
         }
 
         function matchesBacklogFilter(task, filterMode) {
@@ -25092,6 +25807,7 @@ const html = `<!doctype html>
             getPlaygroundTaskTypeLabel(task.taskType),
             agentsById[task.assigneeAgentId || ""]?.name || "",
             environmentsById[task.environmentId || ""]?.name || "",
+            releasesById[task.releaseId || ""]?.name || "",
             sprintsById[task.sprintId || ""]?.name || "",
           ]
             .join(" ")
@@ -25132,30 +25848,30 @@ const html = `<!doctype html>
           return String(left?.id || "").localeCompare(String(right?.id || ""));
         }
 
-        function compareBacklogTaskOrder(left, right) {
+        function compareBacklogTaskOrderWithModes(left, right, sortMode = backlogSortMode, filterMode = backlogFilterMode) {
           const priorityOrder = {
             urgent: 0,
             high: 1,
             medium: 2,
             low: 3,
           };
-          if (backlogSortMode === "default") {
+          if (sortMode === "default") {
             return compareBacklogDefaultTaskOrder(left, right);
           }
-          if (backlogFilterMode === "all") {
+          if (filterMode === "all") {
             const leftIsDone = left.status === "done";
             const rightIsDone = right.status === "done";
             if (leftIsDone !== rightIsDone) {
               return leftIsDone ? 1 : -1;
             }
           }
-          if (backlogSortMode === "title-asc") {
+          if (sortMode === "title-asc") {
             return String(left.title || "").localeCompare(String(right.title || ""));
           }
-          if (backlogSortMode === "created-desc") {
+          if (sortMode === "created-desc") {
             return String(right.createdAt || "").localeCompare(String(left.createdAt || ""));
           }
-          if (backlogSortMode === "priority-desc") {
+          if (sortMode === "priority-desc") {
             const leftPriority = priorityOrder[left.priority] ?? 99;
             const rightPriority = priorityOrder[right.priority] ?? 99;
             if (leftPriority !== rightPriority) {
@@ -25165,11 +25881,83 @@ const html = `<!doctype html>
           return String(right.updatedAt || "").localeCompare(String(left.updatedAt || ""));
         }
 
+        function compareBacklogTaskOrder(left, right) {
+          return compareBacklogTaskOrderWithModes(left, right, backlogSortMode, backlogFilterMode);
+        }
+
+        function compareTaskReleaseOrder(left, right) {
+          if (releaseSortMode === "title-asc") {
+            return String(left.name || "").localeCompare(String(right.name || ""));
+          }
+          if (releaseSortMode === "recent-desc") {
+            return String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || ""));
+          }
+          if (releaseSortMode === "start-asc") {
+            const leftStart = Date.parse(left.startAt || "") || Number.MAX_SAFE_INTEGER;
+            const rightStart = Date.parse(right.startAt || "") || Number.MAX_SAFE_INTEGER;
+            if (leftStart !== rightStart) {
+              return leftStart - rightStart;
+            }
+          }
+          if (releaseSortMode === "end-asc") {
+            const leftEnd = Date.parse(left.endAt || "") || Number.MAX_SAFE_INTEGER;
+            const rightEnd = Date.parse(right.endAt || "") || Number.MAX_SAFE_INTEGER;
+            if (leftEnd !== rightEnd) {
+              return leftEnd - rightEnd;
+            }
+          }
+          const leftSortOrder = Number.isFinite(left?.sortOrder) ? Number(left.sortOrder) : 0;
+          const rightSortOrder = Number.isFinite(right?.sortOrder) ? Number(right.sortOrder) : 0;
+          if (leftSortOrder !== rightSortOrder) {
+            return leftSortOrder - rightSortOrder;
+          }
+          return String(left.name || "").localeCompare(String(right.name || ""));
+        }
+
+        function matchesReleaseFilter(release) {
+          const releaseStatus = getPlaygroundTaskReleaseStatus(release);
+          if (releaseFilterMode === "all") {
+            return true;
+          }
+          if (releaseFilterMode === "active") {
+            return releaseStatus === "active";
+          }
+          if (releaseFilterMode === "planned") {
+            return releaseStatus === "planned";
+          }
+          if (releaseFilterMode === "completed") {
+            return releaseStatus === "completed";
+          }
+          if (releaseFilterMode === "open") {
+            return Number(release?.openTaskCount || 0) > 0;
+          }
+          return true;
+        }
+
+        function matchesReleaseSearch(release) {
+          if (!normalizedSearchQuery) {
+            return true;
+          }
+          const haystack = [
+            release.name || "",
+            release.description || "",
+            getPlaygroundTaskReleaseStatus(release),
+            String(release.taskCount || ""),
+            String(release.openTaskCount || ""),
+          ]
+            .join(" ")
+            .toLowerCase();
+          return haystack.includes(normalizedSearchQuery);
+        }
+
         const projectSearchPlaceholder = useMemo(() => {
+          if (taskView === "backlog" && selectedReleaseId) {
+            return "Search release tasks, ticket numbers, assignees, or environments...";
+          }
           return taskView === "calendar"
             ? "Search tasks, schedules, agents, or environments..."
             : "Search tasks, ticket numbers, assignees, or sprints...";
-        }, [taskView]);
+        }, [selectedReleaseId, taskView]);
 
         const projectSidebarNavItems = useMemo(() => {
           return PLAYGROUND_PROJECT_VIEW_OPTIONS;
@@ -25249,6 +26037,68 @@ const html = `<!doctype html>
             .sort(compareBacklogTaskOrder);
         }, [backlogVisibleTaskIds, backlogFilterMode, backlogSortMode, taskTicketNumbersById, tasks, tasksById]);
 
+        const selectedRelease = useMemo(() => {
+          if (!selectedReleaseId) return null;
+          return releasesById[selectedReleaseId] || null;
+        }, [releasesById, selectedReleaseId]);
+
+        const projectReleaseTasks = useMemo(() => {
+          if (!selectedReleaseId) {
+            return [];
+          }
+          return tasks.filter((task) => task.releaseId === selectedReleaseId);
+        }, [selectedReleaseId, tasks]);
+
+        const projectReleaseTaskIds = useMemo(() => {
+          return new Set(projectReleaseTasks.map((task) => task.id));
+        }, [projectReleaseTasks]);
+
+        const releaseVisibleTaskIds = useMemo(() => {
+          const next = new Set();
+          projectReleaseTasks.forEach((task) => {
+            if (!matchesTaskSearch(task) || !matchesBacklogFilter(task, releaseBacklogFilterMode)) {
+              return;
+            }
+            next.add(task.id);
+          });
+          return next;
+        }, [agentsById, environmentsById, normalizedSearchQuery, projectReleaseTasks, releaseBacklogFilterMode, releasesById, sprintsById, taskTicketNumbersById]);
+
+        const releaseTaskChildrenByParentId = useMemo(() => {
+          const next = {};
+          projectReleaseTasks.forEach((task) => {
+            const parentTaskId = getPlaygroundTaskParentTaskId(task);
+            if (!parentTaskId || !projectReleaseTaskIds.has(parentTaskId)) {
+              return;
+            }
+            if (!next[parentTaskId]) {
+              next[parentTaskId] = [];
+            }
+            next[parentTaskId].push(task);
+          });
+          Object.values(next).forEach((items) => items.sort((left, right) =>
+            compareBacklogTaskOrderWithModes(left, right, releaseBacklogSortMode, releaseBacklogFilterMode)
+          ));
+          return next;
+        }, [projectReleaseTaskIds, projectReleaseTasks, releaseBacklogFilterMode, releaseBacklogSortMode, taskTicketNumbersById]);
+
+        const releaseTaskRoots = useMemo(() => {
+          return projectReleaseTasks
+            .filter((task) => releaseVisibleTaskIds.has(task.id))
+            .filter((task) => {
+              const parentTaskId = getPlaygroundTaskParentTaskId(task);
+              return !parentTaskId || !projectReleaseTaskIds.has(parentTaskId) || !releaseVisibleTaskIds.has(parentTaskId);
+            })
+            .slice()
+            .sort((left, right) => compareBacklogTaskOrderWithModes(left, right, releaseBacklogSortMode, releaseBacklogFilterMode));
+        }, [projectReleaseTaskIds, projectReleaseTasks, releaseBacklogFilterMode, releaseBacklogSortMode, releaseVisibleTaskIds, taskTicketNumbersById]);
+
+        const filteredReleases = useMemo(() => {
+          return [...releases]
+            .filter((release) => matchesReleaseSearch(release) && matchesReleaseFilter(release))
+            .sort(compareTaskReleaseOrder);
+        }, [normalizedSearchQuery, releaseFilterMode, releaseSortMode, releases]);
+
         const allTaskChildrenByParentId = useMemo(() => {
           const next = {};
           tasks.forEach((task) => {
@@ -25320,6 +26170,37 @@ const html = `<!doctype html>
               return String(left.title || "").localeCompare(String(right.title || ""));
             });
         }, [allTaskChildrenByParentId, draftTask?.id, taskTicketNumbersById, tasks]);
+
+        const boardBlockedTaskCandidates = useMemo(() => {
+          const blockedTaskId = String(boardBlockedPickerState?.taskId || "").trim();
+          if (!blockedTaskId) {
+            return [];
+          }
+          const blockedIds = new Set([blockedTaskId]);
+          const stack = [blockedTaskId];
+          while (stack.length > 0) {
+            const currentTaskId = stack.pop();
+            const children = allTaskChildrenByParentId[currentTaskId] || [];
+            children.forEach((childTask) => {
+              if (!childTask?.id || blockedIds.has(childTask.id)) {
+                return;
+              }
+              blockedIds.add(childTask.id);
+              stack.push(childTask.id);
+            });
+          }
+          return tasks
+            .filter((task) => task?.id && !blockedIds.has(task.id) && !isPlaygroundSubtaskRecord(task))
+            .slice()
+            .sort((left, right) => {
+              const leftTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[left.id] || left.ticketNumber);
+              const rightTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[right.id] || right.ticketNumber);
+              if (leftTicketNumber !== rightTicketNumber) {
+                return leftTicketNumber - rightTicketNumber;
+              }
+              return String(left.title || "").localeCompare(String(right.title || ""));
+            });
+        }, [allTaskChildrenByParentId, boardBlockedPickerState?.taskId, taskTicketNumbersById, tasks]);
 
         const selectedScheduleSnapshot = useMemo(() => {
           if (!selectedScheduleId) return null;
@@ -25637,6 +26518,15 @@ const html = `<!doctype html>
           };
         }
 
+        function buildProjectReleaseDraft(projectRecord = selectedProject) {
+          const base = buildPlaygroundDefaultReleaseDraft();
+          return {
+            ...base,
+            projectId: projectRecord?.id || null,
+            sortOrder: releases.length + 1,
+          };
+        }
+
         function getPlaygroundScheduleStatusMeta(schedule) {
           if (!schedule) {
             return {
@@ -25670,8 +26560,18 @@ const html = `<!doctype html>
 
         function clearProjectWorkspace() {
           setTasks([]);
+          setReleases([]);
           setSprints([]);
           setSchedules([]);
+          setSelectedReleaseId("");
+          setReleaseToolbarPopover("");
+          setReleaseBacklogToolbarPopover("");
+          setReleaseComposerOpen(false);
+          setReleaseDraft(buildPlaygroundDefaultReleaseDraft());
+          setReleaseSaveState({
+            isSaving: false,
+            error: "",
+          });
           setSelectedScheduleId("");
           setScheduleViewMode("calendar");
           setScheduleEditorMode("create");
@@ -25715,6 +26615,15 @@ const html = `<!doctype html>
           setBacklogComposerEnvironmentId("");
           setBacklogComposerAgentId(initialAgentId || "");
           setBacklogToolbarPopover("");
+          setReleaseToolbarPopover("");
+          setReleaseBacklogToolbarPopover("");
+          setSelectedReleaseId("");
+          setReleaseComposerOpen(false);
+          setReleaseDraft(buildPlaygroundDefaultReleaseDraft());
+          setReleaseSaveState({
+            isSaving: false,
+            error: "",
+          });
           setSearchQuery("");
           setTaskView("backlog");
           setBoardSprintId(PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID);
@@ -25726,6 +26635,7 @@ const html = `<!doctype html>
             clearProjectWorkspace();
           } else {
             setTasks([]);
+            setReleases([]);
             setSprints([]);
             setSchedules([]);
             setTaskLoadState({
@@ -25802,13 +26712,15 @@ const html = `<!doctype html>
           return normalized;
         }
 
-        function syncProjectSummary(projectId, nextTasks, nextSprints, summarySeed) {
+        function syncProjectSummary(projectId, nextTasks, nextSprints, nextReleases, summarySeed) {
           if (!projectId) return;
           const nextSummary = {
             ...buildEmptyPlaygroundProjectSummary(),
             ...(summarySeed && typeof summarySeed === "object" ? summarySeed : {}),
             tasksCount: nextTasks.length,
             openTasksCount: nextTasks.filter((task) => task.status !== "done").length,
+            releaseCount: nextReleases.length,
+            activeReleaseCount: nextReleases.filter((release) => getPlaygroundTaskReleaseStatus(release) === "active").length,
             sprintCount: nextSprints.length,
             activeSprintCount: nextSprints.filter((sprint) => sprint.status === "active").length,
           };
@@ -26183,12 +27095,16 @@ const html = `<!doctype html>
           }));
 
           try {
-            const [projectResponse, tasksResponse, sprintsResponse] = await Promise.all([
+            const [projectResponse, tasksResponse, releasesResponse, sprintsResponse] = await Promise.all([
               fetch(backendUrl + "/projects/" + encodeURIComponent(projectId), {
                 method: "GET",
                 headers: requestHeaders,
               }),
               fetch(backendUrl + buildProjectScopedPath("/tasks", projectId), {
+                method: "GET",
+                headers: requestHeaders,
+              }),
+              fetch(backendUrl + buildProjectScopedPath("/tasks/releases", projectId), {
                 method: "GET",
                 headers: requestHeaders,
               }),
@@ -26200,18 +27116,21 @@ const html = `<!doctype html>
 
             const projectData = await projectResponse.json().catch(() => ({}));
             const tasksData = await tasksResponse.json().catch(() => ({}));
+            const releasesData = await releasesResponse.json().catch(() => ({}));
             const sprintsData = await sprintsResponse.json().catch(() => ({}));
 
-            if (!projectResponse.ok || !tasksResponse.ok || !sprintsResponse.ok) {
+            if (!projectResponse.ok || !tasksResponse.ok || !releasesResponse.ok || !sprintsResponse.ok) {
               throw new Error(
                 projectData?.message || projectData?.error
                 || tasksData?.message || tasksData?.error
+                || releasesData?.message || releasesData?.error
                 || sprintsData?.message || sprintsData?.error
                 || "Project workspace unavailable."
               );
             }
 
             const nextTasks = parsePlaygroundTaskListResponse(tasksData);
+            const nextReleases = parsePlaygroundTaskReleaseListResponse(releasesData);
             const nextSprints = parsePlaygroundTaskSprintListResponse(sprintsData);
             const projectRecord = getPlaygroundProjectResponseRecord(projectData)
               || selectedProjectSnapshot
@@ -26239,8 +27158,9 @@ const html = `<!doctype html>
             });
 
             setTasks(nextTasks);
+            setReleases(nextReleases);
             setSprints(nextSprints);
-            syncProjectSummary(projectId, nextTasks, nextSprints, nextSummary);
+            syncProjectSummary(projectId, nextTasks, nextSprints, nextReleases, nextSummary);
             setTaskLoadState({
               status: "ready",
               error: "",
@@ -26310,6 +27230,18 @@ const html = `<!doctype html>
         }, [projectComposerOpen, projectIconPickerOpen]);
 
         useEffect(() => {
+          if (!releaseComposerOpen) return undefined;
+
+          function handleReleaseComposerEscape(event) {
+            if (event.key !== "Escape") return;
+            closeReleaseComposer();
+          }
+
+          window.addEventListener("keydown", handleReleaseComposerEscape);
+          return () => window.removeEventListener("keydown", handleReleaseComposerEscape);
+        }, [releaseComposerOpen]);
+
+        useEffect(() => {
           if (!projectSidebarPopover) return undefined;
 
           function handleProjectSidebarPopoverPointerDown(event) {
@@ -26353,6 +27285,36 @@ const html = `<!doctype html>
           document.addEventListener("mousedown", handleBoardToolbarPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handleBoardToolbarPopoverPointerDown);
         }, [boardToolbarPopover]);
+
+        useEffect(() => {
+          if (!releaseToolbarPopover) return undefined;
+
+          function handleReleaseToolbarPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !releaseToolbarActionsRef.current || releaseToolbarActionsRef.current.contains(target)) {
+              return;
+            }
+            setReleaseToolbarPopover("");
+          }
+
+          document.addEventListener("mousedown", handleReleaseToolbarPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleReleaseToolbarPopoverPointerDown);
+        }, [releaseToolbarPopover]);
+
+        useEffect(() => {
+          if (!releaseBacklogToolbarPopover) return undefined;
+
+          function handleReleaseBacklogToolbarPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !releaseBacklogToolbarActionsRef.current || releaseBacklogToolbarActionsRef.current.contains(target)) {
+              return;
+            }
+            setReleaseBacklogToolbarPopover("");
+          }
+
+          document.addEventListener("mousedown", handleReleaseBacklogToolbarPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleReleaseBacklogToolbarPopoverPointerDown);
+        }, [releaseBacklogToolbarPopover]);
 
         useEffect(() => {
           if (!taskDetailPopover) return undefined;
@@ -26468,6 +27430,13 @@ const html = `<!doctype html>
         }, [taskView]);
 
         useEffect(() => {
+          if (taskView !== "releases") {
+            setReleaseToolbarPopover("");
+            setReleaseBacklogToolbarPopover("");
+          }
+        }, [taskView]);
+
+        useEffect(() => {
           if (taskView === "calendar") {
             return;
           }
@@ -26533,6 +27502,12 @@ const html = `<!doctype html>
           setScheduleViewMode("calendar");
           setScheduleEditorMode("create");
         }, [schedulesById, selectedScheduleId]);
+
+        useEffect(() => {
+          if (!selectedReleaseId) return;
+          if (releasesById[selectedReleaseId]) return;
+          setSelectedReleaseId("");
+        }, [releasesById, selectedReleaseId]);
 
         useEffect(() => {
           if (!selectedProjectId || tasks.length === 0) {
@@ -26648,6 +27623,21 @@ const html = `<!doctype html>
           setBacklogDraggingTaskId("");
           setBacklogDropTargetKey("");
         }, [backlogFilterMode, backlogSortMode, normalizedSearchQuery, selectedProjectId]);
+
+        useEffect(() => {
+          setBoardDraggingTaskId("");
+          setBoardDropLaneId("");
+          setBoardBlockedPickerState(null);
+        }, [boardFilterMode, normalizedSearchQuery, selectedProjectId]);
+
+        useEffect(() => {
+          if (!boardBlockedPickerState?.taskId) {
+            return;
+          }
+          if (!tasksById[boardBlockedPickerState.taskId]) {
+            setBoardBlockedPickerState(null);
+          }
+        }, [boardBlockedPickerState?.taskId, tasksById]);
 
         useEffect(() => {
           if (!taskEnvironmentFilePickerOpen) {
@@ -26893,7 +27883,7 @@ const html = `<!doctype html>
         ]);
 
         useEffect(() => {
-          if (!taskEnvironmentFilePickerOpen && !taskEnvironmentChangeDialog && !taskScheduleDialogState && !taskConnectorBrowserOpen && !taskParentPickerState) {
+          if (!taskEnvironmentFilePickerOpen && !taskEnvironmentChangeDialog && !taskScheduleDialogState && !taskConnectorBrowserOpen && !taskParentPickerState && !boardBlockedPickerState) {
             return undefined;
           }
 
@@ -26917,11 +27907,17 @@ const html = `<!doctype html>
             if (taskParentPickerState) {
               setTaskParentPickerState(null);
             }
+            if (boardBlockedPickerState?.isSubmitting) {
+              return;
+            }
+            if (boardBlockedPickerState) {
+              setBoardBlockedPickerState(null);
+            }
           }
 
           window.addEventListener("keydown", handleTaskOverlayEscape);
           return () => window.removeEventListener("keydown", handleTaskOverlayEscape);
-        }, [taskConnectorBrowserOpen, taskEnvironmentChangeDialog, taskEnvironmentFilePickerOpen, taskParentPickerState, taskScheduleDialogState]);
+        }, [boardBlockedPickerState, taskConnectorBrowserOpen, taskEnvironmentChangeDialog, taskEnvironmentFilePickerOpen, taskParentPickerState, taskScheduleDialogState]);
 
         useEffect(() => {
           if (!taskScheduleDialogState) {
@@ -27139,7 +28135,7 @@ const html = `<!doctype html>
             return nextTasks;
           });
 
-          syncProjectSummary(selectedProjectId, nextTasks, sprints, selectedProjectSummary);
+          syncProjectSummary(selectedProjectId, nextTasks, sprints, releases, selectedProjectSummary);
 
           const selectedUpdatedTask = updatesById[selectedTaskIdRef.current];
           if (selectedUpdatedTask) {
@@ -27163,6 +28159,144 @@ const html = `<!doctype html>
         function clearBacklogDragState() {
           setBacklogDraggingTaskId("");
           setBacklogDropTargetKey("");
+        }
+
+        function clearBoardDragState() {
+          setBoardDraggingTaskId("");
+          setBoardDropLaneId("");
+        }
+
+        function getBoardTaskAllowedDropLaneIds(taskRecord) {
+          const boardStatus = getTaskBoardStatus(taskRecord);
+          if (boardStatus === "todo") {
+            return ["in_progress", "blocked"];
+          }
+          if (boardStatus === "blocked") {
+            return ["todo"];
+          }
+          return [];
+        }
+
+        function canDropTaskOnBoardLane(taskRecord, laneId) {
+          return getBoardTaskAllowedDropLaneIds(taskRecord).includes(String(laneId || "").trim());
+        }
+
+        function openBoardBlockedPicker(taskRecord) {
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const taskId = String(normalizedTask.id || "").trim();
+          if (!taskId) {
+            return;
+          }
+          setBoardBlockedPickerState({
+            taskId,
+            taskTitle: normalizedTask.title || "Untitled Task",
+            ticketNumber: taskTicketNumbersById[taskId] || normalizedTask.ticketNumber || "000",
+            isSubmitting: false,
+            error: "",
+          });
+        }
+
+        async function moveTaskToTodoFromBlocked(taskRecord) {
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          if (!normalizedTask?.id) {
+            return;
+          }
+
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const updatedTask = await patchTaskRecord(normalizedTask, {
+              status: "todo",
+              dependencyIds: [],
+              completedAt: null,
+            });
+            commitLocalTaskRecord(updatedTask, {
+              selectTask: selectedTaskIdRef.current === updatedTask.id,
+            });
+            resetSaveState("Task moved to To do");
+          } catch (error) {
+            setSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to move task.",
+              message: "",
+            });
+          }
+        }
+
+        async function handleBoardBlockedDependencySelection(blockedByTaskId) {
+          const dialogState = boardBlockedPickerState;
+          const draggedTask = dialogState?.taskId ? tasksById[dialogState.taskId] || null : null;
+          const normalizedBlockedByTaskId = String(blockedByTaskId || "").trim();
+          if (!dialogState?.taskId || !draggedTask || !normalizedBlockedByTaskId || dialogState.isSubmitting) {
+            return;
+          }
+
+          setBoardBlockedPickerState({
+            ...dialogState,
+            isSubmitting: true,
+            error: "",
+          });
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const updatedTask = await patchTaskRecord(draggedTask, {
+              status: "blocked",
+              dependencyIds: [normalizedBlockedByTaskId],
+              completedAt: null,
+            });
+            commitLocalTaskRecord(updatedTask, {
+              selectTask: selectedTaskIdRef.current === updatedTask.id,
+            });
+            setBoardBlockedPickerState(null);
+            resetSaveState("Task moved to Blocked");
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to update blocked task.";
+            setSaveState({
+              isSaving: false,
+              error: message,
+              message: "",
+            });
+            setBoardBlockedPickerState((current) => current && current.taskId === dialogState.taskId
+              ? {
+                  ...current,
+                  isSubmitting: false,
+                  error: message,
+                }
+              : current
+            );
+          }
+        }
+
+        async function handleBoardLaneMove(taskRecord, targetLaneId) {
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const normalizedTargetLaneId = String(targetLaneId || "").trim();
+          if (!normalizedTask?.id || !normalizedTargetLaneId || !canDropTaskOnBoardLane(normalizedTask, normalizedTargetLaneId)) {
+            return;
+          }
+
+          clearBoardDragState();
+
+          if (normalizedTargetLaneId === "in_progress") {
+            await handleStartTaskThread(normalizedTask);
+            return;
+          }
+
+          if (normalizedTargetLaneId === "blocked") {
+            openBoardBlockedPicker(normalizedTask);
+            return;
+          }
+
+          if (normalizedTargetLaneId === "todo") {
+            await moveTaskToTodoFromBlocked(normalizedTask);
+          }
         }
 
         function getBacklogManualOrderDropTargetKey(parentTaskId, insertIndex) {
@@ -27652,7 +28786,7 @@ const html = `<!doctype html>
             return nextTasks;
           });
 
-          syncProjectSummary(normalized.projectId || selectedProjectId, nextTasks, sprints, selectedProjectSummary);
+          syncProjectSummary(normalized.projectId || selectedProjectId, nextTasks, sprints, releases, selectedProjectSummary);
           if (shouldSelectTask) {
             setSelectedTaskId(normalized.id);
             if (shouldSyncDraft) {
@@ -27709,7 +28843,7 @@ const html = `<!doctype html>
             return nextSprints;
           });
 
-          syncProjectSummary(normalized.projectId || selectedProjectId, tasks, nextSprints, selectedProjectSummary);
+          syncProjectSummary(normalized.projectId || selectedProjectId, tasks, nextSprints, releases, selectedProjectSummary);
           return normalized;
         }
 
@@ -27730,6 +28864,7 @@ const html = `<!doctype html>
 
           return {
             projectId: mergedTask.projectId || selectedProjectId,
+            releaseId: mergedTask.releaseId,
             ticketNumber: mergedTask.ticketNumber,
             type: mergedTask.taskType,
             parentTaskId: mergedTask.taskType === "subtask" ? mergedTask.parentTaskId : null,
@@ -27982,6 +29117,108 @@ const html = `<!doctype html>
             }
           } catch (error) {
             window.alert(error instanceof Error ? error.message : "Failed to delete project.");
+          }
+        }
+
+        function openReleaseComposer() {
+          setReleaseDraft(buildProjectReleaseDraft(selectedProject));
+          setReleaseSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setBacklogToolbarPopover("");
+          setProjectSidebarPopover("");
+          setReleaseComposerOpen(true);
+        }
+
+        function closeReleaseComposer() {
+          setReleaseComposerOpen(false);
+          setReleaseDraft(buildPlaygroundDefaultReleaseDraft());
+          setReleaseSaveState({
+            isSaving: false,
+            error: "",
+          });
+        }
+
+        function handleSelectRelease(releaseId) {
+          const normalizedReleaseId = String(releaseId || "").trim();
+          if (!normalizedReleaseId) {
+            setSelectedReleaseId("");
+            setSelectedTaskId("");
+            setDraftTask(null);
+            return;
+          }
+          setSelectedReleaseId(normalizedReleaseId);
+          setSelectedTaskId("");
+          setDraftTask(null);
+          setBacklogToolbarPopover("");
+          setReleaseBacklogToolbarPopover("");
+        }
+
+        async function handleCreateRelease(event) {
+          event?.preventDefault?.();
+          if (!selectedProjectId) {
+            return;
+          }
+
+          const nextName = String(releaseDraft.name || "").trim().replace(/\\s+/g, " ");
+          if (!nextName) {
+            return;
+          }
+
+          const nextStartAt = fromPlaygroundDateInputValue(releaseDraft.startAt);
+          const nextEndAt = fromPlaygroundDateInputValue(releaseDraft.endAt, { endOfDay: true });
+          if (nextStartAt && nextEndAt && Date.parse(nextEndAt) < Date.parse(nextStartAt)) {
+            setReleaseSaveState({
+              isSaving: false,
+              error: "End date must be on or after the start date.",
+            });
+            return;
+          }
+
+          setReleaseSaveState({
+            isSaving: true,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(backendUrl + "/tasks/releases", {
+              method: "POST",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                projectId: selectedProjectId,
+                name: nextName,
+                description: typeof releaseDraft.description === "string" ? releaseDraft.description : "",
+                startAt: nextStartAt,
+                endAt: nextEndAt,
+                sortOrder: releases.length + 1,
+              }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create release.");
+            }
+
+            const createdRelease = getPlaygroundTaskReleaseResponseRecord(data);
+            if (!createdRelease?.id) {
+              throw new Error("Release creation failed.");
+            }
+
+            setReleases((current) => current.concat(createdRelease));
+            syncProjectSummary(selectedProjectId, tasks, sprints, releases.concat(createdRelease), selectedProjectSummary);
+            setTaskView("backlog");
+            setSelectedReleaseId(createdRelease.id);
+            setSelectedTaskId("");
+            setDraftTask(null);
+            closeReleaseComposer();
+          } catch (error) {
+            setReleaseSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create release.",
+            });
           }
         }
 
@@ -28311,7 +29548,7 @@ const html = `<!doctype html>
             return;
           }
 
-          const nextStatus = task.status === "done" ? "backlog" : "done";
+          const nextStatus = task.status === "done" ? "todo" : "done";
           const optimisticTask = normalizePlaygroundTaskRecord({
             ...task,
             status: nextStatus,
@@ -29898,6 +31135,70 @@ const html = `<!doctype html>
           );
         }
 
+        function renderBoardBlockedPickerDialog() {
+          if (!boardBlockedPickerState) {
+            return null;
+          }
+
+          return React.createElement("div", {
+              className: "playground-tasks-confirm-scrim playground-tasks-parent-picker-scrim",
+              onClick: () => {
+                if (!boardBlockedPickerState.isSubmitting) {
+                  setBoardBlockedPickerState(null);
+                }
+              },
+            },
+            React.createElement("div", {
+              className: "playground-tasks-confirm-dialog playground-tasks-parent-picker-dialog",
+              onClick: (event) => event.stopPropagation(),
+            },
+              React.createElement("div", { className: "playground-tasks-confirm-title" },
+                "Block " + boardBlockedPickerState.ticketNumber + " by which ticket?"
+              ),
+              React.createElement("div", { className: "playground-tasks-confirm-copy" },
+                "Choose the ticket that needs to be completed before ",
+                React.createElement("strong", null, boardBlockedPickerState.ticketNumber + " " + boardBlockedPickerState.taskTitle),
+                "."
+              ),
+              boardBlockedPickerState.error
+                ? React.createElement("div", { className: "playground-environments-error" }, boardBlockedPickerState.error)
+                : null,
+              boardBlockedTaskCandidates.length > 0
+                ? React.createElement("div", { className: "playground-tasks-parent-picker-list" },
+                    boardBlockedTaskCandidates.map((task) => {
+                      const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "000";
+                      return React.createElement("button", {
+                          key: task.id,
+                          type: "button",
+                          className: "playground-tasks-parent-picker-row",
+                          disabled: boardBlockedPickerState.isSubmitting,
+                          onClick: () => void handleBoardBlockedDependencySelection(task.id),
+                        },
+                          React.createElement("div", { className: "playground-tasks-parent-picker-row-main" },
+                            React.createElement("div", { className: "playground-tasks-parent-picker-row-title" }, task.title || "Untitled Task"),
+                            React.createElement("div", { className: "playground-tasks-parent-picker-row-copy" },
+                              getPlaygroundTaskStatusLabel(getTaskBoardStatus(task))
+                            )
+                          ),
+                          React.createElement("span", { className: "playground-tasks-parent-picker-row-ticket" }, taskTicketNumber)
+                        );
+                    })
+                  )
+                : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                    "Create another ticket first, then you can block this task from the board."
+                  ),
+              React.createElement("div", { className: "playground-tasks-confirm-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button is-secondary",
+                  onClick: () => setBoardBlockedPickerState(null),
+                  disabled: boardBlockedPickerState.isSubmitting,
+                }, "Cancel")
+              )
+            )
+          );
+        }
+
         function renderTaskEnvironmentChangeDialog() {
           if (!taskEnvironmentChangeDialog) {
             return null;
@@ -30277,6 +31578,98 @@ const html = `<!doctype html>
             );
         }
 
+        function renderReleaseComposerDialog() {
+          if (!releaseComposerOpen) {
+            return null;
+          }
+
+          return React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop",
+              onClick: () => closeReleaseComposer(),
+            },
+              React.createElement("form", {
+                  className: "playground-tasks-release-modal",
+                  onClick: (event) => event.stopPropagation(),
+                  onSubmit: (event) => void handleCreateRelease(event),
+                },
+                React.createElement("div", { className: "playground-tasks-release-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-release-modal-title-block" },
+                    React.createElement("div", { className: "playground-tasks-release-modal-title" }, "New Release"),
+                    React.createElement("div", { className: "playground-tasks-release-modal-copy" }, "Group project tickets into a milestone release.")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => closeReleaseComposer(),
+                    title: "Close",
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("label", { className: "playground-tasks-release-modal-field" },
+                  React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Name"),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-tasks-release-modal-input",
+                    value: releaseDraft.name,
+                    placeholder: "Release version",
+                    autoFocus: true,
+                    onChange: (event) => setReleaseDraft((current) => ({ ...current, name: event.target.value })),
+                  })
+                ),
+                React.createElement("div", { className: "playground-tasks-release-modal-date-row" },
+                  React.createElement("label", { className: "playground-tasks-release-modal-field" },
+                    React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Start date"),
+                    React.createElement("input", {
+                      type: "date",
+                      className: "playground-tasks-release-modal-input",
+                      value: toPlaygroundDateInputValue(releaseDraft.startAt),
+                      onChange: (event) => setReleaseDraft((current) => ({
+                        ...current,
+                        startAt: fromPlaygroundDateInputValue(event.target.value),
+                      })),
+                    })
+                  ),
+                  React.createElement("label", { className: "playground-tasks-release-modal-field" },
+                    React.createElement("span", { className: "playground-tasks-project-modal-label" }, "End date"),
+                    React.createElement("input", {
+                      type: "date",
+                      className: "playground-tasks-release-modal-input",
+                      value: toPlaygroundDateInputValue(releaseDraft.endAt),
+                      onChange: (event) => setReleaseDraft((current) => ({
+                        ...current,
+                        endAt: fromPlaygroundDateInputValue(event.target.value, { endOfDay: true }),
+                      })),
+                    })
+                  )
+                ),
+                React.createElement("label", { className: "playground-tasks-release-modal-field" },
+                  React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Description"),
+                  React.createElement("textarea", {
+                    className: "playground-tasks-project-modal-textarea playground-tasks-release-modal-textarea",
+                    rows: 5,
+                    value: releaseDraft.description,
+                    placeholder: "Optional milestone details for this release.",
+                    onChange: (event) => setReleaseDraft((current) => ({ ...current, description: event.target.value })),
+                  })
+                ),
+                releaseSaveState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, releaseSaveState.error)
+                  : null,
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => closeReleaseComposer(),
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: releaseSaveState.isSaving || !String(releaseDraft.name || "").trim(),
+                  }, releaseSaveState.isSaving ? "Creating..." : "Create Release")
+                )
+              )
+            );
+        }
+
         function renderProjectLanding() {
           if (projectLoadState.status === "loading" && projects.length === 0) {
             return React.createElement("div", { className: "playground-tasks-loading-state" },
@@ -30380,36 +31773,83 @@ const html = `<!doctype html>
           );
         }
 
-        function renderBacklogView() {
-          const isBacklogManualSort = backlogSortMode === "default";
+        function renderBacklogTaskListView({
+          headerContent,
+          toolbarRef,
+          toolbarPopover,
+          setToolbarPopover,
+          filterMode,
+          setFilterMode,
+          activeFilterOption,
+          sortMode,
+          setSortMode,
+          activeSortOption,
+          taskRoots,
+          visibleTaskIds,
+          childrenByParentId,
+          emptyTitle,
+          emptyCopy,
+          showComposer = false,
+          composer = null,
+          allowManualDrag = true,
+          extraToolbarContent = null,
+          groupRootTasksByRelease = false,
+        }) {
+          const isBacklogManualSort = allowManualDrag && sortMode === "default";
           const draggingBacklogTask = backlogDraggingTaskId ? tasksById[backlogDraggingTaskId] || null : null;
-          const backlogEmptyTitle = normalizedSearchQuery
-            ? "No matching backlog tasks"
-            : backlogFilterMode === "tasks"
-              ? "No tasks yet"
-            : backlogFilterMode === "subtasks"
-              ? "No subtasks yet"
-            : backlogFilterMode === "all"
-              ? "No tasks yet"
-            : backlogFilterMode === "done"
-              ? "No completed tasks"
-              : "Backlog is empty";
-          const backlogEmptyCopy = normalizedSearchQuery
-            ? "Clear the project search or add a new task below."
-            : backlogFilterMode === "tasks"
-              ? "Top-level tasks for this project will appear here."
-            : backlogFilterMode === "subtasks"
-              ? "Subtasks will appear here below the tasks they belong to."
-            : backlogFilterMode === "all"
-              ? "Open and completed project tasks will appear here."
-            : backlogFilterMode === "done"
-              ? "Completed work from this project will appear here."
-              : "Add a new task below to start building this project's backlog.";
-          const backlogComposerBackendUrl = window.location.origin + "/api/task-backlog/" + encodeURIComponent(selectedProjectId);
 
           function renderBacklogTaskTree(taskItems, parentTaskId = null, depth = 0) {
             if (!Array.isArray(taskItems) || taskItems.length === 0) {
               return null;
+            }
+
+            if (!parentTaskId && depth === 0 && groupRootTasksByRelease) {
+              const releaseSections = [];
+              const sectionIndexByKey = new Map();
+              taskItems.forEach((task) => {
+                const normalizedReleaseId = typeof task?.releaseId === "string" ? task.releaseId.trim() : "";
+                const sectionKey = normalizedReleaseId || "__no_release__";
+                const releaseRecord = normalizedReleaseId ? (releasesById[normalizedReleaseId] || null) : null;
+                const sectionTitle = normalizedReleaseId
+                  ? (releaseRecord?.name || "Release unavailable")
+                  : "All other";
+                const sectionCopy = normalizedReleaseId
+                  ? (releaseRecord?.description || "")
+                  : "All tasks, that are not assigned to any release";
+                let sectionIndex = sectionIndexByKey.get(sectionKey);
+                if (sectionIndex === undefined) {
+                  sectionIndex = releaseSections.length;
+                  sectionIndexByKey.set(sectionKey, sectionIndex);
+                  releaseSections.push({
+                    key: sectionKey,
+                    title: sectionTitle,
+                    copy: sectionCopy,
+                    tasks: [],
+                  });
+                }
+                releaseSections[sectionIndex].tasks.push(task);
+              });
+
+              return React.createElement(React.Fragment, null,
+                releaseSections.map((section) =>
+                  React.createElement("div", {
+                      key: section.key,
+                      className: "playground-tasks-backlog-section",
+                    },
+                    React.createElement("div", { className: "playground-tasks-backlog-section-header" },
+                      React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
+                      section.copy
+                        ? React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, section.copy)
+                        : null
+                    ),
+                    section.tasks.map((task, siblingIndex) =>
+                      React.createElement(React.Fragment, { key: task.id },
+                        renderBacklogTaskRow(task, depth, null, section.tasks, siblingIndex)
+                      )
+                    )
+                  )
+                )
+              );
             }
 
             return React.createElement(React.Fragment, null,
@@ -30438,7 +31878,7 @@ const html = `<!doctype html>
                       ? " is-done"
                       : "");
             const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
-            const visibleChildTasks = (taskChildrenByParentId[task.id] || []).filter((childTask) => backlogVisibleTaskIds.has(childTask.id));
+            const visibleChildTasks = (childrenByParentId[task.id] || []).filter((childTask) => visibleTaskIds.has(childTask.id));
             const isSubtask = isPlaygroundSubtaskRecord(task);
             const isTitleEditable = selectedTaskId === task.id || backlogEditingTaskId === task.id;
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
@@ -30448,10 +31888,13 @@ const html = `<!doctype html>
               || (draggingBacklogTask?.id && isPlaygroundSubtaskRecord(draggingBacklogTask) && canBacklogTaskMoveToParentTask(draggingBacklogTask, normalizedParentTaskId));
             const beforeDropTargetKey = getBacklogManualOrderDropTargetKey(normalizedParentTaskId, siblingIndex);
             const afterDropTargetKey = getBacklogManualOrderDropTargetKey(normalizedParentTaskId, siblingIndex + 1);
-            const isDropBefore = backlogDropTargetKey === beforeDropTargetKey
+            const isDropBefore = isBacklogManualSort
+              && backlogDropTargetKey === beforeDropTargetKey
               && siblingIndex === 0
               && backlogDraggingTaskId !== task.id;
-            const isDropAfter = backlogDropTargetKey === afterDropTargetKey && backlogDraggingTaskId !== task.id;
+            const isDropAfter = isBacklogManualSort
+              && backlogDropTargetKey === afterDropTargetKey
+              && backlogDraggingTaskId !== task.id;
 
             function resolveRowDropTarget(event) {
               if (!isBacklogManualSort || !draggingBacklogTask?.id || !canDropOnThisLevel) {
@@ -30624,36 +32067,39 @@ const html = `<!doctype html>
 
           return React.createElement("div", { className: "playground-tasks-backlog-view" },
             React.createElement("div", { className: "playground-tasks-backlog-header" },
-              React.createElement("div", { className: "playground-tasks-backlog-heading" }, "Backlog"),
+              headerContent,
               React.createElement("div", {
                   className: "playground-files-control-row playground-tasks-backlog-control-row",
-                  ref: backlogToolbarActionsRef,
+                  ref: toolbarRef,
                 },
                 React.createElement("div", { className: "playground-files-control-actions" },
-                  React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-files-control-button" + (backlogToolbarPopover === "filter" || backlogFilterMode !== "open" ? " is-active" : ""),
-                      onClick: () => setBacklogToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                      className: "playground-files-control-button" + (toolbarPopover === "filter" || filterMode !== "open" && filterMode !== "all" ? " is-active" : ""),
+                      onClick: () => setToolbarPopover((current) => current === "filter" ? "" : "filter"),
                     },
                       React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
                       React.createElement("span", null, "Filter")
                     ),
-                    backlogToolbarPopover === "filter"
-                      ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                          React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeBacklogFilterOption.label),
+                    toolbarPopover === "filter"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
                           backlogFilterOptions.map((option) =>
                             React.createElement("button", {
                                 key: option.id,
                                 type: "button",
-                                className: "playground-files-toolbar-menu-item" + (backlogFilterMode === option.id ? " is-active" : ""),
+                                className: "tb-popup-row tb-popup-row-select" + (filterMode === option.id ? " selected" : ""),
                                 onClick: () => {
-                                  setBacklogFilterMode(option.id);
-                                  setBacklogToolbarPopover("");
+                                  setFilterMode(option.id);
+                                  setToolbarPopover("");
                                 },
                               },
-                                React.createElement("span", { className: "playground-files-toolbar-menu-check" }, backlogFilterMode === option.id ? "•" : ""),
-                                React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                React.createElement("span", { className: "tb-popup-check-slot" },
+                                  filterMode === option.id
+                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                    : null
+                                ),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                                   React.createElement("span", null, option.label),
                                   React.createElement("span", null, option.description)
                                 )
@@ -30662,80 +32108,227 @@ const html = `<!doctype html>
                         )
                       : null
                   ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-files-control-button" + (backlogToolbarPopover === "sort" || backlogSortMode !== "default" ? " is-active" : ""),
-                      onClick: () => setBacklogToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                      className: "playground-files-control-button" + (toolbarPopover === "sort" || sortMode !== "default" ? " is-active" : ""),
+                      onClick: () => setToolbarPopover((current) => current === "sort" ? "" : "sort"),
                     },
                       React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
                       React.createElement("span", null, "Sort")
                     ),
-                    backlogToolbarPopover === "sort"
-                      ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                          React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeBacklogSortOption.label),
+                    toolbarPopover === "sort"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
                           backlogSortOptions.map((option) =>
                             React.createElement("button", {
                                 key: option.id,
                                 type: "button",
-                                className: "playground-files-toolbar-menu-item" + (backlogSortMode === option.id ? " is-active" : ""),
+                                className: "tb-popup-row tb-popup-row-select" + (sortMode === option.id ? " selected" : ""),
                                 onClick: () => {
-                                  setBacklogSortMode(option.id);
-                                  setBacklogToolbarPopover("");
+                                  setSortMode(option.id);
+                                  setToolbarPopover("");
                                 },
                               },
-                                React.createElement("span", { className: "playground-files-toolbar-menu-check" }, backlogSortMode === option.id ? "•" : ""),
-                                React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                React.createElement("span", { className: "tb-popup-check-slot" },
+                                  sortMode === option.id
+                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                    : null
+                                ),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                                   React.createElement("span", null, option.label)
                                 )
                               )
                           )
                         )
                       : null
-                  )
+                  ),
+                  extraToolbarContent
                 )
               )
             ),
             React.createElement("div", { className: "playground-tasks-backlog-list" },
-              backlogTaskRoots.length > 0
-                ? renderBacklogTaskTree(backlogTaskRoots, null, 0)
+              taskRoots.length > 0
+                ? renderBacklogTaskTree(taskRoots, null, 0)
                 : React.createElement("div", { className: "playground-tasks-empty playground-tasks-backlog-empty" },
-                    React.createElement("div", { className: "playground-tasks-empty-title" }, backlogEmptyTitle),
-                    React.createElement("div", { className: "playground-tasks-empty-copy" }, backlogEmptyCopy)
+                    React.createElement("div", { className: "playground-tasks-empty-title" }, emptyTitle),
+                    React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy)
                   )
             ),
-            React.createElement("div", {
-              className: "playground-tasks-backlog-composer-shell",
-            },
-              React.createElement(RunnerChat, {
-                key: selectedProjectId + ":" + backlogComposerKey,
-                className: "playground-tasks-backlog-runner",
-                backendUrl: backlogComposerBackendUrl,
-                apiKey: apiKey,
-                fetchCustomSkills: fetchProjectCustomSkills,
-                speechToTextUrl: speechToTextUrl || undefined,
-                requestHeaders,
-                appId: "runner-web-sdk-demo",
-                inputMode: "computer-agents",
-                computerAgents: computerAgents,
-                environments: backlogComposerEnvironments,
-                agents: backlogComposerAgents,
-                skills: skills,
-                environmentId: backlogComposerEnvironmentId || undefined,
-                agentId: backlogComposerAgentId || undefined,
-                autoFocusComposer: true,
-                keepFocusOnSubmit: true,
-                enableBacklogSubtaskCommand: true,
-                backlogSubtaskCommand: backlogComposerSubtaskCommandRequest,
-                showUsageInStatus: false,
-                placeholder: "Add a new task",
-                onRunStart: handleBacklogComposerRunStart,
-                onRunFinish: handleBacklogComposerRunFinish,
-                onAgentChange: (nextAgentId) => setBacklogComposerAgentId(nextAgentId),
-                onEnvironmentChange: (nextEnvironmentId) => setBacklogComposerEnvironmentId(nextEnvironmentId),
-              })
-            )
+            showComposer ? composer : null
           );
+        }
+
+        function renderBacklogView() {
+          const isReleaseBacklogView = Boolean(selectedRelease);
+          const activeBacklogFilterValue = isReleaseBacklogView ? releaseBacklogFilterMode : backlogFilterMode;
+          const activeBacklogSortValue = isReleaseBacklogView ? releaseBacklogSortMode : backlogSortMode;
+          const activeBacklogFilterOptionValue = isReleaseBacklogView ? activeReleaseBacklogFilterOption : activeBacklogFilterOption;
+          const activeBacklogSortOptionValue = isReleaseBacklogView ? activeReleaseBacklogSortOption : activeBacklogSortOption;
+          const activeTaskRoots = isReleaseBacklogView ? releaseTaskRoots : backlogTaskRoots;
+          const activeVisibleTaskIds = isReleaseBacklogView ? releaseVisibleTaskIds : backlogVisibleTaskIds;
+          const activeChildrenByParentId = isReleaseBacklogView ? releaseTaskChildrenByParentId : taskChildrenByParentId;
+          const backlogEmptyTitle = normalizedSearchQuery
+            ? (isReleaseBacklogView ? "No matching release tasks" : "No matching backlog tasks")
+            : activeBacklogFilterValue === "tasks"
+              ? "No tasks yet"
+              : activeBacklogFilterValue === "subtasks"
+                ? "No subtasks yet"
+                : activeBacklogFilterValue === "all"
+                  ? "No tasks yet"
+                  : activeBacklogFilterValue === "done"
+                    ? "No completed tasks"
+                    : isReleaseBacklogView
+                      ? "Release backlog is empty"
+                      : "Backlog is empty";
+          const backlogEmptyCopy = normalizedSearchQuery
+            ? (isReleaseBacklogView
+                ? "Clear the search or assign more tickets to this release."
+                : "Clear the project search or add a new task below.")
+            : activeBacklogFilterValue === "tasks"
+              ? "Top-level tasks for this project will appear here."
+              : activeBacklogFilterValue === "subtasks"
+                ? "Subtasks will appear here below the tasks they belong to."
+                : activeBacklogFilterValue === "all"
+                  ? (isReleaseBacklogView
+                      ? "Open and completed work from this release will appear here."
+                      : "Open and completed project tasks will appear here.")
+                  : activeBacklogFilterValue === "done"
+                    ? (isReleaseBacklogView
+                        ? "Completed work for this release will appear here."
+                        : "Completed work from this project will appear here.")
+                    : isReleaseBacklogView
+                      ? "Assign tickets to this release from the ticket details panel and they will appear here."
+                      : "Add a new task below to start building this project's backlog.";
+          const backlogComposerBackendUrl = window.location.origin
+            + "/api/task-backlog/" + encodeURIComponent(selectedProjectId)
+            + (selectedReleaseId ? ("/releases/" + encodeURIComponent(selectedReleaseId)) : "");
+          const sortedReleaseOptions = releases.slice().sort(compareTaskReleaseOrder);
+
+          return renderBacklogTaskListView({
+            headerContent: isReleaseBacklogView
+              ? React.createElement("div", { className: "playground-tasks-release-backlog-header-main" },
+                  React.createElement("div", { className: "playground-tasks-backlog-heading" }, selectedRelease.name || "Release"),
+                  selectedRelease.description
+                    ? React.createElement("div", { className: "playground-tasks-release-backlog-copy" }, selectedRelease.description)
+                    : null
+                )
+              : React.createElement("div", { className: "playground-tasks-backlog-heading" }, "Backlog"),
+            toolbarRef: backlogToolbarActionsRef,
+            toolbarPopover: backlogToolbarPopover,
+            setToolbarPopover: setBacklogToolbarPopover,
+            filterMode: activeBacklogFilterValue,
+            setFilterMode: isReleaseBacklogView ? setReleaseBacklogFilterMode : setBacklogFilterMode,
+            activeFilterOption: activeBacklogFilterOptionValue,
+            sortMode: activeBacklogSortValue,
+            setSortMode: isReleaseBacklogView ? setReleaseBacklogSortMode : setBacklogSortMode,
+            activeSortOption: activeBacklogSortOptionValue,
+            taskRoots: activeTaskRoots,
+            visibleTaskIds: activeVisibleTaskIds,
+            childrenByParentId: activeChildrenByParentId,
+            emptyTitle: backlogEmptyTitle,
+            emptyCopy: backlogEmptyCopy,
+            allowManualDrag: !isReleaseBacklogView,
+            groupRootTasksByRelease: !isReleaseBacklogView,
+            showComposer: true,
+            composer: React.createElement("div", {
+                className: "playground-tasks-backlog-composer-shell",
+              },
+                React.createElement(RunnerChat, {
+                  key: selectedProjectId + ":" + (selectedReleaseId || "__all__") + ":" + backlogComposerKey,
+                  className: "playground-tasks-backlog-runner",
+                  backendUrl: backlogComposerBackendUrl,
+                  apiKey: apiKey,
+                  fetchCustomSkills: fetchProjectCustomSkills,
+                  speechToTextUrl: speechToTextUrl || undefined,
+                  requestHeaders,
+                  appId: "runner-web-sdk-demo",
+                  inputMode: "computer-agents",
+                  computerAgents: computerAgents,
+                  environments: backlogComposerEnvironments,
+                  agents: backlogComposerAgents,
+                  skills: skills,
+                  environmentId: backlogComposerEnvironmentId || undefined,
+                  agentId: backlogComposerAgentId || undefined,
+                  autoFocusComposer: true,
+                  keepFocusOnSubmit: true,
+                  enableBacklogSubtaskCommand: true,
+                  backlogSubtaskCommand: backlogComposerSubtaskCommandRequest,
+                  showUsageInStatus: false,
+                  placeholder: "Add a new task",
+                  onRunStart: handleBacklogComposerRunStart,
+                  onRunFinish: handleBacklogComposerRunFinish,
+                  onAgentChange: (nextAgentId) => setBacklogComposerAgentId(nextAgentId),
+                  onEnvironmentChange: (nextEnvironmentId) => setBacklogComposerEnvironmentId(nextEnvironmentId),
+                })
+              ),
+            extraToolbarContent: React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-control-button" + (backlogToolbarPopover === "release" || selectedRelease ? " is-active" : ""),
+                onClick: () => setBacklogToolbarPopover((current) => current === "release" ? "" : "release"),
+              },
+                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Releases")
+              ),
+              backlogToolbarPopover === "release"
+                ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-release-picker-menu" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "tb-popup-row tb-popup-row-select" + (!selectedReleaseId ? " selected" : ""),
+                      onClick: () => {
+                        handleSelectRelease("");
+                        setBacklogToolbarPopover("");
+                      },
+                    },
+                      React.createElement("span", { className: "tb-popup-check-slot" },
+                        !selectedReleaseId
+                          ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                          : null
+                      ),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "All Tickets"),
+                        React.createElement("span", null, "Show the full project backlog.")
+                      )
+                    ),
+                    sortedReleaseOptions.map((release) =>
+                      React.createElement("button", {
+                        key: release.id,
+                        type: "button",
+                        className: "tb-popup-row tb-popup-row-select" + (selectedReleaseId === release.id ? " selected" : ""),
+                        onClick: () => {
+                          handleSelectRelease(release.id);
+                          setBacklogToolbarPopover("");
+                        },
+                      },
+                        React.createElement("span", { className: "tb-popup-check-slot" },
+                          selectedReleaseId === release.id
+                            ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                            : null
+                        ),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, release.name || "Untitled Release"),
+                          React.createElement("span", null, release.description || formatPlaygroundTaskReleaseDateRange(release))
+                        )
+                      )
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "tb-popup-row",
+                      onClick: () => {
+                        setBacklogToolbarPopover("");
+                        openReleaseComposer();
+                      },
+                    },
+                      React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Add Release"),
+                        React.createElement("span", null, "Create a new milestone release.")
+                      )
+                    )
+                  )
+                : null
+            ),
+          });
         }
 
         function renderBoardView() {
@@ -30792,32 +32385,102 @@ const html = `<!doctype html>
                   React.createElement("div", { className: "playground-tasks-board-grid" },
                     PLAYGROUND_TASK_BOARD_LANES.map((lane) => {
                       const laneTasks = boardTasks.filter((task) => lane.statuses.includes(getTaskBoardStatus(task)));
-                      return React.createElement("div", { key: lane.id, className: "playground-tasks-lane" },
+                      const draggingBoardTask = boardDraggingTaskId ? tasksById[boardDraggingTaskId] || null : null;
+                      const isLaneDropTarget = boardDropLaneId === lane.id && draggingBoardTask && canDropTaskOnBoardLane(draggingBoardTask, lane.id);
+                      return React.createElement("div", {
+                          key: lane.id,
+                          className: "playground-tasks-lane" + (isLaneDropTarget ? " is-drop-target" : ""),
+                          onDragOver: (event) => {
+                            if (!draggingBoardTask || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
+                              return;
+                            }
+                            event.preventDefault();
+                            if (event.dataTransfer) {
+                              event.dataTransfer.dropEffect = "move";
+                            }
+                            if (boardDropLaneId !== lane.id) {
+                              setBoardDropLaneId(lane.id);
+                            }
+                          },
+                          onDragEnter: (event) => {
+                            if (!draggingBoardTask || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
+                              return;
+                            }
+                            event.preventDefault();
+                            if (boardDropLaneId !== lane.id) {
+                              setBoardDropLaneId(lane.id);
+                            }
+                          },
+                          onDragLeave: (event) => {
+                            const relatedTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+                            if (relatedTarget && event.currentTarget.contains(relatedTarget)) {
+                              return;
+                            }
+                            if (boardDropLaneId === lane.id) {
+                              setBoardDropLaneId("");
+                            }
+                          },
+                          onDrop: (event) => {
+                            if (!draggingBoardTask || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
+                              return;
+                            }
+                            event.preventDefault();
+                            void handleBoardLaneMove(draggingBoardTask, lane.id);
+                          },
+                        },
                         laneTasks.length > 0
                           ? React.createElement("div", { className: "playground-tasks-lane-list" },
                               laneTasks.map((task) =>
-                                React.createElement("button", {
-                                    key: task.id,
-                                    type: "button",
-                                    className: "playground-tasks-lane-card" + (selectedTaskId === task.id ? " is-active" : ""),
-                                    onClick: () => handleSelectTask(task.id),
-                                  },
-                                    React.createElement("div", { className: "playground-tasks-lane-card-header" },
+                                (() => {
+                                  const boardStatus = getTaskBoardStatus(task);
+                                  const statusLabel = getPlaygroundTaskStatusLabel(boardStatus);
+                                  const isSubtask = isPlaygroundSubtaskRecord(task);
+                                  const TaskTypeIcon = isSubtask ? Check : Bookmark;
+                                  const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
+                                  const taskDescription = String(task.description || "").trim() || "No description";
+                                  const isDraggable = canDropTaskOnBoardLane(task, "blocked") || canDropTaskOnBoardLane(task, "in_progress") || canDropTaskOnBoardLane(task, "todo");
+                                  return React.createElement("button", {
+                                      key: task.id,
+                                      type: "button",
+                                      className: "playground-tasks-lane-card"
+                                        + (selectedTaskId === task.id ? " is-active" : "")
+                                        + (isDraggable ? " is-draggable" : "")
+                                        + (boardDraggingTaskId === task.id ? " is-dragging" : ""),
+                                      onClick: () => handleSelectTask(task.id),
+                                      draggable: isDraggable,
+                                      onDragStart: (event) => {
+                                        if (!isDraggable) {
+                                          event.preventDefault();
+                                          return;
+                                        }
+                                        if (event.dataTransfer) {
+                                          event.dataTransfer.effectAllowed = "move";
+                                          event.dataTransfer.setData("text/plain", task.id);
+                                        }
+                                        setBoardDraggingTaskId(task.id);
+                                        setBoardDropLaneId("");
+                                      },
+                                      onDragEnd: () => {
+                                        clearBoardDragState();
+                                      },
+                                    },
                                       React.createElement("div", { className: "playground-tasks-lane-card-title" }, task.title || "Untitled Task"),
-                                      task.priority === "urgent"
-                                        ? React.createElement("span", { className: "playground-tasks-chip is-priority-urgent" }, getPlaygroundTaskPriorityLabel(task.priority))
-                                        : null
-                                    ),
-                                    React.createElement("div", { className: "playground-tasks-lane-card-copy" }, task.description || "Open the task detail pane to flesh this out."),
-                                    React.createElement("div", { className: "playground-tasks-lane-card-meta" },
-                                      task.assigneeAgentId
-                                        ? React.createElement("span", { className: "playground-tasks-chip" }, agentsById[task.assigneeAgentId]?.name || "Assigned")
-                                        : React.createElement("span", { className: "playground-tasks-chip" }, "Unassigned"),
-                                      task.dueAt
-                                        ? React.createElement("span", { className: "playground-tasks-meta-copy" }, formatPlaygroundTaskDateTime(task.dueAt))
-                                        : null
-                                    )
-                                  )
+                                      React.createElement("div", { className: "playground-tasks-lane-card-copy" }, taskDescription),
+                                      React.createElement("div", { className: "playground-tasks-lane-card-bottom" },
+                                        React.createElement("div", { className: "playground-tasks-lane-card-meta-left" },
+                                          React.createElement("div", {
+                                            className: "playground-tasks-lane-card-type-badge " + (isSubtask ? "is-subtask" : "is-task"),
+                                            "aria-hidden": "true",
+                                          },
+                                            React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 })
+                                          ),
+                                          renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-lane-card-priority"),
+                                          React.createElement("span", { className: "playground-tasks-lane-card-status", title: statusLabel }, statusLabel)
+                                        ),
+                                        React.createElement("span", { className: "playground-tasks-lane-card-ticket" }, taskTicketNumber)
+                                      )
+                                    );
+                                })()
                               )
                             )
                           : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Nothing here yet.")
@@ -31255,8 +32918,6 @@ const html = `<!doctype html>
                           if (item.id === "calendar") {
                             setSelectedTaskId("");
                             setDraftTask(null);
-                          } else if (item.id === "threads") {
-                            setSelectedTaskId("");
                           }
                           setProjectSidebarPopover("");
                         },
@@ -31296,7 +32957,9 @@ const html = `<!doctype html>
                             React.createElement("div", { className: "playground-files-search-empty" },
                               taskView === "calendar"
                                 ? "Filter tasks and schedules by title, task, agent, or environment."
-                                : "Filter tasks by title, ticket number, assignee, environment, or sprint."
+                                : taskView === "backlog" && selectedReleaseId
+                                  ? "Filter release tasks by title, ticket number, assignee, environment, or release."
+                                  : "Filter tasks by title, ticket number, assignee, environment, or sprint."
                             )
                           )
                         )
@@ -31419,7 +33082,7 @@ const html = `<!doctype html>
             return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-detail-empty" },
               React.createElement("div", { className: "playground-tasks-empty" },
                 React.createElement("div", { className: "playground-tasks-empty-title" }, "Pick a task"),
-                React.createElement("div", { className: "playground-tasks-empty-copy" }, "Select a task from backlog or board to edit assignments, dependencies, attachments, and scheduling.")
+                React.createElement("div", { className: "playground-tasks-empty-copy" }, "Select a task from backlog, board, or a release backlog to edit assignments, dependencies, attachments, and scheduling.")
               )
             );
           }
@@ -31440,6 +33103,7 @@ const html = `<!doctype html>
           const isTaskConfigLocked = Boolean(startedThreadId);
           const activeTicketNumber = taskTicketNumbersById[draftTask.id] || draftTask.ticketNumber || "001";
           const activeTaskType = normalizePlaygroundTaskType(draftTask.taskType);
+          const activeTaskReleaseId = draftTask.releaseId || "";
           const blockedByTaskId = draftTask.dependencyIds[0] || "";
           const hasTaskAttachments = draftTask.attachments.length > 0;
           const taskScheduleSummary = formatPlaygroundTaskScheduleSummary(draftTask.scheduledStartAt);
@@ -31670,6 +33334,24 @@ const html = `<!doctype html>
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
+                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Release"),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                    React.createElement("select", {
+                      className: "playground-environments-select playground-tasks-detail-fact-select",
+                      value: activeTaskReleaseId,
+                      onChange: (event) => updateDraftField("releaseId", event.target.value || null, { autosave: true }),
+                    },
+                      React.createElement("option", { value: "" }, "None"),
+                      releases
+                        .slice()
+                        .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
+                        .map((release) =>
+                          React.createElement("option", { key: release.id, value: release.id }, release.name || "Untitled Release")
+                        )
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-fact" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Assignee"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                     React.createElement("select", {
@@ -31714,7 +33396,7 @@ const html = `<!doctype html>
                           const nextStatus = nextBlockedByTaskId
                             ? "blocked"
                             : current.status === "blocked"
-                              ? (taskHasStartedThread(current) ? "in_progress" : "backlog")
+                              ? "todo"
                               : current.status;
                           return {
                             ...current,
@@ -32099,10 +33781,12 @@ const html = `<!doctype html>
             ),
             renderTaskEnvironmentFilePicker(),
             renderTaskConnectorBrowser(),
+            renderBoardBlockedPickerDialog(),
             renderTaskParentPickerDialog(),
             renderTaskEnvironmentChangeDialog(),
             renderTaskDeleteDialog(),
-            renderProjectComposerDialog()
+            renderProjectComposerDialog(),
+            renderReleaseComposerDialog()
           );
         }
 
@@ -32149,10 +33833,12 @@ const html = `<!doctype html>
           ),
           renderTaskEnvironmentFilePicker(),
           renderTaskConnectorBrowser(),
+          renderBoardBlockedPickerDialog(),
           renderTaskParentPickerDialog(),
           renderTaskEnvironmentChangeDialog(),
           renderTaskDeleteDialog(),
-          renderProjectComposerDialog()
+          renderProjectComposerDialog(),
+          renderReleaseComposerDialog()
         );
       }
 
@@ -40485,7 +42171,7 @@ async function proxyTaskStartThread(req, res, taskId) {
   }
 }
 
-async function proxyTaskBacklogCreateThread(req, res, projectId) {
+async function proxyTaskBacklogCreateThread(req, res, projectId, releaseId = "") {
   try {
     const body = await readRequestBody(req);
     const apiKey = readOptionalApiKey(req, body);
@@ -40512,6 +42198,7 @@ async function proxyTaskBacklogCreateThread(req, res, projectId) {
           runnerPlayground: {
             type: "backlog_task_capture",
             projectId,
+            releaseId: releaseId || null,
           },
         },
       },
@@ -40524,11 +42211,12 @@ async function proxyTaskBacklogCreateThread(req, res, projectId) {
   }
 }
 
-async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId) {
+async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId, releaseId = "") {
   try {
     const body = await readRequestBody(req);
     const apiKey = readOptionalApiKey(req, body);
     const upstreamUrl = parseUpstreamUrl(req, body);
+    const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
 
     if (!apiKey && !hasAiosSession(req)) {
       return sendJson(res, 401, {
@@ -40544,6 +42232,8 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId) 
         message: "The backlog composer thread state is missing or invalid.",
       });
     }
+
+    const requestedReleaseId = typeof releaseId === "string" ? releaseId.trim() : "";
 
     const title = String(body?.content || body?.task || "").trim().replace(/\s+/g, " ");
     if (!title) {
@@ -40585,6 +42275,7 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId) 
       quotedSelection: body?.quotedSelection && typeof body.quotedSelection === "object"
         ? body.quotedSelection
         : null,
+      releaseId: requestedReleaseId || null,
       attachments: Array.isArray(body?.attachments) ? body.attachments : [],
       enabledSkills: (() => {
         const next = [];
@@ -40636,6 +42327,7 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId) 
 
     const upstreamPayload = {
       projectId,
+      ...(requestedReleaseId ? { releaseId: requestedReleaseId } : {}),
       title,
       status: "todo",
       priority: "medium",
@@ -40649,7 +42341,6 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId) 
       },
     };
 
-    const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
     let upstream;
 
     if (apiKey) {
@@ -41333,50 +43024,56 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const taskBacklogCreateThreadMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)\/threads$/);
+  const taskBacklogCreateThreadMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?\/threads$/);
   if (req.method === "POST" && taskBacklogCreateThreadMatch) {
-    void proxyTaskBacklogCreateThread(req, res, decodeURIComponent(taskBacklogCreateThreadMatch[1]));
+    void proxyTaskBacklogCreateThread(
+      req,
+      res,
+      decodeURIComponent(taskBacklogCreateThreadMatch[1]),
+      taskBacklogCreateThreadMatch[2] ? decodeURIComponent(taskBacklogCreateThreadMatch[2]) : "",
+    );
     return;
   }
 
-  const taskBacklogThreadMessagesMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)\/threads\/([^/]+)\/messages$/);
+  const taskBacklogThreadMessagesMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?\/threads\/([^/]+)\/messages$/);
   if (req.method === "POST" && taskBacklogThreadMessagesMatch) {
     void proxyTaskBacklogCreateTaskMessage(
       req,
       res,
       decodeURIComponent(taskBacklogThreadMessagesMatch[1]),
-      decodeURIComponent(taskBacklogThreadMessagesMatch[2]),
+      decodeURIComponent(taskBacklogThreadMessagesMatch[3]),
+      taskBacklogThreadMessagesMatch[2] ? decodeURIComponent(taskBacklogThreadMessagesMatch[2]) : "",
     );
     return;
   }
 
-  const taskBacklogThreadContextDetailsMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)\/threads\/([^/]+)\/context\/details$/);
+  const taskBacklogThreadContextDetailsMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?\/threads\/([^/]+)\/context\/details$/);
   if (req.method === "GET" && taskBacklogThreadContextDetailsMatch) {
-    sendTaskBacklogContextDetailsResponse(res, decodeURIComponent(taskBacklogThreadContextDetailsMatch[2]));
+    sendTaskBacklogContextDetailsResponse(res, decodeURIComponent(taskBacklogThreadContextDetailsMatch[3]));
     return;
   }
 
-  const taskBacklogThreadContextMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)\/threads\/([^/]+)\/context$/);
+  const taskBacklogThreadContextMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?\/threads\/([^/]+)\/context$/);
   if (req.method === "GET" && taskBacklogThreadContextMatch) {
-    sendTaskBacklogContextResponse(res, decodeURIComponent(taskBacklogThreadContextMatch[2]));
+    sendTaskBacklogContextResponse(res, decodeURIComponent(taskBacklogThreadContextMatch[3]));
     return;
   }
 
-  const taskBacklogEnvironmentFilesUploadMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)\/environments\/([^/]+)\/files\/upload$/);
+  const taskBacklogEnvironmentFilesUploadMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?\/environments\/([^/]+)\/files\/upload$/);
   if (req.method === "POST" && taskBacklogEnvironmentFilesUploadMatch) {
     void proxyUpstreamRawRequest(
       req,
       res,
-      `/environments/${encodeURIComponent(decodeURIComponent(taskBacklogEnvironmentFilesUploadMatch[2]))}/files/upload`,
+      `/environments/${encodeURIComponent(decodeURIComponent(taskBacklogEnvironmentFilesUploadMatch[3]))}/files/upload`,
       "POST",
     );
     return;
   }
 
-  const taskBacklogEnvironmentDownloadMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)\/environments\/([^/]+)\/files\/download\/(.+)$/);
+  const taskBacklogEnvironmentDownloadMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?\/environments\/([^/]+)\/files\/download\/(.+)$/);
   if (req.method === "GET" && taskBacklogEnvironmentDownloadMatch) {
-    const environmentId = encodeURIComponent(decodeURIComponent(taskBacklogEnvironmentDownloadMatch[2]));
-    const filePath = taskBacklogEnvironmentDownloadMatch[3]
+    const environmentId = encodeURIComponent(decodeURIComponent(taskBacklogEnvironmentDownloadMatch[3]));
+    const filePath = taskBacklogEnvironmentDownloadMatch[4]
       .split("/")
       .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
       .join("/");
@@ -41384,15 +43081,15 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const taskBacklogAttachmentMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)\/attachments\/([^/]+)$/);
+  const taskBacklogAttachmentMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?\/attachments\/([^/]+)$/);
   if (req.method === "GET" && taskBacklogAttachmentMatch) {
-    void proxyUpstreamBinaryGet(req, res, `/attachments/${encodeURIComponent(decodeURIComponent(taskBacklogAttachmentMatch[2]))}`);
+    void proxyUpstreamBinaryGet(req, res, `/attachments/${encodeURIComponent(decodeURIComponent(taskBacklogAttachmentMatch[3]))}`);
     return;
   }
 
-  const taskBacklogProxyMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(\/.+)$/);
+  const taskBacklogProxyMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?(\/.+)$/);
   if (taskBacklogProxyMatch) {
-    const upstreamPath = taskBacklogProxyMatch[2];
+    const upstreamPath = taskBacklogProxyMatch[3];
 
     if (upstreamPath.startsWith("/threads/")) {
       sendJson(res, 404, {
@@ -41996,6 +43693,47 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "POST" && url.pathname === "/api/real/tasks") {
     void proxyUpstreamTaskJsonRequest(req, res, "/tasks", "POST");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/tasks/releases") {
+    void proxyUpstreamTaskJsonRequest(req, res, "/tasks/releases", "GET");
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/real/tasks/releases") {
+    void proxyUpstreamTaskJsonRequest(req, res, "/tasks/releases", "POST");
+    return;
+  }
+
+  const taskReleaseDetailMatch = url.pathname.match(/^\/api\/real\/tasks\/releases\/([^/]+)$/);
+  if (req.method === "GET" && taskReleaseDetailMatch) {
+    void proxyUpstreamTaskJsonRequest(
+      req,
+      res,
+      `/tasks/releases/${encodeURIComponent(decodeURIComponent(taskReleaseDetailMatch[1]))}`,
+      "GET",
+    );
+    return;
+  }
+
+  if (req.method === "PATCH" && taskReleaseDetailMatch) {
+    void proxyUpstreamTaskJsonRequest(
+      req,
+      res,
+      `/tasks/releases/${encodeURIComponent(decodeURIComponent(taskReleaseDetailMatch[1]))}`,
+      "PATCH",
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && taskReleaseDetailMatch) {
+    void proxyUpstreamTaskJsonRequest(
+      req,
+      res,
+      `/tasks/releases/${encodeURIComponent(decodeURIComponent(taskReleaseDetailMatch[1]))}`,
+      "DELETE",
+    );
     return;
   }
 
