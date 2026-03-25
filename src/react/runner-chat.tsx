@@ -479,6 +479,21 @@ export interface RunnerChatProps {
   onActionSummaryClick?: (summary: RunnerChatActionSummaryClickPayload) => void;
   threadTaskPreview?: RunnerTaskPreview | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
+  externalRunRequest?: {
+    token: string | number;
+    threadId: string;
+    prompt: string;
+    attachments?: RunnerAttachment[] | null;
+    githubRepo?: {
+      repoFullName: string;
+      repoName: string;
+      branch: string;
+    } | null;
+    enabledSkills?: Record<string, unknown> | null;
+    environmentId?: string | null;
+    quotedSelection?: RunnerQuotedSelection | null;
+  } | null;
+  onExternalRunRequestHandled?: (token: string | number) => void;
   autoFocusComposer?: boolean;
   keepFocusOnSubmit?: boolean;
   enableBacklogSubtaskCommand?: boolean;
@@ -4082,6 +4097,8 @@ export function RunnerChat({
   onActionSummaryClick,
   threadTaskPreview = null,
   onTaskPreviewClick,
+  externalRunRequest = null,
+  onExternalRunRequestHandled,
   autoFocusComposer = false,
   keepFocusOnSubmit = false,
   enableBacklogSubtaskCommand = false,
@@ -4248,6 +4265,7 @@ export function RunnerChat({
   const quotedSelectionPopupRef = useRef<HTMLDivElement | null>(null);
   const composerQuotedSelectionAnimationTimerRef = useRef<number | null>(null);
   const appliedBacklogSubtaskCommandTokenRef = useRef<string | number | null>(null);
+  const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -5596,6 +5614,13 @@ export function RunnerChat({
       quotedSelection?: RunnerQuotedSelection | null;
       environmentIdOverride?: string | null;
       backlogSubtaskCommand?: StagedBacklogSubtaskCommand | null;
+      resolvedAttachmentsOverride?: RunnerAttachment[] | null;
+      githubRepoOverride?: {
+        repoFullName: string;
+        repoName: string;
+        branch: string;
+      } | null;
+      enabledSkillsOverride?: Record<string, unknown> | null;
     }
   ) {
     const hiddenSystemPromptText = hiddenSystemPrompt.trim();
@@ -5611,8 +5636,14 @@ export function RunnerChat({
           ? activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
           : effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
     const threadId = options?.threadIdOverride || (await ensureThread(taskText));
-    const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
-    const githubRepo = buildSelectedGithubRepoReference(attachmentEntries);
+    const resolvedAttachments =
+      options?.resolvedAttachmentsOverride !== undefined
+        ? options.resolvedAttachmentsOverride || undefined
+        : await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
+    const githubRepo =
+      options?.githubRepoOverride !== undefined
+        ? options.githubRepoOverride
+        : buildSelectedGithubRepoReference(attachmentEntries);
     const turnAttachments = buildTurnAttachmentsForExecution(attachmentEntries, resolvedAttachments, normalizedBackendUrl);
     const turnId = options?.turnId || generateId("turn");
     const startedAtMs = Date.now();
@@ -5674,7 +5705,9 @@ export function RunnerChat({
             ...(typeof options?.truncateAtMessageIndex === "number" ? { truncateAtMessageIndex: options.truncateAtMessageIndex } : {}),
             ...(typeof options?.persistFileChanges === "boolean" ? { persistFileChanges: options.persistFileChanges } : {}),
             ...(options?.quotedSelection ? { quotedSelection: options.quotedSelection } : {}),
-            ...(enabledSkillsPayload ? { enabledSkills: enabledSkillsPayload } : {}),
+            ...(options?.enabledSkillsOverride !== undefined
+              ? (options.enabledSkillsOverride ? { enabledSkills: options.enabledSkillsOverride } : {})
+              : (enabledSkillsPayload ? { enabledSkills: enabledSkillsPayload } : {})),
             ...(options?.backlogSubtaskCommand
               ? {
                   backlogTaskCommand: {
@@ -5717,6 +5750,61 @@ export function RunnerChat({
       releasePreparationState();
     }
   }
+
+  useEffect(() => {
+    const normalizedRequestThreadId = String(externalRunRequest?.threadId || "").trim();
+    const normalizedPrompt = String(externalRunRequest?.prompt || "").trim();
+    const requestToken = externalRunRequest?.token;
+
+    if (
+      !externalRunRequest ||
+      requestToken === undefined ||
+      requestToken === null ||
+      handledExternalRunRequestTokenRef.current === requestToken ||
+      !normalizedRequestThreadId ||
+      normalizedRequestThreadId !== currentThreadId ||
+      !normalizedPrompt ||
+      !hasApiKey ||
+      !normalizedBackendUrl ||
+      disabled
+    ) {
+      return;
+    }
+
+    handledExternalRunRequestTokenRef.current = requestToken;
+    onExternalRunRequestHandled?.(requestToken);
+
+    void (async () => {
+      try {
+        setInlineError(null);
+        setPendingQueuedMessages([]);
+        setIsPreparingRun(true);
+        closeAllInputPopups();
+        await executeThreadRun(normalizedPrompt, [], {
+          threadIdOverride: normalizedRequestThreadId,
+          environmentIdOverride: externalRunRequest.environmentId ?? undefined,
+          quotedSelection: externalRunRequest.quotedSelection || null,
+          resolvedAttachmentsOverride: Array.isArray(externalRunRequest.attachments) ? externalRunRequest.attachments : undefined,
+          githubRepoOverride: externalRunRequest.githubRepo ?? undefined,
+          enabledSkillsOverride: externalRunRequest.enabledSkills ?? undefined,
+        });
+      } catch (error) {
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
+        setInlineError(normalizedError.message);
+        onRunError?.(normalizedError, normalizedRequestThreadId);
+      } finally {
+        setIsPreparingRun(false);
+      }
+    })();
+  }, [
+    currentThreadId,
+    disabled,
+    externalRunRequest,
+    hasApiKey,
+    normalizedBackendUrl,
+    onExternalRunRequestHandled,
+    onRunError,
+  ]);
 
   async function executeThreadContextAction(
     action: RunnerChatThreadContextAction,
@@ -5967,8 +6055,13 @@ export function RunnerChat({
     let cancelled = false;
     let hydrationApplied = false;
     let previewRendered = false;
+    const hasPendingExternalRunForThread =
+      Boolean(externalRunRequest)
+      && handledExternalRunRequestTokenRef.current !== externalRunRequest?.token
+      && String(externalRunRequest?.threadId || "").trim() === String(threadId || "").trim()
+      && String(externalRunRequest?.prompt || "").trim().length > 0;
 
-    if (!threadId || !hasApiKey || isRunning) {
+    if (!threadId || !hasApiKey || isRunning || hasPendingExternalRunForThread) {
       setIsThreadHistoryLoading(false);
       return () => {
         cancelled = true;
@@ -6066,7 +6159,7 @@ export function RunnerChat({
     return () => {
       cancelled = true;
     };
-  }, [apiKey, clear, hasApiKey, isRunning, normalizedBackendUrl, requestHeaders, threadId]);
+  }, [apiKey, clear, externalRunRequest, hasApiKey, isRunning, normalizedBackendUrl, requestHeaders, threadId]);
 
   useEffect(() => {
     setThreadContextDetails(null);
@@ -9246,9 +9339,6 @@ export function RunnerChat({
                           <LucideRoute className="tb-step-row-icon" strokeWidth={1.5} />
                           <span className="tb-work-label">{workLabel}</span>
                           {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
-                          {isTurnRunning ? (
-                            <LucideLoaderCircle className="tb-work-header-spinner" strokeWidth={1.7} />
-                          ) : null}
                         </button>
 
                         <div className={`tb-work-collapse ${isExpanded ? "" : "collapsed"}`}>

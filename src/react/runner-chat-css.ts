@@ -1871,7 +1871,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-log-card-panel {
   position: relative;
   margin-top: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 0;
   border-radius: 15px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.05);

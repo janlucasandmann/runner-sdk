@@ -28226,6 +28226,8 @@ const html = `<!doctype html>
             const githubRepo = buildPlaygroundTaskGithubRepoReference(taskToLaunch);
             const launchEnvironmentId = taskToLaunch.environmentId || backlogComposerEnvironmentId || initialEnvironmentId || "";
             const launchAgentId = taskToLaunch.assigneeAgentId || backlogComposerAgentId || initialAgentId || "";
+            const launchPrompt = buildPlaygroundTaskRunPrompt(taskToLaunch);
+            const launchAttachments = normalizePlaygroundTaskAttachmentList(taskToLaunch.attachments);
             const response = await fetch(backendUrl + "/tasks/" + encodeURIComponent(task.id) + "/start-thread", {
               method: "POST",
               headers: {
@@ -28237,10 +28239,10 @@ const html = `<!doctype html>
                 environmentId: launchEnvironmentId || undefined,
                 agentId: launchAgentId || undefined,
                 enabledSkills: enabledSkillsPayload,
-                attachments: normalizePlaygroundTaskAttachmentList(taskToLaunch.attachments),
+                attachments: launchAttachments,
                 githubRepo: githubRepo || undefined,
                 connectors: normalizePlaygroundTaskConnectorSelections(taskToLaunch.connectors),
-                launchPrompt: buildPlaygroundTaskRunPrompt(taskToLaunch),
+                launchPrompt: launchPrompt,
                 taskPreview,
               }),
             });
@@ -28278,6 +28280,14 @@ const html = `<!doctype html>
               onThreadStarted(threadRecord.id, {
                 threadRecord,
                 taskPreview: buildPlaygroundTaskThreadPreview(updatedTask, threadRecord.id),
+                taskRunRequest: {
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                  prompt: launchPrompt,
+                  attachments: launchAttachments,
+                  githubRepo: githubRepo || null,
+                  enabledSkills: enabledSkillsPayload || null,
+                  environmentId: launchEnvironmentId || "",
+                },
               });
             }
           } catch (error) {
@@ -31931,6 +31941,7 @@ const html = `<!doctype html>
         const [environmentId, setEnvironmentId] = useState("");
         const [agentId, setAgentId] = useState("");
         const [currentThreadId, setCurrentThreadId] = useState("");
+        const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
         const [taskOpenRequest, setTaskOpenRequest] = useState(null);
         const [settingsSection, setSettingsSection] = useState("costs-plans");
         const [contentMode, setContentMode] = useState("chat");
@@ -35094,6 +35105,7 @@ const html = `<!doctype html>
         function handleNewThread() {
           setActivePage("thread");
           setCurrentThreadId("");
+          setPendingThreadRunRequest(null);
           setContentMode("chat");
           setChangesNavigationTarget(null);
           setThreadListMode("threads");
@@ -35105,6 +35117,7 @@ const html = `<!doctype html>
           if (hasRealAccess && !isRealThreadId(threadId)) return;
           setActivePage("thread");
           setCurrentThreadId(threadId);
+          setPendingThreadRunRequest(null);
           setChangesNavigationTarget(null);
           setThreadListMode("threads");
           setRunnerRenderKey((current) => current + 1);
@@ -38993,6 +39006,19 @@ const html = `<!doctype html>
                               if (options?.taskPreview?.assigneeAgentId) {
                                 setAgentId(options.taskPreview.assigneeAgentId);
                               }
+                              if (options?.taskRunRequest?.prompt) {
+                                setPendingThreadRunRequest({
+                                  token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                                  threadId,
+                                  prompt: options.taskRunRequest.prompt,
+                                  attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                                  githubRepo: options.taskRunRequest.githubRepo || null,
+                                  enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                  environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                });
+                              } else {
+                                setPendingThreadRunRequest(null);
+                              }
                               setActivePage("thread");
                               setCurrentThreadId(threadId);
                               setContentMode(options?.contentMode === "changes" ? "changes" : "chat");
@@ -39038,6 +39064,14 @@ const html = `<!doctype html>
                                     placeholder: "What would you like me to do?",
                                     emptyState: showInitialThreadWelcome ? renderInitialThreadWelcome() : undefined,
                                     threadTaskPreview: selectedThreadTaskPreview || undefined,
+                                    externalRunRequest: pendingThreadRunRequest && pendingThreadRunRequest.threadId === activeRunnerThreadId
+                                      ? pendingThreadRunRequest
+                                      : null,
+                                    onExternalRunRequestHandled: (token) => {
+                                      setPendingThreadRunRequest((current) => (
+                                        current && current.token === token ? null : current
+                                      ));
+                                    },
                                     onTaskPreviewClick: (taskPreview) => {
                                       if (!taskPreview?.taskId || !taskPreview?.projectId) {
                                         return;
@@ -39052,6 +39086,9 @@ const html = `<!doctype html>
                                     onThreadIdChange: (threadId) => {
                                       setActivePage("thread");
                                       setCurrentThreadId(threadId);
+                                      setPendingThreadRunRequest((current) => (
+                                        current && current.threadId === threadId ? current : null
+                                      ));
                                       void refreshThreads();
                                     },
                                     onRunStart: (threadId) => {
@@ -39765,19 +39802,6 @@ async function proxyTaskStartThread(req, res, taskId) {
     if (!updatedTaskRecord?.id) {
       throw new Error("Task thread was started, but the task update response was invalid.");
     }
-
-    void (async () => {
-      try {
-        await fetchCloudApi(`/threads/${encodeURIComponent(createdThreadRecord.id)}/messages`, "POST", {
-          content: launchPrompt,
-          ...(attachments.length > 0 ? { attachments } : {}),
-          ...(githubRepo ? { githubRepo } : {}),
-          ...(enabledSkills ? { enabledSkills } : {}),
-        });
-      } catch (error) {
-        console.error("Failed to launch task thread message:", error);
-      }
-    })();
 
     return sendJson(res, 200, {
       thread: patchedThreadRecord,
