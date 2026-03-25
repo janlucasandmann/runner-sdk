@@ -11019,9 +11019,19 @@ const html = `<!doctype html>
       .playground-tasks-backlog-section-header {
         display: flex;
         align-items: baseline;
+        justify-content: space-between;
         gap: 8px;
         min-width: 0;
         flex-wrap: wrap;
+      }
+
+      .playground-tasks-backlog-section-copy-group {
+        min-width: 0;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+        flex: 1 1 auto;
       }
 
       .playground-tasks-backlog-section-title {
@@ -11036,6 +11046,45 @@ const html = `<!doctype html>
         font-size: 12px;
         line-height: 1.4;
         font-weight: 400;
+      }
+
+      .playground-tasks-backlog-section-meta {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        line-height: 1.4;
+        font-weight: 400;
+        white-space: nowrap;
+        text-align: right;
+      }
+
+      .playground-tasks-backlog-section-date,
+      .playground-tasks-release-header-date {
+        white-space: nowrap;
+      }
+
+      .playground-tasks-release-edit-button {
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.48);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-tasks-release-edit-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
       }
 
       .playground-tasks-backlog-project-icon {
@@ -11315,8 +11364,23 @@ const html = `<!doctype html>
       .playground-tasks-release-backlog-title-row {
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: space-between;
+        gap: 12px;
         min-width: 0;
+        width: 100%;
+      }
+
+      .playground-tasks-release-header-meta {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        line-height: 1.4;
+        font-weight: 400;
+        text-align: right;
       }
 
       .playground-tasks-release-name-pill {
@@ -11493,6 +11557,14 @@ const html = `<!doctype html>
         text-overflow: clip;
         word-break: break-word;
         overflow-wrap: anywhere;
+      }
+
+      .playground-tasks-card-title.is-complete,
+      .playground-tasks-lane-card-title.is-complete,
+      .playground-tasks-backlog-title.is-complete {
+        text-decoration-line: line-through;
+        text-decoration-thickness: 1px;
+        text-decoration-color: rgba(255, 255, 255, 0.55);
       }
 
       .playground-tasks-card-copy,
@@ -11735,7 +11807,7 @@ const html = `<!doctype html>
 
       .playground-tasks-board-header-cell {
         min-width: 0;
-        padding: 0 6px;
+        padding: 0 6px 0 0;
         font-size: 12px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.72);
@@ -15679,6 +15751,14 @@ const html = `<!doctype html>
         return startLabel || endLabel || "No dates";
       }
 
+      function getPlaygroundTaskReleaseDeadlineLabel(release) {
+        if (!release) {
+          return "No deadlines";
+        }
+        const dateRangeLabel = formatPlaygroundTaskReleaseDateRange(release);
+        return dateRangeLabel === "No dates" ? "No deadlines" : dateRangeLabel;
+      }
+
       function normalizePlaygroundTaskReleaseRecord(release) {
         if (!release || typeof release !== "object") {
           return buildPlaygroundDefaultReleaseDraft();
@@ -15939,6 +16019,16 @@ const html = `<!doctype html>
         if (!normalized) return null;
         const timeSuffix = options.endOfDay ? "T23:59:59.999" : "T00:00:00.000";
         const date = new Date(normalized + timeSuffix);
+        return Number.isNaN(date.getTime()) ? null : date.toISOString();
+      }
+
+      function resolvePlaygroundReleaseDraftDateValue(value, options = {}) {
+        const normalized = String(value || "").trim();
+        if (!normalized) return null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+          return fromPlaygroundDateInputValue(normalized, options);
+        }
+        const date = new Date(normalized);
         return Number.isNaN(date.getTime()) ? null : date.toISOString();
       }
 
@@ -24699,6 +24789,7 @@ const html = `<!doctype html>
         const activeScheduleCalendarView = allowedScheduleCalendarViews.includes(scheduleCalendarView) ? scheduleCalendarView : "month";
         const [selectedReleaseId, setSelectedReleaseId] = useState("");
         const [releaseComposerOpen, setReleaseComposerOpen] = useState(false);
+        const [releaseComposerMode, setReleaseComposerMode] = useState("create");
         const [releaseDraft, setReleaseDraft] = useState(buildPlaygroundDefaultReleaseDraft());
         const [releaseSaveState, setReleaseSaveState] = useState({
           isSaving: false,
@@ -26646,6 +26737,7 @@ const html = `<!doctype html>
           setReleaseToolbarPopover("");
           setReleaseBacklogToolbarPopover("");
           setReleaseComposerOpen(false);
+          setReleaseComposerMode("create");
           setReleaseDraft(buildPlaygroundDefaultReleaseDraft());
           setReleaseSaveState({
             isSaving: false,
@@ -26698,6 +26790,7 @@ const html = `<!doctype html>
           setReleaseBacklogToolbarPopover("");
           setSelectedReleaseId("");
           setReleaseComposerOpen(false);
+          setReleaseComposerMode("create");
           setReleaseDraft(buildPlaygroundDefaultReleaseDraft());
           setReleaseSaveState({
             isSaving: false,
@@ -29326,7 +29419,25 @@ const html = `<!doctype html>
         }
 
         function openReleaseComposer() {
+          setReleaseComposerMode("create");
           setReleaseDraft(buildProjectReleaseDraft(selectedProject));
+          setReleaseSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setBacklogToolbarPopover("");
+          setBoardToolbarPopover("");
+          setProjectSidebarPopover("");
+          setReleaseComposerOpen(true);
+        }
+
+        function openReleaseComposerForEdit(releaseRecord) {
+          const normalizedRelease = normalizePlaygroundTaskReleaseRecord(releaseRecord);
+          if (!normalizedRelease?.id) {
+            return;
+          }
+          setReleaseComposerMode("edit");
+          setReleaseDraft(normalizedRelease);
           setReleaseSaveState({
             isSaving: false,
             error: "",
@@ -29339,6 +29450,7 @@ const html = `<!doctype html>
 
         function closeReleaseComposer() {
           setReleaseComposerOpen(false);
+          setReleaseComposerMode("create");
           setReleaseDraft(buildPlaygroundDefaultReleaseDraft());
           setReleaseSaveState({
             isSaving: false,
@@ -29362,9 +29474,11 @@ const html = `<!doctype html>
           setReleaseBacklogToolbarPopover("");
         }
 
-        async function handleCreateRelease(event) {
+        async function handleSaveRelease(event) {
           event?.preventDefault?.();
-          if (!selectedProjectId) {
+          const isEditingRelease = releaseComposerMode === "edit" && Boolean(releaseDraft?.id);
+          const targetProjectId = String(releaseDraft?.projectId || selectedProjectId || "").trim();
+          if (!targetProjectId) {
             return;
           }
 
@@ -29373,8 +29487,8 @@ const html = `<!doctype html>
             return;
           }
 
-          const nextStartAt = fromPlaygroundDateInputValue(releaseDraft.startAt);
-          const nextEndAt = fromPlaygroundDateInputValue(releaseDraft.endAt, { endOfDay: true });
+          const nextStartAt = resolvePlaygroundReleaseDraftDateValue(releaseDraft.startAt);
+          const nextEndAt = resolvePlaygroundReleaseDraftDateValue(releaseDraft.endAt, { endOfDay: true });
           if (nextStartAt && nextEndAt && Date.parse(nextEndAt) < Date.parse(nextStartAt)) {
             setReleaseSaveState({
               isSaving: false,
@@ -29389,43 +29503,75 @@ const html = `<!doctype html>
           });
 
           try {
-            const response = await fetch(backendUrl + "/tasks/releases", {
-              method: "POST",
-              headers: {
-                ...requestHeaders,
-                "Content-Type": "application/json",
+            const response = await fetch(
+              backendUrl + "/tasks/releases" + (isEditingRelease ? ("/" + encodeURIComponent(releaseDraft.id)) : ""),
+              {
+                method: isEditingRelease ? "PATCH" : "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  projectId: targetProjectId,
+                  name: nextName,
+                  description: typeof releaseDraft.description === "string" ? releaseDraft.description : "",
+                  startAt: nextStartAt,
+                  endAt: nextEndAt,
+                  sortOrder: Number.isFinite(releaseDraft.sortOrder) ? Number(releaseDraft.sortOrder) : releases.length + 1,
+                }),
               },
-              body: JSON.stringify({
-                projectId: selectedProjectId,
-                name: nextName,
-                description: typeof releaseDraft.description === "string" ? releaseDraft.description : "",
-                startAt: nextStartAt,
-                endAt: nextEndAt,
-                sortOrder: releases.length + 1,
-              }),
-            });
+            );
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to create release.");
+              throw new Error(data?.message || data?.error || (isEditingRelease ? "Failed to update release." : "Failed to create release."));
             }
 
-            const createdRelease = getPlaygroundTaskReleaseResponseRecord(data);
-            if (!createdRelease?.id) {
-              throw new Error("Release creation failed.");
+            const savedRelease = getPlaygroundTaskReleaseResponseRecord(data);
+            if (!savedRelease?.id) {
+              throw new Error(isEditingRelease ? "Release update failed." : "Release creation failed.");
             }
 
-            setReleases((current) => current.concat(createdRelease));
-            syncProjectSummary(selectedProjectId, tasks, sprints, releases.concat(createdRelease), selectedProjectSummary);
-            setSelectedReleaseId(createdRelease.id);
-            setSelectedTaskId("");
-            setDraftTask(null);
+            const nextReleases = isEditingRelease
+              ? releases.map((release) => release.id === savedRelease.id ? savedRelease : release)
+              : releases.concat(savedRelease);
+
+            setReleases(nextReleases);
+            syncProjectSummary(targetProjectId, tasks, sprints, nextReleases, selectedProjectSummary);
+            if (!isEditingRelease) {
+              setSelectedReleaseId(savedRelease.id);
+              setSelectedTaskId("");
+              setDraftTask(null);
+            }
             closeReleaseComposer();
           } catch (error) {
             setReleaseSaveState({
               isSaving: false,
-              error: error instanceof Error ? error.message : "Failed to create release.",
+              error: error instanceof Error ? error.message : (isEditingRelease ? "Failed to update release." : "Failed to create release."),
             });
           }
+        }
+
+        function renderReleaseHeaderMeta(releaseRecord, options = {}) {
+          const normalizedRelease = releaseRecord?.id ? normalizePlaygroundTaskReleaseRecord(releaseRecord) : null;
+          const className = options.className || "playground-tasks-backlog-section-meta";
+          const dateClassName = options.dateClassName || "playground-tasks-backlog-section-date";
+          return React.createElement("div", { className },
+            React.createElement("span", { className: dateClassName },
+              getPlaygroundTaskReleaseDeadlineLabel(normalizedRelease)
+            ),
+            normalizedRelease?.id
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "playground-tasks-release-edit-button",
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    openReleaseComposerForEdit(normalizedRelease);
+                  },
+                  title: "Edit release",
+                  "aria-label": "Edit release",
+                }, React.createElement(SquarePen, { width: 12, height: 12, strokeWidth: 1.9 }))
+              : null
+          );
         }
 
         function handleBacklogComposerRunStart() {
@@ -31602,7 +31748,9 @@ const html = `<!doctype html>
             },
               React.createElement("div", { className: "playground-tasks-card-header" },
                 React.createElement("div", null,
-                  React.createElement("div", { className: "playground-tasks-card-title" }, task.title || "Untitled Task"),
+                  React.createElement("div", {
+                    className: "playground-tasks-card-title" + (task.status === "done" ? " is-complete" : ""),
+                  }, task.title || "Untitled Task"),
                   React.createElement("div", { className: "playground-tasks-card-copy" }, task.description || "Add task details, dependencies, and assignment context from the right-hand pane.")
                 ),
                 React.createElement("div", { className: "playground-tasks-card-actions" },
@@ -31789,6 +31937,8 @@ const html = `<!doctype html>
             return null;
           }
 
+          const isEditingRelease = releaseComposerMode === "edit" && Boolean(releaseDraft?.id);
+
           return React.createElement("div", {
               className: "playground-tasks-project-modal-backdrop",
               onClick: () => closeReleaseComposer(),
@@ -31796,12 +31946,16 @@ const html = `<!doctype html>
               React.createElement("form", {
                   className: "playground-tasks-release-modal",
                   onClick: (event) => event.stopPropagation(),
-                  onSubmit: (event) => void handleCreateRelease(event),
+                  onSubmit: (event) => void handleSaveRelease(event),
                 },
                 React.createElement("div", { className: "playground-tasks-release-modal-top" },
                   React.createElement("div", { className: "playground-tasks-release-modal-title-block" },
-                    React.createElement("div", { className: "playground-tasks-release-modal-title" }, "New Release"),
-                    React.createElement("div", { className: "playground-tasks-release-modal-copy" }, "Group project tickets into a milestone release.")
+                    React.createElement("div", { className: "playground-tasks-release-modal-title" }, isEditingRelease ? "Edit Release" : "New Release"),
+                    React.createElement("div", { className: "playground-tasks-release-modal-copy" },
+                      isEditingRelease
+                        ? "Update the title, description, and milestone dates for this release."
+                        : "Group project tickets into a milestone release."
+                    )
                   ),
                   React.createElement("button", {
                     type: "button",
@@ -31870,7 +32024,9 @@ const html = `<!doctype html>
                     type: "submit",
                     className: "playground-environments-action-button is-primary",
                     disabled: releaseSaveState.isSaving || !String(releaseDraft.name || "").trim(),
-                  }, releaseSaveState.isSaving ? "Creating..." : "Create Release")
+                  }, releaseSaveState.isSaving
+                    ? (isEditingRelease ? "Saving..." : "Creating...")
+                    : (isEditingRelease ? "Save Release" : "Create Release"))
                 )
               )
             );
@@ -32028,6 +32184,7 @@ const html = `<!doctype html>
                   sectionIndexByKey.set(sectionKey, sectionIndex);
                   releaseSections.push({
                     key: sectionKey,
+                    releaseId: normalizedReleaseId,
                     title: sectionTitle,
                     copy: sectionCopy,
                     tasks: [],
@@ -32109,10 +32266,13 @@ const html = `<!doctype html>
                       },
                     },
                     React.createElement("div", { className: "playground-tasks-backlog-section-header" },
-                      React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
-                      section.copy
-                        ? React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, section.copy)
-                        : null
+                      React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
+                        React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
+                        section.copy
+                          ? React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, section.copy)
+                          : null
+                      ),
+                      renderReleaseHeaderMeta(section.releaseId ? (releasesById[section.releaseId] || null) : null)
                     ),
                     section.tasks.map((task, siblingIndex) =>
                       React.createElement(React.Fragment, { key: task.id },
@@ -32318,7 +32478,7 @@ const html = `<!doctype html>
                               },
                             })
                           : React.createElement("span", {
-                              className: "playground-tasks-backlog-title",
+                              className: "playground-tasks-backlog-title" + (task.status === "done" ? " is-complete" : ""),
                             }, task.title || "Untitled Task")
                       )
                     ),
@@ -32496,7 +32656,13 @@ const html = `<!doctype html>
           return renderBacklogTaskListView({
             headerContent: isReleaseBacklogView
               ? React.createElement("div", { className: "playground-tasks-release-backlog-header-main" },
-                  React.createElement("div", { className: "playground-tasks-backlog-heading" }, selectedRelease.name || "Release"),
+                  React.createElement("div", { className: "playground-tasks-release-backlog-title-row" },
+                    React.createElement("div", { className: "playground-tasks-backlog-heading" }, selectedRelease.name || "Release"),
+                    renderReleaseHeaderMeta(selectedRelease, {
+                      className: "playground-tasks-release-header-meta",
+                      dateClassName: "playground-tasks-release-header-date",
+                    })
+                  ),
                   selectedRelease.description
                     ? React.createElement("div", { className: "playground-tasks-release-backlog-copy" }, selectedRelease.description)
                     : null
@@ -32836,7 +33002,9 @@ const html = `<!doctype html>
                 },
               },
                 React.createElement("div", { className: "playground-tasks-lane-card-header" },
-                  React.createElement("div", { className: "playground-tasks-lane-card-title" }, task.title || "Untitled Task"),
+                  React.createElement("div", {
+                    className: "playground-tasks-lane-card-title" + (task.status === "done" ? " is-complete" : ""),
+                  }, task.title || "Untitled Task"),
                   assigneeName
                     ? renderAgentNameAvatar(assigneeName, "playground-tasks-board-assignee-avatar")
                     : null
@@ -32922,15 +33090,19 @@ const html = `<!doctype html>
           }
 
           function renderBoardSection(section) {
+            const sectionRelease = section.releaseId ? (releasesById[section.releaseId] || null) : null;
             return React.createElement("div", {
                 key: section.key,
                 className: "playground-tasks-board-release-section",
               },
               React.createElement("div", { className: "playground-tasks-board-release-section-header" },
-                React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
-                section.copy
-                  ? React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, section.copy)
-                  : null
+                React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
+                  React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
+                  section.copy
+                    ? React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, section.copy)
+                    : null
+                ),
+                renderReleaseHeaderMeta(sectionRelease)
               ),
               React.createElement("div", { className: "playground-tasks-board-grid" },
                 PLAYGROUND_TASK_BOARD_LANES.map((lane) => renderBoardReleaseLane(section, lane))
