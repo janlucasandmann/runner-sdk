@@ -31942,6 +31942,7 @@ const html = `<!doctype html>
         const [agentId, setAgentId] = useState("");
         const [currentThreadId, setCurrentThreadId] = useState("");
         const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
+        const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
         const [taskOpenRequest, setTaskOpenRequest] = useState(null);
         const [settingsSection, setSettingsSection] = useState("costs-plans");
         const [contentMode, setContentMode] = useState("chat");
@@ -34688,6 +34689,37 @@ const html = `<!doctype html>
           }
           return hasRealAccess ? "" : computerAgentsMode ? "agent_default" : "";
         }, [agentId, computerAgentsMode, hasRealAccess, realAgents]);
+        const buildLiveThreadTaskPreview = useCallback(function buildLiveThreadTaskPreview(taskRecord, existingPreview, threadId = "") {
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const normalizedThreadId = String(threadId || existingPreview?.threadId || "").trim();
+          const assigneeAgentId = normalizedTask.assigneeAgentId || "";
+          const environmentId = normalizedTask.environmentId || "";
+          const assigneeName = assigneeAgentId
+            ? runtimeAgents.find((agent) => agent.id === assigneeAgentId)?.name
+              || (existingPreview?.assigneeAgentId === assigneeAgentId ? existingPreview?.assigneeName || "" : "")
+            : "";
+          const environmentName = environmentId
+            ? runtimeEnvironments.find((environment) => environment.id === environmentId)?.name
+              || (existingPreview?.environmentId === environmentId ? existingPreview?.environmentName || "" : "")
+            : "";
+          return {
+            ...(existingPreview && typeof existingPreview === "object" ? existingPreview : {}),
+            taskId: normalizedTask.id,
+            projectId: normalizedTask.projectId || existingPreview?.projectId || "",
+            projectName: existingPreview?.projectName || "",
+            threadId: normalizedThreadId,
+            ticketNumber: normalizePlaygroundTaskTicketNumber(normalizedTask.ticketNumber || existingPreview?.ticketNumber) || "000",
+            title: normalizedTask.title || existingPreview?.title || "Untitled Task",
+            description: normalizedTask.description || existingPreview?.description || "",
+            status: normalizedTask.status || existingPreview?.status || "todo",
+            priority: normalizedTask.priority || existingPreview?.priority || "medium",
+            taskType: normalizePlaygroundTaskType(normalizedTask.taskType || existingPreview?.taskType),
+            assigneeAgentId,
+            assigneeName,
+            environmentId,
+            environmentName,
+          };
+        }, [runtimeAgents, runtimeEnvironments]);
         const resolvedUpstreamHost = useMemo(() => {
           try {
             return new URL(resolvedUpstreamUrl).host;
@@ -34878,6 +34910,124 @@ const html = `<!doctype html>
           });
         }, []);
 
+        const updateThreadTaskPreviewStatus = useCallback(function updateThreadTaskPreviewStatus(threadId, taskId, nextTaskStatus) {
+          const normalizedThreadId = String(threadId || "").trim();
+          const normalizedTaskId = String(taskId || "").trim();
+          const normalizedTaskStatus = String(nextTaskStatus || "").trim();
+          if (!normalizedThreadId || !normalizedTaskId || !normalizedTaskStatus) {
+            return;
+          }
+
+          setRealThreads((current) => {
+            let didChange = false;
+            const nextThreads = current.map((thread) => {
+              if (thread.id !== normalizedThreadId) {
+                return thread;
+              }
+
+              const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+                ? thread.metadata
+                : {};
+              const runnerPlaygroundMetadata = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+                ? metadata.runnerPlayground
+                : {};
+              const taskPreview = runnerPlaygroundMetadata?.taskPreview && typeof runnerPlaygroundMetadata.taskPreview === "object" && !Array.isArray(runnerPlaygroundMetadata.taskPreview)
+                ? runnerPlaygroundMetadata.taskPreview
+                : null;
+
+              if (!taskPreview || String(taskPreview.taskId || "").trim() !== normalizedTaskId) {
+                return thread;
+              }
+              if (String(taskPreview.status || "").trim() === normalizedTaskStatus) {
+                return thread;
+              }
+
+              didChange = true;
+              return normalizeThreadItem({
+                ...thread,
+                metadata: {
+                  ...metadata,
+                  runnerPlayground: {
+                    ...runnerPlaygroundMetadata,
+                    taskPreview: {
+                      ...taskPreview,
+                      status: normalizedTaskStatus,
+                    },
+                  },
+                },
+              });
+            });
+
+            return didChange ? nextThreads : current;
+          });
+
+          setThreadTaskPreviewOverrides((current) => {
+            const existingPreview = current[normalizedThreadId];
+            if (
+              !existingPreview
+              || String(existingPreview.taskId || "").trim() !== normalizedTaskId
+              || String(existingPreview.status || "").trim() === normalizedTaskStatus
+            ) {
+              return current;
+            }
+            return {
+              ...current,
+              [normalizedThreadId]: {
+                ...existingPreview,
+                status: normalizedTaskStatus,
+              },
+            };
+          });
+        }, []);
+
+        const upsertThreadTaskPreview = useCallback(function upsertThreadTaskPreview(threadId, nextTaskPreview) {
+          const normalizedThreadId = String(threadId || "").trim();
+          if (!normalizedThreadId || !nextTaskPreview || typeof nextTaskPreview !== "object") {
+            return;
+          }
+
+          setThreadTaskPreviewOverrides((current) => ({
+            ...current,
+            [normalizedThreadId]: nextTaskPreview,
+          }));
+
+          setRealThreads((current) => {
+            let didChange = false;
+            const nextThreads = current.map((thread) => {
+              if (thread.id !== normalizedThreadId) {
+                return thread;
+              }
+
+              const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+                ? thread.metadata
+                : {};
+              const runnerPlaygroundMetadata = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+                ? metadata.runnerPlayground
+                : {};
+              const currentPreview = runnerPlaygroundMetadata?.taskPreview && typeof runnerPlaygroundMetadata.taskPreview === "object" && !Array.isArray(runnerPlaygroundMetadata.taskPreview)
+                ? runnerPlaygroundMetadata.taskPreview
+                : null;
+
+              if (JSON.stringify(currentPreview || null) === JSON.stringify(nextTaskPreview)) {
+                return thread;
+              }
+
+              didChange = true;
+              return normalizeThreadItem({
+                ...thread,
+                metadata: {
+                  ...metadata,
+                  runnerPlayground: {
+                    ...runnerPlaygroundMetadata,
+                    taskPreview: nextTaskPreview,
+                  },
+                },
+              });
+            });
+            return didChange ? nextThreads : current;
+          });
+        }, []);
+
         const loadThreadGroundTruthStatus = useCallback(async function loadThreadGroundTruthStatus(threadId) {
           const normalizedThreadId = String(threadId || "").trim();
           if (!hasRealAccess || !isRealThreadId(normalizedThreadId)) {
@@ -34968,7 +35118,15 @@ const html = `<!doctype html>
           } else {
             removeStatusIndicatorItem("task-run:" + normalizedTaskId);
           }
-        }, [removeStatusIndicatorItem, upsertStatusIndicatorItem]);
+
+          const normalizedThreadId = typeof nextTaskRunState?.threadId === "string" ? nextTaskRunState.threadId.trim() : "";
+          const normalizedPhase = typeof nextTaskRunState?.phase === "string" ? nextTaskRunState.phase.trim().toLowerCase() : "";
+          if (normalizedThreadId && normalizedPhase === "running") {
+            updateThreadTaskPreviewStatus(normalizedThreadId, normalizedTaskId, "in_progress");
+          } else if (normalizedThreadId && normalizedPhase === "finished") {
+            updateThreadTaskPreviewStatus(normalizedThreadId, normalizedTaskId, "done");
+          }
+        }, [removeStatusIndicatorItem, updateThreadTaskPreviewStatus, upsertStatusIndicatorItem]);
 
         const syncCompletedTaskRun = useCallback(async function syncCompletedTaskRun(taskRunState) {
           const normalizedTaskId = typeof taskRunState?.taskId === "string" ? taskRunState.taskId.trim() : "";
@@ -38126,6 +38284,14 @@ const html = `<!doctype html>
           return isRealThreadId(currentThreadId) ? currentThreadId : "";
         }, [currentThreadId]);
 
+        const selectedKnownThread = useMemo(() => {
+          if (!currentThreadId) {
+            return null;
+          }
+          return [...pinnedThreadItems, ...baseThreadItems, ...scheduledThreadItems]
+            .find((thread) => thread.id === currentThreadId) || null;
+        }, [baseThreadItems, currentThreadId, pinnedThreadItems, scheduledThreadItems]);
+
         const selectedThreadTitle = useMemo(() => {
           if (activePage === "settings") {
             return "Settings";
@@ -38148,18 +38314,14 @@ const html = `<!doctype html>
           if (!currentThreadId) {
             return "New Thread";
           }
-          const allKnownThreads = [...pinnedThreadItems, ...baseThreadItems, ...scheduledThreadItems];
-          const selectedThread = allKnownThreads.find((thread) => thread.id === currentThreadId);
-          return selectedThread?.title || "Current thread";
-        }, [activePage, baseThreadItems, currentThreadId, hasRealAccess, pinnedThreadItems, scheduledThreadItems]);
-        const selectedThreadTaskPreview = useMemo(() => {
-          if (!currentThreadId) {
+          return selectedKnownThread?.title || "Current thread";
+        }, [activePage, currentThreadId, hasRealAccess, selectedKnownThread]);
+        const rawSelectedThreadTaskPreview = useMemo(() => {
+          if (!selectedKnownThread) {
             return null;
           }
-          const selectedThread = [...pinnedThreadItems, ...baseThreadItems, ...scheduledThreadItems]
-            .find((thread) => thread.id === currentThreadId) || null;
-          const metadata = selectedThread?.metadata && typeof selectedThread.metadata === "object" && !Array.isArray(selectedThread.metadata)
-            ? selectedThread.metadata
+          const metadata = selectedKnownThread?.metadata && typeof selectedKnownThread.metadata === "object" && !Array.isArray(selectedKnownThread.metadata)
+            ? selectedKnownThread.metadata
             : null;
           const runnerPlaygroundMetadata = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
             ? metadata.runnerPlayground
@@ -38168,7 +38330,85 @@ const html = `<!doctype html>
             ? runnerPlaygroundMetadata.taskPreview
             : null;
           return taskPreview?.taskId ? taskPreview : null;
-        }, [baseThreadItems, currentThreadId, pinnedThreadItems, scheduledThreadItems]);
+        }, [selectedKnownThread]);
+        const selectedThreadTaskPreview = useMemo(() => {
+          if (!currentThreadId) {
+            return null;
+          }
+          const overridePreview = threadTaskPreviewOverrides[currentThreadId];
+          if (overridePreview && typeof overridePreview === "object" && overridePreview.taskId) {
+            return overridePreview;
+          }
+          return rawSelectedThreadTaskPreview;
+        }, [currentThreadId, rawSelectedThreadTaskPreview, threadTaskPreviewOverrides]);
+        const selectedThreadTaskPreviewTaskId = typeof selectedThreadTaskPreview?.taskId === "string"
+          ? selectedThreadTaskPreview.taskId.trim()
+          : "";
+        const selectedThreadNeedsTaskPreviewPolling = useMemo(() => {
+          const normalizedStatus = String(selectedKnownThread?.status || "").trim().toLowerCase();
+          return ["running", "queued", "pending", "scheduled", "starting"].includes(normalizedStatus);
+        }, [selectedKnownThread]);
+
+        useEffect(() => {
+          if (
+            activePage !== "thread"
+            || !hasRealAccess
+            || !activeRunnerThreadId
+            || !selectedThreadTaskPreviewTaskId
+          ) {
+            return;
+          }
+
+          let cancelled = false;
+
+          const syncTaskPreview = async () => {
+            try {
+              const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(selectedThreadTaskPreviewTaskId), {
+                method: "GET",
+                headers: authRequestHeaders,
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                return;
+              }
+              const taskRecord = getPlaygroundTaskResponseRecord(data);
+              if (!taskRecord?.id || cancelled) {
+                return;
+              }
+              const nextPreview = buildLiveThreadTaskPreview(taskRecord, selectedThreadTaskPreview, activeRunnerThreadId);
+              if (cancelled) {
+                return;
+              }
+              upsertThreadTaskPreview(activeRunnerThreadId, nextPreview);
+            } catch {}
+          };
+
+          void syncTaskPreview();
+          if (!selectedThreadNeedsTaskPreviewPolling) {
+            return () => {
+              cancelled = true;
+            };
+          }
+
+          const interval = window.setInterval(() => {
+            void syncTaskPreview();
+          }, 2000);
+
+          return () => {
+            cancelled = true;
+            window.clearInterval(interval);
+          };
+        }, [
+          activePage,
+          activeRunnerThreadId,
+          authRequestHeaders,
+          buildLiveThreadTaskPreview,
+          hasRealAccess,
+          proxyBackendBase,
+          selectedThreadNeedsTaskPreviewPolling,
+          selectedThreadTaskPreviewTaskId,
+          upsertThreadTaskPreview,
+        ]);
 
         useEffect(() => {
           if (!selectedThreadTaskPreview || activePage !== "thread") {
