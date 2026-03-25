@@ -28313,10 +28313,21 @@ const html = `<!doctype html>
           return "backlog-drop:" + (parentTaskId || "__root__") + ":" + String(insertIndex);
         }
 
-        function getBacklogSiblingTasks(parentTaskId) {
+        function getBacklogSiblingTasks(parentTaskId, options = {}) {
           const normalizedParentTaskId = normalizePlaygroundParentTaskId(parentTaskId);
+          const hasReleaseScope = Object.prototype.hasOwnProperty.call(options, "releaseId");
+          const normalizedReleaseId = hasReleaseScope && typeof options.releaseId === "string" && options.releaseId.trim()
+            ? options.releaseId.trim()
+            : "";
           return tasks
             .filter((task) => normalizePlaygroundParentTaskId(getPlaygroundTaskParentTaskId(task)) === normalizedParentTaskId)
+            .filter((task) => {
+              if (normalizedParentTaskId || !hasReleaseScope) {
+                return true;
+              }
+              const taskReleaseId = typeof task.releaseId === "string" && task.releaseId.trim() ? task.releaseId.trim() : "";
+              return taskReleaseId === normalizedReleaseId;
+            })
             .slice()
             .sort(compareBacklogDefaultTaskOrder);
         }
@@ -28453,11 +28464,15 @@ const html = `<!doctype html>
           return beforeVisibleTaskId ? targetSiblings.length : 0;
         }
 
-        async function handleBacklogTaskDrop(targetParentTaskId, visibleSiblingIds, insertIndex) {
+        async function handleBacklogTaskDrop(targetParentTaskId, visibleSiblingIds, insertIndex, targetReleaseId = undefined) {
           const draggingTaskId = String(backlogDraggingTaskId || "").trim();
           const draggedTask = draggingTaskId ? tasksById[draggingTaskId] || null : null;
           const normalizedTargetParentTaskId = normalizePlaygroundParentTaskId(targetParentTaskId);
           const targetParentTask = normalizedTargetParentTaskId ? tasksById[normalizedTargetParentTaskId] || null : null;
+          const hasTargetReleaseScope = targetReleaseId !== undefined && !normalizedTargetParentTaskId;
+          const normalizedTargetReleaseId = hasTargetReleaseScope && typeof targetReleaseId === "string" && targetReleaseId.trim()
+            ? targetReleaseId.trim()
+            : "";
 
           clearBacklogDragState();
 
@@ -28470,42 +28485,61 @@ const html = `<!doctype html>
           }
 
           const currentParentTaskId = getPlaygroundTaskParentTaskId(draggedTask);
+          const currentReleaseId = typeof draggedTask.releaseId === "string" && draggedTask.releaseId.trim()
+            ? draggedTask.releaseId.trim()
+            : "";
           const nextTaskType = normalizedTargetParentTaskId ? "subtask" : "task";
-          const targetSiblingTasks = getBacklogSiblingTasks(normalizedTargetParentTaskId).filter((task) => task.id !== draggedTask.id);
+          const targetSiblingTasks = getBacklogSiblingTasks(
+            normalizedTargetParentTaskId,
+            hasTargetReleaseScope ? { releaseId: normalizedTargetReleaseId } : {}
+          ).filter((task) => task.id !== draggedTask.id);
           const insertionIndex = resolveBacklogInsertionIndex(targetSiblingTasks, visibleSiblingIds, insertIndex);
           const movedTask = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
             ...draggedTask,
             taskType: nextTaskType,
             parentTaskId: normalizedTargetParentTaskId,
+            releaseId: hasTargetReleaseScope ? (normalizedTargetReleaseId || null) : draggedTask.releaseId,
           }));
 
           const nextTargetSiblingTasks = targetSiblingTasks.slice();
           nextTargetSiblingTasks.splice(insertionIndex, 0, movedTask);
 
           const updatesById = new Map();
-          const applySiblingOrderUpdates = (siblingTasks) => {
+          const applySiblingOrderUpdates = (siblingTasks, releaseIdScope = undefined) => {
             siblingTasks.forEach((task, siblingIndex) => {
               const currentTask = tasksById[task.id] || null;
               if (!currentTask) {
                 return;
               }
+              const normalizedReleaseScope = releaseIdScope !== undefined && typeof releaseIdScope === "string" && releaseIdScope.trim()
+                ? releaseIdScope.trim()
+                : "";
               const nextTask = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
                 ...task,
+                releaseId: releaseIdScope !== undefined ? (normalizedReleaseScope || null) : task.releaseId,
                 sortOrder: buildBacklogManualSortOrder(siblingIndex),
               }));
               if (
                 currentTask.sortOrder !== nextTask.sortOrder
                 || normalizePlaygroundTaskType(currentTask.taskType) !== normalizePlaygroundTaskType(nextTask.taskType)
                 || normalizePlaygroundParentTaskId(currentTask.parentTaskId) !== normalizePlaygroundParentTaskId(nextTask.parentTaskId)
+                || ((typeof currentTask.releaseId === "string" && currentTask.releaseId.trim() ? currentTask.releaseId.trim() : "")
+                  !== (typeof nextTask.releaseId === "string" && nextTask.releaseId.trim() ? nextTask.releaseId.trim() : ""))
               ) {
                 updatesById.set(nextTask.id, nextTask);
               }
             });
           };
 
-          applySiblingOrderUpdates(nextTargetSiblingTasks);
-          if (currentParentTaskId !== normalizedTargetParentTaskId) {
-            applySiblingOrderUpdates(getBacklogSiblingTasks(currentParentTaskId).filter((task) => task.id !== draggedTask.id));
+          applySiblingOrderUpdates(nextTargetSiblingTasks, hasTargetReleaseScope ? normalizedTargetReleaseId : undefined);
+          if (currentParentTaskId !== normalizedTargetParentTaskId || (hasTargetReleaseScope && currentReleaseId !== normalizedTargetReleaseId)) {
+            applySiblingOrderUpdates(
+              getBacklogSiblingTasks(
+                currentParentTaskId,
+                hasTargetReleaseScope && !currentParentTaskId ? { releaseId: currentReleaseId } : {}
+              ).filter((task) => task.id !== draggedTask.id),
+              hasTargetReleaseScope && !currentParentTaskId ? currentReleaseId : undefined
+            );
           }
 
           const changedTasks = Array.from(updatesById.values());
@@ -31952,6 +31986,9 @@ const html = `<!doctype html>
                         if (!canDropTaskOnBacklogReleaseSection(draggingBacklogTask, sectionReleaseId)) {
                           return;
                         }
+                        if (event.target instanceof Element && event.target.closest(".playground-tasks-backlog-item")) {
+                          return;
+                        }
                         event.preventDefault();
                         if (event.dataTransfer) {
                           event.dataTransfer.dropEffect = "move";
@@ -31962,6 +31999,9 @@ const html = `<!doctype html>
                       },
                       onDragEnter: (event) => {
                         if (!canDropTaskOnBacklogReleaseSection(draggingBacklogTask, sectionReleaseId)) {
+                          return;
+                        }
+                        if (event.target instanceof Element && event.target.closest(".playground-tasks-backlog-item")) {
                           return;
                         }
                         event.preventDefault();
@@ -31982,6 +32022,9 @@ const html = `<!doctype html>
                         if (!canDropTaskOnBacklogReleaseSection(draggingBacklogTask, sectionReleaseId)) {
                           return;
                         }
+                        if (event.target instanceof Element && event.target.closest(".playground-tasks-backlog-item")) {
+                          return;
+                        }
                         event.preventDefault();
                         void handleBacklogReleaseSectionDrop(sectionReleaseId);
                       },
@@ -31994,7 +32037,7 @@ const html = `<!doctype html>
                     ),
                     section.tasks.map((task, siblingIndex) =>
                       React.createElement(React.Fragment, { key: task.id },
-                        renderBacklogTaskRow(task, depth, null, section.tasks, siblingIndex)
+                        renderBacklogTaskRow(task, depth, null, section.tasks, siblingIndex, sectionReleaseId)
                       )
                     )
                   )
@@ -32012,7 +32055,7 @@ const html = `<!doctype html>
             );
           }
 
-          function renderBacklogTaskRow(task, depth = 0, parentTaskId = null, visibleSiblingTasks = [], siblingIndex = 0) {
+          function renderBacklogTaskRow(task, depth = 0, parentTaskId = null, visibleSiblingTasks = [], siblingIndex = 0, releaseSectionId = undefined) {
             const assigneeName = task.assigneeAgentId
               ? (agentsById[task.assigneeAgentId]?.name || "Assigned")
               : "Unassigned";
@@ -32033,8 +32076,7 @@ const html = `<!doctype html>
             const isSubtask = isPlaygroundSubtaskRecord(task);
             const isTitleEditable = selectedTaskId === task.id || backlogEditingTaskId === task.id;
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
-            const isGroupedReleaseBacklog = groupRootTasksByRelease && depth === 0;
-            const isRowManualSort = isBacklogManualSort && !isGroupedReleaseBacklog;
+            const isRowManualSort = isBacklogManualSort;
             const isReleaseSectionDraggable = canDragTaskAcrossReleaseSections(task) && depth === 0;
             const isDraggable = (isRowManualSort || isReleaseSectionDraggable)
               && !saveState.isSaving
@@ -32139,7 +32181,12 @@ const html = `<!doctype html>
                       return;
                     }
                     event.preventDefault();
-                    void handleBacklogTaskDrop(normalizedParentTaskId, visibleSiblingTasks.map((item) => item.id), dropTarget.insertIndex);
+                    void handleBacklogTaskDrop(
+                      normalizedParentTaskId,
+                      visibleSiblingTasks.map((item) => item.id),
+                      dropTarget.insertIndex,
+                      releaseSectionId
+                    );
                   },
                 },
                   React.createElement("div", { className: "playground-tasks-backlog-item-content" },
