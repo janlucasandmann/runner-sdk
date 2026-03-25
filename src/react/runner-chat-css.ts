@@ -1906,7 +1906,6 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   width: min(100%, 800px);
   max-width: 100%;
   padding: 0 12px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 15px;
 }
 
