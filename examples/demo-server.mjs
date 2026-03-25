@@ -11018,8 +11018,10 @@ const html = `<!doctype html>
 
       .playground-tasks-backlog-section-header {
         display: flex;
-        flex-direction: column;
-        gap: 2px;
+        align-items: baseline;
+        gap: 8px;
+        min-width: 0;
+        flex-wrap: wrap;
       }
 
       .playground-tasks-backlog-section-title {
@@ -11453,8 +11455,9 @@ const html = `<!doctype html>
         gap: 0;
         padding: 16px 18px;
         border: 0;
-        border-radius: 15px;
+        border-radius: 8px;
         background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
         color: rgba(255, 255, 255, 0.92);
         text-align: left;
         cursor: pointer;
@@ -11480,7 +11483,7 @@ const html = `<!doctype html>
 
       .playground-tasks-card-title,
       .playground-tasks-lane-card-title {
-        font-size: 14px;
+        font-size: 12px;
         line-height: 1.35;
         font-weight: 500;
         color: white;
@@ -11494,7 +11497,7 @@ const html = `<!doctype html>
 
       .playground-tasks-card-copy,
       .playground-tasks-lane-card-copy {
-        font-size: 14px;
+        font-size: 12px;
         line-height: 1.45;
         color: rgba(255, 255, 255, 0.7);
         font-weight: 400;
@@ -11505,6 +11508,28 @@ const html = `<!doctype html>
 
       .playground-tasks-lane-card-copy {
         margin-top: 4px;
+      }
+
+      .playground-tasks-board-assignee-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.88);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-board-assignee-avatar-fallback {
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
       }
 
       .playground-tasks-card-meta,
@@ -11623,7 +11648,7 @@ const html = `<!doctype html>
       .playground-tasks-lane-card-ticket {
         flex: 0 0 auto;
         color: rgba(102, 166, 255, 1);
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 500;
       }
 
@@ -11672,7 +11697,15 @@ const html = `<!doctype html>
       .playground-tasks-board-release-section {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
+      }
+
+      .playground-tasks-board-release-section-header {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        min-width: 0;
+        flex-wrap: wrap;
       }
 
       .playground-tasks-sprint-pill-row {
@@ -11712,7 +11745,18 @@ const html = `<!doctype html>
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 12px;
-        align-items: start;
+        align-items: stretch;
+      }
+
+      .playground-tasks-board-release-box {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 120px;
+        padding: 12px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.025);
+        transition: background-color 160ms ease, box-shadow 160ms ease;
       }
 
       .playground-tasks-lane {
@@ -11720,15 +11764,16 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 12px;
+        flex: 1 1 auto;
         padding: 0;
         border: 0;
-        border-radius: 10px;
+        border-radius: 0;
         background: transparent;
-        min-height: 320px;
-        transition: background-color 160ms ease, box-shadow 160ms ease;
+        min-height: 100%;
+        transition: none;
       }
 
-      .playground-tasks-lane.is-drop-target {
+      .playground-tasks-board-release-box.is-drop-target {
         background: rgba(102, 166, 255, 0.12);
         box-shadow: inset 0 0 0 1px rgba(102, 166, 255, 0.28);
       }
@@ -11737,6 +11782,10 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 10px;
+      }
+
+      .playground-tasks-board-release-lane-body {
+        min-height: 84px;
       }
 
       .playground-tasks-lane-card.is-draggable {
@@ -28650,6 +28699,14 @@ const html = `<!doctype html>
           );
         }
 
+        function renderAgentNameAvatar(name, className) {
+          const normalizedName = String(name || "").trim() || "Computer Agents";
+          const avatarLetter = getTaskCommentAvatarLetter(normalizedName);
+          return React.createElement("div", { className, title: normalizedName, "aria-hidden": "true" },
+            React.createElement("span", { className: className + "-fallback" }, avatarLetter)
+          );
+        }
+
         async function handleAddTaskComment() {
           if (!draftTask?.id) {
             return;
@@ -32749,6 +32806,9 @@ const html = `<!doctype html>
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
             const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
             const taskDescription = String(task.description || "").trim() || "No description";
+            const assigneeName = task.assigneeAgentId
+              ? (agentsById[task.assigneeAgentId]?.name || "Assigned")
+              : "";
             const isDraggable = canDropTaskOnBoardLane(task, "blocked") || canDropTaskOnBoardLane(task, "in_progress") || canDropTaskOnBoardLane(task, "todo");
             return React.createElement("button", {
                 key: task.id,
@@ -32775,7 +32835,12 @@ const html = `<!doctype html>
                   clearBoardDragState();
                 },
               },
-                React.createElement("div", { className: "playground-tasks-lane-card-title" }, task.title || "Untitled Task"),
+                React.createElement("div", { className: "playground-tasks-lane-card-header" },
+                  React.createElement("div", { className: "playground-tasks-lane-card-title" }, task.title || "Untitled Task"),
+                  assigneeName
+                    ? renderAgentNameAvatar(assigneeName, "playground-tasks-board-assignee-avatar")
+                    : null
+                ),
                 React.createElement("div", { className: "playground-tasks-lane-card-copy" }, taskDescription),
                 React.createElement("div", { className: "playground-tasks-lane-card-bottom" },
                   React.createElement("div", { className: "playground-tasks-lane-card-meta-left" },
@@ -32793,81 +32858,82 @@ const html = `<!doctype html>
               );
           }
 
-          function renderBoardSection(section) {
+          function renderBoardReleaseLane(section, lane) {
             const normalizedSectionReleaseId = typeof section.releaseId === "string" && section.releaseId.trim()
               ? section.releaseId.trim()
               : "";
+            const laneTasks = section.tasks.filter((task) => lane.statuses.includes(getTaskBoardStatus(task)));
+            const laneDropTargetKey = section.key + ":" + lane.id;
+            const isLaneDropTarget = boardDropLaneId === laneDropTargetKey
+              && draggingBoardTask
+              && isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId)
+              && canDropTaskOnBoardLane(draggingBoardTask, lane.id);
+            return React.createElement("div", {
+                key: section.key + ":" + lane.id,
+                className: "playground-tasks-board-release-box" + (isLaneDropTarget ? " is-drop-target" : ""),
+              },
+              React.createElement("div", {
+                  className: "playground-tasks-lane playground-tasks-board-release-lane-body",
+                  onDragOver: (event) => {
+                    if (!draggingBoardTask || !isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId) || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
+                      return;
+                    }
+                    event.preventDefault();
+                    if (event.dataTransfer) {
+                      event.dataTransfer.dropEffect = "move";
+                    }
+                    if (boardDropLaneId !== laneDropTargetKey) {
+                      setBoardDropLaneId(laneDropTargetKey);
+                    }
+                  },
+                  onDragEnter: (event) => {
+                    if (!draggingBoardTask || !isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId) || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
+                      return;
+                    }
+                    event.preventDefault();
+                    if (boardDropLaneId !== laneDropTargetKey) {
+                      setBoardDropLaneId(laneDropTargetKey);
+                    }
+                  },
+                  onDragLeave: (event) => {
+                    const relatedTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+                    if (relatedTarget && event.currentTarget.contains(relatedTarget)) {
+                      return;
+                    }
+                    if (boardDropLaneId === laneDropTargetKey) {
+                      setBoardDropLaneId("");
+                    }
+                  },
+                  onDrop: (event) => {
+                    if (!draggingBoardTask || !isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId) || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
+                      return;
+                    }
+                    event.preventDefault();
+                    void handleBoardLaneMove(draggingBoardTask, lane.id);
+                  },
+                },
+                laneTasks.length > 0
+                  ? React.createElement("div", { className: "playground-tasks-lane-list" },
+                      laneTasks.map((task) => renderBoardCard(task))
+                    )
+                  : null
+              )
+            );
+          }
+
+          function renderBoardSection(section) {
             return React.createElement("div", {
                 key: section.key,
                 className: "playground-tasks-board-release-section",
               },
-              React.createElement("div", { className: "playground-tasks-backlog-section-header" },
+              React.createElement("div", { className: "playground-tasks-board-release-section-header" },
                 React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
                 section.copy
                   ? React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, section.copy)
                   : null
               ),
-              React.createElement("div", { className: "playground-tasks-board-header" },
-                PLAYGROUND_TASK_BOARD_LANES.map((lane) =>
-                  React.createElement("div", { key: lane.id, className: "playground-tasks-board-header-cell" }, lane.label)
-                )
-              ),
               React.createElement("div", { className: "playground-tasks-board-grid" },
-                PLAYGROUND_TASK_BOARD_LANES.map((lane) => {
-                  const laneTasks = section.tasks.filter((task) => lane.statuses.includes(getTaskBoardStatus(task)));
-                  const laneDropTargetKey = section.key + ":" + lane.id;
-                  const isLaneDropTarget = boardDropLaneId === laneDropTargetKey
-                    && draggingBoardTask
-                    && isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId)
-                    && canDropTaskOnBoardLane(draggingBoardTask, lane.id);
-                  return React.createElement("div", {
-                      key: section.key + ":" + lane.id,
-                      className: "playground-tasks-lane" + (isLaneDropTarget ? " is-drop-target" : ""),
-                      onDragOver: (event) => {
-                        if (!draggingBoardTask || !isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId) || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
-                          return;
-                        }
-                        event.preventDefault();
-                        if (event.dataTransfer) {
-                          event.dataTransfer.dropEffect = "move";
-                        }
-                        if (boardDropLaneId !== laneDropTargetKey) {
-                          setBoardDropLaneId(laneDropTargetKey);
-                        }
-                      },
-                      onDragEnter: (event) => {
-                        if (!draggingBoardTask || !isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId) || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
-                          return;
-                        }
-                        event.preventDefault();
-                        if (boardDropLaneId !== laneDropTargetKey) {
-                          setBoardDropLaneId(laneDropTargetKey);
-                        }
-                      },
-                      onDragLeave: (event) => {
-                        const relatedTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
-                        if (relatedTarget && event.currentTarget.contains(relatedTarget)) {
-                          return;
-                        }
-                        if (boardDropLaneId === laneDropTargetKey) {
-                          setBoardDropLaneId("");
-                        }
-                      },
-                      onDrop: (event) => {
-                        if (!draggingBoardTask || !isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId) || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
-                          return;
-                        }
-                        event.preventDefault();
-                        void handleBoardLaneMove(draggingBoardTask, lane.id);
-                      },
-                    },
-                    laneTasks.length > 0
-                      ? React.createElement("div", { className: "playground-tasks-lane-list" },
-                          laneTasks.map((task) => renderBoardCard(task))
-                        )
-                      : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Nothing here yet.")
-                  );
-                })
+                PLAYGROUND_TASK_BOARD_LANES.map((lane) => renderBoardReleaseLane(section, lane))
               )
             );
           }
@@ -32883,8 +32949,15 @@ const html = `<!doctype html>
           return React.createElement("div", { className: "playground-tasks-view-section" },
             renderBoardToolbar(),
             shouldRenderBoardSections
-              ? React.createElement("div", { className: "playground-tasks-board-sections" },
-                  boardReleaseSections.map((section) => renderBoardSection(section))
+              ? React.createElement(React.Fragment, null,
+                  React.createElement("div", { className: "playground-tasks-board-header" },
+                    PLAYGROUND_TASK_BOARD_LANES.map((lane) =>
+                      React.createElement("div", { key: lane.id, className: "playground-tasks-board-header-cell" }, lane.label)
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-board-sections" },
+                    boardReleaseSections.map((section) => renderBoardSection(section))
+                  )
                 )
               : React.createElement("div", { className: "playground-tasks-empty" },
                   React.createElement("div", { className: "playground-tasks-empty-title" }, emptyTitle),

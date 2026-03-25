@@ -52,7 +52,7 @@ import {
 import { RunnerExecuteResult, RunnerLog, RunnerThreadStep, RunnerThreadStepDiffResult } from "../types.js";
 import { iterateSseData } from "../sse.js";
 import { useRunnerExecution } from "./use-runner-execution.js";
-import { getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
+import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 import { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js";
 import {
@@ -73,6 +73,8 @@ import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runn
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
+const RUNNER_THINKING_STATUS_FADE_DURATION_MS = 120;
+const RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS = 500;
 
 export interface RunnerAttachment {
   id: string;
@@ -107,6 +109,7 @@ interface LocalAttachment {
 type RunnerTurnStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
 type RunnerFileBrowserSource = "workspace" | "google-drive" | "one-drive" | "github" | "notion";
 type RunnerQuotedSelectionSource = "working_log" | "run_summary";
+type RunnerThinkingStatusPhase = "visible" | "fading" | "hidden";
 
 interface RunnerQuotedSelection {
   text: string;
@@ -4143,6 +4146,8 @@ export function RunnerChat({
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [isPreparingRun, setIsPreparingRun] = useState(false);
   const [turns, setTurns] = useState<RunnerTurn[]>([]);
+  const [visibleTimelineItemCountsByTurn, setVisibleTimelineItemCountsByTurn] = useState<Record<string, number>>({});
+  const [thinkingStatusPhaseByTurn, setThinkingStatusPhaseByTurn] = useState<Record<string, RunnerThinkingStatusPhase>>({});
   const [pendingQueuedMessages, setPendingQueuedMessages] = useState<PendingRunnerMessage[]>([]);
   const [editingTurnId, setEditingTurnId] = useState<string | null>(null);
   const [editingTurnDraft, setEditingTurnDraft] = useState("");
@@ -4293,6 +4298,11 @@ export function RunnerChat({
   const composerQuotedSelectionAnimationTimerRef = useRef<number | null>(null);
   const appliedBacklogSubtaskCommandTokenRef = useRef<string | number | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
+  const visibleTimelineItemCountsRef = useRef<Record<string, number>>({});
+  const thinkingStatusPhaseByTurnRef = useRef<Record<string, RunnerThinkingStatusPhase>>({});
+  const thinkingStatusTimersRef = useRef<Record<string, { hideTimer?: number; showTimer?: number }>>({});
+  const rawTimelineItemCountsRef = useRef<Record<string, number>>({});
+  const thinkingStatusEligibilityRef = useRef<Record<string, boolean>>({});
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -8067,6 +8077,10 @@ export function RunnerChat({
   }
 
   type RunnerTimelineItem = { kind: "log"; log: RunnerLog } | { kind: "browser_group"; logs: RunnerLog[] };
+  type RunnerTurnTimelineState = {
+    agentMessage?: RunnerLog;
+    displayedTimelineItems: RunnerTimelineItem[];
+  };
 
   function isBrowserTimelineLog(log: RunnerLog): boolean {
     if (log.eventType !== "command_execution") return false;
@@ -8108,6 +8122,199 @@ export function RunnerChat({
     }
     return stepRowKey(turnId, index, item.log);
   }
+
+  function getTurnTimelineState(turn: RunnerTurn): RunnerTurnTimelineState {
+    const agentMessage = [...turn.logs]
+      .reverse()
+      .find((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+    const normalizedAgentResponseMessage = agentMessage?.message
+      ? stripSystemTags(agentMessage.message).replace(/\s+/g, " ").trim()
+      : "";
+    const timelineLogs = dedupeAdjacentRunnerLogs(
+      turn.logs.filter(
+        (log) =>
+          shouldDisplayTimelineLog(log) &&
+          !(
+            (log.eventType === "reasoning" || log.isReasoning) &&
+            normalizedAgentResponseMessage &&
+            stripSystemTags(log.message || "").replace(/\s+/g, " ").trim() === normalizedAgentResponseMessage
+          )
+      )
+    );
+    const displayedTimelineLogs =
+      timelineLogs.length === 0 && turn.status === "running"
+        ? [
+            {
+              time: "00:00",
+              message: "Setting up workspace...",
+              type: "info" as const,
+              eventType: "setup" as const,
+            },
+          ]
+        : timelineLogs;
+
+    return {
+      agentMessage,
+      displayedTimelineItems: buildTimelineItems(displayedTimelineLogs),
+    };
+  }
+
+  function clearThinkingStatusTimers(turnId: string) {
+    const timers = thinkingStatusTimersRef.current[turnId];
+    if (timers?.hideTimer) {
+      window.clearTimeout(timers.hideTimer);
+    }
+    if (timers?.showTimer) {
+      window.clearTimeout(timers.showTimer);
+    }
+    delete thinkingStatusTimersRef.current[turnId];
+  }
+
+  function setVisibleTimelineItemCount(turnId: string, nextCount: number) {
+    setVisibleTimelineItemCountsByTurn((prev) => {
+      if (prev[turnId] === nextCount) {
+        return prev;
+      }
+      const next = { ...prev, [turnId]: nextCount };
+      visibleTimelineItemCountsRef.current = next;
+      return next;
+    });
+  }
+
+  function setThinkingStatusPhase(turnId: string, nextPhase: RunnerThinkingStatusPhase) {
+    setThinkingStatusPhaseByTurn((prev) => {
+      if (prev[turnId] === nextPhase) {
+        return prev;
+      }
+      const next = { ...prev, [turnId]: nextPhase };
+      thinkingStatusPhaseByTurnRef.current = next;
+      return next;
+    });
+  }
+
+  function removeThinkingStatusState(turnId: string) {
+    setVisibleTimelineItemCountsByTurn((prev) => {
+      if (!(turnId in prev)) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[turnId];
+      visibleTimelineItemCountsRef.current = next;
+      return next;
+    });
+    setThinkingStatusPhaseByTurn((prev) => {
+      if (!(turnId in prev)) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[turnId];
+      thinkingStatusPhaseByTurnRef.current = next;
+      return next;
+    });
+    delete rawTimelineItemCountsRef.current[turnId];
+    delete thinkingStatusEligibilityRef.current[turnId];
+    clearThinkingStatusTimers(turnId);
+  }
+
+  useEffect(() => {
+    visibleTimelineItemCountsRef.current = visibleTimelineItemCountsByTurn;
+  }, [visibleTimelineItemCountsByTurn]);
+
+  useEffect(() => {
+    thinkingStatusPhaseByTurnRef.current = thinkingStatusPhaseByTurn;
+  }, [thinkingStatusPhaseByTurn]);
+
+  useEffect(() => {
+    const activeTurnIds = new Set<string>();
+
+    for (const turn of turns) {
+      const { agentMessage, displayedTimelineItems } = getTurnTimelineState(turn);
+      const rawItemCount = displayedTimelineItems.length;
+      const canShowThinkingStatus = turn.status === "running" && rawItemCount > 0 && !agentMessage?.message;
+      const visibleItemCount = visibleTimelineItemCountsRef.current[turn.id];
+      const thinkingPhase = thinkingStatusPhaseByTurnRef.current[turn.id] ?? "hidden";
+
+      activeTurnIds.add(turn.id);
+      rawTimelineItemCountsRef.current[turn.id] = rawItemCount;
+      thinkingStatusEligibilityRef.current[turn.id] = canShowThinkingStatus;
+
+      if (visibleItemCount === undefined) {
+        setVisibleTimelineItemCount(turn.id, rawItemCount);
+      }
+
+      if (!canShowThinkingStatus) {
+        clearThinkingStatusTimers(turn.id);
+        setVisibleTimelineItemCount(turn.id, rawItemCount);
+        setThinkingStatusPhase(turn.id, "hidden");
+        continue;
+      }
+
+      const currentVisibleItemCount = visibleTimelineItemCountsRef.current[turn.id] ?? rawItemCount;
+
+      if (rawItemCount < currentVisibleItemCount) {
+        clearThinkingStatusTimers(turn.id);
+        setVisibleTimelineItemCount(turn.id, rawItemCount);
+        setThinkingStatusPhase(turn.id, "visible");
+        continue;
+      }
+
+      if (rawItemCount > currentVisibleItemCount) {
+        if (thinkingPhase === "visible") {
+          setThinkingStatusPhase(turn.id, "fading");
+          clearThinkingStatusTimers(turn.id);
+          const timers = thinkingStatusTimersRef.current[turn.id] || {};
+          timers.hideTimer = window.setTimeout(() => {
+            const latestVisibleItemCount = rawTimelineItemCountsRef.current[turn.id] ?? 0;
+            setVisibleTimelineItemCount(turn.id, latestVisibleItemCount);
+            setThinkingStatusPhase(turn.id, "hidden");
+
+            const nextTimers = thinkingStatusTimersRef.current[turn.id] || {};
+            if (nextTimers.showTimer) {
+              window.clearTimeout(nextTimers.showTimer);
+            }
+            nextTimers.showTimer = window.setTimeout(() => {
+              if (thinkingStatusEligibilityRef.current[turn.id]) {
+                setThinkingStatusPhase(turn.id, "visible");
+              }
+            }, RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS + RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS);
+            thinkingStatusTimersRef.current[turn.id] = nextTimers;
+          }, RUNNER_THINKING_STATUS_FADE_DURATION_MS);
+          thinkingStatusTimersRef.current[turn.id] = timers;
+        } else if (thinkingPhase === "hidden") {
+          setVisibleTimelineItemCount(turn.id, rawItemCount);
+          const timers = thinkingStatusTimersRef.current[turn.id] || {};
+          if (timers.showTimer) {
+            window.clearTimeout(timers.showTimer);
+          }
+          timers.showTimer = window.setTimeout(() => {
+            if (thinkingStatusEligibilityRef.current[turn.id]) {
+              setThinkingStatusPhase(turn.id, "visible");
+            }
+          }, RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS + RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS);
+          thinkingStatusTimersRef.current[turn.id] = timers;
+        }
+        continue;
+      }
+
+      if (thinkingPhase !== "fading" && thinkingPhase !== "visible") {
+        setThinkingStatusPhase(turn.id, "visible");
+      }
+    }
+
+    for (const turnId of Object.keys(rawTimelineItemCountsRef.current)) {
+      if (!activeTurnIds.has(turnId)) {
+        removeThinkingStatusState(turnId);
+      }
+    }
+  }, [turns]);
+
+  useEffect(() => {
+    return () => {
+      for (const turnId of Object.keys(thinkingStatusTimersRef.current)) {
+        clearThinkingStatusTimers(turnId);
+      }
+    };
+  }, []);
 
   function renderCommandIcon(icon: CommandRowSummary["icon"]) {
     if (icon === "read") return <IconReadFile className="tb-step-row-icon" />;
@@ -9202,9 +9409,7 @@ export function RunnerChat({
               const isTurnRunning = turn.status === "running";
               const isQueuedTurn = turn.status === "queued";
               const turnSeconds = getTurnDurationSeconds(turn);
-              const agentMessage = [...turn.logs]
-                .reverse()
-                .find((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+              const { agentMessage, displayedTimelineItems: rawDisplayedTimelineItems } = getTurnTimelineState(turn);
               const isBtwTurn = turn.presentation === "btw" || turn.prompt.trim().toLowerCase().startsWith("/btw");
               const isEditingTurn = editingTurnId === turn.id;
               const canEditTurn = isEditableUserTurn(turn);
@@ -9228,32 +9433,19 @@ export function RunnerChat({
                 backendUrl: normalizedBackendUrl,
                 environmentId: summaryPreviewEnvironmentId,
               });
-              const normalizedAgentResponseMessage = agentMessage?.message
-                ? stripSystemTags(agentMessage.message).replace(/\s+/g, " ").trim()
-                : "";
-              const timelineLogs = dedupeAdjacentRunnerLogs(
-                turn.logs.filter(
-                  (log) =>
-                    shouldDisplayTimelineLog(log) &&
-                    !(
-                      (log.eventType === "reasoning" || log.isReasoning) &&
-                      normalizedAgentResponseMessage &&
-                      stripSystemTags(log.message || "").replace(/\s+/g, " ").trim() === normalizedAgentResponseMessage
-                    )
-                )
-              );
-              const displayedTimelineLogs =
-                timelineLogs.length === 0 && isTurnRunning
-                  ? [
-                      {
-                        time: "00:00",
-                        message: "Setting up workspace...",
-                        type: "info" as const,
-                        eventType: "setup" as const,
-                      },
-                    ]
-                  : timelineLogs;
-              const displayedTimelineItems = buildTimelineItems(displayedTimelineLogs);
+              const visibleTimelineItemCount = visibleTimelineItemCountsByTurn[turn.id];
+              const displayedTimelineItems =
+                visibleTimelineItemCount === undefined
+                  ? rawDisplayedTimelineItems
+                  : rawDisplayedTimelineItems.slice(0, visibleTimelineItemCount);
+              const thinkingStatusPhase =
+                thinkingStatusPhaseByTurn[turn.id] ??
+                (isTurnRunning && rawDisplayedTimelineItems.length > 0 && !agentMessage?.message ? "visible" : "hidden");
+              const shouldRenderThinkingStatus =
+                isTurnRunning &&
+                rawDisplayedTimelineItems.length > 0 &&
+                !agentMessage?.message &&
+                thinkingStatusPhase !== "hidden";
               const isWorkLogsLoading =
                 isThreadHistoryLoading &&
                 !isTurnRunning &&
@@ -9445,8 +9637,11 @@ export function RunnerChat({
                                   </div>
                                 ))}
                               </div>
-                              {isTurnRunning && displayedTimelineItems.length > 0 && !agentMessage?.message ? (
-                                <div className="agent-step-item" style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}>
+                              {shouldRenderThinkingStatus ? (
+                                <div
+                                  className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
+                                  style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
+                                >
                                   <div className="agent-step-content">
                                     <InlineStatusLogBox
                                       label="Thinking..."
@@ -9636,8 +9831,11 @@ export function RunnerChat({
                                 </div>
                               ))}
                             </div>
-                            {isTurnRunning && displayedTimelineItems.length > 0 && !agentMessage?.message ? (
-                              <div className="agent-step-item" style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}>
+                            {shouldRenderThinkingStatus ? (
+                              <div
+                                className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
+                                style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
+                              >
                                 <div className="agent-step-content">
                                   <InlineStatusLogBox
                                     label="Thinking..."

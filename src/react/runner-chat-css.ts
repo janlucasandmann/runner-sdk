@@ -1113,7 +1113,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-task-preview-ticket {
   color: rgba(102, 166, 255, 1);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   flex: 0 0 auto;
 }
@@ -1121,7 +1121,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-task-preview-title {
   min-width: 0;
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.35;
   white-space: normal;
@@ -1176,7 +1176,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-task-preview-card-description {
   margin-top: 4px;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.45;
   font-weight: 400;
   white-space: pre-wrap;
@@ -1398,6 +1398,17 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-thinking-status {
   animation: tb-context-action-notice-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.tb-runner-chat .tb-thinking-status-transition {
+  transition: opacity 120ms ease, transform 120ms ease;
+  will-change: opacity, transform;
+}
+
+.tb-runner-chat .tb-thinking-status-transition.is-fading {
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
 }
 
 .tb-runner-chat .tb-context-action-notice-pending .tb-context-action-notice-icon {
