@@ -37827,7 +37827,7 @@ const html = `<!doctype html>
 
           const selectedThread = realThreads.find((thread) => thread.id === currentThreadId) || null;
           const normalizedThreadStatus = String(selectedThread?.status || "").trim().toLowerCase();
-          if (!normalizedThreadStatus || ["completed", "failed", "cancelled"].includes(normalizedThreadStatus)) {
+          if (!["running", "queued", "pending", "scheduled", "starting"].includes(normalizedThreadStatus)) {
             return;
           }
 
@@ -37838,7 +37838,8 @@ const html = `<!doctype html>
             if (cancelled || !nextStatus) {
               return;
             }
-            if (String(nextStatus).trim().toLowerCase() !== "running") {
+            const normalizedNextStatus = String(nextStatus).trim().toLowerCase();
+            if (["completed", "failed", "cancelled"].includes(normalizedNextStatus)) {
               void refreshThreads();
             }
           };
@@ -38573,12 +38574,10 @@ const html = `<!doctype html>
                 )
               ),
               React.createElement("div", { className: "sidebar-thread-scroll" },
-                isThreadsLoading
-                  ? React.createElement("div", { className: "sidebar-empty-state" }, sidebarEmptyStateCopy)
-                  : displayedThreadItems.length === 0
-                    ? baseThreadItems.length === 0
-                      ? React.createElement("div", { className: "sidebar-empty-state" }, sidebarEmptyStateCopy)
-                      : null
+                displayedThreadItems.length === 0
+                  ? baseThreadItems.length === 0
+                    ? React.createElement("div", { className: "sidebar-empty-state" }, sidebarEmptyStateCopy)
+                    : null
                   : React.createElement("div", { className: "sidebar-thread-list" },
                       displayedThreadItems.map((thread) => renderSidebarThreadRow(thread)),
                       hasMoreThreadItems
