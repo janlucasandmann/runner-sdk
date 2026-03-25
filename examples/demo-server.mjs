@@ -11004,6 +11004,14 @@ const html = `<!doctype html>
         gap: 8px;
       }
 
+      .playground-tasks-backlog-section.is-release-drop-target {
+        margin-inline: -10px;
+        padding: 8px 10px;
+        border-radius: 14px;
+        background: rgba(102, 166, 255, 0.08);
+        box-shadow: inset 0 0 0 1px rgba(102, 166, 255, 0.22);
+      }
+
       .playground-tasks-backlog-section + .playground-tasks-backlog-section {
         margin-top: 8px;
       }
@@ -24634,6 +24642,7 @@ const html = `<!doctype html>
         const [backlogTitleInputValue, setBacklogTitleInputValue] = useState("");
         const [backlogDraggingTaskId, setBacklogDraggingTaskId] = useState("");
         const [backlogDropTargetKey, setBacklogDropTargetKey] = useState("");
+        const [backlogReleaseDropTargetId, setBacklogReleaseDropTargetId] = useState("");
         const [boardDraggingTaskId, setBoardDraggingTaskId] = useState("");
         const [boardDropLaneId, setBoardDropLaneId] = useState("");
         const [boardBlockedPickerState, setBoardBlockedPickerState] = useState(null);
@@ -28159,6 +28168,7 @@ const html = `<!doctype html>
         function clearBacklogDragState() {
           setBacklogDraggingTaskId("");
           setBacklogDropTargetKey("");
+          setBacklogReleaseDropTargetId("");
         }
 
         function clearBoardDragState() {
@@ -28340,6 +28350,87 @@ const html = `<!doctype html>
           return (index + 1) * 1000;
         }
 
+        function getNextBacklogReleaseSectionSortOrder(releaseId) {
+          const normalizedReleaseId = typeof releaseId === "string" && releaseId.trim() ? releaseId.trim() : "";
+          const siblingSortOrders = tasks
+            .filter((task) => !getPlaygroundTaskParentTaskId(task))
+            .filter((task) => {
+              const taskReleaseId = typeof task.releaseId === "string" && task.releaseId.trim() ? task.releaseId.trim() : "";
+              return taskReleaseId === normalizedReleaseId;
+            })
+            .map((task) => Number.isFinite(task?.sortOrder) ? Number(task.sortOrder) : 0);
+          if (siblingSortOrders.length === 0) {
+            return buildBacklogManualSortOrder(0);
+          }
+          return Math.max(...siblingSortOrders) + 1000;
+        }
+
+        function canDragTaskAcrossReleaseSections(taskRecord) {
+          if (!taskRecord?.id || selectedReleaseId || saveState.isSaving) {
+            return false;
+          }
+          if (isPlaygroundSubtaskRecord(taskRecord) || getPlaygroundTaskParentTaskId(taskRecord)) {
+            return false;
+          }
+          return true;
+        }
+
+        function canDropTaskOnBacklogReleaseSection(taskRecord, targetReleaseId) {
+          if (!canDragTaskAcrossReleaseSections(taskRecord)) {
+            return false;
+          }
+          const normalizedTargetReleaseId = typeof targetReleaseId === "string" && targetReleaseId.trim() ? targetReleaseId.trim() : "";
+          const currentReleaseId = typeof taskRecord.releaseId === "string" && taskRecord.releaseId.trim() ? taskRecord.releaseId.trim() : "";
+          return currentReleaseId !== normalizedTargetReleaseId;
+        }
+
+        async function handleBacklogReleaseSectionDrop(targetReleaseId) {
+          const draggingTaskId = String(backlogDraggingTaskId || "").trim();
+          const draggedTask = draggingTaskId ? tasksById[draggingTaskId] || null : null;
+          const normalizedTargetReleaseId = typeof targetReleaseId === "string" && targetReleaseId.trim() ? targetReleaseId.trim() : "";
+
+          clearBacklogDragState();
+
+          if (!draggedTask?.id || !canDropTaskOnBacklogReleaseSection(draggedTask, normalizedTargetReleaseId)) {
+            return;
+          }
+
+          const nextSortOrder = getNextBacklogReleaseSectionSortOrder(normalizedTargetReleaseId);
+          const updatedTask = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
+            ...draggedTask,
+            releaseId: normalizedTargetReleaseId || null,
+            sortOrder: nextSortOrder,
+          }));
+
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          commitLocalTaskRecord(updatedTask, {
+            selectTask: selectedTaskIdRef.current === updatedTask.id,
+          });
+
+          try {
+            const savedTask = await patchTaskRecord(updatedTask);
+            commitLocalTaskRecord(savedTask, {
+              selectTask: selectedTaskIdRef.current === savedTask.id,
+            });
+            const nextReleaseName = normalizedTargetReleaseId
+              ? (releasesById[normalizedTargetReleaseId]?.name || "release")
+              : "All other";
+            resetSaveState("Moved to " + nextReleaseName);
+          } catch (error) {
+            await loadProjectWorkspace(selectedProjectId);
+            setSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to move ticket to release.",
+              message: "",
+            });
+          }
+        }
+
         function resolveBacklogInsertionIndex(targetSiblings, visibleSiblingIds, insertIndex) {
           const normalizedVisibleSiblingIds = normalizePlaygroundIdList(visibleSiblingIds);
           const beforeVisibleTaskId = normalizedVisibleSiblingIds[insertIndex] || "";
@@ -28448,7 +28539,9 @@ const html = `<!doctype html>
         }
 
         function handleBacklogTaskDragStart(task, event) {
-          if (backlogSortMode !== "default" || saveState.isSaving || !task?.id) {
+          const canManualSort = backlogSortMode === "default";
+          const canReleaseReassign = canDragTaskAcrossReleaseSections(task);
+          if ((!canManualSort && !canReleaseReassign) || saveState.isSaving || !task?.id) {
             event.preventDefault();
             return;
           }
@@ -31830,11 +31923,68 @@ const html = `<!doctype html>
                 releaseSections[sectionIndex].tasks.push(task);
               });
 
+              const orderedReleaseSections = releaseSections
+                .slice()
+                .sort((left, right) => {
+                  const leftIsAllOther = left.key === "__no_release__";
+                  const rightIsAllOther = right.key === "__no_release__";
+                  if (leftIsAllOther !== rightIsAllOther) {
+                    return leftIsAllOther ? 1 : -1;
+                  }
+                  if (leftIsAllOther && rightIsAllOther) {
+                    return 0;
+                  }
+                  const leftRelease = releasesById[left.key] || { id: left.key, name: left.title };
+                  const rightRelease = releasesById[right.key] || { id: right.key, name: right.title };
+                  return compareTaskReleaseOrder(leftRelease, rightRelease);
+                });
+
               return React.createElement(React.Fragment, null,
-                releaseSections.map((section) =>
+                orderedReleaseSections.map((section) => {
+                  const sectionReleaseId = section.key === "__no_release__" ? "" : section.key;
+                  const isSectionDropTarget = backlogReleaseDropTargetId === section.key
+                    && canDropTaskOnBacklogReleaseSection(draggingBacklogTask, sectionReleaseId);
+                  return (
                   React.createElement("div", {
                       key: section.key,
-                      className: "playground-tasks-backlog-section",
+                      className: "playground-tasks-backlog-section" + (isSectionDropTarget ? " is-release-drop-target" : ""),
+                      onDragOver: (event) => {
+                        if (!canDropTaskOnBacklogReleaseSection(draggingBacklogTask, sectionReleaseId)) {
+                          return;
+                        }
+                        event.preventDefault();
+                        if (event.dataTransfer) {
+                          event.dataTransfer.dropEffect = "move";
+                        }
+                        if (backlogReleaseDropTargetId !== section.key) {
+                          setBacklogReleaseDropTargetId(section.key);
+                        }
+                      },
+                      onDragEnter: (event) => {
+                        if (!canDropTaskOnBacklogReleaseSection(draggingBacklogTask, sectionReleaseId)) {
+                          return;
+                        }
+                        event.preventDefault();
+                        if (backlogReleaseDropTargetId !== section.key) {
+                          setBacklogReleaseDropTargetId(section.key);
+                        }
+                      },
+                      onDragLeave: (event) => {
+                        const relatedTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+                        if (relatedTarget && event.currentTarget.contains(relatedTarget)) {
+                          return;
+                        }
+                        if (backlogReleaseDropTargetId === section.key) {
+                          setBacklogReleaseDropTargetId("");
+                        }
+                      },
+                      onDrop: (event) => {
+                        if (!canDropTaskOnBacklogReleaseSection(draggingBacklogTask, sectionReleaseId)) {
+                          return;
+                        }
+                        event.preventDefault();
+                        void handleBacklogReleaseSectionDrop(sectionReleaseId);
+                      },
                     },
                     React.createElement("div", { className: "playground-tasks-backlog-section-header" },
                       React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
@@ -31848,7 +31998,8 @@ const html = `<!doctype html>
                       )
                     )
                   )
-                )
+                );
+                })
               );
             }
 
@@ -31882,22 +32033,29 @@ const html = `<!doctype html>
             const isSubtask = isPlaygroundSubtaskRecord(task);
             const isTitleEditable = selectedTaskId === task.id || backlogEditingTaskId === task.id;
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
-            const isDraggable = isBacklogManualSort && !saveState.isSaving && (!backlogDraggingTaskId || backlogDraggingTaskId === task.id);
+            const isGroupedReleaseBacklog = groupRootTasksByRelease && depth === 0;
+            const isRowManualSort = isBacklogManualSort && !isGroupedReleaseBacklog;
+            const isReleaseSectionDraggable = canDragTaskAcrossReleaseSections(task) && depth === 0;
+            const isDraggable = (isRowManualSort || isReleaseSectionDraggable)
+              && !saveState.isSaving
+              && (!backlogDraggingTaskId || backlogDraggingTaskId === task.id);
             const normalizedParentTaskId = normalizePlaygroundParentTaskId(parentTaskId);
-            const canDropOnThisLevel = !normalizedParentTaskId
-              || (draggingBacklogTask?.id && isPlaygroundSubtaskRecord(draggingBacklogTask) && canBacklogTaskMoveToParentTask(draggingBacklogTask, normalizedParentTaskId));
+            const canDropOnThisLevel = isRowManualSort && (
+              !normalizedParentTaskId
+              || (draggingBacklogTask?.id && isPlaygroundSubtaskRecord(draggingBacklogTask) && canBacklogTaskMoveToParentTask(draggingBacklogTask, normalizedParentTaskId))
+            );
             const beforeDropTargetKey = getBacklogManualOrderDropTargetKey(normalizedParentTaskId, siblingIndex);
             const afterDropTargetKey = getBacklogManualOrderDropTargetKey(normalizedParentTaskId, siblingIndex + 1);
-            const isDropBefore = isBacklogManualSort
+            const isDropBefore = isRowManualSort
               && backlogDropTargetKey === beforeDropTargetKey
               && siblingIndex === 0
               && backlogDraggingTaskId !== task.id;
-            const isDropAfter = isBacklogManualSort
+            const isDropAfter = isRowManualSort
               && backlogDropTargetKey === afterDropTargetKey
               && backlogDraggingTaskId !== task.id;
 
             function resolveRowDropTarget(event) {
-              if (!isBacklogManualSort || !draggingBacklogTask?.id || !canDropOnThisLevel) {
+              if (!isRowManualSort || !draggingBacklogTask?.id || !canDropOnThisLevel) {
                 return null;
               }
               const currentTarget = event.currentTarget;
@@ -31946,6 +32104,9 @@ const html = `<!doctype html>
                     if (event.dataTransfer) {
                       event.dataTransfer.dropEffect = "move";
                     }
+                    if (backlogReleaseDropTargetId) {
+                      setBacklogReleaseDropTargetId("");
+                    }
                     if (backlogDropTargetKey !== dropTarget.dropTargetKey) {
                       setBacklogDropTargetKey(dropTarget.dropTargetKey);
                     }
@@ -31956,6 +32117,9 @@ const html = `<!doctype html>
                       return;
                     }
                     event.preventDefault();
+                    if (backlogReleaseDropTargetId) {
+                      setBacklogReleaseDropTargetId("");
+                    }
                     if (backlogDropTargetKey !== dropTarget.dropTargetKey) {
                       setBacklogDropTargetKey(dropTarget.dropTargetKey);
                     }
