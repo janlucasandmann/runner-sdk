@@ -8756,19 +8756,91 @@ const html = `<!doctype html>
         padding: 0 0 10px;
       }
 
-      .playground-tasks-detail-thread-link {
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: #66a6ff;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.3;
-        cursor: pointer;
+      .playground-tasks-detail-thread-card {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
       }
 
-      .playground-tasks-detail-thread-link:hover {
-        color: #82b7ff;
+      .playground-tasks-detail-thread-card-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-tasks-detail-thread-card-title {
+        min-width: 0;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tasks-detail-thread-card-description {
+        min-width: 0;
+        font-size: 11px;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-tasks-detail-thread-card-actions {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-tasks-detail-thread-card-button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 28px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1;
+        cursor: pointer;
+        overflow: hidden;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-tasks-detail-thread-card-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-tasks-detail-thread-card-button:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
       }
 
       .playground-tasks-detail-facts {
@@ -9171,7 +9243,7 @@ const html = `<!doctype html>
 
       .playground-tasks-attachments-environment-button:hover:not(:disabled) {
         background: transparent;
-        color: #82b7ff;
+        color: #66a6ff;
       }
 
       .playground-tasks-skills {
@@ -9213,7 +9285,7 @@ const html = `<!doctype html>
       .playground-tasks-skills-manage-button:hover:not(:disabled),
       .playground-tasks-skills-manage-button.is-active {
         background: transparent;
-        color: #82b7ff;
+        color: #66a6ff;
       }
 
       .playground-tasks-skills-list {
@@ -9394,8 +9466,8 @@ const html = `<!doctype html>
 
       .playground-tasks-comments .playground-tasks-detail-section-title {
         margin-bottom: 14px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0;
+        border-bottom: 0;
       }
 
       .playground-tasks-comments-list {
@@ -23790,6 +23862,7 @@ const html = `<!doctype html>
         canStartThreads,
         onThreadStarted,
         onTaskRunStateChange,
+        onTaskDeleted,
         openTaskRequest,
         onRequireAuth,
         onRequestSidebarCollapse,
@@ -28001,6 +28074,47 @@ const html = `<!doctype html>
           onThreadStarted(threadId, { contentMode: "changes" });
         }
 
+        function handleOpenTaskThreadChat(task) {
+          const threadId = getTaskStartedThreadId(task);
+          if (!threadId || typeof onThreadStarted !== "function") {
+            return;
+          }
+          setTaskDetailPopover("");
+          onThreadStarted(threadId, { contentMode: "chat" });
+        }
+
+        function getTaskLinkedRunPresentation(threadRecord) {
+          const normalizedStatus = String(threadRecord?.status || "").trim().toLowerCase();
+          if (normalizedStatus === "completed") {
+            return {
+              title: "Latest completed run",
+              description: "",
+            };
+          }
+          if (["running", "starting"].includes(normalizedStatus)) {
+            return {
+              title: "Latest run in progress",
+              description: "",
+            };
+          }
+          if (["queued", "pending", "scheduled"].includes(normalizedStatus)) {
+            return {
+              title: "Latest run scheduled",
+              description: "",
+            };
+          }
+          if (["failed", "cancelled"].includes(normalizedStatus)) {
+            return {
+              title: "Latest run needs review",
+              description: "",
+            };
+          }
+          return {
+            title: "Latest linked Thread",
+            description: "",
+          };
+        }
+
         function collectTaskDescendantIds(taskId) {
           const normalizedTaskId = String(taskId || "").trim();
           const descendantIds = [];
@@ -28116,9 +28230,16 @@ const html = `<!doctype html>
 
             await deleteTaskRecordById(resolvedTaskId);
 
+            if (typeof onTaskDeleted === "function") {
+              onTaskDeleted(resolvedTaskId);
+            }
+
             if (selectedTaskId === resolvedTaskId) {
               setSelectedTaskId("");
               setDraftTask(null);
+              if (typeof onCloseDetailOnly === "function") {
+                onCloseDetailOnly();
+              }
             }
             setTaskDeleteDialogState(null);
             await loadProjectWorkspace(selectedProjectId);
@@ -31346,6 +31467,7 @@ const html = `<!doctype html>
           const startedThreadRecord = startedThreadId
             ? selectedProjectRecentThreads.find((thread) => thread.id === startedThreadId) || null
             : null;
+          const linkedRunPresentation = getTaskLinkedRunPresentation(startedThreadRecord);
           const activeTaskStatusClassName = "playground-tasks-backlog-status playground-tasks-detail-navbar-status"
             + (draftTask.status === "todo"
               ? " is-todo"
@@ -31477,15 +31599,26 @@ const html = `<!doctype html>
                 React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
                 startedThreadId
                   ? React.createElement("div", { className: "playground-tasks-detail-thread-link-row" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-tasks-detail-thread-link",
-                        onClick: () => {
-                          if (typeof onThreadStarted === "function") {
-                            onThreadStarted(startedThreadId);
-                          }
-                        },
-                      }, "Thread: " + (startedThreadRecord?.title || startedThreadId))
+                      React.createElement("div", { className: "playground-tasks-detail-thread-card" },
+                        React.createElement("div", { className: "playground-tasks-detail-thread-card-copy" },
+                          React.createElement("div", { className: "playground-tasks-detail-thread-card-title" }, linkedRunPresentation.title),
+                          linkedRunPresentation.description
+                            ? React.createElement("div", { className: "playground-tasks-detail-thread-card-description" }, linkedRunPresentation.description)
+                            : null
+                        ),
+                        React.createElement("div", { className: "playground-tasks-detail-thread-card-actions" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-detail-thread-card-button",
+                            onClick: () => handleOpenTaskThreadChat(draftTask),
+                          }, "Thread"),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-detail-thread-card-button",
+                            onClick: () => handleOpenTaskThreadChanges(draftTask),
+                          }, "Changes")
+                        )
+                      )
                     )
                   : null,
                 React.createElement("div", { className: "playground-tasks-detail-facts" },
@@ -34871,6 +35004,7 @@ const html = `<!doctype html>
             assigneeName,
             environmentId,
             environmentName,
+            isDeleted: false,
           };
         }, [runtimeAgents, runtimeEnvironments]);
         const resolvedUpstreamHost = useMemo(() => {
@@ -35180,6 +35314,20 @@ const html = `<!doctype html>
             return didChange ? nextThreads : current;
           });
         }, []);
+
+        const markThreadTaskPreviewDeleted = useCallback(function markThreadTaskPreviewDeleted(threadId, taskPreview) {
+          const normalizedThreadId = String(threadId || "").trim();
+          if (!normalizedThreadId || !taskPreview?.taskId) {
+            return;
+          }
+
+          const nextPreview = {
+            ...taskPreview,
+            isDeleted: true,
+          };
+
+          upsertThreadTaskPreview(normalizedThreadId, nextPreview);
+        }, [upsertThreadTaskPreview]);
 
         const loadThreadGroundTruthStatus = useCallback(async function loadThreadGroundTruthStatus(threadId) {
           const normalizedThreadId = String(threadId || "").trim();
@@ -38508,6 +38656,7 @@ const html = `<!doctype html>
             || !hasRealAccess
             || !activeRunnerThreadId
             || !selectedThreadTaskPreviewTaskId
+            || selectedThreadTaskPreview?.isDeleted
           ) {
             return;
           }
@@ -38522,6 +38671,14 @@ const html = `<!doctype html>
               });
               const data = await response.json().catch(() => ({}));
               if (!response.ok) {
+                if (response.status === 404 && !cancelled && !selectedThreadTaskPreview?.isDeleted) {
+                  markThreadTaskPreviewDeleted(activeRunnerThreadId, selectedThreadTaskPreview);
+                  setThreadTaskOpenRequest((current) => (
+                    current && String(current.taskId || "").trim() === selectedThreadTaskPreviewTaskId
+                      ? null
+                      : current
+                  ));
+                }
                 return;
               }
               const taskRecord = getPlaygroundTaskResponseRecord(data);
@@ -38557,8 +38714,10 @@ const html = `<!doctype html>
           authRequestHeaders,
           buildLiveThreadTaskPreview,
           hasRealAccess,
+          markThreadTaskPreviewDeleted,
           proxyBackendBase,
           selectedThreadNeedsTaskPreviewPolling,
+          selectedThreadTaskPreview,
           selectedThreadTaskPreviewTaskId,
           upsertThreadTaskPreview,
         ]);
@@ -39641,6 +39800,16 @@ const html = `<!doctype html>
                               onRequireAuth: handleSignInWithComputerAgents,
                               onRequestSidebarCollapse: () => {
                                 setSidebarOpen(false);
+                              },
+                              onTaskDeleted: (taskId) => {
+                                if (
+                                  activeRunnerThreadId
+                                  && selectedThreadTaskPreview
+                                  && String(selectedThreadTaskPreview.taskId || "").trim() === String(taskId || "").trim()
+                                ) {
+                                  markThreadTaskPreviewDeleted(activeRunnerThreadId, selectedThreadTaskPreview);
+                                }
+                                setThreadTaskOpenRequest(null);
                               },
                               detailOnly: true,
                               onCloseDetailOnly: () => {

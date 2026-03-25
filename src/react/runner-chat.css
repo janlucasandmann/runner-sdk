@@ -367,6 +367,7 @@
 .tb-runner-chat .tb-task-preview-card {
   width: fit-content;
   max-width: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -380,8 +381,33 @@
   transition: background 140ms ease, transform 140ms ease;
 }
 
+.tb-runner-chat .tb-task-preview-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: var(--tb-runner-input-border);
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
 .tb-runner-chat .tb-task-preview-card:hover {
   background: rgba(255, 255, 255, 0.07);
+}
+
+.tb-runner-chat .tb-task-preview-card:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.tb-runner-chat .tb-task-preview-card:disabled:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .tb-runner-chat .tb-task-preview-card:focus-visible {

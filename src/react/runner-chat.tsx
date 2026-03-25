@@ -168,6 +168,7 @@ interface RunnerTaskPreview {
   assigneeName?: string;
   environmentId?: string;
   environmentName?: string;
+  isDeleted?: boolean;
 }
 
 interface PendingEditConfirmation {
@@ -9285,14 +9286,16 @@ export function RunnerChat({
               }
 
               if (taskPreviewForTurn && !isEditingTurn) {
+                const isTaskPreviewDeleted = Boolean(taskPreviewForTurn.isDeleted);
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-user tb-turn-user-task-preview">
                     <div className="tb-task-preview-turn-shell" style={promptStyle}>
                       <button
                         type="button"
                         className="tb-task-preview-card"
+                        disabled={isTaskPreviewDeleted}
                         onClick={() => {
-                          if (typeof onTaskPreviewClick === "function") {
+                          if (!isTaskPreviewDeleted && typeof onTaskPreviewClick === "function") {
                             onTaskPreviewClick(taskPreviewForTurn);
                           }
                         }}
@@ -9438,15 +9441,19 @@ export function RunnerChat({
                           </div>
                         </>
                       ) : taskPreviewForTurn ? (
-                        <button
-                          type="button"
-                          className="tb-task-preview-card"
-                          onClick={() => {
-                            if (taskPreviewForTurn && typeof onTaskPreviewClick === "function") {
-                              onTaskPreviewClick(taskPreviewForTurn);
-                            }
-                          }}
-                        >
+                        (() => {
+                          const isTaskPreviewDeleted = Boolean(taskPreviewForTurn.isDeleted);
+                          return (
+                            <button
+                              type="button"
+                              className="tb-task-preview-card"
+                              disabled={isTaskPreviewDeleted}
+                              onClick={() => {
+                                if (!isTaskPreviewDeleted && taskPreviewForTurn && typeof onTaskPreviewClick === "function") {
+                                  onTaskPreviewClick(taskPreviewForTurn);
+                                }
+                              }}
+                            >
                           <div className="tb-task-preview-card-top">
                             <div className="tb-task-preview-card-title-wrap">
                               <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
@@ -9467,7 +9474,9 @@ export function RunnerChat({
                             {taskPreviewForTurn.environmentName ? <span>{taskPreviewForTurn.environmentName}</span> : null}
                             <span className="tb-task-preview-open">Open ticket</span>
                           </div>
-                        </button>
+                            </button>
+                          );
+                        })()
                       ) : (
                         <RunnerMarkdown
                           content={stripSystemTags(turn.prompt)}
