@@ -2874,6 +2874,11 @@ export function isBrowserSkillCommand(command?: string): boolean {
   return command.includes(".claude/skills/browser/") || command.includes("browser.mjs");
 }
 
+export function isBrowserSkillLaunchCommand(command?: string): boolean {
+  if (!command) return false;
+  return /\bbrowser\.mjs\s+launch(?:\s|$)/i.test(command);
+}
+
 function normalizeBrowserSkillWorkspacePath(filePath?: string | null): string | null {
   const normalized = String(filePath || "").trim().replace(/^\/workspace\//, "").replace(/^workspace\//, "");
   return normalized ? normalized : null;
@@ -3046,8 +3051,8 @@ export function BrowserSkillLogBox({
   requestHeaders?: HeadersInit;
 }) {
   const sourceLogs = useMemo(() => {
-    if (Array.isArray(logs) && logs.length > 0) return logs;
-    return log ? [log] : [];
+    const rawLogs = Array.isArray(logs) && logs.length > 0 ? logs : log ? [log] : [];
+    return rawLogs.filter((entry) => !isBrowserSkillLaunchCommand(entry.metadata?.command || entry.message || ""));
   }, [log, logs]);
   const steps = useMemo(
     () =>
@@ -3088,6 +3093,10 @@ export function BrowserSkillLogBox({
   function moveToStep(nextIndex: number) {
     setSelectedIndex(nextIndex);
     setIsFollowingLatest(nextIndex >= steps.length - 1);
+  }
+
+  if (sourceLogs.length === 0) {
+    return null;
   }
 
   return (

@@ -11024,7 +11024,7 @@ const html = `<!doctype html>
 
       .playground-tasks-backlog-section-title {
         color: rgba(255, 255, 255, 1);
-        font-size: 14px;
+        font-size: 12px;
         line-height: 1.35;
         font-weight: 500;
       }
@@ -11653,6 +11653,26 @@ const html = `<!doctype html>
         font-size: 15px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-tasks-board-toolbar-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .playground-tasks-board-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-tasks-board-release-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
       }
 
       .playground-tasks-sprint-pill-row {
@@ -25535,6 +25555,7 @@ const html = `<!doctype html>
         const activeReleaseSortOption = releaseSortOptions.find((option) => option.id === releaseSortMode) || releaseSortOptions[0];
         const activeReleaseBacklogFilterOption = backlogFilterOptions.find((option) => option.id === releaseBacklogFilterMode) || backlogFilterOptions[0];
         const activeReleaseBacklogSortOption = backlogSortOptions.find((option) => option.id === releaseBacklogSortMode) || backlogSortOptions[0];
+        const sortedReleaseOptions = useMemo(() => releases.slice().sort(compareTaskReleaseOrder), [releases, releaseSortMode]);
 
         function taskHasStartedThread(task) {
           return Boolean(task?.lastStartedThreadId || (Array.isArray(task?.linkedThreadIds) && task.linkedThreadIds.length > 0));
@@ -25960,7 +25981,7 @@ const html = `<!doctype html>
         }
 
         const projectSearchPlaceholder = useMemo(() => {
-          if (taskView === "backlog" && selectedReleaseId) {
+          if (selectedReleaseId && (taskView === "backlog" || taskView === "board")) {
             return "Search release tasks, ticket numbers, assignees, or environments...";
           }
           return taskView === "calendar"
@@ -27637,7 +27658,7 @@ const html = `<!doctype html>
           setBoardDraggingTaskId("");
           setBoardDropLaneId("");
           setBoardBlockedPickerState(null);
-        }, [boardFilterMode, normalizedSearchQuery, selectedProjectId]);
+        }, [boardFilterMode, normalizedSearchQuery, selectedProjectId, selectedReleaseId]);
 
         useEffect(() => {
           if (!boardBlockedPickerState?.taskId) {
@@ -29254,6 +29275,7 @@ const html = `<!doctype html>
             error: "",
           });
           setBacklogToolbarPopover("");
+          setBoardToolbarPopover("");
           setProjectSidebarPopover("");
           setReleaseComposerOpen(true);
         }
@@ -29279,6 +29301,7 @@ const html = `<!doctype html>
           setSelectedTaskId("");
           setDraftTask(null);
           setBacklogToolbarPopover("");
+          setBoardToolbarPopover("");
           setReleaseBacklogToolbarPopover("");
         }
 
@@ -29336,7 +29359,6 @@ const html = `<!doctype html>
 
             setReleases((current) => current.concat(createdRelease));
             syncProjectSummary(selectedProjectId, tasks, sprints, releases.concat(createdRelease), selectedProjectSummary);
-            setTaskView("backlog");
             setSelectedReleaseId(createdRelease.id);
             setSelectedTaskId("");
             setDraftTask(null);
@@ -32413,7 +32435,6 @@ const html = `<!doctype html>
           const backlogComposerBackendUrl = window.location.origin
             + "/api/task-backlog/" + encodeURIComponent(selectedProjectId)
             + (selectedReleaseId ? ("/releases/" + encodeURIComponent(selectedReleaseId)) : "");
-          const sortedReleaseOptions = releases.slice().sort(compareTaskReleaseOrder);
 
           return renderBacklogTaskListView({
             headerContent: isReleaseBacklogView
@@ -32543,207 +32564,331 @@ const html = `<!doctype html>
         }
 
         function renderBoardView() {
-          const boardTasks = sortedTasks.filter((task) => !isPlaygroundSubtaskRecord(task) && matchesBoardFilter(task, boardFilterMode));
+          const boardTasks = sortedTasks
+            .filter((task) => !isPlaygroundSubtaskRecord(task) && matchesBoardFilter(task, boardFilterMode))
+            .filter((task) => !selectedReleaseId || task.releaseId === selectedReleaseId);
+          const draggingBoardTask = boardDraggingTaskId ? tasksById[boardDraggingTaskId] || null : null;
+          const hasSelectedReleaseSection = Boolean(selectedReleaseId && selectedRelease);
+          const boardReleaseSections = hasSelectedReleaseSection
+            ? [{
+                key: selectedRelease.id,
+                releaseId: selectedRelease.id,
+                title: selectedRelease.name || "Release",
+                copy: selectedRelease.description || "",
+                tasks: boardTasks,
+              }]
+            : (() => {
+                const sections = [];
+                const sectionIndexByKey = new Map();
+                boardTasks.forEach((task) => {
+                  const normalizedReleaseId = typeof task?.releaseId === "string" && task.releaseId.trim()
+                    ? task.releaseId.trim()
+                    : "";
+                  const sectionKey = normalizedReleaseId || "__no_release__";
+                  const releaseRecord = normalizedReleaseId ? (releasesById[normalizedReleaseId] || null) : null;
+                  if (!sectionIndexByKey.has(sectionKey)) {
+                    sectionIndexByKey.set(sectionKey, sections.length);
+                    sections.push({
+                      key: sectionKey,
+                      releaseId: normalizedReleaseId,
+                      title: normalizedReleaseId ? (releaseRecord?.name || "Release unavailable") : "All other",
+                      copy: normalizedReleaseId
+                        ? (releaseRecord?.description || "")
+                        : "All tasks, that are not assigned to any release",
+                      tasks: [],
+                    });
+                  }
+                  sections[sectionIndexByKey.get(sectionKey)].tasks.push(task);
+                });
+                return sections
+                  .slice()
+                  .sort((left, right) => {
+                    const leftIsAllOther = left.key === "__no_release__";
+                    const rightIsAllOther = right.key === "__no_release__";
+                    if (leftIsAllOther !== rightIsAllOther) {
+                      return leftIsAllOther ? 1 : -1;
+                    }
+                    if (leftIsAllOther && rightIsAllOther) {
+                      return 0;
+                    }
+                    const leftRelease = releasesById[left.releaseId] || { id: left.releaseId, name: left.title };
+                    const rightRelease = releasesById[right.releaseId] || { id: right.releaseId, name: right.title };
+                    return compareTaskReleaseOrder(leftRelease, rightRelease);
+                  });
+              })();
 
-          return React.createElement("div", { className: "playground-tasks-view-section" },
-            boardTasks.length > 0
-              ? React.createElement(React.Fragment, null,
-                  React.createElement("div", {
-                      className: "playground-tasks-board-toolbar",
-                      ref: boardToolbarActionsRef,
-                    },
-                    React.createElement("div", { className: "playground-tasks-board-toolbar-main" },
-                      React.createElement("div", { className: "playground-tasks-board-heading" }, "Board")
-                    ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button" + (boardToolbarPopover === "filter" || boardFilterMode !== "all" ? " is-active" : ""),
-                        onClick: () => setBoardToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                      },
-                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Filter")
-                      ),
-                      boardToolbarPopover === "filter"
-                        ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeBoardFilterOption.label),
-                            boardFilterOptions.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "playground-files-toolbar-menu-item" + (boardFilterMode === option.id ? " is-active" : ""),
-                                  onClick: () => {
-                                    setBoardFilterMode(option.id);
-                                    setBoardToolbarPopover("");
-                                  },
-                                },
-                                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, boardFilterMode === option.id ? "•" : ""),
-                                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                    React.createElement("span", null, option.label),
-                                    React.createElement("span", null, option.description)
-                                  )
-                                )
-                            )
-                          )
-                        : null
-                    )
+          function isTaskInBoardReleaseSection(taskRecord, releaseId) {
+            const taskReleaseId = typeof taskRecord?.releaseId === "string" && taskRecord.releaseId.trim()
+              ? taskRecord.releaseId.trim()
+              : "";
+            const normalizedReleaseId = typeof releaseId === "string" && releaseId.trim()
+              ? releaseId.trim()
+              : "";
+            return taskReleaseId === normalizedReleaseId;
+          }
+
+          function renderBoardToolbar() {
+            return React.createElement("div", {
+                className: "playground-tasks-board-toolbar",
+                ref: boardToolbarActionsRef,
+              },
+              React.createElement("div", { className: "playground-tasks-board-toolbar-main" },
+                React.createElement("div", { className: "playground-tasks-board-heading" }, "Board")
+              ),
+              React.createElement("div", { className: "playground-tasks-board-toolbar-actions" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button" + (boardToolbarPopover === "filter" || boardFilterMode !== "all" ? " is-active" : ""),
+                    onClick: () => setBoardToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                  },
+                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Filter")
                   ),
-                  React.createElement("div", { className: "playground-tasks-board-header" },
-                    PLAYGROUND_TASK_BOARD_LANES.map((lane) =>
-                      React.createElement("div", { key: lane.id, className: "playground-tasks-board-header-cell" }, lane.label)
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-tasks-board-grid" },
-                    PLAYGROUND_TASK_BOARD_LANES.map((lane) => {
-                      const laneTasks = boardTasks.filter((task) => lane.statuses.includes(getTaskBoardStatus(task)));
-                      const draggingBoardTask = boardDraggingTaskId ? tasksById[boardDraggingTaskId] || null : null;
-                      const isLaneDropTarget = boardDropLaneId === lane.id && draggingBoardTask && canDropTaskOnBoardLane(draggingBoardTask, lane.id);
-                      return React.createElement("div", {
-                          key: lane.id,
-                          className: "playground-tasks-lane" + (isLaneDropTarget ? " is-drop-target" : ""),
-                          onDragOver: (event) => {
-                            if (!draggingBoardTask || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
-                              return;
-                            }
-                            event.preventDefault();
-                            if (event.dataTransfer) {
-                              event.dataTransfer.dropEffect = "move";
-                            }
-                            if (boardDropLaneId !== lane.id) {
-                              setBoardDropLaneId(lane.id);
-                            }
-                          },
-                          onDragEnter: (event) => {
-                            if (!draggingBoardTask || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
-                              return;
-                            }
-                            event.preventDefault();
-                            if (boardDropLaneId !== lane.id) {
-                              setBoardDropLaneId(lane.id);
-                            }
-                          },
-                          onDragLeave: (event) => {
-                            const relatedTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
-                            if (relatedTarget && event.currentTarget.contains(relatedTarget)) {
-                              return;
-                            }
-                            if (boardDropLaneId === lane.id) {
-                              setBoardDropLaneId("");
-                            }
-                          },
-                          onDrop: (event) => {
-                            if (!draggingBoardTask || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
-                              return;
-                            }
-                            event.preventDefault();
-                            void handleBoardLaneMove(draggingBoardTask, lane.id);
-                          },
-                        },
-                        laneTasks.length > 0
-                          ? React.createElement("div", { className: "playground-tasks-lane-list" },
-                              laneTasks.map((task) =>
-                                (() => {
-                                  const boardStatus = getTaskBoardStatus(task);
-                                  const statusLabel = getPlaygroundTaskStatusLabel(boardStatus);
-                                  const isSubtask = isPlaygroundSubtaskRecord(task);
-                                  const TaskTypeIcon = isSubtask ? Check : Bookmark;
-                                  const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
-                                  const taskDescription = String(task.description || "").trim() || "No description";
-                                  const isDraggable = canDropTaskOnBoardLane(task, "blocked") || canDropTaskOnBoardLane(task, "in_progress") || canDropTaskOnBoardLane(task, "todo");
-                                  return React.createElement("button", {
-                                      key: task.id,
-                                      type: "button",
-                                      className: "playground-tasks-lane-card"
-                                        + (selectedTaskId === task.id ? " is-active" : "")
-                                        + (isDraggable ? " is-draggable" : "")
-                                        + (boardDraggingTaskId === task.id ? " is-dragging" : ""),
-                                      onClick: () => handleSelectTask(task.id),
-                                      draggable: isDraggable,
-                                      onDragStart: (event) => {
-                                        if (!isDraggable) {
-                                          event.preventDefault();
-                                          return;
-                                        }
-                                        if (event.dataTransfer) {
-                                          event.dataTransfer.effectAllowed = "move";
-                                          event.dataTransfer.setData("text/plain", task.id);
-                                        }
-                                        setBoardDraggingTaskId(task.id);
-                                        setBoardDropLaneId("");
-                                      },
-                                      onDragEnd: () => {
-                                        clearBoardDragState();
-                                      },
-                                    },
-                                      React.createElement("div", { className: "playground-tasks-lane-card-title" }, task.title || "Untitled Task"),
-                                      React.createElement("div", { className: "playground-tasks-lane-card-copy" }, taskDescription),
-                                      React.createElement("div", { className: "playground-tasks-lane-card-bottom" },
-                                        React.createElement("div", { className: "playground-tasks-lane-card-meta-left" },
-                                          React.createElement("div", {
-                                            className: "playground-tasks-lane-card-type-badge " + (isSubtask ? "is-subtask" : "is-task"),
-                                            "aria-hidden": "true",
-                                          },
-                                            React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 })
-                                          ),
-                                          renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-lane-card-priority"),
-                                          React.createElement("span", { className: "playground-tasks-lane-card-status", title: statusLabel }, statusLabel)
-                                        ),
-                                        React.createElement("span", { className: "playground-tasks-lane-card-ticket" }, taskTicketNumber)
-                                      )
-                                    );
-                                })()
+                  boardToolbarPopover === "filter"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        boardFilterOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (boardFilterMode === option.id ? " selected" : ""),
+                              onClick: () => {
+                                setBoardFilterMode(option.id);
+                                setBoardToolbarPopover("");
+                              },
+                            },
+                              React.createElement("span", { className: "tb-popup-check-slot" },
+                                boardFilterMode === option.id
+                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                  : null
+                              ),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, option.label),
+                                React.createElement("span", null, option.description)
                               )
                             )
-                          : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Nothing here yet.")
-                      );
-                    })
-                  )
-                )
-              : React.createElement(React.Fragment, null,
-                  React.createElement("div", {
-                      className: "playground-tasks-board-toolbar",
-                      ref: boardToolbarActionsRef,
-                    },
-                    React.createElement("div", { className: "playground-tasks-board-toolbar-main" },
-                      React.createElement("div", { className: "playground-tasks-board-heading" }, "Board")
-                    ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button" + (boardToolbarPopover === "filter" || boardFilterMode !== "all" ? " is-active" : ""),
-                        onClick: () => setBoardToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                      },
-                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Filter")
-                      ),
-                      boardToolbarPopover === "filter"
-                        ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeBoardFilterOption.label),
-                            boardFilterOptions.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "playground-files-toolbar-menu-item" + (boardFilterMode === option.id ? " is-active" : ""),
-                                  onClick: () => {
-                                    setBoardFilterMode(option.id);
-                                    setBoardToolbarPopover("");
-                                  },
-                                },
-                                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, boardFilterMode === option.id ? "•" : ""),
-                                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                    React.createElement("span", null, option.label),
-                                    React.createElement("span", null, option.description)
-                                  )
-                                )
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button" + (boardToolbarPopover === "release" || selectedRelease ? " is-active" : ""),
+                    onClick: () => setBoardToolbarPopover((current) => current === "release" ? "" : "release"),
+                  },
+                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Releases")
+                  ),
+                  boardToolbarPopover === "release"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-release-picker-menu" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row tb-popup-row-select" + (!selectedReleaseId ? " selected" : ""),
+                          onClick: () => {
+                            handleSelectRelease("");
+                            setBoardToolbarPopover("");
+                          },
+                        },
+                          React.createElement("span", { className: "tb-popup-check-slot" },
+                            !selectedReleaseId
+                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                              : null
+                          ),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "All Releases"),
+                            React.createElement("span", null, "Show every release on the board.")
+                          )
+                        ),
+                        sortedReleaseOptions.map((release) =>
+                          React.createElement("button", {
+                            key: release.id,
+                            type: "button",
+                            className: "tb-popup-row tb-popup-row-select" + (selectedReleaseId === release.id ? " selected" : ""),
+                            onClick: () => {
+                              handleSelectRelease(release.id);
+                              setBoardToolbarPopover("");
+                            },
+                          },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              selectedReleaseId === release.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, release.name || "Untitled Release"),
+                              React.createElement("span", null, release.description || formatPlaygroundTaskReleaseDateRange(release))
                             )
                           )
-                        : null
-                    )
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row",
+                          onClick: () => {
+                            setBoardToolbarPopover("");
+                            openReleaseComposer();
+                          },
+                        },
+                          React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Add Release"),
+                            React.createElement("span", null, "Create a new milestone release.")
+                          )
+                        )
+                      )
+                    : null
+                )
+              )
+            );
+          }
+
+          function renderBoardCard(task) {
+            const boardStatus = getTaskBoardStatus(task);
+            const statusLabel = getPlaygroundTaskStatusLabel(boardStatus);
+            const isSubtask = isPlaygroundSubtaskRecord(task);
+            const TaskTypeIcon = isSubtask ? Check : Bookmark;
+            const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
+            const taskDescription = String(task.description || "").trim() || "No description";
+            const isDraggable = canDropTaskOnBoardLane(task, "blocked") || canDropTaskOnBoardLane(task, "in_progress") || canDropTaskOnBoardLane(task, "todo");
+            return React.createElement("button", {
+                key: task.id,
+                type: "button",
+                className: "playground-tasks-lane-card"
+                  + (selectedTaskId === task.id ? " is-active" : "")
+                  + (isDraggable ? " is-draggable" : "")
+                  + (boardDraggingTaskId === task.id ? " is-dragging" : ""),
+                onClick: () => handleSelectTask(task.id),
+                draggable: isDraggable,
+                onDragStart: (event) => {
+                  if (!isDraggable) {
+                    event.preventDefault();
+                    return;
+                  }
+                  if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", task.id);
+                  }
+                  setBoardDraggingTaskId(task.id);
+                  setBoardDropLaneId("");
+                },
+                onDragEnd: () => {
+                  clearBoardDragState();
+                },
+              },
+                React.createElement("div", { className: "playground-tasks-lane-card-title" }, task.title || "Untitled Task"),
+                React.createElement("div", { className: "playground-tasks-lane-card-copy" }, taskDescription),
+                React.createElement("div", { className: "playground-tasks-lane-card-bottom" },
+                  React.createElement("div", { className: "playground-tasks-lane-card-meta-left" },
+                    React.createElement("div", {
+                      className: "playground-tasks-lane-card-type-badge " + (isSubtask ? "is-subtask" : "is-task"),
+                      "aria-hidden": "true",
+                    },
+                      React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 })
+                    ),
+                    renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-lane-card-priority"),
+                    React.createElement("span", { className: "playground-tasks-lane-card-status", title: statusLabel }, statusLabel)
                   ),
-                  React.createElement("div", { className: "playground-tasks-empty" },
-                    React.createElement("div", { className: "playground-tasks-empty-title" }, "No tasks on the board"),
-                    React.createElement("div", { className: "playground-tasks-empty-copy" }, "Adjust the filter or add tasks to the project and they will appear in the appropriate board lane.")
-                  )
+                  React.createElement("span", { className: "playground-tasks-lane-card-ticket" }, taskTicketNumber)
+                )
+              );
+          }
+
+          function renderBoardSection(section) {
+            const normalizedSectionReleaseId = typeof section.releaseId === "string" && section.releaseId.trim()
+              ? section.releaseId.trim()
+              : "";
+            return React.createElement("div", {
+                key: section.key,
+                className: "playground-tasks-board-release-section",
+              },
+              React.createElement("div", { className: "playground-tasks-backlog-section-header" },
+                React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
+                section.copy
+                  ? React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, section.copy)
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-board-header" },
+                PLAYGROUND_TASK_BOARD_LANES.map((lane) =>
+                  React.createElement("div", { key: lane.id, className: "playground-tasks-board-header-cell" }, lane.label)
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-board-grid" },
+                PLAYGROUND_TASK_BOARD_LANES.map((lane) => {
+                  const laneTasks = section.tasks.filter((task) => lane.statuses.includes(getTaskBoardStatus(task)));
+                  const laneDropTargetKey = section.key + ":" + lane.id;
+                  const isLaneDropTarget = boardDropLaneId === laneDropTargetKey
+                    && draggingBoardTask
+                    && isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId)
+                    && canDropTaskOnBoardLane(draggingBoardTask, lane.id);
+                  return React.createElement("div", {
+                      key: section.key + ":" + lane.id,
+                      className: "playground-tasks-lane" + (isLaneDropTarget ? " is-drop-target" : ""),
+                      onDragOver: (event) => {
+                        if (!draggingBoardTask || !isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId) || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
+                          return;
+                        }
+                        event.preventDefault();
+                        if (event.dataTransfer) {
+                          event.dataTransfer.dropEffect = "move";
+                        }
+                        if (boardDropLaneId !== laneDropTargetKey) {
+                          setBoardDropLaneId(laneDropTargetKey);
+                        }
+                      },
+                      onDragEnter: (event) => {
+                        if (!draggingBoardTask || !isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId) || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
+                          return;
+                        }
+                        event.preventDefault();
+                        if (boardDropLaneId !== laneDropTargetKey) {
+                          setBoardDropLaneId(laneDropTargetKey);
+                        }
+                      },
+                      onDragLeave: (event) => {
+                        const relatedTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+                        if (relatedTarget && event.currentTarget.contains(relatedTarget)) {
+                          return;
+                        }
+                        if (boardDropLaneId === laneDropTargetKey) {
+                          setBoardDropLaneId("");
+                        }
+                      },
+                      onDrop: (event) => {
+                        if (!draggingBoardTask || !isTaskInBoardReleaseSection(draggingBoardTask, normalizedSectionReleaseId) || !canDropTaskOnBoardLane(draggingBoardTask, lane.id)) {
+                          return;
+                        }
+                        event.preventDefault();
+                        void handleBoardLaneMove(draggingBoardTask, lane.id);
+                      },
+                    },
+                    laneTasks.length > 0
+                      ? React.createElement("div", { className: "playground-tasks-lane-list" },
+                          laneTasks.map((task) => renderBoardCard(task))
+                        )
+                      : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Nothing here yet.")
+                  );
+                })
+              )
+            );
+          }
+
+          const shouldRenderBoardSections = hasSelectedReleaseSection || boardReleaseSections.length > 0;
+          const emptyTitle = selectedRelease
+            ? "No tasks in this release"
+            : "No tasks on the board";
+          const emptyCopy = selectedRelease
+            ? "Assign tasks to this release or adjust the filter and they will appear in the appropriate lane."
+            : "Adjust the filter or add tasks to the project and they will appear in the appropriate board lane.";
+
+          return React.createElement("div", { className: "playground-tasks-view-section" },
+            renderBoardToolbar(),
+            shouldRenderBoardSections
+              ? React.createElement("div", { className: "playground-tasks-board-sections" },
+                  boardReleaseSections.map((section) => renderBoardSection(section))
+                )
+              : React.createElement("div", { className: "playground-tasks-empty" },
+                  React.createElement("div", { className: "playground-tasks-empty-title" }, emptyTitle),
+                  React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy)
                 )
           );
         }

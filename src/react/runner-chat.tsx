@@ -67,7 +67,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, InlineStatusLogBox, RunnerWorkLogEntry, isBrowserSkillCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, InlineStatusLogBox, RunnerWorkLogEntry, isBrowserSkillCommand, isBrowserSkillLaunchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -1029,8 +1029,20 @@ function isInternalTurnPreviewPath(filePath: string): boolean {
     normalized.startsWith(".cache/") ||
     normalized.startsWith(".npm/") ||
     normalized.startsWith(".local/") ||
+    normalized.startsWith("browser-skill/") ||
     normalized.startsWith("tmp/")
   );
+}
+
+function isInternalFileChangeLog(log: RunnerLog): boolean {
+  if (log.eventType !== "file_change") return false;
+  const filePaths = Array.isArray(log.metadata?.filePaths)
+    ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    : [];
+  return filePaths.length > 0 && filePaths.every((filePath) => {
+    const normalizedPath = normalizeRunnerPreviewPath(filePath);
+    return normalizedPath ? isInternalTurnPreviewPath(normalizedPath) : false;
+  });
 }
 
 function resolveTurnPreviewMapValue<T>(source: Record<string, T> | undefined, filePath: string): T | undefined {
@@ -2543,7 +2555,7 @@ function mergeThreadStepsIntoLogs(
   diffEntries: RunnerThreadDiffEntry[],
   startedAtMs: number | null
 ): RunnerLog[] {
-  const hasFileChangeLogs = logs.some((log) => log.eventType === "file_change");
+  const hasFileChangeLogs = logs.some((log) => log.eventType === "file_change" && !isInternalFileChangeLog(log));
   if (hasFileChangeLogs) {
     return logs;
   }
@@ -2567,6 +2579,10 @@ function mergeThreadStepsIntoLogs(
           : {};
 
       return filePaths.map((filePath, index) => {
+        const normalizedPreviewPath = normalizeRunnerPreviewPath(filePath);
+        if (normalizedPreviewPath && isInternalTurnPreviewPath(normalizedPreviewPath)) {
+          return null;
+        }
         const normalizedPath = normalizeRunnerHydratedFilePath(filePath);
         const diffEntry = diffs[filePath] || diffs[normalizedPath];
         return buildSyntheticFileChangeLog({
@@ -2579,24 +2595,26 @@ function mergeThreadStepsIntoLogs(
           createdAt: step.createdAt,
           startedAtMs,
         });
-      });
+      }).filter((entry): entry is RunnerLog => Boolean(entry));
     });
 
   const syntheticLogs =
     syntheticLogsFromSteps.length > 0
       ? syntheticLogsFromSteps
         : diffEntries.map((entry) =>
-          buildSyntheticFileChangeLog({
-            path: entry.path || "",
-            changeKind: inferHydratedChangeKindFromDiff(entry),
-            diff: entry.diff,
-            changes: entry.changes,
-            additions: entry.additions,
-            deletions: entry.deletions,
-            createdAt: entry.createdAt || steps[steps.length - 1]?.createdAt,
-            startedAtMs,
-          })
-        );
+          entry.path && !isInternalTurnPreviewPath(normalizeRunnerHydratedFilePath(entry.path))
+            ? buildSyntheticFileChangeLog({
+                path: entry.path || "",
+                changeKind: inferHydratedChangeKindFromDiff(entry),
+                diff: entry.diff,
+                changes: entry.changes,
+                additions: entry.additions,
+                deletions: entry.deletions,
+                createdAt: entry.createdAt || steps[steps.length - 1]?.createdAt,
+                startedAtMs,
+              })
+            : null
+        ).filter((entry): entry is RunnerLog => Boolean(entry));
 
   if (syntheticLogs.length === 0) {
     return logs;
@@ -2625,6 +2643,7 @@ function mergeThreadDiffsIntoLogs(logs: RunnerLog[], diffEntries: RunnerThreadDi
     const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [];
     if (filePaths.length !== 1 || typeof filePaths[0] !== "string") continue;
     const normalizedPath = normalizeRunnerHydratedFilePath(filePaths[0]);
+    if (isInternalTurnPreviewPath(normalizedPath)) continue;
     if (!normalizedPath) continue;
     lastFileLogIndexByPath.set(normalizedPath, index);
   }
@@ -2642,6 +2661,7 @@ function mergeThreadDiffsIntoLogs(logs: RunnerLog[], diffEntries: RunnerThreadDi
   for (const entry of diffEntries) {
     if (!entry.path) continue;
     const normalizedPath = normalizeRunnerHydratedFilePath(entry.path);
+    if (isInternalTurnPreviewPath(normalizedPath)) continue;
     if (!normalizedPath) continue;
     diffsByPath.set(normalizedPath, {
       ...(entry.diff ? { diff: entry.diff } : {}),
@@ -3806,6 +3826,8 @@ function shouldDisplayTimelineLog(log: RunnerLog): boolean {
   if (log.eventType === "turn_completed") return false;
   if (log.eventType === "agent_message" || log.eventType === "llm_response") return false;
   if (log.eventType === "setup" || log.eventType === "startup") return false;
+  if (isInternalFileChangeLog(log)) return false;
+  if (log.eventType === "command_execution" && isBrowserSkillLaunchCommand(log.metadata?.command || log.message || "")) return false;
   if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") return false;
   return true;
 }
@@ -4900,7 +4922,7 @@ export function RunnerChat({
   }
 
   function turnHasFileChanges(turn: RunnerTurn) {
-    return turn.logs.some((log) => log.eventType === "file_change");
+    return collectTurnChangedFiles(turn.logs).length > 0;
   }
 
   async function resolveEditableTurnBoundary(turnId: string): Promise<{ messageId: string; truncateAtMessageIndex: number }> {
@@ -8048,7 +8070,8 @@ export function RunnerChat({
 
   function isBrowserTimelineLog(log: RunnerLog): boolean {
     if (log.eventType !== "command_execution") return false;
-    return isBrowserSkillCommand(log.metadata?.command || log.message || "");
+    const command = log.metadata?.command || log.message || "";
+    return isBrowserSkillCommand(command) && !isBrowserSkillLaunchCommand(command);
   }
 
   function buildTimelineItems(logs: RunnerLog[]): RunnerTimelineItem[] {

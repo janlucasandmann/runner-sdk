@@ -31,6 +31,19 @@ type StreamErrorEvent = {
   error?: { message?: string };
 };
 
+function normalizeBrowserArtifactPath(filePath?: string | null): string {
+  return String(filePath || "").trim().replace(/^\/workspace\//, "").replace(/^workspace\//, "").replace(/^\/+/, "");
+}
+
+function isBrowserArtifactPath(filePath?: string | null): boolean {
+  const normalized = normalizeBrowserArtifactPath(filePath);
+  return normalized === "browser-skill" || normalized.startsWith("browser-skill/");
+}
+
+function isBrowserSkillLaunchCommand(command?: string | null): boolean {
+  return /\bbrowser\.mjs\s+launch(?:\s|$)/i.test(String(command || ""));
+}
+
 export class RunnerEventNormalizer {
   private readonly startTimeMs: number;
   private readonly now: TimeProvider;
@@ -207,8 +220,11 @@ export class RunnerEventNormalizer {
     }
 
     if (itemType === "file_change") {
-      const changes = this.asObjectArray(item.changes);
+      const changes = this.asObjectArray(item.changes).filter((change) => !isBrowserArtifactPath(this.asString(change.path)));
       const filePaths = changes.map((change) => this.asString(change.path)).filter(Boolean);
+      if (filePaths.length === 0) {
+        return { logs: [] };
+      }
       const changeKinds = changes.map((change) => this.asChangeKind(change.kind)).filter(Boolean) as Array<
         "created" | "modified" | "deleted"
       >;
@@ -352,6 +368,10 @@ export class RunnerEventNormalizer {
     if (toolType === "command_execution" || toolType === "image_generation_skill") {
       const metadata = this.asObject(item.metadata);
       const isImageGeneration = toolType === "image_generation_skill" || Boolean(metadata?.isImageGeneration);
+      const command = this.optionalString(tool.command);
+      if (isBrowserSkillLaunchCommand(command)) {
+        return { logs: [] };
+      }
       return {
         logs: [
           {
@@ -360,7 +380,7 @@ export class RunnerEventNormalizer {
             type: this.optionalNumber(tool.exit_code) === 0 ? "success" : "error",
             eventType: "command_execution",
             metadata: {
-              command: this.optionalString(tool.command),
+              command,
               exitCode: this.optionalNumber(tool.exit_code),
               status: this.asCommandStatus(metadata?.status) ?? this.asCommandStatus(item.status),
               output: this.optionalString(tool.output)?.trim(),
