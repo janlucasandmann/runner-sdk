@@ -1150,7 +1150,7 @@ const html = `<!doctype html>
         align-items: center;
         gap: 16px;
         min-height: 56px;
-        padding: 6px 12px 12px;
+        padding: 2px 12px 12px;
         box-sizing: border-box;
         transition: padding-right 280ms cubic-bezier(0.16, 1, 0.3, 1);
       }
@@ -8606,7 +8606,8 @@ const html = `<!doctype html>
       }
 
       .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail .playground-tasks-detail-navbar {
-        padding-top: 10px;
+        padding-top: 6px;
+        padding-bottom: 12px;
       }
 
       .playground-tasks-detail-shell {
