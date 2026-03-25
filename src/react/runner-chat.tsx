@@ -67,7 +67,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { InlineStatusLogBox, RunnerWorkLogEntry } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, InlineStatusLogBox, RunnerWorkLogEntry, isBrowserSkillCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -8044,6 +8044,48 @@ export function RunnerChat({
     return `${turnId}-${index}-${log.eventType || "log"}-${(log.message || "").slice(0, 24)}`;
   }
 
+  type RunnerTimelineItem = { kind: "log"; log: RunnerLog } | { kind: "browser_group"; logs: RunnerLog[] };
+
+  function isBrowserTimelineLog(log: RunnerLog): boolean {
+    if (log.eventType !== "command_execution") return false;
+    return isBrowserSkillCommand(log.metadata?.command || log.message || "");
+  }
+
+  function buildTimelineItems(logs: RunnerLog[]): RunnerTimelineItem[] {
+    const browserLogs = logs.filter((log) => isBrowserTimelineLog(log));
+    if (browserLogs.length === 0) {
+      return logs.map((log) => ({ kind: "log" as const, log }));
+    }
+
+    const items: RunnerTimelineItem[] = [];
+    let browserGroupInserted = false;
+
+    for (const log of logs) {
+      if (isBrowserTimelineLog(log)) {
+        if (!browserGroupInserted) {
+          items.push({ kind: "browser_group", logs: browserLogs });
+          browserGroupInserted = true;
+        }
+        continue;
+      }
+      items.push({ kind: "log", log });
+    }
+
+    if (!browserGroupInserted) {
+      items.push({ kind: "browser_group", logs: browserLogs });
+    }
+
+    return items;
+  }
+
+  function timelineItemKey(turnId: string, index: number, item: RunnerTimelineItem): string {
+    if (item.kind === "browser_group") {
+      const anchorLog = item.logs[0] || item.logs[item.logs.length - 1];
+      return anchorLog ? `${turnId}-browser-${stepRowKey(turnId, index, anchorLog)}` : `${turnId}-browser-${index}`;
+    }
+    return stepRowKey(turnId, index, item.log);
+  }
+
   function renderCommandIcon(icon: CommandRowSummary["icon"]) {
     if (icon === "read") return <IconReadFile className="tb-step-row-icon" />;
     if (icon === "list") return <IconFolder className="tb-step-row-icon" />;
@@ -8051,17 +8093,32 @@ export function RunnerChat({
     return <IconTerminal className="tb-step-row-icon" />;
   }
 
-  function renderTimelineLog(turnId: string, log: RunnerLog, index: number) {
-    if (!shouldDisplayTimelineLog(log)) return null;
-    const key = stepRowKey(turnId, index, log);
+  function renderTimelineItem(turnId: string, item: RunnerTimelineItem, index: number) {
+    const runnerEnvironmentId = activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
+    const runnerHeaders = buildRunnerHeaders(requestHeaders, apiKey.trim());
+
+    if (item.kind === "browser_group") {
+      const latestLog = item.logs[item.logs.length - 1];
+      return (
+        <BrowserSkillLogBox
+          log={latestLog}
+          logs={item.logs}
+          timeLabel={latestLog ? toDurationLabel(latestLog) : undefined}
+          backendUrl={normalizedBackendUrl}
+          environmentId={runnerEnvironmentId}
+          requestHeaders={runnerHeaders}
+        />
+      );
+    }
+
+    if (!shouldDisplayTimelineLog(item.log)) return null;
     return (
       <RunnerWorkLogEntry
-        key={key}
-        log={log}
-        timeLabel={toDurationLabel(log)}
+        log={item.log}
+        timeLabel={toDurationLabel(item.log)}
         backendUrl={normalizedBackendUrl}
-        environmentId={activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null}
-        requestHeaders={buildRunnerHeaders(requestHeaders, apiKey.trim())}
+        environmentId={runnerEnvironmentId}
+        requestHeaders={runnerHeaders}
         onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
       />
     );
@@ -9173,18 +9230,19 @@ export function RunnerChat({
                       },
                     ]
                   : timelineLogs;
+              const displayedTimelineItems = buildTimelineItems(displayedTimelineLogs);
               const isWorkLogsLoading =
                 isThreadHistoryLoading &&
                 !isTurnRunning &&
                 Boolean(agentMessage?.message) &&
-                displayedTimelineLogs.length === 0;
+                displayedTimelineItems.length === 0;
               const isExpanded = expandedTurns[turn.id] ?? !isThreadHistoryLoading;
               const baseDelay = turnIndex * 140;
               const promptStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay) : undefined;
               const metaHeaderStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 40) : undefined;
               const workHeaderStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 60) : undefined;
               const responseStyle = turn.animateOnRender
-                ? getRunnerChatEnterAnimationStyle(baseDelay + 150 + displayedTimelineLogs.length * 45)
+                ? getRunnerChatEnterAnimationStyle(baseDelay + 150 + displayedTimelineItems.length * 45)
                 : undefined;
               const turnAgentLabel = turn.agentName || displayedAgentLabel || "Agent";
               const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
@@ -9193,7 +9251,7 @@ export function RunnerChat({
                 : isTurnRunning
                   ? "Working..."
                   : `Worked for ${turnSeconds}s`;
-              const shouldRenderWorkSection = isTurnRunning || displayedTimelineLogs.length > 0 || isWorkLogsLoading;
+              const shouldRenderWorkSection = isTurnRunning || displayedTimelineItems.length > 0 || isWorkLogsLoading;
 
               if (actionSummaryLog) {
                 const actionType = actionSummaryLog.metadata?.actionType;
@@ -9354,18 +9412,18 @@ export function RunnerChat({
                             <div className="tb-work-collapse-inner">
                               <div className="agent-steps-container">
                                 <div className="agent-steps-line" />
-                                {displayedTimelineLogs.map((log, index) => (
+                                {displayedTimelineItems.map((item, index) => (
                                   <div
-                                    key={stepRowKey(turn.id, index, log)}
+                                    key={timelineItemKey(turn.id, index, item)}
                                     className="agent-step-item"
                                     style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
                                   >
-                                    <div className="agent-step-content">{renderTimelineLog(turn.id, log, index)}</div>
+                                    <div className="agent-step-content">{renderTimelineItem(turn.id, item, index)}</div>
                                   </div>
                                 ))}
                               </div>
-                              {isTurnRunning && displayedTimelineLogs.length > 0 && !agentMessage?.message ? (
-                                <div className="agent-step-item" style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineLogs.length * 45) : undefined}>
+                              {isTurnRunning && displayedTimelineItems.length > 0 && !agentMessage?.message ? (
+                                <div className="agent-step-item" style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}>
                                   <div className="agent-step-content">
                                     <InlineStatusLogBox
                                       label="Thinking..."
@@ -9545,18 +9603,18 @@ export function RunnerChat({
                           <div className="tb-work-collapse-inner">
                             <div className="agent-steps-container">
                               <div className="agent-steps-line" />
-                              {displayedTimelineLogs.map((log, index) => (
+                              {displayedTimelineItems.map((item, index) => (
                                 <div
-                                  key={stepRowKey(turn.id, index, log)}
+                                  key={timelineItemKey(turn.id, index, item)}
                                   className="agent-step-item"
                                   style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
                                 >
-                                  <div className="agent-step-content">{renderTimelineLog(turn.id, log, index)}</div>
+                                  <div className="agent-step-content">{renderTimelineItem(turn.id, item, index)}</div>
                                 </div>
                               ))}
                             </div>
-                            {isTurnRunning && displayedTimelineLogs.length > 0 && !agentMessage?.message ? (
-                              <div className="agent-step-item" style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineLogs.length * 45) : undefined}>
+                            {isTurnRunning && displayedTimelineItems.length > 0 && !agentMessage?.message ? (
+                              <div className="agent-step-item" style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}>
                                 <div className="agent-step-content">
                                   <InlineStatusLogBox
                                     label="Thinking..."

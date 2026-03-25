@@ -5,6 +5,7 @@ import {
   Brain,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Copy,
   Eye,
@@ -15,11 +16,13 @@ import {
   Folder,
   FolderOpen,
   Globe,
+  HardDrive,
   Images,
   Lightbulb,
   LoaderCircle,
   ListTodo,
   Mail,
+  MousePointerClick,
   Music,
   Paperclip,
   ScanText,
@@ -2856,7 +2859,17 @@ type BrowserSkillResult = {
   screenshotPaths: string[];
 };
 
-function isBrowserSkillCommand(command?: string): boolean {
+type BrowserSkillStep = {
+  id: string;
+  parsed: BrowserSkillResult;
+  previewSrc: string | null;
+  previewAlt: string;
+  locationLabel: string;
+  actionLabel: string;
+  isRunning: boolean;
+};
+
+export function isBrowserSkillCommand(command?: string): boolean {
   if (!command) return false;
   return command.includes(".claude/skills/browser/") || command.includes("browser.mjs");
 }
@@ -2937,118 +2950,216 @@ function formatBrowserSkillAction(action: string): string {
     .join(" ");
 }
 
-function BrowserSkillLogBox({
+function safeDecodeBrowserSkillPath(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function formatBrowserSkillLocationLabel(url?: string, fallbackTitle?: string): string {
+  const normalizedUrl = String(url || "").trim();
+  if (!normalizedUrl) {
+    return fallbackTitle?.trim() || "about:blank";
+  }
+  try {
+    const parsedUrl = new URL(normalizedUrl);
+    if (parsedUrl.protocol === "file:") {
+      return safeDecodeBrowserSkillPath(parsedUrl.pathname || normalizedUrl) || normalizedUrl;
+    }
+    if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+      const pathLabel = `${parsedUrl.hostname}${parsedUrl.pathname || "/"}${parsedUrl.search}${parsedUrl.hash}`;
+      return pathLabel || normalizedUrl;
+    }
+    return normalizedUrl;
+  } catch {
+    return normalizedUrl;
+  }
+}
+
+function formatBrowserSkillActionTarget(value?: string | null): string {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+  return normalized.length > 64 ? `${normalized.slice(0, 61)}...` : normalized;
+}
+
+function formatBrowserSkillStepAction(parsed: BrowserSkillResult): string {
+  const action = parsed.action.toLowerCase();
+  const clickTarget = formatBrowserSkillActionTarget(parsed.text || parsed.selector || parsed.title || parsed.url);
+  const fieldTarget = formatBrowserSkillActionTarget(parsed.selector || parsed.title || parsed.url);
+  const waitTarget = formatBrowserSkillActionTarget(parsed.selector || parsed.text || parsed.title || parsed.url);
+
+  if (action === "launch") return "Launch browser";
+  if (action === "navigate") return "Navigate";
+  if (action === "snapshot" || action === "manual") return "Capture page";
+  if (action === "scroll") return "Scroll";
+  if (action === "click") return clickTarget ? `Click ${clickTarget}` : "Click";
+  if (action === "type") return fieldTarget ? `Type into ${fieldTarget}` : "Type";
+  if (action === "press") return parsed.key ? `Press ${parsed.key}` : "Press key";
+  if (action === "wait-for") return waitTarget ? `Wait for ${waitTarget}` : "Wait";
+  return formatBrowserSkillAction(parsed.action);
+}
+
+function buildBrowserSkillStep({
   log,
+  index,
+  backendUrl,
+  environmentId,
+}: {
+  log: RunnerLog;
+  index: number;
+  backendUrl?: string;
+  environmentId?: string | null;
+}): BrowserSkillStep {
+  const command = log.metadata?.command || log.message || "";
+  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const parsed = parseBrowserSkillOutput(output || log.message, command);
+  const previewSources = parsed.screenshotPaths
+    .map((filePath) => buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath))
+    .filter((value): value is string => Boolean(value));
+  const previewSrc = previewSources.length > 0 ? previewSources[previewSources.length - 1] : null;
+  return {
+    id: `${log.time || "00:00"}-${parsed.action}-${index}`,
+    parsed,
+    previewSrc,
+    previewAlt: parsed.title || parsed.url || `Browser screenshot ${index + 1}`,
+    locationLabel: formatBrowserSkillLocationLabel(parsed.url, parsed.title),
+    actionLabel: formatBrowserSkillStepAction(parsed),
+    isRunning: log.metadata?.status === "running" || log.metadata?.status === "started",
+  };
+}
+
+export function BrowserSkillLogBox({
+  log,
+  logs,
   timeLabel,
   backendUrl,
   environmentId,
   requestHeaders,
 }: {
-  log: RunnerLog;
+  log?: RunnerLog;
+  logs?: RunnerLog[];
   timeLabel?: string;
   backendUrl?: string;
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
 }) {
-  const command = log.metadata?.command || log.message || "";
-  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
-  const parsed = useMemo(() => parseBrowserSkillOutput(output || log.message, command), [command, log.message, output]);
-  const isRunning = log.metadata?.status === "running" || log.metadata?.status === "started";
-  const imageSources = parsed.screenshotPaths
-    .map((filePath) => buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath))
-    .filter((value): value is string => Boolean(value));
+  const sourceLogs = useMemo(() => {
+    if (Array.isArray(logs) && logs.length > 0) return logs;
+    return log ? [log] : [];
+  }, [log, logs]);
+  const steps = useMemo(
+    () =>
+      sourceLogs.map((entry, index) =>
+        buildBrowserSkillStep({
+          log: entry,
+          index,
+          backendUrl,
+          environmentId,
+        })
+      ),
+    [backendUrl, environmentId, sourceLogs]
+  );
+  const [collapsed, setCollapsed] = useState(false);
+  const [isFollowingLatest, setIsFollowingLatest] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState(() => Math.max(0, steps.length - 1));
+
+  useEffect(() => {
+    if (steps.length === 0) {
+      setSelectedIndex(0);
+      return;
+    }
+    setSelectedIndex((currentIndex) => {
+      if (isFollowingLatest) {
+        return steps.length - 1;
+      }
+      return Math.min(currentIndex, steps.length - 1);
+    });
+  }, [isFollowingLatest, steps.length]);
+
+  const currentStep = steps[selectedIndex] || steps[steps.length - 1] || null;
+  const lastLog = sourceLogs[sourceLogs.length - 1];
+  const isRunning = Boolean(lastLog && (lastLog.metadata?.status === "running" || lastLog.metadata?.status === "started"));
+  const canMoveBackward = selectedIndex > 0;
+  const canMoveForward = selectedIndex < steps.length - 1;
+  const cardTitle = steps.length > 1 ? `${steps.length} interactions` : currentStep?.actionLabel || "Browser session";
+
+  function moveToStep(nextIndex: number) {
+    setSelectedIndex(nextIndex);
+    setIsFollowingLatest(nextIndex >= steps.length - 1);
+  }
 
   return (
-    <ImagePreviewLogCard
-      icon={<Eye className="tb-log-card-small-icon" strokeWidth={1.5} />}
-      label="Browser"
-      title={parsed.title || formatBrowserSkillAction(parsed.action)}
-      timeLabel={timeLabel}
-      meta={isRunning ? <span className="tb-log-card-status">running...</span> : null}
-      body={
-        parsed.error && !isRunning ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{parsed.error}</div>
-        ) : (
-          <>
-            {imageSources.length > 0 ? (
-              <div className="tb-log-image-grid">
-                {imageSources.slice(0, 2).map((src, index) => (
-                  <RunnerImagePreviewSurface
-                    key={`${src}-${index}`}
-                    src={src}
-                    alt={parsed.title || parsed.url || `Browser screenshot ${index + 1}`}
-                    fetchHeaders={requestHeaders}
-                    loadStrategy="visible"
-                  />
-                ))}
-              </div>
-            ) : null}
-            <div className="tb-log-checklist">
-              <div className="tb-log-checklist-item">
-                <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
-                <span className="tb-log-checklist-text">{formatBrowserSkillAction(parsed.action)}</span>
-              </div>
-              {parsed.url ? (
-                <div className="tb-log-checklist-item">
-                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
-                  <span className="tb-log-checklist-text">{parsed.url}</span>
-                </div>
-              ) : null}
-              {parsed.selector ? (
-                <div className="tb-log-checklist-item">
-                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
-                  <span className="tb-log-checklist-text">{parsed.selector}</span>
-                </div>
-              ) : null}
-              {parsed.text ? (
-                <div className="tb-log-checklist-item">
-                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
-                  <span className="tb-log-checklist-text">{parsed.text}</span>
-                </div>
-              ) : null}
-              {parsed.key ? (
-                <div className="tb-log-checklist-item">
-                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
-                  <span className="tb-log-checklist-text">Key: {parsed.key}</span>
-                </div>
-              ) : null}
-              {typeof parsed.timeoutMs === "number" ? (
-                <div className="tb-log-checklist-item">
-                  <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
-                  <span className="tb-log-checklist-text">Timeout: {parsed.timeoutMs}ms</span>
-                </div>
-              ) : null}
+    <div className="tb-log-card tb-log-card-browser">
+      <LogHeader
+        icon={<Globe className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Browser"
+        title={cardTitle}
+        timeLabel={timeLabel}
+        meta={isRunning ? <span className="tb-log-card-status">running...</span> : null}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        {currentStep ? (
+          <div className="tb-browser-carousel">
+            <div className="tb-browser-carousel-path" title={currentStep.locationLabel}>
+              <HardDrive className="tb-browser-carousel-meta-icon" strokeWidth={1.6} />
+              <span className="tb-browser-carousel-meta-copy">{currentStep.locationLabel}</span>
             </div>
-            {parsed.elements.length > 0 ? (
-              <div className="tb-log-checklist">
-                {parsed.elements.slice(0, 8).map((element, index) => (
-                  <div key={`${element.selector || element.text || index}`} className="tb-log-checklist-item">
-                    <ChevronRight className="tb-log-checklist-icon" strokeWidth={1.5} />
-                    <span className="tb-log-checklist-text">
-                      {element.text || element.tag || "Element"}
-                      {element.selector ? ` -> ${element.selector}` : ""}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            {parsed.textExcerpt ? (
-              <div className="tb-log-file-preview-frame tb-log-terminal-frame">
-                <div className="tb-log-file-preview-topbar">
-                  <span className="tb-log-file-preview-language">Visible text</span>
+            <div className="tb-browser-carousel-frame">
+              {currentStep.previewSrc ? (
+                <RunnerImagePreviewSurface
+                  src={currentStep.previewSrc}
+                  alt={currentStep.previewAlt}
+                  className="tb-browser-carousel-surface"
+                  imageClassName="tb-browser-carousel-image"
+                  maxHeight={500}
+                  fetchHeaders={requestHeaders}
+                  loadStrategy="visible"
+                />
+              ) : (
+                <div className="tb-browser-carousel-empty">
+                  {currentStep.isRunning ? "Capturing browser state..." : "No screenshot captured for this step."}
                 </div>
-                <div className="tb-log-terminal-body">
-                  <RunnerAnsiOutput content={parsed.textExcerpt.slice(0, 800)} />
-                </div>
+              )}
+            </div>
+            {currentStep.parsed.error && !currentStep.isRunning ? (
+              <div className="tb-log-card-state tb-log-card-state-error">{currentStep.parsed.error}</div>
+            ) : null}
+            <div className="tb-browser-carousel-footer">
+              <div className="tb-browser-carousel-action">
+                <MousePointerClick className="tb-browser-carousel-meta-icon" strokeWidth={1.6} />
+                <span className="tb-browser-carousel-action-copy">{currentStep.actionLabel}</span>
               </div>
-            ) : null}
-            {!parsed.error && !isRunning && imageSources.length === 0 && !parsed.url && parsed.elements.length === 0 ? (
-              <div className="tb-log-card-empty">No browser output was parsed.</div>
-            ) : null}
-          </>
-        )
-      }
-    />
+              <div className="tb-browser-carousel-controls">
+                <button
+                  type="button"
+                  className="tb-browser-carousel-control"
+                  onClick={() => moveToStep(selectedIndex - 1)}
+                  disabled={!canMoveBackward}
+                  aria-label="Show previous browser step"
+                >
+                  <ChevronLeft className="tb-browser-carousel-control-icon" strokeWidth={1.5} />
+                </button>
+                <button
+                  type="button"
+                  className="tb-browser-carousel-control"
+                  onClick={() => moveToStep(selectedIndex + 1)}
+                  disabled={!canMoveForward}
+                  aria-label="Show next browser step"
+                >
+                  <ChevronRight className="tb-browser-carousel-control-icon" strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="tb-log-card-empty">No browser output was parsed.</div>
+        )}
+      </LogPanel>
+    </div>
   );
 }
 

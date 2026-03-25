@@ -10901,7 +10901,7 @@ const html = `<!doctype html>
         flex-direction: column;
         overflow: auto;
         gap: 8px;
-        padding-top: 12px;
+        padding-top: 17px;
       }
 
       .playground-tasks-backlog-item {
