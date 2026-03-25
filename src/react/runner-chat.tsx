@@ -1,0 +1,10949 @@
+import { CSSProperties, ChangeEvent, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  Bookmark as LucideBookmark,
+  Brain as LucideBrain,
+  Calendar as LucideCalendar,
+  Check as LucideCheck,
+  ChevronDown as LucideChevronDown,
+  ChevronLeft as LucideChevronLeft,
+  Route as LucideRoute,
+  Cloud as LucideCloud,
+  Code as LucideCode,
+  Cpu as LucideCpu,
+  Database as LucideDatabase,
+  ChevronsUp as LucideChevronsUp,
+  ChevronRight as LucideChevronRight,
+  ChevronUp as LucideChevronUp,
+  Clock3 as LucideClock3,
+  Calculator as LucideCalculator,
+  Equal as LucideEqual,
+  FileText as LucideFileText,
+  GitBranch as LucideGitBranch,
+  Globe as LucideGlobe,
+  Images as LucideImages,
+  ImageIcon as LucideImageIcon,
+  Layers as LucideLayers,
+  ListTodo as LucideListTodo,
+  Mail as LucideMail,
+  MessageCircle as LucideMessageCircle,
+  MessageSquare as LucideMessageSquare,
+  Minimize2 as LucideMinimize2,
+  LoaderCircle as LucideLoaderCircle,
+  Package as LucidePackage,
+  Palette as LucidePalette,
+  Pencil as LucidePencil,
+  PenTool as LucidePenTool,
+  Minus as LucideMinus,
+  Plus as LucidePlus,
+  Eraser as LucideEraser,
+  Server as LucideServer,
+  Shield as LucideShield,
+  Sparkles as LucideSparkles,
+  Telescope as LucideTelescope,
+  Terminal as LucideTerminal,
+  TextQuote as LucideTextQuote,
+  Upload as LucideUpload,
+  Wand2 as LucideWand2,
+  X as LucideX,
+  Zap as LucideZap,
+} from "lucide-react";
+import { RunnerExecuteResult, RunnerLog, RunnerThreadStep, RunnerThreadStepDiffResult } from "../types.js";
+import { iterateSseData } from "../sse.js";
+import { useRunnerExecution } from "./use-runner-execution.js";
+import { getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
+import { mountRunnerChatStyles } from "./runner-chat-styles.js";
+import { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js";
+import {
+  buildRunnerPreviewHeaders,
+  buildRunnerPreviewAttachmentFromPath,
+  buildRunnerPreviewDownloadUrl,
+  getRunnerPreviewFilename,
+  getRunnerPreviewHeaderValue,
+  isRunnerDocumentPreviewable,
+  normalizeRunnerPreviewPath,
+  resolveRunnerPreviewAssetUrl,
+  type RunnerPreviewAttachment,
+} from "./runner-document-preview.js";
+import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
+import { InlineStatusLogBox, RunnerWorkLogEntry } from "./runner-log-boxes.js";
+import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
+
+const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
+const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
+const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
+
+export interface RunnerAttachment {
+  id: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  type: "image" | "document";
+  uploadedAt: string;
+  url?: string;
+  workspacePath?: string;
+  gcsPath?: string;
+  [key: string]: unknown;
+}
+
+type RunnerTurnAttachment = RunnerPreviewAttachment;
+
+interface LocalAttachment {
+  id: string;
+  file: File;
+  type: RunnerAttachment["type"];
+  previewUrl?: string;
+  source: "local" | "workspace" | "integration";
+  sourceEnvironmentId?: string | null;
+  integrationSource?: "google-drive" | "one-drive" | "github";
+  githubRepoFullName?: string;
+  githubRef?: string | null;
+  resolvedAttachment?: RunnerAttachment;
+  uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";
+  uploadError?: string | null;
+}
+
+type RunnerTurnStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
+type RunnerFileBrowserSource = "workspace" | "google-drive" | "one-drive" | "github" | "notion";
+type RunnerQuotedSelectionSource = "working_log" | "run_summary";
+
+interface RunnerQuotedSelection {
+  text: string;
+  sourceType: RunnerQuotedSelectionSource;
+}
+
+interface RunnerQuotedSelectionPopupState {
+  selection: RunnerQuotedSelection;
+  x: number;
+  y: number;
+}
+
+interface RunnerTurn {
+  id: string;
+  sourceMessageId?: string | null;
+  prompt: string;
+  logs: RunnerLog[];
+  startedAtMs: number;
+  completedAtMs?: number;
+  durationSeconds?: number | null;
+  status: RunnerTurnStatus;
+  animateOnRender?: boolean;
+  isInitialTurn?: boolean;
+  agentName?: string | null;
+  environmentName?: string | null;
+  presentation?: "default" | "context-action-notice" | "btw";
+  quotedSelection?: RunnerQuotedSelection | null;
+  attachments?: RunnerTurnAttachment[] | null;
+}
+
+interface PendingRunnerMessage {
+  id: string;
+  turnId: string;
+  prompt: string;
+  attachments: LocalAttachment[];
+  quotedSelection?: RunnerQuotedSelection | null;
+  backlogSubtaskCommand?: {
+    ticketNumber: string;
+    label: string;
+  } | null;
+}
+
+interface StagedBacklogSubtaskCommand {
+  ticketNumber: string;
+  label: string;
+}
+
+interface RunnerTaskPreview {
+  taskId: string;
+  projectId: string;
+  projectName?: string;
+  threadId?: string;
+  ticketNumber: string;
+  title: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  taskType?: string;
+  assigneeAgentId?: string;
+  assigneeName?: string;
+  environmentId?: string;
+  environmentName?: string;
+}
+
+interface PendingEditConfirmation {
+  turnId: string;
+  nextPrompt: string;
+  changedFiles: Array<{
+    path: string;
+    kind: "created" | "modified" | "deleted";
+    additions?: number;
+    deletions?: number;
+  }>;
+}
+
+type RunnerForkFileCopyMode = "all" | "thread_only" | "none";
+type RunnerForkTarget = "existing_environment" | "new_forked_environment";
+type RunnerForkExistingEnvironmentFileCopyMode = "thread_only" | "none";
+
+interface PendingForkConfiguration {
+  source: "message" | "thread";
+  sourceThreadId: string;
+  stagedPrompt: string;
+  attachments?: LocalAttachment[];
+  quotedSelection?: RunnerQuotedSelection | null;
+  turn?: RunnerTurn;
+  restoreSelectedEnvironmentId?: string | null;
+}
+
+interface RunnerConversationMessage {
+  id?: string;
+  role: string;
+  content: string;
+  createdAt?: string;
+  logMetadata?: Record<string, unknown> | null;
+}
+
+function isLocalAttachmentRecord(attachment: LocalAttachment | RunnerTurnAttachment): attachment is LocalAttachment {
+  return "file" in attachment;
+}
+
+function getAttachmentDisplayName(attachment: LocalAttachment | RunnerTurnAttachment): string {
+  return isLocalAttachmentRecord(attachment) ? attachment.file.name : attachment.filename;
+}
+
+function getAttachmentPreviewUrl(attachment: LocalAttachment | RunnerTurnAttachment): string | undefined {
+  return isLocalAttachmentRecord(attachment) ? attachment.previewUrl : attachment.previewUrl || attachment.url;
+}
+
+function isAttachmentDocumentPreviewable(attachment: RunnerTurnAttachment): boolean {
+  return isRunnerDocumentPreviewable(attachment);
+}
+
+const MAX_QUOTED_SELECTION_LENGTH = 4000;
+const QUOTED_SELECTION_PREVIEW_LENGTH = 140;
+const COMPOSER_QUOTED_SELECTION_ANIMATION_MS = 220;
+
+interface RunnerThreadHydrationPayload {
+  threadId: string;
+  threadStatus?: string | null;
+  threadEnvironmentId?: string | null;
+  threadEnvironmentName?: string | null;
+  initialPrompt: string;
+  logs: RunnerLog[];
+  messages: RunnerConversationMessage[];
+  durationSeconds?: number | null;
+  startedAtMs?: number | null;
+  completedAtMs?: number | null;
+  agentName?: string | null;
+  environmentName?: string | null;
+}
+
+interface RunnerThreadDiffEntry {
+  path?: string;
+  additions?: number;
+  deletions?: number;
+  changes?: string;
+  diff?: string;
+  createdAt?: string;
+}
+
+interface RunnerParsedThreadStep {
+  id: string;
+  sequence: number;
+  stepKind: string;
+  eventType: string | null;
+  title: string;
+  createdAt: string;
+  metadata: Record<string, unknown> | null;
+}
+
+interface RunnerTurnFilePreview {
+  path: string;
+  kind: "created" | "modified";
+  content?: string;
+  diff?: string;
+  additions?: number;
+  deletions?: number;
+}
+
+export type RunnerChatInputMode = "minimal" | "computer-agents";
+
+export interface RunnerChatOption {
+  id: string;
+  name: string;
+  isDefault?: boolean;
+}
+
+type RunnerAgentSelectorMode = "agents" | "teams";
+
+type RunnerAgentOptionRecord = RunnerChatOption & {
+  agentType?: string | null;
+  metadata?: unknown;
+};
+
+function orderOptionsWithPinnedTop<T extends RunnerChatOption>(options: T[], pinnedId: string | null): T[] {
+  if (!pinnedId) {
+    return options;
+  }
+  const pinnedIndex = options.findIndex((option) => option.id === pinnedId);
+  if (pinnedIndex <= 0) {
+    return options;
+  }
+  return [options[pinnedIndex], ...options.slice(0, pinnedIndex), ...options.slice(pinnedIndex + 1)];
+}
+
+function mergeRunnerChatOptions(primary: RunnerChatOption[], additions: Array<RunnerChatOption | null | undefined>): RunnerChatOption[] {
+  const merged = new Map<string, RunnerChatOption>();
+  for (const option of primary) {
+    if (option.id.trim()) {
+      merged.set(option.id, option);
+    }
+  }
+  for (const option of additions) {
+    if (!option || !option.id.trim()) continue;
+    const existing = merged.get(option.id);
+    merged.set(option.id, existing ? { ...option, ...existing, name: existing.name || option.name } : option);
+  }
+  return Array.from(merged.values());
+}
+
+function isRunnerTeamAgentOption(option: RunnerChatOption | null | undefined): boolean {
+  if (!option) {
+    return false;
+  }
+
+  const candidate = option as RunnerAgentOptionRecord;
+  if (typeof candidate.agentType === "string" && candidate.agentType.trim() === "team") {
+    return true;
+  }
+
+  const metadata = candidate.metadata;
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return false;
+  }
+
+  const kind = "kind" in metadata && typeof metadata.kind === "string" ? metadata.kind.trim() : "";
+  const team = "team" in metadata && metadata.team && typeof metadata.team === "object" && !Array.isArray(metadata.team)
+    ? metadata.team
+    : null;
+
+  return kind === "team" && Boolean(team);
+}
+
+function getRunnerAgentSelectorMode(option: RunnerChatOption | null | undefined): RunnerAgentSelectorMode {
+  return isRunnerTeamAgentOption(option) ? "teams" : "agents";
+}
+
+export interface RunnerChatSkill {
+  id: string;
+  name: string;
+  description?: string;
+  enabled?: boolean;
+  icon?: string | null;
+  isCustom?: boolean;
+}
+
+export interface RunnerChatFileNode {
+  id: string;
+  name: string;
+  parentId?: string | null;
+  isFolder?: boolean;
+  mimeType?: string;
+  size?: number;
+  modifiedTime?: string;
+  createdTime?: string;
+  previewUrl?: string;
+  path?: string;
+  repoFullName?: string;
+  ref?: string;
+}
+
+export interface RunnerChatNotionDatabase {
+  id: string;
+  name: string;
+  icon?: string | null;
+}
+
+export interface RunnerChatSchedulePreset {
+  id: string;
+  label: string;
+  cron?: string;
+}
+
+export interface RunnerChatFetchedFileContent {
+  content: string;
+  mimeType?: string;
+  encoding?: "base64" | "text";
+  name?: string;
+}
+
+export interface RunnerChatGithubConfig {
+  connected?: boolean;
+  repositories?: RunnerChatOption[];
+  selectedRepositoryId?: string;
+  contexts?: RunnerChatOption[];
+  selectedContextId?: string;
+  contextLabel?: string;
+  onAttach?: (fileIds: string[]) => void;
+  onRepositoryChange?: (repositoryId: string) => void;
+  onContextChange?: (contextId: string) => void;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
+  fetchItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
+  fetchFileContent?: (file: RunnerChatFileNode) => Promise<RunnerChatFetchedFileContent>;
+}
+
+export interface RunnerChatNotionConfig {
+  connected?: boolean;
+  databases?: RunnerChatNotionDatabase[];
+  selectedDatabaseId?: string;
+  onDatabaseChange?: (databaseId: string) => void;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
+  fetchDatabases?: () => Promise<RunnerChatNotionDatabase[]>;
+}
+
+export interface RunnerChatDriveConfig {
+  connected?: boolean;
+  items?: RunnerChatFileNode[];
+  rootLabel?: string;
+  onAttach?: (fileIds: string[]) => void;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
+  fetchItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
+  fetchFileContent?: (file: RunnerChatFileNode) => Promise<RunnerChatFetchedFileContent>;
+  onManageAccess?: () => Promise<void> | void;
+}
+
+export interface RunnerChatWorkspaceConfig {
+  items?: RunnerChatFileNode[];
+  rootLabel?: string;
+  onAttach?: (fileIds: string[]) => void;
+}
+
+export interface RunnerChatScheduleConfig {
+  enabled?: boolean;
+  presets?: RunnerChatSchedulePreset[];
+  onQuickSchedule?: (schedule: {
+    scheduledTime: Date;
+    scheduleType: "one-time" | "recurring";
+    cronExpression?: string;
+  }) => void;
+  onOpenCalendarApp?: () => void;
+}
+
+export interface RunnerChatComputerAgentsConfig {
+  github?: RunnerChatGithubConfig;
+  notion?: RunnerChatNotionConfig;
+  googleDrive?: RunnerChatDriveConfig;
+  oneDrive?: RunnerChatDriveConfig;
+  workspace?: RunnerChatWorkspaceConfig;
+  schedule?: RunnerChatScheduleConfig;
+}
+
+export interface RunnerChatProps {
+  backendUrl: string;
+  apiKey: string;
+  speechToTextUrl?: string;
+  fetchCustomSkills?: () => Promise<RunnerChatSkill[]>;
+  requestHeaders?: HeadersInit;
+  environmentId?: string;
+  agentId?: string;
+  appId?: string;
+  threadId?: string;
+  title?: string;
+  placeholder?: string;
+  initialTask?: string;
+  hiddenSystemPrompt?: string;
+  emptyState?: ReactNode;
+  className?: string;
+  disabled?: boolean;
+  autoCreateThread?: boolean;
+  maxAttachments?: number;
+  showUsageInStatus?: boolean;
+  inputMode?: RunnerChatInputMode;
+  agents?: RunnerChatOption[];
+  environments?: RunnerChatOption[];
+  skills?: RunnerChatSkill[];
+  computerAgents?: RunnerChatComputerAgentsConfig;
+  uploadFiles?: (files: File[]) => Promise<RunnerAttachment[]>;
+  mapFileToAttachment?: (file: File) => Promise<RunnerAttachment> | RunnerAttachment;
+  onThreadIdChange?: (threadId: string) => void;
+  onRunStart?: (threadId: string) => void;
+  onRunFinish?: (result: RunnerExecuteResult, threadId: string) => void;
+  onRunError?: (error: Error, threadId?: string) => void;
+  onAgentChange?: (agentId: string) => void;
+  onEnvironmentChange?: (environmentId: string) => void;
+  onSkillsChange?: (skillIds: string[]) => void;
+  onContextIndicatorClick?: (context: RunnerChatThreadContext | null) => void;
+  onActionSummaryClick?: (summary: RunnerChatActionSummaryClickPayload) => void;
+  threadTaskPreview?: RunnerTaskPreview | null;
+  onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
+  autoFocusComposer?: boolean;
+  keepFocusOnSubmit?: boolean;
+  enableBacklogSubtaskCommand?: boolean;
+  backlogSubtaskCommand?: {
+    ticketNumber: string;
+    token: string | number;
+    label?: string;
+  } | null;
+}
+
+export interface RunnerChatActionSummaryClickPayload {
+  actionType?: "compact" | "clear" | "fork" | "btw" | "revert" | "reapply";
+  message: string;
+  revertedChangeStepId?: string | null;
+  revertedFilePath?: string | null;
+  revertedFileName?: string | null;
+}
+
+interface RunnerChatThreadContext {
+  threadId: string;
+  sessionId: string | null;
+  model: string;
+  maxTokens: number;
+  usedTokens: number;
+  remainingTokens: number;
+  remainingRatio: number;
+  source: string;
+  exact: boolean;
+}
+
+type RunnerChatThreadContextCategoryKey =
+  | "system_prompt"
+  | "skills"
+  | "messages"
+  | "free_space"
+  | "autocompact_buffer"
+  | "other";
+
+interface RunnerChatThreadContextCategory {
+  key: RunnerChatThreadContextCategoryKey;
+  label: string;
+  tokens: number;
+  ratio: number;
+  kind: "used" | "free" | "buffer" | "other";
+}
+
+interface RunnerChatThreadContextDetails extends RunnerChatThreadContext {
+  categories: RunnerChatThreadContextCategory[];
+  rawText?: string;
+  estimate?: RunnerChatThreadContext;
+}
+
+type RunnerChatThreadContextAction = "compact" | "clear" | "fork" | "btw" | "revert" | "reapply";
+type StagedThreadContextCommandTone = "compact" | "btw" | "fork" | "neutral";
+
+interface RunnerChatThreadContextAvailableActions {
+  compact: boolean;
+  clear: boolean;
+  btw: boolean;
+  fork: boolean;
+}
+
+interface ParsedThreadContextCommand {
+  action: "context" | RunnerChatThreadContextAction;
+  prompt?: string;
+}
+
+const DEFAULT_COMPUTER_AGENT_SKILLS: RunnerChatSkill[] = [
+  { id: "image_generation", name: "Image Generation", enabled: true },
+  { id: "web_search", name: "Web Search", enabled: true },
+  { id: "research", name: "Research", enabled: true },
+  { id: "pdf", name: "PDF Processing", enabled: true },
+  { id: "frontend_design", name: "Frontend Design", enabled: true },
+  { id: "pptx", name: "PowerPoint/PPTX", enabled: true },
+  { id: "memory", name: "Memory", enabled: true },
+  { id: "task_management", name: "Task Management", enabled: true },
+];
+const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "research", "memory", "task_management"] as const;
+const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v1";
+
+const DEFAULT_SCHEDULE_PRESETS: RunnerChatSchedulePreset[] = [
+  { id: "daily", label: "Every day", cron: "0 9 * * *" },
+  { id: "weekdays", label: "Every weekday", cron: "0 9 * * 1-5" },
+  { id: "weekly", label: "Every week", cron: "0 9 * * 1" },
+];
+
+const SPEECH_SAMPLE_RATE = 16000;
+const SPEECH_WORKLET_BUFFER_SIZE = 2048;
+const SPEECH_WORKLET_PROCESSOR_NAME = "tb-runner-speech-capture";
+const SPEECH_QUEUE_LIMIT = 128;
+const SPEECH_ACTIVITY_RMS_THRESHOLD = 0.009;
+const SPEECH_ACTIVITY_HANGOVER_MS = 450;
+const ATTACH_FILES_SHORTCUT_KEY = "u";
+const SCHEDULE_SHORTCUT_KEY = "s";
+const POPUP_ANIMATION_DURATION_MS = 180;
+const DEFAULT_THREAD_CONTEXT_ACTIONS: RunnerChatThreadContextAvailableActions = {
+  compact: false,
+  clear: false,
+  btw: true,
+  fork: false,
+};
+
+const EMPTY_THREAD_CONTEXT_CATEGORIES: RunnerChatThreadContextCategory[] = [
+  { key: "system_prompt", label: "System prompt", tokens: 0, ratio: 0, kind: "used" },
+  { key: "skills", label: "Skills", tokens: 0, ratio: 0, kind: "used" },
+  { key: "messages", label: "Thread context", tokens: 0, ratio: 0, kind: "used" },
+  { key: "autocompact_buffer", label: "Autocompact buffer", tokens: 0, ratio: 0, kind: "buffer" },
+  { key: "free_space", label: "Free space", tokens: 0, ratio: 0, kind: "free" },
+];
+
+type InputPopupId =
+  | "main"
+  | "context"
+  | "skills"
+  | "agent"
+  | "environment"
+  | "github"
+  | "notion"
+  | "google-drive"
+  | "one-drive"
+  | "schedule"
+  | "attach-files";
+
+type SpeechClientMessage = { type: "audio"; data: string } | { type: "activity-start" | "activity-end" };
+
+type MainPopupRenderId = "main" | "context" | "agent" | "environment";
+type SidePopupRenderId = Exclude<InputPopupId, MainPopupRenderId>;
+type PopupAnimationPhase = "idle" | "enter" | "exit";
+type SidePopupExitDirection = "left" | "down";
+
+function isPlusPopupId(popup: InputPopupId | null): popup is Exclude<InputPopupId, "context" | "agent" | "environment"> {
+  return popup === "main" || popup === "skills" || popup === "github" || popup === "notion" || popup === "google-drive" || popup === "one-drive" || popup === "schedule" || popup === "attach-files";
+}
+
+function getMainPopupRenderId(popup: InputPopupId | null): MainPopupRenderId | null {
+  if (popup === "context" || popup === "agent" || popup === "environment") return popup;
+  return isPlusPopupId(popup) ? "main" : null;
+}
+
+function getSidePopupRenderId(popup: InputPopupId | null): SidePopupRenderId | null {
+  if (!popup || popup === "main" || popup === "context" || popup === "agent" || popup === "environment") {
+    return null;
+  }
+  return popup;
+}
+
+function generateId(prefix: string): string {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function sanitizeBackendUrl(url: string): string {
+  return url.trim().replace(/\/+$/, "");
+}
+
+function getHeaderValue(headers: HeadersInit | undefined, name: string): string {
+  return getRunnerPreviewHeaderValue(headers, name);
+}
+
+function buildRunnerHeaders(requestHeaders: HeadersInit | undefined, apiKey: string): Headers {
+  return buildRunnerPreviewHeaders(requestHeaders, apiKey);
+}
+
+function formatCompactTokenCount(value: number): string {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1).replace(/\.0$/, "")}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1).replace(/\.0$/, "")}k`;
+  }
+  return String(value);
+}
+
+function deriveThreadContextDisplayMetrics(
+  context: RunnerChatThreadContext | RunnerChatThreadContextDetails | null | undefined
+): { usedTokens: number; remainingTokens: number; remainingRatio: number; usedRatio: number } {
+  if (!context) {
+    return {
+      usedTokens: 0,
+      remainingTokens: 0,
+      remainingRatio: 0,
+      usedRatio: 0,
+    };
+  }
+
+  let usedTokens = Math.max(0, context.usedTokens);
+  let remainingTokens = Math.max(0, context.remainingTokens);
+
+  if ("categories" in context) {
+    const explicitFreeCategory = context.categories.find((category) => category.key === "free_space");
+    const nonFreeTokens = context.categories
+      .filter((category) => category.key !== "free_space")
+      .reduce((sum, category) => sum + Math.max(0, category.tokens), 0);
+
+    if (explicitFreeCategory) {
+      remainingTokens = Math.max(0, Math.min(context.maxTokens, explicitFreeCategory.tokens));
+      usedTokens = Math.max(0, context.maxTokens - remainingTokens);
+    } else {
+      usedTokens = Math.max(0, Math.min(context.maxTokens, nonFreeTokens));
+      remainingTokens = Math.max(0, context.maxTokens - usedTokens);
+    }
+  }
+
+  const remainingRatio = context.maxTokens > 0 ? remainingTokens / context.maxTokens : 0;
+
+  return {
+    usedTokens,
+    remainingTokens,
+    remainingRatio,
+    usedRatio: context.maxTokens > 0 ? usedTokens / context.maxTokens : 0,
+  };
+}
+
+function buildContextIndicatorTitle(
+  context: RunnerChatThreadContext | RunnerChatThreadContextDetails | null,
+  hasThread: boolean,
+  isLoading: boolean
+): string {
+  if (!hasThread) {
+    return "Conversation context remaining";
+  }
+  if (!context) {
+    return isLoading ? "Loading conversation context…" : "Conversation context remaining";
+  }
+
+  const displayMetrics = deriveThreadContextDisplayMetrics(context);
+  const remainingPercent = Math.round(displayMetrics.remainingRatio * 100);
+  const qualifier = context.exact ? "" : " (estimate)";
+  return `Conversation context remaining: ${remainingPercent}%${qualifier} • ${formatCompactTokenCount(displayMetrics.remainingTokens)} / ${formatCompactTokenCount(context.maxTokens)} tokens`;
+}
+
+function getContextCategoryDisplayTokens(
+  category: RunnerChatThreadContextCategory,
+  metrics: ReturnType<typeof deriveThreadContextDisplayMetrics>
+): number {
+  if (category.key === "free_space") {
+    return metrics.remainingTokens;
+  }
+  return Math.max(0, category.tokens);
+}
+
+function parseThreadContextCommand(input: string): ParsedThreadContextCommand | null {
+  const trimmed = input.trim();
+  if (!trimmed.startsWith("/")) {
+    return null;
+  }
+
+  if (/^\/context\s*$/i.test(trimmed)) {
+    return { action: "context" };
+  }
+  const compactMatch = trimmed.match(/^\/compact(?:\s+([\s\S]+))?$/i);
+  if (compactMatch) {
+    return {
+      action: "compact",
+      prompt: compactMatch[1]?.trim() || "",
+    };
+  }
+  if (/^\/clear\s*$/i.test(trimmed)) {
+    return { action: "clear" };
+  }
+  const forkMatch = trimmed.match(/^\/fork(?:\s+([\s\S]+))?$/i);
+  if (forkMatch) {
+    return {
+      action: "fork",
+      prompt: forkMatch[1]?.trim() || "",
+    };
+  }
+
+  const btwMatch = trimmed.match(/^\/btw(?:\s+([\s\S]+))?$/i);
+  if (btwMatch) {
+    return {
+      action: "btw",
+      prompt: btwMatch[1]?.trim() || "",
+    };
+  }
+
+  return null;
+}
+
+function threadContextCategoryColor(category: RunnerChatThreadContextCategory): string {
+  if (category.key === "system_prompt") return "#67e8f9";
+  if (category.key === "skills") return "#60a5fa";
+  if (category.key === "messages") return "#f8fafc";
+  if (category.key === "autocompact_buffer") return "#fbbf24";
+  if (category.key === "free_space") return "rgba(255, 255, 255, 0.18)";
+  return "rgba(255, 255, 255, 0.4)";
+}
+
+function stagedThreadContextCommandTone(action: RunnerChatThreadContextAction | null): StagedThreadContextCommandTone | null {
+  if (action === "compact") return "compact";
+  if (action === "btw") return "btw";
+  if (action === "fork") return "fork";
+  if (action === "clear") return "neutral";
+  return null;
+}
+
+function stagedThreadContextCommandOffset(action: RunnerChatThreadContextAction | null): string {
+  if (action === "compact") return "82px";
+  if (action === "clear") return "58px";
+  if (action === "fork") return "52px";
+  if (action === "btw") return "52px";
+  return "16px";
+}
+
+function threadContextActionAllowsPrompt(action: RunnerChatThreadContextAction | null): boolean {
+  return action === "compact" || action === "btw" || action === "fork";
+}
+
+function parseAutoStageThreadContextCommand(input: string): { action: RunnerChatThreadContextAction; prompt: string } | null {
+  const compactMatch = input.match(/^\/compact(?:\s+([\s\S]*))?$/i);
+  if (compactMatch) {
+    return {
+      action: "compact",
+      prompt: compactMatch[1] || "",
+    };
+  }
+
+  const btwMatch = input.match(/^\/btw(?:\s+([\s\S]*))?$/i);
+  if (btwMatch) {
+    return {
+      action: "btw",
+      prompt: btwMatch[1] || "",
+    };
+  }
+
+  const forkMatch = input.match(/^\/fork(?:\s+([\s\S]*))?$/i);
+  if (forkMatch) {
+    return {
+      action: "fork",
+      prompt: forkMatch[1] || "",
+    };
+  }
+
+  return null;
+}
+
+function normalizeRunnerBacklogTicketNumber(value: string): string {
+  const digits = String(value || "").replace(/\D+/g, "");
+  if (!digits) {
+    return "";
+  }
+  return digits.slice(-3).padStart(3, "0");
+}
+
+function buildRunnerBacklogSubtaskLabel(ticketNumber: string): string {
+  const normalizedTicketNumber = normalizeRunnerBacklogTicketNumber(ticketNumber);
+  return normalizedTicketNumber ? `Subtask to ${normalizedTicketNumber}` : "Subtask";
+}
+
+function parseAutoStageBacklogSubtaskCommand(input: string): { ticketNumber: string; prompt: string } | null {
+  const match = input.match(/^\/subtask\s+(\d{3})(?:\s+([\s\S]*))$/i);
+  if (!match) {
+    return null;
+  }
+  const ticketNumber = normalizeRunnerBacklogTicketNumber(match[1] || "");
+  if (!ticketNumber) {
+    return null;
+  }
+  return {
+    ticketNumber,
+    prompt: match[2] || "",
+  };
+}
+
+function normalizeRunnerTaskPreviewStatus(value: string | null | undefined): "todo" | "in_progress" | "blocked" | "done" {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "in_progress" || normalized === "blocked" || normalized === "done") {
+    return normalized;
+  }
+  return "todo";
+}
+
+function normalizeRunnerTaskPreviewPriority(value: string | null | undefined): "low" | "medium" | "high" | "critical" {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "low" || normalized === "medium" || normalized === "high" || normalized === "critical") {
+    return normalized;
+  }
+  return "medium";
+}
+
+function normalizeRunnerTaskPreviewType(value: string | null | undefined): "task" | "subtask" {
+  return String(value || "").trim().toLowerCase() === "subtask" ? "subtask" : "task";
+}
+
+function getRunnerTaskPreviewStatusLabel(value: string | null | undefined): string {
+  const normalized = normalizeRunnerTaskPreviewStatus(value);
+  if (normalized === "in_progress") return "In doing";
+  if (normalized === "blocked") return "Blocked";
+  if (normalized === "done") return "Done";
+  return "To do";
+}
+
+function renderRunnerTaskPreviewPriorityIcon(priority: string | null | undefined, className: string) {
+  const normalized = normalizeRunnerTaskPreviewPriority(priority);
+  if (normalized === "low") {
+    return <LucideChevronDown className={`${className} is-low`} strokeWidth={2} />;
+  }
+  if (normalized === "high") {
+    return <LucideChevronUp className={`${className} is-high`} strokeWidth={2} />;
+  }
+  if (normalized === "critical") {
+    return <LucideChevronsUp className={`${className} is-critical`} strokeWidth={2} />;
+  }
+  return <LucideEqual className={`${className} is-medium`} strokeWidth={2} />;
+}
+
+function formatThreadContextCommandText(action: RunnerChatThreadContextAction, prompt?: string): string {
+  const trimmedPrompt = prompt?.trim();
+  if (trimmedPrompt && threadContextActionAllowsPrompt(action)) {
+    return `/${action} ${trimmedPrompt}`;
+  }
+  return `/${action}`;
+}
+
+function isThreadContextCommandPrompt(prompt: string, action?: string | null): boolean {
+  const trimmed = prompt.trim();
+  if (!trimmed.startsWith("/")) {
+    return false;
+  }
+  if (!action) {
+    return /^\/(compact|clear|fork|btw)\b/i.test(trimmed);
+  }
+  return new RegExp(`^/${action}\\b`, "i").test(trimmed);
+}
+
+function normalizeEnvironmentWorkspaceItems(input: unknown): RunnerChatFileNode[] {
+  const rawItems = Array.isArray(input)
+    ? input
+    : input && typeof input === "object" && Array.isArray((input as { data?: unknown[] }).data)
+      ? (input as { data: unknown[] }).data
+      : input && typeof input === "object" && Array.isArray((input as { files?: unknown[] }).files)
+        ? (input as { files: unknown[] }).files
+      : [];
+
+  const normalized = rawItems
+    .map((entry): RunnerChatFileNode | null => {
+      if (!entry || typeof entry !== "object") return null;
+      const file = entry as Record<string, unknown>;
+      const modifiedTime =
+        typeof file.modifiedAt === "string"
+          ? file.modifiedAt
+          : typeof file.lastModified === "string"
+            ? file.lastModified
+            : typeof file.modifiedTime === "string"
+              ? file.modifiedTime
+              : typeof file.updatedAt === "string"
+                ? file.updatedAt
+                : undefined;
+      const createdTime =
+        typeof file.createdAt === "string"
+          ? file.createdAt
+          : typeof file.createdTime === "string"
+            ? file.createdTime
+            : undefined;
+      const rawPath = typeof file.path === "string" ? file.path : "";
+      const normalizedPath = rawPath.replace(/^\/+/, "").replace(/\/+$/, "");
+      const explicitName = typeof file.name === "string" ? file.name : "";
+      const name = explicitName || normalizedPath.split("/").filter(Boolean).pop() || "";
+      if (!name) return null;
+
+      const parentSegments = normalizedPath.split("/").filter(Boolean);
+      parentSegments.pop();
+      const parentId = parentSegments.length ? parentSegments.join("/") : null;
+      const type = typeof file.type === "string" ? file.type : "";
+      const isFolder = type === "directory" || type === "folder";
+
+      return {
+        id: normalizedPath || name,
+        name,
+        path: `/${normalizedPath}`,
+        parentId,
+        isFolder,
+        mimeType: typeof file.mimeType === "string" ? file.mimeType : undefined,
+        size: typeof file.size === "number" ? file.size : undefined,
+        modifiedTime,
+        createdTime,
+      };
+    })
+    .filter((item): item is RunnerChatFileNode => item !== null);
+
+  return normalized;
+}
+
+function getBrowserFileType(mimeType?: string, name?: string): "image" | "video" | "audio" | "pdf" | "code" | "spreadsheet" | "document" | "file" {
+  if (!mimeType && !name) return "file";
+
+  const ext = name?.split(".").pop()?.toLowerCase() || "";
+
+  if (mimeType?.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp"].includes(ext)) {
+    return "image";
+  }
+  if (mimeType?.startsWith("video/") || ["mp4", "mov", "avi", "webm"].includes(ext)) {
+    return "video";
+  }
+  if (mimeType?.startsWith("audio/") || ["mp3", "wav", "ogg", "m4a"].includes(ext)) {
+    return "audio";
+  }
+  if (["pdf"].includes(ext)) {
+    return "pdf";
+  }
+  if (["ts", "tsx", "js", "jsx", "json", "css", "html", "py", "go", "rs", "java", "cpp", "c", "h"].includes(ext)) {
+    return "code";
+  }
+  if (["xlsx", "xls", "csv"].includes(ext)) {
+    return "spreadsheet";
+  }
+  if (["doc", "docx", "txt", "md"].includes(ext)) {
+    return "document";
+  }
+  return "file";
+}
+
+function attachmentTypeForFile(mimeType?: string, name?: string): RunnerAttachment["type"] {
+  return getBrowserFileType(mimeType, name) === "image" ? "image" : "document";
+}
+
+function isBrowserFilePreviewable(file: RunnerChatFileNode): boolean {
+  const fileType = getBrowserFileType(file.mimeType, file.name);
+  return fileType === "image" || fileType === "code" || fileType === "document" || file.name.endsWith(".txt") || file.name.endsWith(".md") || file.name.endsWith(".json");
+}
+
+function buildEnvironmentFileDownloadUrl(backendUrl: string, environmentId: string, filePath?: string): string | null {
+  return buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath);
+}
+
+function isInternalTurnPreviewPath(filePath: string): boolean {
+  const normalized = filePath.replace(/^\/workspace\/?/, "");
+  return (
+    normalized === ".claude.json" ||
+    normalized.startsWith(".claude/") ||
+    normalized.startsWith(".cache/") ||
+    normalized.startsWith(".npm/") ||
+    normalized.startsWith(".local/") ||
+    normalized.startsWith("tmp/")
+  );
+}
+
+function resolveTurnPreviewMapValue<T>(source: Record<string, T> | undefined, filePath: string): T | undefined {
+  if (!source) return undefined;
+  return (
+    source[filePath] ||
+    source[filePath.replace(/^\/workspace\//, "")] ||
+    source[filePath.replace(/^\/+/, "")] ||
+    source[`/workspace/${filePath.replace(/^\/workspace\//, "").replace(/^\/+/, "")}`]
+  );
+}
+
+function collectTurnFilePreviews(logs: RunnerLog[]): RunnerTurnFilePreview[] {
+  const previewEntries = new Map<string, RunnerTurnFilePreview & { order: number }>();
+  let order = 0;
+
+  for (const log of logs) {
+    if (log.eventType !== "file_change") continue;
+
+    const filePaths = Array.isArray(log.metadata?.filePaths)
+      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      : [];
+    if (filePaths.length === 0) continue;
+
+    const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
+    const fileContents =
+      log.metadata?.fileContents && typeof log.metadata.fileContents === "object"
+        ? (log.metadata.fileContents as Record<string, string>)
+        : undefined;
+    const diffs =
+      log.metadata?.diffs && typeof log.metadata.diffs === "object"
+        ? (log.metadata.diffs as Record<string, { diff?: string; changes?: string; additions?: number; deletions?: number }>)
+        : undefined;
+
+    for (let index = 0; index < filePaths.length; index += 1) {
+      const normalizedPath = normalizeRunnerPreviewPath(filePaths[index]);
+      if (!normalizedPath || isInternalTurnPreviewPath(normalizedPath)) continue;
+
+      const rawKind = typeof changeKinds[index] === "string" ? changeKinds[index].trim().toLowerCase() : "modified";
+      const changeKind: "created" | "modified" | "deleted" =
+        rawKind === "created" ? "created" : rawKind === "deleted" ? "deleted" : "modified";
+
+      if (changeKind === "deleted") {
+        previewEntries.delete(normalizedPath);
+        continue;
+      }
+
+      const diffEntry = resolveTurnPreviewMapValue(diffs, normalizedPath);
+      const nextPreview: RunnerTurnFilePreview & { order: number } = {
+        path: normalizedPath,
+        kind: changeKind,
+        content: resolveTurnPreviewMapValue(fileContents, normalizedPath),
+        diff: diffEntry?.diff || diffEntry?.changes,
+        additions: typeof diffEntry?.additions === "number" ? diffEntry.additions : undefined,
+        deletions: typeof diffEntry?.deletions === "number" ? diffEntry.deletions : undefined,
+        order,
+      };
+
+      const existing = previewEntries.get(normalizedPath);
+      previewEntries.set(normalizedPath, {
+        ...(existing || {}),
+        ...nextPreview,
+      });
+      order += 1;
+    }
+  }
+
+  return Array.from(previewEntries.values())
+    .sort((left, right) => left.order - right.order)
+    .map(({ order: _order, ...preview }) => preview)
+    .filter((preview) => {
+      const fileType = getBrowserFileType(undefined, getRunnerPreviewFilename(preview.path));
+      return fileType !== "file" || Boolean(preview.content || preview.diff);
+    });
+}
+
+function buildTurnSummaryPreviewAttachment(
+  file: RunnerTurnFilePreview,
+  options: { backendUrl?: string; environmentId?: string | null }
+): RunnerTurnAttachment {
+  return buildRunnerPreviewAttachmentFromPath(file.path, {
+    backendUrl: options.backendUrl,
+    environmentId: options.environmentId,
+    idPrefix: "summary-preview",
+  });
+}
+
+function collectTurnSummaryPreviewAttachments(
+  logs: RunnerLog[],
+  options: { backendUrl?: string; environmentId?: string | null }
+): RunnerTurnAttachment[] {
+  return collectTurnFilePreviews(logs).map((file) => buildTurnSummaryPreviewAttachment(file, options));
+}
+
+function collectTurnChangedFiles(logs: RunnerLog[]): Array<{
+  path: string;
+  kind: "created" | "modified" | "deleted";
+  additions?: number;
+  deletions?: number;
+}> {
+  const changedFiles = new Map<string, {
+    path: string;
+    kind: "created" | "modified" | "deleted";
+    additions?: number;
+    deletions?: number;
+    order: number;
+  }>();
+  let order = 0;
+
+  for (const log of logs) {
+    if (log.eventType !== "file_change") continue;
+
+    const filePaths = Array.isArray(log.metadata?.filePaths)
+      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      : [];
+    if (filePaths.length === 0) continue;
+
+    const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
+    const diffs =
+      log.metadata?.diffs && typeof log.metadata.diffs === "object"
+        ? (log.metadata.diffs as Record<string, { diff?: string; additions?: number; deletions?: number }>)
+        : undefined;
+
+    for (let index = 0; index < filePaths.length; index += 1) {
+      const normalizedPath = normalizeRunnerPreviewPath(filePaths[index]);
+      if (!normalizedPath || isInternalTurnPreviewPath(normalizedPath)) continue;
+
+      const rawKind = typeof changeKinds[index] === "string" ? changeKinds[index].trim().toLowerCase() : "modified";
+      const changeKind: "created" | "modified" | "deleted" =
+        rawKind === "created" ? "created" : rawKind === "deleted" ? "deleted" : "modified";
+
+      const diffEntry = resolveTurnPreviewMapValue(diffs, normalizedPath);
+      changedFiles.set(normalizedPath, {
+        path: normalizedPath,
+        kind: changeKind,
+        additions: typeof diffEntry?.additions === "number" ? diffEntry.additions : undefined,
+        deletions: typeof diffEntry?.deletions === "number" ? diffEntry.deletions : undefined,
+        order,
+      });
+      order += 1;
+    }
+  }
+
+  return Array.from(changedFiles.values())
+    .sort((left, right) => left.order - right.order)
+    .map(({ order: _order, ...changedFile }) => changedFile);
+}
+
+function mergeDriveFolderItems(current: RunnerChatFileNode[], folderId: string, nextItems: RunnerChatFileNode[]): RunnerChatFileNode[] {
+  const normalizedParentId = folderId === "root" ? null : folderId;
+  const remaining = current.filter((item) => (item.parentId ?? null) !== normalizedParentId);
+  const normalizedNext = nextItems.map((item) => ({
+    ...item,
+    parentId: item.parentId ?? normalizedParentId,
+  }));
+
+  return [...remaining, ...normalizedNext];
+}
+
+function resolveSpeechToTextUrl(overrideUrl: string | undefined, backendUrl: string, requestHeaders?: HeadersInit): string | null {
+  const upstreamUrl = getHeaderValue(requestHeaders, "X-Runner-Upstream-Url");
+  const candidate = overrideUrl?.trim() || upstreamUrl || `${sanitizeBackendUrl(backendUrl)}/ws/speech-to-text`;
+  if (!candidate) return null;
+
+  try {
+    const base = typeof window === "undefined" ? "http://localhost" : window.location.href;
+    const url = new URL(candidate, base);
+    if (url.protocol === "http:") {
+      url.protocol = "ws:";
+    } else if (url.protocol === "https:") {
+      url.protocol = "wss:";
+    }
+    if (url.protocol !== "ws:" && url.protocol !== "wss:") {
+      return null;
+    }
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function combineInputWithTranscript(baseInput: string, transcript: string): string {
+  const trimmedTranscript = transcript.trim();
+  if (!trimmedTranscript) {
+    return baseInput;
+  }
+  if (!baseInput.trim()) {
+    return trimmedTranscript;
+  }
+  return /\s$/.test(baseInput) ? `${baseInput}${trimmedTranscript}` : `${baseInput} ${trimmedTranscript}`;
+}
+
+function float32ToInt16Pcm(input: Float32Array): Int16Array {
+  const pcm = new Int16Array(input.length);
+  for (let index = 0; index < input.length; index += 1) {
+    const sample = Math.max(-1, Math.min(1, input[index] || 0));
+    pcm[index] = sample < 0 ? Math.round(sample * 0x8000) : Math.round(sample * 0x7fff);
+  }
+  return pcm;
+}
+
+function downsampleTo16kHz(input: Float32Array, sourceSampleRate: number): Int16Array {
+  if (!input.length) {
+    return new Int16Array(0);
+  }
+
+  if (sourceSampleRate === SPEECH_SAMPLE_RATE) {
+    return float32ToInt16Pcm(input);
+  }
+
+  const ratio = sourceSampleRate / SPEECH_SAMPLE_RATE;
+  const outputLength = Math.max(1, Math.round(input.length / ratio));
+  const pcm = new Int16Array(outputLength);
+  let outputIndex = 0;
+  let inputIndex = 0;
+
+  while (outputIndex < outputLength) {
+    const nextInputIndex = Math.min(input.length, Math.round((outputIndex + 1) * ratio));
+    let sum = 0;
+    let count = 0;
+
+    while (inputIndex < nextInputIndex) {
+      sum += input[inputIndex] || 0;
+      count += 1;
+      inputIndex += 1;
+    }
+
+    const average = count > 0 ? sum / count : input[Math.min(inputIndex, input.length - 1)] || 0;
+    const sample = Math.max(-1, Math.min(1, average));
+    pcm[outputIndex] = sample < 0 ? Math.round(sample * 0x8000) : Math.round(sample * 0x7fff);
+    outputIndex += 1;
+  }
+
+  return pcm;
+}
+
+function encodePcmChunkBase64(chunk: Int16Array): string {
+  const bytes = new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+  let binary = "";
+
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+  }
+
+  return btoa(binary);
+}
+
+function calculateRms(input: Float32Array): number {
+  if (input.length === 0) return 0;
+
+  let sum = 0;
+  for (let index = 0; index < input.length; index += 1) {
+    const value = input[index] || 0;
+    sum += value * value;
+  }
+
+  return Math.sqrt(sum / input.length);
+}
+
+function createSpeechCaptureWorkletUrl(): string {
+  const source = `
+class TestbaseSpeechCaptureProcessor extends AudioWorkletProcessor {
+  constructor(options) {
+    super();
+    this.bufferSize = options.processorOptions?.bufferSize || ${SPEECH_WORKLET_BUFFER_SIZE};
+    this.pending = [];
+  }
+
+  process(inputs) {
+    const input = inputs[0];
+    const channel = input && input[0];
+    if (!channel || channel.length === 0) {
+      return true;
+    }
+
+    for (let index = 0; index < channel.length; index += 1) {
+      this.pending.push(channel[index]);
+    }
+
+    while (this.pending.length >= this.bufferSize) {
+      const chunk = new Float32Array(this.pending.slice(0, this.bufferSize));
+      this.pending = this.pending.slice(this.bufferSize);
+      this.port.postMessage(chunk);
+    }
+
+    return true;
+  }
+}
+
+registerProcessor(${JSON.stringify(SPEECH_WORKLET_PROCESSOR_NAME)}, TestbaseSpeechCaptureProcessor);
+`;
+
+  return URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+}
+
+function runStatusLabel(status: "idle" | "running" | "success" | "failed" | "cancelled") {
+  if (status === "running") return "Running";
+  if (status === "success") return "Completed";
+  if (status === "failed") return "Failed";
+  if (status === "cancelled") return "Cancelled";
+  return "Idle";
+}
+
+function statusTone(status: "idle" | "running" | "success" | "failed" | "cancelled"): "neutral" | "success" | "error" {
+  if (status === "success") return "success";
+  if (status === "failed") return "error";
+  return "neutral";
+}
+
+function eventGlyph(eventType?: string): string {
+  if (eventType === "reasoning" || eventType === "planning") return "↺";
+  if (eventType === "command_execution") return ">_";
+  if (eventType === "agent_message" || eventType === "llm_response") return "AI";
+  if (eventType === "turn_completed") return "CT";
+  if (eventType === "setup" || eventType === "startup") return "⚙";
+  if (eventType === "file_change") return "FI";
+  return "•";
+}
+
+function IconLightbulb({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M9 18h6M10 21h4M12 3a7 7 0 0 0-4 12l1.2 1.6A2 2 0 0 1 9.6 18h4.8a2 2 0 0 1 .4-1.4L16 15a7 7 0 0 0-4-12z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconReadFile({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 3v6h6M8 13h8M8 17h6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconWriteFile({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 3v6h6M12 12v6M9 15h6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconFolder({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconFolderPlus({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M12 10v6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 13h6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconVideo({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.033 13.44a.647.647 0 0 1 0 1.12l-4.065 2.352a.645.645 0 0 1-.968-.56v-4.704a.645.645 0 0 1 .967-.56z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconMusic({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M9 18V5l12-2v13" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="6" cy="18" r="3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="18" cy="16" r="3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconTerminal({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m4 17 6-5-6-5M12 19h8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconCloud({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+    </svg>
+  );
+}
+
+function IconImages({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <rect x="3" y="5" width="14" height="14" rx="2" strokeWidth="1.5" />
+      <path d="m3 15 4-4 3 3 3-3 4 4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="10" cy="10" r="1.25" fill="currentColor" stroke="none" />
+      <path d="M17 8h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconGlobe({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
+      <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconTelescope({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m6 21 3.5-7M14.5 6.5 18 14M9.5 14 16 11l-3-7-6.5 3 3 7Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 12 7 9.5M15 10.5 20 8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconFileText({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconPalette({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M12 3a9 9 0 0 0 0 18h1.2a2.8 2.8 0 0 0 0-5.6H12a1.8 1.8 0 0 1 0-3.6h4.5A4.5 4.5 0 0 0 21 7.3 9 9 0 0 0 12 3Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="8" r="1" fill="currentColor" stroke="none" />
+      <circle cx="16.5" cy="10.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IconBrain({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M9.5 4a3 3 0 0 0-3 3v.3A3.7 3.7 0 0 0 4 10.8 3.7 3.7 0 0 0 6.5 14v.5a3.5 3.5 0 0 0 6 2.4 3.5 3.5 0 0 0 6-2.4V14a3.7 3.7 0 0 0 2.5-3.2 3.7 3.7 0 0 0-2.5-3.5V7a3 3 0 0 0-5.2-2.1A3.5 3.5 0 0 0 9.5 4Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 10h1M14 8.5h1M8.5 13.5H10M14 13.5h1.5M12 6v12" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconSearch({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  );
+}
+
+function IconX({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconChevronLeft({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m15 6-6 6 6 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconChevronDown({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m6 9 6 6 6-6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconChevronRight({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m9 6 6 6-6 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconPlus({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconPaperclip({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m21.44 11.05-8.49 8.49a5.5 5.5 0 0 1-7.78-7.78l8.49-8.48a3.5 3.5 0 1 1 4.95 4.95l-8.49 8.49a1.5 1.5 0 0 1-2.12-2.12l7.78-7.78" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconLayers({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m12 3 9 4.5-9 4.5-9-4.5 9-4.5ZM3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconUser({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M18 20a6 6 0 0 0-12 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconGithub({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+    </svg>
+  );
+}
+
+function IconGoogleDrive({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 87.3 78" aria-hidden="true">
+      <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da" />
+      <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47" />
+      <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335" />
+      <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" />
+      <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc" />
+      <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00" />
+    </svg>
+  );
+}
+
+function IconOneDrive({ className }: { className?: string }) {
+  return (
+    <img
+      className={className}
+      src="https://upload.wikimedia.org/wikipedia/commons/5/59/Microsoft_Office_OneDrive_%282019%E2%80%932025%29.svg"
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+    />
+  );
+}
+
+function IconNotion({ className }: { className?: string }) {
+  return (
+    <img
+      className={className}
+      src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg"
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+    />
+  );
+}
+
+function IconClock({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" strokeWidth="1.5" />
+      <path d="M12 8v5l3 2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconPlay({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m8 5 11 7-11 7V5Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconRepeat({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M17 2v4h-4M7 22v-4h4M20 11a7 7 0 0 0-12-4L7 8M4 13a7 7 0 0 0 12 4l1-1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconFolderOpen({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H9l2 2h7.5A2.5 2.5 0 0 1 21 10.5v6A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-8Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconFile({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconLoader2({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconLogout({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconMic({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 11a7 7 0 0 1-14 0M12 18v3M8 21h8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconStop({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <rect x="7.5" y="7.5" width="9" height="9" rx="1.75" />
+    </svg>
+  );
+}
+
+function IconCheck({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m5 12 5 5L20 7" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function renderBrowserFileIcon(file: RunnerChatFileNode, className: string) {
+  if (file.isFolder) {
+    return <img src={RUNNER_FOLDER_ICON_URL} alt="" aria-hidden="true" draggable={false} className={`${className} tb-file-browser-icon-asset`} />;
+  }
+
+  if (file.mimeType === "application/x-notion-database" || file.mimeType === "application/x-notion-workspace") {
+    return <IconNotion className={className} />;
+  }
+
+  const fileType = getBrowserFileType(file.mimeType, file.name);
+  if (fileType === "image") {
+    return <img src={RUNNER_IMAGE_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} className={`${className} tb-file-browser-icon-asset`} />;
+  }
+  if (fileType === "video") {
+    return <IconVideo className={`${className} tb-file-browser-item-icon-video`} />;
+  }
+  if (fileType === "audio") {
+    return <IconMusic className={`${className} tb-file-browser-item-icon-audio`} />;
+  }
+  return <img src={RUNNER_TEXT_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} className={`${className} tb-file-browser-icon-asset`} />;
+}
+
+function notionDatabasesToFileItems(databases: RunnerChatNotionDatabase[]): RunnerChatFileNode[] {
+  const workspaceItem: RunnerChatFileNode = {
+    id: "__entire_workspace__",
+    name: "Entire workspace",
+    mimeType: "application/x-notion-workspace",
+    isFolder: false,
+  };
+
+  const databaseItems = databases.map((database) => ({
+    id: database.id,
+    name: database.name,
+    mimeType: "application/x-notion-database",
+    isFolder: false,
+  }));
+
+  return [workspaceItem, ...databaseItems];
+}
+
+function normalizeComputerAgentSkills(skills: RunnerChatSkill[]): RunnerChatSkill[] {
+  const input = skills.length > 0 ? skills : DEFAULT_COMPUTER_AGENT_SKILLS;
+  const byId = new Map(input.map((skill) => [skill.id, skill] as const));
+  const core = DEFAULT_COMPUTER_AGENT_SKILLS.map((skill) => ({ ...skill, ...byId.get(skill.id) }));
+  const custom = input.filter((skill) => !DEFAULT_COMPUTER_AGENT_SKILLS.some((entry) => entry.id === skill.id));
+  return [...core, ...custom];
+}
+
+function buildEnabledSkillsStorageKey(appId: string): string {
+  return `${RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX}:${appId || "runner-web-sdk"}`;
+}
+
+function loadPersistedEnabledSkillIds(storageKey: string): string[] | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    const normalized = parsed.filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+    return normalized.length > 0 ? [...new Set(normalized)] : [];
+  } catch {
+    return null;
+  }
+}
+
+function persistEnabledSkillIds(storageKey: string, skillIds: string[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify([...new Set(skillIds)]));
+  } catch {
+    // Ignore storage failures; the UI still works without persistence.
+  }
+}
+
+function areStringArraysEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function defaultEnabledSkillIds(skills: RunnerChatSkill[]): string[] {
+  const defaultIds = new Set<string>(DEFAULT_ENABLED_SKILL_IDS);
+  return skills.filter((skill) => !skill.isCustom && defaultIds.has(skill.id)).map((skill) => skill.id);
+}
+
+function customSkillIconComponent(icon?: string | null) {
+  const iconKey = (icon || "default").toLowerCase();
+  const iconMap = {
+    default: LucideWand2,
+    sparkles: LucideSparkles,
+    brain: LucideBrain,
+    zap: LucideZap,
+    telescope: LucideTelescope,
+    search: LucideGlobe,
+    image: LucideImageIcon,
+    code: LucideCode,
+    terminal: LucideTerminal,
+    "file-text": LucideFileText,
+    database: LucideDatabase,
+    "pen-tool": LucidePenTool,
+    palette: LucidePalette,
+    message: LucideMessageSquare,
+    mail: LucideMail,
+    calendar: LucideCalendar,
+    calculator: LucideCalculator,
+    shield: LucideShield,
+    lock: LucideShield,
+    cloud: LucideCloud,
+    server: LucideServer,
+    cpu: LucideCpu,
+    git: LucideGitBranch,
+    package: LucidePackage,
+    list: LucideListTodo,
+  } as const;
+  return iconMap[iconKey as keyof typeof iconMap] || LucideWand2;
+}
+
+function buildEnabledSkillsPayload(enabledSkillIds: string[], displayedSkills: RunnerChatSkill[]) {
+  const enabled = new Set(enabledSkillIds);
+  const defaultSkillMap: Record<string, string> = {
+    image_generation: "imageGeneration",
+    web_search: "webSearch",
+    research: "research",
+    pdf: "pdf",
+    frontend_design: "frontendDesign",
+    pptx: "pptx",
+    memory: "memory",
+    task_management: "taskManagement",
+  };
+
+  const payload: Record<string, unknown> = {};
+  for (const [id, key] of Object.entries(defaultSkillMap)) {
+    payload[key] = enabled.has(id);
+  }
+
+  const customSkills = displayedSkills
+    .filter((skill) => skill.isCustom)
+    .map((skill) => skill.id)
+    .filter((id) => enabled.has(id));
+
+  if (customSkills.length > 0) {
+    payload.customSkills = customSkills;
+  }
+
+  return payload;
+}
+
+function formatDateTimeLocalValue(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function formatScheduleChipLabel(schedule: { scheduledTime: Date; scheduleType: "one-time" | "recurring" }): string {
+  if (schedule.scheduleType === "recurring") {
+    return "Recurring";
+  }
+
+  return `${schedule.scheduledTime.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${schedule.scheduledTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+}
+
+function fileItemsForParent(items: RunnerChatFileNode[], parentId: string | null): RunnerChatFileNode[] {
+  return items.filter((item) => (item.parentId ?? null) === parentId);
+}
+
+function childFolderPath(items: RunnerChatFileNode[], rootLabel: string, folderId: string | null): Array<{ id: string | null; name: string }> {
+  const path: Array<{ id: string | null; name: string }> = [{ id: null, name: rootLabel }];
+  if (!folderId) return path;
+
+  const byId = new Map(items.map((item) => [item.id, item] as const));
+  const stack: RunnerChatFileNode[] = [];
+  let current = byId.get(folderId);
+
+  while (current) {
+    stack.unshift(current);
+    current = current.parentId ? byId.get(current.parentId) : undefined;
+  }
+
+  for (const item of stack) {
+    path.push({ id: item.id, name: item.name });
+  }
+
+  return path;
+}
+
+function parseSecondsFromClock(time: string): number | null {
+  const hhmmss = time.match(/^(\d{2}):(\d{2}):(\d{2})$/);
+  if (hhmmss) {
+    const [, hh, mm, ss] = hhmmss;
+    return Number(hh) * 3600 + Number(mm) * 60 + Number(ss);
+  }
+  const mmss = time.match(/^(\d{2}):(\d{2})$/);
+  if (mmss) {
+    const [, mm, ss] = mmss;
+    return Number(mm) * 60 + Number(ss);
+  }
+  return null;
+}
+
+function toDurationLabel(log: RunnerLog): string | undefined {
+  const durationMs =
+    typeof log.metadata?.durationMs === "number"
+      ? log.metadata.durationMs
+      : typeof (log.metadata as { duration_ms?: unknown } | undefined)?.duration_ms === "number"
+        ? ((log.metadata as { duration_ms: number }).duration_ms)
+        : undefined;
+  if (typeof durationMs === "number" && durationMs >= 0) {
+    return `${Math.max(1, Math.round(durationMs / 1000))}s`;
+  }
+  if (log.time) {
+    const seconds = parseSecondsFromClock(log.time);
+    if (seconds !== null) return `${seconds}s`;
+    return log.time;
+  }
+  return undefined;
+}
+
+function formatBrowserFileSize(bytes?: number): string {
+  if (!bytes || bytes < 1) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+function formatBrowserFileDate(isoString?: string): string {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return "";
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
+
+function summarizeSkill(command: string): string | null {
+  const skillPathMatch = command.match(/\.claude\/skills\/([^/]+)\//);
+  if (skillPathMatch?.[1]) {
+    return skillPathMatch[1]
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+  const launchingMatch = command.match(/[Ll]aunching skill:\s*([^\s\n]+)/);
+  if (launchingMatch?.[1]) {
+    return launchingMatch[1]
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+  return null;
+}
+
+type CommandRowSummary = {
+  label: string;
+  detail?: string;
+  icon: "read" | "list" | "write" | "terminal";
+};
+
+function summarizeCommandRow(log: RunnerLog): CommandRowSummary {
+  const command = (log.metadata?.command || log.message || "").trim();
+  const skill = summarizeSkill(command);
+  if (skill) {
+    return { label: `Using ${skill} Skill`, icon: "terminal" };
+  }
+
+  const readPath =
+    command.match(/sed\s+-n\s+['"][^'"]*['"]\s+["']([^"']+)["']/)?.[1] ||
+    command.match(/\b(?:cat|head|tail|less)\s+(?:-n\s+\d+\s+)?["']([^"']+)["']/)?.[1] ||
+    command.match(/\b(?:cat|head|tail|less)\s+(?:-n\s+\d+\s+)?([^\s|&;>"']+)/)?.[1];
+  if (readPath) {
+    const lines = command.match(/sed\s+-n\s+['"](\d+),(\d+)p['"]/);
+    const detail = lines ? `${readPath}  ·  ${lines[1]}-${lines[2]}` : readPath;
+    return { label: "Read File", detail, icon: "read" };
+  }
+
+  const listPath =
+    command.match(/\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?["']([^"']+)["']/)?.[1] ||
+    command.match(/\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?([^\s|&;>"']+)/)?.[1];
+  if (listPath) {
+    return { label: "List Files", detail: listPath, icon: "list" };
+  }
+
+  const writePath =
+    command.match(/>+\s*["']([^"']+)["']/)?.[1] ||
+    command.match(/>+\s*([^\s|&;>"']+)/)?.[1] ||
+    command.match(/\btee\s+["']([^"']+)["']/)?.[1] ||
+    command.match(/\btee\s+([^\s|&;>"']+)/)?.[1];
+  if (writePath) {
+    return { label: "Write File", detail: writePath, icon: "write" };
+  }
+
+  const trimmed = command.length > 80 ? `${command.slice(0, 77)}...` : command;
+  return { label: "Executed", detail: `$ ${trimmed}`, icon: "terminal" };
+}
+
+async function createThread(params: {
+  backendUrl: string;
+  apiKey: string;
+  requestHeaders?: HeadersInit;
+  title?: string;
+  appId?: string;
+  environmentId?: string;
+  agentId?: string;
+}): Promise<string> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = new Headers(params.requestHeaders || {});
+  headers.set("Content-Type", "application/json");
+  headers.set("X-API-Key", params.apiKey);
+
+  const response = await fetch(`${backendUrl}/threads`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      title: params.title,
+      appId: params.appId,
+      environmentId: params.environmentId,
+      agentId: params.agentId,
+    }),
+  });
+
+  const body = await response.text();
+  let parsed: any = {};
+  try {
+    parsed = body ? JSON.parse(body) : {};
+  } catch {
+    parsed = { message: body };
+  }
+
+  if (!response.ok) {
+    throw new Error(parsed?.message || parsed?.error || `Failed to create thread (${response.status})`);
+  }
+
+  const threadId = parsed?.thread?.id;
+  if (!threadId || typeof threadId !== "string") {
+    throw new Error("Thread creation succeeded but response.thread.id is missing");
+  }
+
+  return threadId;
+}
+
+async function startEnvironment(params: {
+  backendUrl: string;
+  apiKey: string;
+  requestHeaders?: HeadersInit;
+  environmentId: string;
+  agentId?: string;
+  enabledSkills?: Record<string, unknown> | null;
+}): Promise<void> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = new Headers(params.requestHeaders || {});
+  headers.set("Content-Type", "application/json");
+  headers.set("X-API-Key", params.apiKey);
+
+  const response = await fetch(`${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/start`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      ...(params.agentId ? { agentId: params.agentId } : {}),
+      ...(params.enabledSkills ? { enabledSkills: params.enabledSkills } : {}),
+    }),
+  });
+
+  if (!response.ok) {
+    const bodyText = await response.text().catch(() => "");
+    throw new Error(bodyText || `Failed to start environment (${response.status})`);
+  }
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error("Failed to encode attachment"));
+        return;
+      }
+      const commaIndex = reader.result.indexOf(",");
+      resolve(commaIndex >= 0 ? reader.result.slice(commaIndex + 1) : reader.result);
+    };
+    reader.onerror = () => reject(reader.error || new Error("Failed to encode attachment"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function normalizeBase64Content(value: string): string {
+  const rawValue = String(value || "");
+  const normalizedInput = rawValue.includes("base64,") ? rawValue.slice(rawValue.indexOf("base64,") + "base64,".length) : rawValue;
+  const sanitizedValue = normalizedInput.replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/");
+  const paddingLength = sanitizedValue.length % 4 === 0 ? 0 : 4 - (sanitizedValue.length % 4);
+  return sanitizedValue + "=".repeat(paddingLength);
+}
+
+function decodeBase64ToUint8Array(value: string): Uint8Array {
+  const normalizedValue = normalizeBase64Content(value);
+  const binaryString = atob(normalizedValue);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let index = 0; index < binaryString.length; index += 1) {
+    bytes[index] = binaryString.charCodeAt(index);
+  }
+  return bytes;
+}
+
+function decodeBase64TextContent(value: string): string {
+  try {
+    const decodedBytes = decodeBase64ToUint8Array(value);
+    return new TextDecoder().decode(decodedBytes);
+  } catch {
+    return String(value || "");
+  }
+}
+
+function buildFileFromFetchedContent(item: RunnerChatFileNode, payload: RunnerChatFetchedFileContent): {
+  file: File;
+  type: RunnerAttachment["type"];
+  previewUrl?: string;
+} {
+  const filename = String(payload?.name || item.name || "file").trim() || "file";
+  const mimeType = String(payload?.mimeType || item.mimeType || "application/octet-stream").trim() || "application/octet-stream";
+  const base64Bytes = new Uint8Array(Array.from(decodeBase64ToUint8Array(typeof payload?.content === "string" ? payload.content : "")));
+  const blob = payload?.encoding === "text"
+    ? new Blob([typeof payload?.content === "string" ? payload.content : ""], { type: mimeType })
+    : new Blob([base64Bytes], { type: mimeType });
+  const file = new File([blob], filename, { type: mimeType });
+  const type = attachmentTypeForFile(mimeType, filename);
+  return {
+    file,
+    type,
+    previewUrl: type === "image" ? URL.createObjectURL(blob) : undefined,
+  };
+}
+
+async function uploadAttachment(params: {
+  backendUrl: string;
+  apiKey: string;
+  requestHeaders?: HeadersInit;
+  file: File;
+  environmentId?: string;
+}): Promise<RunnerAttachment> {
+  return uploadAttachmentContent({
+    backendUrl: params.backendUrl,
+    apiKey: params.apiKey,
+    requestHeaders: params.requestHeaders,
+    filename: params.file.name,
+    mimeType: params.file.type || "application/octet-stream",
+    data: await blobToBase64(params.file),
+    environmentId: params.environmentId,
+  });
+}
+
+async function uploadAttachmentContent(params: {
+  backendUrl: string;
+  apiKey: string;
+  requestHeaders?: HeadersInit;
+  filename: string;
+  mimeType: string;
+  data: string;
+  environmentId?: string;
+}): Promise<RunnerAttachment> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
+  headers.set("Content-Type", "application/json");
+
+  const response = await fetch(`${backendUrl}/attachments/upload`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      filename: params.filename,
+      mimeType: params.mimeType || "application/octet-stream",
+      data: params.data,
+      ...(params.environmentId ? { environmentId: params.environmentId } : {}),
+    }),
+  });
+
+  const body = await response.text();
+  let parsed: any = {};
+  try {
+    parsed = body ? JSON.parse(body) : {};
+  } catch {
+    parsed = { message: body };
+  }
+
+  if (!response.ok) {
+    throw new Error(parsed?.message || parsed?.error || `Failed to upload attachment (${response.status})`);
+  }
+
+  const attachment = parsed?.attachment;
+  if (!attachment || typeof attachment !== "object" || typeof attachment.id !== "string") {
+    throw new Error("Attachment upload succeeded but response.attachment is missing");
+  }
+
+  return {
+    ...attachment,
+    url: `${backendUrl}/attachments/${encodeURIComponent(attachment.id)}`,
+  };
+}
+
+async function fetchAllThreadMessages(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  requestHeaders?: HeadersInit;
+}): Promise<RunnerConversationMessage[]> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
+  const pageSize = 200;
+  const messages: RunnerConversationMessage[] = [];
+  let offset = 0;
+
+  while (true) {
+    const response = await fetch(
+      `${backendUrl}/threads/${encodeURIComponent(params.threadId)}/messages?limit=${pageSize}&offset=${offset}`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
+
+    const body = await response.text();
+    let parsed: { data?: RunnerConversationMessage[]; message?: string; error?: string; has_more?: boolean } = {};
+    try {
+      parsed = body ? JSON.parse(body) : {};
+    } catch {
+      parsed = {};
+    }
+
+    if (!response.ok) {
+      throw new Error(parsed.message || parsed.error || `Failed to load thread messages (${response.status})`);
+    }
+
+    const pageItems = Array.isArray(parsed.data) ? parsed.data : [];
+    messages.push(...pageItems);
+
+    if (!parsed.has_more || pageItems.length === 0) {
+      break;
+    }
+
+    offset += pageItems.length;
+  }
+
+  return messages;
+}
+
+async function forkThreadRequest(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  truncateAtMessageIndex?: number;
+  environmentTarget?: RunnerForkTarget;
+  environmentName?: string;
+  targetEnvironmentId?: string;
+  fileCopyMode?: RunnerForkFileCopyMode;
+  requestHeaders?: HeadersInit;
+}): Promise<{ thread: { id: string }; environmentId?: string | null; environmentName?: string | null }> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
+  headers.set("Content-Type", "application/json");
+
+  const response = await fetch(
+    `${backendUrl}/threads/${encodeURIComponent(params.threadId)}/copy`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        ...(typeof params.truncateAtMessageIndex === "number" ? { truncateAtMessageIndex: params.truncateAtMessageIndex } : {}),
+        environmentTarget: params.environmentTarget,
+        environmentName: params.environmentName,
+        targetEnvironmentId: params.targetEnvironmentId,
+        fileCopyMode: params.fileCopyMode,
+      }),
+    }
+  );
+
+  const body = await response.text();
+  let parsed: { thread?: { id?: string }; environmentId?: string | null; environmentName?: string | null; message?: string; error?: string } = {};
+  try {
+    parsed = body ? JSON.parse(body) : {};
+  } catch {
+    parsed = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(parsed.message || parsed.error || `Failed to fork thread (${response.status})`);
+  }
+
+  const nextThreadId = parsed.thread?.id;
+  if (!nextThreadId || typeof nextThreadId !== "string") {
+    throw new Error("Fork completed without returning a new thread.");
+  }
+
+  return {
+    thread: {
+      id: nextThreadId,
+    },
+    environmentId: typeof parsed.environmentId === "string" && parsed.environmentId.trim() ? parsed.environmentId : null,
+    environmentName: typeof parsed.environmentName === "string" && parsed.environmentName.trim() ? parsed.environmentName : null,
+  };
+}
+
+function normalizeRunnerHydratedFilePath(value: string): string {
+  return value.trim().replace(/^\.?\//, "").replace(/^\/workspace\//, "");
+}
+
+function parseThreadDiffEntries(value: unknown): RunnerThreadDiffEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((entry) => (entry && typeof entry === "object" ? (entry as Record<string, unknown>) : null))
+    .filter((entry): entry is Record<string, unknown> => !!entry)
+    .map((entry) => ({
+      path: typeof entry.path === "string" ? entry.path : undefined,
+      additions: typeof entry.additions === "number" ? entry.additions : undefined,
+      deletions: typeof entry.deletions === "number" ? entry.deletions : undefined,
+      changes: typeof entry.changes === "string" ? entry.changes : undefined,
+      diff: typeof entry.diff === "string" ? entry.diff : undefined,
+      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : undefined,
+    }))
+    .filter((entry) => typeof entry.path === "string" && entry.path.trim().length > 0);
+}
+
+function parseThreadSteps(value: unknown): RunnerParsedThreadStep[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((entry) => (entry && typeof entry === "object" ? (entry as RunnerThreadStep) : null))
+    .filter((entry): entry is RunnerThreadStep => !!entry && typeof entry.id === "string")
+    .map((entry) => ({
+      id: entry.id,
+      sequence: typeof entry.sequence === "number" ? entry.sequence : 0,
+      stepKind: typeof entry.stepKind === "string" ? entry.stepKind : "",
+      eventType: typeof entry.eventType === "string" ? entry.eventType : null,
+      title: typeof entry.title === "string" ? entry.title : "",
+      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : "",
+      metadata: entry.metadata && typeof entry.metadata === "object" ? entry.metadata : null,
+    }));
+}
+
+function formatHydratedRelativeLogTime(createdAt: string, startedAtMs: number | null): string {
+  const createdAtMs = Date.parse(createdAt);
+  if (!Number.isFinite(createdAtMs) || startedAtMs === null || !Number.isFinite(startedAtMs)) {
+    return "";
+  }
+
+  const elapsedSeconds = Math.max(0, Math.round((createdAtMs - startedAtMs) / 1000));
+  if (elapsedSeconds < 60) {
+    return `${elapsedSeconds}s`;
+  }
+  if (elapsedSeconds < 3600) {
+    const minutes = Math.floor(elapsedSeconds / 60);
+    const seconds = elapsedSeconds % 60;
+    return `${minutes}m ${seconds}s`;
+  }
+  const hours = Math.floor(elapsedSeconds / 3600);
+  const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+  return `${hours}h ${minutes}m`;
+}
+
+function inferHydratedChangeKindFromDiff(entry: RunnerThreadDiffEntry): "created" | "modified" | "deleted" {
+  const diffText = entry.diff || entry.changes || "";
+  if (/^---\s+\/dev\/null\b/m.test(diffText)) {
+    return "created";
+  }
+  if (/^\+\+\+\s+\/dev\/null\b/m.test(diffText)) {
+    return "deleted";
+  }
+  return "modified";
+}
+
+function countDiffLineStats(diffText: string): { additions: number; deletions: number } {
+  let additions = 0;
+  let deletions = 0;
+  for (const line of diffText.split("\n")) {
+    if (line.startsWith("+++") || line.startsWith("---")) {
+      continue;
+    }
+    if (line.startsWith("+")) {
+      additions += 1;
+      continue;
+    }
+    if (line.startsWith("-")) {
+      deletions += 1;
+    }
+  }
+  return { additions, deletions };
+}
+
+function parseHydratedStepDiffEntries(diffText: string, createdAt?: string): RunnerThreadDiffEntry[] {
+  if (typeof diffText !== "string" || diffText.trim().length === 0) {
+    return [];
+  }
+
+  const sections = diffText
+    .split(/^diff --git\s+/m)
+    .map((section) => section.trim())
+    .filter((section) => section.length > 0)
+    .map((section) => (section.startsWith("a/") ? `diff --git ${section}` : section));
+
+  const entries: RunnerThreadDiffEntry[] = [];
+  for (const section of sections) {
+      const plusPlusPlusMatch = /^\+\+\+\s+([^\n]+)$/m.exec(section);
+      const minusMinusMinusMatch = /^---\s+([^\n]+)$/m.exec(section);
+      const plusPath = plusPlusPlusMatch?.[1]?.trim() || "";
+      const minusPath = minusMinusMinusMatch?.[1]?.trim() || "";
+      const selectedPath = plusPath !== "/dev/null" ? plusPath : minusPath;
+      const normalizedPath = selectedPath.replace(/^[ab]\//, "").trim();
+      if (!normalizedPath) {
+        continue;
+      }
+      const { additions, deletions } = countDiffLineStats(section);
+      entries.push({
+        path: normalizedPath,
+        additions,
+        deletions,
+        diff: section,
+        createdAt,
+      });
+  }
+  return entries;
+}
+
+async function fetchHydratedStepDiffEntries(params: {
+  backendUrl: string;
+  threadId: string;
+  headers: Headers;
+  steps: RunnerParsedThreadStep[];
+}): Promise<RunnerThreadDiffEntry[]> {
+  const candidateSteps = params.steps.filter((step) => {
+    if (step.id.trim().length === 0) {
+      return false;
+    }
+    const metadata = step.metadata || {};
+    const hasFilePaths = Array.isArray(metadata.filePaths) && metadata.filePaths.some((value) => typeof value === "string" && value.trim().length > 0);
+    const hasInlineDiffs = Boolean(metadata.diffs && typeof metadata.diffs === "object");
+    const stepKind = String(step.stepKind || "").toLowerCase();
+    const eventType = String(step.eventType || "").toLowerCase();
+    return hasFilePaths || hasInlineDiffs || stepKind === "file_change" || eventType === "file_change";
+  });
+  if (candidateSteps.length === 0) {
+    return [];
+  }
+
+  const entries = await Promise.all(
+    candidateSteps.map(async (step) => {
+      try {
+        const response = await fetch(
+          `${params.backendUrl}/threads/${encodeURIComponent(params.threadId)}/steps/${encodeURIComponent(step.id)}/diff`,
+          {
+            method: "GET",
+            headers: params.headers,
+          }
+        );
+        if (!response.ok) {
+          return [];
+        }
+        const body = (await response.json()) as Partial<RunnerThreadStepDiffResult> | null;
+        const parsedDiffEntries = parseHydratedStepDiffEntries(typeof body?.diff === "string" ? body.diff : "", step.createdAt);
+        if (parsedDiffEntries.length > 0) {
+          return parsedDiffEntries;
+        }
+
+        const changedPaths = Array.isArray(body?.changedPaths)
+          ? body.changedPaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+          : [];
+        if (changedPaths.length !== 1) {
+          return [];
+        }
+
+        return [
+          {
+            path: changedPaths[0],
+            additions: typeof body?.additions === "number" ? body.additions : undefined,
+            deletions: typeof body?.deletions === "number" ? body.deletions : undefined,
+            diff: typeof body?.diff === "string" ? body.diff : undefined,
+            createdAt: step.createdAt,
+          } satisfies RunnerThreadDiffEntry,
+        ];
+      } catch {
+        return [];
+      }
+    })
+  );
+
+  return entries.flat();
+}
+
+function buildSyntheticFileChangeLog(params: {
+  path: string;
+  changeKind: "created" | "modified" | "deleted";
+  diff?: string;
+  changes?: string;
+  additions?: number;
+  deletions?: number;
+  createdAt?: string;
+  startedAtMs?: number | null;
+}): RunnerLog {
+  const normalizedPath = params.path.startsWith("/workspace/") ? params.path : `/workspace/${normalizeRunnerHydratedFilePath(params.path)}`;
+  const message =
+    params.changeKind === "created"
+      ? `Write: ${normalizedPath}`
+      : params.changeKind === "deleted"
+        ? `Delete: ${normalizedPath}`
+        : `Edit: ${normalizedPath}`;
+
+  return {
+    time: params.createdAt ? formatHydratedRelativeLogTime(params.createdAt, params.startedAtMs ?? null) : "",
+    message,
+    type: "info",
+    eventType: "file_change",
+    metadata: {
+      filePaths: [normalizedPath],
+      changeKinds: [params.changeKind],
+      diffs: {
+        [normalizedPath]: {
+          ...(params.diff ? { diff: params.diff } : {}),
+          ...(params.changes ? { changes: params.changes } : {}),
+          ...(typeof params.additions === "number" ? { additions: params.additions } : {}),
+          ...(typeof params.deletions === "number" ? { deletions: params.deletions } : {}),
+        },
+      },
+    },
+  };
+}
+
+function mergeThreadStepsIntoLogs(
+  logs: RunnerLog[],
+  steps: RunnerParsedThreadStep[],
+  diffEntries: RunnerThreadDiffEntry[],
+  startedAtMs: number | null
+): RunnerLog[] {
+  const hasFileChangeLogs = logs.some((log) => log.eventType === "file_change");
+  if (hasFileChangeLogs) {
+    return logs;
+  }
+
+  const syntheticLogsFromSteps = steps
+    .filter((step) => step.eventType === "file_change" || step.stepKind === "file_change")
+    .flatMap((step) => {
+      const metadata = step.metadata || {};
+      const filePaths = Array.isArray(metadata.filePaths)
+        ? metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+        : [];
+      const changeKinds = Array.isArray(metadata.changeKinds)
+        ? metadata.changeKinds.filter(
+            (value): value is "created" | "modified" | "deleted" =>
+              value === "created" || value === "modified" || value === "deleted"
+          )
+        : [];
+      const diffs =
+        metadata.diffs && typeof metadata.diffs === "object"
+          ? (metadata.diffs as Record<string, { diff?: string; changes?: string; additions?: number; deletions?: number }>)
+          : {};
+
+      return filePaths.map((filePath, index) => {
+        const normalizedPath = normalizeRunnerHydratedFilePath(filePath);
+        const diffEntry = diffs[filePath] || diffs[normalizedPath];
+        return buildSyntheticFileChangeLog({
+          path: filePath,
+          changeKind: changeKinds[index] || "modified",
+          diff: diffEntry?.diff,
+          changes: diffEntry?.changes,
+          additions: diffEntry?.additions,
+          deletions: diffEntry?.deletions,
+          createdAt: step.createdAt,
+          startedAtMs,
+        });
+      });
+    });
+
+  const syntheticLogs =
+    syntheticLogsFromSteps.length > 0
+      ? syntheticLogsFromSteps
+        : diffEntries.map((entry) =>
+          buildSyntheticFileChangeLog({
+            path: entry.path || "",
+            changeKind: inferHydratedChangeKindFromDiff(entry),
+            diff: entry.diff,
+            changes: entry.changes,
+            additions: entry.additions,
+            deletions: entry.deletions,
+            createdAt: entry.createdAt || steps[steps.length - 1]?.createdAt,
+            startedAtMs,
+          })
+        );
+
+  if (syntheticLogs.length === 0) {
+    return logs;
+  }
+
+  const firstAgentMessageIndex = logs.findIndex((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+  if (firstAgentMessageIndex === -1) {
+    return [...logs, ...syntheticLogs];
+  }
+
+  return [
+    ...logs.slice(0, firstAgentMessageIndex),
+    ...syntheticLogs,
+    ...logs.slice(firstAgentMessageIndex),
+  ];
+}
+
+function mergeThreadDiffsIntoLogs(logs: RunnerLog[], diffEntries: RunnerThreadDiffEntry[]): RunnerLog[] {
+  if (diffEntries.length === 0) {
+    return logs;
+  }
+
+  const lastFileLogIndexByPath = new Map<string, number>();
+  for (const [index, log] of logs.entries()) {
+    if (log.eventType !== "file_change") continue;
+    const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [];
+    if (filePaths.length !== 1 || typeof filePaths[0] !== "string") continue;
+    const normalizedPath = normalizeRunnerHydratedFilePath(filePaths[0]);
+    if (!normalizedPath) continue;
+    lastFileLogIndexByPath.set(normalizedPath, index);
+  }
+
+  const diffsByPath = new Map<
+    string,
+    {
+      diff?: string;
+      changes?: string;
+      additions?: number;
+      deletions?: number;
+    }
+  >();
+
+  for (const entry of diffEntries) {
+    if (!entry.path) continue;
+    const normalizedPath = normalizeRunnerHydratedFilePath(entry.path);
+    if (!normalizedPath) continue;
+    diffsByPath.set(normalizedPath, {
+      ...(entry.diff ? { diff: entry.diff } : {}),
+      ...(entry.changes ? { changes: entry.changes } : {}),
+      ...(typeof entry.additions === "number" ? { additions: entry.additions } : {}),
+      ...(typeof entry.deletions === "number" ? { deletions: entry.deletions } : {}),
+    });
+  }
+
+  return logs.map((log, index) => {
+    if (log.eventType !== "file_change") {
+      return log;
+    }
+
+    const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [];
+    if (filePaths.length !== 1 || typeof filePaths[0] !== "string") {
+      return log;
+    }
+
+    const normalizedPath = normalizeRunnerHydratedFilePath(filePaths[0]);
+    if (!normalizedPath || lastFileLogIndexByPath.get(normalizedPath) !== index) {
+      return log;
+    }
+
+    const diff = diffsByPath.get(normalizedPath);
+    if (!diff) {
+      return log;
+    }
+
+    const existingDiffs = log.metadata?.diffs as
+      | Record<
+          string,
+          {
+            diff?: string;
+            changes?: string;
+            additions?: number;
+            deletions?: number;
+          }
+        >
+      | undefined;
+    if (existingDiffs && (typeof existingDiffs[normalizedPath] === "object" || typeof existingDiffs[filePaths[0]] === "object")) {
+      return log;
+    }
+
+    return {
+      ...log,
+      metadata: {
+        ...log.metadata,
+        diffs: {
+          ...(existingDiffs || {}),
+          [filePaths[0]]: diff,
+        },
+      },
+    };
+  });
+}
+
+async function fetchThreadHydrationPayload(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  requestHeaders?: HeadersInit;
+  messagesPromise?: Promise<RunnerConversationMessage[]>;
+}): Promise<RunnerThreadHydrationPayload> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
+  const messagesPromise =
+    params.messagesPromise ||
+    fetchAllThreadMessages({
+      backendUrl,
+      apiKey: params.apiKey,
+      threadId: params.threadId,
+      requestHeaders: params.requestHeaders,
+    }).catch(() => []);
+
+  const [threadResponse, logsResponse, diffsResponse, stepsResponse, messages] = await Promise.all([
+    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}`, {
+      method: "GET",
+      headers,
+    }),
+    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/logs`, {
+      method: "GET",
+      headers,
+    }),
+    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/diffs`, {
+      method: "GET",
+      headers,
+    }).catch(() => null),
+    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/steps?limit=500`, {
+      method: "GET",
+      headers,
+    }).catch(() => null),
+    messagesPromise,
+  ]);
+
+  const [threadBody, logsBody, diffsBody, stepsBody] = await Promise.all([
+    threadResponse.text(),
+    logsResponse.text(),
+    diffsResponse ? diffsResponse.text() : Promise.resolve(""),
+    stepsResponse ? stepsResponse.text() : Promise.resolve(""),
+  ]);
+
+  let parsedThread: {
+    thread?: {
+      id?: string | null;
+      status?: string | null;
+      task?: string | null;
+      environmentId?: string | null;
+      duration?: string | number | null;
+      startedAt?: string | null;
+      completedAt?: string | null;
+      agentName?: string | null;
+      environmentName?: string | null;
+    };
+    message?: string;
+    error?: string;
+  } = {};
+  let parsedLogs: {
+    logs?: RunnerLog[];
+    duration?: string | number | null;
+    agentName?: string | null;
+    environmentName?: string | null;
+    message?: string;
+    error?: string;
+  } = {};
+  let parsedDiffs: {
+    diffs?: RunnerThreadDiffEntry[];
+    message?: string;
+    error?: string;
+  } = {};
+  let parsedSteps: {
+    data?: RunnerThreadStep[];
+    message?: string;
+    error?: string;
+  } = {};
+
+  try {
+    parsedThread = threadBody ? JSON.parse(threadBody) : {};
+  } catch {
+    parsedThread = {};
+  }
+
+  try {
+    parsedLogs = logsBody ? JSON.parse(logsBody) : {};
+  } catch {
+    parsedLogs = {};
+  }
+
+  if (diffsResponse?.ok) {
+    try {
+      parsedDiffs = diffsBody ? JSON.parse(diffsBody) : {};
+    } catch {
+      parsedDiffs = {};
+    }
+  }
+
+  if (stepsResponse?.ok) {
+    try {
+      parsedSteps = stepsBody ? JSON.parse(stepsBody) : {};
+    } catch {
+      parsedSteps = {};
+    }
+  }
+
+  if (!threadResponse.ok) {
+    throw new Error(parsedThread.message || parsedThread.error || `Failed to load thread (${threadResponse.status})`);
+  }
+
+  if (!logsResponse.ok) {
+    throw new Error(parsedLogs.message || parsedLogs.error || `Failed to load thread logs (${logsResponse.status})`);
+  }
+
+  const startedAtMs = parseIsoTimestampMs(parsedThread.thread?.startedAt);
+  const parsedStepsData = parseThreadSteps(parsedSteps.data);
+  let diffEntries = parseThreadDiffEntries(parsedDiffs.diffs);
+  if (!Array.isArray(parsedLogs.logs) || !parsedLogs.logs.some((log) => log.eventType === "file_change")) {
+    if (diffEntries.length === 0 && parsedStepsData.length > 0) {
+      diffEntries = await fetchHydratedStepDiffEntries({
+        backendUrl,
+        threadId: params.threadId,
+        headers,
+        steps: parsedStepsData,
+      });
+    }
+  }
+  const mergedLogs = mergeThreadStepsIntoLogs(
+    mergeThreadDiffsIntoLogs(Array.isArray(parsedLogs.logs) ? parsedLogs.logs : [], diffEntries),
+    parsedStepsData,
+    diffEntries,
+    startedAtMs
+  );
+
+  return {
+    threadId: typeof parsedThread.thread?.id === "string" && parsedThread.thread.id.trim() ? parsedThread.thread.id : params.threadId,
+    threadStatus:
+      typeof parsedThread.thread?.status === "string" && parsedThread.thread.status.trim()
+        ? parsedThread.thread.status.trim()
+        : null,
+    threadEnvironmentId:
+      typeof parsedThread.thread?.environmentId === "string" && parsedThread.thread.environmentId.trim()
+        ? parsedThread.thread.environmentId
+        : null,
+    threadEnvironmentName:
+      parsedLogs.environmentName ?? parsedThread.thread?.environmentName ?? null,
+    initialPrompt: typeof parsedThread.thread?.task === "string" ? parsedThread.thread.task : "",
+    logs: mergedLogs,
+    messages,
+    durationSeconds: parseDurationSecondsValue(parsedLogs.duration ?? parsedThread.thread?.duration),
+    startedAtMs,
+    completedAtMs: parseIsoTimestampMs(parsedThread.thread?.completedAt),
+    agentName: parsedLogs.agentName ?? parsedThread.thread?.agentName ?? null,
+    environmentName: parsedLogs.environmentName ?? parsedThread.thread?.environmentName ?? null,
+  };
+}
+
+function buildHydratedTurnsFromMessages(
+  messages: RunnerConversationMessage[],
+  meta?: {
+    agentName?: string | null;
+    environmentName?: string | null;
+    backendUrl?: string;
+    threadStatus?: string | null;
+    completedAtMs?: number | null;
+  }
+): RunnerTurn[] {
+  const turns: RunnerTurn[] = [];
+  let currentTurn: RunnerTurn | null = null;
+  let pendingBtwTurn: RunnerTurn | null = null;
+
+  function commitCurrentTurn() {
+    if (!currentTurn) return;
+    const hasPrompt = currentTurn.prompt.trim().length > 0;
+    const hasResponse = currentTurn.logs.some((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+    if (hasPrompt || hasResponse) {
+      turns.push(currentTurn);
+    }
+    currentTurn = null;
+  }
+
+  function commitPendingBtwTurn() {
+    if (!pendingBtwTurn) return;
+    const hasPrompt = pendingBtwTurn.prompt.trim().length > 0;
+    const hasResponse = pendingBtwTurn.logs.some((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+    if (hasPrompt || hasResponse) {
+      turns.push(pendingBtwTurn);
+    }
+    pendingBtwTurn = null;
+  }
+
+  for (let index = 0; index < messages.length; index += 1) {
+    const message = messages[index];
+    const createdAtMs = message.createdAt ? Date.parse(message.createdAt) : Number.NaN;
+    const safeTimestamp = Number.isFinite(createdAtMs) ? createdAtMs : Date.now() + index;
+
+    if (message.role === "user") {
+      if (isBtwTurnPrompt(message.content || "")) {
+        commitPendingBtwTurn();
+        pendingBtwTurn = {
+          id: message.id || generateId("turn"),
+          sourceMessageId: message.id || null,
+          prompt: message.content || "",
+          logs: [],
+          startedAtMs: safeTimestamp,
+          completedAtMs: safeTimestamp,
+          status: "running",
+          animateOnRender: false,
+          agentName: meta?.agentName ?? null,
+          environmentName: meta?.environmentName ?? null,
+          presentation: "btw",
+          quotedSelection: normalizeQuotedSelection(message.logMetadata?.quotedSelection),
+          attachments: normalizeTurnAttachments(message.logMetadata?.attachments, meta?.backendUrl),
+        };
+      } else {
+        commitPendingBtwTurn();
+        commitCurrentTurn();
+        currentTurn = {
+          id: message.id || generateId("turn"),
+          sourceMessageId: message.id || null,
+          prompt: message.content || "",
+          logs: [],
+          startedAtMs: safeTimestamp,
+          completedAtMs: safeTimestamp,
+          status: "completed",
+          animateOnRender: false,
+          agentName: meta?.agentName ?? null,
+          environmentName: meta?.environmentName ?? null,
+          presentation: "default",
+          quotedSelection: normalizeQuotedSelection(message.logMetadata?.quotedSelection),
+          attachments: normalizeTurnAttachments(message.logMetadata?.attachments, meta?.backendUrl),
+        };
+      }
+      continue;
+    }
+
+    if (message.role !== "assistant") {
+      continue;
+    }
+
+    const assistantBelongsToBtw =
+      Boolean(message.logMetadata?.isBTW) ||
+      (pendingBtwTurn !== null && turnPresentation(pendingBtwTurn) === "btw");
+
+    if (assistantBelongsToBtw && pendingBtwTurn) {
+      const existingResponseIndex = pendingBtwTurn.logs.findIndex(
+        (log) => log.eventType === "agent_message" || log.eventType === "llm_response"
+      );
+
+      if (existingResponseIndex === -1) {
+        pendingBtwTurn.logs.push({
+          time: message.createdAt || new Date(safeTimestamp).toISOString(),
+          message: message.content || "",
+          type: "info",
+          eventType: "agent_message",
+        });
+      } else {
+        const existing = pendingBtwTurn.logs[existingResponseIndex];
+        pendingBtwTurn.logs[existingResponseIndex] = {
+          ...existing,
+          message: `${existing.message}\n\n${message.content || ""}`.trim(),
+        };
+      }
+
+      pendingBtwTurn.completedAtMs = safeTimestamp;
+      pendingBtwTurn.status = "completed";
+      commitPendingBtwTurn();
+      continue;
+    }
+
+    if (!currentTurn) {
+      continue;
+    }
+
+    const existingResponseIndex = currentTurn.logs.findIndex(
+      (log) => log.eventType === "agent_message" || log.eventType === "llm_response"
+    );
+
+    if (existingResponseIndex === -1) {
+      currentTurn.logs.push({
+        time: message.createdAt || new Date(safeTimestamp).toISOString(),
+        message: message.content || "",
+        type: "info",
+        eventType: "agent_message",
+      });
+    } else {
+      const existing = currentTurn.logs[existingResponseIndex];
+      currentTurn.logs[existingResponseIndex] = {
+        ...existing,
+        message: `${existing.message}\n\n${message.content || ""}`.trim(),
+      };
+    }
+
+    currentTurn.completedAtMs = safeTimestamp;
+    currentTurn.status = "completed";
+  }
+
+  commitPendingBtwTurn();
+  commitCurrentTurn();
+  const sortedTurns = [...turns].sort((left, right) => {
+    if (left.startedAtMs !== right.startedAtMs) {
+      return left.startedAtMs - right.startedAtMs;
+    }
+    return left.id.localeCompare(right.id);
+  });
+  if (sortedTurns[0]) {
+    sortedTurns[0].isInitialTurn = true;
+  }
+  return applyHydratedRunningThreadState(
+    attachHydratedMessageIdsToTurns(sortedTurns, messages, meta?.backendUrl),
+    meta
+  );
+}
+
+function hydratedThreadStatusIsRunning(meta?: {
+  threadStatus?: string | null;
+  completedAtMs?: number | null;
+}): boolean {
+  const normalizedStatus = typeof meta?.threadStatus === "string" ? meta.threadStatus.trim().toLowerCase() : "";
+  if (normalizedStatus) {
+    return normalizedStatus === "running";
+  }
+  if (!meta || !Object.prototype.hasOwnProperty.call(meta, "completedAtMs")) {
+    return false;
+  }
+  return meta.completedAtMs == null;
+}
+
+function applyHydratedRunningThreadState(
+  turns: RunnerTurn[],
+  meta?: {
+    threadStatus?: string | null;
+    completedAtMs?: number | null;
+  }
+): RunnerTurn[] {
+  if (!hydratedThreadStatusIsRunning(meta) || turns.length === 0) {
+    return turns;
+  }
+
+  const lastIndex = turns.length - 1;
+  const lastTurn = turns[lastIndex];
+  if (!lastTurn || lastTurn.status === "failed" || lastTurn.status === "cancelled") {
+    return turns;
+  }
+
+  if (lastTurn.status === "running" && lastTurn.completedAtMs == null) {
+    return turns;
+  }
+
+  const nextTurns = turns.slice();
+  nextTurns[lastIndex] = {
+    ...lastTurn,
+    status: "running",
+    completedAtMs: undefined,
+  };
+  return nextTurns;
+}
+
+function attachHydratedMessageIdsToTurns(
+  turns: RunnerTurn[],
+  messages: RunnerConversationMessage[],
+  backendUrl?: string
+): RunnerTurn[] {
+  const userMessages = messages.filter(
+    (message) =>
+      message.role === "user" &&
+      typeof message.id === "string" &&
+      message.id.trim().length > 0 &&
+      typeof message.content === "string"
+  );
+
+  if (userMessages.length === 0) {
+    return turns;
+  }
+
+  let nextUserMessageIndex = 0;
+
+  return turns.map((turn) => {
+    let matchedMessage: RunnerConversationMessage | null = null;
+
+    if (typeof turn.sourceMessageId === "string" && turn.sourceMessageId.trim().length > 0) {
+      matchedMessage =
+        userMessages.find((message) => message.id === turn.sourceMessageId) || null;
+    }
+
+    if (!matchedMessage && turn.prompt.trim().length > 0) {
+      let matchedMessageIndex = userMessages.findIndex(
+        (message, index) => index >= nextUserMessageIndex && message.content.trim() === turn.prompt.trim()
+      );
+
+      if (matchedMessageIndex === -1 && nextUserMessageIndex < userMessages.length) {
+        matchedMessageIndex = nextUserMessageIndex;
+      }
+
+      if (matchedMessageIndex !== -1) {
+        matchedMessage = userMessages[matchedMessageIndex] || null;
+        nextUserMessageIndex = matchedMessageIndex + 1;
+      }
+    }
+
+    if (!matchedMessage) {
+      return turn;
+    }
+
+    return {
+      ...turn,
+      id: turn.sourceMessageId ? turn.id : matchedMessage.id!,
+      sourceMessageId: matchedMessage.id!,
+      quotedSelection: normalizeQuotedSelection(matchedMessage.logMetadata?.quotedSelection),
+      attachments: normalizeTurnAttachments(matchedMessage.logMetadata?.attachments, backendUrl),
+    };
+  });
+}
+
+function buildHydratedTurnsFromPayload(
+  payload: RunnerThreadHydrationPayload,
+  fallbackMeta?: { agentName?: string | null; environmentName?: string | null; backendUrl?: string }
+): RunnerTurn[] {
+  const turnsFromLogs = buildHydratedTurnsFromLogs(payload.logs, payload.initialPrompt, payload.messages, {
+    durationSeconds: payload.durationSeconds,
+    startedAtMs: payload.startedAtMs,
+    completedAtMs: payload.completedAtMs,
+    threadStatus: payload.threadStatus,
+    agentName: payload.agentName,
+    environmentName: payload.environmentName,
+    backendUrl: fallbackMeta?.backendUrl,
+  });
+  const turnsWithCanonicalMessages = mergeHydratedMessageTurnsIntoTurns(turnsFromLogs, payload.messages, {
+    agentName: payload.agentName ?? fallbackMeta?.agentName ?? null,
+    environmentName: payload.environmentName ?? fallbackMeta?.environmentName ?? null,
+    backendUrl: fallbackMeta?.backendUrl,
+    threadStatus: payload.threadStatus,
+    completedAtMs: payload.completedAtMs,
+  });
+
+  const hasConversationMessages = payload.messages.some(
+    (message) =>
+      (message.role === "user" || message.role === "assistant") &&
+      typeof message.content === "string" &&
+      message.content.trim().length > 0
+  );
+  const hasHydratedConversationTurns = turnsWithCanonicalMessages.some((turn) => {
+    if (turn.prompt.trim().length > 0) {
+      return true;
+    }
+    return turn.logs.some((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+  });
+
+  if (hasConversationMessages && !hasHydratedConversationTurns) {
+    return buildHydratedTurnsFromMessages(payload.messages, {
+      agentName: payload.agentName ?? fallbackMeta?.agentName ?? null,
+      environmentName: payload.environmentName ?? fallbackMeta?.environmentName ?? null,
+      backendUrl: fallbackMeta?.backendUrl,
+      threadStatus: payload.threadStatus,
+      completedAtMs: payload.completedAtMs,
+    });
+  }
+
+  return turnsWithCanonicalMessages;
+}
+
+function isBtwTurnPrompt(prompt: string): boolean {
+  return /^\/btw\b/i.test(prompt.trim());
+}
+
+function normalizeTurnPrompt(prompt: string): string {
+  return stripSystemTags(prompt || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function sanitizeQuotedSelectionText(text: string): string {
+  const normalized = text.replace(/\r\n?/g, "\n").replace(/\u00a0/g, " ").trim();
+  if (normalized.length <= MAX_QUOTED_SELECTION_LENGTH) {
+    return normalized;
+  }
+  return `${normalized.slice(0, MAX_QUOTED_SELECTION_LENGTH - 1).trimEnd()}…`;
+}
+
+function previewQuotedSelectionText(text: string): string {
+  const singleLine = text.replace(/\s+/g, " ").trim();
+  if (singleLine.length <= QUOTED_SELECTION_PREVIEW_LENGTH) {
+    return singleLine;
+  }
+  return `${singleLine.slice(0, QUOTED_SELECTION_PREVIEW_LENGTH - 1).trimEnd()}…`;
+}
+
+function normalizeQuotedSelection(
+  value: unknown
+): RunnerQuotedSelection | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const candidate = value as { text?: unknown; sourceType?: unknown };
+  if (typeof candidate.text !== "string") {
+    return null;
+  }
+  const text = sanitizeQuotedSelectionText(candidate.text);
+  if (!text) {
+    return null;
+  }
+  const sourceType: RunnerQuotedSelectionSource =
+    candidate.sourceType === "run_summary" ? "run_summary" : "working_log";
+  return {
+    text,
+    sourceType,
+  };
+}
+
+function resolveAttachmentAssetUrl(url: string | undefined, backendUrl?: string, attachmentId?: string): string | undefined {
+  return resolveRunnerPreviewAssetUrl(url, backendUrl, attachmentId);
+}
+
+function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTurnAttachment | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const candidate = value as {
+    id?: unknown;
+    filename?: unknown;
+    name?: unknown;
+    mimeType?: unknown;
+    type?: unknown;
+    url?: unknown;
+    previewUrl?: unknown;
+  };
+  const attachmentId = typeof candidate.id === "string" && candidate.id.trim() ? candidate.id.trim() : generateId("att");
+  const filename =
+    typeof candidate.filename === "string" && candidate.filename.trim()
+      ? candidate.filename.trim()
+      : typeof candidate.name === "string" && candidate.name.trim()
+        ? candidate.name.trim()
+        : "";
+  if (!filename) {
+    return null;
+  }
+  const mimeType = typeof candidate.mimeType === "string" && candidate.mimeType.trim() ? candidate.mimeType.trim() : "application/octet-stream";
+  const type: RunnerAttachment["type"] =
+    candidate.type === "image" || candidate.type === "document"
+      ? candidate.type
+      : attachmentTypeForFile(mimeType, filename);
+  const url = resolveAttachmentAssetUrl(typeof candidate.url === "string" ? candidate.url : undefined, backendUrl, attachmentId);
+  const previewUrl = type === "image"
+    ? resolveAttachmentAssetUrl(
+        typeof candidate.previewUrl === "string" ? candidate.previewUrl : typeof candidate.url === "string" ? candidate.url : undefined,
+        backendUrl,
+        attachmentId
+      )
+    : undefined;
+  return {
+    id: attachmentId,
+    filename,
+    mimeType,
+    type,
+    url,
+    previewUrl,
+  };
+}
+
+function normalizeTurnAttachments(value: unknown, backendUrl?: string): RunnerTurnAttachment[] | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+  const normalized = value
+    .map((entry) => normalizeTurnAttachment(entry, backendUrl))
+    .filter((attachment): attachment is RunnerTurnAttachment => Boolean(attachment));
+  return normalized.length > 0 ? normalized : null;
+}
+
+function buildTurnAttachmentsFromRunnerAttachments(
+  attachments: RunnerAttachment[] | undefined,
+  backendUrl?: string
+): RunnerTurnAttachment[] | null {
+  if (!attachments || attachments.length === 0) {
+    return null;
+  }
+  return normalizeTurnAttachments(attachments, backendUrl);
+}
+
+function buildTurnAttachmentsFromLocalAttachments(attachments: LocalAttachment[]): RunnerTurnAttachment[] | null {
+  if (attachments.length === 0) {
+    return null;
+  }
+  return attachments.map((attachment) => ({
+    id: attachment.id,
+    filename: attachment.file.name,
+    mimeType: attachment.file.type || "application/octet-stream",
+    type: attachment.type,
+    previewUrl: attachment.previewUrl,
+  }));
+}
+
+function turnAttachmentMatchKey(filename: string, mimeType: string, type: RunnerAttachment["type"]): string {
+  return `${filename}\u0000${mimeType}\u0000${type}`;
+}
+
+function buildTurnAttachmentsForExecution(
+  attachmentEntries: LocalAttachment[],
+  resolvedAttachments: RunnerAttachment[] | undefined,
+  backendUrl?: string
+): RunnerTurnAttachment[] | null {
+  const localTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
+  const resolvedTurnAttachments = buildTurnAttachmentsFromRunnerAttachments(resolvedAttachments, backendUrl);
+
+  if (!resolvedTurnAttachments || resolvedTurnAttachments.length === 0) {
+    return localTurnAttachments;
+  }
+  if (!localTurnAttachments || localTurnAttachments.length === 0) {
+    return resolvedTurnAttachments;
+  }
+
+  const resolvedBuckets = new Map<string, RunnerTurnAttachment[]>();
+  for (const attachment of resolvedTurnAttachments) {
+    const key = turnAttachmentMatchKey(attachment.filename, attachment.mimeType, attachment.type);
+    const bucket = resolvedBuckets.get(key);
+    if (bucket) {
+      bucket.push(attachment);
+    } else {
+      resolvedBuckets.set(key, [attachment]);
+    }
+  }
+
+  const merged = localTurnAttachments.map((attachment) => {
+    const key = turnAttachmentMatchKey(attachment.filename, attachment.mimeType, attachment.type);
+    const bucket = resolvedBuckets.get(key);
+    const resolvedAttachment = bucket?.shift();
+    if (!resolvedAttachment) {
+      return attachment;
+    }
+    if (attachment.type === "image" && attachment.previewUrl) {
+      return {
+        ...resolvedAttachment,
+        previewUrl: attachment.previewUrl,
+      };
+    }
+    return resolvedAttachment;
+  });
+
+  for (const bucket of resolvedBuckets.values()) {
+    merged.push(...bucket);
+  }
+
+  return merged;
+}
+
+function pickTurnAttachments(
+  preferred?: RunnerTurnAttachment[] | null,
+  fallback?: RunnerTurnAttachment[] | null
+): RunnerTurnAttachment[] | null {
+  if (preferred && preferred.length > 0) {
+    return preferred;
+  }
+  if (fallback && fallback.length > 0) {
+    return fallback;
+  }
+  return null;
+}
+
+function requiresAuthenticatedAttachmentPreview(url: string | undefined, backendUrl?: string): boolean {
+  if (!url) {
+    return false;
+  }
+  const normalizedUrl = url.trim();
+  if (!normalizedUrl) {
+    return false;
+  }
+  const normalizedBackendUrl = backendUrl ? sanitizeBackendUrl(backendUrl) : "";
+  const normalizedPath = normalizedUrl.replace(/^https?:\/\/[^/]+/i, "");
+  const isEnvironmentDownload = /(?:^|\/)(?:api\/)?environments\/[^/]+\/files\/download\//.test(normalizedPath);
+  return (
+    normalizedUrl.startsWith("/attachments/") ||
+    normalizedUrl.startsWith("/api/attachments/") ||
+    normalizedUrl.startsWith("/api/real/attachments/") ||
+    isEnvironmentDownload ||
+    (normalizedBackendUrl ? normalizedUrl.startsWith(`${normalizedBackendUrl}/attachments/`) : false)
+  );
+}
+
+function selectionNodeToElement(node: Node | null): Element | null {
+  if (!node) return null;
+  return node instanceof Element ? node : node.parentElement;
+}
+
+function findQuotedSelectionContainer(node: Node | null, root: HTMLElement | null): HTMLElement | null {
+  const element = selectionNodeToElement(node);
+  if (!element || !root) {
+    return null;
+  }
+  const container = element.closest(".agent-step-content, .tb-turn-summary, .tb-btw-turn-response");
+  if (!container || !root.contains(container)) {
+    return null;
+  }
+  if (element.closest(".tb-user-turn-shell, .tb-input-shell, .tb-selection-popup")) {
+    return null;
+  }
+  return container as HTMLElement;
+}
+
+function getQuotedSelectionSourceType(container: HTMLElement): RunnerQuotedSelectionSource {
+  return container.matches(".tb-turn-summary, .tb-btw-turn-response") ? "run_summary" : "working_log";
+}
+
+function getTurnAssistantMessageText(turn: RunnerTurn): string {
+  return turn.logs
+    .filter((log) => log.eventType === "agent_message" || log.eventType === "llm_response")
+    .map((log) => stripSystemTags(log.message || "").trim())
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+}
+
+function turnPresentation(turn: RunnerTurn): RunnerTurn["presentation"] {
+  if (turn.presentation) return turn.presentation;
+  return isBtwTurnPrompt(turn.prompt) ? "btw" : "default";
+}
+
+function turnsLikelyMatch(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): boolean {
+  const localPresentation = turnPresentation(localTurn);
+  const hydratedPresentation = turnPresentation(hydratedTurn);
+  const localPrompt = normalizeTurnPrompt(localTurn.prompt);
+  const hydratedPrompt = normalizeTurnPrompt(hydratedTurn.prompt);
+  const localSourceMessageId =
+    typeof localTurn.sourceMessageId === "string" && localTurn.sourceMessageId.trim()
+      ? localTurn.sourceMessageId.trim()
+      : "";
+  const hydratedSourceMessageId =
+    typeof hydratedTurn.sourceMessageId === "string" && hydratedTurn.sourceMessageId.trim()
+      ? hydratedTurn.sourceMessageId.trim()
+      : "";
+
+  if (localPresentation === "btw" || hydratedPresentation === "btw") {
+    if (localPresentation !== "btw" || hydratedPresentation !== "btw") {
+      return false;
+    }
+    if (localPrompt && hydratedPrompt && localPrompt === hydratedPrompt) {
+      return true;
+    }
+    const localAssistantText = getTurnAssistantMessageText(localTurn);
+    const hydratedAssistantText = getTurnAssistantMessageText(hydratedTurn);
+    if (!localAssistantText || !hydratedAssistantText) {
+      return false;
+    }
+    return (
+      localAssistantText === hydratedAssistantText ||
+      localAssistantText.startsWith(hydratedAssistantText) ||
+      hydratedAssistantText.startsWith(localAssistantText)
+    );
+  }
+
+  if (localTurn.status === "queued" && localPrompt && hydratedPrompt) {
+    return localPrompt === hydratedPrompt;
+  }
+
+  if (localPresentation === "context-action-notice" || hydratedPresentation === "context-action-notice") {
+    const localActionType = localTurn.logs.find((log) => log.eventType === "action_summary")?.metadata?.actionType;
+    const hydratedActionType = hydratedTurn.logs.find((log) => log.eventType === "action_summary")?.metadata?.actionType;
+    return Boolean(localActionType && hydratedActionType && localActionType === hydratedActionType);
+  }
+
+  if (localSourceMessageId && hydratedSourceMessageId && localSourceMessageId === hydratedSourceMessageId) {
+    return true;
+  }
+
+  if (localPrompt && hydratedPrompt && localPrompt === hydratedPrompt) {
+    const localAssistantText = getTurnAssistantMessageText(localTurn);
+    const hydratedAssistantText = getTurnAssistantMessageText(hydratedTurn);
+    if (!localAssistantText || !hydratedAssistantText) {
+      return true;
+    }
+    return (
+      localAssistantText === hydratedAssistantText ||
+      localAssistantText.startsWith(hydratedAssistantText) ||
+      hydratedAssistantText.startsWith(localAssistantText)
+    );
+  }
+
+  return false;
+}
+
+function isTurnResponseLog(log: RunnerLog): boolean {
+  return log.eventType === "agent_message" || log.eventType === "llm_response";
+}
+
+function replaceTurnResponseLogs(logs: RunnerLog[], nextResponseLogs: RunnerLog[]): RunnerLog[] {
+  if (nextResponseLogs.length === 0) {
+    return logs;
+  }
+
+  const nextLogs: RunnerLog[] = [];
+  let insertedResponseLogs = false;
+
+  for (const log of logs) {
+    if (isTurnResponseLog(log)) {
+      if (!insertedResponseLogs) {
+        nextLogs.push(...nextResponseLogs);
+        insertedResponseLogs = true;
+      }
+      continue;
+    }
+    nextLogs.push(log);
+  }
+
+  if (!insertedResponseLogs) {
+    nextLogs.push(...nextResponseLogs);
+  }
+
+  return nextLogs;
+}
+
+function mergeHydratedMessageTurnsIntoTurns(
+  turns: RunnerTurn[],
+  messages: RunnerConversationMessage[],
+  meta?: {
+    agentName?: string | null;
+    environmentName?: string | null;
+    backendUrl?: string;
+    threadStatus?: string | null;
+    completedAtMs?: number | null;
+  }
+): RunnerTurn[] {
+  if (turns.length === 0 || messages.length === 0) {
+    return turns;
+  }
+
+  const messageTurns = buildHydratedTurnsFromMessages(messages, meta);
+  if (messageTurns.length === 0) {
+    return turns;
+  }
+
+  const consumedMessageTurnIndexes = new Set<number>();
+  const mergedTurns = turns.map((turn) => {
+    const matchedMessageTurnIndex = messageTurns.findIndex(
+      (messageTurn, index) => !consumedMessageTurnIndexes.has(index) && turnsLikelyMatch(turn, messageTurn)
+    );
+
+    if (matchedMessageTurnIndex === -1) {
+      return turn;
+    }
+
+    consumedMessageTurnIndexes.add(matchedMessageTurnIndex);
+    const messageTurn = messageTurns[matchedMessageTurnIndex]!;
+    const messageResponseLogs = messageTurn.logs.filter(isTurnResponseLog);
+    const turnResponseText = getTurnAssistantMessageText(turn);
+    const messageResponseText = getTurnAssistantMessageText(messageTurn);
+    const shouldPreferMessageResponse =
+      messageResponseLogs.length > 0 &&
+      (!turnResponseText ||
+        messageResponseText === turnResponseText ||
+        messageResponseText.startsWith(turnResponseText) ||
+        messageResponseText.length > turnResponseText.length);
+
+    return {
+      ...turn,
+      prompt: turn.prompt || messageTurn.prompt,
+      sourceMessageId: turn.sourceMessageId ?? messageTurn.sourceMessageId ?? null,
+      quotedSelection: turn.quotedSelection ?? messageTurn.quotedSelection ?? null,
+      attachments: pickTurnAttachments(turn.attachments, messageTurn.attachments),
+      logs: shouldPreferMessageResponse ? replaceTurnResponseLogs(turn.logs, messageResponseLogs) : turn.logs,
+      completedAtMs: turn.completedAtMs ?? messageTurn.completedAtMs,
+      durationSeconds: turn.durationSeconds ?? messageTurn.durationSeconds ?? null,
+      agentName: turn.agentName ?? messageTurn.agentName ?? null,
+      environmentName: turn.environmentName ?? messageTurn.environmentName ?? null,
+    };
+  });
+
+  const unmatchedMessageTurns = messageTurns.filter((_, index) => !consumedMessageTurnIndexes.has(index));
+  if (unmatchedMessageTurns.length === 0) {
+    return mergedTurns;
+  }
+
+  const sortedTurns = [...mergedTurns, ...unmatchedMessageTurns].sort((left, right) => {
+    const leftTime = left.startedAtMs || 0;
+    const rightTime = right.startedAtMs || 0;
+    if (leftTime !== rightTime) {
+      return leftTime - rightTime;
+    }
+    return left.id.localeCompare(right.id);
+  });
+
+  return sortedTurns.map((turn, index) => ({
+    ...turn,
+    isInitialTurn: index === 0,
+  }));
+}
+
+function mergeHydratedTurns(existingTurns: RunnerTurn[], hydratedTurns: RunnerTurn[]): RunnerTurn[] {
+  const mergedTurns = [...hydratedTurns];
+
+  for (const localTurn of existingTurns) {
+    const localPresentation = turnPresentation(localTurn);
+    const shouldCarryForward =
+      localTurn.status === "queued" ||
+      localPresentation === "btw" ||
+      (localPresentation === "context-action-notice" && localTurn.status === "running") ||
+      Boolean(localTurn.quotedSelection) ||
+      Boolean(localTurn.attachments?.length);
+
+    if (!shouldCarryForward) {
+      continue;
+    }
+
+    const hydratedIndex = mergedTurns.findIndex((hydratedTurn) => turnsLikelyMatch(localTurn, hydratedTurn));
+    if (hydratedIndex === -1) {
+      mergedTurns.push(localTurn);
+      continue;
+    }
+
+    const hydratedTurn = mergedTurns[hydratedIndex];
+    const localAssistantText = getTurnAssistantMessageText(localTurn);
+    const hydratedAssistantText = getTurnAssistantMessageText(hydratedTurn);
+    const preferLocalTurn =
+      localTurn.status === "queued" ||
+      localTurn.status === "running" ||
+      (localPresentation === "btw" && localAssistantText.length > hydratedAssistantText.length);
+
+    if (preferLocalTurn) {
+      mergedTurns[hydratedIndex] = {
+        ...hydratedTurn,
+        ...localTurn,
+        presentation: localPresentation,
+        quotedSelection: localTurn.quotedSelection ?? hydratedTurn.quotedSelection ?? null,
+        attachments: pickTurnAttachments(localTurn.attachments, hydratedTurn.attachments),
+        sourceMessageId: localTurn.sourceMessageId ?? hydratedTurn.sourceMessageId ?? null,
+      };
+      continue;
+    }
+
+    mergedTurns[hydratedIndex] = {
+      ...hydratedTurn,
+      ...(!hydratedTurn.presentation && localPresentation !== "default" ? { presentation: localPresentation } : {}),
+      quotedSelection: hydratedTurn.quotedSelection ?? localTurn.quotedSelection ?? null,
+      attachments: pickTurnAttachments(hydratedTurn.attachments, localTurn.attachments),
+      sourceMessageId: hydratedTurn.sourceMessageId ?? localTurn.sourceMessageId ?? null,
+    };
+  }
+
+  const sortedTurns = [...mergedTurns].sort((left, right) => {
+    const leftTime = left.startedAtMs || 0;
+    const rightTime = right.startedAtMs || 0;
+    if (leftTime !== rightTime) {
+      return leftTime - rightTime;
+    }
+    return left.id.localeCompare(right.id);
+  });
+
+  return sortedTurns.map((turn, index) => ({
+    ...turn,
+    isInitialTurn: index === 0,
+  }));
+}
+
+function mapExpandedTurns(
+  previousExpandedTurns: Record<string, boolean>,
+  previousTurns: RunnerTurn[],
+  nextTurns: RunnerTurn[],
+  options?: { defaultLatestExpanded?: boolean }
+): Record<string, boolean> {
+  const latestTurnId = nextTurns.length > 0 ? nextTurns[nextTurns.length - 1]!.id : null;
+  return nextTurns.reduce<Record<string, boolean>>((accumulator, turn) => {
+    const directExpanded = previousExpandedTurns[turn.id];
+    if (typeof directExpanded === "boolean") {
+      accumulator[turn.id] = directExpanded;
+      return accumulator;
+    }
+
+    const matchedPreviousTurn = previousTurns.find((previousTurn) => turnsLikelyMatch(previousTurn, turn));
+    if (matchedPreviousTurn && typeof previousExpandedTurns[matchedPreviousTurn.id] === "boolean") {
+      accumulator[turn.id] = previousExpandedTurns[matchedPreviousTurn.id]!;
+      return accumulator;
+    }
+
+    accumulator[turn.id] = Boolean(options?.defaultLatestExpanded && latestTurnId === turn.id);
+    return accumulator;
+  }, {});
+}
+
+function parseDurationSecondsValue(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.max(0, Math.round(value));
+  }
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value.trim());
+    if (Number.isFinite(parsed)) {
+      return Math.max(0, Math.round(parsed));
+    }
+  }
+  return null;
+}
+
+function parseIsoTimestampMs(value: unknown): number | null {
+  if (typeof value !== "string" || !value.trim()) {
+    return null;
+  }
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeHydratedLog(log: RunnerLog): RunnerLog {
+  if (typeof (log.metadata as { duration_ms?: unknown } | undefined)?.duration_ms === "number" && typeof log.metadata?.durationMs !== "number") {
+    return {
+      ...log,
+      metadata: {
+        ...log.metadata,
+        durationMs: (log.metadata as { duration_ms: number }).duration_ms,
+      },
+    };
+  }
+  return log;
+}
+
+function stableRunnerLogValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableRunnerLogValue(entry)).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value as Record<string, unknown>)
+      .sort()
+      .map((key) => `${key}:${stableRunnerLogValue((value as Record<string, unknown>)[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function normalizedToolLogIdentity(log: RunnerLog): string | null {
+  if (log.eventType === "command_execution") {
+    const command = typeof log.metadata?.command === "string" ? log.metadata.command.trim() : "";
+    const normalizedCommand = command || log.message.replace(/^Executed:\s*/i, "").trim();
+    if (!normalizedCommand) {
+      return null;
+    }
+    return `command:${normalizedCommand}`;
+  }
+
+  if (log.eventType === "file_change") {
+    const filePath = Array.isArray(log.metadata?.filePaths) && typeof log.metadata.filePaths[0] === "string"
+      ? log.metadata.filePaths[0].trim()
+      : "";
+    const changeKind = Array.isArray(log.metadata?.changeKinds) && typeof log.metadata.changeKinds[0] === "string"
+      ? log.metadata.changeKinds[0].trim().toLowerCase()
+      : "";
+    const normalizedPath = filePath || log.message.replace(/^(created|modified|update|updated|deleted):\s*/i, "").replace(/\s+\((update|created|modified|deleted)\)$/i, "").trim();
+    const normalizedKind = changeKind || (/^\s*(created|modified|update|updated|deleted):/i.exec(log.message)?.[1]?.toLowerCase() ?? /\((update|created|modified|deleted)\)\s*$/i.exec(log.message)?.[1]?.toLowerCase() ?? "");
+    if (!normalizedPath) {
+      return null;
+    }
+    const canonicalKind = normalizedKind === "updated" ? "update" : normalizedKind;
+    return `file:${canonicalKind}:${normalizedPath}`;
+  }
+
+  return null;
+}
+
+function runnerLogSignature(log: RunnerLog): string {
+  const normalizedEventType =
+    log.eventType === "setup" || log.eventType === "startup"
+      ? "session_start"
+      : log.eventType === "reasoning" || log.eventType === "planning" || log.isReasoning || log.isPlanning
+        ? "thinking"
+        : log.eventType || "";
+  const normalizedMessage = normalizedEventType === "session_start" ? "Starting session" : log.message || "";
+  const normalizedToolIdentity = normalizedToolLogIdentity(log);
+  const normalizedMetadata =
+    normalizedEventType === "thinking" || normalizedEventType === "session_start" || normalizedToolIdentity
+      ? {}
+      : log.metadata || {};
+  return [
+    normalizedToolIdentity ? "" : log.type || "",
+    normalizedEventType,
+    normalizedToolIdentity || stripSystemTags(normalizedMessage).replace(/\s+/g, " ").trim(),
+    stableRunnerLogValue(normalizedMetadata),
+  ].join("|");
+}
+
+function runnerLogMetadataWeight(log: RunnerLog): number {
+  if (!log.metadata || typeof log.metadata !== "object" || Array.isArray(log.metadata)) {
+    return 0;
+  }
+  return Object.keys(log.metadata).length;
+}
+
+function dedupeAdjacentRunnerLogs(logs: RunnerLog[]): RunnerLog[] {
+  const deduped: RunnerLog[] = [];
+  let lastSignature = "";
+
+  for (const log of logs) {
+    const signature = runnerLogSignature(log);
+    if (signature === lastSignature) {
+      const previousLog = deduped[deduped.length - 1];
+      if (previousLog && runnerLogMetadataWeight(log) >= runnerLogMetadataWeight(previousLog)) {
+        deduped[deduped.length - 1] = log;
+      }
+      continue;
+    }
+    deduped.push(log);
+    lastSignature = signature;
+  }
+
+  return deduped;
+}
+
+function shouldDisplayTimelineLog(log: RunnerLog): boolean {
+  const normalizedMessage = stripSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
+  if (log.eventType === "turn_completed") return false;
+  if (log.eventType === "agent_message" || log.eventType === "llm_response") return false;
+  if (log.eventType === "setup" || log.eventType === "startup") return false;
+  if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") return false;
+  return true;
+}
+
+function buildHydratedTurnsFromLogs(
+  logs: RunnerLog[],
+  initialPrompt: string,
+  messages: RunnerConversationMessage[],
+  meta?: {
+    durationSeconds?: number | null;
+    startedAtMs?: number | null;
+    completedAtMs?: number | null;
+    threadStatus?: string | null;
+    agentName?: string | null;
+    environmentName?: string | null;
+    backendUrl?: string;
+  }
+): RunnerTurn[] {
+  const turns: RunnerTurn[] = [];
+  const dedupedLogs = dedupeAdjacentRunnerLogs(logs.map(normalizeHydratedLog));
+  let pendingBtwTurn: RunnerTurn | null = null;
+  let currentTurn: RunnerTurn | null = initialPrompt.trim()
+    ? {
+        id: generateId("turn"),
+        prompt: initialPrompt.trim(),
+        logs: [],
+        startedAtMs: meta?.startedAtMs ?? Date.now(),
+        completedAtMs: meta?.completedAtMs ?? meta?.startedAtMs ?? Date.now(),
+        durationSeconds: meta?.durationSeconds ?? null,
+        status: "completed",
+        animateOnRender: false,
+        isInitialTurn: true,
+        agentName: meta?.agentName ?? null,
+        environmentName: meta?.environmentName ?? null,
+      }
+    : null;
+
+  function ensureCurrentTurn(index: number): RunnerTurn {
+    if (currentTurn) return currentTurn;
+    const fallbackTime = Date.now() + index;
+    currentTurn = {
+      id: generateId("turn"),
+      prompt: "",
+      logs: [],
+      startedAtMs: fallbackTime,
+      completedAtMs: fallbackTime,
+      status: "completed",
+      animateOnRender: false,
+      agentName: meta?.agentName ?? null,
+      environmentName: meta?.environmentName ?? null,
+    };
+    return currentTurn;
+  }
+
+  function commitCurrentTurn() {
+    if (!currentTurn) return;
+    const hasPrompt = currentTurn.prompt.trim().length > 0;
+    const hasLogs = currentTurn.logs.length > 0;
+    if (hasPrompt || hasLogs) {
+      turns.push(currentTurn);
+    }
+    currentTurn = null;
+  }
+
+  function commitPendingBtwTurn() {
+    if (!pendingBtwTurn) return;
+    const hasPrompt = pendingBtwTurn.prompt.trim().length > 0;
+    const hasLogs = pendingBtwTurn.logs.length > 0;
+    if (hasPrompt || hasLogs) {
+      turns.push(pendingBtwTurn);
+    }
+    pendingBtwTurn = null;
+  }
+
+  function getSafeTimestamp(log: RunnerLog, index: number): number {
+    const logTimestampMs = parseIsoTimestampMs(log.time);
+    if (logTimestampMs !== null) {
+      return logTimestampMs;
+    }
+    const relativeSeconds = log.time ? parseSecondsFromClock(log.time) : null;
+    if (relativeSeconds !== null && meta?.startedAtMs != null) {
+      return meta.startedAtMs + relativeSeconds * 1000;
+    }
+    return Date.now() + index;
+  }
+
+  for (let index = 0; index < dedupedLogs.length; index += 1) {
+    const log = dedupedLogs[index];
+
+    if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
+      const prompt = stripSystemTags(log.message || "");
+      const startedAtMs = getSafeTimestamp(log, index);
+      const messageAttachments = normalizeTurnAttachments(
+        (log.metadata as Record<string, unknown> | undefined)?.attachments,
+        meta?.backendUrl
+      );
+      if (isBtwTurnPrompt(prompt)) {
+        commitPendingBtwTurn();
+        pendingBtwTurn = {
+          id: generateId("turn"),
+          prompt,
+          logs: [],
+          startedAtMs,
+          completedAtMs: startedAtMs,
+          status: "running",
+          animateOnRender: false,
+          agentName: meta?.agentName ?? null,
+          environmentName: meta?.environmentName ?? null,
+          presentation: "btw",
+          attachments: messageAttachments,
+        };
+      } else {
+        commitPendingBtwTurn();
+        commitCurrentTurn();
+        currentTurn = {
+          id: generateId("turn"),
+          prompt,
+          logs: [],
+          startedAtMs,
+          completedAtMs: startedAtMs,
+          status: "completed",
+          animateOnRender: false,
+          agentName: meta?.agentName ?? null,
+          environmentName: meta?.environmentName ?? null,
+          presentation: "default",
+          attachments: messageAttachments,
+        };
+      }
+      continue;
+    }
+
+    if ((log.eventType === "agent_message" || log.eventType === "llm_response") && pendingBtwTurn) {
+      pendingBtwTurn.logs.push(log);
+      pendingBtwTurn.completedAtMs = getSafeTimestamp(log, index);
+      pendingBtwTurn.status = log.type === "error" ? "failed" : "completed";
+      commitPendingBtwTurn();
+      continue;
+    }
+
+    const actionType = log.metadata?.actionType;
+    if (
+      log.eventType === "action_summary" &&
+      (actionType === "compact" || actionType === "clear" || actionType === "fork" || actionType === "revert" || actionType === "reapply")
+    ) {
+      let commandPrompt = "";
+      if (
+        currentTurn &&
+        currentTurn.prompt.trim().length > 0 &&
+        currentTurn.logs.length === 0 &&
+        isThreadContextCommandPrompt(currentTurn.prompt, actionType)
+      ) {
+        commandPrompt = currentTurn.prompt;
+        currentTurn = null;
+      } else {
+        commitCurrentTurn();
+      }
+      const logTimestampMs = parseIsoTimestampMs(log.time);
+      const safeTimestamp = logTimestampMs ?? Date.now() + index;
+      turns.push({
+        id: generateId("turn"),
+        prompt: commandPrompt,
+        logs: [log],
+        startedAtMs: safeTimestamp,
+        completedAtMs: safeTimestamp,
+        status: "completed",
+        animateOnRender: false,
+        agentName: meta?.agentName ?? null,
+        environmentName: meta?.environmentName ?? null,
+        presentation: "context-action-notice",
+      });
+      currentTurn = null;
+      continue;
+    }
+
+    const turn = ensureCurrentTurn(index);
+
+    if (log.eventType === "turn_completed") {
+      const durationMs = typeof log.metadata?.durationMs === "number" ? log.metadata.durationMs : null;
+      if (durationMs && durationMs >= 0) {
+        turn.durationSeconds = Math.max(0, Math.round(durationMs / 1000));
+        turn.completedAtMs = turn.startedAtMs + durationMs;
+      }
+      if (log.type === "error") {
+        turn.status = "failed";
+      } else if (turn.status === "running") {
+        turn.status = "completed";
+      }
+      continue;
+    }
+
+    turn.logs.push(log);
+
+    if (log.eventType === "agent_message" || log.eventType === "llm_response") {
+      const durationMs =
+        typeof log.metadata?.durationMs === "number"
+          ? log.metadata.durationMs
+          : typeof (log.metadata as { duration_ms?: unknown } | undefined)?.duration_ms === "number"
+            ? ((log.metadata as { duration_ms: number }).duration_ms)
+            : null;
+      if (durationMs && durationMs >= 0) {
+        turn.durationSeconds = Math.max(0, Math.round(durationMs / 1000));
+        turn.completedAtMs = turn.startedAtMs + durationMs;
+      }
+      turn.status = log.type === "error" ? "failed" : "completed";
+      continue;
+    }
+
+    if (log.type === "error") {
+      turn.status = "failed";
+    }
+  }
+
+  commitPendingBtwTurn();
+  commitCurrentTurn();
+  const sortedTurns = [...turns].sort((left, right) => {
+    if (left.startedAtMs !== right.startedAtMs) {
+      return left.startedAtMs - right.startedAtMs;
+    }
+    return left.id.localeCompare(right.id);
+  });
+  for (let index = 0; index < sortedTurns.length; index += 1) {
+    const turn = sortedTurns[index];
+    if (!turn.agentName) {
+      turn.agentName = meta?.agentName ?? null;
+    }
+    if (!turn.environmentName) {
+      turn.environmentName = meta?.environmentName ?? null;
+    }
+    if (index === 0) {
+      turn.isInitialTurn = true;
+      if (meta?.durationSeconds != null) {
+        turn.durationSeconds = meta.durationSeconds;
+      }
+      if (meta?.startedAtMs != null) {
+        turn.startedAtMs = meta.startedAtMs;
+      }
+      if (meta?.completedAtMs != null) {
+        turn.completedAtMs = meta.completedAtMs;
+      }
+    }
+  }
+  return applyHydratedRunningThreadState(
+    attachHydratedMessageIdsToTurns(sortedTurns, messages, meta?.backendUrl),
+    meta
+  );
+}
+
+function defaultAttachmentFromFile(file: File): RunnerAttachment {
+  return {
+    id: generateId("att"),
+    filename: file.name,
+    mimeType: file.type || "application/octet-stream",
+    size: file.size,
+    type: file.type.startsWith("image/") ? "image" : "document",
+    uploadedAt: new Date().toISOString(),
+  };
+}
+
+export function RunnerChat({
+  backendUrl,
+  apiKey,
+  speechToTextUrl,
+  fetchCustomSkills,
+  requestHeaders,
+  environmentId,
+  agentId,
+  appId = "runner-web-sdk",
+  threadId,
+  title,
+  placeholder = "What would you like me to do?",
+  initialTask = "",
+  hiddenSystemPrompt = "",
+  emptyState,
+  className,
+  disabled = false,
+  autoCreateThread = true,
+  maxAttachments = 20,
+  showUsageInStatus = true,
+  inputMode = "minimal",
+  agents = [],
+  environments = [],
+  skills = [],
+  computerAgents,
+  uploadFiles,
+  mapFileToAttachment,
+  onThreadIdChange,
+  onRunStart,
+  onRunFinish,
+  onRunError,
+  onAgentChange,
+  onEnvironmentChange,
+  onSkillsChange,
+  onContextIndicatorClick,
+  onActionSummaryClick,
+  threadTaskPreview = null,
+  onTaskPreviewClick,
+  autoFocusComposer = false,
+  keepFocusOnSubmit = false,
+  enableBacklogSubtaskCommand = false,
+  backlogSubtaskCommand = null,
+}: RunnerChatProps) {
+  const [input, setInput] = useState(initialTask);
+  const [composerQuotedSelection, setComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
+  const [renderedComposerQuotedSelection, setRenderedComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
+  const [isComposerQuotedSelectionVisible, setIsComposerQuotedSelectionVisible] = useState(false);
+  const [localThreadId, setLocalThreadId] = useState<string | null>(threadId ?? null);
+  const [attachments, setAttachments] = useState<LocalAttachment[]>([]);
+  const [previewedDocumentAttachment, setPreviewedDocumentAttachment] = useState<RunnerTurnAttachment | null>(null);
+  const [documentPreviewDrawerWidth, setDocumentPreviewDrawerWidth] = useState<number | null>(null);
+  const [isThreadHistoryLoading, setIsThreadHistoryLoading] = useState(false);
+  const [inlineError, setInlineError] = useState<string | null>(null);
+  const [isPreparingRun, setIsPreparingRun] = useState(false);
+  const [turns, setTurns] = useState<RunnerTurn[]>([]);
+  const [pendingQueuedMessages, setPendingQueuedMessages] = useState<PendingRunnerMessage[]>([]);
+  const [editingTurnId, setEditingTurnId] = useState<string | null>(null);
+  const [editingTurnDraft, setEditingTurnDraft] = useState("");
+  const [forkingTurnId, setForkingTurnId] = useState<string | null>(null);
+  const [pendingForkConfiguration, setPendingForkConfiguration] = useState<PendingForkConfiguration | null>(null);
+  const [forkTarget, setForkTarget] = useState<RunnerForkTarget>("existing_environment");
+  const [forkTargetEnvironmentId, setForkTargetEnvironmentId] = useState<string>(environmentId ?? "");
+  const [forkNewEnvironmentName, setForkNewEnvironmentName] = useState("");
+  const [forkNewEnvironmentFileCopyMode, setForkNewEnvironmentFileCopyMode] = useState<RunnerForkFileCopyMode>("all");
+  const [forkExistingEnvironmentFileCopyMode, setForkExistingEnvironmentFileCopyMode] = useState<RunnerForkExistingEnvironmentFileCopyMode>("none");
+  const [showForkEnvironmentPopup, setShowForkEnvironmentPopup] = useState(false);
+  const [forkDialogError, setForkDialogError] = useState<string | null>(null);
+  const [pendingEditConfirmation, setPendingEditConfirmation] = useState<PendingEditConfirmation | null>(null);
+  const [expandedTurns, setExpandedTurns] = useState<Record<string, boolean>>({});
+  const [expandedStepRows, setExpandedStepRows] = useState<Record<string, boolean>>({});
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
+  const [activeInputPopup, setActiveInputPopup] = useState<InputPopupId | null>(null);
+  const [selectedWorkspaceFileIds, setSelectedWorkspaceFileIds] = useState<string[]>([]);
+  const [showFileBrowserModal, setShowFileBrowserModal] = useState(false);
+  const [showFileBrowserApiKeyPrompt, setShowFileBrowserApiKeyPrompt] = useState(false);
+  const [fileBrowserSource, setFileBrowserSource] = useState<RunnerFileBrowserSource>("workspace");
+  const [fileBrowserSearchQuery, setFileBrowserSearchQuery] = useState("");
+  const [fileBrowserPreviewId, setFileBrowserPreviewId] = useState<string | null>(null);
+  const [expandedFileBrowserFolderIds, setExpandedFileBrowserFolderIds] = useState<string[]>([]);
+  const [fileBrowserPreviewContent, setFileBrowserPreviewContent] = useState<string | null>(null);
+  const [fileBrowserPreviewKind, setFileBrowserPreviewKind] = useState<"image" | "text" | null>(null);
+  const [isFileBrowserPreviewLoading, setIsFileBrowserPreviewLoading] = useState(false);
+  const [isFileBrowserAttaching, setIsFileBrowserAttaching] = useState(false);
+  const [fileBrowserHistory, setFileBrowserHistory] = useState<Array<{ source: RunnerFileBrowserSource; folderId: string | null }>>([]);
+  const [fileBrowserHistoryIndex, setFileBrowserHistoryIndex] = useState(-1);
+  const [remoteWorkspaceItems, setRemoteWorkspaceItems] = useState<RunnerChatFileNode[]>([]);
+  const [remoteGoogleDriveItems, setRemoteGoogleDriveItems] = useState<RunnerChatFileNode[]>([]);
+  const [remoteOneDriveItems, setRemoteOneDriveItems] = useState<RunnerChatFileNode[]>([]);
+  const [remoteGithubItems, setRemoteGithubItems] = useState<RunnerChatFileNode[]>([]);
+  const [remoteNotionDatabases, setRemoteNotionDatabases] = useState<RunnerChatNotionDatabase[]>([]);
+  const [notionDatabasesLoaded, setNotionDatabasesLoaded] = useState(false);
+  const [loadedGoogleDriveFolderIds, setLoadedGoogleDriveFolderIds] = useState<string[]>([]);
+  const [loadedOneDriveFolderIds, setLoadedOneDriveFolderIds] = useState<string[]>([]);
+  const [loadedGithubFolderIds, setLoadedGithubFolderIds] = useState<string[]>([]);
+  const [loadingGoogleDriveFolderIds, setLoadingGoogleDriveFolderIds] = useState<string[]>([]);
+  const [loadingOneDriveFolderIds, setLoadingOneDriveFolderIds] = useState<string[]>([]);
+  const [loadingGithubFolderIds, setLoadingGithubFolderIds] = useState<string[]>([]);
+  const [isGoogleDriveBrowserLoading, setIsGoogleDriveBrowserLoading] = useState(false);
+  const [isOneDriveBrowserLoading, setIsOneDriveBrowserLoading] = useState(false);
+  const [isGithubBrowserLoading, setIsGithubBrowserLoading] = useState(false);
+  const [isNotionBrowserLoading, setIsNotionBrowserLoading] = useState(false);
+  const [isGoogleDrivePickerLoading, setIsGoogleDrivePickerLoading] = useState(false);
+  const [googleDriveBrowserError, setGoogleDriveBrowserError] = useState<string | null>(null);
+  const [oneDriveBrowserError, setOneDriveBrowserError] = useState<string | null>(null);
+  const [githubBrowserError, setGithubBrowserError] = useState<string | null>(null);
+  const [notionBrowserError, setNotionBrowserError] = useState<string | null>(null);
+  const [threadContext, setThreadContext] = useState<RunnerChatThreadContext | null>(null);
+  const [isThreadContextLoading, setIsThreadContextLoading] = useState(false);
+  const [threadContextDetails, setThreadContextDetails] = useState<RunnerChatThreadContextDetails | null>(null);
+  const [threadContextDetailsError, setThreadContextDetailsError] = useState<string | null>(null);
+  const [threadContextNativeError, setThreadContextNativeError] = useState<string | null>(null);
+  const [isThreadContextDetailsLoading, setIsThreadContextDetailsLoading] = useState(false);
+  const [threadContextActionLoading, setThreadContextActionLoading] = useState<RunnerChatThreadContextAction | null>(null);
+  const [threadContextAvailableActions, setThreadContextAvailableActions] = useState<RunnerChatThreadContextAvailableActions>(DEFAULT_THREAD_CONTEXT_ACTIONS);
+  const [isWorkspaceBrowserLoading, setIsWorkspaceBrowserLoading] = useState(false);
+  const [workspaceBrowserError, setWorkspaceBrowserError] = useState<string | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [scheduleType, setScheduleType] = useState<"one-time" | "recurring">("one-time");
+  const [scheduledAtValue, setScheduledAtValue] = useState(() => formatDateTimeLocalValue(new Date(Date.now() + 60 * 60 * 1000)));
+  const [selectedSchedulePresetId, setSelectedSchedulePresetId] = useState<string>(() => DEFAULT_SCHEDULE_PRESETS[0]?.id || "");
+  const [skillsTab, setSkillsTab] = useState<"system" | "custom">("system");
+  const [scheduledTask, setScheduledTask] = useState<{
+    scheduledTime: Date;
+    scheduleType: "one-time" | "recurring";
+    cronExpression?: string;
+  } | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(() => {
+    if (agentId) return agentId;
+    return agents[0]?.id || "";
+  });
+  const [agentPopupMode, setAgentPopupMode] = useState<RunnerAgentSelectorMode>(() =>
+    getRunnerAgentSelectorMode(agents.find((agent) => agent.id === agentId) || agents[0] || null)
+  );
+  const [activeThreadEnvironmentId, setActiveThreadEnvironmentId] = useState<string | null>(environmentId ?? null);
+  const [activeThreadEnvironmentName, setActiveThreadEnvironmentName] = useState<string | null>(null);
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(() => {
+    if (environmentId) return environmentId;
+    return environments.find((environment) => environment.isDefault)?.id || environments[0]?.id || "";
+  });
+  const [initialAgentTopId, setInitialAgentTopId] = useState<string | null>(null);
+  const [initialEnvironmentTopId, setInitialEnvironmentTopId] = useState<string | null>(null);
+  const [enabledSkillIds, setEnabledSkillIds] = useState<string[]>(() => {
+    const storageKey = buildEnabledSkillsStorageKey(appId);
+    const persisted = loadPersistedEnabledSkillIds(storageKey);
+    if (persisted !== null) {
+      return persisted;
+    }
+    return defaultEnabledSkillIds(normalizeComputerAgentSkills(skills));
+  });
+  const [selectedGithubRepositoryId, setSelectedGithubRepositoryId] = useState<string>(() => computerAgents?.github?.selectedRepositoryId || "");
+  const [selectedGithubContextId, setSelectedGithubContextId] = useState<string>(() => computerAgents?.github?.selectedContextId || "");
+  const [selectedNotionDatabaseId, setSelectedNotionDatabaseId] = useState<string>(() => computerAgents?.notion?.selectedDatabaseId || "");
+  const [customSkills, setCustomSkills] = useState<RunnerChatSkill[]>([]);
+  const [isLoadingCustomSkills, setIsLoadingCustomSkills] = useState(false);
+  const [customSkillsLoaded, setCustomSkillsLoaded] = useState(false);
+  const [googleDriveFolderId, setGoogleDriveFolderId] = useState<string | null>(null);
+  const [oneDriveFolderId, setOneDriveFolderId] = useState<string | null>(null);
+  const [selectedGoogleDriveFileIds, setSelectedGoogleDriveFileIds] = useState<string[]>([]);
+  const [selectedOneDriveFileIds, setSelectedOneDriveFileIds] = useState<string[]>([]);
+  const [selectedGithubFileIds, setSelectedGithubFileIds] = useState<string[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const [recordingStartedAtMs, setRecordingStartedAtMs] = useState<number | null>(null);
+  const [recordingElapsedSeconds, setRecordingElapsedSeconds] = useState(0);
+  const [stagedThreadContextCommand, setStagedThreadContextCommand] = useState<RunnerChatThreadContextAction | null>(null);
+  const [stagedBacklogSubtaskCommand, setStagedBacklogSubtaskCommand] = useState<StagedBacklogSubtaskCommand | null>(null);
+  const [renderedMainPopup, setRenderedMainPopup] = useState<MainPopupRenderId | null>(null);
+  const [mainPopupPhase, setMainPopupPhase] = useState<PopupAnimationPhase>("idle");
+  const [renderedSidePopup, setRenderedSidePopup] = useState<SidePopupRenderId | null>(null);
+  const [sidePopupPhase, setSidePopupPhase] = useState<PopupAnimationPhase>("idle");
+  const [sidePopupExitDirection, setSidePopupExitDirection] = useState<SidePopupExitDirection>("left");
+  const [quotedSelectionPopup, setQuotedSelectionPopup] = useState<RunnerQuotedSelectionPopupState | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const logsRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const editingTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const popupAreaRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const forkEnvironmentPopupRef = useRef<HTMLDivElement | null>(null);
+  const currentInputRef = useRef(initialTask);
+  const speechSocketRef = useRef<WebSocket | null>(null);
+  const speechSocketReadyRef = useRef(false);
+  const speechPendingChunksRef = useRef<SpeechClientMessage[]>([]);
+  const speechBaseInputRef = useRef(initialTask);
+  const speechTranscriptRef = useRef("");
+  const speechActivityOpenRef = useRef(false);
+  const speechLastVoiceMsRef = useRef(0);
+  const speechMediaStreamRef = useRef<MediaStream | null>(null);
+  const speechAudioContextRef = useRef<AudioContext | null>(null);
+  const speechSourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const speechProcessorNodeRef = useRef<AudioWorkletNode | null>(null);
+  const speechSinkGainNodeRef = useRef<GainNode | null>(null);
+  const fileBrowserPreviewObjectUrlRef = useRef<string | null>(null);
+  const documentPreviewResizeStateRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const mainPopupAnimationTimerRef = useRef<number | null>(null);
+  const sidePopupAnimationTimerRef = useRef<number | null>(null);
+  const isDrainingQueuedRunsRef = useRef(false);
+  const attachmentsRef = useRef<LocalAttachment[]>([]);
+  const attachmentUploadPromisesRef = useRef<Record<string, Promise<RunnerAttachment> | undefined>>({});
+  const turnsRef = useRef<RunnerTurn[]>([]);
+  const lastEnvironmentStartRequestKeyRef = useRef<string | null>(null);
+  const quotedSelectionPopupRef = useRef<HTMLDivElement | null>(null);
+  const composerQuotedSelectionAnimationTimerRef = useRef<number | null>(null);
+  const appliedBacklogSubtaskCommandTokenRef = useRef<string | number | null>(null);
+
+  const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
+
+  const normalizedBackendUrl = useMemo(() => sanitizeBackendUrl(backendUrl), [backendUrl]);
+  const resolvedSpeechToTextUrl = useMemo(
+    () => resolveSpeechToTextUrl(speechToTextUrl, normalizedBackendUrl, requestHeaders),
+    [speechToTextUrl, normalizedBackendUrl, requestHeaders]
+  );
+  const normalizedSkills = useMemo(() => normalizeComputerAgentSkills(skills), [skills]);
+  const displayedSkills = useMemo(() => [...normalizedSkills, ...customSkills], [customSkills, normalizedSkills]);
+  const enabledSkillsStorageKey = useMemo(() => buildEnabledSkillsStorageKey(appId), [appId]);
+  const systemSkills = useMemo(() => displayedSkills.filter((skill) => !skill.isCustom), [displayedSkills]);
+  const customSkillItems = useMemo(() => displayedSkills.filter((skill) => skill.isCustom), [displayedSkills]);
+  const githubConfig = computerAgents?.github;
+  const notionConfig = computerAgents?.notion;
+  const googleDriveConfig = computerAgents?.googleDrive;
+  const oneDriveConfig = computerAgents?.oneDrive;
+  const workspaceConfig = computerAgents?.workspace;
+  const scheduleConfig = computerAgents?.schedule;
+  const schedulePresets = scheduleConfig?.presets?.length ? scheduleConfig.presets : DEFAULT_SCHEDULE_PRESETS;
+  const githubRepositories = githubConfig?.repositories || [];
+  const githubContexts = githubConfig?.contexts || [];
+  const notionDatabases = notionConfig?.fetchDatabases ? remoteNotionDatabases : notionConfig?.databases || [];
+  const googleDriveItems = googleDriveConfig?.fetchItems ? remoteGoogleDriveItems : googleDriveConfig?.items || [];
+  const oneDriveItems = oneDriveConfig?.fetchItems ? remoteOneDriveItems : oneDriveConfig?.items || [];
+  const githubItems = githubConfig?.fetchItems ? remoteGithubItems : [];
+  const notionItems = notionDatabasesToFileItems(notionDatabases);
+  const currentThreadId = threadId ?? localThreadId;
+  const currentThreadHasMessages = useMemo(
+    () => turns.some((turn) => turn.presentation !== "context-action-notice" && turn.prompt.trim().length > 0),
+    [turns]
+  );
+  const currentThreadHasWorkspaceChanges = useMemo(
+    () => turns.some((turn) => collectTurnChangedFiles(turn.logs).length > 0),
+    [turns]
+  );
+  const isRunning = status === "running";
+  const activeRunningTurn =
+    [...turns].reverse().find(
+      (turn) => turn.status === "running" && turn.presentation !== "btw" && turn.presentation !== "context-action-notice"
+    ) || null;
+  const hasRunningTurn = Boolean(activeRunningTurn);
+  const hasRunningTurnLogs = Boolean(activeRunningTurn && activeRunningTurn.logs.length > 0);
+  const showRunPreparationIndicator = isPreparingRun || (hasRunningTurn && !hasRunningTurnLogs);
+  const showActiveRunStopButton = !showRunPreparationIndicator && (hasRunningTurn || isRunning);
+  const trimmedInput = input.trim();
+  const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
+  const stagedThreadContextCommandLabel = stagedThreadContextCommand ? `/${stagedThreadContextCommand}` : "";
+  const stagedComposerLabel = stagedBacklogSubtaskCommand?.label || stagedThreadContextCommandLabel;
+  const stagedComposerToneValue = stagedBacklogSubtaskCommand ? "compact" : stagedThreadContextCommandToneValue;
+  const stagedComposerOffsetValue = stagedBacklogSubtaskCommand
+    ? `${Math.max(120, Math.round(stagedComposerLabel.length * 7.5 + 22))}px`
+    : stagedThreadContextCommandOffset(stagedThreadContextCommand);
+  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedBacklogSubtaskCommand);
+  const canRunStagedThreadContextCommand = stagedThreadContextCommand
+    ? stagedThreadContextCommand === "btw"
+      ? trimmedInput.length > 0
+      : true
+    : false;
+  const canRun =
+    !disabled &&
+    !isPreparingRun &&
+    (!hasRunningTurn || hasRunningTurnLogs) &&
+    (trimmedInput.length > 0 || canRunStagedThreadContextCommand);
+  const useComputerAgentsMode = inputMode === "computer-agents";
+  const enabledSkillsPayload = useMemo(
+    () => (useComputerAgentsMode ? buildEnabledSkillsPayload(enabledSkillIds, displayedSkills) : null),
+    [displayedSkills, enabledSkillIds, useComputerAgentsMode]
+  );
+  const hasApiKey = apiKey.trim().length > 0;
+  const authenticatedAttachmentFetchHeaders = useMemo(
+    () => buildRunnerHeaders(requestHeaders, apiKey.trim()),
+    [apiKey, requestHeaders]
+  );
+  const summaryPreviewEnvironmentId = activeThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
+  const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
+  const availableEnvironments = useMemo(
+    () =>
+      mergeRunnerChatOptions(environments, [
+        activeThreadEnvironmentId && activeThreadEnvironmentName
+          ? {
+              id: activeThreadEnvironmentId,
+              name: activeThreadEnvironmentName,
+            }
+          : null,
+        environmentId && !environments.some((environment) => environment.id === environmentId)
+          ? {
+              id: environmentId,
+              name: activeThreadEnvironmentName || "Current Environment",
+            }
+          : null,
+      ]),
+    [activeThreadEnvironmentId, activeThreadEnvironmentName, environmentId, environments]
+  );
+  const targetMainPopup = getMainPopupRenderId(activeInputPopup);
+  const targetSidePopup = getSidePopupRenderId(activeInputPopup);
+  const supportsSpeechToText = useMemo(() => {
+    if (!hasApiKey || !resolvedSpeechToTextUrl || typeof window === "undefined" || typeof navigator === "undefined") {
+      return false;
+    }
+    const browserWindow = window as typeof window & {
+      webkitAudioContext?: typeof AudioContext;
+    };
+    return (
+      typeof WebSocket !== "undefined" &&
+      typeof AudioWorkletNode !== "undefined" &&
+      !!navigator.mediaDevices?.getUserMedia &&
+      !!(browserWindow.AudioContext || browserWindow.webkitAudioContext)
+    );
+  }, [hasApiKey, resolvedSpeechToTextUrl]);
+  const effectiveAgentId = useComputerAgentsMode ? selectedAgentId || agentId : agentId;
+  const effectiveEnvironmentId = useComputerAgentsMode ? selectedEnvironmentId || environmentId : environmentId;
+  const textareaAllowsPromptAfterStagedCommand = threadContextActionAllowsPrompt(stagedThreadContextCommand);
+
+  function focusComposerSoon() {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }
+
+  function applyHydratedThreadEnvironment(payload: RunnerThreadHydrationPayload) {
+    const nextEnvironmentId = payload.threadEnvironmentId ?? null;
+    const nextEnvironmentName = payload.threadEnvironmentName ?? payload.environmentName ?? null;
+    setActiveThreadEnvironmentId(nextEnvironmentId);
+    setActiveThreadEnvironmentName(nextEnvironmentName);
+    if (nextEnvironmentId) {
+      setSelectedEnvironmentId(nextEnvironmentId);
+    }
+  }
+
+  function buildSuggestedForkEnvironmentName() {
+    const baseName = sourceThreadEnvironmentName || selectedEnvironment?.name || displayedEnvironmentLabel || "Environment";
+    return `${baseName} Fork`;
+  }
+
+  function resetForkConfiguration() {
+    setPendingForkConfiguration(null);
+    setForkTarget("existing_environment");
+    setForkTargetEnvironmentId(sourceThreadEnvironmentId || selectedEnvironmentId || environmentId || "");
+    setForkNewEnvironmentName(buildSuggestedForkEnvironmentName());
+    setForkNewEnvironmentFileCopyMode("all");
+    setForkExistingEnvironmentFileCopyMode("none");
+    setShowForkEnvironmentPopup(false);
+    setForkDialogError(null);
+  }
+
+  async function fetchThreadContextEstimate(nextThreadId: string): Promise<RunnerChatThreadContext | null> {
+    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
+    const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(nextThreadId)}/context`, {
+      method: "GET",
+      headers,
+    });
+    const body = await response.text();
+    let parsed: { context?: RunnerChatThreadContext; message?: string; error?: string } = {};
+    try {
+      parsed = body ? JSON.parse(body) : {};
+    } catch {
+      parsed = {};
+    }
+
+    if (!response.ok) {
+      throw new Error(parsed.message || parsed.error || `Failed to load thread context (${response.status})`);
+    }
+
+    return parsed.context || null;
+  }
+
+  async function fetchThreadContextDetails(nextThreadId: string): Promise<{
+    context: RunnerChatThreadContextDetails | null;
+    availableActions: RunnerChatThreadContextAvailableActions;
+    nativeError: string | null;
+  }> {
+    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
+    const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(nextThreadId)}/context/details`, {
+      method: "GET",
+      headers,
+    });
+    const body = await response.text();
+    let parsed: {
+      context?: RunnerChatThreadContextDetails;
+      availableActions?: RunnerChatThreadContextAvailableActions;
+      nativeError?: string | null;
+      message?: string;
+      error?: string;
+    } = {};
+    try {
+      parsed = body ? JSON.parse(body) : {};
+    } catch {
+      parsed = {};
+    }
+
+    if (!response.ok) {
+      throw new Error(parsed.message || parsed.error || `Failed to load thread context details (${response.status})`);
+    }
+
+    return {
+      context: parsed.context || null,
+      availableActions: parsed.availableActions || DEFAULT_THREAD_CONTEXT_ACTIONS,
+      nativeError: parsed.nativeError || null,
+    };
+  }
+
+  function appendSyntheticActionTurn(
+    promptText: string,
+    responseText: string,
+    detailLabel: string,
+    options?: { presentation?: RunnerTurn["presentation"] }
+  ) {
+    const turnId = generateId("turn");
+    const now = Date.now();
+    const timestamp = new Date(now).toISOString();
+    setTurns((prev) => [
+      ...prev,
+      {
+        id: turnId,
+        prompt: promptText,
+        logs: [
+          {
+            time: timestamp,
+            message: detailLabel,
+            type: "info",
+            eventType: "setup",
+          },
+          {
+            time: timestamp,
+            message: responseText,
+            type: "success",
+            eventType: "agent_message",
+          },
+        ],
+        startedAtMs: now,
+        completedAtMs: now,
+        durationSeconds: 0,
+        status: "completed",
+        animateOnRender: true,
+        isInitialTurn: prev.length === 0,
+        agentName: selectedAgent?.name || displayedAgentLabel,
+        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+        presentation: options?.presentation || "default",
+      },
+    ]);
+    setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
+  }
+
+  function appendThreadContextActionNotice(action: RunnerChatThreadContextAction, message: string) {
+    const turnId = generateId("turn");
+    const now = Date.now();
+    const timestamp = new Date(now).toISOString();
+    setTurns((prev) => [
+      ...prev,
+      {
+        id: turnId,
+        prompt: "",
+        logs: [
+          {
+            time: timestamp,
+            message,
+            type: "info",
+            eventType: "action_summary",
+            metadata: {
+              actionType: action,
+            },
+          },
+        ],
+        startedAtMs: now,
+        completedAtMs: now,
+        durationSeconds: 0,
+        status: "completed",
+        animateOnRender: true,
+        isInitialTurn: prev.length === 0,
+        agentName: selectedAgent?.name || displayedAgentLabel,
+        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+        presentation: "context-action-notice",
+      },
+    ]);
+    return turnId;
+  }
+
+  function appendPendingThreadContextActionNotice(
+    action: RunnerChatThreadContextAction,
+    message: string,
+    options?: { prompt?: string }
+  ) {
+    const turnId = generateId("turn");
+    const now = Date.now();
+    const timestamp = new Date(now).toISOString();
+    setTurns((prev) => [
+      ...prev,
+      {
+        id: turnId,
+        prompt: options?.prompt || "",
+        logs: [
+          {
+            time: timestamp,
+            message,
+            type: "info",
+            eventType: "action_summary",
+            metadata: {
+              actionType: action,
+              isPending: true,
+            },
+          },
+        ],
+        startedAtMs: now,
+        status: "running",
+        animateOnRender: true,
+        isInitialTurn: prev.length === 0,
+        agentName: selectedAgent?.name || displayedAgentLabel,
+        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+        presentation: "context-action-notice",
+      },
+    ]);
+    return turnId;
+  }
+
+  function updateThreadContextActionNotice(
+    turnId: string,
+    message: string,
+    options?: { pending?: boolean; failed?: boolean }
+  ) {
+    const now = Date.now();
+    const timestamp = new Date(now).toISOString();
+    setTurns((prev) =>
+      prev.map((turn) => {
+        if (turn.id !== turnId) {
+          return turn;
+        }
+        const nextLogs = turn.logs.map((log, index) =>
+          index === 0 && log.eventType === "action_summary"
+            ? {
+                ...log,
+                time: timestamp,
+                message,
+                type: (options?.failed ? "error" : "info") as RunnerLog["type"],
+                metadata: {
+                  ...log.metadata,
+                  isPending: options?.pending ?? false,
+                  failed: options?.failed ?? false,
+                },
+              }
+            : log
+        );
+        return {
+          ...turn,
+          logs: nextLogs,
+          status: options?.failed ? "failed" : options?.pending ? "running" : "completed",
+          completedAtMs: options?.pending ? undefined : now,
+          durationSeconds: options?.pending ? undefined : getTurnDurationSeconds(turn),
+        };
+      })
+    );
+  }
+
+  async function refreshThreadContextDetails(nextThreadId?: string) {
+    const resolvedThreadId = nextThreadId || currentThreadId;
+    if (!resolvedThreadId || !hasApiKey || !normalizedBackendUrl) {
+      setThreadContextDetails(null);
+      setThreadContextDetailsError(null);
+      setThreadContextNativeError(null);
+      setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
+      return;
+    }
+
+    setIsThreadContextDetailsLoading(true);
+    setThreadContextDetailsError(null);
+    try {
+      const details = await fetchThreadContextDetails(resolvedThreadId);
+      setThreadContextDetails(details.context);
+      setThreadContext(details.context);
+      setThreadContextAvailableActions(details.availableActions);
+      setThreadContextNativeError(details.nativeError);
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setThreadContextDetails(null);
+      setThreadContextDetailsError(normalizedError.message || "Failed to load thread context details.");
+      setThreadContextNativeError(null);
+      setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
+    } finally {
+      setIsThreadContextDetailsLoading(false);
+    }
+  }
+
+  function refreshThreadContextDetailsInBackground(nextThreadId?: string) {
+    void refreshThreadContextDetails(nextThreadId).catch(() => undefined);
+  }
+
+  function handleContextIndicatorClick() {
+    onContextIndicatorClick?.(threadContext);
+    togglePopup("context");
+  }
+
+  function openContextPopup() {
+    onContextIndicatorClick?.(threadContext);
+    setActiveInputPopup("context");
+  }
+
+  function clearComposerDraft(options?: { preserveStagedCommand?: boolean; preserveQuotedSelection?: boolean }) {
+    setInput("");
+    if (!options?.preserveStagedCommand) {
+      setStagedThreadContextCommand(null);
+    }
+    if (!options?.preserveQuotedSelection) {
+      setComposerQuotedSelection(null);
+    }
+    currentInputRef.current = "";
+    speechBaseInputRef.current = "";
+    speechTranscriptRef.current = "";
+  }
+
+  function clearQuotedSelectionPopup() {
+    setQuotedSelectionPopup(null);
+  }
+
+  function clearComposerQuotedSelection() {
+    setComposerQuotedSelection(null);
+  }
+
+  function closeDocumentAttachmentPreview() {
+    setPreviewedDocumentAttachment(null);
+  }
+
+  function startDocumentPreviewResize(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const drawerWidth = event.currentTarget.parentElement?.getBoundingClientRect().width;
+    if (!drawerWidth) {
+      return;
+    }
+    documentPreviewResizeStateRef.current = {
+      startX: event.clientX,
+      startWidth: drawerWidth,
+    };
+    event.preventDefault();
+  }
+
+  function toggleDocumentAttachmentPreview(attachment: RunnerTurnAttachment) {
+    if (!isAttachmentDocumentPreviewable(attachment)) {
+      return;
+    }
+    setPreviewedDocumentAttachment((current) => (current?.id === attachment.id ? null : attachment));
+  }
+
+  function revokeAttachmentPreview(attachment: Pick<LocalAttachment, "previewUrl">) {
+    if (attachment.previewUrl) {
+      URL.revokeObjectURL(attachment.previewUrl);
+    }
+  }
+
+  function pruneWorkspaceAttachmentsForEnvironment(nextEnvironmentId: string) {
+    setAttachments((prev) => {
+      const removed: LocalAttachment[] = [];
+      const kept = prev.filter((attachment) => {
+        const shouldRemove =
+          attachment.source === "workspace" &&
+          Boolean(attachment.sourceEnvironmentId) &&
+          attachment.sourceEnvironmentId !== nextEnvironmentId;
+        if (shouldRemove) {
+          removed.push(attachment);
+        }
+        return !shouldRemove;
+      });
+      for (const attachment of removed) {
+        revokeAttachmentPreview(attachment);
+      }
+      return removed.length > 0 ? kept : prev;
+    });
+  }
+
+  function clearComposerAttachments(entries?: LocalAttachment[], options?: { revokePreviews?: boolean }) {
+    const attachmentsToClear = entries || attachments;
+    if (options?.revokePreviews !== false) {
+      for (const attachment of attachmentsToClear) {
+        revokeAttachmentPreview(attachment);
+      }
+    }
+    setAttachments([]);
+  }
+
+  function setComposerDraft(prompt: string) {
+    setStagedThreadContextCommand(null);
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageThreadContextCommand(action: RunnerChatThreadContextAction, prompt = "") {
+    setStagedBacklogSubtaskCommand(null);
+    setStagedThreadContextCommand(action);
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageBacklogSubtaskCommand(ticketNumber: string, prompt?: string) {
+    const normalizedTicketNumber = normalizeRunnerBacklogTicketNumber(ticketNumber);
+    if (!normalizedTicketNumber) {
+      return;
+    }
+    const nextPrompt = prompt === undefined ? currentInputRef.current : prompt;
+    setStagedThreadContextCommand(null);
+    setStagedBacklogSubtaskCommand({
+      ticketNumber: normalizedTicketNumber,
+      label: buildRunnerBacklogSubtaskLabel(normalizedTicketNumber),
+    });
+    setInput(nextPrompt);
+    currentInputRef.current = nextPrompt;
+    speechBaseInputRef.current = nextPrompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function handleQuotedSelectionMouseUp(event: MouseEvent<HTMLDivElement>) {
+    if (event.button !== 0) {
+      return;
+    }
+    const { clientX, clientY } = event;
+    window.requestAnimationFrame(() => {
+      const rootElement = rootRef.current;
+      const selection = window.getSelection();
+      if (!rootElement || !selection || selection.isCollapsed) {
+        setQuotedSelectionPopup(null);
+        return;
+      }
+      const anchorContainer = findQuotedSelectionContainer(selection.anchorNode, rootElement);
+      const focusContainer = findQuotedSelectionContainer(selection.focusNode, rootElement);
+      if (!anchorContainer || !focusContainer || anchorContainer !== focusContainer) {
+        setQuotedSelectionPopup(null);
+        return;
+      }
+      const text = sanitizeQuotedSelectionText(selection.toString());
+      if (!text) {
+        setQuotedSelectionPopup(null);
+        return;
+      }
+      const popupX = Math.min(Math.max(clientX - 36, 12), window.innerWidth - 184);
+      const popupY = Math.max(clientY - 64, 12);
+      setQuotedSelectionPopup({
+        selection: {
+          text,
+          sourceType: getQuotedSelectionSourceType(anchorContainer),
+        },
+        x: popupX,
+        y: popupY,
+      });
+    });
+  }
+
+  function handleAddQuotedSelectionToComposer() {
+    if (!quotedSelectionPopup) {
+      return;
+    }
+    setComposerQuotedSelection(quotedSelectionPopup.selection);
+    setQuotedSelectionPopup(null);
+    window.getSelection()?.removeAllRanges();
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }
+
+  function updateTurn(turnId: string, updater: (turn: RunnerTurn) => RunnerTurn) {
+    setTurns((prev) => prev.map((turn) => (turn.id === turnId ? updater(turn) : turn)));
+  }
+
+  function appendTurnLog(turnId: string, log: RunnerLog) {
+    updateTurn(turnId, (turn) => ({
+      ...turn,
+      logs: [...turn.logs, log],
+    }));
+  }
+
+  function upsertTurnAgentMessage(turnId: string, message: string) {
+    updateTurn(turnId, (turn) => {
+      const nextLogs = [...turn.logs];
+      const existingIndex = nextLogs.findIndex((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+      const nextLog: RunnerLog = {
+        time: new Date().toISOString(),
+        message,
+        type: "info",
+        eventType: "agent_message",
+      };
+      if (existingIndex === -1) {
+        nextLogs.push(nextLog);
+      } else {
+        nextLogs[existingIndex] = nextLog;
+      }
+      return {
+        ...turn,
+        logs: nextLogs,
+      };
+    });
+  }
+
+  function isEditableUserTurn(turn: RunnerTurn) {
+    return (
+      turn.presentation !== "btw" &&
+      turn.presentation !== "context-action-notice" &&
+      (turn.sourceMessageId?.startsWith("msg_") || turn.id.startsWith("msg_")) &&
+      turn.prompt.trim().length > 0 &&
+      !hasRunningTurn &&
+      !isPreparingRun &&
+      !forkingTurnId
+    );
+  }
+
+  function isActionableUserTurn(turn: RunnerTurn) {
+    return (
+      turn.presentation !== "btw" &&
+      turn.presentation !== "context-action-notice" &&
+      turn.prompt.trim().length > 0
+    );
+  }
+
+  function startEditingTurn(turn: RunnerTurn) {
+    setEditingTurnId(turn.id);
+    setEditingTurnDraft(stripSystemTags(turn.prompt));
+  }
+
+  function cancelEditingTurn() {
+    setEditingTurnId(null);
+    setEditingTurnDraft("");
+    setPendingEditConfirmation(null);
+  }
+
+  function turnHasFileChanges(turn: RunnerTurn) {
+    return turn.logs.some((log) => log.eventType === "file_change");
+  }
+
+  async function resolveEditableTurnBoundary(turnId: string): Promise<{ messageId: string; truncateAtMessageIndex: number }> {
+    const targetTurn = turnsRef.current.find((turn) => turn.id === turnId);
+    if (!targetTurn) {
+      throw new Error("Message not found.");
+    }
+
+    const fallbackMessageId =
+      typeof targetTurn.sourceMessageId === "string" && targetTurn.sourceMessageId.trim().startsWith("msg_")
+        ? targetTurn.sourceMessageId.trim()
+        : turnId.startsWith("msg_")
+          ? turnId
+          : "";
+
+    if (!currentThreadId || !hasApiKey) {
+      if (fallbackMessageId) {
+        return {
+          messageId: fallbackMessageId,
+          truncateAtMessageIndex: 0,
+        };
+      }
+      throw new Error("Message not found.");
+    }
+
+    const messages = await fetchAllThreadMessages({
+      backendUrl: normalizedBackendUrl,
+      apiKey: apiKey.trim(),
+      threadId: currentThreadId,
+      requestHeaders,
+    });
+
+    const canonicalUserMessages = messages.filter(
+      (message) =>
+        message.role === "user" &&
+        typeof message.id === "string" &&
+        message.id.trim().startsWith("msg_") &&
+        typeof message.content === "string" &&
+        !isBtwTurnPrompt(message.content) &&
+        !isThreadContextCommandPrompt(message.content)
+    );
+
+    if (fallbackMessageId && canonicalUserMessages.some((message) => message.id === fallbackMessageId)) {
+      const matchedIndex = messages.findIndex((message) => message.id === fallbackMessageId);
+      return {
+        messageId: fallbackMessageId,
+        truncateAtMessageIndex: matchedIndex === -1 ? 0 : matchedIndex,
+      };
+    }
+
+    const editableConversationTurns = turnsRef.current.filter(
+      (turn) =>
+        turn.presentation !== "btw" &&
+        turn.presentation !== "context-action-notice" &&
+        turn.prompt.trim().length > 0
+    );
+    const editableTurnIndex = editableConversationTurns.findIndex((turn) => turn.id === turnId);
+    if (editableTurnIndex !== -1 && editableTurnIndex < canonicalUserMessages.length) {
+      const matchedMessageId = canonicalUserMessages[editableTurnIndex]!.id!;
+      const matchedIndex = messages.findIndex((message) => message.id === matchedMessageId);
+      return {
+        messageId: matchedMessageId,
+        truncateAtMessageIndex: matchedIndex === -1 ? 0 : matchedIndex,
+      };
+    }
+
+    const promptMatch = canonicalUserMessages.find((message) => message.content.trim() === targetTurn.prompt.trim());
+    if (promptMatch?.id) {
+      const matchedIndex = messages.findIndex((message) => message.id === promptMatch.id);
+      return {
+        messageId: promptMatch.id,
+        truncateAtMessageIndex: matchedIndex === -1 ? 0 : matchedIndex,
+      };
+    }
+
+    if (canonicalUserMessages.length === 1 && canonicalUserMessages[0]?.id) {
+      const matchedIndex = messages.findIndex((message) => message.id === canonicalUserMessages[0]!.id);
+      return {
+        messageId: canonicalUserMessages[0].id!,
+        truncateAtMessageIndex: matchedIndex === -1 ? 0 : matchedIndex,
+      };
+    }
+
+    if (fallbackMessageId) {
+      return {
+        messageId: fallbackMessageId,
+        truncateAtMessageIndex: 0,
+      };
+    }
+
+    throw new Error("Message not found.");
+  }
+
+  async function submitEditedTurn(turnId: string, nextPrompt: string, persistFileChanges?: boolean) {
+    const normalizedPrompt = nextPrompt.trim();
+    if (!normalizedPrompt) {
+      return;
+    }
+
+    const resolvedThreadId = currentThreadId;
+
+    const turnIndex = turnsRef.current.findIndex((turn) => turn.id === turnId);
+    if (turnIndex === -1) {
+      setInlineError("Message not found.");
+      return;
+    }
+
+    let editBoundary: { messageId: string; truncateAtMessageIndex: number };
+    try {
+      editBoundary = await resolveEditableTurnBoundary(turnId);
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setInlineError(normalizedError.message || "Message not found.");
+      return;
+    }
+
+    const nextTurns = turnsRef.current
+      .slice(0, turnIndex + 1)
+      .map((turn, index) =>
+        turn.id === turnId
+          ? {
+              ...turn,
+              prompt: normalizedPrompt,
+              logs: [],
+              startedAtMs: Date.now(),
+              completedAtMs: undefined,
+              durationSeconds: null,
+              status: "running" as RunnerTurnStatus,
+              animateOnRender: false,
+              sourceMessageId: editBoundary.messageId,
+              isInitialTurn: index === 0,
+            }
+          : {
+              ...turn,
+              isInitialTurn: index === 0,
+            }
+      );
+
+    setTurns(nextTurns);
+    setPendingQueuedMessages([]);
+    isDrainingQueuedRunsRef.current = false;
+    setExpandedTurns((prev) => ({
+      ...prev,
+      [turnId]: true,
+    }));
+    setEditingTurnId(null);
+    setEditingTurnDraft("");
+    setPendingEditConfirmation(null);
+    setInlineError(null);
+      setIsPreparingRun(true);
+      closeAllInputPopups();
+
+    try {
+      const quotedSelection = turnsRef.current[turnIndex]?.quotedSelection;
+      const execution = await executeThreadRun(normalizedPrompt, [], {
+        turnId,
+        truncateAtMessageIndex: editBoundary.truncateAtMessageIndex,
+        persistFileChanges,
+        quotedSelection,
+      });
+      const executionThreadId = execution.threadId || resolvedThreadId;
+      if (executionThreadId && hasApiKey) {
+        const payload = await fetchThreadHydrationPayload({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          threadId: executionThreadId,
+          requestHeaders,
+        });
+        applyHydratedThreadEnvironment(payload);
+        const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
+          agentName: displayedAgentLabel,
+          environmentName: payload.threadEnvironmentName ?? payload.environmentName ?? displayedEnvironmentLabel,
+          backendUrl: normalizedBackendUrl,
+        });
+        setTurns(hydratedTurns);
+        setExpandedTurns((previousExpandedTurns) =>
+          mapExpandedTurns(previousExpandedTurns, nextTurns, hydratedTurns, { defaultLatestExpanded: true })
+        );
+      }
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setInlineError(normalizedError.message || "Failed to resend edited message.");
+      if (resolvedThreadId && hasApiKey) {
+        void fetchThreadHydrationPayload({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          threadId: resolvedThreadId,
+          requestHeaders,
+        })
+          .then((payload) => {
+            applyHydratedThreadEnvironment(payload);
+            return buildHydratedTurnsFromPayload(payload, {
+              agentName: displayedAgentLabel,
+              environmentName: payload.threadEnvironmentName ?? payload.environmentName ?? displayedEnvironmentLabel,
+              backendUrl: normalizedBackendUrl,
+            });
+          })
+          .then((hydratedTurns) => {
+            setTurns(hydratedTurns);
+            setExpandedTurns((previousExpandedTurns) =>
+              mapExpandedTurns(previousExpandedTurns, turnsRef.current, hydratedTurns, { defaultLatestExpanded: true })
+            );
+          })
+          .catch(() => {
+            updateTurn(turnId, (turn) => ({
+              ...turn,
+              prompt: normalizedPrompt,
+              status: "failed",
+              completedAtMs: Date.now(),
+              durationSeconds: getTurnDurationSeconds(turn),
+            }));
+          });
+      } else {
+        updateTurn(turnId, (turn) => ({
+          ...turn,
+          prompt: normalizedPrompt,
+          status: "failed",
+          completedAtMs: Date.now(),
+          durationSeconds: getTurnDurationSeconds(turn),
+        }));
+      }
+    } finally {
+      setIsPreparingRun(false);
+    }
+  }
+
+  function openForkDialogForTurn(turn: RunnerTurn) {
+    if (!currentThreadId) {
+      setInlineError("Forking requires a saved thread.");
+      return;
+    }
+    if (!normalizedBackendUrl) {
+      setInlineError("backendUrl is required.");
+      return;
+    }
+    if (!hasApiKey) {
+      setInlineError("apiKey is required.");
+      return;
+    }
+
+    setInlineError(null);
+    setPendingEditConfirmation(null);
+    closeAllInputPopups();
+
+    setPendingForkConfiguration({
+      source: "message",
+      sourceThreadId: currentThreadId,
+      stagedPrompt: turn.prompt,
+      quotedSelection: turn.quotedSelection || null,
+      turn,
+    });
+    setForkTarget("existing_environment");
+    setForkTargetEnvironmentId(sourceThreadEnvironmentId || selectedEnvironmentId || environmentId || "");
+    setForkNewEnvironmentName(buildSuggestedForkEnvironmentName());
+    setForkNewEnvironmentFileCopyMode("all");
+    setForkExistingEnvironmentFileCopyMode("none");
+    setShowForkEnvironmentPopup(false);
+    setForkDialogError(null);
+  }
+
+  function openForkDialogForCurrentThread(
+    prompt: string,
+    options?: {
+      includeCurrentAttachments?: boolean;
+      preselectedTargetEnvironmentId?: string | null;
+      restoreSelectedEnvironmentId?: string | null;
+      initialExistingEnvironmentFileCopyMode?: RunnerForkExistingEnvironmentFileCopyMode;
+    }
+  ) {
+    if (!currentThreadId) {
+      setInlineError("Forking requires a saved thread.");
+      return;
+    }
+    if (!normalizedBackendUrl) {
+      setInlineError("backendUrl is required.");
+      return;
+    }
+    if (!hasApiKey) {
+      setInlineError("apiKey is required.");
+      return;
+    }
+
+    setInlineError(null);
+    setPendingEditConfirmation(null);
+    closeAllInputPopups();
+
+    setPendingForkConfiguration({
+      source: "thread",
+      sourceThreadId: currentThreadId,
+      stagedPrompt: prompt,
+      attachments: options?.includeCurrentAttachments === false ? [] : attachments.slice(),
+      quotedSelection: composerQuotedSelection,
+      restoreSelectedEnvironmentId: options?.restoreSelectedEnvironmentId ?? null,
+    });
+    setForkTarget("existing_environment");
+    setForkTargetEnvironmentId(
+      options?.preselectedTargetEnvironmentId || sourceThreadEnvironmentId || selectedEnvironmentId || environmentId || ""
+    );
+    setForkNewEnvironmentName(buildSuggestedForkEnvironmentName());
+    setForkNewEnvironmentFileCopyMode("all");
+    setForkExistingEnvironmentFileCopyMode(options?.initialExistingEnvironmentFileCopyMode || "none");
+    setShowForkEnvironmentPopup(false);
+    setForkDialogError(null);
+  }
+
+  function cancelPendingForkConfiguration() {
+    const restoreSelectedEnvironmentId = pendingForkConfiguration?.restoreSelectedEnvironmentId;
+    resetForkConfiguration();
+    if (typeof restoreSelectedEnvironmentId === "string") {
+      setSelectedEnvironmentId(restoreSelectedEnvironmentId);
+    }
+  }
+
+  async function switchToForkedThread(params: {
+    nextThreadId: string;
+    nextEnvironmentId: string | null;
+    nextEnvironmentName: string | null;
+    composerDraft?: string;
+    composerQuotedSelection?: RunnerQuotedSelection | null;
+    autoRunPrompt?: string;
+    autoRunAttachments?: LocalAttachment[];
+    autoRunQuotedSelection?: RunnerQuotedSelection | null;
+  }) {
+    clear();
+    setTurns([]);
+    setExpandedTurns({});
+    setExpandedStepRows({});
+    setPendingQueuedMessages([]);
+    isDrainingQueuedRunsRef.current = false;
+    setEditingTurnId(null);
+    setEditingTurnDraft("");
+    setPendingEditConfirmation(null);
+    clearComposerAttachments(params.autoRunAttachments);
+    setThreadContext(null);
+    setThreadContextDetails(null);
+    setThreadContextDetailsError(null);
+    setThreadContextNativeError(null);
+    setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
+    setActiveThreadEnvironmentId(params.nextEnvironmentId || null);
+    setActiveThreadEnvironmentName(params.nextEnvironmentName || null);
+    if (params.nextEnvironmentId) {
+      setSelectedEnvironmentId(params.nextEnvironmentId);
+      onEnvironmentChange?.(params.nextEnvironmentId);
+    }
+    setLocalThreadId(params.nextThreadId);
+    onThreadIdChange?.(params.nextThreadId);
+
+    if (typeof params.composerDraft === "string") {
+      setComposerDraft(params.composerDraft);
+      setComposerQuotedSelection(params.composerQuotedSelection || null);
+    } else {
+      clearComposerDraft();
+    }
+
+    try {
+      try {
+        const payload = await fetchThreadHydrationPayload({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          threadId: params.nextThreadId,
+          requestHeaders,
+        });
+        applyHydratedThreadEnvironment(payload);
+        const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
+          agentName: displayedAgentLabel,
+          environmentName: payload.threadEnvironmentName ?? payload.environmentName ?? displayedEnvironmentLabel,
+          backendUrl: normalizedBackendUrl,
+        });
+        setTurns(hydratedTurns);
+        setExpandedTurns(mapExpandedTurns({}, [], hydratedTurns));
+      } catch {
+        setActiveThreadEnvironmentName(params.nextEnvironmentName || null);
+        const hydratedTurns = await fetchAllThreadMessages({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          threadId: params.nextThreadId,
+          requestHeaders,
+        }).then((messages) =>
+          buildHydratedTurnsFromMessages(messages, {
+            agentName: displayedAgentLabel,
+            environmentName: params.nextEnvironmentName,
+            backendUrl: normalizedBackendUrl,
+          })
+        );
+        setTurns(hydratedTurns);
+        setExpandedTurns(mapExpandedTurns({}, [], hydratedTurns));
+      }
+
+      if (params.autoRunPrompt?.trim()) {
+        await executeThreadRun(params.autoRunPrompt.trim(), params.autoRunAttachments || [], {
+          threadIdOverride: params.nextThreadId,
+          quotedSelection: params.autoRunQuotedSelection || null,
+          environmentIdOverride: params.nextEnvironmentId,
+        });
+      } else {
+        refreshThreadContextDetailsInBackground(params.nextThreadId);
+        window.requestAnimationFrame(() => {
+          textareaRef.current?.focus();
+        });
+      }
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setInlineError(normalizedError.message || "Failed to load forked thread.");
+    }
+  }
+
+  async function confirmForkFromPendingConfiguration() {
+    const pendingFork = pendingForkConfiguration;
+    if (!pendingFork) {
+      return;
+    }
+    if (!pendingFork.sourceThreadId) {
+      setForkDialogError("Forking requires a saved thread.");
+      return;
+    }
+    if (!normalizedBackendUrl) {
+      setForkDialogError("backendUrl is required.");
+      return;
+    }
+    if (!hasApiKey) {
+      setForkDialogError("apiKey is required.");
+      return;
+    }
+
+    const requestTarget = forkTarget;
+    const requestTargetEnvironmentId =
+      requestTarget === "existing_environment"
+        ? (forkTargetEnvironmentId || sourceThreadEnvironmentId || selectedEnvironmentId || environmentId || "")
+        : "";
+    const requestEnvironmentName =
+      requestTarget === "new_forked_environment"
+        ? (forkNewEnvironmentName.trim() || buildSuggestedForkEnvironmentName())
+        : "";
+    const selectedForkEnvironment =
+      availableEnvironments.find((environment) => environment.id === requestTargetEnvironmentId) || null;
+    const shouldShowExistingEnvironmentCopyOptions =
+      requestTarget === "existing_environment" &&
+      Boolean(requestTargetEnvironmentId) &&
+      Boolean(sourceThreadEnvironmentId) &&
+      requestTargetEnvironmentId !== sourceThreadEnvironmentId;
+    const requestFileCopyMode =
+      requestTarget === "new_forked_environment"
+        ? forkNewEnvironmentFileCopyMode
+        : shouldShowExistingEnvironmentCopyOptions
+          ? forkExistingEnvironmentFileCopyMode
+          : undefined;
+    const fallbackForkEnvironmentName =
+      requestTarget === "existing_environment"
+        ? (selectedForkEnvironment?.name || sourceThreadEnvironmentName || displayedEnvironmentLabel)
+        : requestEnvironmentName;
+
+    if (requestTarget === "existing_environment" && !requestTargetEnvironmentId) {
+      setForkDialogError("Select an environment for the forked thread.");
+      return;
+    }
+    if (requestTarget === "new_forked_environment" && !requestEnvironmentName.trim()) {
+      setForkDialogError("Enter a name for the new forked environment.");
+      return;
+    }
+
+    setForkDialogError(null);
+    setForkingTurnId(pendingFork.turn?.id || "thread-fork");
+
+    let forkResult: Awaited<ReturnType<typeof forkThreadRequest>> | null = null;
+    try {
+      await stopSpeechToText().catch(() => undefined);
+      const truncateAtMessageIndex =
+        pendingFork.source === "message" && pendingFork.turn
+          ? (await resolveEditableTurnBoundary(pendingFork.turn.id)).truncateAtMessageIndex
+          : undefined;
+      forkResult = await forkThreadRequest({
+        backendUrl: normalizedBackendUrl,
+        apiKey: apiKey.trim(),
+        threadId: pendingFork.sourceThreadId,
+        truncateAtMessageIndex,
+        environmentTarget: requestTarget,
+        environmentName: requestTarget === "new_forked_environment" ? requestEnvironmentName : undefined,
+        targetEnvironmentId: requestTarget === "existing_environment" ? requestTargetEnvironmentId : undefined,
+        fileCopyMode: requestFileCopyMode,
+        requestHeaders,
+      });
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setForkDialogError(normalizedError.message || "Failed to fork thread.");
+      setForkingTurnId(null);
+      return;
+    }
+
+    const nextThreadId = forkResult.thread.id;
+    resetForkConfiguration();
+    const nextEnvironmentId =
+      forkResult.environmentId ??
+      (requestTarget === "existing_environment" ? requestTargetEnvironmentId : sourceThreadEnvironmentId ?? null);
+    const nextEnvironmentName = forkResult.environmentName ?? fallbackForkEnvironmentName;
+    const autoRunPrompt = pendingFork.source === "thread" ? pendingFork.stagedPrompt.trim() : "";
+    const autoRunAttachments = pendingFork.source === "thread" ? pendingFork.attachments || [] : [];
+    const pendingForkQuotedSelection = pendingFork.quotedSelection || null;
+
+    try {
+      await switchToForkedThread({
+        nextThreadId,
+        nextEnvironmentId,
+        nextEnvironmentName,
+        composerDraft: pendingFork.source === "message" ? pendingFork.stagedPrompt : undefined,
+        composerQuotedSelection: pendingFork.source === "message" ? pendingForkQuotedSelection : null,
+        autoRunPrompt: pendingFork.source === "thread" ? autoRunPrompt : undefined,
+        autoRunAttachments,
+        autoRunQuotedSelection: pendingFork.source === "thread" ? pendingForkQuotedSelection : null,
+      });
+    } finally {
+      setForkingTurnId(null);
+    }
+  }
+
+  function handleEditedTurnSend(turnId: string) {
+    const normalizedPrompt = editingTurnDraft.trim();
+    if (!normalizedPrompt) {
+      return;
+    }
+
+    const turnIndex = turnsRef.current.findIndex((turn) => turn.id === turnId);
+    if (turnIndex === -1) {
+      return;
+    }
+
+    const affectedTurns = turnsRef.current.slice(turnIndex);
+    const changedFiles = affectedTurns.flatMap((turn) => collectTurnChangedFiles(turn.logs));
+    const changedFileMap = new Map<string, {
+      path: string;
+      kind: "created" | "modified" | "deleted";
+      additions?: number;
+      deletions?: number;
+    }>();
+    for (const file of changedFiles) {
+      changedFileMap.set(file.path, file);
+    }
+
+    if (changedFileMap.size > 0) {
+      setPendingEditConfirmation({
+        turnId,
+        nextPrompt: normalizedPrompt,
+        changedFiles: Array.from(changedFileMap.values()),
+      });
+      return;
+    }
+
+    void submitEditedTurn(turnId, normalizedPrompt);
+  }
+
+  function handleEditedTurnKeyDown(event: KeyboardEvent<HTMLTextAreaElement>, turnId: string) {
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      event.preventDefault();
+      handleEditedTurnSend(turnId);
+    }
+  }
+
+  async function streamBtwSideQuestion(prompt: string, commandText: string) {
+    if (!normalizedBackendUrl) {
+      throw new Error("backendUrl is required.");
+    }
+    if (!apiKey) {
+      throw new Error("apiKey is required.");
+    }
+    const resolvedThreadId = currentThreadId;
+    if (!resolvedThreadId) {
+      throw new Error("Start a conversation first before using /btw.");
+    }
+
+    const turnId = generateId("turn");
+    const now = Date.now();
+    setTurns((prev) => [
+      ...prev,
+      {
+        id: turnId,
+        prompt: commandText,
+        logs: [],
+        startedAtMs: now,
+        status: "running",
+        animateOnRender: true,
+        isInitialTurn: prev.length === 0,
+        agentName: selectedAgent?.name || displayedAgentLabel,
+        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+        presentation: "btw",
+      },
+    ]);
+
+    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
+    headers.set("Content-Type", "application/json");
+    const hiddenSystemPromptText = hiddenSystemPrompt.trim();
+    const executionPrompt =
+      hiddenSystemPromptText && prompt
+        ? `${hiddenSystemPromptText}\n\n${prompt}`
+        : hiddenSystemPromptText || prompt;
+
+    try {
+      const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(resolvedThreadId)}/context/actions/btw/stream`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ prompt: executionPrompt }),
+      });
+
+      if (!response.ok) {
+        const bodyText = await response.text().catch(() => "");
+        throw new Error(bodyText || `Failed to execute /btw (${response.status})`);
+      }
+      if (!response.body) {
+        throw new Error("BTW stream response has no body");
+      }
+
+      let fullText = "";
+      for await (const data of iterateSseData(response.body)) {
+        if (!data || data === "[DONE]") continue;
+        let event: Record<string, unknown> | null = null;
+        try {
+          event = JSON.parse(data) as Record<string, unknown>;
+        } catch {
+          event = null;
+        }
+        if (!event) continue;
+        if (event.type === "btw.delta" && typeof event.text === "string") {
+          fullText = event.text;
+          upsertTurnAgentMessage(turnId, fullText);
+          continue;
+        }
+        if (event.type === "btw.completed" && typeof event.message === "string") {
+          fullText = event.message;
+          upsertTurnAgentMessage(turnId, fullText);
+        }
+        if (event.type === "stream.error") {
+          const errorMessage =
+            typeof event.error === "object" && event.error && typeof (event.error as { message?: unknown }).message === "string"
+              ? ((event.error as { message: string }).message || "Failed to execute /btw.")
+              : "Failed to execute /btw.";
+          throw new Error(errorMessage);
+        }
+      }
+
+      updateTurn(turnId, (turn) => ({
+        ...turn,
+        status: "completed",
+        completedAtMs: Date.now(),
+        durationSeconds: getTurnDurationSeconds(turn),
+      }));
+      refreshThreadContextDetailsInBackground(resolvedThreadId);
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      updateTurn(turnId, (turn) => ({
+        ...turn,
+        status: "failed",
+        completedAtMs: Date.now(),
+        durationSeconds: getTurnDurationSeconds(turn),
+        logs: turn.logs.length > 0
+          ? turn.logs
+          : [
+              {
+                time: new Date().toISOString(),
+                message: normalizedError.message || "Failed to execute /btw.",
+                type: "error",
+                eventType: "agent_message",
+              },
+            ],
+      }));
+      throw normalizedError;
+    }
+  }
+
+  function buildSelectedGithubRepoReference(attachmentEntries: LocalAttachment[]): {
+    repoFullName: string;
+    repoName: string;
+    branch: string;
+  } | null {
+    const githubAttachments = attachmentEntries.filter((entry) => entry.integrationSource === "github" && entry.githubRepoFullName);
+    if (githubAttachments.length > 0) {
+      const repoFullNames = Array.from(
+        new Set(githubAttachments.map((entry) => String(entry.githubRepoFullName || "").trim()).filter(Boolean))
+      );
+      if (repoFullNames.length === 1) {
+        const repoFullName = repoFullNames[0];
+        const branch =
+          githubAttachments.map((entry) => String(entry.githubRef || "").trim()).find(Boolean)
+          || githubContexts.find((context) => context.id === selectedGithubContextId)?.name
+          || selectedGithubContextId;
+        if (branch) {
+          return {
+            repoFullName,
+            repoName: repoFullName.split("/").pop() || repoFullName,
+            branch,
+          };
+        }
+      }
+    }
+
+    const selectedRepository = githubRepositories.find((repository) => repository.id === selectedGithubRepositoryId);
+    if (!selectedRepository) {
+      return null;
+    }
+    const branch = githubContexts.find((context) => context.id === selectedGithubContextId)?.name || selectedGithubContextId;
+    if (!branch) {
+      return null;
+    }
+    return {
+      repoFullName: selectedRepository.id,
+      repoName: selectedRepository.name || selectedRepository.id,
+      branch,
+    };
+  }
+
+  async function executeThreadRun(
+    taskText: string,
+    attachmentEntries: LocalAttachment[],
+    options?: {
+      turnId?: string;
+      threadIdOverride?: string;
+      truncateAtMessageIndex?: number;
+      persistFileChanges?: boolean;
+      quotedSelection?: RunnerQuotedSelection | null;
+      environmentIdOverride?: string | null;
+      backlogSubtaskCommand?: StagedBacklogSubtaskCommand | null;
+    }
+  ) {
+    const hiddenSystemPromptText = hiddenSystemPrompt.trim();
+    const executionTaskText =
+      hiddenSystemPromptText && taskText
+        ? `${hiddenSystemPromptText}\n\n${taskText}`
+        : hiddenSystemPromptText || taskText;
+    const hasResolvedThread = Boolean(options?.threadIdOverride || currentThreadId);
+    const runEnvironmentId =
+      options?.environmentIdOverride !== undefined
+        ? options.environmentIdOverride
+        : hasResolvedThread
+          ? activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
+          : effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
+    const threadId = options?.threadIdOverride || (await ensureThread(taskText));
+    const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
+    const githubRepo = buildSelectedGithubRepoReference(attachmentEntries);
+    const turnAttachments = buildTurnAttachmentsForExecution(attachmentEntries, resolvedAttachments, normalizedBackendUrl);
+    const turnId = options?.turnId || generateId("turn");
+    const startedAtMs = Date.now();
+    let releasedPreparationState = false;
+    const releasePreparationState = () => {
+      if (releasedPreparationState) {
+        return;
+      }
+      releasedPreparationState = true;
+      setIsPreparingRun(false);
+    };
+
+    if (options?.turnId) {
+      updateTurn(turnId, (turn) => ({
+        ...turn,
+        logs: [],
+        startedAtMs,
+        completedAtMs: undefined,
+        durationSeconds: null,
+        status: "running",
+        quotedSelection: options?.quotedSelection === undefined ? turn.quotedSelection : options.quotedSelection,
+        attachments: pickTurnAttachments(turnAttachments, turn.attachments),
+      }));
+    } else {
+      setTurns((prev) => [
+        ...prev,
+        {
+          id: turnId,
+          prompt: taskText,
+          logs: [],
+          startedAtMs,
+          status: "running",
+          animateOnRender: true,
+          isInitialTurn: prev.length === 0,
+          agentName: selectedAgent?.name || displayedAgentLabel,
+          environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+          quotedSelection: options?.quotedSelection || null,
+          attachments: turnAttachments,
+        },
+      ]);
+      setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
+    }
+
+    onRunStart?.(threadId);
+    try {
+      const executionResult = await execute({
+        run: {
+          url: `${normalizedBackendUrl}/threads/${encodeURIComponent(threadId)}/messages`,
+          headers: (() => {
+            const headers = new Headers(requestHeaders || {});
+            headers.set("Content-Type", "application/json");
+            headers.set("X-API-Key", apiKey);
+            return headers;
+          })(),
+          body: {
+            content: executionTaskText,
+            ...(resolvedAttachments ? { attachments: resolvedAttachments } : {}),
+            ...(githubRepo ? { githubRepo } : {}),
+            ...(typeof options?.truncateAtMessageIndex === "number" ? { truncateAtMessageIndex: options.truncateAtMessageIndex } : {}),
+            ...(typeof options?.persistFileChanges === "boolean" ? { persistFileChanges: options.persistFileChanges } : {}),
+            ...(options?.quotedSelection ? { quotedSelection: options.quotedSelection } : {}),
+            ...(enabledSkillsPayload ? { enabledSkills: enabledSkillsPayload } : {}),
+            ...(options?.backlogSubtaskCommand
+              ? {
+                  backlogTaskCommand: {
+                    action: "subtask",
+                    parentTicketNumber: options.backlogSubtaskCommand.ticketNumber,
+                  },
+                }
+              : {}),
+          },
+        },
+        onLog: (log) => {
+          releasePreparationState();
+          appendTurnLog(turnId, log);
+        },
+      });
+
+      releasePreparationState();
+      updateTurn(turnId, (turn) => ({
+        ...turn,
+        status: executionResult.cancelled ? "cancelled" : "completed",
+        completedAtMs: Date.now(),
+        durationSeconds: executionResult.durationSeconds,
+      }));
+      setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
+
+      refreshThreadContextDetailsInBackground(threadId);
+      onRunFinish?.(executionResult, threadId);
+      return { threadId, executionResult, turnId };
+    } catch (error) {
+      releasePreparationState();
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      updateTurn(turnId, (turn) => ({
+        ...turn,
+        status: normalizedError.name === "AbortError" ? "cancelled" : "failed",
+        completedAtMs: Date.now(),
+        durationSeconds: getTurnDurationSeconds(turn),
+      }));
+      throw normalizedError;
+    } finally {
+      releasePreparationState();
+    }
+  }
+
+  async function executeThreadContextAction(
+    action: RunnerChatThreadContextAction,
+    options?: { prompt?: string; commandText?: string }
+  ) {
+    const resolvedThreadId = currentThreadId;
+    if (!normalizedBackendUrl) {
+      throw new Error("backendUrl is required.");
+    }
+    if (!apiKey) {
+      throw new Error("apiKey is required.");
+    }
+    if (!resolvedThreadId) {
+      throw new Error("Start a conversation first before using this context action.");
+    }
+
+    setThreadContextActionLoading(action);
+    setThreadContextDetailsError(null);
+    let pendingNoticeTurnId: string | null = null;
+
+    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
+    headers.set("Content-Type", "application/json");
+
+    try {
+      if (action === "compact") {
+        pendingNoticeTurnId = appendPendingThreadContextActionNotice("compact", "Compacting context", {
+          prompt: options?.commandText || formatThreadContextCommandText("compact", options?.prompt),
+        });
+      }
+
+      const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(resolvedThreadId)}/context/actions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          action,
+          ...(options?.prompt ? { prompt: options.prompt } : {}),
+        }),
+      });
+      const body = await response.text();
+      let parsed: {
+        action?: {
+          type?: RunnerChatThreadContextAction;
+          message?: string;
+          responseText?: string;
+          sessionId?: string | null;
+          thread?: { id: string; title?: string };
+        };
+        message?: string;
+        error?: string;
+      } = {};
+      try {
+        parsed = body ? JSON.parse(body) : {};
+      } catch {
+        parsed = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(parsed.message || parsed.error || `Failed to execute ${action} (${response.status})`);
+      }
+
+      const actionPayload = parsed.action || {};
+      const commandText = options?.commandText || `/${action}`;
+      const responseText = actionPayload.responseText || actionPayload.message || `Completed /${action}.`;
+
+      if (action === "fork") {
+        const nextThreadId = actionPayload.thread?.id;
+        if (!nextThreadId) {
+          throw new Error("Fork completed without returning a new thread.");
+        }
+        setLocalThreadId(nextThreadId);
+        onThreadIdChange?.(nextThreadId);
+        appendThreadContextActionNotice("fork", "Forked into a new conversation");
+        refreshThreadContextDetailsInBackground(nextThreadId);
+        return;
+      }
+
+      if (action === "clear") {
+        setThreadContext(null);
+        setThreadContextDetails(null);
+        appendThreadContextActionNotice("clear", "Context was cleared");
+      } else if (action === "compact") {
+        if (pendingNoticeTurnId) {
+          updateThreadContextActionNotice(pendingNoticeTurnId, "Context was compacted");
+        } else {
+          appendThreadContextActionNotice("compact", "Context was compacted");
+        }
+      } else if (action === "btw") {
+        appendSyntheticActionTurn(commandText, responseText, "Asked side question", {
+          presentation: "btw",
+        });
+      }
+
+      refreshThreadContextDetailsInBackground(resolvedThreadId);
+    } catch (error) {
+      if (action === "compact" && pendingNoticeTurnId) {
+        updateThreadContextActionNotice(pendingNoticeTurnId, "Failed to compact context", { failed: true });
+      }
+      throw error;
+    } finally {
+      setThreadContextActionLoading(null);
+    }
+  }
+
+  useEffect(() => {
+    mountRunnerChatStyles();
+  }, []);
+
+  useEffect(() => {
+    turnsRef.current = turns;
+  }, [turns]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+    const className = "tb-runner-document-preview-active";
+    document.body.classList.toggle(className, Boolean(previewedDocumentAttachment));
+    return () => {
+      document.body.classList.remove(className);
+    };
+  }, [previewedDocumentAttachment]);
+
+  useEffect(() => {
+    setDocumentPreviewDrawerWidth(null);
+    documentPreviewResizeStateRef.current = null;
+  }, [previewedDocumentAttachment?.id]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      const resizeState = documentPreviewResizeStateRef.current;
+      if (!resizeState) {
+        return;
+      }
+      const minWidth = 360;
+      const maxWidth = Math.max(minWidth, Math.min(960, window.innerWidth - 220));
+      const nextWidth = Math.max(minWidth, Math.min(maxWidth, resizeState.startWidth + (resizeState.startX - event.clientX)));
+      setDocumentPreviewDrawerWidth(nextWidth);
+    }
+
+    function stopResize() {
+      documentPreviewResizeStateRef.current = null;
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", stopResize);
+    window.addEventListener("pointercancel", stopResize);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", stopResize);
+      window.removeEventListener("pointercancel", stopResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (mainPopupAnimationTimerRef.current !== null) {
+        window.clearTimeout(mainPopupAnimationTimerRef.current);
+      }
+      if (sidePopupAnimationTimerRef.current !== null) {
+        window.clearTimeout(sidePopupAnimationTimerRef.current);
+      }
+      if (composerQuotedSelectionAnimationTimerRef.current !== null) {
+        window.clearTimeout(composerQuotedSelectionAnimationTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (composerQuotedSelectionAnimationTimerRef.current !== null) {
+      window.clearTimeout(composerQuotedSelectionAnimationTimerRef.current);
+      composerQuotedSelectionAnimationTimerRef.current = null;
+    }
+
+    if (composerQuotedSelection) {
+      setRenderedComposerQuotedSelection(composerQuotedSelection);
+      const animationFrameId = window.requestAnimationFrame(() => {
+        setIsComposerQuotedSelectionVisible(true);
+      });
+      return () => window.cancelAnimationFrame(animationFrameId);
+    }
+
+    setIsComposerQuotedSelectionVisible(false);
+    if (!renderedComposerQuotedSelection) {
+      return;
+    }
+
+    composerQuotedSelectionAnimationTimerRef.current = window.setTimeout(() => {
+      setRenderedComposerQuotedSelection(null);
+      composerQuotedSelectionAnimationTimerRef.current = null;
+    }, COMPOSER_QUOTED_SELECTION_ANIMATION_MS);
+
+    return () => {
+      if (composerQuotedSelectionAnimationTimerRef.current !== null) {
+        window.clearTimeout(composerQuotedSelectionAnimationTimerRef.current);
+        composerQuotedSelectionAnimationTimerRef.current = null;
+      }
+    };
+  }, [composerQuotedSelection, renderedComposerQuotedSelection]);
+
+  useEffect(() => {
+    if (threadId) {
+      setLocalThreadId(threadId);
+      setEditingTurnId(null);
+      setEditingTurnDraft("");
+      setComposerQuotedSelection(null);
+      setQuotedSelectionPopup(null);
+      setPreviewedDocumentAttachment(null);
+      resetForkConfiguration();
+    }
+  }, [threadId]);
+
+  useEffect(() => {
+    if (!quotedSelectionPopup) {
+      return;
+    }
+
+    function handleDocumentMouseDown(event: globalThis.MouseEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        setQuotedSelectionPopup(null);
+        return;
+      }
+      if (quotedSelectionPopupRef.current?.contains(target)) {
+        return;
+      }
+      setQuotedSelectionPopup(null);
+    }
+
+    function handleViewportChange() {
+      setQuotedSelectionPopup(null);
+    }
+
+    document.addEventListener("mousedown", handleDocumentMouseDown);
+    window.addEventListener("scroll", handleViewportChange, true);
+    window.addEventListener("resize", handleViewportChange);
+    return () => {
+      document.removeEventListener("mousedown", handleDocumentMouseDown);
+      window.removeEventListener("scroll", handleViewportChange, true);
+      window.removeEventListener("resize", handleViewportChange);
+    };
+  }, [quotedSelectionPopup]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let hydrationApplied = false;
+    let previewRendered = false;
+
+    if (!threadId || !hasApiKey || isRunning) {
+      setIsThreadHistoryLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    clear();
+    setIsThreadHistoryLoading(true);
+    setInlineError(null);
+    setExpandedStepRows({});
+
+    const threadMessagesPromise = fetchAllThreadMessages({
+      backendUrl: normalizedBackendUrl,
+      apiKey: apiKey.trim(),
+      threadId,
+      requestHeaders,
+    });
+
+    void threadMessagesPromise
+      .then((messages) => {
+        if (cancelled || hydrationApplied) {
+          return;
+        }
+        const previewTurns = buildHydratedTurnsFromMessages(messages, {
+          agentName: displayedAgentLabel,
+          environmentName: displayedEnvironmentLabel,
+          backendUrl: normalizedBackendUrl,
+        });
+        if (previewTurns.length === 0) {
+          return;
+        }
+        previewRendered = true;
+        setTurns(previewTurns);
+        setExpandedTurns((previousExpandedTurns) =>
+          mapExpandedTurns(previousExpandedTurns, turnsRef.current, previewTurns)
+        );
+      })
+      .catch(() => undefined);
+
+    void fetchThreadHydrationPayload({
+      backendUrl: normalizedBackendUrl,
+      apiKey: apiKey.trim(),
+      threadId,
+      requestHeaders,
+      messagesPromise: threadMessagesPromise.catch(() => []),
+    })
+      .then((payload) => {
+        if (cancelled) return;
+        hydrationApplied = true;
+        applyHydratedThreadEnvironment(payload);
+        return buildHydratedTurnsFromPayload(payload, {
+          agentName: displayedAgentLabel,
+          environmentName: payload.threadEnvironmentName ?? payload.environmentName ?? displayedEnvironmentLabel,
+          backendUrl: normalizedBackendUrl,
+        });
+      })
+      .catch(() =>
+        fetchAllThreadMessages({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          threadId,
+          requestHeaders,
+        }).then((messages) =>
+          buildHydratedTurnsFromMessages(messages, {
+            agentName: displayedAgentLabel,
+            environmentName: displayedEnvironmentLabel,
+            backendUrl: normalizedBackendUrl,
+          })
+        )
+      )
+      .then((hydratedTurns) => {
+        if (cancelled || !hydratedTurns) return;
+        const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
+        setTurns(mergedTurns);
+        setExpandedTurns((previousExpandedTurns) =>
+          mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns)
+        );
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        if (previewRendered) {
+          return;
+        }
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
+        setTurns([]);
+        setExpandedTurns({});
+        setInlineError(normalizedError.message || "Failed to load thread history.");
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsThreadHistoryLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiKey, clear, hasApiKey, isRunning, normalizedBackendUrl, requestHeaders, threadId]);
+
+  useEffect(() => {
+    setThreadContextDetails(null);
+    setThreadContextDetailsError(null);
+    setThreadContextNativeError(null);
+    setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
+    setPendingQueuedMessages([]);
+    setEditingTurnId(null);
+    setEditingTurnDraft("");
+    setForkingTurnId(null);
+    setPendingEditConfirmation(null);
+    isDrainingQueuedRunsRef.current = false;
+  }, [currentThreadId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!currentThreadId || !hasApiKey || isRunning) {
+      if (!currentThreadId) {
+        setThreadContext(null);
+      }
+      setIsThreadContextLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setIsThreadContextLoading(true);
+    void fetchThreadContextEstimate(currentThreadId)
+      .then((context) => {
+        if (!cancelled) {
+          setThreadContext(context);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setThreadContext(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsThreadContextLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiKey, currentThreadId, hasApiKey, isRunning, normalizedBackendUrl, requestHeaders]);
+
+  useEffect(() => {
+    if (!hasApiKey || !normalizedBackendUrl || !effectiveEnvironmentId) {
+      lastEnvironmentStartRequestKeyRef.current = null;
+      return;
+    }
+    const requestKey = JSON.stringify({
+      environmentId: effectiveEnvironmentId,
+      agentId: effectiveAgentId || null,
+      enabledSkills: enabledSkillsPayload,
+    });
+    if (lastEnvironmentStartRequestKeyRef.current === requestKey) {
+      return;
+    }
+    lastEnvironmentStartRequestKeyRef.current = requestKey;
+    void startEnvironment({
+      backendUrl: normalizedBackendUrl,
+      apiKey: apiKey.trim(),
+      requestHeaders,
+      environmentId: effectiveEnvironmentId,
+      agentId: effectiveAgentId,
+      enabledSkills: enabledSkillsPayload,
+    }).catch(() => undefined);
+  }, [
+    apiKey,
+    effectiveAgentId,
+    effectiveEnvironmentId,
+    enabledSkillsPayload,
+    hasApiKey,
+    normalizedBackendUrl,
+    requestHeaders,
+  ]);
+
+  useEffect(() => {
+    if (renderedMainPopup !== "context") {
+      return;
+    }
+    if (threadContextDetails?.threadId === currentThreadId && !threadContextDetailsError) {
+      return;
+    }
+    void refreshThreadContextDetails();
+  }, [
+    apiKey,
+    currentThreadId,
+    hasApiKey,
+    normalizedBackendUrl,
+    renderedMainPopup,
+    requestHeaders,
+    threadContextDetails?.threadId,
+    threadContextDetailsError,
+  ]);
+
+  useEffect(() => {
+    if (mainPopupAnimationTimerRef.current !== null) {
+      window.clearTimeout(mainPopupAnimationTimerRef.current);
+      mainPopupAnimationTimerRef.current = null;
+    }
+
+    if (targetMainPopup === null) {
+      if (renderedMainPopup !== null) {
+        setMainPopupPhase("exit");
+        mainPopupAnimationTimerRef.current = window.setTimeout(() => {
+          setRenderedMainPopup(null);
+          setMainPopupPhase("idle");
+          mainPopupAnimationTimerRef.current = null;
+        }, POPUP_ANIMATION_DURATION_MS);
+      }
+      return;
+    }
+
+    setRenderedMainPopup(targetMainPopup);
+    setMainPopupPhase("enter");
+    mainPopupAnimationTimerRef.current = window.setTimeout(() => {
+      setMainPopupPhase("idle");
+      mainPopupAnimationTimerRef.current = null;
+    }, POPUP_ANIMATION_DURATION_MS);
+  }, [renderedMainPopup, targetMainPopup]);
+
+  useEffect(() => {
+    if (sidePopupAnimationTimerRef.current !== null) {
+      window.clearTimeout(sidePopupAnimationTimerRef.current);
+      sidePopupAnimationTimerRef.current = null;
+    }
+
+    if (targetSidePopup === null) {
+      if (renderedSidePopup !== null) {
+        setSidePopupPhase("exit");
+        sidePopupAnimationTimerRef.current = window.setTimeout(() => {
+          setRenderedSidePopup(null);
+          setSidePopupPhase("idle");
+          setSidePopupExitDirection("left");
+          sidePopupAnimationTimerRef.current = null;
+        }, POPUP_ANIMATION_DURATION_MS);
+      }
+      return;
+    }
+
+    setSidePopupExitDirection("left");
+    setRenderedSidePopup(targetSidePopup);
+    setSidePopupPhase("enter");
+    sidePopupAnimationTimerRef.current = window.setTimeout(() => {
+      setSidePopupPhase("idle");
+      sidePopupAnimationTimerRef.current = null;
+    }, POPUP_ANIMATION_DURATION_MS);
+  }, [renderedSidePopup, targetSidePopup]);
+
+  useEffect(() => {
+    if (!showForkEnvironmentPopup) {
+      return;
+    }
+
+    const handlePointerDown = (event: Event) => {
+      const target = event.target as Node | null;
+      if (forkEnvironmentPopupRef.current && target && !forkEnvironmentPopupRef.current.contains(target)) {
+        setShowForkEnvironmentPopup(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [showForkEnvironmentPopup]);
+
+  useEffect(() => {
+    if (!agents.length) return;
+    setSelectedAgentId((current) => {
+      if (agentId && agents.some((agent) => agent.id === agentId)) {
+        return agentId;
+      }
+      if (current && agents.some((agent) => agent.id === current)) {
+        return current;
+      }
+      return agents[0]?.id || "";
+    });
+  }, [agentId, agents]);
+
+  useEffect(() => {
+    if (!agents.length) {
+      setInitialAgentTopId(null);
+      return;
+    }
+    if (initialAgentTopId && agents.some((agent) => agent.id === initialAgentTopId)) {
+      return;
+    }
+    if (agentId && agents.some((agent) => agent.id === agentId)) {
+      setInitialAgentTopId(agentId);
+      return;
+    }
+    if (selectedAgentId && agents.some((agent) => agent.id === selectedAgentId)) {
+      setInitialAgentTopId(selectedAgentId);
+      return;
+    }
+    setInitialAgentTopId(agents[0]?.id || null);
+  }, [agentId, agents, initialAgentTopId, selectedAgentId]);
+
+  useEffect(() => {
+    if (activeInputPopup !== "agent") {
+      return;
+    }
+    const nextSelectedAgent =
+      agents.find((agent) => agent.id === selectedAgentId) ||
+      (agentId ? agents.find((agent) => agent.id === agentId) : null) ||
+      agents[0] ||
+      null;
+    setAgentPopupMode(getRunnerAgentSelectorMode(nextSelectedAgent));
+  }, [activeInputPopup, agentId, agents, selectedAgentId]);
+
+  useEffect(() => {
+    if (!availableEnvironments.length) return;
+    setSelectedEnvironmentId((current) => {
+      if (activeThreadEnvironmentId && availableEnvironments.some((environment) => environment.id === activeThreadEnvironmentId)) {
+        return activeThreadEnvironmentId;
+      }
+      if (environmentId && availableEnvironments.some((environment) => environment.id === environmentId)) {
+        return environmentId;
+      }
+      if (current && availableEnvironments.some((environment) => environment.id === current)) {
+        return current;
+      }
+      return availableEnvironments.find((environment) => environment.isDefault)?.id || availableEnvironments[0]?.id || "";
+    });
+  }, [activeThreadEnvironmentId, availableEnvironments, environmentId]);
+
+  useEffect(() => {
+    if (!availableEnvironments.length) {
+      setInitialEnvironmentTopId(null);
+      return;
+    }
+    if (initialEnvironmentTopId && availableEnvironments.some((environment) => environment.id === initialEnvironmentTopId)) {
+      return;
+    }
+    if (activeThreadEnvironmentId && availableEnvironments.some((environment) => environment.id === activeThreadEnvironmentId)) {
+      setInitialEnvironmentTopId(activeThreadEnvironmentId);
+      return;
+    }
+    if (environmentId && availableEnvironments.some((environment) => environment.id === environmentId)) {
+      setInitialEnvironmentTopId(environmentId);
+      return;
+    }
+    if (selectedEnvironmentId && availableEnvironments.some((environment) => environment.id === selectedEnvironmentId)) {
+      setInitialEnvironmentTopId(selectedEnvironmentId);
+      return;
+    }
+    setInitialEnvironmentTopId(availableEnvironments.find((environment) => environment.isDefault)?.id || availableEnvironments[0]?.id || null);
+  }, [activeThreadEnvironmentId, availableEnvironments, environmentId, initialEnvironmentTopId, selectedEnvironmentId]);
+
+  useEffect(() => {
+    const persisted = loadPersistedEnabledSkillIds(enabledSkillsStorageKey);
+    const nextEnabledSkillIds = persisted !== null ? persisted : defaultEnabledSkillIds(normalizedSkills);
+    setEnabledSkillIds((current) => (areStringArraysEqual(current, nextEnabledSkillIds) ? current : nextEnabledSkillIds));
+  }, [enabledSkillsStorageKey, normalizedSkills]);
+
+  useEffect(() => {
+    persistEnabledSkillIds(enabledSkillsStorageKey, enabledSkillIds);
+  }, [enabledSkillIds, enabledSkillsStorageKey]);
+
+  useEffect(() => {
+    if (activeInputPopup !== "skills" || !fetchCustomSkills || customSkillsLoaded || isLoadingCustomSkills) {
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingCustomSkills(true);
+
+    void fetchCustomSkills()
+      .then((loadedSkills) => {
+        if (cancelled) return;
+        const filtered = (loadedSkills || []).filter((skill) => skill.isCustom);
+        setCustomSkills(filtered);
+        setCustomSkillsLoaded(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCustomSkills([]);
+        setCustomSkillsLoaded(true);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingCustomSkills(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeInputPopup, customSkillsLoaded, fetchCustomSkills]);
+
+  useEffect(() => {
+    setCustomSkills([]);
+    setCustomSkillsLoaded(false);
+  }, [fetchCustomSkills]);
+
+  useEffect(() => {
+    setSelectedGithubRepositoryId((current) => {
+      if (githubConfig?.selectedRepositoryId && githubRepositories.some((repository) => repository.id === githubConfig.selectedRepositoryId)) {
+        return githubConfig.selectedRepositoryId;
+      }
+      if (current && githubRepositories.some((repository) => repository.id === current)) {
+        return current;
+      }
+      return githubRepositories[0]?.id || "";
+    });
+  }, [githubConfig?.selectedRepositoryId, githubRepositories]);
+
+  useEffect(() => {
+    setSelectedGithubContextId((current) => {
+      if (githubConfig?.selectedContextId && githubContexts.some((context) => context.id === githubConfig.selectedContextId)) {
+        return githubConfig.selectedContextId;
+      }
+      if (current && githubContexts.some((context) => context.id === current)) {
+        return current;
+      }
+      return githubContexts[0]?.id || "";
+    });
+  }, [githubConfig?.selectedContextId, githubContexts]);
+
+  useEffect(() => {
+    setSelectedNotionDatabaseId((current) => {
+      if (notionConfig?.selectedDatabaseId && notionDatabases.some((database) => database.id === notionConfig.selectedDatabaseId)) {
+        return notionConfig.selectedDatabaseId;
+      }
+      if (current && notionDatabases.some((database) => database.id === current)) {
+        return current;
+      }
+      return "";
+    });
+  }, [notionConfig?.selectedDatabaseId, notionDatabases]);
+
+  useEffect(() => {
+    setSelectedSchedulePresetId((current) => {
+      if (current && schedulePresets.some((preset) => preset.id === current)) return current;
+      return schedulePresets[0]?.id || "";
+    });
+  }, [schedulePresets]);
+
+  useEffect(() => {
+    if (!logsRef.current) return;
+    logsRef.current.scrollTo({ top: logsRef.current.scrollHeight, behavior: "smooth" });
+  }, [logs, turns]);
+
+  useEffect(() => {
+    const hasRunningTurn = turns.some((turn) => turn.status === "running");
+    if (!hasRunningTurn) return;
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [turns]);
+
+  useEffect(() => {
+    if (!isListening || recordingStartedAtMs === null) {
+      setRecordingElapsedSeconds(0);
+      return;
+    }
+
+    setRecordingElapsedSeconds(Math.max(0, Math.floor((Date.now() - recordingStartedAtMs) / 1000)));
+    const timer = window.setInterval(() => {
+      setRecordingElapsedSeconds(Math.max(0, Math.floor((Date.now() - recordingStartedAtMs) / 1000)));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [isListening, recordingStartedAtMs]);
+
+  useEffect(() => {
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const computed = window.getComputedStyle(textarea);
+    const lineHeight = Number.parseFloat(computed.lineHeight) || 20;
+    const paddingTop = Number.parseFloat(computed.paddingTop) || 0;
+    const paddingBottom = Number.parseFloat(computed.paddingBottom) || 0;
+    const singleRowHeight = Math.ceil(lineHeight + paddingTop + paddingBottom);
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${
+      input.length === 0
+        ? singleRowHeight
+        : Math.max(singleRowHeight, Math.min(textarea.scrollHeight, 220))
+    }px`;
+  }, [input]);
+
+  useEffect(() => {
+    if (!editingTextareaRef.current || !editingTurnId) return;
+    const textarea = editingTextareaRef.current;
+    const computed = window.getComputedStyle(textarea);
+    const lineHeight = Number.parseFloat(computed.lineHeight) || 20;
+    const paddingTop = Number.parseFloat(computed.paddingTop) || 0;
+    const paddingBottom = Number.parseFloat(computed.paddingBottom) || 0;
+    const singleRowHeight = Math.ceil(lineHeight + paddingTop + paddingBottom);
+    const maxHeight = 300;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.max(singleRowHeight, Math.min(textarea.scrollHeight, maxHeight))}px`;
+    textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+  }, [editingTurnDraft, editingTurnId]);
+
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
+
+  useEffect(() => {
+    currentInputRef.current = input;
+  }, [input]);
+
+  useEffect(() => {
+    if (!autoFocusComposer) {
+      return;
+    }
+    focusComposerSoon();
+  }, [autoFocusComposer]);
+
+  useEffect(() => {
+    if (!enableBacklogSubtaskCommand || !backlogSubtaskCommand?.ticketNumber) {
+      return;
+    }
+    if (appliedBacklogSubtaskCommandTokenRef.current === backlogSubtaskCommand.token) {
+      return;
+    }
+    appliedBacklogSubtaskCommandTokenRef.current = backlogSubtaskCommand.token;
+    closeAllInputPopups();
+    stageBacklogSubtaskCommand(backlogSubtaskCommand.ticketNumber);
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }, [backlogSubtaskCommand, enableBacklogSubtaskCommand]);
+
+  useEffect(() => {
+    return () => {
+      for (const attachment of attachmentsRef.current) {
+        revokeAttachmentPreview(attachment);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      const socket = speechSocketRef.current;
+      const processorNode = speechProcessorNodeRef.current;
+      const sourceNode = speechSourceNodeRef.current;
+      const sinkGainNode = speechSinkGainNodeRef.current;
+      const stream = speechMediaStreamRef.current;
+      const audioContext = speechAudioContextRef.current;
+
+      speechSocketRef.current = null;
+      speechSocketReadyRef.current = false;
+      speechPendingChunksRef.current = [];
+      speechProcessorNodeRef.current = null;
+      speechSourceNodeRef.current = null;
+      speechSinkGainNodeRef.current = null;
+      speechMediaStreamRef.current = null;
+      speechAudioContextRef.current = null;
+      speechActivityOpenRef.current = false;
+      speechLastVoiceMsRef.current = 0;
+
+      processorNode?.disconnect();
+      if (processorNode) {
+        processorNode.port.onmessage = null;
+      }
+      sourceNode?.disconnect();
+      sinkGainNode?.disconnect();
+      stream?.getTracks().forEach((track) => track.stop());
+      if (audioContext) {
+        void audioContext.close().catch(() => undefined);
+      }
+
+      if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+        socket.close(1000, "Speech-to-text stopped");
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    void stopSpeechToText();
+  }, [isRunning]);
+
+  async function ensureThread(taskText: string): Promise<string> {
+    if (currentThreadId) {
+      return currentThreadId;
+    }
+
+    if (!autoCreateThread) {
+      throw new Error("No threadId available. Provide threadId or enable autoCreateThread.");
+    }
+
+    const createdThreadId = await createThread({
+      backendUrl: normalizedBackendUrl,
+      apiKey,
+      requestHeaders,
+      appId,
+      environmentId: effectiveEnvironmentId,
+      agentId: effectiveAgentId,
+      title: title || taskText.slice(0, 50),
+    });
+
+    setLocalThreadId(createdThreadId);
+    setActiveThreadEnvironmentId(effectiveEnvironmentId || null);
+    setActiveThreadEnvironmentName(selectedEnvironment?.name || null);
+    onThreadIdChange?.(createdThreadId);
+    return createdThreadId;
+  }
+
+  function resolveAttachmentUploadEnvironmentId(): string | null {
+    if (currentThreadId) {
+      return activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
+    }
+    return effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
+  }
+
+  async function resolveSingleAttachment(
+    attachment: LocalAttachment,
+    environmentIdOverride?: string | null
+  ): Promise<RunnerAttachment> {
+    if (attachment.resolvedAttachment) {
+      return attachment.resolvedAttachment;
+    }
+
+    if (uploadFiles) {
+      const uploaded = await uploadFiles([attachment.file]);
+      const uploadedAttachment = uploaded[0];
+      if (!uploadedAttachment) {
+        throw new Error(`Failed to upload ${attachment.file.name}.`);
+      }
+      return uploadedAttachment;
+    }
+
+    if (mapFileToAttachment) {
+      return mapFileToAttachment(attachment.file);
+    }
+
+    if (normalizedBackendUrl && apiKey.trim()) {
+      return uploadAttachment({
+        backendUrl: normalizedBackendUrl,
+        apiKey: apiKey.trim(),
+        requestHeaders,
+        file: attachment.file,
+        ...(environmentIdOverride ? { environmentId: environmentIdOverride } : {}),
+      });
+    }
+
+    return defaultAttachmentFromFile(attachment.file);
+  }
+
+  function beginAttachmentUpload(
+    attachment: LocalAttachment,
+    options?: { environmentIdOverride?: string | null }
+  ): Promise<RunnerAttachment> | undefined {
+    if (attachment.resolvedAttachment) {
+      return Promise.resolve(attachment.resolvedAttachment);
+    }
+
+    const existingPromise = attachmentUploadPromisesRef.current[attachment.id];
+    if (existingPromise) {
+      return existingPromise;
+    }
+
+    const uploadPromise = resolveSingleAttachment(
+      attachment,
+      options?.environmentIdOverride === undefined ? resolveAttachmentUploadEnvironmentId() : options.environmentIdOverride
+    )
+      .then((resolvedAttachment) => {
+        attachment.resolvedAttachment = resolvedAttachment;
+        attachment.uploadStatus = "uploaded";
+        attachment.uploadError = null;
+        setAttachments((prev) =>
+          prev.map((entry) =>
+            entry.id === attachment.id
+              ? {
+                  ...entry,
+                  resolvedAttachment,
+                  uploadStatus: "uploaded",
+                  uploadError: null,
+                }
+              : entry
+          )
+        );
+        return resolvedAttachment;
+      })
+      .catch((error) => {
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
+        attachment.uploadStatus = "failed";
+        attachment.uploadError = normalizedError.message || `Failed to upload ${attachment.file.name}.`;
+        setAttachments((prev) =>
+          prev.map((entry) =>
+            entry.id === attachment.id
+              ? {
+                  ...entry,
+                  uploadStatus: "failed",
+                  uploadError: normalizedError.message || `Failed to upload ${attachment.file.name}.`,
+                }
+              : entry
+          )
+        );
+        throw normalizedError;
+      })
+      .finally(() => {
+        delete attachmentUploadPromisesRef.current[attachment.id];
+      });
+
+    attachmentUploadPromisesRef.current[attachment.id] = uploadPromise;
+    attachment.uploadStatus = "uploading";
+    attachment.uploadError = null;
+    setAttachments((prev) =>
+      prev.map((entry) =>
+        entry.id === attachment.id
+          ? {
+              ...entry,
+              uploadStatus: "uploading",
+              uploadError: null,
+            }
+          : entry
+      )
+    );
+
+    return uploadPromise;
+  }
+
+  function appendFiles(files: File[]) {
+    if (!files.length) return;
+
+    const remainingCapacity = Math.max(maxAttachments - attachmentsRef.current.length, 0);
+    const incoming = files.slice(0, remainingCapacity).map((file) => ({
+      id: generateId("local"),
+      file,
+      type: attachmentTypeForFile(file.type, file.name),
+      previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+      source: "local" as const,
+      uploadStatus:
+        uploadFiles || mapFileToAttachment || (normalizedBackendUrl && apiKey.trim())
+          ? ("uploading" as const)
+          : ("idle" as const),
+      uploadError: null,
+    }));
+    if (!incoming.length) {
+      return;
+    }
+
+    setAttachments((prev) => [...prev, ...incoming]);
+
+    for (const attachment of incoming) {
+      if (attachment.uploadStatus === "uploading") {
+        const uploadPromise = beginAttachmentUpload(attachment);
+        if (uploadPromise) {
+          void uploadPromise.catch(() => undefined);
+        }
+      }
+    }
+  }
+
+  function handleAddFiles(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    appendFiles(files);
+    if (renderedSidePopup === "attach-files" || activeInputPopup === "attach-files") {
+      closeAllInputPopups();
+    }
+
+    event.target.value = "";
+  }
+
+  function removeAttachment(id: string) {
+    setAttachments((prev) => {
+      const target = prev.find((item) => item.id === id);
+      if (target) {
+        revokeAttachmentPreview(target);
+      }
+      delete attachmentUploadPromisesRef.current[id];
+      return prev.filter((item) => item.id !== id);
+    });
+  }
+
+  function closeAllInputPopups(mode: "default" | "outside" = "default") {
+    const hasStackedPlusPopupsOpen =
+      renderedSidePopup !== null &&
+      (renderedMainPopup === "main" || isPlusPopupId(activeInputPopup));
+
+    if (mode === "outside" && hasStackedPlusPopupsOpen) {
+      setSidePopupExitDirection("down");
+    }
+    setActiveInputPopup(null);
+    setSelectedWorkspaceFileIds([]);
+    setIsDraggingOver(false);
+    clearQuotedSelectionPopup();
+  }
+
+  async function createWorkspaceAttachment(item: RunnerChatFileNode, sourceEnvironmentId: string): Promise<LocalAttachment> {
+    const downloadUrl = buildEnvironmentFileDownloadUrl(normalizedBackendUrl, sourceEnvironmentId, item.path);
+    if (!downloadUrl) {
+      throw new Error(`Failed to prepare ${item.name} for attachment.`);
+    }
+
+    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
+    const response = await fetch(downloadUrl, {
+      method: "GET",
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load ${item.name} (${response.status})`);
+    }
+
+    const blob = await response.blob();
+    const mimeType = blob.type || item.mimeType || "application/octet-stream";
+    const file = new File([blob], item.name, { type: mimeType });
+    const type = attachmentTypeForFile(mimeType, item.name);
+    const resolvedAttachment = await uploadAttachment({
+      backendUrl: normalizedBackendUrl,
+      apiKey: apiKey.trim(),
+      requestHeaders,
+      file,
+      environmentId: sourceEnvironmentId,
+    });
+
+    return {
+      id: generateId("workspace"),
+      file,
+      type,
+      previewUrl: type === "image" ? URL.createObjectURL(blob) : undefined,
+      source: "workspace",
+      sourceEnvironmentId,
+      resolvedAttachment,
+      uploadStatus: "uploaded",
+      uploadError: null,
+    };
+  }
+
+  async function createIntegrationAttachment(
+    item: RunnerChatFileNode,
+    source: "google-drive" | "one-drive" | "github",
+    targetEnvironmentId: string,
+    fetchFileContent: (file: RunnerChatFileNode) => Promise<RunnerChatFetchedFileContent>
+  ): Promise<LocalAttachment> {
+    const payload = await fetchFileContent(item);
+    const filename = String(payload?.name || item.name || "file").trim() || "file";
+    const mimeType = String(payload?.mimeType || item.mimeType || "application/octet-stream").trim() || "application/octet-stream";
+    const type = attachmentTypeForFile(mimeType, filename);
+    const encodedData =
+      payload?.encoding === "text"
+        ? await blobToBase64(new Blob([typeof payload?.content === "string" ? payload.content : ""], { type: mimeType }))
+        : normalizeBase64Content(typeof payload?.content === "string" ? payload.content : "");
+    const resolvedAttachment = await uploadAttachmentContent({
+      backendUrl: normalizedBackendUrl,
+      apiKey: apiKey.trim(),
+      requestHeaders,
+      filename,
+      mimeType,
+      data: encodedData,
+      environmentId: targetEnvironmentId,
+    });
+    const file = new File([""], filename, { type: mimeType });
+    const resolvedImagePreviewUrl =
+      payload?.encoding === "text"
+        ? undefined
+        : encodedData
+          ? `data:${mimeType};base64,${encodedData}`
+          : item.previewUrl;
+    const previewUrl = type === "image" ? resolvedImagePreviewUrl : undefined;
+
+    return {
+      id: generateId("integration"),
+      file,
+      type,
+      previewUrl,
+      source: "integration",
+      sourceEnvironmentId: targetEnvironmentId,
+      integrationSource: source,
+      githubRepoFullName: source === "github" ? item.repoFullName : undefined,
+      githubRef: source === "github" ? item.ref || null : undefined,
+      resolvedAttachment,
+      uploadStatus: "uploaded",
+      uploadError: null,
+    };
+  }
+
+  function handleAttachFilesMenuClick() {
+    setActiveInputPopup("attach-files");
+  }
+
+  function closeAttachFilesPopup() {
+    setIsDraggingOver(false);
+    setActiveInputPopup("main");
+  }
+
+  function closeSkillsPopup() {
+    setActiveInputPopup("main");
+  }
+
+  function closeSchedulePopup() {
+    setActiveInputPopup("main");
+  }
+
+  function clearScheduledTask() {
+    setScheduledTask(null);
+  }
+
+  function handleUploadNewFilesClick() {
+    fileInputRef.current?.click();
+  }
+
+  function openFileBrowserModal(initialSource: RunnerFileBrowserSource) {
+    if (!hasApiKey) {
+      setShowFileBrowserApiKeyPrompt(true);
+      return;
+    }
+    setActiveInputPopup(null);
+    setFileBrowserSource(initialSource);
+    setFileBrowserSearchQuery("");
+    setFileBrowserPreviewId(null);
+    setExpandedFileBrowserFolderIds([]);
+    if (initialSource === "google-drive") {
+      setRemoteGoogleDriveItems([]);
+      setLoadedGoogleDriveFolderIds([]);
+      setLoadingGoogleDriveFolderIds([]);
+      setGoogleDriveBrowserError(null);
+    } else if (initialSource === "one-drive") {
+      setRemoteOneDriveItems([]);
+      setLoadedOneDriveFolderIds([]);
+      setLoadingOneDriveFolderIds([]);
+      setOneDriveBrowserError(null);
+    } else if (initialSource === "github") {
+      setRemoteGithubItems([]);
+      setLoadedGithubFolderIds([]);
+      setLoadingGithubFolderIds([]);
+      setGithubBrowserError(null);
+    } else if (initialSource === "notion") {
+      setRemoteNotionDatabases([]);
+      setNotionDatabasesLoaded(false);
+      setNotionBrowserError(null);
+    }
+    setFileBrowserHistory([{ source: initialSource, folderId: null }]);
+    setFileBrowserHistoryIndex(0);
+    setShowFileBrowserModal(true);
+  }
+
+  function closeFileBrowserModal() {
+    setShowFileBrowserModal(false);
+    setFileBrowserSearchQuery("");
+    setFileBrowserPreviewId(null);
+    setExpandedFileBrowserFolderIds([]);
+    setIsFileBrowserAttaching(false);
+    setFileBrowserHistory([]);
+    setFileBrowserHistoryIndex(-1);
+    setGoogleDriveBrowserError(null);
+    setOneDriveBrowserError(null);
+    setGithubBrowserError(null);
+    setIsGoogleDrivePickerLoading(false);
+  }
+
+  function closeFileBrowserApiKeyPrompt() {
+    setShowFileBrowserApiKeyPrompt(false);
+  }
+
+  async function loadGoogleDriveFolder(folderId: string, options?: { inline?: boolean }) {
+    if (!googleDriveConfig?.fetchItems) {
+      return;
+    }
+
+    const normalizedFolderId = folderId || "root";
+    if (options?.inline) {
+      setLoadingGoogleDriveFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
+    } else {
+      setIsGoogleDriveBrowserLoading(true);
+      setGoogleDriveBrowserError(null);
+    }
+
+    try {
+      const items = await googleDriveConfig.fetchItems(normalizedFolderId);
+      setRemoteGoogleDriveItems((current) => mergeDriveFolderItems(current, normalizedFolderId, items));
+      setLoadedGoogleDriveFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
+      setGoogleDriveBrowserError(null);
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setGoogleDriveBrowserError(normalizedError.message || "Failed to load Google Drive files.");
+    } finally {
+      if (options?.inline) {
+        setLoadingGoogleDriveFolderIds((current) => current.filter((id) => id !== normalizedFolderId));
+      } else {
+        setIsGoogleDriveBrowserLoading(false);
+      }
+    }
+  }
+
+  async function loadOneDriveFolder(folderId: string, options?: { inline?: boolean }) {
+    if (!oneDriveConfig?.fetchItems) {
+      return;
+    }
+
+    const normalizedFolderId = folderId || "root";
+    if (options?.inline) {
+      setLoadingOneDriveFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
+    } else {
+      setIsOneDriveBrowserLoading(true);
+      setOneDriveBrowserError(null);
+    }
+
+    try {
+      const items = await oneDriveConfig.fetchItems(normalizedFolderId);
+      setRemoteOneDriveItems((current) => mergeDriveFolderItems(current, normalizedFolderId, items));
+      setLoadedOneDriveFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
+      setOneDriveBrowserError(null);
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setOneDriveBrowserError(normalizedError.message || "Failed to load OneDrive files.");
+    } finally {
+      if (options?.inline) {
+        setLoadingOneDriveFolderIds((current) => current.filter((id) => id !== normalizedFolderId));
+      } else {
+        setIsOneDriveBrowserLoading(false);
+      }
+    }
+  }
+
+  async function loadGithubFolder(folderId: string, options?: { inline?: boolean }) {
+    if (!githubConfig?.fetchItems) {
+      return;
+    }
+
+    const normalizedFolderId = folderId || "root";
+    if (options?.inline) {
+      setLoadingGithubFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
+    } else {
+      setIsGithubBrowserLoading(true);
+      setGithubBrowserError(null);
+    }
+
+    try {
+      const items = await githubConfig.fetchItems(normalizedFolderId);
+      setRemoteGithubItems((current) => mergeDriveFolderItems(current, normalizedFolderId, items));
+      setLoadedGithubFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
+      setGithubBrowserError(null);
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setGithubBrowserError(normalizedError.message || "Failed to load GitHub files.");
+    } finally {
+      if (options?.inline) {
+        setLoadingGithubFolderIds((current) => current.filter((id) => id !== normalizedFolderId));
+      } else {
+        setIsGithubBrowserLoading(false);
+      }
+    }
+  }
+
+  async function handleGoogleDriveManageAccess() {
+    if (!googleDriveConfig?.onManageAccess) {
+      return;
+    }
+
+    setIsGoogleDrivePickerLoading(true);
+    try {
+      await googleDriveConfig.onManageAccess();
+      setRemoteGoogleDriveItems([]);
+      setLoadedGoogleDriveFolderIds([]);
+      setFileBrowserHistory([{ source: "google-drive", folderId: null }]);
+      setFileBrowserHistoryIndex(0);
+      await loadGoogleDriveFolder("root");
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setGoogleDriveBrowserError(normalizedError.message || "Failed to open Google Drive picker.");
+    } finally {
+      setIsGoogleDrivePickerLoading(false);
+    }
+  }
+
+  async function stopSpeechToText() {
+    const socket = speechSocketRef.current;
+    const processorNode = speechProcessorNodeRef.current;
+    const sourceNode = speechSourceNodeRef.current;
+    const sinkGainNode = speechSinkGainNodeRef.current;
+    const stream = speechMediaStreamRef.current;
+    const audioContext = speechAudioContextRef.current;
+    const wasActivityOpen = speechActivityOpenRef.current;
+
+    speechSocketRef.current = null;
+    speechSocketReadyRef.current = false;
+    speechPendingChunksRef.current = [];
+    speechProcessorNodeRef.current = null;
+    speechSourceNodeRef.current = null;
+    speechSinkGainNodeRef.current = null;
+    speechMediaStreamRef.current = null;
+    speechAudioContextRef.current = null;
+    speechTranscriptRef.current = "";
+    speechBaseInputRef.current = currentInputRef.current;
+    speechActivityOpenRef.current = false;
+    speechLastVoiceMsRef.current = 0;
+
+    if (processorNode) {
+      processorNode.port.onmessage = null;
+      processorNode.disconnect();
+    }
+    sourceNode?.disconnect();
+    sinkGainNode?.disconnect();
+    stream?.getTracks().forEach((track) => track.stop());
+
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+      if (socket.readyState === WebSocket.OPEN && wasActivityOpen) {
+        sendSpeechSignal(socket, "activity-end");
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
+      }
+      socket.close(1000, "Speech-to-text stopped");
+    }
+
+    if (audioContext) {
+      await audioContext.close().catch(() => undefined);
+    }
+
+    setRecordingStartedAtMs(null);
+    setRecordingElapsedSeconds(0);
+    setIsListening(false);
+  }
+
+  function flushPendingSpeechChunks(socket: WebSocket) {
+    if (!speechPendingChunksRef.current.length || socket.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    for (const message of speechPendingChunksRef.current) {
+      socket.send(JSON.stringify(message));
+    }
+    speechPendingChunksRef.current = [];
+  }
+
+  function sendSpeechChunk(socket: WebSocket, chunk: string) {
+    if (!chunk) return;
+
+    if (speechSocketReadyRef.current && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: "audio", data: chunk }));
+      return;
+    }
+
+    const queue = speechPendingChunksRef.current;
+    queue.push({ type: "audio", data: chunk });
+    if (queue.length > SPEECH_QUEUE_LIMIT) {
+      queue.splice(0, queue.length - SPEECH_QUEUE_LIMIT);
+    }
+  }
+
+  function sendSpeechSignal(socket: WebSocket, type: "activity-start" | "activity-end") {
+    if (speechSocketReadyRef.current && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type }));
+      return;
+    }
+
+    if (socket.readyState !== WebSocket.OPEN && socket.readyState !== WebSocket.CONNECTING) {
+      return;
+    }
+
+    const queue = speechPendingChunksRef.current;
+    queue.push({ type });
+    if (queue.length > SPEECH_QUEUE_LIMIT) {
+      queue.splice(0, queue.length - SPEECH_QUEUE_LIMIT);
+    }
+  }
+
+  async function startSpeechToText() {
+    if (!hasApiKey) {
+      setInlineError("Enter an API key to enable speech-to-text.");
+      return;
+    }
+    if (!supportsSpeechToText || !resolvedSpeechToTextUrl) {
+      setInlineError("Speech-to-text is not supported in this browser.");
+      return;
+    }
+
+    await stopSpeechToText();
+    setInlineError(null);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      const browserWindow = window as typeof window & {
+        webkitAudioContext?: typeof AudioContext;
+      };
+      const AudioContextConstructor = browserWindow.AudioContext || browserWindow.webkitAudioContext;
+
+      if (!AudioContextConstructor) {
+        stream.getTracks().forEach((track) => track.stop());
+        throw new Error("Speech-to-text is not supported in this browser.");
+      }
+
+      const wsUrl = new URL(resolvedSpeechToTextUrl);
+      wsUrl.searchParams.set("apiKey", apiKey.trim());
+      const socket = new WebSocket(wsUrl.toString());
+      const audioContext = new AudioContextConstructor();
+      const workletUrl = createSpeechCaptureWorkletUrl();
+      try {
+        await audioContext.audioWorklet.addModule(workletUrl);
+      } finally {
+        URL.revokeObjectURL(workletUrl);
+      }
+      const sourceNode = audioContext.createMediaStreamSource(stream);
+      const processorNode = new AudioWorkletNode(audioContext, SPEECH_WORKLET_PROCESSOR_NAME, {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        channelCount: 1,
+        processorOptions: {
+          bufferSize: SPEECH_WORKLET_BUFFER_SIZE,
+        },
+      });
+      const sinkGainNode = audioContext.createGain();
+
+      sinkGainNode.gain.value = 0;
+
+      speechSocketRef.current = socket;
+      speechSocketReadyRef.current = false;
+      speechPendingChunksRef.current = [];
+      speechMediaStreamRef.current = stream;
+      speechAudioContextRef.current = audioContext;
+      speechSourceNodeRef.current = sourceNode;
+      speechProcessorNodeRef.current = processorNode;
+      speechSinkGainNodeRef.current = sinkGainNode;
+      speechBaseInputRef.current = currentInputRef.current;
+      speechTranscriptRef.current = "";
+      speechActivityOpenRef.current = false;
+      speechLastVoiceMsRef.current = 0;
+
+      socket.onmessage = (event) => {
+        let message: { type?: string; text?: string; message?: string };
+
+        try {
+          message = JSON.parse(String(event.data || ""));
+        } catch {
+          return;
+        }
+
+        if (message.type === "ready") {
+          speechSocketReadyRef.current = true;
+          flushPendingSpeechChunks(socket);
+          return;
+        }
+
+        if (message.type === "transcript" && typeof message.text === "string") {
+          speechTranscriptRef.current = combineInputWithTranscript(speechTranscriptRef.current, message.text);
+          setInput(combineInputWithTranscript(speechBaseInputRef.current, speechTranscriptRef.current));
+          return;
+        }
+
+        if (message.type === "turn-complete") {
+          const committedInput = combineInputWithTranscript(speechBaseInputRef.current, speechTranscriptRef.current);
+          speechBaseInputRef.current = committedInput;
+          speechTranscriptRef.current = "";
+          setInput(committedInput);
+          return;
+        }
+
+        if (message.type === "error") {
+          setInlineError(message.message || "Speech-to-text failed.");
+          void stopSpeechToText();
+        }
+      };
+      socket.onerror = () => {
+        setInlineError("Speech-to-text connection failed.");
+        void stopSpeechToText();
+      };
+      socket.onclose = (event) => {
+        const closeReason = event.reason?.trim();
+        if (speechSocketRef.current === socket && closeReason && closeReason !== "Speech-to-text stopped") {
+          setInlineError(`Speech-to-text stopped: ${closeReason}`);
+        }
+        if (speechSocketRef.current === socket) {
+          void stopSpeechToText();
+        }
+      };
+
+      processorNode.port.onmessage = (event) => {
+        if (socket.readyState !== WebSocket.OPEN) {
+          return;
+        }
+
+        const channelData = event.data;
+        const normalizedChunk =
+          channelData instanceof Float32Array
+            ? channelData
+            : channelData instanceof ArrayBuffer
+              ? new Float32Array(channelData)
+              : ArrayBuffer.isView(channelData)
+                ? new Float32Array(channelData.buffer.slice(channelData.byteOffset, channelData.byteOffset + channelData.byteLength))
+                : null;
+
+        if (!normalizedChunk || normalizedChunk.length === 0) {
+          return;
+        }
+
+        const rms = calculateRms(normalizedChunk);
+        const now = Date.now();
+        const isSpeechChunk = rms >= SPEECH_ACTIVITY_RMS_THRESHOLD;
+        if (isSpeechChunk) {
+          speechLastVoiceMsRef.current = now;
+          if (!speechActivityOpenRef.current) {
+            speechActivityOpenRef.current = true;
+            sendSpeechSignal(socket, "activity-start");
+          }
+        }
+
+        if (!isSpeechChunk && now - speechLastVoiceMsRef.current > SPEECH_ACTIVITY_HANGOVER_MS) {
+          if (speechActivityOpenRef.current) {
+            speechActivityOpenRef.current = false;
+            sendSpeechSignal(socket, "activity-end");
+          }
+          return;
+        }
+
+        const pcmChunk = downsampleTo16kHz(normalizedChunk, audioContext.sampleRate);
+        if (!pcmChunk.length) {
+          return;
+        }
+
+        sendSpeechChunk(socket, encodePcmChunkBase64(pcmChunk));
+      };
+
+      sourceNode.connect(processorNode);
+      processorNode.connect(sinkGainNode);
+      sinkGainNode.connect(audioContext.destination);
+      await audioContext.resume();
+      setRecordingStartedAtMs(Date.now());
+      setRecordingElapsedSeconds(0);
+      setIsListening(true);
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setInlineError(normalizedError.message === "Permission denied" ? "Microphone access was blocked." : normalizedError.message || "Speech-to-text failed to start.");
+      await stopSpeechToText();
+    }
+  }
+
+  async function handleMicrophoneClick() {
+    if (disabled || isPreparingRun) return;
+
+    if (isListening) {
+      await stopSpeechToText();
+      return;
+    }
+
+    await startSpeechToText();
+  }
+
+  function toggleMainMenu() {
+    setActiveInputPopup((current) => (isPlusPopupId(current) ? null : "main"));
+  }
+
+  function openPlusPopup(popup: Exclude<InputPopupId, "context" | "agent" | "environment">) {
+    setActiveInputPopup(popup);
+  }
+
+  function togglePopup(popup: InputPopupId) {
+    setActiveInputPopup((current) => (current === popup ? null : popup));
+  }
+
+  function toggleSkill(skillId: string) {
+    setEnabledSkillIds((current) => {
+      const next = current.includes(skillId) ? current.filter((id) => id !== skillId) : [...current, skillId];
+      onSkillsChange?.(next);
+      return next;
+    });
+  }
+
+  function selectAgent(nextAgentId: string) {
+    setSelectedAgentId(nextAgentId);
+    onAgentChange?.(nextAgentId);
+    setActiveInputPopup(null);
+  }
+
+  function selectEnvironment(nextEnvironmentId: string) {
+    const previousEnvironmentId = selectedEnvironmentId || sourceThreadEnvironmentId || environmentId || "";
+    const threadEnvironmentId = sourceThreadEnvironmentId || environmentId || "";
+
+    if (nextEnvironmentId === previousEnvironmentId) {
+      setActiveInputPopup(null);
+      return;
+    }
+
+    if (
+      currentThreadId &&
+      currentThreadHasMessages &&
+      currentThreadHasWorkspaceChanges &&
+      threadEnvironmentId &&
+      nextEnvironmentId !== threadEnvironmentId
+    ) {
+      setSelectedEnvironmentId(nextEnvironmentId);
+      openForkDialogForCurrentThread("", {
+        includeCurrentAttachments: false,
+        preselectedTargetEnvironmentId: nextEnvironmentId,
+        restoreSelectedEnvironmentId: previousEnvironmentId,
+        initialExistingEnvironmentFileCopyMode: "thread_only",
+      });
+      return;
+    }
+
+    setSelectedEnvironmentId(nextEnvironmentId);
+    onEnvironmentChange?.(nextEnvironmentId);
+    setActiveInputPopup(null);
+  }
+
+  function selectGithubRepository(nextRepositoryId: string) {
+    setSelectedGithubRepositoryId(nextRepositoryId);
+    githubConfig?.onRepositoryChange?.(nextRepositoryId);
+  }
+
+  function selectGithubContext(nextContextId: string) {
+    setSelectedGithubContextId(nextContextId);
+    githubConfig?.onContextChange?.(nextContextId);
+  }
+
+  function selectNotionDatabase(nextDatabaseId: string) {
+    setSelectedNotionDatabaseId(nextDatabaseId);
+    notionConfig?.onDatabaseChange?.(nextDatabaseId);
+  }
+
+  function toggleFileSelection(selection: string[], nextId: string): string[] {
+    return selection.includes(nextId) ? selection.filter((id) => id !== nextId) : [...selection, nextId];
+  }
+
+  function handleWorkspaceFileBrowserEnvironmentSelect(nextEnvironmentId: string) {
+    setSelectedWorkspaceFileIds([]);
+    pruneWorkspaceAttachmentsForEnvironment(nextEnvironmentId);
+    setSelectedEnvironmentId(nextEnvironmentId);
+    onEnvironmentChange?.(nextEnvironmentId);
+    switchFileBrowserSource("workspace");
+  }
+
+  async function attachWorkspaceFiles(): Promise<boolean> {
+    const selectedItems = workspaceItems.filter((item) => selectedWorkspaceFileIds.includes(item.id) && !item.isFolder);
+    if (!selectedItems.length) {
+      return false;
+    }
+
+    if (!activeWorkspaceEnvironmentId) {
+      setWorkspaceBrowserError("Select an environment to browse workspace files.");
+      return false;
+    }
+
+    const remainingCapacity = Math.max(maxAttachments - attachments.length, 0);
+    const itemsToAttach = selectedItems.slice(0, remainingCapacity);
+    if (!itemsToAttach.length) {
+      return false;
+    }
+
+    setInlineError(null);
+    setIsFileBrowserAttaching(true);
+
+    try {
+      const createdAttachments = await Promise.all(
+        itemsToAttach.map((item) => createWorkspaceAttachment(item, activeWorkspaceEnvironmentId))
+      );
+      setAttachments((prev) => [...prev, ...createdAttachments]);
+      workspaceConfig?.onAttach?.(itemsToAttach.map((item) => item.id));
+      setSelectedWorkspaceFileIds([]);
+      closeAllInputPopups();
+      return true;
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setInlineError(normalizedError.message || "Failed to attach workspace files.");
+      return false;
+    } finally {
+      setIsFileBrowserAttaching(false);
+    }
+  }
+
+  async function attachIntegrationFiles(source: "google-drive" | "one-drive" | "github"): Promise<boolean> {
+    const config =
+      source === "google-drive"
+        ? googleDriveConfig
+        : source === "one-drive"
+          ? oneDriveConfig
+          : githubConfig;
+    const items =
+      source === "google-drive"
+        ? googleDriveItems
+        : source === "one-drive"
+          ? oneDriveItems
+          : githubItems;
+    const selectedIds =
+      source === "google-drive"
+        ? selectedGoogleDriveFileIds
+        : source === "one-drive"
+          ? selectedOneDriveFileIds
+          : selectedGithubFileIds;
+    const selectedItems = items.filter((item) => selectedIds.includes(item.id) && !item.isFolder);
+    if (!selectedItems.length) {
+      return false;
+    }
+
+    const targetEnvironmentId = resolveAttachmentUploadEnvironmentId();
+    if (!targetEnvironmentId) {
+      setInlineError("Select an environment before attaching files.");
+      return false;
+    }
+    if (!config?.fetchFileContent) {
+      setInlineError("This integration does not support file downloads.");
+      return false;
+    }
+
+    const remainingCapacity = Math.max(maxAttachments - attachments.length, 0);
+    const itemsToAttach = selectedItems.slice(0, remainingCapacity);
+    if (!itemsToAttach.length) {
+      return false;
+    }
+
+    setInlineError(null);
+    setIsFileBrowserAttaching(true);
+
+    try {
+      const createdAttachments = await Promise.all(
+        itemsToAttach.map((item) =>
+          createIntegrationAttachment(item, source, targetEnvironmentId, config.fetchFileContent!)
+        )
+      );
+      setAttachments((prev) => [...prev, ...createdAttachments]);
+      config?.onAttach?.(itemsToAttach.map((item) => item.id));
+      if (source === "google-drive") {
+        setSelectedGoogleDriveFileIds([]);
+      } else if (source === "one-drive") {
+        setSelectedOneDriveFileIds([]);
+      } else {
+        setSelectedGithubFileIds([]);
+      }
+      closeAllInputPopups();
+      return true;
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setInlineError(normalizedError.message || "Failed to attach files.");
+      return false;
+    } finally {
+      setIsFileBrowserAttaching(false);
+    }
+  }
+
+  function switchFileBrowserSource(nextSource: RunnerFileBrowserSource) {
+    setFileBrowserSource(nextSource);
+    setFileBrowserPreviewId(null);
+    setFileBrowserSearchQuery("");
+    setExpandedFileBrowserFolderIds([]);
+    if (nextSource === "google-drive") {
+      setRemoteGoogleDriveItems([]);
+      setLoadedGoogleDriveFolderIds([]);
+      setLoadingGoogleDriveFolderIds([]);
+      setGoogleDriveBrowserError(null);
+    } else if (nextSource === "one-drive") {
+      setRemoteOneDriveItems([]);
+      setLoadedOneDriveFolderIds([]);
+      setLoadingOneDriveFolderIds([]);
+      setOneDriveBrowserError(null);
+    } else if (nextSource === "github") {
+      setRemoteGithubItems([]);
+      setLoadedGithubFolderIds([]);
+      setLoadingGithubFolderIds([]);
+      setGithubBrowserError(null);
+    } else if (nextSource === "notion") {
+      setRemoteNotionDatabases([]);
+      setNotionDatabasesLoaded(false);
+      setNotionBrowserError(null);
+    }
+    setFileBrowserHistory([{ source: nextSource, folderId: null }]);
+    setFileBrowserHistoryIndex(0);
+  }
+
+  function navigateFileBrowserToFolder(folderId: string | null) {
+    const nextEntry = { source: currentFileBrowserSource, folderId };
+    setFileBrowserHistory((current) => [...current.slice(0, fileBrowserHistoryIndex + 1), nextEntry]);
+    setFileBrowserHistoryIndex((current) => current + 1);
+    setFileBrowserPreviewId(null);
+    setExpandedFileBrowserFolderIds([]);
+  }
+
+  function navigateFileBrowserToBreadcrumb(index: number) {
+    const nextEntry = fileBrowserPath[index];
+    if (!nextEntry) return;
+    navigateFileBrowserToFolder(nextEntry.id);
+  }
+
+  function goFileBrowserBack() {
+    if (fileBrowserHistoryIndex <= 0) return;
+    setFileBrowserHistoryIndex((current) => current - 1);
+    setFileBrowserPreviewId(null);
+    setExpandedFileBrowserFolderIds([]);
+  }
+
+  function goFileBrowserForward() {
+    if (fileBrowserHistoryIndex >= fileBrowserHistory.length - 1) return;
+    setFileBrowserHistoryIndex((current) => current + 1);
+    setFileBrowserPreviewId(null);
+    setExpandedFileBrowserFolderIds([]);
+  }
+
+  async function toggleFileBrowserFolderExpansion(folderId: string, event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    const isExpanded = expandedFileBrowserFolderIds.includes(folderId);
+    if (!isExpanded && currentFileBrowserSource === "google-drive" && googleDriveConfig?.fetchItems && !loadedGoogleDriveFolderIds.includes(folderId)) {
+      await loadGoogleDriveFolder(folderId, { inline: true });
+    }
+    if (!isExpanded && currentFileBrowserSource === "one-drive" && oneDriveConfig?.fetchItems && !loadedOneDriveFolderIds.includes(folderId)) {
+      await loadOneDriveFolder(folderId, { inline: true });
+    }
+    if (!isExpanded && currentFileBrowserSource === "github" && githubConfig?.fetchItems && !loadedGithubFolderIds.includes(folderId)) {
+      await loadGithubFolder(folderId, { inline: true });
+    }
+    setExpandedFileBrowserFolderIds((current) => (current.includes(folderId) ? current.filter((id) => id !== folderId) : [...current, folderId]));
+  }
+
+  function handleFileBrowserItemClick(item: RunnerChatFileNode) {
+    setFileBrowserPreviewId(item.id);
+    if (item.isFolder) {
+      navigateFileBrowserToFolder(item.id);
+      return;
+    }
+
+    if (currentFileBrowserSource === "google-drive") {
+      setSelectedGoogleDriveFileIds((current) => toggleFileSelection(current, item.id));
+      return;
+    }
+
+    if (currentFileBrowserSource === "one-drive") {
+      setSelectedOneDriveFileIds((current) => toggleFileSelection(current, item.id));
+      return;
+    }
+    if (currentFileBrowserSource === "github") {
+      setSelectedGithubFileIds((current) => toggleFileSelection(current, item.id));
+      return;
+    }
+    if (currentFileBrowserSource === "notion") {
+      setSelectedNotionDatabaseId((current) => (current === item.id ? "" : item.id));
+      return;
+    }
+
+    setSelectedWorkspaceFileIds((current) => toggleFileSelection(current, item.id));
+  }
+
+  async function handleFileBrowserAttach() {
+    if (currentFileBrowserSource === "google-drive") {
+      if (await attachIntegrationFiles("google-drive")) {
+        closeFileBrowserModal();
+      }
+      return;
+    }
+    if (currentFileBrowserSource === "one-drive") {
+      if (await attachIntegrationFiles("one-drive")) {
+        closeFileBrowserModal();
+      }
+      return;
+    }
+    if (currentFileBrowserSource === "github") {
+      if (await attachIntegrationFiles("github")) {
+        closeFileBrowserModal();
+      }
+      return;
+    }
+    if (currentFileBrowserSource === "notion") {
+      const nextDatabaseId = selectedNotionDatabaseId || "";
+      if (nextDatabaseId) {
+        selectNotionDatabase(nextDatabaseId);
+      }
+      closeFileBrowserModal();
+      return;
+    }
+    if (await attachWorkspaceFiles()) {
+      closeFileBrowserModal();
+    }
+  }
+
+  function handleScheduleSubmit() {
+    const scheduledTime = new Date(scheduledAtValue);
+    if (Number.isNaN(scheduledTime.getTime())) {
+      setInlineError("Pick a valid date and time for the schedule.");
+      return;
+    }
+    const selectedPreset = schedulePresets.find((preset) => preset.id === selectedSchedulePresetId);
+    const nextSchedule = {
+      scheduledTime,
+      scheduleType,
+      cronExpression: scheduleType === "recurring" ? selectedPreset?.cron : undefined,
+    } as const;
+    setScheduledTask(nextSchedule);
+    scheduleConfig?.onQuickSchedule?.(nextSchedule);
+    closeAllInputPopups();
+  }
+
+  async function handleThreadContextCommand(command: ParsedThreadContextCommand, options?: { commandText?: string }) {
+    setInlineError(null);
+    await stopSpeechToText();
+
+    if (command.action === "context") {
+      openContextPopup();
+      clearComposerDraft();
+      return;
+    }
+
+    if (command.action === "btw" && !command.prompt) {
+      throw new Error("Provide a side question after /btw.");
+    }
+
+    if (command.action === "btw") {
+      clearComposerDraft();
+      await streamBtwSideQuestion(command.prompt || "", options?.commandText || formatThreadContextCommandText("btw", command.prompt || ""));
+      return;
+    }
+
+    if (command.action === "fork") {
+      openForkDialogForCurrentThread(command.prompt || "");
+      return;
+    }
+
+    await executeThreadContextAction(command.action, {
+      prompt: command.prompt?.trim() || undefined,
+      commandText: options?.commandText || input.trim(),
+    });
+  }
+
+  async function handleContextPopupActionClick(action: RunnerChatThreadContextAction) {
+    setInlineError(null);
+    setThreadContextDetailsError(null);
+    closeAllInputPopups();
+    if (action === "clear") {
+      void stopSpeechToText().catch((error) => {
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
+        setInlineError(normalizedError.message || "Failed to stop speech-to-text.");
+      });
+      void executeThreadContextAction("clear").catch((error) => {
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
+        setInlineError(normalizedError.message || "Failed to clear thread context.");
+      });
+      return;
+    }
+    stageThreadContextCommand(action);
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+    void stopSpeechToText().catch((error) => {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setInlineError(normalizedError.message || "Failed to stop speech-to-text.");
+    });
+  }
+
+  async function resolveAttachmentPayload(
+    files: LocalAttachment[],
+    environmentIdOverride?: string | null
+  ): Promise<RunnerAttachment[] | undefined> {
+    if (!files.length) return undefined;
+
+    await Promise.all(
+      files
+        .map((entry) => attachmentUploadPromisesRef.current[entry.id])
+        .filter((uploadPromise): uploadPromise is Promise<RunnerAttachment> => Boolean(uploadPromise))
+        .map((uploadPromise) => uploadPromise.catch(() => undefined))
+    );
+
+    const resolvedAttachments = files
+      .map((entry) => entry.resolvedAttachment)
+      .filter((attachment): attachment is RunnerAttachment => Boolean(attachment));
+    const unresolvedFiles = files.filter((entry) => !entry.resolvedAttachment);
+
+    if (!unresolvedFiles.length) {
+      return resolvedAttachments.length ? resolvedAttachments : undefined;
+    }
+    const uploadEnvironmentId =
+      environmentIdOverride === undefined
+        ? resolveAttachmentUploadEnvironmentId()
+        : environmentIdOverride;
+    const uploaded = await Promise.all(
+      unresolvedFiles.map((entry) => beginAttachmentUpload(entry, { environmentIdOverride: uploadEnvironmentId }) || resolveSingleAttachment(entry, uploadEnvironmentId))
+    );
+    const combined = [...resolvedAttachments, ...uploaded];
+    return combined.length ? combined : undefined;
+  }
+
+  async function runTask() {
+    if (!canRun) return;
+
+    setInlineError(null);
+    closeAllInputPopups();
+    let ensuredThreadId: string | undefined;
+
+    try {
+      if (!normalizedBackendUrl) {
+        throw new Error("backendUrl is required.");
+      }
+      if (!apiKey) {
+        throw new Error("apiKey is required.");
+      }
+
+      const taskText = trimmedInput;
+      const attachmentEntries = attachments;
+      const queuedTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
+      const quotedSelection = composerQuotedSelection;
+      const backlogSubtaskCommand = stagedBacklogSubtaskCommand;
+      if (stagedThreadContextCommand) {
+        const stagedPrompt = textareaAllowsPromptAfterStagedCommand ? taskText : "";
+        const shouldPreserveComposerState = stagedThreadContextCommand === "fork";
+        if (!shouldPreserveComposerState) {
+          clearComposerDraft();
+          clearComposerAttachments(attachmentEntries);
+        }
+        await handleThreadContextCommand(
+          {
+            action: stagedThreadContextCommand,
+            ...(stagedPrompt ? { prompt: stagedPrompt } : {}),
+          },
+          {
+            commandText: formatThreadContextCommandText(stagedThreadContextCommand, stagedPrompt),
+          }
+        );
+        return;
+      }
+      const threadContextCommand = parseThreadContextCommand(taskText);
+      if (threadContextCommand) {
+        const shouldPreserveComposerState = threadContextCommand.action === "fork";
+        if (!shouldPreserveComposerState) {
+          clearComposerDraft();
+          clearComposerAttachments(attachmentEntries);
+        }
+        await handleThreadContextCommand(threadContextCommand);
+        return;
+      }
+
+      clearComposerDraft();
+      clearComposerAttachments(attachmentEntries, {
+        revokePreviews: false,
+      });
+      setStagedBacklogSubtaskCommand(null);
+      if (keepFocusOnSubmit) {
+        focusComposerSoon();
+      }
+      await stopSpeechToText();
+      if (hasRunningTurn) {
+        const queuedTurnId = generateId("turn");
+        setTurns((prev) => [
+          ...prev,
+          {
+            id: queuedTurnId,
+            prompt: taskText,
+            logs: [],
+            startedAtMs: Date.now(),
+            status: "queued",
+            animateOnRender: true,
+            isInitialTurn: prev.length === 0,
+            agentName: selectedAgent?.name || displayedAgentLabel,
+            environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+            quotedSelection,
+            attachments: queuedTurnAttachments,
+          },
+        ]);
+        setPendingQueuedMessages((prev) => [
+          ...prev,
+          {
+            id: generateId("queue"),
+            turnId: queuedTurnId,
+            prompt: taskText,
+            attachments: attachmentEntries,
+            quotedSelection,
+            backlogSubtaskCommand,
+          },
+        ]);
+        return;
+      }
+
+      setIsPreparingRun(true);
+      const execution = await executeThreadRun(taskText, attachmentEntries, {
+        quotedSelection,
+        backlogSubtaskCommand,
+      });
+      ensuredThreadId = execution.threadId;
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setInlineError(normalizedError.message);
+      onRunError?.(normalizedError, ensuredThreadId ?? currentThreadId ?? undefined);
+    } finally {
+      setIsPreparingRun(false);
+    }
+  }
+
+  useEffect(() => {
+    if (isPreparingRun || hasRunningTurn || pendingQueuedMessages.length === 0 || isDrainingQueuedRunsRef.current) {
+      return;
+    }
+    const nextQueuedMessage = pendingQueuedMessages[0];
+    if (!nextQueuedMessage) {
+      return;
+    }
+
+    isDrainingQueuedRunsRef.current = true;
+    setPendingQueuedMessages((prev) => prev.filter((item) => item.id !== nextQueuedMessage.id));
+
+    void (async () => {
+      try {
+        setIsPreparingRun(true);
+        await executeThreadRun(nextQueuedMessage.prompt, nextQueuedMessage.attachments, {
+          turnId: nextQueuedMessage.turnId,
+          quotedSelection: nextQueuedMessage.quotedSelection,
+          backlogSubtaskCommand: nextQueuedMessage.backlogSubtaskCommand,
+        });
+      } catch (error) {
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
+        setInlineError(normalizedError.message);
+        onRunError?.(normalizedError, currentThreadId ?? undefined);
+      } finally {
+        isDrainingQueuedRunsRef.current = false;
+      }
+    })();
+  }, [currentThreadId, hasRunningTurn, isPreparingRun, onRunError, pendingQueuedMessages]);
+
+  function handleInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    const nextValue = event.target.value;
+    if (!stagedThreadContextCommand && !stagedBacklogSubtaskCommand) {
+      const autoStageCommand = parseAutoStageThreadContextCommand(nextValue);
+      if (autoStageCommand) {
+        stageThreadContextCommand(autoStageCommand.action, autoStageCommand.prompt);
+        return;
+      }
+      if (enableBacklogSubtaskCommand) {
+        const autoStageBacklogSubtaskCommand = parseAutoStageBacklogSubtaskCommand(nextValue);
+        if (autoStageBacklogSubtaskCommand) {
+          stageBacklogSubtaskCommand(autoStageBacklogSubtaskCommand.ticketNumber, autoStageBacklogSubtaskCommand.prompt);
+          return;
+        }
+      }
+    }
+    setInput(nextValue);
+
+    if (isListening) {
+      speechBaseInputRef.current = nextValue;
+      speechTranscriptRef.current = "";
+    }
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Backspace" && stagedThreadContextCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedThreadContextCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedBacklogSubtaskCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedBacklogSubtaskCommand(null);
+      return;
+    }
+    if (event.key !== "Enter") {
+      return;
+    }
+    if (event.metaKey || event.ctrlKey) {
+      event.preventDefault();
+      if (canRun) {
+        void runTask();
+      }
+      return;
+    }
+    if (event.shiftKey) {
+      return;
+    }
+    if (!input.includes("\n")) {
+      event.preventDefault();
+      if (canRun) {
+        void runTask();
+      }
+    }
+  }
+
+  function getTurnDurationSeconds(turn: RunnerTurn): number {
+    if (typeof turn.durationSeconds === "number" && Number.isFinite(turn.durationSeconds)) {
+      return Math.max(0, Math.round(turn.durationSeconds));
+    }
+    const end = turn.completedAtMs ?? nowMs;
+    return Math.max(0, Math.floor((end - turn.startedAtMs) / 1000));
+  }
+
+  function stepRowKey(turnId: string, index: number, log: RunnerLog): string {
+    return `${turnId}-${index}-${log.eventType || "log"}-${(log.message || "").slice(0, 24)}`;
+  }
+
+  function renderCommandIcon(icon: CommandRowSummary["icon"]) {
+    if (icon === "read") return <IconReadFile className="tb-step-row-icon" />;
+    if (icon === "list") return <IconFolder className="tb-step-row-icon" />;
+    if (icon === "write") return <IconWriteFile className="tb-step-row-icon" />;
+    return <IconTerminal className="tb-step-row-icon" />;
+  }
+
+  function renderTimelineLog(turnId: string, log: RunnerLog, index: number) {
+    if (!shouldDisplayTimelineLog(log)) return null;
+    const key = stepRowKey(turnId, index, log);
+    return (
+      <RunnerWorkLogEntry
+        key={key}
+        log={log}
+        timeLabel={toDurationLabel(log)}
+        backendUrl={normalizedBackendUrl}
+        environmentId={activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null}
+        requestHeaders={buildRunnerHeaders(requestHeaders, apiKey.trim())}
+        onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
+      />
+    );
+  }
+
+  function renderSkillIcon(skill: RunnerChatSkill, className: string) {
+    if (skill.isCustom) {
+      const CustomSkillIcon = customSkillIconComponent(skill.icon);
+      return <CustomSkillIcon className={className} strokeWidth={1.75} />;
+    }
+    if (skill.id === "image_generation") return <LucideImages className={className} strokeWidth={1.75} />;
+    if (skill.id === "web_search") return <LucideGlobe className={className} strokeWidth={1.75} />;
+    if (skill.id === "research") return <LucideTelescope className={className} strokeWidth={1.75} />;
+    if (skill.id === "pdf") return <LucideFileText className={className} strokeWidth={1.75} />;
+    if (skill.id === "frontend_design") return <LucidePalette className={className} strokeWidth={1.75} />;
+    if (skill.id === "pptx") return <LucideLayers className={className} strokeWidth={1.75} />;
+    if (skill.id === "memory") return <LucideBrain className={className} strokeWidth={1.75} />;
+    if (skill.id === "task_management") return <LucideListTodo className={className} strokeWidth={1.75} />;
+    return <LucideLayers className={className} strokeWidth={1.75} />;
+  }
+
+  function renderAttachmentPreviewChip(
+    attachment: LocalAttachment | RunnerTurnAttachment,
+    options?: { removable?: boolean; onRemove?: () => void }
+  ) {
+    const filename = getAttachmentDisplayName(attachment);
+    const previewUrl = getAttachmentPreviewUrl(attachment);
+    const isImage = attachment.type === "image";
+    const isUploading = isLocalAttachmentRecord(attachment) && attachment.uploadStatus === "uploading";
+    const isDocumentPreviewable =
+      !isImage && !options?.removable && !isLocalAttachmentRecord(attachment) && isAttachmentDocumentPreviewable(attachment);
+    const isDocumentPreviewActive =
+      isDocumentPreviewable && previewedDocumentAttachment?.id === attachment.id;
+    const imageFetchHeaders =
+      isImage && !isLocalAttachmentRecord(attachment) && requiresAuthenticatedAttachmentPreview(previewUrl, normalizedBackendUrl)
+        ? authenticatedAttachmentFetchHeaders
+        : undefined;
+
+    return (
+      <div
+        className={`runner-attachment ${isImage ? "runner-attachment-image" : "runner-attachment-file"} ${isUploading ? "runner-attachment-uploading" : ""} ${options?.removable ? "runner-attachment-removable" : "runner-attachment-readonly"} ${isDocumentPreviewable ? "runner-attachment-document-previewable" : ""} ${isDocumentPreviewActive ? "runner-attachment-document-active" : ""}`.trim()}
+        key={attachment.id}
+      >
+        {isImage ? (
+          <>
+            <span className="runner-attachment-image-frame">
+              {previewUrl ? (
+                <RunnerImagePreviewSurface
+                  src={previewUrl}
+                  alt={filename}
+                  mimeType={isLocalAttachmentRecord(attachment) ? attachment.file.type : attachment.mimeType}
+                  className={`runner-attachment-image-button ${previewUrl ? "is-clickable" : ""}`.trim()}
+                  imageClassName="runner-attachment-image-preview"
+                  fetchHeaders={imageFetchHeaders}
+                />
+              ) : (
+                <span className="runner-attachment-image-placeholder" aria-hidden="true">
+                  <img src={RUNNER_IMAGE_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} />
+                </span>
+              )}
+              {isUploading ? (
+                <span className="runner-attachment-upload-indicator" aria-hidden="true">
+                  <LucideLoaderCircle className="runner-attachment-upload-indicator-icon tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
+                </span>
+              ) : null}
+            </span>
+            {options?.removable && options.onRemove ? (
+              <button
+                type="button"
+                className="runner-attachment-remove runner-attachment-remove-image"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  options.onRemove?.();
+                }}
+                aria-label={`Remove ${filename}`}
+              >
+                <LucideX className="runner-attachment-remove-icon" strokeWidth={2} />
+              </button>
+            ) : null}
+          </>
+        ) : (
+          <>
+            {isDocumentPreviewable ? (
+              <button
+                type="button"
+                className="runner-attachment-file-button"
+                onClick={() => toggleDocumentAttachmentPreview(attachment)}
+                aria-label={`Preview ${filename}`}
+              >
+                <span className="runner-attachment-file-icon-slot" aria-hidden="true">
+                  {isUploading ? (
+                    <LucideLoaderCircle className="runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
+                  ) : (
+                    <img
+                      src={RUNNER_TEXT_FILE_ICON_URL}
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      className="runner-attachment-file-icon"
+                    />
+                  )}
+                </span>
+                <div className="runner-attachment-file-name" title={filename}>
+                  {filename}
+                </div>
+              </button>
+            ) : (
+              <>
+                <span className="runner-attachment-file-icon-slot" aria-hidden="true">
+                  {isUploading ? (
+                    <LucideLoaderCircle className="runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
+                  ) : (
+                    <img
+                      src={RUNNER_TEXT_FILE_ICON_URL}
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      className="runner-attachment-file-icon"
+                    />
+                  )}
+                </span>
+                <div className="runner-attachment-file-name" title={filename}>
+                  {filename}
+                </div>
+              </>
+            )}
+            {options?.removable && options.onRemove ? (
+              <button
+                type="button"
+                className="runner-attachment-remove runner-attachment-remove-file"
+                onClick={options.onRemove}
+                aria-label={`Remove ${filename}`}
+              >
+                <LucideX className="runner-attachment-remove-icon" strokeWidth={2} />
+              </button>
+            ) : null}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  const effectiveStatus = isPreparingRun ? "running" : status;
+  const statusToneValue = statusTone(effectiveStatus);
+  const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) || agents[0];
+  const selectedEnvironment =
+    availableEnvironments.find((environment) => environment.id === selectedEnvironmentId) ||
+    availableEnvironments.find((environment) => environment.isDefault) ||
+    availableEnvironments[0];
+  const orderedAgents = useMemo(() => orderOptionsWithPinnedTop(agents, initialAgentTopId), [agents, initialAgentTopId]);
+  const filteredOrderedAgents = useMemo(
+    () => orderedAgents.filter((agent) => getRunnerAgentSelectorMode(agent) === agentPopupMode),
+    [agentPopupMode, orderedAgents]
+  );
+  const orderedEnvironments = useMemo(
+    () => orderOptionsWithPinnedTop(availableEnvironments, initialEnvironmentTopId),
+    [availableEnvironments, initialEnvironmentTopId]
+  );
+  const activeWorkspaceEnvironmentId = selectedEnvironment?.id || environmentId || "";
+  const sourceThreadEnvironmentId = activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
+  const sourceThreadEnvironmentName = activeThreadEnvironmentName || selectedEnvironment?.name || null;
+  const selectedForkExistingEnvironment =
+    availableEnvironments.find((environment) => environment.id === forkTargetEnvironmentId) ||
+    (sourceThreadEnvironmentId && sourceThreadEnvironmentId === forkTargetEnvironmentId
+      ? {
+          id: sourceThreadEnvironmentId,
+          name: sourceThreadEnvironmentName || "Current Environment",
+        }
+      : null);
+  const orderedForkTargetEnvironments = useMemo(
+    () => orderOptionsWithPinnedTop(availableEnvironments, forkTargetEnvironmentId || sourceThreadEnvironmentId),
+    [availableEnvironments, forkTargetEnvironmentId, sourceThreadEnvironmentId]
+  );
+  const shouldShowForkExistingEnvironmentCopyOptions =
+    forkTarget === "existing_environment" &&
+    Boolean(forkTargetEnvironmentId) &&
+    Boolean(sourceThreadEnvironmentId) &&
+    forkTargetEnvironmentId !== sourceThreadEnvironmentId;
+  const githubConnected = githubConfig?.connected ?? false;
+  const notionConnected = notionConfig?.connected ?? false;
+  const googleDriveConnected = googleDriveConfig?.connected ?? false;
+  const oneDriveConnected = oneDriveConfig?.connected ?? false;
+  const scheduleEnabled = (scheduleConfig?.enabled ?? false) || scheduledTask !== null;
+  const githubContextLabel = githubConfig?.contextLabel || "Branch";
+  const workspaceRootLabel = workspaceConfig?.rootLabel || "Workspace";
+  const googleDriveRootLabel = googleDriveConfig?.rootLabel || "My Drive";
+  const oneDriveRootLabel = oneDriveConfig?.rootLabel || "OneDrive";
+  const githubRootLabel = "Repositories";
+  const notionRootLabel = "Notion";
+  const currentFileBrowserEntry = fileBrowserHistory[fileBrowserHistoryIndex] || { source: fileBrowserSource, folderId: null };
+  const currentFileBrowserSource = currentFileBrowserEntry.source;
+  const currentFileBrowserFolderId = currentFileBrowserEntry.folderId;
+  const googleDrivePath = childFolderPath(googleDriveItems, googleDriveRootLabel, googleDriveFolderId);
+  const oneDrivePath = childFolderPath(oneDriveItems, oneDriveRootLabel, oneDriveFolderId);
+  const visibleGoogleDriveItems = fileItemsForParent(googleDriveItems, googleDriveFolderId);
+  const visibleOneDriveItems = fileItemsForParent(oneDriveItems, oneDriveFolderId);
+  const fileBrowserRootLabel =
+    currentFileBrowserSource === "google-drive"
+      ? googleDriveRootLabel
+      : currentFileBrowserSource === "github"
+        ? githubRootLabel
+      : currentFileBrowserSource === "notion"
+        ? notionRootLabel
+      : currentFileBrowserSource === "one-drive"
+        ? oneDriveRootLabel
+        : selectedEnvironment?.name || workspaceRootLabel;
+  const fileBrowserItems =
+    currentFileBrowserSource === "google-drive"
+      ? googleDriveItems
+      : currentFileBrowserSource === "github"
+        ? githubItems
+      : currentFileBrowserSource === "notion"
+        ? notionItems
+      : currentFileBrowserSource === "one-drive"
+        ? oneDriveItems
+        : workspaceItems;
+  const fileBrowserPath = childFolderPath(fileBrowserItems, fileBrowserRootLabel, currentFileBrowserFolderId);
+  const visibleFileBrowserItems = fileItemsForParent(fileBrowserItems, currentFileBrowserFolderId);
+  const filteredFileBrowserItems = fileBrowserSearchQuery.trim()
+    ? visibleFileBrowserItems.filter((item) => item.name.toLowerCase().includes(fileBrowserSearchQuery.trim().toLowerCase()))
+    : visibleFileBrowserItems;
+  const selectedFileBrowserIds =
+    currentFileBrowserSource === "google-drive"
+      ? selectedGoogleDriveFileIds
+      : currentFileBrowserSource === "github"
+        ? selectedGithubFileIds
+      : currentFileBrowserSource === "notion"
+        ? (selectedNotionDatabaseId ? [selectedNotionDatabaseId] : [])
+      : currentFileBrowserSource === "one-drive"
+        ? selectedOneDriveFileIds
+        : selectedWorkspaceFileIds;
+  const selectedFileBrowserItems = fileBrowserItems.filter((item) => selectedFileBrowserIds.includes(item.id));
+  const selectedFileBrowserLabel =
+    currentFileBrowserSource === "notion" && selectedFileBrowserItems.length > 0
+      ? selectedFileBrowserItems[0]?.id === "__entire_workspace__"
+        ? "workspace"
+        : `${selectedFileBrowserIds.length} ${selectedFileBrowserIds.length === 1 ? "database" : "databases"}`
+      : currentFileBrowserSource === "github" && selectedFileBrowserItems.some((item) => item.isFolder)
+      ? `${selectedFileBrowserIds.length} ${selectedFileBrowserIds.length === 1 ? "item" : "items"}`
+      : `${selectedFileBrowserIds.length} ${selectedFileBrowserIds.length === 1 ? "file" : "files"}`;
+  const previewFileBrowserItem = fileBrowserItems.find((item) => item.id === fileBrowserPreviewId) || null;
+  const showGoogleDriveAuthScreen = currentFileBrowserSource === "google-drive" && !googleDriveConnected;
+  const showGithubAuthScreen = currentFileBrowserSource === "github" && !githubConnected;
+  const showNotionAuthScreen = currentFileBrowserSource === "notion" && !notionConnected;
+  const showOneDriveAuthScreen = currentFileBrowserSource === "one-drive" && !oneDriveConnected;
+  const showGoogleDrivePickerPrompt =
+    currentFileBrowserSource === "google-drive" &&
+    googleDriveConnected &&
+    !isGoogleDriveBrowserLoading &&
+    !googleDriveBrowserError &&
+    filteredFileBrowserItems.length === 0 &&
+    !fileBrowserSearchQuery.trim() &&
+    fileBrowserPath.length <= 1 &&
+    !!googleDriveConfig?.onManageAccess;
+  const hasInputPopupOpen = activeInputPopup !== null;
+  const showMainMenu = renderedMainPopup === "main";
+  const hasPlusPopupOpen = isPlusPopupId(activeInputPopup) || renderedSidePopup !== null || renderedMainPopup === "main";
+  const showContextPopup = renderedMainPopup === "context";
+  const showSkillsPopup = renderedSidePopup === "skills";
+  const showAgentPopup = renderedMainPopup === "agent";
+  const showEnvironmentPopup = renderedMainPopup === "environment";
+  const showGithubPopup = renderedSidePopup === "github";
+  const showNotionPopup = renderedSidePopup === "notion";
+  const showGoogleDrivePopup = renderedSidePopup === "google-drive";
+  const showOneDrivePopup = renderedSidePopup === "one-drive";
+  const showSchedulePopup = renderedSidePopup === "schedule";
+  const showAttachFilesPopup = renderedSidePopup === "attach-files";
+  const documentAttachmentPreviewDrawer = previewedDocumentAttachment ? (
+    <RunnerDocumentPreviewDrawer
+      attachment={previewedDocumentAttachment}
+      backendUrl={normalizedBackendUrl}
+      requestHeaders={requestHeaders}
+      apiKey={apiKey.trim()}
+      onClose={closeDocumentAttachmentPreview}
+      onResizeStart={startDocumentPreviewResize}
+      showResizeHandle
+    />
+  ) : null;
+  const isClosingPopupStackTogether =
+    sidePopupPhase === "exit" &&
+    mainPopupPhase === "exit" &&
+    renderedMainPopup === "main" &&
+    renderedSidePopup !== null;
+  const mainPopupAnimationClass = mainPopupPhase === "enter"
+    ? "tb-popup-menu-animate-up-in"
+    : mainPopupPhase === "exit"
+      ? "tb-popup-menu-animate-up-out"
+      : "";
+  const sidePopupAnimationClass = sidePopupPhase === "enter"
+    ? "tb-popup-menu-animate-left-in"
+    : sidePopupPhase === "exit"
+      ? isClosingPopupStackTogether || sidePopupExitDirection === "down"
+        ? "tb-popup-menu-animate-down-out"
+        : "tb-popup-menu-animate-left-out"
+      : "";
+  const contextIndicatorSource = threadContextDetails || threadContext;
+  const contextIndicatorMetrics = deriveThreadContextDisplayMetrics(contextIndicatorSource);
+  const contextUsageRatio = Math.max(0, Math.min(1, contextIndicatorMetrics.usedRatio));
+  const contextIndicatorTitle = buildContextIndicatorTitle(contextIndicatorSource, Boolean(currentThreadId), isThreadContextLoading);
+  const contextDetails = threadContextDetails || threadContext;
+  const fallbackThreadContextDetails: RunnerChatThreadContextDetails = {
+    threadId: currentThreadId || "",
+    sessionId: null,
+    model: currentThreadId ? "Waiting for context data" : "No active thread",
+    maxTokens: 0,
+    usedTokens: 0,
+    remainingTokens: 0,
+    remainingRatio: 0,
+    source: "empty",
+    exact: false,
+    categories: EMPTY_THREAD_CONTEXT_CATEGORIES,
+  };
+  const displayContextDetails = contextDetails || fallbackThreadContextDetails;
+  const displayContextMetrics = deriveThreadContextDisplayMetrics(displayContextDetails);
+  const contextCategoryOrder: RunnerChatThreadContextCategoryKey[] = ["system_prompt", "skills", "messages", "autocompact_buffer", "free_space", "other"];
+  const contextCategories = threadContextDetails?.categories || EMPTY_THREAD_CONTEXT_CATEGORIES;
+  const orderedContextCategories = [...contextCategories].sort(
+    (left, right) => contextCategoryOrder.indexOf(left.key) - contextCategoryOrder.indexOf(right.key)
+  );
+  const visibleContextCategories = orderedContextCategories.filter((category) => category.tokens > 0 || category.key === "free_space");
+  const hasDisplayContextUsage = Boolean(contextDetails) && displayContextDetails.maxTokens > 0;
+  const nativeContextUsedPercent = Math.round((displayContextMetrics.usedTokens / Math.max(displayContextDetails.maxTokens, 1)) * 100);
+  const hasReceivedFirstAssistantAnswer =
+    Boolean(threadContextDetails?.sessionId || threadContext?.sessionId) ||
+    turns.some((turn) => turn.logs.some((log) => log.eventType === "agent_message" || log.eventType === "llm_response"));
+  const hasBackendThreadContextActionAvailability =
+    threadContextAvailableActions.compact || threadContextAvailableActions.clear || threadContextAvailableActions.fork;
+  const canStageThreadContextManagementActions =
+    hasReceivedFirstAssistantAnswer || hasBackendThreadContextActionAvailability;
+  const canUseBtwThreadContextAction = Boolean(currentThreadId) && currentThreadHasMessages;
+  const effectiveThreadContextAvailableActions: RunnerChatThreadContextAvailableActions = {
+    compact: canStageThreadContextManagementActions,
+    clear: canStageThreadContextManagementActions,
+    btw: canUseBtwThreadContextAction,
+    fork: canStageThreadContextManagementActions,
+  };
+  const displayedAgentLabel = hasApiKey ? selectedAgent?.name || "Agent" : "Default Agent";
+  const agentPopupEmptyLabel = agentPopupMode === "teams" ? "No teams available." : "No agents available.";
+  const displayedEnvironmentLabel = hasApiKey ? selectedEnvironment?.name || "Default" : "Default";
+  const speechToTextTitle = !hasApiKey
+    ? "Enter an API key to enable speech-to-text"
+    : supportsSpeechToText
+      ? isListening
+        ? "Stop speech to text"
+        : "Start speech to text"
+      : "Speech-to-text is not supported in this browser";
+
+  useEffect(() => {
+    if (!currentThreadId || !hasApiKey || !normalizedBackendUrl || isRunning) {
+      return;
+    }
+
+    const hasHydratedRunningTurn = turns.some((turn) => turn.status === "running");
+    if (!hasHydratedRunningTurn) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const pollRunningThread = async () => {
+      try {
+        const payload = await fetchThreadHydrationPayload({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          threadId: currentThreadId,
+          requestHeaders,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        applyHydratedThreadEnvironment(payload);
+        const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
+          agentName: displayedAgentLabel,
+          environmentName: payload.threadEnvironmentName ?? payload.environmentName ?? displayedEnvironmentLabel,
+          backendUrl: normalizedBackendUrl,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        setTurns(hydratedTurns);
+        setExpandedTurns((previousExpandedTurns) =>
+          mapExpandedTurns(previousExpandedTurns, turnsRef.current, hydratedTurns, { defaultLatestExpanded: true })
+        );
+      } catch (error) {
+        if (!cancelled) {
+          console.warn("[RunnerChat] Failed to refresh hydrated running thread:", error);
+        }
+      }
+    };
+
+    void pollRunningThread();
+    const interval = window.setInterval(() => {
+      void pollRunningThread();
+    }, 2000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [
+    apiKey,
+    currentThreadId,
+    displayedAgentLabel,
+    displayedEnvironmentLabel,
+    hasApiKey,
+    isRunning,
+    normalizedBackendUrl,
+    requestHeaders,
+    turns,
+  ]);
+
+  function renderThreadContextPopup() {
+    if (!hasApiKey) {
+      return (
+        <div className={`tb-popup-menu tb-popup-menu-context ${mainPopupAnimationClass}`.trim()}>
+          <div className="tb-popup-menu-title tb-popup-menu-title-context">Thread Context</div>
+          <div className="tb-popup-note">
+            <div className="tb-popup-note-title">API key required</div>
+            <div className="tb-popup-note-body">Enter an API key in the playground sidebar to inspect and manage thread context.</div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`tb-popup-menu tb-popup-menu-context ${mainPopupAnimationClass}`.trim()}>
+        <div className="tb-popup-menu-title tb-popup-menu-title-context">
+          <span>Thread Context</span>
+          {hasDisplayContextUsage ? (
+            <span className="tb-context-panel-tokens">
+              {formatCompactTokenCount(displayContextMetrics.usedTokens)}/{formatCompactTokenCount(displayContextDetails.maxTokens)} tokens ({nativeContextUsedPercent}%)
+            </span>
+          ) : null}
+        </div>
+        {isThreadContextDetailsLoading ? (
+          <div className="tb-popup-loading-row">
+            <span className="tb-popup-loading-spinner" />
+            <span className="tb-popup-loading-label">Loading native thread context…</span>
+          </div>
+        ) : threadContextDetailsError ? (
+          <div className="tb-popup-note">
+            <div className="tb-popup-note-title">Context unavailable</div>
+            <div className="tb-popup-note-body">{threadContextDetailsError}</div>
+            <button type="button" className="tb-popup-action tb-popup-action-secondary tb-context-panel-retry" onClick={() => void refreshThreadContextDetails()}>
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="tb-context-panel">
+            <div className="tb-context-panel-bar" aria-hidden="true">
+              {visibleContextCategories
+                .filter((category) => getContextCategoryDisplayTokens(category, displayContextMetrics) > 0)
+                .map((category) => (
+                  <span
+                    key={category.key}
+                    className={`tb-context-panel-bar-segment tb-context-panel-bar-segment-${category.kind === "buffer" ? "used" : category.kind}`}
+                    style={
+                      {
+                        "--tb-context-segment-size": String(
+                          displayContextDetails.maxTokens > 0
+                            ? getContextCategoryDisplayTokens(category, displayContextMetrics) / displayContextDetails.maxTokens
+                            : 0
+                        ),
+                        "--tb-context-segment-color": threadContextCategoryColor(category),
+                      } as CSSProperties
+                    }
+                  />
+                ))}
+            </div>
+
+            <div className="tb-context-panel-list">
+              {visibleContextCategories.map((category) => (
+                <div key={category.key} className="tb-context-panel-row">
+                  <span className="tb-context-panel-row-main">
+                    <span className="tb-context-panel-row-swatch" style={{ background: threadContextCategoryColor(category) }} />
+                  <span className="tb-context-panel-row-label">{category.label}</span>
+                </span>
+                <span className="tb-context-panel-row-value">
+                  {!hasDisplayContextUsage && category.key === "free_space"
+                    ? "100%"
+                    : `${formatCompactTokenCount(getContextCategoryDisplayTokens(category, displayContextMetrics))} tokens`}
+                </span>
+              </div>
+            ))}
+            </div>
+
+            <div className="tb-context-panel-actions">
+              <button
+                type="button"
+                className="tb-context-panel-action"
+                disabled={!effectiveThreadContextAvailableActions.compact || threadContextActionLoading !== null}
+                onClick={() => void handleContextPopupActionClick("compact")}
+              >
+                <span className="tb-context-panel-action-single">
+                  <LucideMinimize2 className="tb-context-panel-action-icon" strokeWidth={1.75} />
+                  <span>/compact</span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="tb-context-panel-action"
+                disabled={!effectiveThreadContextAvailableActions.clear || threadContextActionLoading !== null}
+                onClick={() => void handleContextPopupActionClick("clear")}
+              >
+                <span className="tb-context-panel-action-single">
+                  <LucideEraser className="tb-context-panel-action-icon" strokeWidth={1.75} />
+                  <span>/clear</span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="tb-context-panel-action"
+                disabled={!effectiveThreadContextAvailableActions.btw || threadContextActionLoading !== null}
+                onClick={() => void handleContextPopupActionClick("btw")}
+              >
+                <span className="tb-context-panel-action-single">
+                  <LucideMessageCircle className="tb-context-panel-action-icon" strokeWidth={1.75} />
+                  <span>/btw</span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="tb-context-panel-action"
+                disabled={!effectiveThreadContextAvailableActions.fork || threadContextActionLoading !== null}
+                onClick={() => void handleContextPopupActionClick("fork")}
+              >
+                <span className="tb-context-panel-action-single">
+                  <LucideGitBranch className="tb-context-panel-action-icon" strokeWidth={1.75} />
+                  <span>/fork</span>
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderContextIndicatorControl() {
+    return (
+      <div className="tb-selector-anchor tb-context-indicator-anchor">
+        <button
+          type="button"
+          className={`tb-context-indicator-button ${showContextPopup ? "active" : ""} ${isThreadContextLoading ? "loading" : ""}`.trim()}
+          onClick={handleContextIndicatorClick}
+          aria-label="Conversation context remaining"
+          title={contextIndicatorTitle}
+        >
+          <span className="tb-context-indicator-ring" style={{ "--tb-context-progress": String(contextUsageRatio) } as CSSProperties} />
+        </button>
+
+        {showContextPopup ? renderThreadContextPopup() : null}
+      </div>
+    );
+  }
+
+  function renderFileBrowserItem(item: RunnerChatFileNode, depth = 0) {
+    const isSelected = selectedFileBrowserIds.includes(item.id);
+    const isPreviewActive = previewFileBrowserItem?.id === item.id;
+    const isExpanded = expandedFileBrowserFolderIds.includes(item.id);
+    const isFolderLoading =
+      currentFileBrowserSource === "google-drive"
+        ? loadingGoogleDriveFolderIds.includes(item.id)
+        : currentFileBrowserSource === "one-drive"
+          ? loadingOneDriveFolderIds.includes(item.id)
+          : currentFileBrowserSource === "github"
+            ? loadingGithubFolderIds.includes(item.id)
+            : false;
+    const nestedItems = fileBrowserSearchQuery.trim() ? [] : fileItemsForParent(fileBrowserItems, item.id);
+    const showGithubFolderCheckbox = currentFileBrowserSource === "github" && item.isFolder;
+
+    return (
+      <div key={item.id}>
+        <div
+          className={`tb-file-browser-item ${isPreviewActive ? "preview" : ""} ${isSelected ? "selected" : ""}`}
+          onClick={() => handleFileBrowserItemClick(item)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              handleFileBrowserItemClick(item);
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          style={{ paddingLeft: `${12 + depth * 20}px` }}
+        >
+          {item.isFolder ? (
+            <button type="button" className="tb-file-browser-item-leading" onClick={(event) => toggleFileBrowserFolderExpansion(item.id, event)}>
+              {isFolderLoading ? <IconLoader2 className="tb-file-browser-folder-chevron tb-file-browser-folder-chevron-spin" /> : isExpanded ? <IconChevronDown className="tb-file-browser-folder-chevron" /> : <IconChevronRight className="tb-file-browser-folder-chevron" />}
+            </button>
+          ) : (
+            <div
+              className={`tb-file-browser-check ${isSelected ? "selected" : ""}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleFileBrowserItemClick(item);
+              }}
+            >
+              {isSelected ? <IconCheck className="tb-file-browser-check-icon" /> : null}
+            </div>
+          )}
+          {showGithubFolderCheckbox ? (
+            <div
+              className={`tb-file-browser-check ${isSelected ? "selected" : ""}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                setSelectedGithubFileIds((current) => toggleFileSelection(current, item.id));
+              }}
+            >
+              {isSelected ? <IconCheck className="tb-file-browser-check-icon" /> : null}
+            </div>
+          ) : null}
+          {renderBrowserFileIcon(item, "tb-file-browser-item-icon")}
+          <span className="tb-file-browser-item-name">{item.name}</span>
+          <span className="tb-file-browser-item-meta">{formatBrowserFileDate(item.modifiedTime)}</span>
+          <span className="tb-file-browser-item-size">{item.isFolder ? "" : formatBrowserFileSize(item.size)}</span>
+        </div>
+
+        {item.isFolder && isExpanded && nestedItems.length > 0 ? (
+          <div className="tb-file-browser-item-children">{nestedItems.map((nestedItem) => renderFileBrowserItem(nestedItem, depth + 1))}</div>
+        ) : null}
+      </div>
+    );
+  }
+
+  useEffect(() => {
+    return () => {
+      if (fileBrowserPreviewObjectUrlRef.current) {
+        URL.revokeObjectURL(fileBrowserPreviewObjectUrlRef.current);
+        fileBrowserPreviewObjectUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showFileBrowserModal || currentFileBrowserSource !== "workspace") {
+      return;
+    }
+
+    if (!hasApiKey) {
+      setRemoteWorkspaceItems([]);
+      setWorkspaceBrowserError(null);
+      setIsWorkspaceBrowserLoading(false);
+      return;
+    }
+
+    if (!activeWorkspaceEnvironmentId) {
+      setRemoteWorkspaceItems([]);
+      setWorkspaceBrowserError("Select an environment to browse workspace files.");
+      setIsWorkspaceBrowserLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
+    setIsWorkspaceBrowserLoading(true);
+    setWorkspaceBrowserError(null);
+
+    fetch(`${normalizedBackendUrl}/environments/${activeWorkspaceEnvironmentId}/files?depth=-1`, {
+      method: "GET",
+      headers,
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const text = await response.text();
+        let parsed: any = {};
+        try {
+          parsed = text ? JSON.parse(text) : {};
+        } catch {
+          parsed = { message: text };
+        }
+
+        if (!response.ok) {
+          throw new Error(parsed?.message || parsed?.error || `Failed to load workspace files (${response.status})`);
+        }
+
+        setRemoteWorkspaceItems(normalizeEnvironmentWorkspaceItems(parsed));
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
+        setRemoteWorkspaceItems([]);
+        setWorkspaceBrowserError(normalizedError.message || "Failed to load workspace files.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsWorkspaceBrowserLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [
+    apiKey,
+    currentFileBrowserSource,
+    hasApiKey,
+    normalizedBackendUrl,
+    requestHeaders,
+    activeWorkspaceEnvironmentId,
+    showFileBrowserModal,
+  ]);
+
+  useEffect(() => {
+    if (!showFileBrowserModal || currentFileBrowserSource !== "google-drive" || !googleDriveConnected || !googleDriveConfig?.fetchItems) {
+      return;
+    }
+
+    const folderId = currentFileBrowserFolderId || "root";
+    if (loadedGoogleDriveFolderIds.includes(folderId) || loadingGoogleDriveFolderIds.includes(folderId)) {
+      return;
+    }
+
+    void loadGoogleDriveFolder(folderId);
+  }, [
+    currentFileBrowserFolderId,
+    currentFileBrowserSource,
+    googleDriveConfig,
+    googleDriveConnected,
+    loadedGoogleDriveFolderIds,
+    loadingGoogleDriveFolderIds,
+    showFileBrowserModal,
+  ]);
+
+  useEffect(() => {
+    if (!showFileBrowserModal || currentFileBrowserSource !== "one-drive" || !oneDriveConnected || !oneDriveConfig?.fetchItems) {
+      return;
+    }
+
+    const folderId = currentFileBrowserFolderId || "root";
+    if (loadedOneDriveFolderIds.includes(folderId) || loadingOneDriveFolderIds.includes(folderId)) {
+      return;
+    }
+
+    void loadOneDriveFolder(folderId);
+  }, [
+    currentFileBrowserFolderId,
+    currentFileBrowserSource,
+    loadedOneDriveFolderIds,
+    loadingOneDriveFolderIds,
+    oneDriveConfig,
+    oneDriveConnected,
+    showFileBrowserModal,
+  ]);
+
+  useEffect(() => {
+    if (!showFileBrowserModal || currentFileBrowserSource !== "github" || !githubConnected || !githubConfig?.fetchItems) {
+      return;
+    }
+
+    const folderId = currentFileBrowserFolderId || "root";
+    if (loadedGithubFolderIds.includes(folderId) || loadingGithubFolderIds.includes(folderId)) {
+      return;
+    }
+
+    void loadGithubFolder(folderId);
+  }, [
+    currentFileBrowserFolderId,
+    currentFileBrowserSource,
+    githubConfig,
+    githubConnected,
+    loadedGithubFolderIds,
+    loadingGithubFolderIds,
+    showFileBrowserModal,
+  ]);
+
+  useEffect(() => {
+    if (!showFileBrowserModal || currentFileBrowserSource !== "notion" || !notionConnected || !notionConfig?.fetchDatabases || notionDatabasesLoaded) {
+      return;
+    }
+
+    let cancelled = false;
+    setIsNotionBrowserLoading(true);
+    setNotionBrowserError(null);
+
+    void notionConfig.fetchDatabases()
+      .then((databases) => {
+        if (cancelled) return;
+        setRemoteNotionDatabases(databases || []);
+        setNotionDatabasesLoaded(true);
+        setNotionBrowserError(null);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
+        setRemoteNotionDatabases([]);
+        setNotionDatabasesLoaded(false);
+        setNotionBrowserError(normalizedError.message || "Failed to load Notion databases.");
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsNotionBrowserLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    currentFileBrowserSource,
+    notionConfig?.fetchDatabases,
+    notionConnected,
+    notionDatabasesLoaded,
+    showFileBrowserModal,
+  ]);
+
+  useEffect(() => {
+    if (fileBrowserPreviewObjectUrlRef.current) {
+      URL.revokeObjectURL(fileBrowserPreviewObjectUrlRef.current);
+      fileBrowserPreviewObjectUrlRef.current = null;
+    }
+
+    if (!previewFileBrowserItem || previewFileBrowserItem.isFolder || !isBrowserFilePreviewable(previewFileBrowserItem)) {
+      setFileBrowserPreviewContent(null);
+      setFileBrowserPreviewKind(null);
+      setIsFileBrowserPreviewLoading(false);
+      return;
+    }
+
+    const fileType = getBrowserFileType(previewFileBrowserItem.mimeType, previewFileBrowserItem.name);
+
+    const connectorFetchFileContent =
+      currentFileBrowserSource === "google-drive"
+        ? googleDriveConfig?.fetchFileContent
+        : currentFileBrowserSource === "one-drive"
+          ? oneDriveConfig?.fetchFileContent
+          : currentFileBrowserSource === "github"
+            ? githubConfig?.fetchFileContent
+            : undefined;
+
+    if (currentFileBrowserSource !== "workspace" && currentFileBrowserSource !== "notion" && connectorFetchFileContent) {
+
+      let cancelled = false;
+      setIsFileBrowserPreviewLoading(true);
+      setFileBrowserPreviewContent(null);
+      setFileBrowserPreviewKind(null);
+
+      void connectorFetchFileContent(previewFileBrowserItem)
+        .then((payload) => {
+          if (cancelled) return;
+          if (!payload?.content) {
+            if (fileType === "image" && previewFileBrowserItem.previewUrl) {
+              setFileBrowserPreviewKind("image");
+              setFileBrowserPreviewContent(previewFileBrowserItem.previewUrl);
+            } else {
+              setFileBrowserPreviewContent(null);
+              setFileBrowserPreviewKind(null);
+            }
+            return;
+          }
+
+          if (fileType === "image") {
+            const mimeType = payload.mimeType || previewFileBrowserItem.mimeType || "image/png";
+            setFileBrowserPreviewKind("image");
+            setFileBrowserPreviewContent(`data:${mimeType};base64,${normalizeBase64Content(payload.content)}`);
+            return;
+          }
+
+          if (payload.encoding === "base64") {
+            const decoded = decodeBase64TextContent(payload.content);
+            setFileBrowserPreviewKind("text");
+            setFileBrowserPreviewContent(decoded.slice(0, 5000));
+            return;
+          }
+
+          setFileBrowserPreviewKind("text");
+          setFileBrowserPreviewContent(payload.content.slice(0, 5000));
+        })
+        .catch(() => {
+          if (cancelled) return;
+          if (fileType === "image" && previewFileBrowserItem.previewUrl) {
+            setFileBrowserPreviewKind("image");
+            setFileBrowserPreviewContent(previewFileBrowserItem.previewUrl);
+          } else {
+            setFileBrowserPreviewContent(null);
+            setFileBrowserPreviewKind(null);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setIsFileBrowserPreviewLoading(false);
+          }
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (currentFileBrowserSource !== "workspace") {
+      if (fileType === "image" && previewFileBrowserItem.previewUrl) {
+        setFileBrowserPreviewKind("image");
+        setFileBrowserPreviewContent(previewFileBrowserItem.previewUrl);
+      } else {
+        setFileBrowserPreviewKind(null);
+        setFileBrowserPreviewContent(null);
+      }
+      setIsFileBrowserPreviewLoading(false);
+      return;
+    }
+
+    const previewUrl = buildEnvironmentFileDownloadUrl(normalizedBackendUrl, activeWorkspaceEnvironmentId, previewFileBrowserItem.path);
+    if (!previewUrl) {
+      setFileBrowserPreviewContent(null);
+      setFileBrowserPreviewKind(null);
+      setIsFileBrowserPreviewLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
+    setIsFileBrowserPreviewLoading(true);
+    setFileBrowserPreviewContent(null);
+    setFileBrowserPreviewKind(null);
+
+    fetch(previewUrl, {
+      method: "GET",
+      headers,
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load preview (${response.status})`);
+        }
+
+        if (fileType === "image") {
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          fileBrowserPreviewObjectUrlRef.current = objectUrl;
+          setFileBrowserPreviewKind("image");
+          setFileBrowserPreviewContent(objectUrl);
+          return;
+        }
+
+        const text = await response.text();
+        setFileBrowserPreviewKind("text");
+        setFileBrowserPreviewContent(text.slice(0, 5000));
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setFileBrowserPreviewContent(null);
+        setFileBrowserPreviewKind(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsFileBrowserPreviewLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [
+    activeWorkspaceEnvironmentId,
+    apiKey,
+    currentFileBrowserSource,
+    googleDriveConfig,
+    githubConfig,
+    normalizedBackendUrl,
+    oneDriveConfig,
+    previewFileBrowserItem,
+    requestHeaders,
+  ]);
+
+  useEffect(() => {
+    if (!hasInputPopupOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (popupAreaRef.current?.contains(target)) return;
+      closeAllInputPopups("outside");
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [hasInputPopupOpen]);
+
+  useEffect(() => {
+    if (!useComputerAgentsMode || disabled || isPreparingRun || showFileBrowserModal) return;
+
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if ((!event.metaKey && !event.ctrlKey) || event.altKey || event.shiftKey || event.repeat) {
+        return;
+      }
+      const shortcutKey = event.key.toLowerCase();
+      if (shortcutKey === ATTACH_FILES_SHORTCUT_KEY) {
+        event.preventDefault();
+        setActiveInputPopup("attach-files");
+        return;
+      }
+      if (shortcutKey === SCHEDULE_SHORTCUT_KEY) {
+        event.preventDefault();
+        setActiveInputPopup("schedule");
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [disabled, isPreparingRun, showFileBrowserModal, useComputerAgentsMode]);
+
+  const hasCustomEmptyState = turns.length === 0 && emptyState !== undefined && emptyState !== null;
+
+  return (
+    <div
+      ref={rootRef}
+      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${className || ""}`.trim()}
+      style={
+        {
+          "--tb-document-preview-width": previewedDocumentAttachment
+            ? documentPreviewDrawerWidth !== null
+              ? `${documentPreviewDrawerWidth}px`
+              : "var(--tb-document-preview-max-width)"
+            : "0px",
+        } as CSSProperties
+      }
+    >
+      <input ref={fileInputRef} type="file" multiple hidden onChange={handleAddFiles} />
+
+      {quotedSelectionPopup ? (
+        <div
+          ref={quotedSelectionPopupRef}
+          className="tb-selection-popup"
+          style={{
+            left: `${quotedSelectionPopup.x}px`,
+            top: `${quotedSelectionPopup.y}px`,
+          }}
+        >
+          <button
+            type="button"
+            className="tb-selection-popup-button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={handleAddQuotedSelectionToComposer}
+          >
+            <LucideTextQuote className="tb-selection-popup-icon" strokeWidth={1.7} />
+            <span>Add to chat</span>
+          </button>
+        </div>
+      ) : null}
+
+      <div className="workinglogsbox">
+        <div
+          className={`tb-log-scroll ${hasCustomEmptyState ? "is-custom-empty-state" : ""}`.trim()}
+          ref={logsRef}
+          onMouseUp={handleQuotedSelectionMouseUp}
+        >
+          <div className={`tb-content-width ${hasCustomEmptyState ? "is-custom-empty-state" : ""}`.trim()}>
+            {turns.length === 0
+              ? hasCustomEmptyState
+                ? emptyState
+                : <div className="runner-log-empty">No logs yet. Run a task to start streaming.</div>
+              : null}
+            {turns.map((turn, turnIndex) => {
+              const isTurnRunning = turn.status === "running";
+              const isQueuedTurn = turn.status === "queued";
+              const turnSeconds = getTurnDurationSeconds(turn);
+              const agentMessage = [...turn.logs]
+                .reverse()
+                .find((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+              const isBtwTurn = turn.presentation === "btw" || turn.prompt.trim().toLowerCase().startsWith("/btw");
+              const isEditingTurn = editingTurnId === turn.id;
+              const canEditTurn = isEditableUserTurn(turn);
+              const taskPreviewForTurn =
+                threadTaskPreview &&
+                !isBtwTurn &&
+                turn.presentation !== "context-action-notice" &&
+                (turn.isInitialTurn || turnIndex === 0)
+                  ? threadTaskPreview
+                  : null;
+              const isActionableTurn = isActionableUserTurn(turn);
+              const isForkingTurn = forkingTurnId === turn.id;
+              const isEditablePromptTurn = canEditTurn && !taskPreviewForTurn;
+              const showTurnActions = isActionableTurn && !isEditingTurn && !taskPreviewForTurn;
+              const areTurnActionsDisabled = !canEditTurn || isForkingTurn || Boolean(taskPreviewForTurn);
+              const actionSummaryLog =
+                turn.presentation === "context-action-notice"
+                  ? turn.logs.find((log) => log.eventType === "action_summary") || null
+                  : null;
+              const summaryPreviewAttachments = collectTurnSummaryPreviewAttachments(turn.logs, {
+                backendUrl: normalizedBackendUrl,
+                environmentId: summaryPreviewEnvironmentId,
+              });
+              const normalizedAgentResponseMessage = agentMessage?.message
+                ? stripSystemTags(agentMessage.message).replace(/\s+/g, " ").trim()
+                : "";
+              const timelineLogs = dedupeAdjacentRunnerLogs(
+                turn.logs.filter(
+                  (log) =>
+                    shouldDisplayTimelineLog(log) &&
+                    !(
+                      (log.eventType === "reasoning" || log.isReasoning) &&
+                      normalizedAgentResponseMessage &&
+                      stripSystemTags(log.message || "").replace(/\s+/g, " ").trim() === normalizedAgentResponseMessage
+                    )
+                )
+              );
+              const displayedTimelineLogs =
+                timelineLogs.length === 0 && isTurnRunning
+                  ? [
+                      {
+                        time: "00:00",
+                        message: "Setting up workspace...",
+                        type: "info" as const,
+                        eventType: "setup" as const,
+                      },
+                    ]
+                  : timelineLogs;
+              const isWorkLogsLoading =
+                isThreadHistoryLoading &&
+                !isTurnRunning &&
+                Boolean(agentMessage?.message) &&
+                displayedTimelineLogs.length === 0;
+              const isExpanded = expandedTurns[turn.id] ?? !isThreadHistoryLoading;
+              const baseDelay = turnIndex * 140;
+              const promptStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay) : undefined;
+              const metaHeaderStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 40) : undefined;
+              const workHeaderStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 60) : undefined;
+              const responseStyle = turn.animateOnRender
+                ? getRunnerChatEnterAnimationStyle(baseDelay + 150 + displayedTimelineLogs.length * 45)
+                : undefined;
+              const turnAgentLabel = turn.agentName || displayedAgentLabel || "Agent";
+              const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
+              const workLabel = isWorkLogsLoading
+                ? "Loading Working Logs..."
+                : isTurnRunning
+                  ? "Working..."
+                  : `Worked for ${turnSeconds}s`;
+              const shouldRenderWorkSection = isTurnRunning || displayedTimelineLogs.length > 0 || isWorkLogsLoading;
+
+              if (actionSummaryLog) {
+                const actionType = actionSummaryLog.metadata?.actionType;
+                const isPendingActionSummary = Boolean(actionSummaryLog.metadata?.isPending);
+                const isActionSummaryClickable =
+                  !isPendingActionSummary &&
+                  typeof onActionSummaryClick === "function" &&
+                  (actionType === "revert" || actionType === "reapply") &&
+                  Boolean(actionSummaryLog.metadata?.revertedChangeStepId || actionSummaryLog.metadata?.revertedFilePath);
+                const actionSummaryContent = isActionSummaryClickable ? (
+                  <button
+                    type="button"
+                    className="tb-context-action-notice-copy tb-context-action-notice-copy-button"
+                    onClick={() =>
+                      onActionSummaryClick?.({
+                        actionType,
+                        message: actionSummaryLog.message,
+                        revertedChangeStepId: actionSummaryLog.metadata?.revertedChangeStepId ?? null,
+                        revertedFilePath: actionSummaryLog.metadata?.revertedFilePath ?? null,
+                        revertedFileName: actionSummaryLog.metadata?.revertedFileName ?? null,
+                      })
+                    }
+                  >
+                    {isPendingActionSummary ? (
+                      <LucideLoaderCircle className="tb-context-action-notice-icon tb-context-action-notice-icon-spinner" strokeWidth={1.5} />
+                    ) : (
+                      <LucideFileText className="tb-context-action-notice-icon" strokeWidth={1.5} />
+                    )}
+                    <span>{actionSummaryLog.message}</span>
+                  </button>
+                ) : (
+                  <span className="tb-context-action-notice-copy">
+                    {isPendingActionSummary ? (
+                      <LucideLoaderCircle className="tb-context-action-notice-icon tb-context-action-notice-icon-spinner" strokeWidth={1.5} />
+                    ) : (
+                      <LucideFileText className="tb-context-action-notice-icon" strokeWidth={1.5} />
+                    )}
+                    <span>{actionSummaryLog.message}</span>
+                  </span>
+                );
+                return (
+                  <div key={turn.id} className="tb-turn tb-turn-context-action-notice">
+                    {turn.prompt.trim() ? (
+                      <div className="task-prompt-in-session-context" style={promptStyle}>
+                        <RunnerMarkdown
+                          content={stripSystemTags(turn.prompt)}
+                          className="tb-message-markdown tb-message-markdown-user"
+                          softBreaks
+                          disallowHeadings
+                        />
+                      </div>
+                    ) : null}
+                    <div
+                      className={`tb-context-action-notice ${actionType ? `tb-context-action-notice-${actionType}` : ""} ${isPendingActionSummary ? "tb-context-action-notice-pending" : ""}`.trim()}
+                      style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 40) : undefined}
+                    >
+                      <span className="tb-context-action-notice-line" />
+                      {actionSummaryContent}
+                      <span className="tb-context-action-notice-line" />
+                    </div>
+                  </div>
+                );
+              }
+
+              if (isBtwTurn) {
+                return (
+                  <div key={turn.id} className="tb-turn tb-turn-btw">
+                    <div className="tb-btw-turn-card" style={promptStyle}>
+                      <div className="tb-btw-turn-prompt">
+                        <RunnerMarkdown
+                          content={stripSystemTags(turn.prompt)}
+                          className="tb-message-markdown tb-message-markdown-user"
+                          softBreaks
+                          disallowHeadings
+                        />
+                      </div>
+                      {isTurnRunning && !agentMessage?.message ? (
+                        <div className="tb-btw-turn-pending tb-thinking-status" style={responseStyle}>
+                          <LucideLoaderCircle className="tb-btw-turn-pending-icon tb-context-action-notice-icon-spinner" strokeWidth={1.5} />
+                          <span>Thinking...</span>
+                        </div>
+                      ) : null}
+                      {agentMessage?.message ? (
+                        <div className="tb-btw-turn-response" style={responseStyle}>
+                          <RunnerMarkdown
+                            content={stripSystemTags(agentMessage.message)}
+                            className="tb-message-markdown tb-message-markdown-summary"
+                            softBreaks
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              }
+
+              if (taskPreviewForTurn && !isEditingTurn) {
+                return (
+                  <div key={turn.id} className="tb-turn tb-turn-user tb-turn-user-task-preview">
+                    <div className="tb-task-preview-turn-shell" style={promptStyle}>
+                      <button
+                        type="button"
+                        className="tb-task-preview-card"
+                        onClick={() => {
+                          if (typeof onTaskPreviewClick === "function") {
+                            onTaskPreviewClick(taskPreviewForTurn);
+                          }
+                        }}
+                      >
+                        <div className="tb-task-preview-card-top">
+                          <div className="tb-task-preview-card-title-wrap">
+                            <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
+                              {normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask"
+                                ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
+                                : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
+                            </div>
+                            {renderRunnerTaskPreviewPriorityIcon(taskPreviewForTurn.priority, "tb-task-preview-priority-icon")}
+                            <span className="tb-task-preview-ticket">{taskPreviewForTurn.ticketNumber}</span>
+                            <span className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</span>
+                          </div>
+                          <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreviewForTurn.status)}`.trim()}>
+                            {getRunnerTaskPreviewStatusLabel(taskPreviewForTurn.status)}
+                          </span>
+                        </div>
+                        <div className="tb-task-preview-card-description">
+                          {String(taskPreviewForTurn.description || "").trim() || "No description"}
+                        </div>
+                      </button>
+                    </div>
+
+                    {!isQueuedTurn ? (
+                      <div className="tb-turn-meta" style={metaHeaderStyle}>
+                        <span className="tb-turn-agent-name">{turnAgentLabel}</span>
+                        <div className="tb-turn-environment-pill">
+                          <LucideCloud className="tb-turn-environment-icon" />
+                          <span className="tb-turn-environment-label">{turnEnvironmentLabel}</span>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {shouldRenderWorkSection ? (
+                      <>
+                        <button
+                          type="button"
+                          className="tb-work-header"
+                          style={workHeaderStyle}
+                          onClick={() => setExpandedTurns((prev) => ({ ...prev, [turn.id]: !isExpanded }))}
+                        >
+                          <LucideRoute className="tb-step-row-icon" strokeWidth={1.5} />
+                          <span className="tb-work-label">{workLabel}</span>
+                          {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
+                          {isTurnRunning ? (
+                            <LucideLoaderCircle className="tb-work-header-spinner" strokeWidth={1.7} />
+                          ) : null}
+                        </button>
+
+                        <div className={`tb-work-collapse ${isExpanded ? "" : "collapsed"}`}>
+                          {isExpanded ? (
+                            <div className="tb-work-collapse-inner">
+                              <div className="agent-steps-container">
+                                <div className="agent-steps-line" />
+                                {displayedTimelineLogs.map((log, index) => (
+                                  <div
+                                    key={stepRowKey(turn.id, index, log)}
+                                    className="agent-step-item"
+                                    style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
+                                  >
+                                    <div className="agent-step-content">{renderTimelineLog(turn.id, log, index)}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              {isTurnRunning && displayedTimelineLogs.length > 0 && !agentMessage?.message ? (
+                                <div className="agent-step-item" style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineLogs.length * 45) : undefined}>
+                                  <div className="agent-step-content">
+                                    <InlineStatusLogBox
+                                      label="Thinking..."
+                                      icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
+                                      pending
+                                    />
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      </>
+                    ) : null}
+
+                    {agentMessage?.message ? (
+                      <div className="tb-turn-summary" style={responseStyle}>
+                        {summaryPreviewAttachments.length > 0 ? (
+                          <div className="runner-attachments runner-attachments-summary" role="list" aria-label="Changed files">
+                            {summaryPreviewAttachments.map((attachment) => (
+                              <div key={`${turn.id}:${attachment.id}`} role="listitem">
+                                {renderAttachmentPreviewChip(attachment)}
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+                        <div className="tb-turn-response">
+                          <RunnerMarkdown content={stripSystemTags(agentMessage.message)} className="tb-message-markdown tb-message-markdown-summary" />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              }
+
+              return (
+                <div key={turn.id} className="tb-turn tb-turn-user">
+                  <div
+                    className={`tb-user-turn-shell ${showTurnActions ? "tb-user-turn-shell-has-actions" : ""} ${isEditablePromptTurn ? "tb-user-turn-shell-editable" : ""} ${isEditingTurn ? "tb-user-turn-shell-editing" : ""} ${isForkingTurn ? "tb-user-turn-shell-forking" : ""}`.trim()}
+                    style={promptStyle}
+                  >
+                    {turn.attachments && turn.attachments.length > 0 ? (
+                      <div className="runner-attachments runner-attachments-turn">
+                        {turn.attachments.map((attachment) => renderAttachmentPreviewChip(attachment))}
+                      </div>
+                    ) : null}
+                    {turn.quotedSelection ? (
+                      <div className="tb-user-turn-quote">
+                        <LucideTextQuote className="tb-user-turn-quote-icon" strokeWidth={1.6} />
+                        <div className="tb-user-turn-quote-text">{turn.quotedSelection.text}</div>
+                      </div>
+                    ) : null}
+                    <div
+                      className={`task-prompt-in-session-context ${isEditablePromptTurn ? "tb-user-turn-editable" : ""} ${isEditingTurn ? "tb-user-turn-editing" : ""}`.trim()}
+                    >
+                      {isEditingTurn ? (
+                        <>
+                          <textarea
+                            ref={editingTextareaRef}
+                            className="tb-user-turn-editor"
+                            value={editingTurnDraft}
+                            onChange={(event) => setEditingTurnDraft(event.target.value)}
+                            onKeyDown={(event) => handleEditedTurnKeyDown(event, turn.id)}
+                            autoFocus
+                          />
+                          <div className="tb-user-turn-edit-actions">
+                            <button type="button" className="tb-user-turn-edit-button tb-user-turn-edit-button-secondary" onClick={cancelEditingTurn}>
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              className="tb-user-turn-edit-button tb-user-turn-edit-button-primary"
+                              onClick={() => handleEditedTurnSend(turn.id)}
+                              disabled={!editingTurnDraft.trim()}
+                            >
+                              Send
+                            </button>
+                          </div>
+                        </>
+                      ) : taskPreviewForTurn ? (
+                        <button
+                          type="button"
+                          className="tb-task-preview-card"
+                          onClick={() => {
+                            if (taskPreviewForTurn && typeof onTaskPreviewClick === "function") {
+                              onTaskPreviewClick(taskPreviewForTurn);
+                            }
+                          }}
+                        >
+                          <div className="tb-task-preview-card-top">
+                            <div className="tb-task-preview-card-title-wrap">
+                              <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
+                                {normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask"
+                                  ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
+                                  : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
+                              </div>
+                              {renderRunnerTaskPreviewPriorityIcon(taskPreviewForTurn.priority, "tb-task-preview-priority-icon")}
+                              <span className="tb-task-preview-ticket">{taskPreviewForTurn.ticketNumber}</span>
+                              <span className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</span>
+                            </div>
+                            <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreviewForTurn.status)}`.trim()}>
+                              {getRunnerTaskPreviewStatusLabel(taskPreviewForTurn.status)}
+                            </span>
+                          </div>
+                          <div className="tb-task-preview-card-meta">
+                            {taskPreviewForTurn.assigneeName ? <span>{taskPreviewForTurn.assigneeName}</span> : null}
+                            {taskPreviewForTurn.environmentName ? <span>{taskPreviewForTurn.environmentName}</span> : null}
+                            <span className="tb-task-preview-open">Open ticket</span>
+                          </div>
+                        </button>
+                      ) : (
+                        <RunnerMarkdown
+                          content={stripSystemTags(turn.prompt)}
+                          className="tb-message-markdown tb-message-markdown-user"
+                          softBreaks
+                          disallowHeadings
+                        />
+                      )}
+                    </div>
+                    {showTurnActions ? (
+                      <div className="tb-user-turn-actions">
+                        <button
+                          type="button"
+                          className="tb-user-turn-action-trigger"
+                          aria-label="Fork from message"
+                          onClick={() => openForkDialogForTurn(turn)}
+                          disabled={areTurnActionsDisabled}
+                        >
+                          {isForkingTurn ? (
+                            <LucideLoaderCircle className="tb-user-turn-edit-trigger-icon tb-context-action-notice-icon-spinner" strokeWidth={1.75} />
+                          ) : (
+                            <LucideGitBranch className="tb-user-turn-edit-trigger-icon" strokeWidth={1.75} />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className="tb-user-turn-action-trigger"
+                          aria-label="Edit message"
+                          onClick={() => startEditingTurn(turn)}
+                          disabled={areTurnActionsDisabled}
+                        >
+                          <LucidePencil className="tb-user-turn-edit-trigger-icon" strokeWidth={1.75} />
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {!isQueuedTurn ? (
+                    <div className="tb-turn-meta" style={metaHeaderStyle}>
+                      <span className="tb-turn-agent-name">{turnAgentLabel}</span>
+                      <div className="tb-turn-environment-pill">
+                        <LucideCloud className="tb-turn-environment-icon" />
+                        <span className="tb-turn-environment-label">{turnEnvironmentLabel}</span>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {shouldRenderWorkSection ? (
+                    <>
+                      <button
+                        type="button"
+                        className="tb-work-header"
+                        style={workHeaderStyle}
+                        onClick={() => setExpandedTurns((prev) => ({ ...prev, [turn.id]: !isExpanded }))}
+                      >
+                        <LucideRoute className="tb-step-row-icon" strokeWidth={1.5} />
+                        <span className="tb-work-label">{workLabel}</span>
+                        {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
+                      </button>
+
+                      <div className={`tb-work-collapse ${isExpanded ? "" : "collapsed"}`}>
+                        {isExpanded ? (
+                          <div className="tb-work-collapse-inner">
+                            <div className="agent-steps-container">
+                              <div className="agent-steps-line" />
+                              {displayedTimelineLogs.map((log, index) => (
+                                <div
+                                  key={stepRowKey(turn.id, index, log)}
+                                  className="agent-step-item"
+                                  style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
+                                >
+                                  <div className="agent-step-content">{renderTimelineLog(turn.id, log, index)}</div>
+                                </div>
+                              ))}
+                            </div>
+                            {isTurnRunning && displayedTimelineLogs.length > 0 && !agentMessage?.message ? (
+                              <div className="agent-step-item" style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineLogs.length * 45) : undefined}>
+                                <div className="agent-step-content">
+                                  <InlineStatusLogBox
+                                    label="Thinking..."
+                                    icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
+                                    pending
+                                  />
+                                </div>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    </>
+                  ) : null}
+
+                  {agentMessage?.message ? (
+                    <div className="tb-turn-summary" style={responseStyle}>
+                      {summaryPreviewAttachments.length > 0 ? (
+                        <div className="runner-attachments runner-attachments-summary" role="list" aria-label="Changed files">
+                          {summaryPreviewAttachments.map((attachment) => (
+                            <div key={`${turn.id}:${attachment.id}`} role="listitem">
+                              {renderAttachmentPreviewChip(attachment)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                      <div className="tb-turn-response">
+                        <RunnerMarkdown content={stripSystemTags(agentMessage.message)} className="tb-message-markdown tb-message-markdown-summary" />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="tb-input-shell">
+        <div className="tb-input-width">
+          <div className="embedded-runner-input">
+            <div
+              className={`task-input-box ${stagedComposerToneValue ? `task-input-box-thread-context task-input-box-thread-context-${stagedComposerToneValue}` : ""}`.trim()}
+            >
+              {attachments.length > 0 ? (
+                <div className="runner-attachments">
+                  {attachments.map((attachment) =>
+                    renderAttachmentPreviewChip(attachment, {
+                      removable: true,
+                      onRemove: () => removeAttachment(attachment.id),
+                    })
+                  )}
+                </div>
+              ) : null}
+
+              {renderedComposerQuotedSelection ? (
+                <div
+                  className={`tb-composer-quoted-selection ${isComposerQuotedSelectionVisible ? "tb-composer-quoted-selection-visible" : ""}`.trim()}
+                >
+                  <LucideTextQuote className="tb-composer-quoted-selection-icon" strokeWidth={1.7} />
+                  <div className="tb-composer-quoted-selection-copy">{previewQuotedSelectionText(renderedComposerQuotedSelection.text)}</div>
+                  <button
+                    type="button"
+                    className="tb-composer-quoted-selection-dismiss"
+                    onClick={clearComposerQuotedSelection}
+                    aria-label="Remove quoted text"
+                  >
+                    <LucideX className="tb-composer-quoted-selection-dismiss-icon" strokeWidth={1.75} />
+                  </button>
+                </div>
+              ) : null}
+
+              <div
+                className={`tb-composer-textarea-shell ${hasStagedComposerCommand ? "tb-composer-textarea-shell-staged" : ""}`.trim()}
+                style={
+                  hasStagedComposerCommand
+                    ? ({
+                        "--tb-staged-thread-command-offset": stagedComposerOffsetValue,
+                      } as CSSProperties)
+                    : undefined
+                }
+              >
+                {hasStagedComposerCommand ? (
+                  <span
+                    className={`tb-staged-thread-command ${stagedComposerToneValue ? `tb-staged-thread-command-${stagedComposerToneValue}` : ""}`.trim()}
+                  >
+                    {stagedComposerLabel}
+                  </span>
+                ) : null}
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  className={`sidebar-textarea ${hasStagedComposerCommand ? "sidebar-textarea-staged" : ""}`.trim()}
+                  value={input}
+                  onChange={handleInputChange}
+                  placeholder={hasStagedComposerCommand ? "" : placeholder}
+                  onKeyDown={handleKeyDown}
+                  readOnly={Boolean(stagedThreadContextCommand && !textareaAllowsPromptAfterStagedCommand)}
+                />
+              </div>
+
+                {useComputerAgentsMode ? (
+                  <div ref={popupAreaRef} className="task-input-controls task-input-controls-full">
+                    <div className="tb-selector-anchor">
+                      <button
+                        type="button"
+                        className={`task-attachment-button task-attachment-button-full ${hasPlusPopupOpen ? "active" : ""}`}
+                        onClick={toggleMainMenu}
+                        disabled={disabled || isPreparingRun}
+                        aria-label="More options"
+                        title="More options"
+                      >
+                        <IconPlus className="task-attachment-icon" />
+                      </button>
+
+                      {showMainMenu ? (
+                        <div className={`tb-popup-menu tb-popup-menu-main ${mainPopupAnimationClass}`.trim()}>
+                          <button
+                            type="button"
+                            className={`tb-popup-row tb-popup-row-divider tb-popup-row-core-action ${showAttachFilesPopup ? "selected" : ""}`}
+                            onClick={handleAttachFilesMenuClick}
+                          >
+                            <IconPaperclip className="tb-popup-icon" />
+                            <span className="tb-popup-label">Attach Files</span>
+                            <span className="tb-popup-shortcut" aria-label="Keyboard shortcut Command U">
+                              <span className="tb-popup-shortcut-key">⌘</span>
+                              <span className="tb-popup-shortcut-key tb-popup-shortcut-key-letter">{ATTACH_FILES_SHORTCUT_KEY.toUpperCase()}</span>
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row"
+                            onClick={() => openFileBrowserModal("github")}
+                          >
+                            <IconGithub className="tb-popup-icon tb-popup-brand-icon" />
+                            <span className="tb-popup-label">{githubConnected ? "GitHub" : "Connect GitHub"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row"
+                            onClick={() => openFileBrowserModal("google-drive")}
+                          >
+                            <IconGoogleDrive className="tb-popup-icon tb-popup-brand-icon" />
+                            <span className="tb-popup-label">{googleDriveConnected ? "Google Drive" : "Connect Google Drive"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row"
+                            onClick={() => openFileBrowserModal("one-drive")}
+                          >
+                            <IconOneDrive className="tb-popup-icon tb-popup-brand-icon" />
+                            <span className="tb-popup-label">{oneDriveConnected ? "OneDrive" : "Connect OneDrive"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row tb-popup-row-divider"
+                            onClick={() => openFileBrowserModal("notion")}
+                          >
+                            <IconNotion className="tb-popup-icon tb-popup-brand-icon" />
+                            <span className="tb-popup-label">{notionConnected ? "Notion" : "Connect Notion"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`tb-popup-row tb-popup-row-core-action ${showSkillsPopup ? "selected" : ""}`}
+                            onClick={() => openPlusPopup("skills")}
+                          >
+                            <IconLayers className="tb-popup-icon" />
+                            <span className="tb-popup-label">Skills</span>
+                            <IconChevronRight className="tb-popup-chevron" />
+                          </button>
+                          <button
+                            type="button"
+                            className={`tb-popup-row tb-popup-row-core-action ${showSchedulePopup ? "selected" : ""} ${scheduleEnabled ? "tb-popup-row-accent" : ""}`}
+                            onClick={() => openPlusPopup("schedule")}
+                          >
+                            <IconClock className="tb-popup-icon" />
+                            <span className="tb-popup-label">Schedule</span>
+                            <span className="tb-popup-shortcut" aria-label="Keyboard shortcut Command S">
+                              <span className="tb-popup-shortcut-key">⌘</span>
+                              <span className="tb-popup-shortcut-key tb-popup-shortcut-key-letter">{SCHEDULE_SHORTCUT_KEY.toUpperCase()}</span>
+                            </span>
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {showSkillsPopup ? (
+                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-skills ${sidePopupAnimationClass}`.trim()}>
+                          <div className="tb-popup-attach-topbar">
+                            <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeSkillsPopup} aria-label="Close skills popup">
+                              <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
+                            </button>
+                            <div className="tb-popup-attach-topbar-title">Skills</div>
+                            <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-confirm" onClick={() => closeAllInputPopups()} aria-label="Done">
+                              <LucideCheck className="tb-popup-attach-topbar-icon" strokeWidth={2} />
+                            </button>
+                          </div>
+                          <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
+                            <div className="tb-popup-nav">
+                              <button type="button" className={`tb-popup-nav-button ${skillsTab === "system" ? "active" : ""}`} onClick={() => setSkillsTab("system")}>
+                                System
+                              </button>
+                              <button type="button" className={`tb-popup-nav-button ${skillsTab === "custom" ? "active" : ""}`} onClick={() => setSkillsTab("custom")}>
+                                Custom
+                              </button>
+                            </div>
+                          </div>
+                          <div className="tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced tb-popup-panel-section-skills-body">
+                            {(skillsTab === "system" ? systemSkills : customSkillItems).map((skill) => {
+                              const isEnabled = enabledSkillIds.includes(skill.id);
+                              return (
+                                <button
+                                  key={skill.id}
+                                  type="button"
+                                  className={`tb-popup-row tb-popup-row-skill ${isEnabled ? "selected" : ""}`}
+                                  onClick={() => toggleSkill(skill.id)}
+                                >
+                                  {renderSkillIcon(skill, "tb-popup-icon")}
+                                  <span className="tb-popup-label">{skill.name}</span>
+                                  <span className="tb-popup-check-slot">{isEnabled ? <LucideCheck className="tb-popup-check" strokeWidth={1.75} /> : null}</span>
+                                </button>
+                              );
+                            })}
+                            {skillsTab === "custom" && isLoadingCustomSkills ? (
+                              <div className="tb-popup-loading-row">
+                                <span className="tb-popup-loading-spinner" aria-hidden="true" />
+                                <span className="tb-popup-loading-label">Loading custom skills...</span>
+                              </div>
+                            ) : null}
+                            {skillsTab === "custom" && !isLoadingCustomSkills && customSkillItems.length === 0 ? (
+                              <div className="tb-popup-empty-state">No custom skills yet.</div>
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {showGithubPopup ? (
+                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-panel ${sidePopupAnimationClass}`.trim()}>
+                          {!githubConnected ? (
+                            <div className="tb-popup-note">
+                              <div className="tb-popup-note-title">GitHub not connected</div>
+                              <div className="tb-popup-note-body">
+                                {hasApiKey ? "Provide GitHub auth in your host app to browse repositories and branches." : "Enter an API key in the playground sidebar to connect GitHub."}
+                              </div>
+                              <button type="button" className="tb-popup-action" onClick={() => {
+                                githubConfig?.onConnect?.();
+                                closeAllInputPopups();
+                              }}>
+                                Connect GitHub
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="tb-popup-panel-section">
+                                <label className="tb-popup-field-label">Repository</label>
+                                <select className="tb-popup-select" value={selectedGithubRepositoryId} onChange={(event) => selectGithubRepository(event.target.value)}>
+                                  <option value="">No repository</option>
+                                  {githubRepositories.map((repository) => (
+                                    <option key={repository.id} value={repository.id}>
+                                      {repository.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="tb-popup-panel-section tb-popup-panel-section-divider">
+                                <label className="tb-popup-field-label">{githubContextLabel}</label>
+                                <select className="tb-popup-select" value={selectedGithubContextId} onChange={(event) => selectGithubContext(event.target.value)}>
+                                  <option value="">{selectedGithubRepositoryId ? `Select ${githubContextLabel.toLowerCase()}...` : "Select repository first"}</option>
+                                  {githubContexts.map((context) => (
+                                    <option key={context.id} value={context.id}>
+                                      {context.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="tb-popup-panel-footer">
+                                <button type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => {
+                                  githubConfig?.onDisconnect?.();
+                                  closeAllInputPopups();
+                                }}>
+                                  <IconLogout className="tb-popup-action-icon" />
+                                  Disconnect GitHub
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {showNotionPopup ? (
+                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-panel ${sidePopupAnimationClass}`.trim()}>
+                          {!notionConnected ? (
+                            <div className="tb-popup-note">
+                              <div className="tb-popup-note-title">Notion not connected</div>
+                              <div className="tb-popup-note-body">
+                                {hasApiKey ? "Provide Notion auth in your host app to browse databases." : "Enter an API key in the playground sidebar to connect Notion."}
+                              </div>
+                              <button type="button" className="tb-popup-action" onClick={() => {
+                                notionConfig?.onConnect?.();
+                                closeAllInputPopups();
+                              }}>
+                                Connect Notion
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="tb-popup-panel-section tb-popup-panel-section-divider">
+                                <label className="tb-popup-field-label">Notion Database</label>
+                                <select className="tb-popup-select" value={selectedNotionDatabaseId} onChange={(event) => selectNotionDatabase(event.target.value)}>
+                                  <option value="">No database selected</option>
+                                  <option value="__entire_workspace__">Entire workspace</option>
+                                  {notionDatabases.map((database) => (
+                                    <option key={database.id} value={database.id}>
+                                      {database.icon ? `${database.icon} ` : ""}{database.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="tb-popup-panel-footer">
+                                <button type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => {
+                                  notionConfig?.onDisconnect?.();
+                                  closeAllInputPopups();
+                                }}>
+                                  <IconLogout className="tb-popup-action-icon" />
+                                  Disconnect Notion
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {showGoogleDrivePopup ? (
+                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-filebrowser ${sidePopupAnimationClass}`.trim()}>
+                          {!googleDriveConnected ? (
+                            <div className="tb-popup-note">
+                              <div className="tb-popup-note-title">Google Drive not connected</div>
+                              <div className="tb-popup-note-body">
+                                {hasApiKey ? "Provide Google Drive auth in your host app to browse files." : "Enter an API key in the playground sidebar to connect Google Drive."}
+                              </div>
+                              <button type="button" className="tb-popup-action" onClick={() => {
+                                googleDriveConfig?.onConnect?.();
+                                closeAllInputPopups();
+                              }}>
+                                Connect Google Drive
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="tb-popup-file-header">
+                                <div className="tb-popup-breadcrumbs">
+                                  {googleDrivePath.map((folder, index) => (
+                                    <span key={`${folder.id || "root"}-${index}`} className="tb-popup-breadcrumb-part">
+                                      {index > 0 ? <span>/</span> : null}
+                                      <button type="button" className="tb-popup-breadcrumb" onClick={() => setGoogleDriveFolderId(folder.id)}>
+                                        {folder.name}
+                                      </button>
+                                    </span>
+                                  ))}
+                                </div>
+                                <button type="button" className="tb-popup-icon-button" onClick={() => {
+                                  googleDriveConfig?.onDisconnect?.();
+                                  closeAllInputPopups();
+                                }} aria-label="Disconnect Google Drive">
+                                  <IconLogout className="tb-popup-icon-button-glyph" />
+                                </button>
+                              </div>
+                              <div className="tb-popup-file-list">
+                                {visibleGoogleDriveItems.length === 0 ? (
+                                  <div className="tb-popup-empty">This folder is empty</div>
+                                ) : (
+                                  visibleGoogleDriveItems.map((item) => (
+                                    <button
+                                      key={item.id}
+                                      type="button"
+                                      className={`tb-popup-file-row ${selectedGoogleDriveFileIds.includes(item.id) ? "selected" : ""}`}
+                                      onClick={() => {
+                                        if (item.isFolder) {
+                                          setGoogleDriveFolderId(item.id);
+                                          return;
+                                        }
+                                        setSelectedGoogleDriveFileIds((current) => toggleFileSelection(current, item.id));
+                                      }}
+                                    >
+                                      {item.isFolder ? <IconFolderOpen className="tb-popup-icon tb-popup-file-type" /> : <span className={`tb-popup-file-checkbox ${selectedGoogleDriveFileIds.includes(item.id) ? "selected" : ""}`}>{selectedGoogleDriveFileIds.includes(item.id) ? <IconCheck className="tb-popup-file-check" /> : null}</span>}
+                                      {!item.isFolder ? <IconFile className="tb-popup-icon tb-popup-file-type tb-popup-file-type-muted" /> : null}
+                                      <span className="tb-popup-file-name">{item.name}</span>
+                                      {item.isFolder ? <IconChevronRight className="tb-popup-chevron" /> : null}
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                              <div className="tb-popup-file-footer">
+                                <button type="button" className="tb-popup-action tb-popup-action-primary" disabled={selectedGoogleDriveFileIds.length === 0} onClick={() => void attachIntegrationFiles("google-drive")}>
+                                  <IconPaperclip className="tb-popup-action-icon" />
+                                  Attach {selectedGoogleDriveFileIds.length > 0 ? `${selectedGoogleDriveFileIds.length} file${selectedGoogleDriveFileIds.length > 1 ? "s" : ""}` : "Files"}
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {showOneDrivePopup ? (
+                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-filebrowser ${sidePopupAnimationClass}`.trim()}>
+                          {!oneDriveConnected ? (
+                            <div className="tb-popup-note">
+                              <div className="tb-popup-note-title">OneDrive not connected</div>
+                              <div className="tb-popup-note-body">
+                                {hasApiKey ? "Provide OneDrive auth in your host app to browse files." : "Enter an API key in the playground sidebar to connect OneDrive."}
+                              </div>
+                              <button type="button" className="tb-popup-action" onClick={() => {
+                                oneDriveConfig?.onConnect?.();
+                                closeAllInputPopups();
+                              }}>
+                                Connect OneDrive
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="tb-popup-file-header">
+                                <div className="tb-popup-breadcrumbs">
+                                  {oneDrivePath.map((folder, index) => (
+                                    <span key={`${folder.id || "root"}-${index}`} className="tb-popup-breadcrumb-part">
+                                      {index > 0 ? <span>/</span> : null}
+                                      <button type="button" className="tb-popup-breadcrumb" onClick={() => setOneDriveFolderId(folder.id)}>
+                                        {folder.name}
+                                      </button>
+                                    </span>
+                                  ))}
+                                </div>
+                                <button type="button" className="tb-popup-icon-button" onClick={() => {
+                                  oneDriveConfig?.onDisconnect?.();
+                                  closeAllInputPopups();
+                                }} aria-label="Disconnect OneDrive">
+                                  <IconLogout className="tb-popup-icon-button-glyph" />
+                                </button>
+                              </div>
+                              <div className="tb-popup-file-list">
+                                {visibleOneDriveItems.length === 0 ? (
+                                  <div className="tb-popup-empty">This folder is empty</div>
+                                ) : (
+                                  visibleOneDriveItems.map((item) => (
+                                    <button
+                                      key={item.id}
+                                      type="button"
+                                      className={`tb-popup-file-row ${selectedOneDriveFileIds.includes(item.id) ? "selected" : ""}`}
+                                      onClick={() => {
+                                        if (item.isFolder) {
+                                          setOneDriveFolderId(item.id);
+                                          return;
+                                        }
+                                        setSelectedOneDriveFileIds((current) => toggleFileSelection(current, item.id));
+                                      }}
+                                    >
+                                      {item.isFolder ? <IconFolderOpen className="tb-popup-icon tb-popup-file-type" /> : <span className={`tb-popup-file-checkbox ${selectedOneDriveFileIds.includes(item.id) ? "selected" : ""}`}>{selectedOneDriveFileIds.includes(item.id) ? <IconCheck className="tb-popup-file-check" /> : null}</span>}
+                                      {!item.isFolder ? <IconFile className="tb-popup-icon tb-popup-file-type tb-popup-file-type-muted" /> : null}
+                                      <span className="tb-popup-file-name">{item.name}</span>
+                                      {item.isFolder ? <IconChevronRight className="tb-popup-chevron" /> : null}
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                              <div className="tb-popup-file-footer">
+                                <button type="button" className="tb-popup-action tb-popup-action-primary" disabled={selectedOneDriveFileIds.length === 0} onClick={() => void attachIntegrationFiles("one-drive")}>
+                                  <IconPaperclip className="tb-popup-action-icon" />
+                                  Attach {selectedOneDriveFileIds.length > 0 ? `${selectedOneDriveFileIds.length} file${selectedOneDriveFileIds.length > 1 ? "s" : ""}` : "Files"}
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {showSchedulePopup ? (
+                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-schedule ${sidePopupAnimationClass}`.trim()}>
+                          <div className="tb-popup-attach-topbar">
+                            <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeSchedulePopup} aria-label="Close schedule popup">
+                              <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
+                            </button>
+                            <div className="tb-popup-attach-topbar-title">Schedule</div>
+                            <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-confirm" onClick={handleScheduleSubmit} aria-label="Confirm schedule">
+                              <LucideCheck className="tb-popup-attach-topbar-icon" strokeWidth={2} />
+                            </button>
+                          </div>
+                          <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
+                            <div className="tb-popup-nav">
+                              <button type="button" className={`tb-popup-nav-button ${scheduleType === "one-time" ? "active" : ""}`} onClick={() => setScheduleType("one-time")}>
+                                One-time
+                              </button>
+                              <button type="button" className={`tb-popup-nav-button ${scheduleType === "recurring" ? "active" : ""}`} onClick={() => setScheduleType("recurring")}>
+                                Recurring
+                              </button>
+                            </div>
+                          </div>
+                          <div className="tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced">
+                            <>
+                              <div className="tb-popup-field-row">
+                                <label className="tb-popup-field-label">Run at</label>
+                                <button type="button" className="tb-popup-link-button tb-popup-link-button-inline" onClick={() => {
+                                  scheduleConfig?.onOpenCalendarApp?.();
+                                  closeAllInputPopups();
+                                }}>
+                                  Open Calendar App
+                                  <LucideChevronRight className="tb-popup-link-chevron" strokeWidth={1.75} />
+                                </button>
+                              </div>
+                              <div className="tb-popup-select-wrap tb-popup-select-wrap-schedule">
+                                <input
+                                  type="datetime-local"
+                                  className="tb-popup-select tb-popup-select-schedule"
+                                  value={scheduledAtValue}
+                                  min={formatDateTimeLocalValue(new Date())}
+                                  onChange={(event) => setScheduledAtValue(event.target.value)}
+                                />
+                              </div>
+                              {scheduleType === "recurring" ? (
+                                <>
+                                  <div className="tb-popup-field-row tb-popup-field-row-followup">
+                                    <label className="tb-popup-field-label">Repeat</label>
+                                  </div>
+                                  <div className="tb-popup-preset-list">
+                                    {schedulePresets.map((preset) => (
+                                      <button key={preset.id} type="button" className={`tb-popup-preset-row ${selectedSchedulePresetId === preset.id ? "selected" : ""}`} onClick={() => setSelectedSchedulePresetId(preset.id)}>
+                                        <span className="tb-popup-check-slot">{selectedSchedulePresetId === preset.id ? <LucideCheck className="tb-popup-check" strokeWidth={1.75} /> : null}</span>
+                                        <span>{preset.label}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </>
+                              ) : null}
+                            </>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {showAttachFilesPopup ? (
+                        <div className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-attach ${sidePopupAnimationClass}`.trim()}>
+                          <div className="tb-popup-attach-topbar">
+                            <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeAttachFilesPopup} aria-label="Close attach files popup">
+                              <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
+                            </button>
+                            <div className="tb-popup-attach-topbar-title">Attach Files</div>
+                            <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-confirm" onClick={() => closeAllInputPopups()} aria-label="Done">
+                              <LucideCheck className="tb-popup-attach-topbar-icon" strokeWidth={2} />
+                            </button>
+                          </div>
+                          <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
+                            <div className="tb-popup-nav">
+                              <button type="button" className="tb-popup-nav-button active" onClick={handleUploadNewFilesClick}>
+                                Upload New
+                              </button>
+                              <button
+                                type="button"
+                                className="tb-popup-nav-button"
+                                onClick={() => {
+                                  openFileBrowserModal("workspace");
+                                }}
+                              >
+                                From Workspace
+                              </button>
+                            </div>
+                          </div>
+                          <div className="tb-popup-panel-section tb-popup-panel-section-attach-body tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced">
+                            <button
+                              type="button"
+                              className={`tb-popup-dropzone ${isDraggingOver ? "dragging" : ""}`}
+                              onClick={handleUploadNewFilesClick}
+                              onDragOver={(event) => {
+                                event.preventDefault();
+                                setIsDraggingOver(true);
+                              }}
+                              onDragLeave={() => setIsDraggingOver(false)}
+                              onDrop={(event) => {
+                                event.preventDefault();
+                                setIsDraggingOver(false);
+                                const droppedFiles = Array.from(event.dataTransfer.files || []);
+                                appendFiles(droppedFiles);
+                                if (droppedFiles.length > 0) {
+                                  closeAllInputPopups();
+                                }
+                              }}
+                            >
+                              <LucideUpload className="tb-popup-dropzone-icon" strokeWidth={1.75} />
+                              <span className="tb-popup-dropzone-title">{isDraggingOver ? "Drop files here" : "Drag & drop files here"}</span>
+                              <span className="tb-popup-dropzone-copy">or click to browse</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                    {renderContextIndicatorControl()}
+
+                    {agents.length > 0 ? (
+                      <div className="tb-selector-anchor">
+                        <button
+                          type="button"
+                          className={`tb-inline-selector tb-inline-selector-agent ${showAgentPopup ? "active" : ""}`.trim()}
+                          onClick={() => togglePopup("agent")}
+                        >
+                          <span>{displayedAgentLabel}</span>
+                          <IconChevronDown className="tb-inline-selector-chevron" />
+                        </button>
+
+                        {showAgentPopup ? (
+                          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent ${mainPopupAnimationClass}`.trim()}>
+                            {!hasApiKey ? (
+                              <div className="tb-popup-note">
+                                <div className="tb-popup-note-title">API key required</div>
+                                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select an agent.</div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="tb-popup-menu-title">Agent</div>
+                                <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
+                                  <div className="tb-popup-nav">
+                                    <button
+                                      type="button"
+                                      className={`tb-popup-nav-button ${agentPopupMode === "agents" ? "active" : ""}`}
+                                      onClick={() => setAgentPopupMode("agents")}
+                                    >
+                                      Agents
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`tb-popup-nav-button ${agentPopupMode === "teams" ? "active" : ""}`}
+                                      onClick={() => setAgentPopupMode("teams")}
+                                    >
+                                      Teams
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent">
+                                  {filteredOrderedAgents.length > 0 ? filteredOrderedAgents.map((agent) => {
+                                    const isTeamAgent = getRunnerAgentSelectorMode(agent) === "teams";
+                                    return (
+                                      <button
+                                        key={agent.id}
+                                        type="button"
+                                        className={`tb-popup-row tb-popup-row-select tb-popup-row-agent ${selectedAgentId === agent.id ? "selected" : ""}`}
+                                        onClick={() => selectAgent(agent.id)}
+                                      >
+                                        {isTeamAgent ? <IconLayers className="tb-popup-icon" /> : <IconUser className="tb-popup-icon" />}
+                                        <span className="tb-popup-label">{agent.name}</span>
+                                        <span className="tb-popup-check-slot">
+                                          {selectedAgentId === agent.id ? <IconCheck className="tb-popup-check" /> : null}
+                                        </span>
+                                      </button>
+                                    );
+                                  }) : (
+                                    <div className="tb-popup-menu-inline-empty">
+                                      <div className="tb-popup-empty-state">{agentPopupEmptyLabel}</div>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {scheduledTask ? (
+                      <div className="tb-schedule-chip">
+                        <LucideCalendar className="tb-schedule-chip-icon" strokeWidth={1.75} />
+                        <span className="tb-schedule-chip-label">{formatScheduleChipLabel(scheduledTask)}</span>
+                        <button type="button" className="tb-schedule-chip-clear" onClick={clearScheduledTask} aria-label="Clear schedule">
+                          <LucideX className="tb-schedule-chip-clear-icon" strokeWidth={1.75} />
+                        </button>
+                      </div>
+                    ) : null}
+
+                    <div className="task-input-spacer" />
+
+                    {availableEnvironments.length > 0 ? (
+                      <div className="tb-selector-anchor">
+                        <button
+                          type="button"
+                          className={`tb-inline-selector ${showEnvironmentPopup ? "active" : ""}`.trim()}
+                          onClick={() => togglePopup("environment")}
+                        >
+                          <span>{displayedEnvironmentLabel}</span>
+                          <IconChevronDown className="tb-inline-selector-chevron" />
+                        </button>
+
+                        {showEnvironmentPopup ? (
+                          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-right ${mainPopupAnimationClass}`.trim()}>
+                            {!hasApiKey ? (
+                              <div className="tb-popup-note">
+                                <div className="tb-popup-note-title">API key required</div>
+                                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select an environment.</div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="tb-popup-menu-title">Environment</div>
+                                <div className="tb-popup-menu-inline-body">
+                                  {orderedEnvironments.map((environment) => (
+                                    <button
+                                      key={environment.id}
+                                      type="button"
+                                      className={`tb-popup-row tb-popup-row-select ${selectedEnvironmentId === environment.id ? "selected" : ""}`}
+                                      onClick={() => selectEnvironment(environment.id)}
+                                    >
+                                      <span className="tb-popup-check-slot">
+                                        {selectedEnvironmentId === environment.id ? <IconCheck className="tb-popup-check" /> : null}
+                                      </span>
+                                      <span className="tb-popup-label">{environment.name}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {showRunPreparationIndicator ? (
+                      <button type="button" className="task-run-button task-run-button-full" disabled>
+                        <span className="runner-spinner" />
+                      </button>
+                    ) : showActiveRunStopButton ? (
+                      <button
+                        type="button"
+                        className="task-run-button task-run-button-full"
+                        onClick={cancel}
+                        disabled={disabled}
+                        aria-label="Stop agent"
+                        title="Stop agent"
+                      >
+                        <span className="task-stop-icon" />
+                      </button>
+                    ) : (
+                      <>
+                        {isListening ? <span className="task-recording-duration">{recordingElapsedSeconds}s</span> : null}
+                        <button
+                          type="button"
+                          className={`task-mic-button task-mic-button-full ${isListening ? "active" : ""}`}
+                          onClick={handleMicrophoneClick}
+                          disabled={disabled}
+                          aria-label={isListening ? "Stop speech to text" : "Start speech to text"}
+                          title={speechToTextTitle}
+                        >
+                          {isListening ? <IconStop className="task-mic-icon" /> : <IconMic className="task-mic-icon" />}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="task-input-controls">
+                    <button
+                      type="button"
+                      className="task-attachment-button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={disabled || isPreparingRun || attachments.length >= maxAttachments}
+                      aria-label="Upload files"
+                      title="Upload files"
+                    >
+                      <IconPlus className="task-attachment-icon" />
+                    </button>
+                    {renderContextIndicatorControl()}
+                    <div className="task-input-spacer" />
+                    {showRunPreparationIndicator ? (
+                      <button type="button" className="task-run-button" disabled>
+                        <span className="runner-spinner" />
+                      </button>
+                    ) : showActiveRunStopButton ? (
+                      <button
+                        type="button"
+                        className="task-run-button"
+                        onClick={cancel}
+                        disabled={disabled}
+                      >
+                        <span className="task-stop-icon" />
+                      </button>
+                    ) : (
+                      <>
+                        {isListening ? <span className="task-recording-duration">{recordingElapsedSeconds}s</span> : null}
+                        <button
+                          type="button"
+                          className={`task-mic-button ${isListening ? "active" : ""}`}
+                          onClick={handleMicrophoneClick}
+                          disabled={disabled}
+                          aria-label={isListening ? "Stop speech to text" : "Start speech to text"}
+                          title={speechToTextTitle}
+                        >
+                          {isListening ? <IconStop className="task-mic-icon" /> : <IconMic className="task-mic-icon" />}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+            {inlineError ? <div className="runner-inline-error">{inlineError}</div> : null}
+          </div>
+        </div>
+      </div>
+
+      {pendingForkConfiguration ? (
+        <div
+          className="tb-popup-modal-scrim"
+          onClick={() => {
+            if (forkingTurnId) return;
+            cancelPendingForkConfiguration();
+          }}
+        >
+          <div className="tb-popup-modal tb-fork-thread-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="tb-popup-modal-header">
+              <div className="tb-popup-note-title">Fork Thread</div>
+            </div>
+            <div className="tb-fork-thread-modal-body">
+              <div className="tb-popup-note-body">
+                {pendingForkConfiguration.source === "message"
+                  ? "Choose where the forked thread should run before opening the new chat. The selected user message will be staged in the composer and not sent automatically."
+                  : pendingForkConfiguration.stagedPrompt.trim()
+                    ? "Choose where the forked thread should run before opening the new chat. Your /fork prompt will be sent in the new thread after the fork is created."
+                    : "Choose where the forked thread should run before opening the new chat. The full conversation will be copied into the new thread."}
+              </div>
+
+              <div className="tb-fork-thread-section">
+                <div className="tb-fork-thread-section-header">
+                  <div className="tb-fork-thread-section-title">Environment</div>
+                  <div className="tb-fork-thread-section-copy">Pick an existing Environment or create a new Environment for this branch.</div>
+                </div>
+                <div className="tb-fork-thread-environment-list">
+                  <div
+                    className={`tb-popup-row tb-popup-row-select tb-fork-thread-environment-row ${forkTarget === "existing_environment" ? "selected" : ""}`.trim()}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={forkTarget === "existing_environment"}
+                    onClick={() => {
+                      setForkTarget("existing_environment");
+                      setForkDialogError(null);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setForkTarget("existing_environment");
+                        setForkDialogError(null);
+                      }
+                    }}
+                  >
+                    <span className="tb-popup-check-slot">
+                      {forkTarget === "existing_environment" ? <IconCheck className="tb-popup-check" /> : null}
+                    </span>
+                    <span className="tb-fork-thread-environment-main">
+                      <span className="tb-fork-thread-environment-copy">
+                        <span className="tb-fork-thread-environment-name">Existing Environment</span>
+                      </span>
+                    </span>
+                    <div className="tb-fork-thread-row-control">
+                      <div className="tb-fork-thread-selector-anchor" ref={forkEnvironmentPopupRef}>
+                        <button
+                          type="button"
+                          className={`tb-inline-selector tb-fork-thread-inline-selector ${showForkEnvironmentPopup ? "active" : ""}`.trim()}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setForkTarget("existing_environment");
+                            setShowForkEnvironmentPopup((current) => !current);
+                            setForkDialogError(null);
+                          }}
+                          disabled={Boolean(forkingTurnId) || availableEnvironments.length === 0}
+                        >
+                          <span>{selectedForkExistingEnvironment?.name || "Select Environment"}</span>
+                          <IconChevronDown className="tb-inline-selector-chevron" />
+                        </button>
+
+                        {showForkEnvironmentPopup ? (
+                          <div className="tb-popup-menu tb-popup-menu-inline tb-fork-thread-environment-popup">
+                            <div className="tb-popup-menu-inline-body">
+                              {orderedForkTargetEnvironments.map((environment) => (
+                                <button
+                                  key={environment.id}
+                                  type="button"
+                                  className={`tb-popup-row tb-popup-row-select ${forkTargetEnvironmentId === environment.id ? "selected" : ""}`}
+                                  onClick={() => {
+                                    setForkTarget("existing_environment");
+                                    setForkTargetEnvironmentId(environment.id);
+                                    setForkExistingEnvironmentFileCopyMode("none");
+                                    setShowForkEnvironmentPopup(false);
+                                    setForkDialogError(null);
+                                  }}
+                                >
+                                  <span className="tb-popup-check-slot">
+                                    {forkTargetEnvironmentId === environment.id ? <IconCheck className="tb-popup-check" /> : null}
+                                  </span>
+                                  <span className="tb-popup-label">{environment.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className={`tb-popup-row tb-popup-row-select tb-fork-thread-environment-row ${forkTarget === "new_forked_environment" ? "selected" : ""}`.trim()}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={forkTarget === "new_forked_environment"}
+                    onClick={() => {
+                      setForkTarget("new_forked_environment");
+                      setShowForkEnvironmentPopup(false);
+                      setForkDialogError(null);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setForkTarget("new_forked_environment");
+                        setShowForkEnvironmentPopup(false);
+                        setForkDialogError(null);
+                      }
+                    }}
+                  >
+                    <span className="tb-popup-check-slot">
+                      {forkTarget === "new_forked_environment" ? <IconCheck className="tb-popup-check" /> : null}
+                    </span>
+                    <span className="tb-fork-thread-environment-main">
+                      <span className="tb-fork-thread-environment-copy">
+                        <span className="tb-fork-thread-environment-name">Create new Environment</span>
+                      </span>
+                    </span>
+                    <div className="tb-fork-thread-row-control">
+                      <input
+                        type="text"
+                        className="tb-fork-thread-name-input"
+                        value={forkNewEnvironmentName}
+                        placeholder="Environment name"
+                        disabled={Boolean(forkingTurnId)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setForkTarget("new_forked_environment");
+                          setShowForkEnvironmentPopup(false);
+                        }}
+                        onChange={(event) => {
+                          setForkTarget("new_forked_environment");
+                          setForkNewEnvironmentName(event.target.value);
+                          setForkDialogError(null);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {forkTarget === "new_forked_environment" ? (
+                <div className="tb-fork-thread-section">
+                  <div className="tb-fork-thread-section-header">
+                    <div className="tb-fork-thread-section-title">Workspace files</div>
+                    <div className="tb-fork-thread-section-copy">Choose what the new Environment should contain.</div>
+                  </div>
+                  <div className="tb-fork-thread-copy-options">
+                    <button
+                      type="button"
+                      className={`tb-fork-thread-copy-option ${forkNewEnvironmentFileCopyMode === "all" ? "selected" : ""}`.trim()}
+                      onClick={() => {
+                        setForkNewEnvironmentFileCopyMode("all");
+                        setForkDialogError(null);
+                      }}
+                      disabled={Boolean(forkingTurnId)}
+                    >
+                      <span className="tb-fork-thread-copy-option-icon-shell">
+                        <LucideCloud className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
+                      </span>
+                      <span className="tb-fork-thread-copy-option-main">
+                        <span className="tb-fork-thread-copy-option-copy">
+                          <span className="tb-fork-thread-copy-option-title">Copy full current workspace</span>
+                          <span className="tb-fork-thread-copy-option-description">Create a new Environment from the source thread&apos;s current workspace.</span>
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`tb-fork-thread-copy-option ${forkNewEnvironmentFileCopyMode === "thread_only" ? "selected" : ""}`.trim()}
+                      onClick={() => {
+                        setForkNewEnvironmentFileCopyMode("thread_only");
+                        setForkDialogError(null);
+                      }}
+                      disabled={Boolean(forkingTurnId)}
+                    >
+                      <span className="tb-fork-thread-copy-option-icon-shell">
+                        <LucideGitBranch className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
+                      </span>
+                      <span className="tb-fork-thread-copy-option-main">
+                        <span className="tb-fork-thread-copy-option-copy">
+                          <span className="tb-fork-thread-copy-option-title">Copy only thread-touched files</span>
+                          <span className="tb-fork-thread-copy-option-description">Start from an empty workspace and bring over only files the thread changed before this message.</span>
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`tb-fork-thread-copy-option ${forkNewEnvironmentFileCopyMode === "none" ? "selected" : ""}`.trim()}
+                      onClick={() => {
+                        setForkNewEnvironmentFileCopyMode("none");
+                        setForkDialogError(null);
+                      }}
+                      disabled={Boolean(forkingTurnId)}
+                    >
+                      <span className="tb-fork-thread-copy-option-icon-shell">
+                        <LucideServer className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
+                      </span>
+                      <span className="tb-fork-thread-copy-option-main">
+                        <span className="tb-fork-thread-copy-option-copy">
+                          <span className="tb-fork-thread-copy-option-title">Start with an empty workspace</span>
+                          <span className="tb-fork-thread-copy-option-description">Create a fresh Environment with no files copied from the source thread.</span>
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              ) : shouldShowForkExistingEnvironmentCopyOptions ? (
+                <div className="tb-fork-thread-section">
+                  <div className="tb-fork-thread-section-header">
+                    <div className="tb-fork-thread-section-title">Workspace files</div>
+                    <div className="tb-fork-thread-section-copy">Decide whether the selected Environment should receive files from the source thread before the fork opens.</div>
+                  </div>
+                  <div className="tb-fork-thread-copy-options">
+                    <button
+                      type="button"
+                      className={`tb-fork-thread-copy-option ${forkExistingEnvironmentFileCopyMode === "thread_only" ? "selected" : ""}`.trim()}
+                      onClick={() => {
+                        setForkExistingEnvironmentFileCopyMode("thread_only");
+                        setForkDialogError(null);
+                      }}
+                      disabled={Boolean(forkingTurnId)}
+                    >
+                      <span className="tb-fork-thread-copy-option-icon-shell">
+                        <LucideGitBranch className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
+                      </span>
+                      <span className="tb-fork-thread-copy-option-main">
+                        <span className="tb-fork-thread-copy-option-copy">
+                          <span className="tb-fork-thread-copy-option-title">Copy thread-touched files</span>
+                          <span className="tb-fork-thread-copy-option-description">Overlay files the thread changed before this message onto the selected Environment.</span>
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`tb-fork-thread-copy-option ${forkExistingEnvironmentFileCopyMode === "none" ? "selected" : ""}`.trim()}
+                      onClick={() => {
+                        setForkExistingEnvironmentFileCopyMode("none");
+                        setForkDialogError(null);
+                      }}
+                      disabled={Boolean(forkingTurnId)}
+                    >
+                      <span className="tb-fork-thread-copy-option-icon-shell">
+                        <LucideServer className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
+                      </span>
+                      <span className="tb-fork-thread-copy-option-main">
+                        <span className="tb-fork-thread-copy-option-copy">
+                          <span className="tb-fork-thread-copy-option-title">Keep the selected Environment as-is</span>
+                          <span className="tb-fork-thread-copy-option-description">Do not copy any files from the source thread into the selected Environment.</span>
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {forkDialogError ? <div className="runner-inline-error tb-fork-thread-error">{forkDialogError}</div> : null}
+
+              <div className="tb-edit-confirmation-actions tb-fork-thread-actions">
+                <button
+                  type="button"
+                  className="tb-popup-action tb-popup-action-secondary"
+                  onClick={cancelPendingForkConfiguration}
+                  disabled={Boolean(forkingTurnId)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={`tb-popup-action tb-popup-action-primary ${forkingTurnId ? "loading" : ""}`.trim()}
+                  onClick={() => void confirmForkFromPendingConfiguration()}
+                  disabled={
+                    Boolean(forkingTurnId) ||
+                    (forkTarget === "existing_environment"
+                      ? !forkTargetEnvironmentId
+                      : !forkNewEnvironmentName.trim())
+                  }
+                >
+                  {forkingTurnId ? (
+                    <span className="tb-fork-thread-action-loading">
+                      <span className="runner-spinner tb-fork-thread-action-spinner" />
+                      <span>Creating Fork...</span>
+                    </span>
+                  ) : (
+                    "Create Fork"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingEditConfirmation ? (
+        <div className="tb-popup-modal-scrim" onClick={() => setPendingEditConfirmation(null)}>
+          <div className="tb-popup-modal tb-edit-confirmation-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="tb-popup-modal-header">
+              <div className="tb-popup-note-title">File changes detected</div>
+            </div>
+            <div className="tb-popup-note-body">
+              The following files were changed by this message or later messages. Do you want to keep those workspace changes when rerunning from the edited message?
+            </div>
+            {pendingEditConfirmation.changedFiles.length > 0 ? (
+              <div className="tb-edit-confirmation-files">
+                {pendingEditConfirmation.changedFiles.map((file) => (
+                  <div key={file.path} className="tb-edit-confirmation-file">
+                    <div className="tb-edit-confirmation-file-main">
+                      <span className={`tb-edit-confirmation-file-kind is-${file.kind}`}>{file.kind}</span>
+                      <span className="tb-edit-confirmation-file-path" title={file.path}>{file.path}</span>
+                    </div>
+                    {(typeof file.additions === "number" || typeof file.deletions === "number") ? (
+                      <div className="tb-edit-confirmation-file-stats">
+                        {typeof file.additions === "number" ? <span className="tb-edit-confirmation-file-stat is-added">+{file.additions}</span> : null}
+                        {typeof file.deletions === "number" ? <span className="tb-edit-confirmation-file-stat is-removed">-{file.deletions}</span> : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <div className="tb-edit-confirmation-actions">
+              <button type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => setPendingEditConfirmation(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="tb-popup-action tb-popup-action-secondary"
+                onClick={() => {
+                  const confirmation = pendingEditConfirmation;
+                  if (!confirmation) return;
+                  void submitEditedTurn(confirmation.turnId, confirmation.nextPrompt, false);
+                }}
+              >
+                Revert file changes
+              </button>
+              <button
+                type="button"
+                className="tb-popup-action tb-popup-action-primary"
+                onClick={() => {
+                  const confirmation = pendingEditConfirmation;
+                  if (!confirmation) return;
+                  void submitEditedTurn(confirmation.turnId, confirmation.nextPrompt, true);
+                }}
+              >
+                Keep file changes
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {documentAttachmentPreviewDrawer}
+
+      {showFileBrowserModal && typeof document !== "undefined"
+        ? createPortal(
+            <div className="tb-runner-chat">
+              <div className="tb-file-browser-scrim" onClick={closeFileBrowserModal}>
+                <div className="tb-file-browser-modal" onClick={(event) => event.stopPropagation()}>
+                  <div className="tb-file-browser-body">
+                    <div className="tb-file-browser-sidebar">
+                      <div className="tb-file-browser-search-wrap">
+                        <div className="tb-file-browser-search">
+                          <IconSearch className="tb-file-browser-search-icon" />
+                          <input
+                            type="text"
+                            placeholder="Search files..."
+                            value={fileBrowserSearchQuery}
+                            onChange={(event) => setFileBrowserSearchQuery(event.target.value)}
+                            className="tb-file-browser-search-input"
+                          />
+                          {fileBrowserSearchQuery ? (
+                            <button type="button" className="tb-file-browser-search-clear" onClick={() => setFileBrowserSearchQuery("")}>
+                              <IconX className="tb-file-browser-search-clear-icon" />
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      {availableEnvironments.length > 0 ? (
+                        <div className="tb-file-browser-sidebar-section tb-file-browser-sidebar-section-environments">
+                          <div className="tb-file-browser-sidebar-title">Environments</div>
+                          <div className="tb-file-browser-sidebar-list tb-file-browser-sidebar-list-environments">
+                            {availableEnvironments.map((environment) => (
+                              <button
+                                key={environment.id}
+                                type="button"
+                                className={`tb-file-browser-source-row ${currentFileBrowserSource === "workspace" && selectedEnvironmentId === environment.id ? "active" : ""}`}
+                                onClick={() => handleWorkspaceFileBrowserEnvironmentSelect(environment.id)}
+                              >
+                                <IconCloud className="tb-file-browser-source-icon" />
+                                <span className="tb-file-browser-source-label">{environment.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="tb-file-browser-sidebar-section">
+                        <div className="tb-file-browser-sidebar-title">Integrations</div>
+                        <div className="tb-file-browser-sidebar-list">
+                          <button
+                            type="button"
+                            className={`tb-file-browser-source-row ${currentFileBrowserSource === "google-drive" ? "active" : ""}`}
+                            onClick={() => switchFileBrowserSource("google-drive")}
+                          >
+                            <IconGoogleDrive className="tb-file-browser-source-brand-icon" />
+                            <span className="tb-file-browser-source-label">Google Drive</span>
+                            {!googleDriveConnected ? <span className="tb-file-browser-source-note">Connect</span> : null}
+                          </button>
+                          <button
+                            type="button"
+                            className={`tb-file-browser-source-row ${currentFileBrowserSource === "notion" ? "active" : ""}`}
+                            onClick={() => switchFileBrowserSource("notion")}
+                          >
+                            <IconNotion className="tb-file-browser-source-brand-icon" />
+                            <span className="tb-file-browser-source-label">Notion</span>
+                            {!notionConnected ? <span className="tb-file-browser-source-note">Connect</span> : null}
+                          </button>
+                          <button
+                            type="button"
+                            className={`tb-file-browser-source-row ${currentFileBrowserSource === "one-drive" ? "active" : ""}`}
+                            onClick={() => switchFileBrowserSource("one-drive")}
+                          >
+                            <IconOneDrive className="tb-file-browser-source-brand-icon" />
+                            <span className="tb-file-browser-source-label">OneDrive</span>
+                            {!oneDriveConnected ? <span className="tb-file-browser-source-note">Connect</span> : null}
+                          </button>
+                          <button
+                            type="button"
+                            className={`tb-file-browser-source-row ${currentFileBrowserSource === "github" ? "active" : ""}`}
+                            onClick={() => switchFileBrowserSource("github")}
+                          >
+                            <IconGithub className="tb-file-browser-source-brand-icon" />
+                            <span className="tb-file-browser-source-label">GitHub</span>
+                            {!githubConnected ? <span className="tb-file-browser-source-note">Connect</span> : null}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="tb-file-browser-main">
+                      {showGoogleDriveAuthScreen || showOneDriveAuthScreen || showGithubAuthScreen || showNotionAuthScreen ? (
+                        <div className="tb-file-browser-auth-screen">
+                          <div className="tb-file-browser-auth-card">
+                            <div className="tb-file-browser-auth-icon-wrap">
+                              {showGoogleDriveAuthScreen ? (
+                                <IconGoogleDrive className="tb-file-browser-auth-icon" />
+                              ) : showNotionAuthScreen ? (
+                                <IconNotion className="tb-file-browser-auth-icon" />
+                              ) : showOneDriveAuthScreen ? (
+                                <IconOneDrive className="tb-file-browser-auth-icon" />
+                              ) : (
+                                <IconGithub className="tb-file-browser-auth-icon" />
+                              )}
+                            </div>
+                            <h3 className="tb-file-browser-auth-title">
+                              {showGoogleDriveAuthScreen ? "Connect to Google Drive" : showNotionAuthScreen ? "Connect to Notion" : showOneDriveAuthScreen ? "Connect to OneDrive" : "Connect to GitHub"}
+                            </h3>
+                            <p className="tb-file-browser-auth-copy">
+                              {showGoogleDriveAuthScreen
+                                ? "Connect your Google Drive to browse and attach files."
+                                : showNotionAuthScreen
+                                  ? "Connect your Notion workspace to browse and select databases."
+                                : showOneDriveAuthScreen
+                                  ? "Connect your OneDrive to browse and attach files."
+                                  : "Connect your GitHub to browse and attach repository files."}
+                            </p>
+                            <button
+                              type="button"
+                              className="tb-file-browser-auth-button"
+                              onClick={() => {
+                                if (showGoogleDriveAuthScreen) {
+                                  googleDriveConfig?.onConnect?.();
+                                  return;
+                                }
+                                if (showNotionAuthScreen) {
+                                  notionConfig?.onConnect?.();
+                                  return;
+                                }
+                                if (showOneDriveAuthScreen) {
+                                  oneDriveConfig?.onConnect?.();
+                                  return;
+                                }
+                                githubConfig?.onConnect?.();
+                              }}
+                            >
+                              {showGoogleDriveAuthScreen ? "Connect Google Drive" : showNotionAuthScreen ? "Connect Notion" : showOneDriveAuthScreen ? "Connect OneDrive" : "Connect GitHub"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="tb-file-browser-header">
+                            <button type="button" className="tb-file-browser-nav-button" onClick={goFileBrowserBack} disabled={fileBrowserHistoryIndex <= 0}>
+                              <IconChevronLeft className="tb-file-browser-nav-icon" />
+                            </button>
+                            <button type="button" className="tb-file-browser-nav-button" onClick={goFileBrowserForward} disabled={fileBrowserHistoryIndex >= fileBrowserHistory.length - 1}>
+                              <IconChevronRight className="tb-file-browser-nav-icon" />
+                            </button>
+                            <div className="tb-file-browser-header-icon">
+                              {currentFileBrowserSource === "google-drive" ? (
+                                <IconGoogleDrive className="tb-file-browser-source-brand-icon" />
+                              ) : currentFileBrowserSource === "notion" ? (
+                                <IconNotion className="tb-file-browser-source-brand-icon" />
+                              ) : currentFileBrowserSource === "github" ? (
+                                <IconGithub className="tb-file-browser-source-brand-icon" />
+                              ) : currentFileBrowserSource === "one-drive" ? (
+                                <IconOneDrive className="tb-file-browser-source-brand-icon" />
+                              ) : (
+                                <IconCloud className="tb-file-browser-source-icon" />
+                              )}
+                            </div>
+                            <div className="tb-file-browser-breadcrumbs">
+                              {fileBrowserPath.map((crumb, index) => (
+                                <span key={`${crumb.id || "root"}-${index}`} className="tb-file-browser-breadcrumb-chip">
+                                  {index > 0 ? <span className="tb-file-browser-breadcrumb-sep">/</span> : null}
+                                  <button
+                                    type="button"
+                                    className={`tb-file-browser-breadcrumb ${index === fileBrowserPath.length - 1 ? "active" : ""}`}
+                                    onClick={() => navigateFileBrowserToBreadcrumb(index)}
+                                  >
+                                    {crumb.name}
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                            {currentFileBrowserSource === "google-drive" && googleDriveItems.length > 0 && googleDriveConfig?.onManageAccess ? (
+                              <button type="button" className="tb-file-browser-toolbar-button" onClick={handleGoogleDriveManageAccess} disabled={isGoogleDrivePickerLoading} title="Manage file access">
+                                {isGoogleDrivePickerLoading ? <IconLoader2 className="tb-file-browser-toolbar-icon tb-file-browser-folder-chevron-spin" /> : <IconFolderPlus className="tb-file-browser-toolbar-icon" />}
+                              </button>
+                            ) : null}
+                            {currentFileBrowserSource === "google-drive" && googleDriveConfig?.onDisconnect ? (
+                              <button type="button" className="tb-file-browser-toolbar-button" onClick={() => googleDriveConfig.onDisconnect?.()} title="Disconnect Google Drive">
+                                <IconLogout className="tb-file-browser-toolbar-icon" />
+                              </button>
+                            ) : null}
+                            {currentFileBrowserSource === "notion" && notionConfig?.onDisconnect ? (
+                              <button type="button" className="tb-file-browser-toolbar-button" onClick={() => notionConfig.onDisconnect?.()} title="Disconnect Notion">
+                                <IconLogout className="tb-file-browser-toolbar-icon" />
+                              </button>
+                            ) : null}
+                            {currentFileBrowserSource === "one-drive" && oneDriveConfig?.onDisconnect ? (
+                              <button type="button" className="tb-file-browser-toolbar-button" onClick={() => oneDriveConfig.onDisconnect?.()} title="Disconnect OneDrive">
+                                <IconLogout className="tb-file-browser-toolbar-icon" />
+                              </button>
+                            ) : null}
+                            {currentFileBrowserSource === "github" && githubConfig?.onDisconnect ? (
+                              <button type="button" className="tb-file-browser-toolbar-button" onClick={() => githubConfig.onDisconnect?.()} title="Disconnect GitHub">
+                                <IconLogout className="tb-file-browser-toolbar-icon" />
+                              </button>
+                            ) : null}
+                          </div>
+
+                          <div className="tb-file-browser-list">
+                            {currentFileBrowserSource === "workspace" && isWorkspaceBrowserLoading ? (
+                              <div className="tb-file-browser-empty">Loading workspace files...</div>
+                            ) : currentFileBrowserSource === "workspace" && workspaceBrowserError ? (
+                              <div className="tb-file-browser-empty">{workspaceBrowserError}</div>
+                            ) : currentFileBrowserSource === "google-drive" && isGoogleDriveBrowserLoading ? (
+                              <div className="tb-file-browser-empty">Loading Google Drive files...</div>
+                            ) : currentFileBrowserSource === "google-drive" && googleDriveBrowserError ? (
+                              <div className="tb-file-browser-empty">{googleDriveBrowserError}</div>
+                            ) : currentFileBrowserSource === "notion" && isNotionBrowserLoading ? (
+                              <div className="tb-file-browser-empty">Loading Notion databases...</div>
+                            ) : currentFileBrowserSource === "notion" && notionBrowserError ? (
+                              <div className="tb-file-browser-empty">{notionBrowserError}</div>
+                            ) : currentFileBrowserSource === "one-drive" && isOneDriveBrowserLoading ? (
+                              <div className="tb-file-browser-empty">Loading OneDrive files...</div>
+                            ) : currentFileBrowserSource === "one-drive" && oneDriveBrowserError ? (
+                              <div className="tb-file-browser-empty">{oneDriveBrowserError}</div>
+                            ) : currentFileBrowserSource === "github" && isGithubBrowserLoading ? (
+                              <div className="tb-file-browser-empty">Loading GitHub files...</div>
+                            ) : currentFileBrowserSource === "github" && githubBrowserError ? (
+                              <div className="tb-file-browser-empty">{githubBrowserError}</div>
+                            ) : showGoogleDrivePickerPrompt ? (
+                              <div className="tb-file-browser-empty-state">
+                                <div className="tb-file-browser-auth-icon-wrap">
+                                  <IconGoogleDrive className="tb-file-browser-auth-icon" />
+                                </div>
+                                <h3 className="tb-file-browser-auth-title">Select files to share</h3>
+                                <p className="tb-file-browser-auth-copy">Choose which files and folders from your Google Drive you want to access in Testbase.</p>
+                                <button type="button" className="tb-file-browser-auth-button" onClick={handleGoogleDriveManageAccess} disabled={isGoogleDrivePickerLoading}>
+                                  {isGoogleDrivePickerLoading ? "Opening picker..." : "Select Files from Google Drive"}
+                                </button>
+                              </div>
+                            ) : filteredFileBrowserItems.length === 0 ? (
+                              <div className="tb-file-browser-empty">
+                                {fileBrowserSearchQuery ? "No files match your search" : currentFileBrowserSource === "notion" ? "No Notion databases found" : "This folder is empty"}
+                              </div>
+                            ) : (
+                              <div className="tb-file-browser-list-inner">
+                                {filteredFileBrowserItems.map((item) => renderFileBrowserItem(item))}
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {previewFileBrowserItem ? (
+                      <div className="tb-file-browser-preview">
+                        <div className="tb-file-browser-preview-header">
+                          <div className="tb-file-browser-preview-art">
+                            {isFileBrowserPreviewLoading ? (
+                              <IconLoader2 className="tb-file-browser-preview-loader" />
+                            ) : fileBrowserPreviewContent && fileBrowserPreviewKind === "image" ? (
+                              <img src={fileBrowserPreviewContent} alt={previewFileBrowserItem.name} className="tb-file-browser-preview-image" />
+                            ) : fileBrowserPreviewContent && fileBrowserPreviewKind === "text" ? (
+                              <pre className="tb-file-browser-preview-text">{fileBrowserPreviewContent}</pre>
+                            ) : (
+                              renderBrowserFileIcon(previewFileBrowserItem, "tb-file-browser-preview-glyph")
+                            )}
+                          </div>
+                          <h3 className="tb-file-browser-preview-name">{previewFileBrowserItem.name}</h3>
+                          <p className="tb-file-browser-preview-subtitle">
+                            {previewFileBrowserItem.isFolder ? "Folder" : formatBrowserFileSize(previewFileBrowserItem.size)}
+                          </p>
+                        </div>
+                        <div className="tb-file-browser-preview-info">
+                          <div className="tb-file-browser-preview-info-title">Information</div>
+                          <div className="tb-file-browser-preview-info-row">
+                            <span>Modified</span>
+                            <span>{formatBrowserFileDate(previewFileBrowserItem.modifiedTime)}</span>
+                          </div>
+                          <div className="tb-file-browser-preview-info-row">
+                            <span>Created</span>
+                            <span>{formatBrowserFileDate(previewFileBrowserItem.createdTime)}</span>
+                          </div>
+                          <div className="tb-file-browser-preview-info-row">
+                            <span>Type</span>
+                            <span>{previewFileBrowserItem.isFolder ? "folder" : getBrowserFileType(previewFileBrowserItem.mimeType, previewFileBrowserItem.name)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="tb-file-browser-footer">
+                    <button type="button" className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary" onClick={closeFileBrowserModal}>
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="tb-file-browser-footer-button tb-file-browser-footer-button-primary"
+                      onClick={() => void handleFileBrowserAttach()}
+                      disabled={selectedFileBrowserIds.length === 0 || isFileBrowserAttaching}
+                    >
+                      <span className="tb-file-browser-footer-button-content">
+                        {isFileBrowserAttaching ? <span className="runner-spinner tb-file-browser-footer-button-spinner" /> : null}
+                        <span className="tb-file-browser-footer-button-label">
+                          {isFileBrowserAttaching
+                            ? "Attaching Files..."
+                            : `${currentFileBrowserSource === "notion" ? "Use" : "Attach"} ${selectedFileBrowserIds.length > 0 ? selectedFileBrowserLabel : currentFileBrowserSource === "notion" ? "Database" : "Files"}`}
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+      {showFileBrowserApiKeyPrompt && typeof document !== "undefined"
+        ? createPortal(
+            <div className="tb-runner-chat">
+              <div className="tb-file-browser-scrim" onClick={closeFileBrowserApiKeyPrompt}>
+                <div className="tb-file-browser-api-key-modal" onClick={(event) => event.stopPropagation()}>
+                  <div className="tb-popup-note">
+                    <div className="tb-popup-note-title">API key required</div>
+                    <div className="tb-popup-note-body">Enter an API key in the playground sidebar to browse workspace files.</div>
+                  </div>
+                  <div className="tb-file-browser-api-key-footer">
+                    <button type="button" className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary" onClick={closeFileBrowserApiKeyPrompt}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
+  );
+}
+
+export type { RunnerLog };
