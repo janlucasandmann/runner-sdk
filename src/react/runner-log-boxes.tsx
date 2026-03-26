@@ -3114,7 +3114,7 @@ export function BrowserSkillLogBox({
   return (
     <div className="tb-log-card tb-log-card-browser">
       <LogHeader
-        icon={<Globe className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        icon={<Globe className="tb-log-card-small-icon tb-log-card-small-icon-browser" strokeWidth={1.5} />}
         label="Browser"
         title={cardTitle}
         timeLabel={timeLabel}
@@ -3203,7 +3203,7 @@ export function SubagentLogBox({
   return (
     <div className="tb-log-card tb-log-card-subagent">
       <LogHeader
-        icon={<Bot className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        icon={<Bot className="tb-log-card-small-icon tb-log-card-small-icon-subagent" strokeWidth={1.5} />}
         label="Subagent"
         title={title}
         timeLabel={timeLabel}

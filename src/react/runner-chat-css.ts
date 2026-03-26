@@ -1853,6 +1853,14 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   flex-shrink: 0;
 }
 
+.tb-runner-chat .tb-log-card-small-icon-browser {
+  transform: translateX(-1px);
+}
+
+.tb-runner-chat .tb-log-card-small-icon-subagent {
+  transform: translateX(-1px);
+}
+
 .tb-runner-chat .tb-log-card-header-copy {
   min-width: 0;
   flex: 1;
@@ -1970,14 +1978,14 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-log-card.tb-log-card-browser {
   width: min(100%, 800px);
   max-width: 100%;
-  padding: 0 12px 12px;
+  padding: 0 0 12px;
   border-radius: 15px;
 }
 
 .tb-runner-chat .tb-log-card.tb-log-card-subagent {
-  width: min(100%, 860px);
-  max-width: 100%;
-  padding: 0 12px 12px;
+  width: 100%;
+  max-width: none;
+  padding: 0 0 12px;
   border-radius: 15px;
 }
 
@@ -3804,6 +3812,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   max-width: 100%;
   padding: 0;
   margin: 0 0 8px;
+}
+
+.tb-runner-chat .runner-attachments.runner-attachments-summary {
+  padding: 0;
 }
 
 .tb-runner-chat .tb-composer-quoted-selection {
