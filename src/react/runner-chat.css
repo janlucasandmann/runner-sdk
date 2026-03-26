@@ -367,18 +367,18 @@
 .tb-runner-chat .tb-task-preview-card {
   width: fit-content;
   max-width: 100%;
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 16px 18px;
-  border-radius: 15px;
+  padding: 12px;
+  border-radius: 8px;
   border: 0;
   background: rgba(255, 255, 255, 0.05);
-  color: white;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
+  color: rgba(255, 255, 255, 0.92);
   text-align: left;
   cursor: pointer;
-  transition: background 140ms ease, transform 140ms ease;
+  transition: background-color 160ms ease, box-shadow 160ms ease;
 }
 
 .tb-runner-chat .tb-task-preview-card:hover {
@@ -397,6 +397,35 @@
 .tb-runner-chat .tb-task-preview-card:focus-visible {
   outline: 2px solid rgba(102, 166, 255, 0.45);
   outline-offset: 2px;
+}
+
+.tb-runner-chat .tb-task-preview-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tb-runner-chat .tb-task-preview-assignee-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.88);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-task-preview-assignee-avatar-fallback {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .tb-runner-chat .tb-task-preview-type-badge {

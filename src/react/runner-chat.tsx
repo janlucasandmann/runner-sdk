@@ -1051,6 +1051,68 @@ function renderRunnerTaskPreviewPriorityIcon(priority: string | null | undefined
   return <LucideEqual className={`${className} is-medium`} strokeWidth={2} />;
 }
 
+function renderRunnerTaskPreviewAssigneeAvatar(taskPreview: RunnerTaskPreview) {
+  const assigneeName = String(taskPreview?.assigneeName || "").trim();
+  if (!assigneeName) {
+    return null;
+  }
+
+  return (
+    <span className="tb-task-preview-assignee-avatar" aria-hidden="true" title={assigneeName}>
+      <span className="tb-task-preview-assignee-avatar-fallback">
+        {assigneeName.charAt(0).toUpperCase()}
+      </span>
+    </span>
+  );
+}
+
+function renderRunnerTaskPreviewCard(
+  taskPreview: RunnerTaskPreview,
+  options: {
+    onClick?: ((preview: RunnerTaskPreview) => void) | undefined;
+  } = {}
+) {
+  const isTaskPreviewDeleted = Boolean(taskPreview?.isDeleted);
+
+  return (
+    <button
+      type="button"
+      className="tb-task-preview-card"
+      disabled={isTaskPreviewDeleted}
+      onClick={() => {
+        if (!isTaskPreviewDeleted && typeof options.onClick === "function") {
+          options.onClick(taskPreview);
+        }
+      }}
+    >
+      <div className="tb-task-preview-card-header">
+        <div className="tb-task-preview-title">{taskPreview.title || "Untitled Task"}</div>
+        {renderRunnerTaskPreviewAssigneeAvatar(taskPreview)}
+      </div>
+      <RunnerMarkdown
+        content={String(taskPreview.description || "").trim() || "No description"}
+        className="tb-task-preview-card-description tb-message-markdown"
+        softBreaks
+        disallowHeadings
+      />
+      <div className="tb-task-preview-card-bottom">
+        <div className="tb-task-preview-card-meta-left">
+          <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreview.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
+            {normalizeRunnerTaskPreviewType(taskPreview.taskType) === "subtask"
+              ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
+              : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
+          </div>
+          {renderRunnerTaskPreviewPriorityIcon(taskPreview.priority, "tb-task-preview-priority-icon")}
+          <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreview.status)}`.trim()}>
+            {getRunnerTaskPreviewStatusLabel(taskPreview.status)}
+          </span>
+        </div>
+        <span className="tb-task-preview-ticket">{taskPreview.ticketNumber}</span>
+      </div>
+    </button>
+  );
+}
+
 function formatThreadContextCommandText(action: RunnerChatThreadContextAction, prompt?: string): string {
   const trimmedPrompt = prompt?.trim();
   if (trimmedPrompt && threadContextActionAllowsPrompt(action)) {
@@ -10357,42 +10419,10 @@ export function RunnerChat({
               }
 
               if (taskPreviewForTurn && !isEditingTurn) {
-                const isTaskPreviewDeleted = Boolean(taskPreviewForTurn.isDeleted);
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-user tb-turn-user-task-preview">
                     <div className="tb-task-preview-turn-shell" style={promptStyle}>
-                      <button
-                        type="button"
-                        className="tb-task-preview-card"
-                        disabled={isTaskPreviewDeleted}
-                        onClick={() => {
-                          if (!isTaskPreviewDeleted && typeof onTaskPreviewClick === "function") {
-                            onTaskPreviewClick(taskPreviewForTurn);
-                          }
-                        }}
-                      >
-                        <div className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</div>
-                        <RunnerMarkdown
-                          content={String(taskPreviewForTurn.description || "").trim() || "No description"}
-                          className="tb-task-preview-card-description tb-message-markdown"
-                          softBreaks
-                          disallowHeadings
-                        />
-                        <div className="tb-task-preview-card-bottom">
-                          <div className="tb-task-preview-card-meta-left">
-                            <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
-                              {normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask"
-                                ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
-                                : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
-                            </div>
-                            {renderRunnerTaskPreviewPriorityIcon(taskPreviewForTurn.priority, "tb-task-preview-priority-icon")}
-                            <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreviewForTurn.status)}`.trim()}>
-                              {getRunnerTaskPreviewStatusLabel(taskPreviewForTurn.status)}
-                            </span>
-                          </div>
-                          <span className="tb-task-preview-ticket">{taskPreviewForTurn.ticketNumber}</span>
-                        </div>
-                      </button>
+                      {renderRunnerTaskPreviewCard(taskPreviewForTurn, { onClick: onTaskPreviewClick })}
                     </div>
 
                     {!isQueuedTurn ? (
@@ -10518,43 +10548,7 @@ export function RunnerChat({
                           </div>
                         </>
                       ) : taskPreviewForTurn ? (
-                        (() => {
-                          const isTaskPreviewDeleted = Boolean(taskPreviewForTurn.isDeleted);
-                          return (
-                            <button
-                              type="button"
-                              className="tb-task-preview-card"
-                              disabled={isTaskPreviewDeleted}
-                              onClick={() => {
-                                if (!isTaskPreviewDeleted && taskPreviewForTurn && typeof onTaskPreviewClick === "function") {
-                                  onTaskPreviewClick(taskPreviewForTurn);
-                                }
-                              }}
-                            >
-                              <div className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</div>
-                              <RunnerMarkdown
-                                content={String(taskPreviewForTurn.description || "").trim() || "No description"}
-                                className="tb-task-preview-card-description tb-message-markdown"
-                                softBreaks
-                                disallowHeadings
-                              />
-                              <div className="tb-task-preview-card-bottom">
-                                <div className="tb-task-preview-card-meta-left">
-                                  <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
-                                    {normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask"
-                                      ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
-                                      : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
-                                  </div>
-                                  {renderRunnerTaskPreviewPriorityIcon(taskPreviewForTurn.priority, "tb-task-preview-priority-icon")}
-                                  <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreviewForTurn.status)}`.trim()}>
-                                    {getRunnerTaskPreviewStatusLabel(taskPreviewForTurn.status)}
-                                  </span>
-                                </div>
-                                <span className="tb-task-preview-ticket">{taskPreviewForTurn.ticketNumber}</span>
-                              </div>
-                            </button>
-                          );
-                        })()
+                        renderRunnerTaskPreviewCard(taskPreviewForTurn, { onClick: onTaskPreviewClick })
                       ) : (
                         <RunnerMarkdown
                           content={stripSystemTags(turn.prompt)}

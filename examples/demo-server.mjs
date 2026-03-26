@@ -19,6 +19,9 @@ const html = `<!doctype html>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Runner Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/react-big-calendar@1.19.4/lib/css/react-big-calendar.css" />
     <style>
       :root {
@@ -34,11 +37,18 @@ const html = `<!doctype html>
       body {
         margin: 0;
         color: var(--text);
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
         background: #000;
         width: 100vw;
         height: 100vh;
         overflow: hidden;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font-family: inherit;
       }
 
       .page {
@@ -88,7 +98,7 @@ const html = `<!doctype html>
 
       .panel h3 {
         margin: 0 0 10px;
-        font-size: 13px;
+        font-size: 12px;
       }
 
       .field {
@@ -353,7 +363,6 @@ const html = `<!doctype html>
         padding: 0;
         overflow: hidden;
         background: transparent;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
         transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
@@ -402,6 +411,7 @@ const html = `<!doctype html>
 
       .sidebar-toggle-icon,
       .sidebar-action-icon,
+      .sidebar-search-trigger-icon,
       .sidebar-section-icon,
       .sidebar-settings-icon,
       .sidebar-thread-header-icon,
@@ -410,6 +420,7 @@ const html = `<!doctype html>
         width: 14px;
         height: 14px;
         flex-shrink: 0;
+        stroke-width: 2;
       }
 
       .playground-sidebar-top {
@@ -442,7 +453,7 @@ const html = `<!doctype html>
       }
 
       .sidebar-search-trigger-copy {
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 500;
       }
 
@@ -618,7 +629,7 @@ const html = `<!doctype html>
       .sidebar-action-list {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 4px;
         margin-bottom: 20px;
       }
 
@@ -635,7 +646,7 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.92);
         cursor: pointer;
         text-align: left;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 500;
         transition: background-color 160ms ease, color 160ms ease;
       }
@@ -2180,7 +2191,7 @@ const html = `<!doctype html>
       }
 
       .changes-code-block.is-empty {
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
         color: rgba(255, 255, 255, 0.56);
       }
 
@@ -4183,7 +4194,7 @@ const html = `<!doctype html>
       .playground-settings-plan-card-title {
         font-size: 14px;
         font-weight: 500;
-        font-family: Georgia, "Times New Roman", serif;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
         font-style: italic;
         color: rgba(255, 255, 255, 0.98);
       }
@@ -38453,6 +38464,77 @@ const html = `<!doctype html>
           }
         }, [removeStatusIndicatorItem, updateThreadTaskPreviewStatus, upsertStatusIndicatorItem]);
 
+        const startThreadRunInBackground = useCallback(async function startThreadRunInBackground(threadId, taskRunRequest, taskPreview) {
+          const normalizedThreadId = typeof threadId === "string" ? threadId.trim() : "";
+          const normalizedPrompt = typeof taskRunRequest?.prompt === "string" ? taskRunRequest.prompt.trim() : "";
+          if (!normalizedThreadId || !normalizedPrompt) {
+            return;
+          }
+
+          try {
+            const response = await fetch(proxyBackendBase + "/threads/" + encodeURIComponent(normalizedThreadId) + "/messages", {
+              method: "POST",
+              headers: {
+                ...authRequestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                content: normalizedPrompt,
+                attachments: Array.isArray(taskRunRequest?.attachments) ? taskRunRequest.attachments : [],
+                githubRepo: taskRunRequest?.githubRepo && typeof taskRunRequest.githubRepo === "object" ? taskRunRequest.githubRepo : undefined,
+                enabledSkills: taskRunRequest?.enabledSkills && typeof taskRunRequest.enabledSkills === "object" ? taskRunRequest.enabledSkills : undefined,
+              }),
+            });
+
+            if (!response.ok) {
+              const text = await response.text().catch(() => "");
+              let parsed = {};
+              try {
+                parsed = text ? JSON.parse(text) : {};
+              } catch {
+                parsed = { message: text };
+              }
+              throw new Error(parsed?.message || parsed?.error || "Failed to start thread execution.");
+            }
+
+            updateRealThreadStatus(normalizedThreadId, "running");
+            void refreshThreads();
+
+            const reader = response.body?.getReader ? response.body.getReader() : null;
+            if (reader) {
+              try {
+                while (true) {
+                  const { done } = await reader.read();
+                  if (done) {
+                    break;
+                  }
+                }
+              } finally {
+                reader.releaseLock();
+              }
+            } else {
+              await response.text().catch(() => "");
+            }
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to start thread execution.";
+            if (taskPreview?.taskId) {
+              applyTaskRunState({
+                taskId: taskPreview.taskId,
+                projectId: taskPreview.projectId || "",
+                threadId: normalizedThreadId,
+                ticketNumber: taskPreview.ticketNumber || "",
+                title: taskPreview.title || "Untitled Task",
+                phase: "failed",
+                error: errorMessage,
+              });
+            }
+            console.error("Failed to launch background task thread run", error);
+          } finally {
+            void loadThreadGroundTruthStatus(normalizedThreadId);
+            void refreshThreads();
+          }
+        }, [applyTaskRunState, authRequestHeaders, loadThreadGroundTruthStatus, proxyBackendBase, refreshThreads, updateRealThreadStatus]);
+
         const syncCompletedTaskRun = useCallback(async function syncCompletedTaskRun(taskRunState) {
           const normalizedTaskId = typeof taskRunState?.taskId === "string" ? taskRunState.taskId.trim() : "";
           const normalizedThreadId = typeof taskRunState?.threadId === "string" ? taskRunState.threadId.trim() : "";
@@ -42175,7 +42257,7 @@ const html = `<!doctype html>
                 className: "sidebar-hide-button",
                 onClick: () => setSidebarOpen(false),
                 "aria-label": "Hide sidebar"
-              }, React.createElement(PanelLeftClose, { className: "sidebar-toggle-icon", strokeWidth: 1.75 }))
+              }, React.createElement(PanelLeftClose, { className: "sidebar-toggle-icon", strokeWidth: 1.5 }))
             ),
             React.createElement("div", { className: "sidebar-action-list" },
               React.createElement("button", {
@@ -42184,7 +42266,7 @@ const html = `<!doctype html>
                 onClick: openThreadSearch,
               },
                 React.createElement("div", { className: "sidebar-search-trigger-main" },
-                  React.createElement(Search, { className: "sidebar-search-trigger-icon", strokeWidth: 1.85 }),
+                  React.createElement(Search, { className: "sidebar-search-trigger-icon", strokeWidth: 1.5 }),
                   React.createElement("span", { className: "sidebar-search-trigger-copy" }, "Search")
                 ),
                 React.createElement("span", { className: "sidebar-search-trigger-shortcut" }, "⌘K")
@@ -42194,7 +42276,7 @@ const html = `<!doctype html>
                 className: "sidebar-action-button",
                 onClick: hasRealAccess ? handleNewThread : handleSignInWithComputerAgents
               },
-                React.createElement(SquarePen, { className: "sidebar-action-icon", strokeWidth: 1.75 }),
+                React.createElement(SquarePen, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
                 React.createElement("span", null, "New Thread")
               ),
               React.createElement("button", {
@@ -42202,7 +42284,7 @@ const html = `<!doctype html>
                 className: "sidebar-action-button" + (activePage === "tasks" ? " is-active" : ""),
                 onClick: handleOpenTasksShortcut
               },
-                React.createElement(Rocket, { className: "sidebar-action-icon", strokeWidth: 1.75 }),
+                React.createElement(Rocket, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
                 React.createElement("span", null, "Projects")
               ),
               React.createElement("button", {
@@ -42210,7 +42292,7 @@ const html = `<!doctype html>
                 className: "sidebar-action-button" + (activePage === "files" ? " is-active" : ""),
                 onClick: handleOpenFilesShortcut
               },
-                React.createElement(FolderOpen, { className: "sidebar-action-icon", strokeWidth: 1.75 }),
+                React.createElement(FolderOpen, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
                 React.createElement("span", null, "Files")
               ),
               React.createElement("button", {
@@ -42218,7 +42300,7 @@ const html = `<!doctype html>
                 className: "sidebar-action-button" + (activePage === "environments" ? " is-active" : ""),
                 onClick: handleOpenEnvironmentsShortcut
               },
-                React.createElement(HardDrive, { className: "sidebar-action-icon", strokeWidth: 1.75 }),
+                React.createElement(HardDrive, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
                 React.createElement("span", null, "Environments")
               ),
               React.createElement("button", {
@@ -42226,7 +42308,7 @@ const html = `<!doctype html>
                 className: "sidebar-action-button" + (activePage === "agents" ? " is-active" : ""),
                 onClick: handleOpenAgentsShortcut
               },
-                React.createElement(Bot, { className: "sidebar-action-icon", strokeWidth: 1.75 }),
+                React.createElement(Bot, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
                 React.createElement("span", null, "Agents")
               )
             ),
@@ -42295,7 +42377,7 @@ const html = `<!doctype html>
                 src: RUNNER_TRANSPARENT_LOGO_URL,
                 alt: "Runner"
               }),
-              React.createElement(PanelLeftOpen, { className: "sidebar-rail-logo-open-icon", strokeWidth: 1.75 })
+              React.createElement(PanelLeftOpen, { className: "sidebar-rail-logo-open-icon", strokeWidth: 1.5 })
             ),
             React.createElement("div", { className: "sidebar-rail-actions" },
               React.createElement("button", {
@@ -42304,42 +42386,42 @@ const html = `<!doctype html>
                 onClick: openThreadSearch,
                 "aria-label": "Search conversations",
                 title: "Search conversations"
-              }, React.createElement(Search, { className: "sidebar-rail-icon", strokeWidth: 1.75 })),
+              }, React.createElement(Search, { className: "sidebar-rail-icon", strokeWidth: 1.5 })),
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-rail-button",
                 onClick: hasRealAccess ? handleNewThread : handleSignInWithComputerAgents,
                 "aria-label": "New thread",
                 title: "New thread"
-              }, React.createElement(SquarePen, { className: "sidebar-rail-icon", strokeWidth: 1.75 })),
+              }, React.createElement(SquarePen, { className: "sidebar-rail-icon", strokeWidth: 1.5 })),
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-rail-button" + (activePage === "tasks" ? " is-active" : ""),
                 onClick: handleOpenTasksShortcut,
                 "aria-label": "Projects",
                 title: "Projects"
-              }, React.createElement(Rocket, { className: "sidebar-rail-icon", strokeWidth: 1.75 })),
+              }, React.createElement(Rocket, { className: "sidebar-rail-icon", strokeWidth: 1.5 })),
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-rail-button" + (activePage === "files" ? " is-active" : ""),
                 onClick: handleOpenFilesShortcut,
                 "aria-label": "Files",
                 title: "Files"
-              }, React.createElement(FolderOpen, { className: "sidebar-rail-icon", strokeWidth: 1.75 })),
+              }, React.createElement(FolderOpen, { className: "sidebar-rail-icon", strokeWidth: 1.5 })),
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-rail-button" + (activePage === "environments" ? " is-active" : ""),
                 onClick: handleOpenEnvironmentsShortcut,
                 "aria-label": "Environments",
                 title: "Environments"
-              }, React.createElement(HardDrive, { className: "sidebar-rail-icon", strokeWidth: 1.75 })),
+              }, React.createElement(HardDrive, { className: "sidebar-rail-icon", strokeWidth: 1.5 })),
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-rail-button" + (activePage === "agents" ? " is-active" : ""),
                 onClick: handleOpenAgentsShortcut,
                 "aria-label": "Agents",
                 title: "Agents"
-              }, React.createElement(Bot, { className: "sidebar-rail-icon", strokeWidth: 1.75 }))
+              }, React.createElement(Bot, { className: "sidebar-rail-icon", strokeWidth: 1.5 }))
             ),
             React.createElement("button", {
               type: "button",
@@ -42668,18 +42750,11 @@ const html = `<!doctype html>
                                 setAgentId(options.taskPreview.assigneeAgentId);
                               }
                               if (options?.taskRunRequest?.prompt) {
-                                setPendingThreadRunRequest({
-                                  token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
-                                  threadId,
-                                  prompt: options.taskRunRequest.prompt,
-                                  attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
-                                  githubRepo: options.taskRunRequest.githubRepo || null,
-                                  enabledSkills: options.taskRunRequest.enabledSkills || null,
-                                  environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
-                                });
-                              } else {
                                 setPendingThreadRunRequest(null);
+                                void startThreadRunInBackground(threadId, options.taskRunRequest, options.taskPreview || null);
+                                return;
                               }
+                              setPendingThreadRunRequest(null);
                               setActivePage("thread");
                               setCurrentThreadId(threadId);
                               setContentMode(options?.contentMode === "changes" ? "changes" : "chat");
