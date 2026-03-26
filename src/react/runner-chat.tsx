@@ -1,4 +1,4 @@
-import { CSSProperties, ChangeEvent, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, ChangeEvent, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Bookmark as LucideBookmark,
@@ -4546,6 +4546,7 @@ export function RunnerChat({
   const attachmentUploadPromisesRef = useRef<Record<string, Promise<RunnerAttachment> | undefined>>({});
   const githubPreparationPromisesRef = useRef<Record<string, Promise<void> | undefined>>({});
   const turnsRef = useRef<RunnerTurn[]>([]);
+  const initializedThreadHistoryIdRef = useRef<string | null>(null);
   const lastEnvironmentStartRequestKeyRef = useRef<string | null>(null);
   const quotedSelectionPopupRef = useRef<HTMLDivElement | null>(null);
   const composerQuotedSelectionAnimationTimerRef = useRef<number | null>(null);
@@ -6012,6 +6013,7 @@ export function RunnerChat({
           ? activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
           : effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
     const threadId = options?.threadIdOverride || (await ensureThread(taskText));
+    initializedThreadHistoryIdRef.current = threadId;
     const githubRepo =
       options?.githubRepoOverride !== undefined
         ? options.githubRepoOverride
@@ -6397,6 +6399,7 @@ export function RunnerChat({
 
   useEffect(() => {
     if (threadId) {
+      initializedThreadHistoryIdRef.current = null;
       setLocalThreadId(threadId);
       setEditingTurnId(null);
       setEditingTurnDraft("");
@@ -6455,6 +6458,13 @@ export function RunnerChat({
       };
     }
 
+    if (initializedThreadHistoryIdRef.current === threadId && turnsRef.current.length > 0) {
+      setIsThreadHistoryLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     clear();
     setIsThreadHistoryLoading(true);
     setInlineError(null);
@@ -6481,6 +6491,7 @@ export function RunnerChat({
           return;
         }
         previewRendered = true;
+        initializedThreadHistoryIdRef.current = threadId;
         setTurns(previewTurns);
         setExpandedTurns((previousExpandedTurns) =>
           mapExpandedTurns(previousExpandedTurns, turnsRef.current, previewTurns)
@@ -6521,6 +6532,7 @@ export function RunnerChat({
       )
       .then((hydratedTurns) => {
         if (cancelled || !hydratedTurns) return;
+        initializedThreadHistoryIdRef.current = threadId;
         const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
         setTurns(mergedTurns);
         setExpandedTurns((previousExpandedTurns) =>
@@ -6892,9 +6904,9 @@ export function RunnerChat({
     });
   }, [schedulePresets]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!logsRef.current) return;
-    logsRef.current.scrollTo({ top: logsRef.current.scrollHeight, behavior: "smooth" });
+    logsRef.current.scrollTop = logsRef.current.scrollHeight;
   }, [logs, turns]);
 
   useEffect(() => {
