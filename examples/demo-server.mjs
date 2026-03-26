@@ -35507,41 +35507,74 @@ const html = `<!doctype html>
           await saveProfileDraft(true);
         }
 
-        function createGithubRepoFolderId(repoFullName) {
-          return "github-repo:" + repoFullName;
+        function encodeGithubFolderSegment(value) {
+          return encodeURIComponent(String(value || "").trim());
         }
 
-        function createGithubNodeId(repoFullName, path) {
-          return "github-node:" + repoFullName + ":" + (path || "");
+        function decodeGithubFolderSegment(value) {
+          try {
+            return decodeURIComponent(String(value || ""));
+          } catch {
+            return String(value || "");
+          }
+        }
+
+        function createGithubRepoFolderId(repoFullName, ref) {
+          return "github-repo:" + encodeGithubFolderSegment(repoFullName) + ":" + encodeGithubFolderSegment(ref || "");
+        }
+
+        function createGithubNodeId(repoFullName, path, ref) {
+          return "github-node:" + encodeGithubFolderSegment(repoFullName) + ":" + encodeGithubFolderSegment(ref || "") + ":" + encodeGithubFolderSegment(path || "");
         }
 
         function parseGithubFolderId(folderId) {
           if (!folderId || folderId === "root") {
-            return { repoFullName: "", path: "", isRoot: true };
+            return { repoFullName: "", path: "", ref: "", isRoot: true };
           }
 
           if (folderId.startsWith("github-repo:")) {
+            const value = folderId.slice("github-repo:".length);
+            const separatorIndex = value.indexOf(":");
+            if (separatorIndex === -1) {
+              return {
+                repoFullName: value,
+                path: "",
+                ref: "",
+                isRoot: false,
+              };
+            }
             return {
-              repoFullName: folderId.slice("github-repo:".length),
+              repoFullName: decodeGithubFolderSegment(value.slice(0, separatorIndex)),
               path: "",
+              ref: decodeGithubFolderSegment(value.slice(separatorIndex + 1)),
               isRoot: false,
             };
           }
 
           if (folderId.startsWith("github-node:")) {
             const value = folderId.slice("github-node:".length);
-            const separatorIndex = value.indexOf(":");
-            if (separatorIndex === -1) {
-              return { repoFullName: value, path: "", isRoot: false };
+            const firstSeparatorIndex = value.indexOf(":");
+            if (firstSeparatorIndex === -1) {
+              return { repoFullName: value, path: "", ref: "", isRoot: false };
+            }
+            const secondSeparatorIndex = value.indexOf(":", firstSeparatorIndex + 1);
+            if (secondSeparatorIndex === -1) {
+              return {
+                repoFullName: value.slice(0, firstSeparatorIndex),
+                path: value.slice(firstSeparatorIndex + 1),
+                ref: "",
+                isRoot: false,
+              };
             }
             return {
-              repoFullName: value.slice(0, separatorIndex),
-              path: value.slice(separatorIndex + 1),
+              repoFullName: decodeGithubFolderSegment(value.slice(0, firstSeparatorIndex)),
+              path: decodeGithubFolderSegment(value.slice(secondSeparatorIndex + 1)),
+              ref: decodeGithubFolderSegment(value.slice(firstSeparatorIndex + 1, secondSeparatorIndex)),
               isRoot: false,
             };
           }
 
-          return { repoFullName: "", path: "", isRoot: true };
+          return { repoFullName: "", path: "", ref: "", isRoot: true };
         }
 
         const refreshSessionState = useCallback(async function refreshSessionState() {
@@ -36389,7 +36422,7 @@ const html = `<!doctype html>
             }
 
             return (data.repos || []).map((repo) => ({
-              id: createGithubRepoFolderId(repo.full_name),
+              id: createGithubRepoFolderId(repo.full_name, repo.default_branch || undefined),
               name: repo.name,
               path: "",
               isFolder: true,
@@ -36398,8 +36431,15 @@ const html = `<!doctype html>
             }));
           }
 
+          const params = new URLSearchParams();
+          if (parsedFolder.path) {
+            params.set("path", parsedFolder.path);
+          }
+          if (parsedFolder.ref) {
+            params.set("ref", parsedFolder.ref);
+          }
           const response = await fetch(
-            "/api/aios/github/repos/" + parsedFolder.repoFullName + "/contents" + (parsedFolder.path ? "?path=" + encodeURIComponent(parsedFolder.path) : ""),
+            "/api/aios/github/repos/" + parsedFolder.repoFullName + "/contents" + (params.toString() ? "?" + params.toString() : ""),
             {
               method: "GET",
               credentials: "include",
@@ -36416,14 +36456,34 @@ const html = `<!doctype html>
 
           const items = Array.isArray(data) ? data : data.contents || [];
           return items.map((item) => ({
-            id: item.type === "dir" ? createGithubNodeId(parsedFolder.repoFullName, item.path) : createGithubNodeId(parsedFolder.repoFullName, item.path),
+            id: createGithubNodeId(parsedFolder.repoFullName, item.path, data.ref || parsedFolder.ref || undefined),
             name: item.name,
             path: item.path,
             isFolder: item.type === "dir",
             size: item.size || 0,
             mimeType: undefined,
             repoFullName: parsedFolder.repoFullName,
-            ref: data.ref || undefined,
+            ref: data.ref || parsedFolder.ref || undefined,
+          }));
+        }
+
+        async function handleGithubFetchBranches(repoFullName) {
+          const response = await fetch("/api/aios/github/repos/" + repoFullName + "/branches", {
+            method: "GET",
+            credentials: "include",
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            if (isUnauthorizedStatus(response.status)) {
+              setGithubStatus({ connected: false });
+            }
+            throw new Error(data.error || "Failed to fetch GitHub branches");
+          }
+
+          return (data.branches || []).map((branch) => ({
+            id: branch.name,
+            name: branch.name,
           }));
         }
 
@@ -36432,8 +36492,13 @@ const html = `<!doctype html>
             throw new Error("Missing GitHub file metadata");
           }
 
+          const params = new URLSearchParams();
+          params.set("path", file.path);
+          if (file.ref) {
+            params.set("ref", file.ref);
+          }
           const response = await fetch(
-            "/api/aios/github/repos/" + file.repoFullName + "/download?path=" + encodeURIComponent(file.path),
+            "/api/aios/github/repos/" + file.repoFullName + "/download?" + params.toString(),
             {
               method: "GET",
               credentials: "include",
@@ -37737,6 +37802,7 @@ const html = `<!doctype html>
             onConnect: handleGithubAuthConnect,
             onDisconnect: handleGithubAuthDisconnect,
             fetchItems: handleGithubFetchItems,
+            fetchBranches: handleGithubFetchBranches,
             fetchFileContent: handleGithubFetchFileContent,
           },
           notion: {
@@ -42538,6 +42604,13 @@ const html = `<!doctype html>
                                       void loadThreadGroundTruthStatus(threadId);
                                       void refreshThreads();
                                     },
+                                    onRunCancel: (threadId) => {
+                                      setActivePage("thread");
+                                      setCurrentThreadId(threadId);
+                                      updateRealThreadStatus(threadId, "cancelled");
+                                      void loadThreadGroundTruthStatus(threadId);
+                                      void refreshThreads();
+                                    },
                                     onRunError: (error, threadId) => {
                                       if (!threadId) {
                                         return;
@@ -44642,6 +44715,17 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const threadCancelMatch = url.pathname.match(/^\/api\/real\/threads\/([^/]+)\/cancel$/);
+  if (req.method === "POST" && threadCancelMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/threads/${encodeURIComponent(decodeURIComponent(threadCancelMatch[1]))}/cancel`,
+      "POST",
+    );
+    return;
+  }
+
   const threadDetailMatch = url.pathname.match(/^\/api\/real\/threads\/([^/]+)$/);
   if (req.method === "GET" && threadDetailMatch) {
     void proxyUpstreamGet(req, res, `/threads/${encodeURIComponent(decodeURIComponent(threadDetailMatch[1]))}`);
@@ -45086,6 +45170,17 @@ const server = http.createServer((req, res) => {
       req,
       res,
       `/environments/${encodeURIComponent(decodeURIComponent(environmentStartMatch[1]))}/start`,
+      "POST",
+    );
+    return;
+  }
+
+  const environmentGithubPrepareMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/github\/prepare$/);
+  if (req.method === "POST" && environmentGithubPrepareMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentGithubPrepareMatch[1]))}/github/prepare`,
       "POST",
     );
     return;

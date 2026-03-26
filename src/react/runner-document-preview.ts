@@ -5,8 +5,15 @@ export interface RunnerPreviewAttachment {
   filename: string;
   mimeType: string;
   type: "image" | "document";
+  uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";
   url?: string;
   previewUrl?: string;
+  workspacePath?: string;
+  integrationSource?: "google-drive" | "one-drive" | "github";
+  githubRepoFullName?: string;
+  githubRef?: string | null;
+  githubItemPath?: string;
+  githubSelectionType?: "repo" | "file";
 }
 
 const RUNNER_PREVIEW_MIME_TYPES_BY_EXTENSION: Record<string, string> = {

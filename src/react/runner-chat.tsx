@@ -86,6 +86,11 @@ export interface RunnerAttachment {
   url?: string;
   workspacePath?: string;
   gcsPath?: string;
+  integrationSource?: "google-drive" | "one-drive" | "github";
+  githubRepoFullName?: string;
+  githubRef?: string | null;
+  githubItemPath?: string;
+  githubSelectionType?: "repo" | "file";
   [key: string]: unknown;
 }
 
@@ -101,6 +106,8 @@ interface LocalAttachment {
   integrationSource?: "google-drive" | "one-drive" | "github";
   githubRepoFullName?: string;
   githubRef?: string | null;
+  githubItemPath?: string;
+  githubSelectionType?: "repo" | "file";
   resolvedAttachment?: RunnerAttachment;
   uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";
   uploadError?: string | null;
@@ -212,7 +219,66 @@ function isLocalAttachmentRecord(attachment: LocalAttachment | RunnerTurnAttachm
   return "file" in attachment;
 }
 
+function getGithubAttachmentRepoFullName(attachment: LocalAttachment | RunnerTurnAttachment): string {
+  if (isLocalAttachmentRecord(attachment)) {
+    return String(attachment.githubRepoFullName || "").trim();
+  }
+  return String(attachment.githubRepoFullName || "").trim();
+}
+
+function getGithubAttachmentPath(attachment: LocalAttachment | RunnerTurnAttachment): string {
+  if (isLocalAttachmentRecord(attachment)) {
+    return String(attachment.githubItemPath || "").trim();
+  }
+  return String(attachment.githubItemPath || "").trim();
+}
+
+function getGithubAttachmentRef(attachment: LocalAttachment | RunnerTurnAttachment): string {
+  if (isLocalAttachmentRecord(attachment)) {
+    return String(attachment.githubRef || "").trim();
+  }
+  return String(attachment.githubRef || "").trim();
+}
+
+function isGithubAttachmentSelection(attachment: LocalAttachment | RunnerTurnAttachment): boolean {
+  const integrationSource = isLocalAttachmentRecord(attachment)
+    ? attachment.integrationSource
+    : attachment.integrationSource;
+  if (integrationSource !== "github" || !getGithubAttachmentRepoFullName(attachment)) {
+    return false;
+  }
+  const selectionType = isLocalAttachmentRecord(attachment)
+    ? attachment.githubSelectionType
+    : attachment.githubSelectionType;
+  const workspacePath = isLocalAttachmentRecord(attachment)
+    ? attachment.resolvedAttachment?.workspacePath || ""
+    : attachment.workspacePath || "";
+  return selectionType === "repo" || selectionType === "file" || String(workspacePath || "").startsWith("/workspace/GitHub/");
+}
+
+function getGithubRepoName(repoFullName: string): string {
+  const normalized = String(repoFullName || "").trim();
+  if (!normalized) {
+    return "repository";
+  }
+  return normalized.split("/").pop() || normalized;
+}
+
+function getGithubAttachmentDisplayName(attachment: LocalAttachment | RunnerTurnAttachment): string {
+  const repoFullName = getGithubAttachmentRepoFullName(attachment);
+  const repoName = getGithubRepoName(repoFullName);
+  const selectionPath = getGithubAttachmentPath(attachment);
+  if (!selectionPath) {
+    return repoName;
+  }
+  const selectionName = selectionPath.split("/").filter(Boolean).pop() || selectionPath;
+  return `${repoName}/${selectionName}`;
+}
+
 function getAttachmentDisplayName(attachment: LocalAttachment | RunnerTurnAttachment): string {
+  if (isGithubAttachmentSelection(attachment)) {
+    return getGithubAttachmentDisplayName(attachment);
+  }
   return isLocalAttachmentRecord(attachment) ? attachment.file.name : attachment.filename;
 }
 
@@ -220,7 +286,85 @@ function getAttachmentPreviewUrl(attachment: LocalAttachment | RunnerTurnAttachm
   return isLocalAttachmentRecord(attachment) ? attachment.previewUrl : attachment.previewUrl || attachment.url;
 }
 
+function encodeGithubBrowserSegment(value: string | null | undefined): string {
+  return encodeURIComponent(String(value || "").trim());
+}
+
+function decodeGithubBrowserSegment(value: string | null | undefined): string {
+  try {
+    return decodeURIComponent(String(value || ""));
+  } catch {
+    return String(value || "");
+  }
+}
+
+function createGithubBrowserRepoFolderId(repoFullName: string, ref?: string | null): string {
+  return `github-repo:${encodeGithubBrowserSegment(repoFullName)}:${encodeGithubBrowserSegment(ref || "")}`;
+}
+
+function createGithubBrowserNodeId(repoFullName: string, path: string, ref?: string | null): string {
+  return `github-node:${encodeGithubBrowserSegment(repoFullName)}:${encodeGithubBrowserSegment(ref || "")}:${encodeGithubBrowserSegment(path || "")}`;
+}
+
+function parseGithubBrowserFolderId(folderId: string | null | undefined): {
+  repoFullName: string;
+  path: string;
+  ref: string;
+  isRoot: boolean;
+} {
+  if (!folderId || folderId === "root") {
+    return { repoFullName: "", path: "", ref: "", isRoot: true };
+  }
+
+  if (folderId.startsWith("github-repo:")) {
+    const value = folderId.slice("github-repo:".length);
+    const separatorIndex = value.indexOf(":");
+    if (separatorIndex === -1) {
+      return {
+        repoFullName: value,
+        path: "",
+        ref: "",
+        isRoot: false,
+      };
+    }
+    return {
+      repoFullName: decodeGithubBrowserSegment(value.slice(0, separatorIndex)),
+      path: "",
+      ref: decodeGithubBrowserSegment(value.slice(separatorIndex + 1)),
+      isRoot: false,
+    };
+  }
+
+  if (folderId.startsWith("github-node:")) {
+    const value = folderId.slice("github-node:".length);
+    const firstSeparatorIndex = value.indexOf(":");
+    if (firstSeparatorIndex === -1) {
+      return { repoFullName: value, path: "", ref: "", isRoot: false };
+    }
+    const secondSeparatorIndex = value.indexOf(":", firstSeparatorIndex + 1);
+    if (secondSeparatorIndex === -1) {
+      return {
+        repoFullName: value.slice(0, firstSeparatorIndex),
+        path: value.slice(firstSeparatorIndex + 1),
+        ref: "",
+        isRoot: false,
+      };
+    }
+    return {
+      repoFullName: decodeGithubBrowserSegment(value.slice(0, firstSeparatorIndex)),
+      ref: decodeGithubBrowserSegment(value.slice(firstSeparatorIndex + 1, secondSeparatorIndex)),
+      path: decodeGithubBrowserSegment(value.slice(secondSeparatorIndex + 1)),
+      isRoot: false,
+    };
+  }
+
+  return { repoFullName: "", path: "", ref: "", isRoot: true };
+}
+
 function isAttachmentDocumentPreviewable(attachment: RunnerTurnAttachment): boolean {
+  if (isGithubAttachmentSelection(attachment)) {
+    return false;
+  }
   return isRunnerDocumentPreviewable(attachment);
 }
 
@@ -395,6 +539,7 @@ export interface RunnerChatGithubConfig {
   onConnect?: () => void;
   onDisconnect?: () => void;
   fetchItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
+  fetchBranches?: (repoFullName: string) => Promise<RunnerChatOption[]>;
   fetchFileContent?: (file: RunnerChatFileNode) => Promise<RunnerChatFetchedFileContent>;
 }
 
@@ -476,6 +621,7 @@ export interface RunnerChatProps {
   onThreadIdChange?: (threadId: string) => void;
   onRunStart?: (threadId: string) => void;
   onRunFinish?: (result: RunnerExecuteResult, threadId: string) => void;
+  onRunCancel?: (threadId: string) => void;
   onRunError?: (error: Error, threadId?: string) => void;
   onAgentChange?: (agentId: string) => void;
   onEnvironmentChange?: (environmentId: string) => void;
@@ -2095,6 +2241,68 @@ async function startEnvironment(params: {
   }
 }
 
+async function prepareGithubRepositorySelection(params: {
+  backendUrl: string;
+  apiKey: string;
+  requestHeaders?: HeadersInit;
+  environmentId: string;
+  repoFullName: string;
+  branch: string;
+}): Promise<void> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = new Headers(params.requestHeaders || {});
+  headers.set("Content-Type", "application/json");
+  headers.set("X-API-Key", params.apiKey);
+
+  const response = await fetch(
+    `${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/github/prepare`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        repoFullName: params.repoFullName,
+        branch: params.branch,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const bodyText = await response.text().catch(() => "");
+    throw new Error(bodyText || `Failed to prepare GitHub repository (${response.status})`);
+  }
+}
+
+async function cancelThreadExecution(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  requestHeaders?: HeadersInit;
+}): Promise<void> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
+
+  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/cancel`, {
+    method: "POST",
+    headers,
+  });
+
+  const bodyText = await response.text().catch(() => "");
+  let parsed: { message?: string; error?: string } = {};
+  try {
+    parsed = bodyText ? JSON.parse(bodyText) : {};
+  } catch {
+    parsed = { message: bodyText };
+  }
+
+  if (!response.ok) {
+    const message = parsed.message || parsed.error || `Failed to cancel thread (${response.status})`;
+    if (response.status === 400 && /no active execution|no running execution/i.test(message)) {
+      return;
+    }
+    throw new Error(message);
+  }
+}
+
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -3247,8 +3455,14 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
     name?: unknown;
     mimeType?: unknown;
     type?: unknown;
+    uploadStatus?: unknown;
     url?: unknown;
     previewUrl?: unknown;
+    integrationSource?: unknown;
+    githubRepoFullName?: unknown;
+    githubRef?: unknown;
+    githubItemPath?: unknown;
+    githubSelectionType?: unknown;
   };
   const attachmentId = typeof candidate.id === "string" && candidate.id.trim() ? candidate.id.trim() : generateId("att");
   const filename =
@@ -3278,8 +3492,36 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
     filename,
     mimeType,
     type,
+    uploadStatus:
+      candidate.uploadStatus === "idle" ||
+      candidate.uploadStatus === "uploading" ||
+      candidate.uploadStatus === "uploaded" ||
+      candidate.uploadStatus === "failed"
+        ? candidate.uploadStatus
+        : undefined,
     url,
     previewUrl,
+    integrationSource:
+      candidate.integrationSource === "google-drive" || candidate.integrationSource === "one-drive" || candidate.integrationSource === "github"
+        ? candidate.integrationSource
+        : undefined,
+    githubRepoFullName:
+      typeof candidate.githubRepoFullName === "string" && candidate.githubRepoFullName.trim()
+        ? candidate.githubRepoFullName.trim()
+        : undefined,
+    githubRef:
+      typeof candidate.githubRef === "string" && candidate.githubRef.trim()
+        ? candidate.githubRef.trim()
+        : candidate.githubRef === null
+          ? null
+          : undefined,
+    githubItemPath:
+      typeof candidate.githubItemPath === "string" && candidate.githubItemPath.trim()
+        ? candidate.githubItemPath.trim()
+        : undefined,
+    githubSelectionType: candidate.githubSelectionType === "repo" || candidate.githubSelectionType === "file"
+      ? candidate.githubSelectionType
+      : undefined,
   };
 }
 
@@ -3313,6 +3555,12 @@ function buildTurnAttachmentsFromLocalAttachments(attachments: LocalAttachment[]
     mimeType: attachment.file.type || "application/octet-stream",
     type: attachment.type,
     previewUrl: attachment.previewUrl,
+    integrationSource: attachment.integrationSource,
+    githubRepoFullName: attachment.githubRepoFullName,
+    githubRef: attachment.githubRef,
+    githubItemPath: attachment.githubItemPath,
+    githubSelectionType: attachment.githubSelectionType,
+    uploadStatus: attachment.uploadStatus,
   }));
 }
 
@@ -4119,6 +4367,7 @@ export function RunnerChat({
   onThreadIdChange,
   onRunStart,
   onRunFinish,
+  onRunCancel,
   onRunError,
   onAgentChange,
   onEnvironmentChange,
@@ -4253,6 +4502,9 @@ export function RunnerChat({
   const [selectedGoogleDriveFileIds, setSelectedGoogleDriveFileIds] = useState<string[]>([]);
   const [selectedOneDriveFileIds, setSelectedOneDriveFileIds] = useState<string[]>([]);
   const [selectedGithubFileIds, setSelectedGithubFileIds] = useState<string[]>([]);
+  const [githubBranchesByRepoFullName, setGithubBranchesByRepoFullName] = useState<Record<string, RunnerChatOption[]>>({});
+  const [githubSelectedBranchByRepoFullName, setGithubSelectedBranchByRepoFullName] = useState<Record<string, string>>({});
+  const [githubBranchLoadingRepoFullNames, setGithubBranchLoadingRepoFullNames] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [recordingStartedAtMs, setRecordingStartedAtMs] = useState<number | null>(null);
   const [recordingElapsedSeconds, setRecordingElapsedSeconds] = useState(0);
@@ -4292,17 +4544,20 @@ export function RunnerChat({
   const isDrainingQueuedRunsRef = useRef(false);
   const attachmentsRef = useRef<LocalAttachment[]>([]);
   const attachmentUploadPromisesRef = useRef<Record<string, Promise<RunnerAttachment> | undefined>>({});
+  const githubPreparationPromisesRef = useRef<Record<string, Promise<void> | undefined>>({});
   const turnsRef = useRef<RunnerTurn[]>([]);
   const lastEnvironmentStartRequestKeyRef = useRef<string | null>(null);
   const quotedSelectionPopupRef = useRef<HTMLDivElement | null>(null);
   const composerQuotedSelectionAnimationTimerRef = useRef<number | null>(null);
   const appliedBacklogSubtaskCommandTokenRef = useRef<string | number | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
+  const stopRequestedThreadIdRef = useRef<string | null>(null);
   const visibleTimelineItemCountsRef = useRef<Record<string, number>>({});
   const thinkingStatusPhaseByTurnRef = useRef<Record<string, RunnerThinkingStatusPhase>>({});
   const thinkingStatusTimersRef = useRef<Record<string, { hideTimer?: number; showTimer?: number }>>({});
   const rawTimelineItemCountsRef = useRef<Record<string, number>>({});
   const thinkingStatusEligibilityRef = useRef<Record<string, boolean>>({});
+  const [isStoppingRun, setIsStoppingRun] = useState(false);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -4347,7 +4602,7 @@ export function RunnerChat({
   const hasRunningTurn = Boolean(activeRunningTurn);
   const hasRunningTurnLogs = Boolean(activeRunningTurn && activeRunningTurn.logs.length > 0);
   const showRunPreparationIndicator = isPreparingRun || (hasRunningTurn && !hasRunningTurnLogs);
-  const showActiveRunStopButton = !showRunPreparationIndicator && (hasRunningTurn || isRunning);
+  const showActiveRunStopButton = !showRunPreparationIndicator && (hasRunningTurn || isRunning || isStoppingRun);
   const trimmedInput = input.trim();
   const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
   const stagedThreadContextCommandLabel = stagedThreadContextCommand ? `/${stagedThreadContextCommand}` : "";
@@ -4424,6 +4679,90 @@ export function RunnerChat({
     window.requestAnimationFrame(() => {
       textareaRef.current?.focus();
     });
+  }
+
+  function consumeIntentionalStopAbort(error: Error, threadIdToMatch?: string | null): boolean {
+    if (error.name !== "AbortError") {
+      return false;
+    }
+    const requestedThreadId = String(stopRequestedThreadIdRef.current || "").trim();
+    const normalizedThreadId = String(threadIdToMatch || "").trim();
+    if (!requestedThreadId || !normalizedThreadId || requestedThreadId !== normalizedThreadId) {
+      return false;
+    }
+    stopRequestedThreadIdRef.current = null;
+    return true;
+  }
+
+  function markRunningTurnsCancelled() {
+    const cancelledAtMs = Date.now();
+    setTurns((previousTurns) =>
+      previousTurns.map((turn) =>
+        turn.status === "running"
+          ? {
+              ...turn,
+              status: "cancelled",
+              completedAtMs: cancelledAtMs,
+              durationSeconds:
+                typeof turn.durationSeconds === "number" && Number.isFinite(turn.durationSeconds)
+                  ? Math.max(0, Math.round(turn.durationSeconds))
+                  : Math.max(0, Math.floor((cancelledAtMs - turn.startedAtMs) / 1000)),
+            }
+          : turn
+      )
+    );
+  }
+
+  async function handleStopActiveRun() {
+    if (isStoppingRun) {
+      return;
+    }
+
+    const threadIdToCancel = String(currentThreadId || "").trim();
+    const hasLocalExecution = isRunning;
+
+    if (!threadIdToCancel && !hasLocalExecution) {
+      return;
+    }
+
+    setInlineError(null);
+    setIsPreparingRun(false);
+    setPendingQueuedMessages([]);
+    setIsStoppingRun(true);
+
+    if (threadIdToCancel) {
+      stopRequestedThreadIdRef.current = threadIdToCancel;
+    }
+
+    try {
+      if (threadIdToCancel && normalizedBackendUrl && hasApiKey) {
+        await cancelThreadExecution({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          threadId: threadIdToCancel,
+          requestHeaders,
+        });
+      }
+
+      markRunningTurnsCancelled();
+      cancel();
+
+      if (!hasLocalExecution) {
+        stopRequestedThreadIdRef.current = null;
+      }
+
+      if (threadIdToCancel) {
+        refreshThreadContextDetailsInBackground(threadIdToCancel);
+        onRunCancel?.(threadIdToCancel);
+      }
+    } catch (error) {
+      stopRequestedThreadIdRef.current = null;
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setInlineError(normalizedError.message || "Failed to stop agent.");
+      onRunError?.(normalizedError, threadIdToCancel || undefined);
+    } finally {
+      setIsStoppingRun(false);
+    }
   }
 
   function applyHydratedThreadEnvironment(payload: RunnerThreadHydrationPayload) {
@@ -5673,15 +6012,11 @@ export function RunnerChat({
           ? activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
           : effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
     const threadId = options?.threadIdOverride || (await ensureThread(taskText));
-    const resolvedAttachments =
-      options?.resolvedAttachmentsOverride !== undefined
-        ? options.resolvedAttachmentsOverride || undefined
-        : await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
     const githubRepo =
       options?.githubRepoOverride !== undefined
         ? options.githubRepoOverride
         : buildSelectedGithubRepoReference(attachmentEntries);
-    const turnAttachments = buildTurnAttachmentsForExecution(attachmentEntries, resolvedAttachments, normalizedBackendUrl);
+    const initialTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
     const turnId = options?.turnId || generateId("turn");
     const startedAtMs = Date.now();
     let releasedPreparationState = false;
@@ -5702,7 +6037,7 @@ export function RunnerChat({
         durationSeconds: null,
         status: "running",
         quotedSelection: options?.quotedSelection === undefined ? turn.quotedSelection : options.quotedSelection,
-        attachments: pickTurnAttachments(turnAttachments, turn.attachments),
+        attachments: pickTurnAttachments(initialTurnAttachments, turn.attachments),
       }));
     } else {
       setTurns((prev) => [
@@ -5718,7 +6053,7 @@ export function RunnerChat({
           agentName: selectedAgent?.name || displayedAgentLabel,
           environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
           quotedSelection: options?.quotedSelection || null,
-          attachments: turnAttachments,
+          attachments: initialTurnAttachments,
         },
       ]);
       setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
@@ -5726,6 +6061,18 @@ export function RunnerChat({
 
     onRunStart?.(threadId);
     try {
+      const resolvedAttachments =
+        options?.resolvedAttachmentsOverride !== undefined
+          ? options.resolvedAttachmentsOverride || undefined
+          : await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
+      const turnAttachments = buildTurnAttachmentsForExecution(attachmentEntries, resolvedAttachments, normalizedBackendUrl);
+      if (turnAttachments) {
+        updateTurn(turnId, (turn) => ({
+          ...turn,
+          attachments: pickTurnAttachments(turnAttachments, turn.attachments),
+        }));
+      }
+
       const executionResult = await execute({
         run: {
           url: `${normalizedBackendUrl}/threads/${encodeURIComponent(threadId)}/messages`,
@@ -5827,6 +6174,9 @@ export function RunnerChat({
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
+        if (consumeIntentionalStopAbort(normalizedError, normalizedRequestThreadId)) {
+          return;
+        }
         setInlineError(normalizedError.message);
         onRunError?.(normalizedError, normalizedRequestThreadId);
       } finally {
@@ -6204,6 +6554,8 @@ export function RunnerChat({
     setThreadContextNativeError(null);
     setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
     setPendingQueuedMessages([]);
+    stopRequestedThreadIdRef.current = null;
+    setIsStoppingRun(false);
     setEditingTurnId(null);
     setEditingTurnDraft("");
     setForkingTurnId(null);
@@ -6713,10 +7065,109 @@ export function RunnerChat({
     return effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
   }
 
+  function updateTurnAttachmentState(
+    attachmentId: string,
+    patch: Partial<RunnerTurnAttachment>
+  ) {
+    setTurns((prev) =>
+      prev.map((turn) => {
+        if (!turn.attachments?.some((attachment) => attachment.id === attachmentId)) {
+          return turn;
+        }
+        return {
+          ...turn,
+          attachments: turn.attachments.map((attachment) =>
+            attachment.id === attachmentId
+              ? {
+                  ...attachment,
+                  ...patch,
+                }
+              : attachment
+          ),
+        };
+      })
+    );
+  }
+
+  function applyAttachmentStatePatch(
+    attachmentId: string,
+    patch: Partial<LocalAttachment> & Partial<RunnerTurnAttachment>
+  ) {
+    setAttachments((prev) =>
+      prev.map((entry) =>
+        entry.id === attachmentId
+          ? {
+              ...entry,
+              ...patch,
+            }
+          : entry
+      )
+    );
+    updateTurnAttachmentState(attachmentId, patch);
+  }
+
+  async function ensureGithubSelectionPrepared(
+    attachment: LocalAttachment,
+    targetEnvironmentId: string
+  ): Promise<RunnerAttachment> {
+    if (!attachment.resolvedAttachment) {
+      throw new Error("Missing GitHub attachment metadata.");
+    }
+
+    const repoFullName = String(attachment.githubRepoFullName || "").trim();
+    const branch = String(attachment.githubRef || "").trim() || "main";
+    if (!repoFullName) {
+      throw new Error("Missing GitHub repository metadata.");
+    }
+
+    if (!normalizedBackendUrl || !apiKey.trim()) {
+      return attachment.resolvedAttachment;
+    }
+
+    const preparationKey = `${targetEnvironmentId}\u0000${repoFullName}\u0000${branch}`;
+    let preparationPromise = githubPreparationPromisesRef.current[preparationKey];
+    if (!preparationPromise) {
+      preparationPromise = (async () => {
+        await startEnvironment({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          requestHeaders,
+          environmentId: targetEnvironmentId,
+          ...(selectedAgentId ? { agentId: selectedAgentId } : {}),
+        });
+        await prepareGithubRepositorySelection({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          requestHeaders,
+          environmentId: targetEnvironmentId,
+          repoFullName,
+          branch,
+        });
+      })().finally(() => {
+        delete githubPreparationPromisesRef.current[preparationKey];
+      });
+      githubPreparationPromisesRef.current[preparationKey] = preparationPromise;
+    }
+
+    await preparationPromise;
+    return attachment.resolvedAttachment;
+  }
+
   async function resolveSingleAttachment(
     attachment: LocalAttachment,
     environmentIdOverride?: string | null
   ): Promise<RunnerAttachment> {
+    if (attachment.integrationSource === "github") {
+      const targetEnvironmentId =
+        environmentIdOverride === undefined
+          ? resolveAttachmentUploadEnvironmentId()
+          : environmentIdOverride;
+      if (!targetEnvironmentId) {
+        throw new Error("Select an environment before attaching GitHub repositories.");
+      }
+      return ensureGithubSelectionPrepared(attachment, targetEnvironmentId);
+    }
+
     if (attachment.resolvedAttachment) {
       return attachment.resolvedAttachment;
     }
@@ -6751,7 +7202,11 @@ export function RunnerChat({
     attachment: LocalAttachment,
     options?: { environmentIdOverride?: string | null }
   ): Promise<RunnerAttachment> | undefined {
-    if (attachment.resolvedAttachment) {
+    if (attachment.resolvedAttachment && attachment.integrationSource !== "github") {
+      return Promise.resolve(attachment.resolvedAttachment);
+    }
+
+    if (attachment.integrationSource === "github" && attachment.resolvedAttachment && attachment.uploadStatus === "uploaded") {
       return Promise.resolve(attachment.resolvedAttachment);
     }
 
@@ -6768,35 +7223,21 @@ export function RunnerChat({
         attachment.resolvedAttachment = resolvedAttachment;
         attachment.uploadStatus = "uploaded";
         attachment.uploadError = null;
-        setAttachments((prev) =>
-          prev.map((entry) =>
-            entry.id === attachment.id
-              ? {
-                  ...entry,
-                  resolvedAttachment,
-                  uploadStatus: "uploaded",
-                  uploadError: null,
-                }
-              : entry
-          )
-        );
+        applyAttachmentStatePatch(attachment.id, {
+          resolvedAttachment,
+          uploadStatus: "uploaded",
+          uploadError: null,
+        });
         return resolvedAttachment;
       })
       .catch((error) => {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
         attachment.uploadStatus = "failed";
         attachment.uploadError = normalizedError.message || `Failed to upload ${attachment.file.name}.`;
-        setAttachments((prev) =>
-          prev.map((entry) =>
-            entry.id === attachment.id
-              ? {
-                  ...entry,
-                  uploadStatus: "failed",
-                  uploadError: normalizedError.message || `Failed to upload ${attachment.file.name}.`,
-                }
-              : entry
-          )
-        );
+        applyAttachmentStatePatch(attachment.id, {
+          uploadStatus: "failed",
+          uploadError: normalizedError.message || `Failed to upload ${attachment.file.name}.`,
+        });
         throw normalizedError;
       })
       .finally(() => {
@@ -6806,17 +7247,10 @@ export function RunnerChat({
     attachmentUploadPromisesRef.current[attachment.id] = uploadPromise;
     attachment.uploadStatus = "uploading";
     attachment.uploadError = null;
-    setAttachments((prev) =>
-      prev.map((entry) =>
-        entry.id === attachment.id
-          ? {
-              ...entry,
-              uploadStatus: "uploading",
-              uploadError: null,
-            }
-          : entry
-      )
-    );
+    applyAttachmentStatePatch(attachment.id, {
+      uploadStatus: "uploading",
+      uploadError: null,
+    });
 
     return uploadPromise;
   }
@@ -6979,6 +7413,61 @@ export function RunnerChat({
     };
   }
 
+  function createGithubIntegrationSelectionAttachment(
+    item: RunnerChatFileNode,
+    targetEnvironmentId: string,
+    options?: { pendingPreparation?: boolean }
+  ): LocalAttachment {
+    const repoFullName = String(item.repoFullName || "").trim();
+    if (!repoFullName) {
+      throw new Error("Missing GitHub repository metadata.");
+    }
+
+    const repoName = getGithubRepoName(repoFullName);
+    const selectedBranch = getGithubSelectedBranchForRepo(repoFullName, item.ref);
+    const normalizedItemPath = String(item.path || "").trim().replace(/^\/+/, "");
+    const selectionType: "repo" | "file" = item.isFolder && !normalizedItemPath ? "repo" : "file";
+    const displayName =
+      selectionType === "repo"
+        ? repoName
+        : `${repoName}/${(normalizedItemPath.split("/").filter(Boolean).pop() || item.name || "file").trim()}`;
+    const workspacePath = `/workspace/GitHub/${repoName}${normalizedItemPath ? `/${normalizedItemPath}` : ""}`;
+    const selectionMimeType = "application/x-github-selection";
+    const file = new File([""], displayName, { type: selectionMimeType });
+    const resolvedAttachment: RunnerAttachment = {
+      id: generateId("integration"),
+      filename: displayName,
+      mimeType: selectionMimeType,
+      size: 0,
+      type: "document",
+      uploadedAt: new Date().toISOString(),
+      url: "",
+      gcsPath: "",
+      workspacePath,
+      integrationSource: "github",
+      githubRepoFullName: repoFullName,
+      githubRef: selectedBranch,
+      githubItemPath: normalizedItemPath || undefined,
+      githubSelectionType: selectionType,
+    };
+
+    return {
+      id: generateId("integration"),
+      file,
+      type: "document",
+      source: "integration",
+      sourceEnvironmentId: targetEnvironmentId,
+      integrationSource: "github",
+      githubRepoFullName: repoFullName,
+      githubRef: selectedBranch,
+      githubItemPath: normalizedItemPath || undefined,
+      githubSelectionType: selectionType,
+      resolvedAttachment,
+      uploadStatus: options?.pendingPreparation ? "uploading" : "uploaded",
+      uploadError: null,
+    };
+  }
+
   function handleAttachFilesMenuClick() {
     setActiveInputPopup("attach-files");
   }
@@ -7132,7 +7621,11 @@ export function RunnerChat({
 
     try {
       const items = await githubConfig.fetchItems(normalizedFolderId);
-      setRemoteGithubItems((current) => mergeDriveFolderItems(current, normalizedFolderId, items));
+      const normalizedItems =
+        normalizedFolderId === "root"
+          ? items.map((item) => buildGithubEffectiveRootItem(item))
+          : items;
+      setRemoteGithubItems((current) => mergeDriveFolderItems(current, normalizedFolderId, normalizedItems));
       setLoadedGithubFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
       setGithubBrowserError(null);
     } catch (error) {
@@ -7143,6 +7636,156 @@ export function RunnerChat({
         setLoadingGithubFolderIds((current) => current.filter((id) => id !== normalizedFolderId));
       } else {
         setIsGithubBrowserLoading(false);
+      }
+    }
+  }
+
+  async function ensureGithubBranchesLoaded(repoFullName: string, fallbackRef?: string | null) {
+    const normalizedRepoFullName = String(repoFullName || "").trim();
+    if (!normalizedRepoFullName) {
+      return;
+    }
+
+    const initialBranch = getGithubSelectedBranchForRepo(normalizedRepoFullName, fallbackRef);
+    if (initialBranch) {
+      setGithubSelectedBranchByRepoFullName((current) =>
+        current[normalizedRepoFullName]
+          ? current
+          : {
+              ...current,
+              [normalizedRepoFullName]: initialBranch,
+            }
+      );
+    }
+
+    if (
+      githubBranchesByRepoFullName[normalizedRepoFullName]?.length
+      || githubBranchLoadingRepoFullNames.includes(normalizedRepoFullName)
+      || !githubConfig?.fetchBranches
+    ) {
+      return;
+    }
+
+    setGithubBranchLoadingRepoFullNames((current) =>
+      current.includes(normalizedRepoFullName) ? current : [...current, normalizedRepoFullName]
+    );
+
+    try {
+      const branches = await githubConfig.fetchBranches(normalizedRepoFullName);
+      setGithubBranchesByRepoFullName((current) => ({
+        ...current,
+        [normalizedRepoFullName]: branches,
+      }));
+      if (branches.length > 0) {
+        setGithubSelectedBranchByRepoFullName((current) =>
+          current[normalizedRepoFullName]
+            ? current
+            : {
+                ...current,
+                [normalizedRepoFullName]: String(branches[0]?.name || initialBranch || "main").trim() || "main",
+              }
+        );
+      }
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setGithubBrowserError(normalizedError.message || "Failed to load GitHub branches.");
+    } finally {
+      setGithubBranchLoadingRepoFullNames((current) => current.filter((name) => name !== normalizedRepoFullName));
+    }
+  }
+
+  function handleGithubRepoBranchChange(item: RunnerChatFileNode, nextBranch: string) {
+    const repoFullName = String(item.repoFullName || "").trim();
+    const normalizedBranch = String(nextBranch || "").trim();
+    if (!repoFullName || !normalizedBranch) {
+      return;
+    }
+
+    const currentRootId = String(item.id || "").trim();
+    const nextRootId = createGithubBrowserRepoFolderId(repoFullName, normalizedBranch);
+
+    setGithubSelectedBranchByRepoFullName((current) => ({
+      ...current,
+      [repoFullName]: normalizedBranch,
+    }));
+
+    setRemoteGithubItems((current) => {
+      const nextItems: RunnerChatFileNode[] = [];
+      let rootUpdated = false;
+      for (const currentItem of current) {
+        if (String(currentItem.repoFullName || "").trim() !== repoFullName) {
+          nextItems.push(currentItem);
+          continue;
+        }
+        if ((currentItem.parentId ?? null) === null) {
+          nextItems.push({
+            ...currentItem,
+            id: nextRootId,
+            ref: normalizedBranch,
+          });
+          rootUpdated = true;
+        }
+      }
+      if (!rootUpdated) {
+        nextItems.push({
+          ...item,
+          id: nextRootId,
+          ref: normalizedBranch,
+          parentId: null,
+        });
+      }
+      return nextItems;
+    });
+
+    setLoadedGithubFolderIds((current) =>
+      current.filter((folderId) => parseGithubBrowserFolderId(folderId).repoFullName !== repoFullName)
+    );
+    setLoadingGithubFolderIds((current) =>
+      current.filter((folderId) => parseGithubBrowserFolderId(folderId).repoFullName !== repoFullName)
+    );
+    setExpandedFileBrowserFolderIds((current) =>
+      current
+        .filter((folderId) => parseGithubBrowserFolderId(folderId).repoFullName !== repoFullName)
+        .concat(current.includes(currentRootId) ? [nextRootId] : [])
+    );
+    setSelectedGithubFileIds((current) =>
+      current.filter((fileId) => parseGithubBrowserFolderId(fileId).repoFullName !== repoFullName)
+    );
+    setFileBrowserPreviewId((current) => {
+      if (!current || parseGithubBrowserFolderId(current).repoFullName !== repoFullName) {
+        return current;
+      }
+      return null;
+    });
+    setFileBrowserHistory((current) =>
+      current.map((entry) => {
+        if (entry.source !== "github" || !entry.folderId) {
+          return entry;
+        }
+        const parsedFolder = parseGithubBrowserFolderId(entry.folderId);
+        if (parsedFolder.repoFullName !== repoFullName) {
+          return entry;
+        }
+        if (!parsedFolder.path) {
+          return {
+            ...entry,
+            folderId: nextRootId,
+          };
+        }
+        return {
+          ...entry,
+          folderId: createGithubBrowserNodeId(repoFullName, parsedFolder.path, normalizedBranch),
+        };
+      })
+    );
+
+    if (currentFileBrowserSource === "github" && currentFileBrowserFolderId) {
+      const parsedFolder = parseGithubBrowserFolderId(currentFileBrowserFolderId);
+      if (parsedFolder.repoFullName === repoFullName) {
+        const nextFolderId = parsedFolder.path
+          ? createGithubBrowserNodeId(repoFullName, parsedFolder.path, normalizedBranch)
+          : nextRootId;
+        void loadGithubFolder(nextFolderId);
       }
     }
   }
@@ -7586,7 +8229,7 @@ export function RunnerChat({
         : source === "one-drive"
           ? selectedOneDriveFileIds
           : selectedGithubFileIds;
-    const selectedItems = items.filter((item) => selectedIds.includes(item.id) && !item.isFolder);
+    const selectedItems = items.filter((item) => selectedIds.includes(item.id) && (source === "github" || !item.isFolder));
     if (!selectedItems.length) {
       return false;
     }
@@ -7596,9 +8239,24 @@ export function RunnerChat({
       setInlineError("Select an environment before attaching files.");
       return false;
     }
-    if (!config?.fetchFileContent) {
+    const fetchFileContent = config?.fetchFileContent;
+    if (source !== "github" && !fetchFileContent) {
       setInlineError("This integration does not support file downloads.");
       return false;
+    }
+
+    if (source === "github") {
+      const selectedRepoFullNames = Array.from(
+        new Set(
+          selectedItems
+            .map((item) => String(item.repoFullName || "").trim())
+            .filter(Boolean)
+        )
+      );
+      if (selectedRepoFullNames.length > 1) {
+        setInlineError("Attach files from a single GitHub repository per message.");
+        return false;
+      }
     }
 
     const remainingCapacity = Math.max(maxAttachments - attachments.length, 0);
@@ -7611,12 +8269,30 @@ export function RunnerChat({
     setIsFileBrowserAttaching(true);
 
     try {
-      const createdAttachments = await Promise.all(
-        itemsToAttach.map((item) =>
-          createIntegrationAttachment(item, source, targetEnvironmentId, config.fetchFileContent!)
-        )
-      );
+      const createdAttachments =
+        source === "github"
+          ? itemsToAttach.map((item) =>
+              createGithubIntegrationSelectionAttachment(item, targetEnvironmentId, {
+                pendingPreparation: Boolean(normalizedBackendUrl && apiKey.trim()),
+              })
+            )
+          : await Promise.all(
+              itemsToAttach.map((item) =>
+                createIntegrationAttachment(item, source, targetEnvironmentId, fetchFileContent!)
+              )
+            );
       setAttachments((prev) => [...prev, ...createdAttachments]);
+      if (source === "github") {
+        for (const attachment of createdAttachments) {
+          const uploadPromise = beginAttachmentUpload(attachment, { environmentIdOverride: targetEnvironmentId });
+          if (uploadPromise) {
+            void uploadPromise.catch((error) => {
+              const normalizedError = error instanceof Error ? error : new Error(String(error));
+              setInlineError(normalizedError.message || "Failed to prepare GitHub repository.");
+            });
+          }
+        }
+      }
       config?.onAttach?.(itemsToAttach.map((item) => item.id));
       if (source === "google-drive") {
         setSelectedGoogleDriveFileIds([]);
@@ -7971,6 +8647,9 @@ export function RunnerChat({
       ensuredThreadId = execution.threadId;
     } catch (error) {
       const normalizedError = error instanceof Error ? error : new Error(String(error));
+      if (consumeIntentionalStopAbort(normalizedError, ensuredThreadId ?? currentThreadId ?? null)) {
+        return;
+      }
       setInlineError(normalizedError.message);
       onRunError?.(normalizedError, ensuredThreadId ?? currentThreadId ?? undefined);
     } finally {
@@ -8000,6 +8679,9 @@ export function RunnerChat({
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
+        if (consumeIntentionalStopAbort(normalizedError, currentThreadId ?? null)) {
+          return;
+        }
         setInlineError(normalizedError.message);
         onRunError?.(normalizedError, currentThreadId ?? undefined);
       } finally {
@@ -8376,11 +9058,13 @@ export function RunnerChat({
     options?: { removable?: boolean; onRemove?: () => void }
   ) {
     const filename = getAttachmentDisplayName(attachment);
+    const githubBranch = isGithubAttachmentSelection(attachment) ? getGithubAttachmentRef(attachment) : "";
     const previewUrl = getAttachmentPreviewUrl(attachment);
     const isImage = attachment.type === "image";
-    const isUploading = isLocalAttachmentRecord(attachment) && attachment.uploadStatus === "uploading";
+    const isGithubAttachment = isGithubAttachmentSelection(attachment);
+    const isUploading = attachment.uploadStatus === "uploading";
     const isDocumentPreviewable =
-      !isImage && !options?.removable && !isLocalAttachmentRecord(attachment) && isAttachmentDocumentPreviewable(attachment);
+      !isImage && !isGithubAttachment && !options?.removable && !isLocalAttachmentRecord(attachment) && isAttachmentDocumentPreviewable(attachment);
     const isDocumentPreviewActive =
       isDocumentPreviewable && previewedDocumentAttachment?.id === attachment.id;
     const imageFetchHeaders =
@@ -8390,7 +9074,7 @@ export function RunnerChat({
 
     return (
       <div
-        className={`runner-attachment ${isImage ? "runner-attachment-image" : "runner-attachment-file"} ${isUploading ? "runner-attachment-uploading" : ""} ${options?.removable ? "runner-attachment-removable" : "runner-attachment-readonly"} ${isDocumentPreviewable ? "runner-attachment-document-previewable" : ""} ${isDocumentPreviewActive ? "runner-attachment-document-active" : ""}`.trim()}
+        className={`runner-attachment ${isImage ? "runner-attachment-image" : "runner-attachment-file"} ${isGithubAttachment ? "runner-attachment-github" : ""} ${isUploading ? "runner-attachment-uploading" : ""} ${options?.removable ? "runner-attachment-removable" : "runner-attachment-readonly"} ${isDocumentPreviewable ? "runner-attachment-document-previewable" : ""} ${isDocumentPreviewActive ? "runner-attachment-document-active" : ""}`.trim()}
         key={attachment.id}
       >
         {isImage ? (
@@ -8442,6 +9126,8 @@ export function RunnerChat({
                 <span className="runner-attachment-file-icon-slot" aria-hidden="true">
                   {isUploading ? (
                     <LucideLoaderCircle className="runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
+                  ) : isGithubAttachment ? (
+                    <IconGithub className="runner-attachment-file-brand-icon runner-attachment-file-brand-icon-github" />
                   ) : (
                     <img
                       src={RUNNER_TEXT_FILE_ICON_URL}
@@ -8452,8 +9138,15 @@ export function RunnerChat({
                     />
                   )}
                 </span>
-                <div className="runner-attachment-file-name" title={filename}>
-                  {filename}
+                <div className="runner-attachment-file-copy">
+                  <div className="runner-attachment-file-name" title={filename}>
+                    {filename}
+                  </div>
+                  {githubBranch ? (
+                    <span className="runner-attachment-file-branch" title={githubBranch}>
+                      {githubBranch}
+                    </span>
+                  ) : null}
                 </div>
               </button>
             ) : (
@@ -8461,6 +9154,8 @@ export function RunnerChat({
                 <span className="runner-attachment-file-icon-slot" aria-hidden="true">
                   {isUploading ? (
                     <LucideLoaderCircle className="runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
+                  ) : isGithubAttachment ? (
+                    <IconGithub className="runner-attachment-file-brand-icon runner-attachment-file-brand-icon-github" />
                   ) : (
                     <img
                       src={RUNNER_TEXT_FILE_ICON_URL}
@@ -8471,8 +9166,15 @@ export function RunnerChat({
                     />
                   )}
                 </span>
-                <div className="runner-attachment-file-name" title={filename}>
-                  {filename}
+                <div className="runner-attachment-file-copy">
+                  <div className="runner-attachment-file-name" title={filename}>
+                    {filename}
+                  </div>
+                  {githubBranch ? (
+                    <span className="runner-attachment-file-branch" title={githubBranch}>
+                      {githubBranch}
+                    </span>
+                  ) : null}
                 </div>
               </>
             )}
@@ -8534,6 +9236,35 @@ export function RunnerChat({
   const oneDriveConnected = oneDriveConfig?.connected ?? false;
   const scheduleEnabled = (scheduleConfig?.enabled ?? false) || scheduledTask !== null;
   const githubContextLabel = githubConfig?.contextLabel || "Branch";
+  const defaultGithubBranchFromContext = useMemo(() => {
+    const selectedContext = githubContexts.find((context) => context.id === selectedGithubContextId);
+    return String(selectedContext?.name || selectedGithubContextId || "").trim();
+  }, [githubContexts, selectedGithubContextId]);
+
+  function getGithubSelectedBranchForRepo(repoFullName: string, fallbackRef?: string | null): string {
+    const normalizedRepoFullName = String(repoFullName || "").trim();
+    if (!normalizedRepoFullName) {
+      return String(fallbackRef || defaultGithubBranchFromContext || "main").trim() || "main";
+    }
+    return String(
+      githubSelectedBranchByRepoFullName[normalizedRepoFullName]
+      || fallbackRef
+      || defaultGithubBranchFromContext
+      || "main"
+    ).trim() || "main";
+  }
+
+  function buildGithubEffectiveRootItem(item: RunnerChatFileNode): RunnerChatFileNode {
+    if (!item.repoFullName || item.parentId) {
+      return item;
+    }
+    const selectedBranch = getGithubSelectedBranchForRepo(item.repoFullName, item.ref);
+    return {
+      ...item,
+      id: createGithubBrowserRepoFolderId(item.repoFullName, selectedBranch),
+      ref: selectedBranch,
+    };
+  }
   const workspaceRootLabel = workspaceConfig?.rootLabel || "Workspace";
   const googleDriveRootLabel = googleDriveConfig?.rootLabel || "My Drive";
   const oneDriveRootLabel = oneDriveConfig?.rootLabel || "OneDrive";
@@ -8733,9 +9464,10 @@ export function RunnerChat({
           return;
         }
 
-        setTurns(hydratedTurns);
+        const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
+        setTurns(mergedTurns);
         setExpandedTurns((previousExpandedTurns) =>
-          mapExpandedTurns(previousExpandedTurns, turnsRef.current, hydratedTurns, { defaultLatestExpanded: true })
+          mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, { defaultLatestExpanded: true })
         );
       } catch (error) {
         if (!cancelled) {
@@ -8914,29 +9646,51 @@ export function RunnerChat({
   }
 
   function renderFileBrowserItem(item: RunnerChatFileNode, depth = 0) {
-    const isSelected = selectedFileBrowserIds.includes(item.id);
-    const isPreviewActive = previewFileBrowserItem?.id === item.id;
-    const isExpanded = expandedFileBrowserFolderIds.includes(item.id);
+    const isGithubRepoRootRow =
+      currentFileBrowserSource === "github"
+      && item.isFolder
+      && depth === 0
+      && !item.parentId
+      && Boolean(item.repoFullName);
+    const effectiveItem = isGithubRepoRootRow ? buildGithubEffectiveRootItem(item) : item;
+    const effectiveItemId = effectiveItem.id;
+    const isSelected = selectedFileBrowserIds.includes(effectiveItemId);
+    const isPreviewActive = previewFileBrowserItem?.id === effectiveItemId;
+    const isExpanded = expandedFileBrowserFolderIds.includes(effectiveItemId);
     const isFolderLoading =
       currentFileBrowserSource === "google-drive"
-        ? loadingGoogleDriveFolderIds.includes(item.id)
+        ? loadingGoogleDriveFolderIds.includes(effectiveItemId)
         : currentFileBrowserSource === "one-drive"
-          ? loadingOneDriveFolderIds.includes(item.id)
+          ? loadingOneDriveFolderIds.includes(effectiveItemId)
           : currentFileBrowserSource === "github"
-            ? loadingGithubFolderIds.includes(item.id)
+            ? loadingGithubFolderIds.includes(effectiveItemId)
             : false;
-    const nestedItems = fileBrowserSearchQuery.trim() ? [] : fileItemsForParent(fileBrowserItems, item.id);
+    const nestedItems = fileBrowserSearchQuery.trim() ? [] : fileItemsForParent(fileBrowserItems, effectiveItemId);
     const showGithubFolderCheckbox = currentFileBrowserSource === "github" && item.isFolder;
+    const githubRepoFullName = String(effectiveItem.repoFullName || "").trim();
+    const githubBranchOptions = githubRepoFullName
+      ? githubBranchesByRepoFullName[githubRepoFullName] || []
+      : [];
+    const githubSelectedBranch = githubRepoFullName
+      ? getGithubSelectedBranchForRepo(githubRepoFullName, effectiveItem.ref)
+      : "";
+    const isGithubBranchLoading = githubRepoFullName
+      ? githubBranchLoadingRepoFullNames.includes(githubRepoFullName)
+      : false;
+    const githubBranchSelectOptions =
+      githubSelectedBranch && !githubBranchOptions.some((option) => option.id === githubSelectedBranch || option.name === githubSelectedBranch)
+        ? [{ id: githubSelectedBranch, name: githubSelectedBranch }, ...githubBranchOptions]
+        : githubBranchOptions;
 
     return (
-      <div key={item.id}>
+      <div key={effectiveItemId}>
         <div
           className={`tb-file-browser-item ${isPreviewActive ? "preview" : ""} ${isSelected ? "selected" : ""}`}
-          onClick={() => handleFileBrowserItemClick(item)}
+          onClick={() => handleFileBrowserItemClick(effectiveItem)}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
-              handleFileBrowserItemClick(item);
+              handleFileBrowserItemClick(effectiveItem);
             }
           }}
           role="button"
@@ -8944,7 +9698,7 @@ export function RunnerChat({
           style={{ paddingLeft: `${12 + depth * 20}px` }}
         >
           {item.isFolder ? (
-            <button type="button" className="tb-file-browser-item-leading" onClick={(event) => toggleFileBrowserFolderExpansion(item.id, event)}>
+            <button type="button" className="tb-file-browser-item-leading" onClick={(event) => toggleFileBrowserFolderExpansion(effectiveItemId, event)}>
               {isFolderLoading ? <IconLoader2 className="tb-file-browser-folder-chevron tb-file-browser-folder-chevron-spin" /> : isExpanded ? <IconChevronDown className="tb-file-browser-folder-chevron" /> : <IconChevronRight className="tb-file-browser-folder-chevron" />}
             </button>
           ) : (
@@ -8952,7 +9706,7 @@ export function RunnerChat({
               className={`tb-file-browser-check ${isSelected ? "selected" : ""}`}
               onClick={(event) => {
                 event.stopPropagation();
-                handleFileBrowserItemClick(item);
+                handleFileBrowserItemClick(effectiveItem);
               }}
             >
               {isSelected ? <IconCheck className="tb-file-browser-check-icon" /> : null}
@@ -8963,16 +9717,43 @@ export function RunnerChat({
               className={`tb-file-browser-check ${isSelected ? "selected" : ""}`}
               onClick={(event) => {
                 event.stopPropagation();
-                setSelectedGithubFileIds((current) => toggleFileSelection(current, item.id));
+                setSelectedGithubFileIds((current) => toggleFileSelection(current, effectiveItemId));
               }}
             >
               {isSelected ? <IconCheck className="tb-file-browser-check-icon" /> : null}
             </div>
           ) : null}
-          {renderBrowserFileIcon(item, "tb-file-browser-item-icon")}
-          <span className="tb-file-browser-item-name">{item.name}</span>
-          <span className="tb-file-browser-item-meta">{formatBrowserFileDate(item.modifiedTime)}</span>
-          <span className="tb-file-browser-item-size">{item.isFolder ? "" : formatBrowserFileSize(item.size)}</span>
+          {renderBrowserFileIcon(effectiveItem, "tb-file-browser-item-icon")}
+          <span className="tb-file-browser-item-name">{effectiveItem.name}</span>
+          {isGithubRepoRootRow ? (
+            <div className="tb-file-browser-item-branch-slot">
+              <select
+                className="tb-file-browser-item-branch-select"
+                value={githubSelectedBranch}
+                disabled={isGithubBranchLoading}
+                onFocus={() => {
+                  void ensureGithubBranchesLoaded(githubRepoFullName, effectiveItem.ref);
+                }}
+                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
+                onChange={(event) => {
+                  event.stopPropagation();
+                  handleGithubRepoBranchChange(effectiveItem, event.target.value);
+                }}
+              >
+                {githubBranchSelectOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <>
+              <span className="tb-file-browser-item-meta">{formatBrowserFileDate(effectiveItem.modifiedTime)}</span>
+              <span className="tb-file-browser-item-size">{effectiveItem.isFolder ? "" : formatBrowserFileSize(effectiveItem.size)}</span>
+            </>
+          )}
         </div>
 
         {item.isFolder && isExpanded && nestedItems.length > 0 ? (
@@ -10566,8 +11347,8 @@ export function RunnerChat({
                       <button
                         type="button"
                         className="task-run-button task-run-button-full"
-                        onClick={cancel}
-                        disabled={disabled}
+                        onClick={() => void handleStopActiveRun()}
+                        disabled={disabled || isStoppingRun}
                         aria-label="Stop agent"
                         title="Stop agent"
                       >
@@ -10611,8 +11392,8 @@ export function RunnerChat({
                       <button
                         type="button"
                         className="task-run-button"
-                        onClick={cancel}
-                        disabled={disabled}
+                        onClick={() => void handleStopActiveRun()}
+                        disabled={disabled || isStoppingRun}
                       >
                         <span className="task-stop-icon" />
                       </button>

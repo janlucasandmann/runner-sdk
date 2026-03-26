@@ -3554,7 +3554,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 14px 0 0;
+  padding: 14px 14px 0;
 }
 
 .tb-runner-chat .runner-attachments-turn {
@@ -3766,6 +3766,17 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   object-fit: contain;
 }
 
+.tb-runner-chat .runner-attachment-file .runner-attachment-file-brand-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.tb-runner-chat .runner-attachment-file .runner-attachment-file-brand-icon-github {
+  color: rgba(255, 255, 255, 0.94);
+}
+
 .tb-runner-chat .runner-attachment-file-button {
   width: 100%;
   min-width: 0;
@@ -3805,6 +3816,29 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-runner-chat .runner-attachment-file-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.tb-runner-chat .runner-attachment-file-branch {
+  flex-shrink: 0;
+  max-width: 92px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 11px;
+  line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -6614,6 +6648,40 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-file-browser-item-size {
   width: 64px;
   text-align: right;
+}
+
+.tb-runner-chat .tb-file-browser-item-branch-slot {
+  flex-shrink: 0;
+  min-width: 120px;
+  max-width: 156px;
+}
+
+.tb-runner-chat .tb-file-browser-item-branch-select {
+  width: 100%;
+  height: 28px;
+  padding: 0 28px 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  line-height: 1;
+  outline: none;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-file-browser-item-branch-select:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.tb-runner-chat .tb-file-browser-item-branch-select:focus {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.tb-runner-chat .tb-file-browser-item-branch-select:disabled {
+  opacity: 0.65;
+  cursor: default;
 }
 
 .tb-runner-chat .tb-file-browser-preview {
