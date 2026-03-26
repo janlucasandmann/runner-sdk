@@ -634,8 +634,11 @@ export interface RunnerChatProps {
   onSkillsChange?: (skillIds: string[]) => void;
   onContextIndicatorClick?: (context: RunnerChatThreadContext | null) => void;
   onActionSummaryClick?: (summary: RunnerChatActionSummaryClickPayload) => void;
+  onSubagentDetailOpenChange?: (isOpen: boolean) => void;
   threadTaskPreview?: RunnerTaskPreview | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
+  subagentDetailPortalTarget?: Element | null;
+  disableSubagentDetailDrawer?: boolean;
   externalRunRequest?: {
     token: string | number;
     threadId: string;
@@ -4494,8 +4497,11 @@ export function RunnerChat({
   onSkillsChange,
   onContextIndicatorClick,
   onActionSummaryClick,
+  onSubagentDetailOpenChange,
   threadTaskPreview = null,
   onTaskPreviewClick,
+  subagentDetailPortalTarget = null,
+  disableSubagentDetailDrawer = false,
   externalRunRequest = null,
   onExternalRunRequestHandled,
   autoFocusComposer = false,
@@ -9005,12 +9011,32 @@ export function RunnerChat({
     return getSubagentInvocationId(log) === invocationId;
   }
 
+  function sanitizeSubagentResponseMessage(message: string | null | undefined): string {
+    const cleaned = stripSystemTags(String(message || ""))
+      .replace(/^\s*agentId:\s.*$/gim, "")
+      .replace(/<usage>[\s\S]*?<\/usage>/gi, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    return cleaned;
+  }
+
   function buildSubagentTimelineGroups(logs: RunnerLog[]) {
     const groups = new Map<string, RunnerSubagentGroup>();
+    const anchoredInvocationIds = new Set<string>();
+
+    for (const log of logs) {
+      if (!isSubagentInvocationLog(log)) {
+        continue;
+      }
+      const invocationId = getSubagentInvocationId(log);
+      if (invocationId) {
+        anchoredInvocationIds.add(invocationId);
+      }
+    }
 
     for (const log of logs) {
       const invocationId = getSubagentInvocationId(log);
-      if (!invocationId) {
+      if (!invocationId || !anchoredInvocationIds.has(invocationId)) {
         continue;
       }
 
@@ -9129,7 +9155,9 @@ export function RunnerChat({
       "Subagent";
     const subagentEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
     const isSubagentRunning = turn.status === "running" && !completionLog;
-    const completionOutput = typeof completionLog?.metadata?.output === "string" ? completionLog.metadata.output : "";
+    const completionOutput = sanitizeSubagentResponseMessage(
+      typeof completionLog?.metadata?.output === "string" ? completionLog.metadata.output : ""
+    );
     const completionFailed =
       completionLog?.metadata?.status === "failed" ||
       completionLog?.type === "error" ||
@@ -9795,7 +9823,7 @@ export function RunnerChat({
       showResizeHandle
     />
   ) : null;
-  const subagentDetailDrawer = selectedSubagentDetailPresentation ? (
+  const subagentDetailDrawerContent = selectedSubagentDetailPresentation ? (
     <SubagentDetailDrawer
       title={selectedSubagentDetailPresentation.title}
       prompt={selectedSubagentDetailPresentation.prompt}
@@ -9810,6 +9838,10 @@ export function RunnerChat({
       {renderNestedTimelineItems(selectedSubagentDetailPresentation.turn, selectedSubagentDetailPresentation.nestedItems)}
     </SubagentDetailDrawer>
   ) : null;
+  const subagentDetailDrawer =
+    subagentDetailDrawerContent && subagentDetailPortalTarget && typeof document !== "undefined"
+      ? createPortal(subagentDetailDrawerContent, subagentDetailPortalTarget)
+      : subagentDetailDrawerContent;
   const isClosingPopupStackTogether =
     sidePopupPhase === "exit" &&
     mainPopupPhase === "exit" &&
@@ -9886,6 +9918,22 @@ export function RunnerChat({
   useEffect(() => {
     setSelectedSubagentDetail(null);
   }, [localThreadId]);
+
+  useEffect(() => {
+    if (disableSubagentDetailDrawer && selectedSubagentDetail) {
+      setSelectedSubagentDetail(null);
+    }
+  }, [disableSubagentDetailDrawer, selectedSubagentDetail]);
+
+  useEffect(() => {
+    onSubagentDetailOpenChange?.(Boolean(selectedSubagentDetailPresentation));
+  }, [onSubagentDetailOpenChange, selectedSubagentDetailPresentation]);
+
+  useEffect(() => {
+    return () => {
+      onSubagentDetailOpenChange?.(false);
+    };
+  }, [onSubagentDetailOpenChange]);
 
   useEffect(() => {
     if (!currentThreadId || !hasApiKey || !normalizedBackendUrl || isRunning) {

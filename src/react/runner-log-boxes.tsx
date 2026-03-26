@@ -50,6 +50,14 @@ const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.ur
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
 
+function sanitizeSubagentDisplayText(value: string | null | undefined): string {
+  return stripRunnerSystemTags(String(value || ""))
+    .replace(/^\s*agentId:\s.*$/gim, "")
+    .replace(/<usage>[\s\S]*?<\/usage>/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 interface RunnerWorkLogEntryProps {
   log: RunnerLog;
   timeLabel?: string;
@@ -3190,7 +3198,7 @@ export function SubagentLogBox({
   onOpenDetails?: () => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const cleanedSummaryMessage = stripRunnerSystemTags(String(summaryMessage || "")).trim() || `${title} is working`;
+  const cleanedSummaryMessage = sanitizeSubagentDisplayText(summaryMessage) || `${title} is working`;
 
   return (
     <div className="tb-log-card tb-log-card-subagent">
@@ -3247,8 +3255,9 @@ export function SubagentDetailDrawer({
   onClose: () => void;
   children?: ReactNode;
 }) {
+  const [expanded, setExpanded] = useState(true);
   const cleanedPrompt = stripRunnerSystemTags(String(prompt || "")).trim();
-  const cleanedResponseMessage = stripRunnerSystemTags(String(responseMessage || "")).trim();
+  const cleanedResponseMessage = sanitizeSubagentDisplayText(responseMessage);
 
   return (
     <aside className="tb-subagent-detail-drawer">
@@ -3256,7 +3265,6 @@ export function SubagentDetailDrawer({
         <div className="tb-subagent-detail-drawer-header-copy">
           <Bot className="tb-attachment-preview-drawer-header-icon" strokeWidth={1.6} />
           <div className="tb-subagent-detail-drawer-header-text">
-            <div className="tb-subagent-detail-drawer-label">Subagent</div>
             <div className="tb-subagent-detail-drawer-title" title={title}>{title}</div>
           </div>
         </div>
@@ -3288,18 +3296,30 @@ export function SubagentDetailDrawer({
               </div>
             ) : null}
           </div>
-          <div className="tb-subagent-log-work">
+          <button
+            type="button"
+            className="tb-work-header"
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={expanded}
+          >
             <Route className="tb-step-row-icon" strokeWidth={1.5} />
             <span className="tb-work-label">{running ? `${title} is working` : workLabel}</span>
+            {expanded ? <ChevronDown className="tb-chevron" strokeWidth={1.5} /> : <ChevronRight className="tb-chevron" strokeWidth={1.5} />}
+          </button>
+          <div className={`tb-work-collapse ${expanded ? "" : "collapsed"}`}>
+            {expanded ? (
+              <div className="tb-work-collapse-inner">
+                {children ? (
+                  <div className="agent-steps-container tb-subagent-log-steps">
+                    <div className="agent-steps-line" />
+                    {children}
+                  </div>
+                ) : (
+                  <div className="tb-log-card-empty">No subagent logs yet.</div>
+                )}
+              </div>
+            ) : null}
           </div>
-          {children ? (
-            <div className="agent-steps-container tb-subagent-log-steps">
-              <div className="agent-steps-line" />
-              {children}
-            </div>
-          ) : (
-            <div className="tb-log-card-empty">No subagent logs yet.</div>
-          )}
           {cleanedResponseMessage ? (
             <div className={`tb-subagent-log-summary ${responseFailed ? "is-error" : ""}`.trim()}>
               <RunnerMarkdown

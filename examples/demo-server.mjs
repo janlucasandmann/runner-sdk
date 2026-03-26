@@ -1235,7 +1235,8 @@ const html = `<!doctype html>
         transition: padding-right 280ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      .playground-content-shell.is-thread-task-detail-open > .playground-content-nav {
+      .playground-content-shell.is-thread-task-detail-open > .playground-content-nav,
+      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav {
         padding-right: calc(12px + var(--playground-thread-task-detail-width));
       }
 
@@ -1262,7 +1263,9 @@ const html = `<!doctype html>
       }
 
       .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-center,
-      .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-right {
+      .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-right,
+      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav > .playground-content-nav-center,
+      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav > .playground-content-nav-right {
         opacity: 0;
         pointer-events: none;
       }
@@ -1379,6 +1382,79 @@ const html = `<!doctype html>
         opacity: 1;
         transform: translateX(0);
         pointer-events: auto;
+      }
+
+      .playground-thread-subagent-drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 12;
+        width: var(--playground-thread-task-detail-width);
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        background: transparent;
+        opacity: 0;
+        transform: translateX(100%);
+        pointer-events: none;
+        transition:
+          transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+          opacity 220ms ease;
+      }
+
+      .playground-thread-subagent-drawer.is-open {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+
+      .playground-thread-subagent-drawer-host {
+        flex: 1;
+        min-height: 0;
+      }
+
+      .playground-thread-subagent-drawer-host.tb-runner-chat {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        grid-template-rows: none;
+        background: transparent;
+      }
+
+      .playground-thread-subagent-drawer-host.tb-runner-chat > .tb-subagent-detail-drawer {
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+      }
+
+      .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat > .tb-subagent-detail-drawer {
+        position: relative;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        height: 100%;
+        border-left: 0;
+        box-shadow: none;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .playground-thread-subagent-drawer .tb-subagent-detail-drawer-header {
+        min-height: 56px;
+        padding: 6px 18px 12px;
+      }
+
+      .playground-thread-subagent-drawer .tb-subagent-detail-drawer-body {
+        padding-top: 0;
       }
 
       .playground-thread-welcome {
@@ -1523,7 +1599,8 @@ const html = `<!doctype html>
         transition: right 280ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      .playground-content-body.is-thread-task-detail-open .playground-view-pane {
+      .playground-content-body.is-thread-task-detail-open .playground-view-pane,
+      .playground-content-body.is-thread-side-detail-open .playground-view-pane {
         right: var(--playground-thread-task-detail-width);
       }
 
@@ -22354,6 +22431,7 @@ const html = `<!doctype html>
         const environmentAutosaveQueuedRef = useRef(null);
         const environmentAutosaveInFlightRef = useRef(false);
         const selectedEnvironmentIdRef = useRef(initialEnvironmentId || "");
+        const environmentSeededSelectionRef = useRef("");
         const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(initialEnvironmentId || "");
         const [environmentDetailsById, setEnvironmentDetailsById] = useState(() => {
           const next = {};
@@ -22825,12 +22903,18 @@ const html = `<!doctype html>
 
         useEffect(() => {
           if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            environmentSeededSelectionRef.current = selectedEnvironmentId;
             if (selectedEnvironmentId !== PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
               setDraftEnvironment(null);
               resetEditorAuxiliaryState();
             }
             return;
           }
+
+          if (environmentSeededSelectionRef.current === selectedEnvironmentId) {
+            return;
+          }
+          environmentSeededSelectionRef.current = selectedEnvironmentId;
 
           const seedEnvironment = environmentDetailsById[selectedEnvironmentId]
             || orderedEnvironments.find((environment) => environment.id === selectedEnvironmentId)
@@ -22840,7 +22924,7 @@ const html = `<!doctype html>
           setEnvironmentDetailsCollapsed(false);
           setDraftEnvironment(seedEnvironment ? normalizePlaygroundEnvironmentRecord(seedEnvironment) : null);
           void loadEnvironmentDetails(selectedEnvironmentId);
-        }, [loadEnvironmentDetails, orderedEnvironments, selectedEnvironmentId]);
+        }, [environmentDetailsById, loadEnvironmentDetails, orderedEnvironments, selectedEnvironmentId]);
 
         useEffect(() => {
           if (!environmentRuntimePopover) return undefined;
@@ -23058,6 +23142,68 @@ const html = `<!doctype html>
           };
         }
 
+        function preserveTransientDraftEnvironmentRows(savedEnvironment, currentDraft) {
+          if (!currentDraft) {
+            return savedEnvironment;
+          }
+
+          const transientEnvironmentVariables = (currentDraft.environmentVariables || [])
+            .filter((item) => !String(item?.key || "").trim())
+            .map((item) => ({
+              key: "",
+              value: typeof item?.value === "string" ? item.value : "",
+            }));
+          const transientSecrets = (currentDraft.secrets || [])
+            .filter((item) => !String(item?.key || "").trim())
+            .map((item) => ({
+              key: "",
+              value: typeof item?.value === "string" ? item.value : "",
+            }));
+          const transientSetupScripts = (currentDraft.setupScripts || [])
+            .filter((value) => !String(value || "").trim())
+            .map((value) => String(value || ""));
+          const transientMcpServers = (currentDraft.mcpServers || [])
+            .filter((server) => !String(server?.name || "").trim())
+            .map((server, index) => ({
+              id: server?.id || "mcp-transient-" + index,
+              name: "",
+              enabled: server?.enabled !== false,
+              type: server?.type === "http" ? "http" : "stdio",
+              command: typeof server?.command === "string" ? server.command : "",
+              url: typeof server?.url === "string" ? server.url : "",
+              bearerToken: typeof server?.bearerToken === "string" ? server.bearerToken : "",
+            }));
+
+          if (
+            transientEnvironmentVariables.length === 0
+            && transientSecrets.length === 0
+            && transientSetupScripts.length === 0
+            && transientMcpServers.length === 0
+          ) {
+            return savedEnvironment;
+          }
+
+          return normalizePlaygroundEnvironmentRecord({
+            ...savedEnvironment,
+            environmentVariables: [
+              ...(savedEnvironment.environmentVariables || []),
+              ...transientEnvironmentVariables,
+            ],
+            secrets: [
+              ...(savedEnvironment.secrets || []),
+              ...transientSecrets,
+            ],
+            setupScripts: [
+              ...(savedEnvironment.setupScripts || []),
+              ...transientSetupScripts,
+            ],
+            mcpServers: [
+              ...(savedEnvironment.mcpServers || []),
+              ...transientMcpServers,
+            ],
+          });
+        }
+
         async function persistEnvironmentRecord(environmentRecord) {
           if (!environmentRecord) {
             return;
@@ -23187,7 +23333,7 @@ const html = `<!doctype html>
                         createdAt: savedEnvironment.createdAt,
                       });
                     }
-                    return savedEnvironment;
+                    return preserveTransientDraftEnvironmentRows(savedEnvironment, current);
                   });
                 }
 
@@ -23199,7 +23345,7 @@ const html = `<!doctype html>
                 setSaveState({
                   isSaving: false,
                   error: "",
-                  message: hasQueuedFollowUp ? "" : "Saved",
+                  message: "",
                 });
                 if (onEnvironmentMutated) {
                   await onEnvironmentMutated();
@@ -36052,6 +36198,8 @@ const html = `<!doctype html>
         const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
         const [taskOpenRequest, setTaskOpenRequest] = useState(null);
         const [threadTaskOpenRequest, setThreadTaskOpenRequest] = useState(null);
+        const [threadSubagentDetailOpen, setThreadSubagentDetailOpen] = useState(false);
+        const [threadSubagentDetailHost, setThreadSubagentDetailHost] = useState(null);
         const [settingsSection, setSettingsSection] = useState("costs-plans");
         const [contentMode, setContentMode] = useState("chat");
         const [changesNavigationTarget, setChangesNavigationTarget] = useState(null);
@@ -36161,6 +36309,9 @@ const html = `<!doctype html>
         const threadSearchInputRef = useRef(null);
         const threadRenameInputRef = useRef(null);
         const threadNavMenuRef = useRef(null);
+        const threadSubagentDetailHostRef = useCallback((node) => {
+          setThreadSubagentDetailHost(node || null);
+        }, []);
         const accountMenuAnimationTimerRef = useRef(null);
         const taskCompletionSyncInFlightRef = useRef(new Set());
 
@@ -42574,10 +42725,13 @@ const html = `<!doctype html>
             return;
           }
 
-          const hasThreadTaskDetailOpen = activePage === "thread" && Boolean(threadTaskOpenRequest) && hasRealAccess;
+          const hasThreadSideDetailOpen =
+            activePage === "thread" &&
+            hasRealAccess &&
+            (Boolean(threadTaskOpenRequest) || Boolean(threadSubagentDetailOpen));
           const hasThreadTarget = Boolean(currentThreadId) && baseThreadItems.some((thread) => thread.id === currentThreadId);
 
-          if (activePage !== "thread" || hasThreadTaskDetailOpen || !hasThreadTarget) {
+          if (activePage !== "thread" || hasThreadSideDetailOpen || !hasThreadTarget) {
             setThreadNavMenuOpen(false);
             return;
           }
@@ -42611,7 +42765,7 @@ const html = `<!doctype html>
             window.removeEventListener("resize", handleViewportChange);
             window.removeEventListener("scroll", handleViewportChange, true);
           };
-        }, [activePage, baseThreadItems, currentThreadId, hasRealAccess, threadNavMenuOpen, threadTaskOpenRequest]);
+        }, [activePage, baseThreadItems, currentThreadId, hasRealAccess, threadNavMenuOpen, threadSubagentDetailOpen, threadTaskOpenRequest]);
 
         useEffect(() => {
           if (!threadRenameState || !threadRenameInputRef.current) {
@@ -42918,6 +43072,21 @@ const html = `<!doctype html>
             setSidebarOpen(false);
           }
         }, [activePage, sidebarOpen, threadTaskOpenRequest]);
+        useEffect(() => {
+          if (activePage === "thread" && threadSubagentDetailOpen && sidebarOpen) {
+            setSidebarOpen(false);
+          }
+        }, [activePage, sidebarOpen, threadSubagentDetailOpen]);
+        useEffect(() => {
+          if (activePage !== "thread") {
+            setThreadSubagentDetailOpen(false);
+          }
+        }, [activePage]);
+        useEffect(() => {
+          if (threadTaskOpenRequest) {
+            setThreadSubagentDetailOpen(false);
+          }
+        }, [threadTaskOpenRequest]);
         const threadActionTarget = useMemo(() => {
           if (!threadActionMenuState?.threadId) {
             return null;
@@ -42939,6 +43108,12 @@ const html = `<!doctype html>
               : "Sign in to load your threads."
             : "No threads yet.";
         const isThreadTaskDetailOpen = activePage === "thread" && Boolean(threadTaskOpenRequest) && hasRealAccess;
+        const isThreadSubagentDetailOpen =
+          activePage === "thread" &&
+          Boolean(threadSubagentDetailOpen) &&
+          !threadTaskOpenRequest &&
+          hasRealAccess;
+        const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen;
 
         function renderAuthGate() {
           return React.createElement("div", { className: "playground-auth-panel" },
@@ -43709,13 +43884,13 @@ const html = `<!doctype html>
                 }, renderCollapsedSidebarRail())
               ),
               React.createElement("main", { className: "playground-main" },
-                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") },
+                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") },
                   activePage === "settings" || activePage === "files" || activePage === "environments" || activePage === "agents" || activePage === "tasks" || showInitialThreadWelcome
                     ? null
                     : React.createElement("div", { className: "playground-content-nav" },
                         React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle),
                         React.createElement("div", { className: "playground-content-nav-center" },
-                          activePage === "thread" && !isThreadTaskDetailOpen
+                          activePage === "thread" && !isThreadSideDetailOpen
                             ? React.createElement("div", { className: "content-mode-switch" },
                                 React.createElement("button", {
                                   type: "button",
@@ -43735,7 +43910,7 @@ const html = `<!doctype html>
                             : null
                         ),
                         React.createElement("div", { className: "playground-content-nav-right" },
-                          activePage === "thread" && !isThreadTaskDetailOpen
+                          activePage === "thread" && !isThreadSideDetailOpen
                             ? React.createElement("div", {
                                 className: "playground-thread-nav-popup-shell playground-tasks-toolbar-popup-shell",
                                 ref: threadNavMenuRef,
@@ -43796,7 +43971,7 @@ const html = `<!doctype html>
                             : null
                         )
                       ),
-                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") },
+                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") },
                     activePage === "settings"
                       ? renderSettingsPage()
                       : activePage === "files"
@@ -43982,6 +44157,9 @@ const html = `<!doctype html>
                                       void loadThreadGroundTruthStatus(threadId);
                                       void refreshThreads();
                                     },
+                                    onSubagentDetailOpenChange: (isOpen) => {
+                                      setThreadSubagentDetailOpen(isOpen);
+                                    },
                                     onActionSummaryClick: (summary) => {
                                       if (!activeRunnerThreadId || !summary?.revertedChangeStepId) {
                                         return;
@@ -43994,7 +44172,9 @@ const html = `<!doctype html>
                                         openDetail: true,
                                       });
                                       setContentMode("changes");
-                                    }
+                                    },
+                                    subagentDetailPortalTarget: threadSubagentDetailHost,
+                                    disableSubagentDetailDrawer: isThreadTaskDetailOpen,
                                   })
                                 : renderAuthGate()
                             )
@@ -44097,6 +44277,19 @@ const html = `<!doctype html>
                               },
                             })
                           : null
+                      )
+                    : null,
+                  activePage === "thread" && hasRealAccess
+                    ? React.createElement("aside", {
+                        className: "playground-thread-subagent-drawer" + (isThreadSubagentDetailOpen ? " is-open" : ""),
+                        "aria-hidden": isThreadSubagentDetailOpen ? "false" : "true",
+                      },
+                        React.createElement("div", {
+                          ref: threadSubagentDetailHostRef,
+                          className:
+                            "playground-thread-subagent-drawer-host tb-runner-chat" +
+                            (isThreadSubagentDetailOpen ? " tb-runner-chat-subagent-detail-open" : ""),
+                        })
                       )
                     : null
                 ),
