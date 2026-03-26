@@ -14878,6 +14878,7 @@ const html = `<!doctype html>
         "#f4b85f",
       ];
       const PLAYGROUND_PROJECT_ICON_OPTIONS = [
+        { id: "rocket", label: "Rocket", icon: Rocket },
         { id: "flame", label: "Flame", icon: Flame },
         { id: "layout-grid", label: "Grid", icon: LayoutGrid },
         { id: "layers", label: "Layers", icon: Layers },
@@ -42040,7 +42041,7 @@ const html = `<!doctype html>
                 className: "sidebar-action-button" + (activePage === "tasks" ? " is-active" : ""),
                 onClick: handleOpenTasksShortcut
               },
-                React.createElement(ListTodo, { className: "sidebar-action-icon", strokeWidth: 1.75 }),
+                React.createElement(Rocket, { className: "sidebar-action-icon", strokeWidth: 1.75 }),
                 React.createElement("span", null, "Projects")
               ),
               React.createElement("button", {
@@ -42156,7 +42157,7 @@ const html = `<!doctype html>
                 onClick: handleOpenTasksShortcut,
                 "aria-label": "Projects",
                 title: "Projects"
-              }, React.createElement(ListTodo, { className: "sidebar-rail-icon", strokeWidth: 1.75 })),
+              }, React.createElement(Rocket, { className: "sidebar-rail-icon", strokeWidth: 1.75 })),
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-rail-button" + (activePage === "files" ? " is-active" : ""),
