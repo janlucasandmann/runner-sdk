@@ -7791,24 +7791,29 @@ const html = `<!doctype html>
       .playground-agents-list-switch {
         display: flex;
         width: 100%;
-        gap: 4px;
-        padding: 3px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.06);
+        max-width: none;
+        gap: 8px;
+        padding: 2px;
+        border: 0;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        line-height: 1rem;
+        position: relative;
+        overflow: hidden;
       }
 
       .playground-agents-list-switch .content-mode-button {
         flex: 1;
         min-width: 0;
-        padding: 6px 14px;
-        font-size: 11px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.64);
+        padding: 4px 12px;
+        font-size: 10px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.72);
       }
 
       .playground-agents-list-switch .content-mode-button.is-active {
-        background: rgba(255, 255, 255, 0.18);
-        color: rgba(255, 255, 255, 0.98);
+        background: rgba(255, 255, 255, 0.35);
+        color: white;
       }
 
       .playground-environments-list-body {
@@ -8910,8 +8915,7 @@ const html = `<!doctype html>
       .playground-agents-page .playground-agents-skill-card,
       .playground-agents-page .playground-agents-team-card,
       .playground-agents-page .playground-agents-team-hint,
-      .playground-agents-page .playground-agents-team-readonly,
-      .playground-agents-page .playground-agents-model-metric {
+      .playground-agents-page .playground-agents-team-readonly {
         padding: 12px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
@@ -8952,9 +8956,10 @@ const html = `<!doctype html>
       }
 
       .playground-agents-model-metric {
-        padding: 12px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.03);
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
       }
 
       .playground-agents-model-metric-label {
@@ -8967,6 +8972,38 @@ const html = `<!doctype html>
         font-size: 13px;
         font-weight: 600;
         color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-agents-intelligence-metric {
+        width: 120px;
+      }
+
+      .playground-agents-intelligence-bulbs {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .playground-agents-intelligence-bulb {
+        width: 24px;
+        height: 24px;
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .playground-agents-intelligence-bulb.is-active {
+        color: #fff;
+      }
+
+      .playground-agents-intelligence-copy {
+        margin-top: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.98);
+        line-height: 1.25;
+      }
+
+      .playground-agents-intelligence-copy span {
+        color: rgba(255, 255, 255, 0.5);
       }
 
       .playground-agents-instructions {
@@ -12365,6 +12402,13 @@ const html = `<!doctype html>
         flex: 0 0 auto;
       }
 
+      .playground-tasks-board-assignee-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
       .playground-tasks-board-assignee-avatar-fallback {
         font-size: 10px;
         font-weight: 500;
@@ -13898,7 +13942,7 @@ const html = `<!doctype html>
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Square, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Square, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -15250,6 +15294,20 @@ const html = `<!doctype html>
 
       function getPlaygroundAgentModelMeta(modelId) {
         return PLAYGROUND_AGENT_MODEL_OPTIONS.find((option) => option.id === modelId) || PLAYGROUND_AGENT_MODEL_OPTIONS[2];
+      }
+
+      function getPlaygroundAgentIntelligenceLevel(label) {
+        const normalized = String(label || "").trim().toLowerCase();
+        if (normalized === "highest") {
+          return 4;
+        }
+        if (normalized === "high" || normalized === "medium") {
+          return 3;
+        }
+        if (normalized === "good") {
+          return 2;
+        }
+        return 1;
       }
 
       function buildPlaygroundDefaultEnvironmentDraft() {
@@ -24678,9 +24736,7 @@ const html = `<!doctype html>
                 ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
                 : saveState.message
                   ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, saveState.message)
-                  : isLoadingCurrentEnvironment
-                      ? React.createElement("div", { className: "playground-environments-muted playground-environments-editor-notice" }, "Loading environment...")
-                      : null,
+                  : null,
               descriptionSection,
               environmentFactsSection,
               renderEditorSection("runtimes", "Runtime Versions", "", runtimesSection, null, false),
@@ -24907,8 +24963,7 @@ const html = `<!doctype html>
             React.createElement("section", { className: "playground-environments-detail" },
               isLoadingCurrentEnvironment && !draftEnvironment
                 ? React.createElement("div", { className: "playground-files-state" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                    React.createElement("span", null, "Loading environment...")
+                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                   )
                 : renderCurrentEnvironmentEditor()
             )
@@ -26058,9 +26113,20 @@ const html = `<!doctype html>
                   React.createElement("div", { className: "playground-agents-model-hint-title" }, modelMeta.label),
                   React.createElement("div", { className: "playground-agents-model-hint-copy" }, modelMeta.description),
                   React.createElement("div", { className: "playground-agents-model-metrics" },
-                    React.createElement("div", { className: "playground-agents-model-metric" },
-                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Intelligence"),
-                      React.createElement("div", { className: "playground-agents-model-metric-value" }, modelMeta.intelligence)
+                    React.createElement("div", { className: "playground-agents-model-metric playground-agents-intelligence-metric" },
+                      React.createElement("div", { className: "playground-agents-intelligence-bulbs" },
+                        [1, 2, 3, 4].map((level) =>
+                          React.createElement(Lightbulb, {
+                            key: level,
+                            className: "playground-agents-intelligence-bulb" + (level <= getPlaygroundAgentIntelligenceLevel(modelMeta.intelligence) ? " is-active" : ""),
+                            strokeWidth: 1.5,
+                          })
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-agents-intelligence-copy" },
+                        modelMeta.intelligence,
+                        React.createElement("span", null, " Intelligence")
+                      )
                     ),
                     React.createElement("div", { className: "playground-agents-model-metric" },
                       React.createElement("div", { className: "playground-agents-model-metric-label" }, "Context Window"),
@@ -26159,28 +26225,6 @@ const html = `<!doctype html>
                   : draftAgent.isSystem
                     ? React.createElement("span", { className: "playground-environments-badge" }, "System")
                     : null,
-                !isSystemAgent
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      onClick: handleRevertDraft,
-                      disabled: saveState.isSaving,
-                    },
-                      React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Revert")
-                    )
-                  : null,
-                !isSystemAgent
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button is-primary",
-                      onClick: () => void handleSaveAgent(),
-                      disabled: saveState.isSaving || isLoadingCurrentAgent,
-                    },
-                      React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, saveState.isSaving ? "Saving..." : "Save")
-                    )
-                  : null,
                 draftAgent.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID && !draftAgent.isSystem
                   ? React.createElement("div", {
                       className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
@@ -26221,9 +26265,7 @@ const html = `<!doctype html>
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
               saveState.error
                 ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
-                : isLoadingCurrentAgent
-                    ? React.createElement("div", { className: "playground-environments-muted playground-environments-editor-notice" }, "Loading agent...")
-                    : null,
+                : null,
               descriptionSection,
               agentFactsSection,
               isSystemAgent
@@ -26420,10 +26462,539 @@ const html = `<!doctype html>
             React.createElement("section", { className: "playground-environments-detail" },
               isLoadingCurrentAgent && !draftAgent
                 ? React.createElement("div", { className: "playground-files-state" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                    React.createElement("span", null, "Loading agent...")
+                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                   )
                 : renderCurrentAgentEditor()
+            )
+          )
+        );
+      }
+
+      function PlaygroundSkillsPage({ skills, fetchCustomSkills }) {
+        const searchPopupInputRef = useRef(null);
+        const [toolbarPopover, setToolbarPopover] = useState("");
+        const [searchPopupQuery, setSearchPopupQuery] = useState("");
+        const [skillListMode, setSkillListMode] = useState("system");
+        const [selectedSkillId, setSelectedSkillId] = useState("");
+        const [customSkills, setCustomSkills] = useState([]);
+        const [customSkillsLoading, setCustomSkillsLoading] = useState(false);
+        const [customSkillsLoaded, setCustomSkillsLoaded] = useState(false);
+        const [customSkillsError, setCustomSkillsError] = useState("");
+
+        const skillCatalogMetaById = useMemo(() => ({
+          image_generation: {
+            name: "Image Generation",
+            description: "Generate and edit images directly from prompts and visual references.",
+            icon: "image",
+          },
+          web_search: {
+            name: "Web Search",
+            description: "Search the web for up-to-date information with cited results.",
+            icon: "search",
+          },
+          research: {
+            name: "Research",
+            description: "Run focused research passes across multiple sources and summarize findings.",
+            icon: "telescope",
+          },
+          deep_research: {
+            name: "Deep Research",
+            description: "Enable longer-form research runs with a dedicated research model.",
+            icon: "telescope",
+          },
+          pdf: {
+            name: "PDF Processing",
+            description: "Read, extract, and reason over PDF documents.",
+            icon: "file-text",
+          },
+          frontend_design: {
+            name: "Frontend Design",
+            description: "Design and refine frontend UI with stronger visual direction.",
+            icon: "palette",
+          },
+          pptx: {
+            name: "PowerPoint / PPTX",
+            description: "Create, inspect, and transform PowerPoint presentations.",
+            icon: "layers",
+          },
+          memory: {
+            name: "Memory",
+            description: "Allow the agent to reuse persistent memory context when available.",
+            icon: "brain",
+          },
+          task_management: {
+            name: "Task Management",
+            description: "Let the agent create, organize, and comment on planning tasks and projects.",
+            icon: "list",
+          },
+        }), []);
+
+        const systemSkills = useMemo(() => {
+          const next = [];
+          const seen = new Set();
+
+          const appendSkill = (skill) => {
+            const skillId = typeof skill?.id === "string" ? skill.id.trim() : "";
+            if (!skillId || seen.has(skillId)) {
+              return;
+            }
+            seen.add(skillId);
+            const meta = skillCatalogMetaById[skillId] || {};
+            next.push({
+              id: skillId,
+              name: typeof skill?.name === "string" && skill.name.trim()
+                ? skill.name.trim()
+                : typeof meta.name === "string" && meta.name.trim()
+                  ? meta.name.trim()
+                  : skillId,
+              description: typeof skill?.description === "string" && skill.description.trim()
+                ? skill.description.trim()
+                : typeof meta.description === "string"
+                  ? meta.description
+                  : "",
+              icon: typeof skill?.icon === "string" && skill.icon.trim()
+                ? skill.icon.trim()
+                : typeof meta.icon === "string"
+                  ? meta.icon
+                  : "",
+              isCustom: false,
+              statusLabel: "System",
+            });
+          };
+
+          (Array.isArray(skills) ? skills : []).forEach((skill) => appendSkill(skill));
+          PLAYGROUND_AGENT_SKILL_OPTIONS.forEach((skill) => appendSkill({
+            id: skill.id,
+            name: skill.label,
+            description: skill.description,
+          }));
+
+          return next;
+        }, [skillCatalogMetaById, skills]);
+
+        const normalizedCustomSkills = useMemo(() => {
+          return (Array.isArray(customSkills) ? customSkills : [])
+            .map((skill) => {
+              const skillId = typeof skill?.id === "string" ? skill.id.trim() : "";
+              if (!skillId) {
+                return null;
+              }
+
+              return {
+                id: skillId,
+                name: typeof skill?.name === "string" && skill.name.trim()
+                  ? skill.name.trim()
+                  : skillId,
+                description: typeof skill?.description === "string" ? skill.description : "",
+                icon: typeof skill?.icon === "string" ? skill.icon.trim() : "",
+                isCustom: true,
+                statusLabel: "Custom",
+              };
+            })
+            .filter(Boolean);
+        }, [customSkills]);
+
+        const displaySkills = useMemo(() => {
+          return skillListMode === "custom" ? normalizedCustomSkills : systemSkills;
+        }, [normalizedCustomSkills, skillListMode, systemSkills]);
+
+        const selectedSkill = useMemo(() => {
+          return displaySkills.find((skill) => skill.id === selectedSkillId) || null;
+        }, [displaySkills, selectedSkillId]);
+
+        const searchResults = useMemo(() => {
+          const query = searchPopupQuery.trim().toLowerCase();
+          if (!query) return [];
+          return displaySkills
+            .filter((skill) => {
+              const haystack = [skill?.name || "", skill?.description || "", skill?.id || ""].join(" ").toLowerCase();
+              return haystack.includes(query);
+            })
+            .slice(0, 12);
+        }, [displaySkills, searchPopupQuery]);
+
+        const loadCustomSkills = useCallback(async ({ force = false } = {}) => {
+          if (typeof fetchCustomSkills !== "function") {
+            setCustomSkills([]);
+            setCustomSkillsLoaded(true);
+            setCustomSkillsError("");
+            return;
+          }
+          if (customSkillsLoading) {
+            return;
+          }
+          if (customSkillsLoaded && !force) {
+            return;
+          }
+
+          setCustomSkillsLoading(true);
+          setCustomSkillsError("");
+          try {
+            const nextSkills = await fetchCustomSkills();
+            setCustomSkills(Array.isArray(nextSkills) ? nextSkills : []);
+            setCustomSkillsLoaded(true);
+          } catch (error) {
+            setCustomSkills([]);
+            setCustomSkillsLoaded(true);
+            setCustomSkillsError(error instanceof Error ? error.message : "Failed to load custom skills.");
+          } finally {
+            setCustomSkillsLoading(false);
+          }
+        }, [customSkillsLoaded, customSkillsLoading, fetchCustomSkills]);
+
+        useEffect(() => {
+          void loadCustomSkills();
+        }, [loadCustomSkills]);
+
+        useEffect(() => {
+          if (!toolbarPopover) return;
+
+          const focusFrame = toolbarPopover === "search"
+            ? window.requestAnimationFrame(() => {
+                if (searchPopupInputRef.current) {
+                  searchPopupInputRef.current.focus();
+                  searchPopupInputRef.current.select();
+                }
+              })
+            : 0;
+
+          function handleKeyDown(event) {
+            if (event.key === "Escape") {
+              setToolbarPopover("");
+            }
+          }
+
+          window.addEventListener("keydown", handleKeyDown);
+          return () => {
+            if (focusFrame) {
+              window.cancelAnimationFrame(focusFrame);
+            }
+            window.removeEventListener("keydown", handleKeyDown);
+          };
+        }, [toolbarPopover]);
+
+        useEffect(() => {
+          if (skillListMode === "custom" && !customSkillsLoaded && !customSkillsLoading) {
+            void loadCustomSkills();
+          }
+        }, [customSkillsLoaded, customSkillsLoading, loadCustomSkills, skillListMode]);
+
+        useEffect(() => {
+          if (selectedSkillId && displaySkills.some((skill) => skill.id === selectedSkillId)) {
+            return;
+          }
+          setSelectedSkillId(displaySkills[0]?.id || "");
+        }, [displaySkills, selectedSkillId]);
+
+        function toggleToolbarPopover(nextValue) {
+          setToolbarPopover((current) => current === nextValue ? "" : nextValue);
+        }
+
+        function handleSkillSelect(skillId) {
+          setToolbarPopover("");
+          setSelectedSkillId(skillId);
+        }
+
+        function handleSkillListModeChange(nextMode) {
+          const normalizedMode = nextMode === "custom" ? "custom" : "system";
+          setSkillListMode(normalizedMode);
+          setToolbarPopover("");
+        }
+
+        function getPlaygroundSkillIconComponent(skill) {
+          const normalizedCustomIcon = String(skill?.icon || "default").trim().toLowerCase();
+          if (skill?.isCustom) {
+            if (normalizedCustomIcon === "sparkles") return Sparkles;
+            if (normalizedCustomIcon === "brain") return Brain;
+            if (normalizedCustomIcon === "zap") return Zap;
+            if (normalizedCustomIcon === "telescope" || normalizedCustomIcon === "research") return Telescope;
+            if (normalizedCustomIcon === "search" || normalizedCustomIcon === "globe") return Globe;
+            if (normalizedCustomIcon === "image") return ImageIcon;
+            if (normalizedCustomIcon === "code") return Code;
+            if (normalizedCustomIcon === "terminal") return Terminal;
+            if (normalizedCustomIcon === "file-text") return FileText;
+            if (normalizedCustomIcon === "database") return Database;
+            if (normalizedCustomIcon === "pen-tool") return PenTool;
+            if (normalizedCustomIcon === "palette") return Paintbrush;
+            if (normalizedCustomIcon === "message") return MessageSquare;
+            if (normalizedCustomIcon === "mail") return Mail;
+            if (normalizedCustomIcon === "calendar") return CalendarIcon;
+            if (normalizedCustomIcon === "calculator") return Calculator;
+            if (normalizedCustomIcon === "shield" || normalizedCustomIcon === "lock") return Shield;
+            if (normalizedCustomIcon === "cloud") return Cloud;
+            if (normalizedCustomIcon === "server") return Server;
+            if (normalizedCustomIcon === "cpu") return Cpu;
+            if (normalizedCustomIcon === "git") return GitCommitHorizontal;
+            if (normalizedCustomIcon === "package") return Package;
+            if (normalizedCustomIcon === "list") return ListTodo;
+            return Wand2;
+          }
+          if (skill?.id === "image_generation") return ImageIcon;
+          if (skill?.id === "web_search") return Globe;
+          if (skill?.id === "research" || skill?.id === "deep_research") return Telescope;
+          if (skill?.id === "pdf") return FileText;
+          if (skill?.id === "frontend_design") return Paintbrush;
+          if (skill?.id === "pptx") return Layers;
+          if (skill?.id === "memory") return Brain;
+          if (skill?.id === "task_management") return ListTodo;
+          return Layers;
+        }
+
+        function renderSkillIcon(skill, className) {
+          const Icon = getPlaygroundSkillIconComponent(skill);
+          return React.createElement(Icon, { className, strokeWidth: 1.8 });
+        }
+
+        function renderSkillFactRow(label, value) {
+          return React.createElement("div", { className: "playground-tasks-detail-fact-row", key: label },
+            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
+            React.createElement("div", { className: "playground-environments-editor-fact-value" }, value)
+          );
+        }
+
+        function renderCurrentSkillDetail() {
+          if (!selectedSkill) {
+            return React.createElement("div", { className: "playground-files-state" },
+              customSkillsLoading && skillListMode === "custom"
+                ? React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                : null,
+              React.createElement("span", null,
+                skillListMode === "custom"
+                  ? (customSkillsLoading ? "Loading skills..." : "Select a custom skill")
+                  : "Select a system skill"
+              )
+            );
+          }
+
+          const detailBadgeTone = selectedSkill.isCustom ? "Team" : "Default";
+          const usageCopy = selectedSkill.isCustom
+            ? "Custom skills are loaded from your project scope and can be attached to threads and tasks."
+            : "System skills are available by default across agents, tasks, and the runner playground.";
+          const detailMeta = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
+            React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details")
+            ),
+            React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+              renderSkillFactRow("Type", selectedSkill.isCustom ? "Custom skill" : "System skill"),
+              renderSkillFactRow("Identifier", selectedSkill.id),
+              renderSkillFactRow("Availability", selectedSkill.isCustom ? "Project scope" : "Default in playground"),
+              renderSkillFactRow("Status", "Enabled")
+            )
+          );
+
+          const descriptionSection = React.createElement("section", {
+              className: "playground-environments-editor-surface playground-environments-section",
+            },
+              React.createElement("div", { className: "playground-environments-section-header is-static" },
+                React.createElement("div", null,
+                  React.createElement("div", { className: "playground-environments-section-title" }, "Description"),
+                  React.createElement("div", { className: "playground-environments-section-copy" }, usageCopy)
+                )
+              ),
+              React.createElement("div", { className: "playground-environments-section-body" },
+                String(selectedSkill.description || "").trim()
+                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                      React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                        content: selectedSkill.description,
+                        className: "playground-tasks-detail-description-preview tb-message-markdown",
+                      })
+                    )
+                  : React.createElement("div", {
+                      className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                    }, "No description available for this skill.")
+              )
+            );
+
+          const availabilitySection = React.createElement("section", {
+              className: "playground-environments-editor-surface playground-environments-section",
+            },
+              React.createElement("div", { className: "playground-environments-section-header is-static" },
+                React.createElement("div", null,
+                  React.createElement("div", { className: "playground-environments-section-title" }, "Usage"),
+                  React.createElement("div", { className: "playground-environments-section-copy" }, "How this skill appears inside the playground.")
+                )
+              ),
+              React.createElement("div", { className: "playground-environments-section-body" },
+                React.createElement("div", { className: "playground-agents-model-hint" },
+                  React.createElement("div", { className: "playground-agents-model-hint-title" }, selectedSkill.isCustom ? "Project-managed skill" : "Built-in playground skill"),
+                  React.createElement("div", { className: "playground-agents-model-hint-copy" },
+                    selectedSkill.isCustom
+                      ? "Custom skills are discovered from your current project and can be enabled on tasks and runner threads."
+                      : "System skills ship with the playground and can be enabled anywhere an agent or task supports skill selection."
+                  ),
+                  React.createElement("div", { className: "playground-agents-model-metrics" },
+                    React.createElement("div", { className: "playground-agents-model-metric" },
+                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Kind"),
+                      React.createElement("div", { className: "playground-agents-model-metric-value" }, selectedSkill.isCustom ? "Custom" : "System")
+                    ),
+                    React.createElement("div", { className: "playground-agents-model-metric" },
+                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Scope"),
+                      React.createElement("div", { className: "playground-agents-model-metric-value" }, selectedSkill.isCustom ? "Project" : "Global")
+                    ),
+                    React.createElement("div", { className: "playground-agents-model-metric" },
+                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Runner"),
+                      React.createElement("div", { className: "playground-agents-model-metric-value" }, "Available")
+                    )
+                  )
+                )
+              )
+            );
+
+          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
+            React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
+              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                  React.createElement("div", { className: "playground-content-title" }, selectedSkill.name || "Skill")
+                )
+              ),
+              React.createElement("div", { className: "playground-content-nav-center" }),
+              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+                React.createElement("span", { className: "playground-environments-badge" }, selectedSkill.isCustom ? "Custom" : "System"),
+                !selectedSkill.isCustom
+                  ? React.createElement("span", { className: "playground-environments-badge" }, "Default")
+                  : null
+              )
+            ),
+            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+              customSkillsError && skillListMode === "custom"
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, customSkillsError)
+                : null,
+              descriptionSection,
+              detailMeta,
+              availabilitySection
+            )
+          );
+        }
+
+        return React.createElement("div", { className: "playground-environments-page playground-agents-page playground-skills-page" },
+          React.createElement("div", { className: "playground-environments-shell" },
+            React.createElement("aside", { className: "playground-environments-list-pane" },
+              React.createElement("div", { className: "playground-files-browser-header playground-environments-list-header" },
+                toolbarPopover
+                  ? React.createElement("div", {
+                      className: "playground-files-search-backdrop",
+                      onClick: () => setToolbarPopover(""),
+                    })
+                  : null,
+                React.createElement("div", { className: "playground-files-topbar" },
+                  React.createElement("div", { className: "playground-environments-list-title" }, "Skills"),
+                  React.createElement("div", { className: "playground-files-topbar-actions" },
+                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
+                        onClick: () => toggleToolbarPopover("search"),
+                        title: skillListMode === "custom" ? "Search custom skills" : "Search system skills",
+                      }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
+                      toolbarPopover === "search"
+                        ? React.createElement("div", { className: "playground-files-search-popover" },
+                            React.createElement("div", { className: "playground-files-search-popover-header" },
+                              React.createElement("div", { className: "playground-files-search-popover-title" }, skillListMode === "custom" ? "Search Custom Skills" : "Search System Skills"),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-search-popover-close",
+                                onClick: () => setToolbarPopover(""),
+                              }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
+                            ),
+                            React.createElement("div", { className: "playground-files-search-popover-body" },
+                              React.createElement("div", { className: "playground-files-search-field" },
+                                React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
+                                React.createElement("input", {
+                                  ref: searchPopupInputRef,
+                                  type: "text",
+                                  className: "playground-files-search-field-input",
+                                  placeholder: skillListMode === "custom"
+                                    ? "Search custom skills by name or description..."
+                                    : "Search system skills by name or description...",
+                                  value: searchPopupQuery,
+                                  onChange: (event) => setSearchPopupQuery(event.target.value),
+                                })
+                              ),
+                              searchPopupQuery.trim()
+                                ? searchResults.length > 0
+                                  ? React.createElement("div", { className: "playground-files-search-results" },
+                                      searchResults.map((skill) =>
+                                        React.createElement("button", {
+                                            key: skill.id,
+                                            type: "button",
+                                            className: "playground-files-search-result",
+                                            onClick: () => handleSkillSelect(skill.id),
+                                          },
+                                            renderSkillIcon(skill, "playground-files-entry-icon"),
+                                            React.createElement("div", { className: "playground-files-search-result-copy" },
+                                              React.createElement("div", { className: "playground-files-search-result-name" }, skill.name || skill.id),
+                                              React.createElement("div", { className: "playground-files-search-result-path" }, skill.description || skill.id)
+                                            )
+                                          )
+                                      )
+                                    )
+                                  : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "No matching custom skills found." : "No matching system skills found.")
+                                : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "Type a custom skill name or description to search." : "Type a system skill name or description to search.")
+                            )
+                          )
+                        : null
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain",
+                      onClick: () => {
+                        void loadCustomSkills({ force: true });
+                      },
+                      title: "Refresh skills",
+                      disabled: customSkillsLoading,
+                    }, customSkillsLoading
+                      ? React.createElement(Loader2, { width: 16, height: 16, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                      : React.createElement(RefreshCw, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  )
+                ),
+                React.createElement("div", { className: "playground-agents-list-switch-row" },
+                  React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "content-mode-button" + (skillListMode === "system" ? " is-active" : ""),
+                      onClick: () => handleSkillListModeChange("system"),
+                      "aria-pressed": skillListMode === "system",
+                    }, "System Skills"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "content-mode-button" + (skillListMode === "custom" ? " is-active" : ""),
+                      onClick: () => handleSkillListModeChange("custom"),
+                      "aria-pressed": skillListMode === "custom",
+                    }, "Custom Skills")
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-environments-list-body" },
+                displaySkills.length > 0
+                  ? displaySkills.map((skill) =>
+                      React.createElement("button", {
+                          key: skill.id,
+                          type: "button",
+                          className: "playground-environments-list-item" + (selectedSkillId === skill.id ? " is-active" : ""),
+                          onClick: () => handleSkillSelect(skill.id),
+                        },
+                          renderSkillIcon(skill, "playground-environments-list-item-icon"),
+                          React.createElement("div", { className: "playground-environments-list-item-copy" },
+                            React.createElement("div", { className: "playground-environments-list-item-title" }, skill.name || skill.id)
+                          ),
+                          React.createElement("span", { className: "playground-environments-badge" }, skill.isCustom ? "Custom" : "System")
+                        )
+                    )
+                  : React.createElement("div", { className: "playground-environments-empty-state" },
+                      customSkillsLoading && skillListMode === "custom"
+                        ? React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                        : null,
+                      React.createElement("div", { className: "playground-environments-empty-title" }, skillListMode === "custom" ? "No custom skills" : "No system skills"),
+                      React.createElement("div", { className: "playground-environments-empty-copy" },
+                        skillListMode === "custom"
+                          ? (customSkillsError || "Custom skills from the current project will appear here.")
+                          : "System skills available to the runner will appear here."
+                      )
+                    )
+              )
+            ),
+            React.createElement("section", { className: "playground-environments-detail" },
+              renderCurrentSkillDetail()
             )
           )
         );
@@ -30902,7 +31473,15 @@ const html = `<!doctype html>
           if (isHumanAssignedTask(task)) {
             const currentUserInitials = getAccountInitials(currentUserName || "Me");
             const currentUserPhotoUrl = canRenderAvatarImage(currentUserAvatarUrl) ? currentUserAvatarUrl : "";
-            return renderAccountAvatar(className, className, currentUserInitials, currentUserPhotoUrl);
+            return React.createElement("div", { className, title: assigneeName, "aria-hidden": "true" },
+              currentUserPhotoUrl
+                ? React.createElement("img", {
+                    className: className + "-image",
+                    src: currentUserPhotoUrl,
+                    alt: currentUserInitials,
+                  })
+                : React.createElement("span", { className: className + "-fallback" }, currentUserInitials)
+            );
           }
           return renderAgentNameAvatar(assigneeName, className);
         }
@@ -40671,7 +41250,9 @@ const html = `<!doctype html>
         }
 
         function handleOpenSkillsShortcut() {
-          window.open(${JSON.stringify(aiosOrigin + "/skills")}, "_blank", "noopener,noreferrer");
+          setAccountMenuOpen(false);
+          setProfileEditorOpen(false);
+          setActivePage("skills");
         }
 
         function handleOpenTasksShortcut() {
@@ -43491,6 +44072,9 @@ const html = `<!doctype html>
           if (activePage === "agents") {
             return "Agents";
           }
+          if (activePage === "skills") {
+            return "Skills";
+          }
           if (activePage === "tasks") {
             return "Projects";
           }
@@ -44184,6 +44768,14 @@ const html = `<!doctype html>
               },
                 React.createElement(Bot, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
                 React.createElement("span", null, "Agents")
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "sidebar-action-button" + (activePage === "skills" ? " is-active" : ""),
+                onClick: handleOpenSkillsShortcut
+              },
+                React.createElement(Layers, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
+                React.createElement("span", null, "Skills")
               )
             ),
             pinnedThreadItems.length > 0
@@ -44287,7 +44879,14 @@ const html = `<!doctype html>
                 onClick: handleOpenAgentsShortcut,
                 "aria-label": "Agents",
                 title: "Agents"
-              }, React.createElement(Bot, { className: "sidebar-rail-icon", strokeWidth: 1.5 }))
+              }, React.createElement(Bot, { className: "sidebar-rail-icon", strokeWidth: 1.5 })),
+              React.createElement("button", {
+                type: "button",
+                className: "sidebar-rail-button" + (activePage === "skills" ? " is-active" : ""),
+                onClick: handleOpenSkillsShortcut,
+                "aria-label": "Skills",
+                title: "Skills"
+              }, React.createElement(Layers, { className: "sidebar-rail-icon", strokeWidth: 1.5 }))
             ),
             React.createElement("button", {
               type: "button",
@@ -44342,13 +44941,11 @@ const html = `<!doctype html>
                     React.createElement("div", { className: "account-menu-section" },
                       React.createElement("button", {
                         type: "button",
-                        className: "account-menu-item is-disabled",
-                        disabled: true,
-                        "aria-disabled": "true",
+                        className: "account-menu-item",
+                        onClick: handleOpenSkillsShortcut,
                       },
                         React.createElement(Layers, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "account-menu-item-label" }, "Skills"),
-                        React.createElement("span", { className: "account-menu-item-copy" }, "Soon")
+                        React.createElement("span", { className: "account-menu-item-label" }, "Skills")
                       ),
                       React.createElement("button", {
                         type: "button",
@@ -44502,7 +45099,7 @@ const html = `<!doctype html>
               ),
               React.createElement("main", { className: "playground-main" },
                 React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") },
-                  activePage === "settings" || activePage === "files" || activePage === "environments" || activePage === "agents" || activePage === "tasks" || showInitialThreadWelcome
+                  activePage === "settings" || activePage === "files" || activePage === "environments" || activePage === "agents" || activePage === "skills" || activePage === "tasks" || showInitialThreadWelcome
                     ? null
                     : React.createElement("div", { className: "playground-content-nav" },
                         React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle),
@@ -44591,6 +45188,13 @@ const html = `<!doctype html>
                   React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") },
                     activePage === "settings"
                       ? renderSettingsPage()
+                      : activePage === "skills"
+                        ? hasRealAccess
+                          ? React.createElement(PlaygroundSkillsPage, {
+                              skills: demoSkills,
+                              fetchCustomSkills: handleFetchCustomSkills,
+                            })
+                          : renderAuthGate()
                       : activePage === "files"
                         ? hasRealAccess
                           ? React.createElement(PlaygroundFilesPage, {
