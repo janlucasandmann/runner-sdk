@@ -4,6 +4,7 @@ export type RunnerEventType =
   | "user_message"
   | "agent_message"
   | "reasoning"
+  | "subagent_invocation"
   | "command_execution"
   | "mcp_tool_call"
   | "mcp_log"
@@ -25,6 +26,47 @@ export interface RunnerUsage {
   costUsd?: number;
 }
 
+export interface RunnerTeamExecutionMember {
+  agentId: string;
+  agentName: string;
+  claudeAgentName: string;
+}
+
+export interface RunnerTeamExecutionMetadata {
+  mode: "team";
+  teamAgentId: string;
+  teamAgentName: string;
+  orchestrator: RunnerTeamExecutionMember;
+  subagents: RunnerTeamExecutionMember[];
+}
+
+export interface RunnerLogActorMetadata {
+  kind: "orchestrator" | "subagent";
+  agentId: string;
+  agentName: string;
+  teamAgentId: string;
+  teamAgentName: string;
+  claudeAgentName: string;
+  subagentType: string;
+  parentToolUseId?: string;
+  invocationId?: string;
+}
+
+export interface RunnerSubagentInvocationMetadata {
+  invocationId: string;
+  parentToolUseId: string;
+  toolName: string;
+  agentId: string;
+  agentName: string;
+  teamAgentId: string;
+  teamAgentName: string;
+  claudeAgentName: string;
+  subagentType: string;
+  message?: string;
+  description?: string;
+  status?: "started" | "completed" | "failed";
+}
+
 export interface RunnerLog {
   createdAt?: string;
   time: string;
@@ -35,6 +77,10 @@ export interface RunnerLog {
   isPlanning?: boolean;
   isLLMResponse?: boolean;
   metadata?: {
+    actor?: RunnerLogActorMetadata;
+    delegatedTo?: RunnerLogActorMetadata;
+    teamExecution?: RunnerTeamExecutionMetadata;
+    subagentInvocation?: RunnerSubagentInvocationMetadata;
     command?: string;
     exitCode?: number;
     status?: "running" | "completed" | "failed" | "started" | "output";

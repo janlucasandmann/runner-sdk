@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   AlertCircle,
+  Bot,
   Brain,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Cloud,
   Copy,
   Eye,
   FileImage,
@@ -23,6 +25,7 @@ import {
   ListTodo,
   Mail,
   MousePointerClick,
+  Route,
   Music,
   Paperclip,
   ScanText,
@@ -30,6 +33,7 @@ import {
   Telescope,
   Terminal,
   Video,
+  X,
 } from "lucide-react";
 import type { RunnerLog } from "../types.js";
 import {
@@ -3169,6 +3173,145 @@ export function BrowserSkillLogBox({
         )}
       </LogPanel>
     </div>
+  );
+}
+
+export function SubagentLogBox({
+  title,
+  timeLabel,
+  running = false,
+  summaryMessage,
+  onOpenDetails,
+}: {
+  title: string;
+  timeLabel?: string;
+  running?: boolean;
+  summaryMessage?: string | null;
+  onOpenDetails?: () => void;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const cleanedSummaryMessage = stripRunnerSystemTags(String(summaryMessage || "")).trim() || `${title} is working`;
+
+  return (
+    <div className="tb-log-card tb-log-card-subagent">
+      <LogHeader
+        icon={<Bot className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Subagent"
+        title={title}
+        timeLabel={timeLabel}
+        meta={running ? <span className="tb-log-card-status">running...</span> : null}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        <div className="tb-subagent-log-preview">
+          <div className={`tb-subagent-log-preview-copy ${running ? "is-running" : ""}`.trim()}>
+            <RunnerMarkdown
+              content={cleanedSummaryMessage}
+              className="tb-message-markdown tb-message-markdown-summary tb-subagent-log-preview-markdown"
+              softBreaks
+            />
+          </div>
+          <div className="tb-subagent-log-preview-footer">
+            <button type="button" className="tb-subagent-log-open-button" onClick={onOpenDetails}>
+              <span>Open details</span>
+              <ChevronRight className="tb-subagent-log-open-button-icon" strokeWidth={1.6} />
+            </button>
+          </div>
+        </div>
+      </LogPanel>
+    </div>
+  );
+}
+
+export function SubagentDetailDrawer({
+  title,
+  prompt,
+  environmentName,
+  workLabel,
+  timeLabel,
+  running = false,
+  responseMessage,
+  responseFailed = false,
+  onClose,
+  children,
+}: {
+  title: string;
+  prompt?: string | null;
+  environmentName?: string | null;
+  workLabel: string;
+  timeLabel?: string;
+  running?: boolean;
+  responseMessage?: string | null;
+  responseFailed?: boolean;
+  onClose: () => void;
+  children?: ReactNode;
+}) {
+  const cleanedPrompt = stripRunnerSystemTags(String(prompt || "")).trim();
+  const cleanedResponseMessage = stripRunnerSystemTags(String(responseMessage || "")).trim();
+
+  return (
+    <aside className="tb-subagent-detail-drawer">
+      <div className="tb-subagent-detail-drawer-header">
+        <div className="tb-subagent-detail-drawer-header-copy">
+          <Bot className="tb-attachment-preview-drawer-header-icon" strokeWidth={1.6} />
+          <div className="tb-subagent-detail-drawer-header-text">
+            <div className="tb-subagent-detail-drawer-label">Subagent</div>
+            <div className="tb-subagent-detail-drawer-title" title={title}>{title}</div>
+          </div>
+        </div>
+        <div className="tb-subagent-detail-drawer-header-actions">
+          {timeLabel ? <span className="tb-subagent-detail-drawer-time">{timeLabel}</span> : null}
+          <button type="button" className="tb-attachment-preview-drawer-action" onClick={onClose} aria-label="Close subagent details">
+            <X className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.8} />
+          </button>
+        </div>
+      </div>
+      <div className="tb-subagent-detail-drawer-body">
+        <div className="tb-subagent-log-shell">
+          {cleanedPrompt ? (
+            <div className="tb-subagent-log-prompt">
+              <RunnerMarkdown
+                content={cleanedPrompt}
+                className="tb-message-markdown tb-message-markdown-user tb-subagent-log-prompt-markdown"
+                softBreaks
+                disallowHeadings
+              />
+            </div>
+          ) : null}
+          <div className="tb-subagent-log-meta">
+            <span className="tb-turn-agent-name">{title}</span>
+            {environmentName ? (
+              <div className="tb-turn-environment-pill">
+                <Cloud className="tb-turn-environment-icon" strokeWidth={1.6} />
+                <span className="tb-turn-environment-label">{environmentName}</span>
+              </div>
+            ) : null}
+          </div>
+          <div className="tb-subagent-log-work">
+            <Route className="tb-step-row-icon" strokeWidth={1.5} />
+            <span className="tb-work-label">{running ? `${title} is working` : workLabel}</span>
+          </div>
+          {children ? (
+            <div className="agent-steps-container tb-subagent-log-steps">
+              <div className="agent-steps-line" />
+              {children}
+            </div>
+          ) : (
+            <div className="tb-log-card-empty">No subagent logs yet.</div>
+          )}
+          {cleanedResponseMessage ? (
+            <div className={`tb-subagent-log-summary ${responseFailed ? "is-error" : ""}`.trim()}>
+              <RunnerMarkdown
+                content={cleanedResponseMessage}
+                className="tb-message-markdown tb-message-markdown-summary"
+                softBreaks
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </aside>
   );
 }
 

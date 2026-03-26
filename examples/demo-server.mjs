@@ -458,15 +458,19 @@ const html = `<!doctype html>
       }
 
       .sidebar-search-trigger-shortcut {
+        display: none;
         flex-shrink: 0;
-        padding: 0 6px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
         color: rgba(255, 255, 255, 0.52);
         font-size: 10px;
         font-weight: 600;
-        line-height: 18px;
+        line-height: 1;
         letter-spacing: 0.04em;
+      }
+
+      .sidebar-search-trigger:hover .sidebar-search-trigger-shortcut,
+      .sidebar-search-trigger:focus-visible .sidebar-search-trigger-shortcut,
+      .sidebar-search-trigger:focus-within .sidebar-search-trigger-shortcut {
+        display: inline;
       }
 
       .playground-sidebar-brand {
@@ -731,13 +735,19 @@ const html = `<!doctype html>
         gap: 6px;
       }
 
+      .sidebar-thread-title-copy {
+        min-width: 0;
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        overflow: hidden;
+      }
+
       .sidebar-thread-project-icon {
         width: 16px;
         height: 16px;
         flex-shrink: 0;
-        border-radius: 5px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.08);
         color: rgba(255, 255, 255, 0.84);
         display: inline-flex;
         align-items: center;
@@ -760,6 +770,12 @@ const html = `<!doctype html>
         text-overflow: ellipsis;
       }
 
+      .sidebar-thread-ticket-number {
+        flex-shrink: 0;
+        font-size: 12px;
+        color: #4da3ff;
+      }
+
       .sidebar-thread-running-indicator {
         width: 12px;
         height: 12px;
@@ -777,6 +793,7 @@ const html = `<!doctype html>
         justify-content: flex-end;
         min-width: 24px;
         max-width: 84px;
+        height: 24px;
         transform: translateY(-50%);
       }
 
@@ -787,6 +804,7 @@ const html = `<!doctype html>
         flex-shrink: 0;
         white-space: nowrap;
         line-height: 1;
+        transition: opacity 160ms ease;
       }
 
       .sidebar-thread-menu-button {
@@ -802,6 +820,12 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        opacity: 0;
+        pointer-events: none;
         transition: background-color 160ms ease, color 160ms ease;
       }
 
@@ -809,6 +833,27 @@ const html = `<!doctype html>
       .sidebar-thread-menu-button.is-open {
         background: rgba(255, 255, 255, 0.1);
         color: #fff;
+      }
+
+      .sidebar-pinned-button:hover .sidebar-thread-menu-button,
+      .sidebar-thread-item:hover .sidebar-thread-menu-button,
+      .sidebar-pinned-button:focus-within .sidebar-thread-menu-button,
+      .sidebar-thread-item:focus-within .sidebar-thread-menu-button,
+      .sidebar-pinned-button.is-active .sidebar-thread-menu-button,
+      .sidebar-thread-item.is-active .sidebar-thread-menu-button,
+      .sidebar-thread-menu-button.is-open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .sidebar-pinned-button:hover .sidebar-thread-meta,
+      .sidebar-thread-item:hover .sidebar-thread-meta,
+      .sidebar-pinned-button:focus-within .sidebar-thread-meta,
+      .sidebar-thread-item:focus-within .sidebar-thread-meta,
+      .sidebar-pinned-button.is-active .sidebar-thread-meta,
+      .sidebar-thread-item.is-active .sidebar-thread-meta {
+        opacity: 0;
+        pointer-events: none;
       }
 
       .sidebar-thread-menu-icon {
@@ -1055,6 +1100,12 @@ const html = `<!doctype html>
         min-height: 0;
         overflow: auto;
         padding-right: 2px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .sidebar-thread-scroll::-webkit-scrollbar {
+        display: none;
       }
 
       .sidebar-empty-state {
@@ -7909,8 +7960,8 @@ const html = `<!doctype html>
         min-width: 0;
         flex: 1;
         display: flex;
-        align-items: flex-start;
-        gap: 10px;
+        align-items: center;
+        gap: 0;
       }
 
       .playground-environments-editor-navbar-icon {
@@ -7931,7 +7982,7 @@ const html = `<!doctype html>
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0;
       }
 
       .playground-environments-editor-title-input {
@@ -7982,11 +8033,6 @@ const html = `<!doctype html>
       .playground-environments-editor-fact-value.is-id {
         color: rgba(255, 255, 255, 0.62);
         font-size: 11px;
-      }
-
-      .playground-environments-editor-description-input {
-        min-height: 72px;
-        padding-bottom: 0;
       }
 
       .playground-environments-action-button,
@@ -8159,8 +8205,19 @@ const html = `<!doctype html>
         text-align: left;
       }
 
+      .playground-environments-section-header.is-static {
+        cursor: default;
+      }
+
       .playground-environments-section-heading {
         min-width: 0;
+      }
+
+      .playground-environments-section-header-right {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
       }
 
       .playground-environments-section-title {
@@ -8209,9 +8266,33 @@ const html = `<!doctype html>
         padding: 0 0 10px;
       }
 
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-section.is-runtimes .playground-environments-section-header {
+        padding-top: 2px;
+      }
+
       .playground-environments-page:not(.playground-agents-page) .playground-environments-section-body {
         padding: 0;
         border-top: 0;
+      }
+
+      .playground-environments-editor-surface {
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-environments-editor-surface-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-editor-surface {
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .playground-environments-field-grid {
@@ -8279,6 +8360,11 @@ const html = `<!doctype html>
         padding-top: 0;
       }
 
+      .playground-environments-editor-surface .playground-environments-field-grid,
+      .playground-environments-editor-surface .playground-environments-stack {
+        padding-top: 0;
+      }
+
       .playground-environments-subsection {
         display: flex;
         flex-direction: column;
@@ -8297,6 +8383,37 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+      }
+
+      .playground-environments-package-group .playground-tasks-skills-list {
+        gap: 8px;
+      }
+
+      .playground-environments-package-composer {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .playground-environments-package-composer-cancel {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.66);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-environments-package-composer-cancel:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.9);
       }
 
       .playground-environments-inline-row {
@@ -8356,10 +8473,124 @@ const html = `<!doctype html>
       }
 
       .playground-environments-runtime-row {
-        display: grid;
-        grid-template-columns: minmax(140px, 180px) minmax(0, 1fr);
-        gap: 12px;
+        min-height: 32px;
+      }
+
+      .playground-environments-runtimes-section {
+        padding-top: 14px;
+      }
+
+      .playground-environments-runtime-service {
+        min-width: 0;
+      }
+
+      .playground-environments-runtime-service .playground-tasks-connector-service {
+        gap: 0;
+      }
+
+      .playground-environments-runtime-value-button {
+        width: auto;
+        min-width: 120px;
+        max-width: 100%;
+        margin-left: auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.86);
+        font-family: inherit;
+        font-size: 12px;
+        line-height: 1.35;
+        display: inline-flex;
         align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        text-align: right;
+        cursor: pointer;
+      }
+
+      .playground-environments-runtime-value-button:hover {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-environments-runtime-value-button.is-empty {
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-environments-runtime-value-label {
+        min-width: 0;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-environments-runtime-value-button svg {
+        flex: 0 0 auto;
+      }
+
+      .playground-environments-runtime-popup-shell {
+        position: relative;
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+      }
+
+      .playground-environments-runtime-popup-shell.is-open {
+        z-index: 60;
+      }
+
+      .playground-environments-runtime-popup-shell .playground-tasks-toolbar-popup-menu {
+        top: calc(100% + 8px);
+        bottom: auto;
+        left: auto;
+        right: 0;
+        width: 240px;
+        min-width: 240px;
+        max-height: min(320px, calc(100vh - 180px));
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        transform-origin: top right;
+      }
+
+      .playground-environments-runtime-popup-shell.is-open .playground-tasks-toolbar-popup-menu {
+        z-index: 61;
+      }
+
+      .playground-environments-runtime-popup-shell .tb-popup-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border: 0;
+        background: transparent;
+        color: white;
+        cursor: pointer;
+        text-align: left;
+        transition: background-color 160ms ease;
+      }
+
+      .playground-environments-runtime-popup-shell .tb-popup-row:hover,
+      .playground-environments-runtime-popup-shell .tb-popup-row.selected {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-environments-runtime-popup-shell .tb-popup-row-select.selected {
+        background: transparent;
+      }
+
+      .playground-environments-runtime-popup-shell .tb-popup-check-slot {
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .playground-environments-runtime-popup-shell .tb-popup-check {
+        color: white;
       }
 
       .playground-environments-runtime-toggle,
@@ -8386,6 +8617,13 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 12px;
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-mcp-card.playground-environments-editor-surface {
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .playground-environments-empty-copy {
@@ -14465,6 +14703,42 @@ const html = `<!doctype html>
           metadata,
           isPinned: Boolean(runnerPlaygroundMetadata.pinnedInSidebar),
           pinnedAt: typeof runnerPlaygroundMetadata.pinnedAt === "string" ? runnerPlaygroundMetadata.pinnedAt : "",
+        };
+      }
+
+      function getThreadTaskPreview(thread) {
+        const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+          ? thread.metadata
+          : null;
+        const runnerPlaygroundMetadata = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+          ? metadata.runnerPlayground
+          : null;
+        const taskPreview = runnerPlaygroundMetadata?.taskPreview && typeof runnerPlaygroundMetadata.taskPreview === "object" && !Array.isArray(runnerPlaygroundMetadata.taskPreview)
+          ? runnerPlaygroundMetadata.taskPreview
+          : null;
+        return taskPreview?.taskId ? taskPreview : null;
+      }
+
+      function getSidebarThreadTitleParts(thread) {
+        const safeThread = normalizeThreadItem(thread);
+        const safeThreadTitle = typeof safeThread.title === "string" && safeThread.title.trim()
+          ? safeThread.title.trim()
+          : "Untitled thread";
+        const taskPreview = getThreadTaskPreview(safeThread);
+        const previewTicketNumber = typeof taskPreview?.ticketNumber === "string" && taskPreview.ticketNumber.trim()
+          ? taskPreview.ticketNumber.trim()
+          : "";
+        const prefixedTicketMatch = safeThreadTitle.match(/^((?:[A-Z]{1,10}-)?\d{1,6})\s+(.+)$/);
+        const ticketNumber = previewTicketNumber || (prefixedTicketMatch ? prefixedTicketMatch[1].trim() : "");
+        const displayThreadTitle = ticketNumber && safeThreadTitle.startsWith(ticketNumber)
+          ? (safeThreadTitle.slice(ticketNumber.length).trimStart() || safeThreadTitle)
+          : prefixedTicketMatch?.[2]?.trim() || safeThreadTitle;
+
+        return {
+          safeThread,
+          taskPreview,
+          taskTicketNumber: ticketNumber,
+          displayThreadTitle,
         };
       }
 
@@ -22073,6 +22347,13 @@ const html = `<!doctype html>
       function PlaygroundEnvironmentsPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, onEnvironmentMutated }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
+        const environmentDetailMainRef = useRef(null);
+        const environmentDescriptionTextareaRef = useRef(null);
+        const environmentRuntimePopoverRef = useRef(null);
+        const environmentAutosaveTimerRef = useRef(null);
+        const environmentAutosaveQueuedRef = useRef(null);
+        const environmentAutosaveInFlightRef = useRef(false);
+        const selectedEnvironmentIdRef = useRef(initialEnvironmentId || "");
         const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(initialEnvironmentId || "");
         const [environmentDetailsById, setEnvironmentDetailsById] = useState(() => {
           const next = {};
@@ -22091,10 +22372,17 @@ const html = `<!doctype html>
           error: "",
           message: "",
         });
+        const [isEnvironmentDescriptionEditing, setIsEnvironmentDescriptionEditing] = useState(false);
+        const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
+        const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
         const [availableRuntimes, setAvailableRuntimes] = useState(PLAYGROUND_DEFAULT_AVAILABLE_RUNTIMES);
-        const [expandedSections, setExpandedSections] = useState(() => new Set(["general", "overview", "runtimes", "packages", "variables"]));
+        const [expandedSections, setExpandedSections] = useState(() => new Set(["general", "overview", "runtimes", "packages-system", "packages-python", "packages-node", "variables"]));
         const [modifiedSecrets, setModifiedSecrets] = useState({});
         const [modifiedMcpTokens, setModifiedMcpTokens] = useState({});
+        const [packageComposerState, setPackageComposerState] = useState({
+          type: "",
+          value: "",
+        });
         const [generatedDockerfile, setGeneratedDockerfile] = useState("");
         const [dockerfileState, setDockerfileState] = useState({
           isLoading: false,
@@ -22166,8 +22454,17 @@ const html = `<!doctype html>
           && loadingEnvironmentId === selectedEnvironmentId
         );
 
+        useEffect(() => {
+          selectedEnvironmentIdRef.current = selectedEnvironmentId;
+        }, [selectedEnvironmentId]);
+
         function resetEditorAuxiliaryState() {
           editorDirtyRef.current = false;
+          setEnvironmentRuntimePopover("");
+          setPackageComposerState({
+            type: "",
+            value: "",
+          });
           setModifiedSecrets({});
           setModifiedMcpTokens({});
           setGeneratedDockerfile("");
@@ -22194,6 +22491,165 @@ const html = `<!doctype html>
             error: "",
             message: "",
           }));
+        }
+
+        function resizeEnvironmentDescriptionTextarea(textarea) {
+          if (!textarea) return;
+          const computedStyles = window.getComputedStyle(textarea);
+          const lineHeight = Number.parseFloat(computedStyles.lineHeight) || 21;
+          const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
+          const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
+          const borderTopWidth = Number.parseFloat(computedStyles.borderTopWidth) || 0;
+          const borderBottomWidth = Number.parseFloat(computedStyles.borderBottomWidth) || 0;
+          const singleLineHeight = Math.ceil(lineHeight + paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
+          textarea.style.height = "auto";
+          const nextHeight = String(textarea.value || "").trim()
+            ? Math.max(singleLineHeight, textarea.scrollHeight)
+            : singleLineHeight;
+          textarea.style.height = nextHeight + "px";
+        }
+
+        function applyEnvironmentDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateEnvironmentField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = environmentDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeEnvironmentDescriptionTextarea(textarea);
+          });
+        }
+
+        function buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          if (safeStart !== safeEnd) {
+            if (
+              selectedText.startsWith(prefix)
+              && selectedText.endsWith(suffix)
+              && selectedText.length >= prefix.length + suffix.length
+            ) {
+              const unwrappedText = selectedText.slice(prefix.length, selectedText.length - suffix.length);
+              const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
+              return {
+                value: nextValue,
+                selectionStart: safeStart,
+                selectionEnd: safeStart + unwrappedText.length,
+              };
+            }
+
+            const surroundingPrefix = value.slice(Math.max(0, safeStart - prefix.length), safeStart);
+            const surroundingSuffix = value.slice(safeEnd, safeEnd + suffix.length);
+            if (surroundingPrefix === prefix && surroundingSuffix === suffix) {
+              const nextValue =
+                value.slice(0, safeStart - prefix.length)
+                + selectedText
+                + value.slice(safeEnd + suffix.length);
+              return {
+                value: nextValue,
+                selectionStart: safeStart - prefix.length,
+                selectionEnd: safeStart - prefix.length + selectedText.length,
+              };
+            }
+
+            const wrappedText = prefix + selectedText + suffix;
+            const nextValue = value.slice(0, safeStart) + wrappedText + value.slice(safeEnd);
+            return {
+              value: nextValue,
+              selectionStart: safeStart + prefix.length,
+              selectionEnd: safeStart + prefix.length + selectedText.length,
+            };
+          }
+
+          const insertedText = prefix + suffix;
+          const nextValue = value.slice(0, safeStart) + insertedText + value.slice(safeEnd);
+          return {
+            value: nextValue,
+            selectionStart: safeStart + prefix.length,
+            selectionEnd: safeStart + prefix.length,
+          };
+        }
+
+        function buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
+          let lineEnd = value.indexOf("\\n", safeEnd);
+          if (lineEnd === -1) {
+            lineEnd = value.length;
+          }
+          const block = value.slice(lineStart, lineEnd);
+          const lines = block.split("\\n");
+          const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => /^(\\s*)-\\s+/.test(line));
+          const nextLines = lines.map((line) => {
+            if (!line.trim()) {
+              return shouldRemoveList ? line : "- ";
+            }
+            if (shouldRemoveList) {
+              return line.replace(/^(\\s*)-\\s+/, "$1");
+            }
+            if (/^(\\s*)-\\s+/.test(line)) {
+              return line;
+            }
+            return line.replace(/^(\\s*)/, "$1- ");
+          });
+          const nextBlock = nextLines.join("\\n");
+          const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
+          const collapsedSelection = safeStart === safeEnd;
+          const nextCaretOffset = shouldRemoveList
+            ? Math.max(0, safeStart - lineStart - 2)
+            : safeStart - lineStart + 2;
+          return {
+            value: nextValue,
+            selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
+            selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+
+        function handleEnvironmentDescriptionFormat(formatType) {
+          const textarea = environmentDescriptionTextareaRef.current;
+          if (!textarea || !draftEnvironment) {
+            return;
+          }
+          const value = String(draftEnvironment?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyEnvironmentDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        function commitDraftEnvironmentIfDirty() {
+          if (!editorDirtyRef.current || !draftEnvironment) {
+            return;
+          }
+          if (environmentAutosaveTimerRef.current) {
+            window.clearTimeout(environmentAutosaveTimerRef.current);
+            environmentAutosaveTimerRef.current = null;
+          }
+          environmentAutosaveQueuedRef.current = normalizePlaygroundEnvironmentRecord(draftEnvironment);
+          void flushQueuedEnvironmentAutosave();
         }
 
         function toggleToolbarPopover(nextValue) {
@@ -22381,9 +22837,35 @@ const html = `<!doctype html>
             || null;
 
           resetEditorAuxiliaryState();
+          setEnvironmentDetailsCollapsed(false);
           setDraftEnvironment(seedEnvironment ? normalizePlaygroundEnvironmentRecord(seedEnvironment) : null);
           void loadEnvironmentDetails(selectedEnvironmentId);
         }, [loadEnvironmentDetails, orderedEnvironments, selectedEnvironmentId]);
+
+        useEffect(() => {
+          if (!environmentRuntimePopover) return undefined;
+
+          function handleEnvironmentRuntimePopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !environmentRuntimePopoverRef.current || environmentRuntimePopoverRef.current.contains(target)) {
+              return;
+            }
+            setEnvironmentRuntimePopover("");
+          }
+
+          function handleEnvironmentRuntimePopoverEscape(event) {
+            if (event.key === "Escape") {
+              setEnvironmentRuntimePopover("");
+            }
+          }
+
+          document.addEventListener("mousedown", handleEnvironmentRuntimePopoverPointerDown);
+          window.addEventListener("keydown", handleEnvironmentRuntimePopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleEnvironmentRuntimePopoverPointerDown);
+            window.removeEventListener("keydown", handleEnvironmentRuntimePopoverEscape);
+          };
+        }, [environmentRuntimePopover]);
 
         useEffect(() => {
           if (!expandedSections.has("dockerfile")) {
@@ -22399,13 +22881,95 @@ const html = `<!doctype html>
           void loadDockerfilePreview(selectedEnvironmentId);
         }, [dockerfileState.isLoading, expandedSections, generatedDockerfile, loadDockerfilePreview, selectedEnvironmentId]);
 
+        useEffect(() => () => {
+          if (environmentAutosaveTimerRef.current) {
+            window.clearTimeout(environmentAutosaveTimerRef.current);
+            environmentAutosaveTimerRef.current = null;
+          }
+        }, []);
+
+        useLayoutEffect(() => {
+          resizeEnvironmentDescriptionTextarea(environmentDescriptionTextareaRef.current);
+        }, [draftEnvironment?.description, draftEnvironment?.id]);
+
+        useEffect(() => {
+          const textarea = environmentDescriptionTextareaRef.current;
+          const detailMain = environmentDetailMainRef.current;
+          if (!textarea || !detailMain) return undefined;
+
+          let frameId = 0;
+          const timeoutIds = [];
+          const scheduleResize = () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            frameId = window.requestAnimationFrame(() => {
+              resizeEnvironmentDescriptionTextarea(environmentDescriptionTextareaRef.current);
+            });
+          };
+
+          scheduleResize();
+          [120, 240, 360].forEach((delay) => {
+            timeoutIds.push(window.setTimeout(scheduleResize, delay));
+          });
+
+          if (typeof ResizeObserver === "undefined") {
+            window.addEventListener("resize", scheduleResize);
+            return () => {
+              if (frameId) {
+                window.cancelAnimationFrame(frameId);
+              }
+              timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+              window.removeEventListener("resize", scheduleResize);
+            };
+          }
+
+          const observer = new ResizeObserver(() => {
+            scheduleResize();
+          });
+          observer.observe(detailMain);
+
+          return () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+            observer.disconnect();
+          };
+        }, [draftEnvironment?.id]);
+
+        useEffect(() => {
+          if (!draftEnvironment || !editorDirtyRef.current) {
+            return;
+          }
+
+          if (environmentAutosaveTimerRef.current) {
+            window.clearTimeout(environmentAutosaveTimerRef.current);
+          }
+
+          environmentAutosaveTimerRef.current = window.setTimeout(() => {
+            environmentAutosaveTimerRef.current = null;
+            environmentAutosaveQueuedRef.current = normalizePlaygroundEnvironmentRecord(draftEnvironment);
+            void flushQueuedEnvironmentAutosave();
+          }, 700);
+
+          return () => {
+            if (environmentAutosaveTimerRef.current) {
+              window.clearTimeout(environmentAutosaveTimerRef.current);
+              environmentAutosaveTimerRef.current = null;
+            }
+          };
+        }, [draftEnvironment]);
+
         function handleEnvironmentSelect(environmentId) {
+          commitDraftEnvironmentIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
           setSelectedEnvironmentId(environmentId);
         }
 
         function handleCreateEnvironment() {
+          commitDraftEnvironmentIfDirty();
           resetEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
@@ -22494,112 +23058,163 @@ const html = `<!doctype html>
           };
         }
 
-        async function handleSaveEnvironment() {
-          if (!draftEnvironment) {
+        async function persistEnvironmentRecord(environmentRecord) {
+          if (!environmentRecord) {
             return;
           }
 
-          const payload = buildSanitizedEnvironmentPayload(draftEnvironment);
-          setSaveState({
-            isSaving: true,
-            error: "",
-            message: "",
-          });
+          const payload = buildSanitizedEnvironmentPayload(environmentRecord);
+          let savedEnvironment = null;
 
+          if (!environmentRecord.id || environmentRecord.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            const createResponse = await fetch(backendUrl + "/environments", {
+              method: "POST",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: payload.name,
+                description: payload.description,
+                environmentVariables: payload.environmentVariables,
+                secrets: payload.secrets,
+                setupScripts: payload.setupScripts,
+                mcpServers: payload.mcpServers,
+                documentation: payload.documentation,
+                internetAccess: payload.internetAccess,
+              }),
+            });
+            const createData = await createResponse.json().catch(() => ({}));
+            if (!createResponse.ok) {
+              throw new Error(createData?.message || createData?.error || "Failed to create environment.");
+            }
+
+            const createdEnvironment = getPlaygroundEnvironmentResponseRecord(createData);
+            if (!createdEnvironment?.id) {
+              throw new Error("Environment creation response did not include an id.");
+            }
+
+            const updateResponse = await fetch(backendUrl + "/environments/" + encodeURIComponent(createdEnvironment.id), {
+              method: "PUT",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            });
+            const updateData = await updateResponse.json().catch(() => ({}));
+            if (!updateResponse.ok) {
+              throw new Error(updateData?.message || updateData?.error || "Failed to update the new environment.");
+            }
+            savedEnvironment = getPlaygroundEnvironmentResponseRecord(updateData) || normalizePlaygroundEnvironmentRecord({
+              ...createdEnvironment,
+              ...payload,
+            });
+          } else {
+            const updateResponse = await fetch(backendUrl + "/environments/" + encodeURIComponent(environmentRecord.id), {
+              method: "PUT",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            });
+            const updateData = await updateResponse.json().catch(() => ({}));
+            if (!updateResponse.ok) {
+              throw new Error(updateData?.message || updateData?.error || "Failed to save environment.");
+            }
+            savedEnvironment = getPlaygroundEnvironmentResponseRecord(updateData) || normalizePlaygroundEnvironmentRecord({
+              ...environmentRecord,
+              ...payload,
+              updatedAt: new Date().toISOString(),
+            });
+          }
+
+          if (!savedEnvironment) {
+            throw new Error("Environment save failed.");
+          }
+
+          return savedEnvironment;
+        }
+
+        async function flushQueuedEnvironmentAutosave() {
+          if (environmentAutosaveInFlightRef.current) {
+            return;
+          }
+
+          environmentAutosaveInFlightRef.current = true;
           try {
-            let savedEnvironment = null;
+            while (environmentAutosaveQueuedRef.current) {
+              const nextEnvironmentToSave = normalizePlaygroundEnvironmentRecord(environmentAutosaveQueuedRef.current);
+              environmentAutosaveQueuedRef.current = null;
 
-            if (selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID || !draftEnvironment.id) {
-              const createResponse = await fetch(backendUrl + "/environments", {
-                method: "POST",
-                headers: {
-                  ...requestHeaders,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  name: payload.name,
-                  description: payload.description,
-                  environmentVariables: payload.environmentVariables,
-                  secrets: payload.secrets,
-                  setupScripts: payload.setupScripts,
-                  mcpServers: payload.mcpServers,
-                  documentation: payload.documentation,
-                  internetAccess: payload.internetAccess,
-                }),
+              setSaveState({
+                isSaving: true,
+                error: "",
+                message: "",
               });
-              const createData = await createResponse.json().catch(() => ({}));
-              if (!createResponse.ok) {
-                throw new Error(createData?.message || createData?.error || "Failed to create environment.");
-              }
 
-              const createdEnvironment = getPlaygroundEnvironmentResponseRecord(createData);
-              if (!createdEnvironment?.id) {
-                throw new Error("Environment creation response did not include an id.");
-              }
+              try {
+                const savedEnvironment = await persistEnvironmentRecord(nextEnvironmentToSave);
+                const hasQueuedFollowUp = Boolean(environmentAutosaveQueuedRef.current);
+                const shouldKeepEnvironmentSelected =
+                  selectedEnvironmentIdRef.current === nextEnvironmentToSave.id
+                  || (!nextEnvironmentToSave.id && selectedEnvironmentIdRef.current === PLAYGROUND_ENVIRONMENT_DRAFT_ID);
 
-              const updateResponse = await fetch(backendUrl + "/environments/" + encodeURIComponent(createdEnvironment.id), {
-                method: "PUT",
-                headers: {
-                  ...requestHeaders,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-              });
-              const updateData = await updateResponse.json().catch(() => ({}));
-              if (!updateResponse.ok) {
-                throw new Error(updateData?.message || updateData?.error || "Failed to update the new environment.");
+                if (hasQueuedFollowUp && environmentAutosaveQueuedRef.current) {
+                  environmentAutosaveQueuedRef.current = normalizePlaygroundEnvironmentRecord({
+                    ...environmentAutosaveQueuedRef.current,
+                    id: savedEnvironment.id,
+                    userId: savedEnvironment.userId || environmentAutosaveQueuedRef.current.userId,
+                    createdAt: savedEnvironment.createdAt || environmentAutosaveQueuedRef.current.createdAt,
+                  });
+                }
+
+                editorDirtyRef.current = hasQueuedFollowUp;
+                setEnvironmentDetailsById((current) => ({
+                  ...current,
+                  [savedEnvironment.id]: savedEnvironment,
+                }));
+                if (shouldKeepEnvironmentSelected) {
+                  setSelectedEnvironmentId(savedEnvironment.id);
+                  setDraftEnvironment((current) => {
+                    if (hasQueuedFollowUp && current) {
+                      return normalizePlaygroundEnvironmentRecord({
+                        ...savedEnvironment,
+                        ...current,
+                        id: savedEnvironment.id,
+                        userId: savedEnvironment.userId,
+                        createdAt: savedEnvironment.createdAt,
+                      });
+                    }
+                    return savedEnvironment;
+                  });
+                }
+
+                if (!hasQueuedFollowUp) {
+                  setModifiedSecrets({});
+                  setModifiedMcpTokens({});
+                }
+
+                setSaveState({
+                  isSaving: false,
+                  error: "",
+                  message: hasQueuedFollowUp ? "" : "Saved",
+                });
+                if (onEnvironmentMutated) {
+                  await onEnvironmentMutated();
+                }
+              } catch (error) {
+                setSaveState({
+                  isSaving: false,
+                  error: error instanceof Error ? error.message : "Failed to save environment.",
+                  message: "",
+                });
+                break;
               }
-              savedEnvironment = getPlaygroundEnvironmentResponseRecord(updateData) || normalizePlaygroundEnvironmentRecord({
-                ...createdEnvironment,
-                ...payload,
-              });
-            } else {
-              const updateResponse = await fetch(backendUrl + "/environments/" + encodeURIComponent(draftEnvironment.id), {
-                method: "PUT",
-                headers: {
-                  ...requestHeaders,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-              });
-              const updateData = await updateResponse.json().catch(() => ({}));
-              if (!updateResponse.ok) {
-                throw new Error(updateData?.message || updateData?.error || "Failed to save environment.");
-              }
-              savedEnvironment = getPlaygroundEnvironmentResponseRecord(updateData) || normalizePlaygroundEnvironmentRecord({
-                ...draftEnvironment,
-                ...payload,
-                updatedAt: new Date().toISOString(),
-              });
             }
-
-            if (!savedEnvironment) {
-              throw new Error("Environment save failed.");
-            }
-
-            editorDirtyRef.current = false;
-            setModifiedSecrets({});
-            setModifiedMcpTokens({});
-            setEnvironmentDetailsById((current) => ({
-              ...current,
-              [savedEnvironment.id]: savedEnvironment,
-            }));
-            setSelectedEnvironmentId(savedEnvironment.id);
-            setDraftEnvironment(savedEnvironment);
-            setSaveState({
-              isSaving: false,
-              error: "",
-              message: "Saved",
-            });
-            if (onEnvironmentMutated) {
-              await onEnvironmentMutated();
-            }
-          } catch (error) {
-            setSaveState({
-              isSaving: false,
-              error: error instanceof Error ? error.message : "Failed to save environment.",
-              message: "",
-            });
+          } finally {
+            environmentAutosaveInFlightRef.current = false;
           }
         }
 
@@ -22730,65 +23345,66 @@ const html = `<!doctype html>
         }
 
         function updateRuntime(key, value) {
-          updateDraftEnvironment((current) => ({
-            ...current,
-            runtimes: {
-              ...(current.runtimes || {}),
-              [key]: value,
-            },
-            packageVersions: {
-              ...(current.packageVersions || {}),
-              [key]: value,
-            },
-          }));
-        }
-
-        function toggleRuntime(key, enabled) {
           updateDraftEnvironment((current) => {
             const nextRuntimes = {
               ...(current.runtimes || {}),
             };
-            if (enabled) {
-              const runtimeDefinition = PLAYGROUND_RUNTIME_DEFINITIONS.find((item) => item.key === key);
-              const versions = availableRuntimes[key] || [];
-              nextRuntimes[key] = runtimeDefinition?.defaultVersion === "first"
-                ? versions[0]
-                : versions[versions.length - 1];
-            } else {
+            const nextPackageVersions = {
+              ...(current.packageVersions || {}),
+            };
+            const normalizedValue = String(value || "").trim();
+            if (!normalizedValue) {
               delete nextRuntimes[key];
+              delete nextPackageVersions[key];
+            } else {
+              nextRuntimes[key] = normalizedValue;
+              nextPackageVersions[key] = normalizedValue;
             }
 
             return {
               ...current,
               runtimes: nextRuntimes,
-              packageVersions: {
-                ...nextRuntimes,
-              },
+              packageVersions: nextPackageVersions,
             };
           });
         }
 
-        function addPackage(type) {
-          updateDraftEnvironment((current) => ({
-            ...current,
-            packages: {
-              ...(current.packages || { system: [], python: [], node: [] }),
-              [type]: [...(current.packages?.[type] || []), ""],
-            },
-          }));
-        }
+        function addPackage(type, value) {
+          const normalizedValue = String(value || "").trim();
+          if (!normalizedValue) {
+            return;
+          }
 
-        function updatePackage(type, index, value) {
           updateDraftEnvironment((current) => {
-            const nextList = [...(current.packages?.[type] || [])];
-            nextList[index] = value;
+            const currentList = (current.packages?.[type] || []).map((item) => String(item || "").trim()).filter(Boolean);
+            if (currentList.includes(normalizedValue)) {
+              return current;
+            }
             return {
               ...current,
               packages: {
                 ...(current.packages || { system: [], python: [], node: [] }),
-                [type]: nextList,
+                [type]: [...currentList, normalizedValue],
               },
             };
+          });
+          setPackageComposerState((current) => current.type === type
+            ? { type: "", value: "" }
+            : current
+          );
+        }
+
+        function openPackageComposer(type) {
+          setPackageComposerState({
+            type,
+            value: "",
+          });
+        }
+
+        function closePackageComposer() {
+          setPackageComposerState({
+            type: "",
+            value: "",
           });
         }
 
@@ -23106,21 +23722,34 @@ const html = `<!doctype html>
             });
         }
 
-        function renderEditorSection(sectionId, title, description, content) {
-          const isExpanded = expandedSections.has(sectionId);
-          return React.createElement("section", { className: "playground-environments-section", key: sectionId },
-            React.createElement("button", {
+        function renderEditorSection(sectionId, title, description, content, headerActions, collapsible = true) {
+          const isExpanded = collapsible ? expandedSections.has(sectionId) : true;
+          return React.createElement("section", { className: "playground-environments-section" + (sectionId === "runtimes" ? " is-runtimes" : ""), key: sectionId },
+            React.createElement(collapsible ? "button" : "div", collapsible ? {
               type: "button",
               className: "playground-environments-section-header",
               onClick: () => toggleSection(sectionId),
+            } : {
+              className: "playground-environments-section-header is-static",
             },
               React.createElement("div", { className: "playground-environments-section-heading" },
                 React.createElement("div", { className: "playground-environments-section-title" }, title),
-                React.createElement("div", { className: "playground-environments-section-copy" }, description)
+                description
+                  ? React.createElement("div", { className: "playground-environments-section-copy" }, description)
+                  : null
               ),
-              isExpanded
-                ? React.createElement(ChevronDown, { className: "playground-environments-section-toggle", strokeWidth: 1.8 })
-                : React.createElement(ChevronRight, { className: "playground-environments-section-toggle", strokeWidth: 1.8 })
+              React.createElement("div", { className: "playground-environments-section-header-right" },
+                headerActions
+                  ? React.createElement("div", {
+                      onClick: collapsible ? (event) => event.stopPropagation() : undefined,
+                    }, headerActions)
+                  : null,
+                collapsible && isExpanded
+                  ? React.createElement(ChevronDown, { className: "playground-environments-section-toggle", strokeWidth: 1.8 })
+                  : collapsible
+                    ? React.createElement(ChevronRight, { className: "playground-environments-section-toggle", strokeWidth: 1.8 })
+                    : null
+              )
             ),
             isExpanded
               ? React.createElement("div", { className: "playground-environments-section-body" }, content)
@@ -23129,37 +23758,61 @@ const html = `<!doctype html>
         }
 
         function renderPackageGroup(type, label, placeholder) {
-          const values = draftEnvironment?.packages?.[type] || [];
+          const values = (draftEnvironment?.packages?.[type] || [])
+            .map((value) => String(value || "").trim())
+            .filter(Boolean);
+          const isComposerOpen = packageComposerState.type === type;
           return React.createElement("div", { className: "playground-environments-package-group", key: type },
-            React.createElement("div", { className: "playground-environments-package-group-header" },
-              React.createElement("div", { className: "playground-environments-subtitle" }, label),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-environments-add-button",
-                onClick: () => addPackage(type),
-              }, "Add")
-            ),
             values.length > 0
-              ? React.createElement("div", { className: "playground-environments-stack" },
+              ? React.createElement("div", { className: "playground-tasks-skills-list" },
                   values.map((value, index) =>
-                    React.createElement("div", { className: "playground-environments-inline-row", key: type + ":" + index },
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-environments-input",
-                        value,
-                        onChange: (event) => updatePackage(type, index, event.target.value),
-                        placeholder,
-                      }),
+                    React.createElement("div", { className: "playground-tasks-skill-pill", key: type + ":" + index },
+                      React.createElement("span", { className: "playground-tasks-skill-pill-label" }, value),
                       React.createElement("button", {
                         type: "button",
-                        className: "playground-environments-remove-button",
+                        className: "playground-tasks-skill-pill-remove",
                         onClick: () => removePackage(type, index),
                         "aria-label": "Remove " + label + " package",
-                      }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                      }, React.createElement(X, { width: 12, height: 12, strokeWidth: 1.9 }))
                     )
                   )
                 )
-              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No " + label.toLowerCase() + " packages.")
+              : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No " + label.toLowerCase() + " packages."),
+            isComposerOpen
+              ? React.createElement("div", { className: "playground-environments-package-composer" },
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-environments-input",
+                    value: packageComposerState.value,
+                    onChange: (event) => setPackageComposerState((current) => ({
+                      ...current,
+                      value: event.target.value,
+                    })),
+                    onKeyDown: (event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addPackage(type, packageComposerState.value);
+                      } else if (event.key === "Escape") {
+                        event.preventDefault();
+                        closePackageComposer();
+                      }
+                    },
+                    placeholder,
+                    autoFocus: true,
+                  }),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => addPackage(type, packageComposerState.value),
+                  }, "Add"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-package-composer-cancel",
+                    onClick: closePackageComposer,
+                    "aria-label": "Cancel package add",
+                  }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.9 }))
+                )
+              : null
           );
         }
 
@@ -23170,9 +23823,7 @@ const html = `<!doctype html>
             );
           }
 
-          const storageDisplay = draftEnvironment.estimatedStorageMB
-            ? formatPlaygroundFileSize(draftEnvironment.estimatedStorageMB * 1024 * 1024)
-            : "-";
+          const storageDisplay = "4GB";
           const gitTokenIsSet = existingSecretKeys.has("GITHUB_TOKEN");
           const gitTokenValue = getDraftGitTokenValue();
           const environmentStatusLabel = draftEnvironment.isDefault
@@ -23180,165 +23831,265 @@ const html = `<!doctype html>
             : draftEnvironment.isSystem
               ? "System"
               : "Custom";
+          const isEnvironmentDescriptionLocked = Boolean(draftEnvironment.isDefault);
           const renderEnvironmentFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
           );
           const environmentFactsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
-            renderEnvironmentFactRow("ID",
-              React.createElement("span", {
-                className: "playground-environments-editor-fact-value is-id",
-                title: draftEnvironment.id || "Unsaved environment",
-              }, draftEnvironment.id || "Unsaved environment")
-            ),
-            renderEnvironmentFactRow("Created",
-              React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftEnvironment.createdAt))
-            ),
-            renderEnvironmentFactRow("Updated",
-              React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftEnvironment.updatedAt))
-            ),
-            renderEnvironmentFactRow("Storage",
-              React.createElement("span", { className: "playground-environments-editor-fact-value" }, storageDisplay)
-            ),
-            renderEnvironmentFactRow("Internet",
+            React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
               React.createElement("button", {
                 type: "button",
-                className: "playground-environments-toggle" + (draftEnvironment.internetAccess ? " is-active" : ""),
-                onClick: () => updateEnvironmentField("internetAccess", !draftEnvironment.internetAccess),
-                "aria-pressed": draftEnvironment.internetAccess ? "true" : "false",
-                title: draftEnvironment.internetAccess ? "Internet access enabled" : "Internet access disabled",
-              }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                className: "playground-tasks-detail-facts-toggle" + (environmentDetailsCollapsed ? " is-collapsed" : ""),
+                onClick: () => setEnvironmentDetailsCollapsed((current) => !current),
+                title: environmentDetailsCollapsed ? "Expand details" : "Collapse details",
+                "aria-label": environmentDetailsCollapsed ? "Expand details" : "Collapse details",
+                "aria-expanded": environmentDetailsCollapsed ? "false" : "true",
+              }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
             ),
-            renderEnvironmentFactRow("Status",
-              React.createElement("span", { className: "playground-environments-editor-fact-value" }, environmentStatusLabel)
-            )
+            !environmentDetailsCollapsed
+              ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  renderEnvironmentFactRow("ID",
+                    React.createElement("span", {
+                      className: "playground-environments-editor-fact-value is-id",
+                      title: draftEnvironment.id || "Unsaved environment",
+                    }, draftEnvironment.id || "Unsaved environment")
+                  ),
+                  renderEnvironmentFactRow("Created",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftEnvironment.createdAt))
+                  ),
+                  renderEnvironmentFactRow("Updated",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftEnvironment.updatedAt))
+                  ),
+                  renderEnvironmentFactRow("Storage",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, storageDisplay)
+                  ),
+                  renderEnvironmentFactRow("Internet",
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-toggle" + (draftEnvironment.internetAccess ? " is-active" : ""),
+                      onClick: () => updateEnvironmentField("internetAccess", !draftEnvironment.internetAccess),
+                      "aria-pressed": draftEnvironment.internetAccess ? "true" : "false",
+                      title: draftEnvironment.internetAccess ? "Internet access enabled" : "Internet access disabled",
+                    }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                  ),
+                  renderEnvironmentFactRow("Status",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, environmentStatusLabel)
+                  )
+                )
+              : null
           );
           const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-            React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-            React.createElement("textarea", {
-              className: "playground-tasks-detail-description-input playground-environments-editor-description-input",
-              rows: 3,
-              value: draftEnvironment.description || "",
-              onChange: (event) => updateEnvironmentField("description", event.target.value),
-              placeholder: "Describe this environment...",
-            })
-          );
-
-          const runtimesSection = React.createElement("div", { className: "playground-environments-stack" },
-            PLAYGROUND_RUNTIME_DEFINITIONS.map((runtime) => {
-              const versions = availableRuntimes[runtime.key] || [];
-              const currentValue = draftEnvironment.runtimes?.[runtime.key] || "";
-              const isEnabled = Boolean(currentValue);
-              return React.createElement("div", { className: "playground-environments-runtime-row", key: runtime.key },
-                React.createElement("label", { className: "playground-environments-runtime-toggle" },
-                  React.createElement("input", {
-                    type: "checkbox",
-                    checked: isEnabled,
-                    onChange: (event) => toggleRuntime(runtime.key, event.target.checked),
-                  }),
-                  React.createElement("span", { className: "playground-environments-runtime-label" }, runtime.label)
-                ),
-                isEnabled
-                  ? React.createElement("select", {
-                      className: "playground-environments-select",
-                      value: currentValue,
-                      onChange: (event) => updateRuntime(runtime.key, event.target.value),
-                    },
-                      versions.map((version) => React.createElement("option", { key: version, value: version }, version))
-                    )
-                  : React.createElement("div", { className: "playground-environments-muted" }, "Disabled")
-              );
-            })
-          );
-
-          const variablesSection = React.createElement("div", { className: "playground-environments-stack" },
-            React.createElement("div", { className: "playground-environments-subsection" },
-              React.createElement("div", { className: "playground-environments-package-group-header" },
-                React.createElement("div", { className: "playground-environments-subtitle" }, "Environment Variables"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-add-button",
-                  onClick: addEnvironmentVariable,
-                }, "Add")
-              ),
-              draftEnvironment.environmentVariables.length > 0
-                ? React.createElement("div", { className: "playground-environments-stack" },
-                    draftEnvironment.environmentVariables.map((item, index) =>
-                      React.createElement("div", { className: "playground-environments-inline-row playground-environments-inline-row-paired", key: "env-var:" + index },
-                        React.createElement("input", {
-                          type: "text",
-                          className: "playground-environments-input",
-                          value: item.key,
-                          onChange: (event) => updateEnvironmentVariable(index, "key", event.target.value),
-                          placeholder: "KEY",
-                        }),
-                        React.createElement("input", {
-                          type: "text",
-                          className: "playground-environments-input",
-                          value: item.value,
-                          onChange: (event) => updateEnvironmentVariable(index, "value", event.target.value),
-                          placeholder: "value",
-                        }),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-remove-button",
-                          onClick: () => removeEnvironmentVariable(index),
-                          "aria-label": "Remove variable",
-                        }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                      )
-                    )
-                  )
-                : React.createElement("div", { className: "playground-environments-empty-copy" }, "No environment variables configured.")
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                [
+                  { id: "bold", label: "Bold", icon: Bold },
+                  { id: "italic", label: "Italic", icon: Italic },
+                  { id: "underline", label: "Underline", icon: Underline },
+                  { id: "list", label: "List", icon: List },
+                ].map((action) =>
+                  React.createElement("button", {
+                    key: action.id,
+                    type: "button",
+                    className: "playground-tasks-detail-format-button",
+                    title: action.label,
+                    "aria-label": action.label,
+                    disabled: isEnvironmentDescriptionLocked,
+                    onMouseDown: (event) => event.preventDefault(),
+                    onClick: () => handleEnvironmentDescriptionFormat(action.id),
+                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                )
+              )
             ),
-            React.createElement("div", { className: "playground-environments-subsection" },
-              React.createElement("div", { className: "playground-environments-package-group-header" },
-                React.createElement("div", { className: "playground-environments-subtitle" }, "Secrets"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-add-button",
-                  onClick: addSecret,
-                }, "Add")
-              ),
-              draftEnvironment.secrets.length > 0
-                ? React.createElement("div", { className: "playground-environments-stack" },
-                    draftEnvironment.secrets.map((secret, index) => {
-                      const isExistingSecret = existingSecretKeys.has(secret.key);
-                      const hasBeenModified = modifiedSecrets[secret.key] !== undefined;
-                      const displayValue = isExistingSecret
-                        ? (hasBeenModified ? modifiedSecrets[secret.key] : "")
-                        : secret.value;
-                      return React.createElement("div", { className: "playground-environments-inline-row playground-environments-inline-row-paired", key: "secret:" + index },
-                        React.createElement("input", {
-                          type: "text",
-                          className: "playground-environments-input",
-                          value: secret.key,
-                          disabled: isExistingSecret,
-                          onChange: (event) => updateSecret(index, "key", event.target.value),
-                          placeholder: "SECRET_KEY",
-                        }),
-                        React.createElement("div", { className: "playground-environments-secret-field" },
-                          React.createElement("input", {
-                            type: "password",
-                            className: "playground-environments-input",
-                            value: displayValue,
-                            onChange: (event) => updateSecret(index, "value", event.target.value),
-                            placeholder: isExistingSecret ? "Enter new value to change" : "secret value",
-                          }),
-                          isExistingSecret && !hasBeenModified
-                            ? React.createElement("span", { className: "playground-environments-secret-indicator" }, "(set)")
-                            : null
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-remove-button",
-                          onClick: () => removeSecret(index),
-                          "aria-label": "Remove secret",
-                        }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                      );
-                    })
+            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEnvironmentDescriptionEditing ? " is-editing" : " is-preview") },
+              !isEnvironmentDescriptionEditing
+                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                    String(draftEnvironment.description || "").trim()
+                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                          content: draftEnvironment.description,
+                          className: "playground-tasks-detail-description-preview tb-message-markdown",
+                        })
+                      : React.createElement("div", {
+                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                        }, "Add Description here")
                   )
-                : React.createElement("div", { className: "playground-environments-empty-copy" }, "No secrets configured.")
+                : null,
+              React.createElement("textarea", {
+                ref: environmentDescriptionTextareaRef,
+                className: "playground-tasks-detail-description-input " + (isEnvironmentDescriptionEditing ? "is-editing" : "is-preview"),
+                rows: 1,
+                placeholder: isEnvironmentDescriptionEditing ? "Add Description here" : "",
+                value: draftEnvironment.description || "",
+                readOnly: isEnvironmentDescriptionLocked,
+                onFocus: () => {
+                  if (!isEnvironmentDescriptionLocked) {
+                    setIsEnvironmentDescriptionEditing(true);
+                  }
+                },
+                onChange: (event) => {
+                  updateEnvironmentField("description", event.target.value);
+                  resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                },
+                onBlur: () => {
+                  setIsEnvironmentDescriptionEditing(false);
+                  commitDraftEnvironmentIfDirty();
+                },
+              })
             )
+          );
+
+          const runtimesSection = React.createElement("div", { className: "playground-tasks-connectors playground-environments-runtimes-section" },
+            React.createElement("div", { className: "playground-tasks-connectors-list" },
+              PLAYGROUND_RUNTIME_DEFINITIONS.map((runtime) => {
+                const versions = availableRuntimes[runtime.key] || [];
+                const currentValue = draftEnvironment.runtimes?.[runtime.key] || "";
+                const runtimeOptions = currentValue && !versions.includes(currentValue)
+                  ? [currentValue, ...versions]
+                  : versions;
+                const isPopoverOpen = environmentRuntimePopover === runtime.key;
+                return React.createElement("div", {
+                  className: "playground-tasks-connector-row playground-environments-runtime-row",
+                  key: runtime.key,
+                },
+                  React.createElement("div", { className: "playground-environments-runtime-service" },
+                    React.createElement("div", { className: "playground-tasks-connector-service" },
+                      React.createElement("span", { className: "playground-tasks-connector-service-label" }, runtime.label)
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                    React.createElement("div", {
+                        className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell" + (isPopoverOpen ? " is-open" : ""),
+                        ref: isPopoverOpen ? environmentRuntimePopoverRef : null,
+                      },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-runtime-value-button" + (currentValue ? "" : " is-empty"),
+                        onClick: () => setEnvironmentRuntimePopover((current) => current === runtime.key ? "" : runtime.key),
+                      },
+                        React.createElement("span", { className: "playground-environments-runtime-value-label" }, currentValue || "Disabled"),
+                        React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                      ),
+                      isPopoverOpen
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select" + (!currentValue ? " selected" : ""),
+                                onClick: () => {
+                                  updateRuntime(runtime.key, "");
+                                  setEnvironmentRuntimePopover("");
+                                },
+                              },
+                                React.createElement("span", { className: "tb-popup-check-slot" },
+                                  !currentValue
+                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                    : null
+                                ),
+                                React.createElement("span", null, "Disabled")
+                              ),
+                            runtimeOptions.map((version) =>
+                              React.createElement("button", {
+                                  key: version,
+                                  type: "button",
+                                  className: "tb-popup-row tb-popup-row-select" + (currentValue === version ? " selected" : ""),
+                                  onClick: () => {
+                                    updateRuntime(runtime.key, version);
+                                    setEnvironmentRuntimePopover("");
+                                  },
+                                },
+                                  React.createElement("span", { className: "tb-popup-check-slot" },
+                                    currentValue === version
+                                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                      : null
+                                  ),
+                                  React.createElement("span", null, version)
+                                )
+                            )
+                          )
+                        : null
+                    )
+                  )
+                );
+              })
+            )
+          );
+
+          const environmentVariablesSection = React.createElement("div", { className: "playground-environments-stack" },
+            draftEnvironment.environmentVariables.length > 0
+              ? React.createElement("div", { className: "playground-environments-stack" },
+                  draftEnvironment.environmentVariables.map((item, index) =>
+                    React.createElement("div", { className: "playground-environments-inline-row playground-environments-inline-row-paired playground-environments-editor-surface", key: "env-var:" + index },
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: item.key,
+                        onChange: (event) => updateEnvironmentVariable(index, "key", event.target.value),
+                        placeholder: "KEY",
+                      }),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: item.value,
+                        onChange: (event) => updateEnvironmentVariable(index, "value", event.target.value),
+                        placeholder: "value",
+                      }),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-remove-button",
+                        onClick: () => removeEnvironmentVariable(index),
+                        "aria-label": "Remove variable",
+                      }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    )
+                  )
+                )
+              : React.createElement("div", { className: "playground-environments-editor-surface" },
+                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No environment variables configured.")
+                )
+          );
+
+          const secretsSection = React.createElement("div", { className: "playground-environments-stack" },
+            draftEnvironment.secrets.length > 0
+              ? React.createElement("div", { className: "playground-environments-stack" },
+                  draftEnvironment.secrets.map((secret, index) => {
+                    const isExistingSecret = existingSecretKeys.has(secret.key);
+                    const hasBeenModified = modifiedSecrets[secret.key] !== undefined;
+                    const displayValue = isExistingSecret
+                      ? (hasBeenModified ? modifiedSecrets[secret.key] : "")
+                      : secret.value;
+                    return React.createElement("div", { className: "playground-environments-inline-row playground-environments-inline-row-paired playground-environments-editor-surface", key: "secret:" + index },
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: secret.key,
+                        disabled: isExistingSecret,
+                        onChange: (event) => updateSecret(index, "key", event.target.value),
+                        placeholder: "SECRET_KEY",
+                      }),
+                      React.createElement("div", { className: "playground-environments-secret-field" },
+                        React.createElement("input", {
+                          type: "password",
+                          className: "playground-environments-input",
+                          value: displayValue,
+                          onChange: (event) => updateSecret(index, "value", event.target.value),
+                          placeholder: isExistingSecret ? "Enter new value to change" : "secret value",
+                        }),
+                        isExistingSecret && !hasBeenModified
+                          ? React.createElement("span", { className: "playground-environments-secret-indicator" }, "(set)")
+                          : null
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-remove-button",
+                        onClick: () => removeSecret(index),
+                        "aria-label": "Remove secret",
+                      }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    );
+                  })
+                )
+              : React.createElement("div", { className: "playground-environments-editor-surface" },
+                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No secrets configured.")
+                )
           );
 
           const mcpSection = React.createElement("div", { className: "playground-environments-stack" },
@@ -23346,7 +24097,7 @@ const html = `<!doctype html>
               ? draftEnvironment.mcpServers.map((server, index) => {
                   const hasExistingToken = existingMcpTokenServers.has(server.name);
                   const hasModifiedToken = modifiedMcpTokens[server.name] !== undefined;
-                  return React.createElement("div", { className: "playground-environments-mcp-card", key: server.id || index },
+                  return React.createElement("div", { className: "playground-environments-mcp-card playground-environments-editor-surface", key: server.id || index },
                     React.createElement("div", { className: "playground-environments-inline-row" },
                       React.createElement("input", {
                         type: "text",
@@ -23456,18 +24207,15 @@ const html = `<!doctype html>
                     )
                   );
                 })
-              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No MCP servers configured."),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-environments-add-button",
-              onClick: addMcpServer,
-            }, "Add Server")
+              : React.createElement("div", { className: "playground-environments-editor-surface" },
+                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No MCP servers configured.")
+                )
           );
 
           const setupScriptsSection = React.createElement("div", { className: "playground-environments-stack" },
             draftEnvironment.setupScripts.length > 0
               ? draftEnvironment.setupScripts.map((script, index) =>
-                  React.createElement("div", { className: "playground-environments-inline-row playground-environments-inline-row-top", key: "script:" + index },
+                  React.createElement("div", { className: "playground-environments-inline-row playground-environments-inline-row-top playground-environments-editor-surface", key: "script:" + index },
                     React.createElement("textarea", {
                       className: "playground-environments-textarea",
                       rows: 3,
@@ -23483,48 +24231,47 @@ const html = `<!doctype html>
                     }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
                   )
                 )
-              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No setup scripts configured."),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-environments-add-button",
-              onClick: addSetupScript,
-            }, "Add Script")
+              : React.createElement("div", { className: "playground-environments-editor-surface" },
+                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No setup scripts configured.")
+                )
           );
 
-          const gitSection = React.createElement("div", { className: "playground-environments-field-grid" },
-            React.createElement("label", { className: "playground-environments-field playground-environments-field-span" },
-              React.createElement("span", { className: "playground-environments-field-label" }, "Repository URL"),
-              React.createElement("input", {
-                type: "text",
-                className: "playground-environments-input",
-                value: getDraftEnvironmentVariableValue("GIT_REPO_URL"),
-                onChange: (event) => updateGitField("GIT_REPO_URL", event.target.value),
-                placeholder: "https://github.com/user/repo.git",
-              })
-            ),
-            React.createElement("label", { className: "playground-environments-field" },
-              React.createElement("span", { className: "playground-environments-field-label" }, "Branch"),
-              React.createElement("input", {
-                type: "text",
-                className: "playground-environments-input",
-                value: getDraftEnvironmentVariableValue("GIT_BRANCH"),
-                onChange: (event) => updateGitField("GIT_BRANCH", event.target.value),
-                placeholder: "main",
-              })
-            ),
-            React.createElement("label", { className: "playground-environments-field" },
-              React.createElement("span", { className: "playground-environments-field-label" }, "Access Token"),
-              React.createElement("div", { className: "playground-environments-secret-field" },
+          const gitSection = React.createElement("div", { className: "playground-environments-editor-surface" },
+            React.createElement("div", { className: "playground-environments-field-grid" },
+              React.createElement("label", { className: "playground-environments-field playground-environments-field-span" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Repository URL"),
                 React.createElement("input", {
-                  type: "password",
+                  type: "text",
                   className: "playground-environments-input",
-                  value: gitTokenValue,
-                  onChange: (event) => updateGitToken(event.target.value),
-                  placeholder: gitTokenIsSet ? "Enter new token to change" : "ghp_... or personal access token",
-                }),
-                gitTokenIsSet && modifiedSecrets.GITHUB_TOKEN === undefined
-                  ? React.createElement("span", { className: "playground-environments-secret-indicator" }, "(set)")
-                  : null
+                  value: getDraftEnvironmentVariableValue("GIT_REPO_URL"),
+                  onChange: (event) => updateGitField("GIT_REPO_URL", event.target.value),
+                  placeholder: "https://github.com/user/repo.git",
+                })
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Branch"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-environments-input",
+                  value: getDraftEnvironmentVariableValue("GIT_BRANCH"),
+                  onChange: (event) => updateGitField("GIT_BRANCH", event.target.value),
+                  placeholder: "main",
+                })
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Access Token"),
+                React.createElement("div", { className: "playground-environments-secret-field" },
+                  React.createElement("input", {
+                    type: "password",
+                    className: "playground-environments-input",
+                    value: gitTokenValue,
+                    onChange: (event) => updateGitToken(event.target.value),
+                    placeholder: gitTokenIsSet ? "Enter new token to change" : "ghp_... or personal access token",
+                  }),
+                  gitTokenIsSet && modifiedSecrets.GITHUB_TOKEN === undefined
+                    ? React.createElement("span", { className: "playground-environments-secret-indicator" }, "(set)")
+                    : null
+                )
               )
             )
           );
@@ -23532,7 +24279,7 @@ const html = `<!doctype html>
           const contextFilesSection = React.createElement("div", { className: "playground-environments-stack" },
             draftEnvironment.documentation.length > 0
               ? draftEnvironment.documentation.map((document, index) =>
-                  React.createElement("div", { className: "playground-environments-mcp-card", key: document.id || index },
+                  React.createElement("div", { className: "playground-environments-mcp-card playground-environments-editor-surface", key: document.id || index },
                     React.createElement("div", { className: "playground-environments-inline-row" },
                       React.createElement("input", {
                         type: "text",
@@ -23563,15 +24310,12 @@ const html = `<!doctype html>
                     })
                   )
                 )
-              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No context files configured."),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-environments-add-button",
-              onClick: addDocumentationFile,
-            }, "Add File")
+              : React.createElement("div", { className: "playground-environments-editor-surface" },
+                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No context files configured.")
+                )
           );
 
-          const dockerfileSection = React.createElement("div", { className: "playground-environments-stack" },
+          const dockerfileSection = React.createElement("div", { className: "playground-environments-editor-surface playground-environments-editor-surface-stack" },
             React.createElement("label", { className: "playground-environments-field" },
               React.createElement("span", { className: "playground-environments-field-label" }, "Dockerfile Extensions"),
               React.createElement("textarea", {
@@ -23581,30 +24325,6 @@ const html = `<!doctype html>
                 onChange: (event) => updateEnvironmentField("dockerfileExtensions", event.target.value),
                 placeholder: "RUN apt-get update && apt-get install -y custom-tool",
               })
-            ),
-            React.createElement("div", { className: "playground-environments-dockerfile-actions" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-environments-add-button",
-                onClick: () => selectedEnvironmentId && selectedEnvironmentId !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
-                  ? void loadDockerfilePreview(selectedEnvironmentId)
-                  : null,
-                disabled: !selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID || dockerfileState.isLoading,
-              },
-                React.createElement(RefreshCw, {
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                  className: dockerfileState.isLoading ? "playground-environments-spin" : "",
-                }),
-                React.createElement("span", null, dockerfileState.isLoading ? "Loading..." : "Refresh")
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-environments-add-button",
-                onClick: copyDockerfilePreview,
-                disabled: !generatedDockerfile,
-              }, dockerfileState.copied ? "Copied" : "Copy")
             ),
             dockerfileState.error
               ? React.createElement("div", { className: "playground-environments-error" }, dockerfileState.error)
@@ -23618,12 +24338,9 @@ const html = `<!doctype html>
                 )
           );
 
-          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
+          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: environmentDetailMainRef },
             React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
               React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-                React.createElement("div", { className: "playground-environments-editor-navbar-icon" },
-                  React.createElement(HardDrive, { width: 15, height: 15, strokeWidth: 1.8 })
-                ),
                 React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
                   React.createElement("input", {
                     type: "text",
@@ -23633,24 +24350,13 @@ const html = `<!doctype html>
                     "aria-label": "Environment name",
                     title: draftEnvironment.name || "Environment",
                     onChange: (event) => updateEnvironmentField("name", event.target.value),
-                  }),
-                  React.createElement("div", { className: "playground-environments-editor-navbar-subtitle" },
-                    draftEnvironment.id || "Unsaved environment"
-                  )
+                    onBlur: commitDraftEnvironmentIfDirty,
+                  })
                 )
               ),
               React.createElement("div", { className: "playground-content-nav-center" }),
               React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
                 React.createElement("span", { className: "playground-environments-badge" }, environmentStatusLabel),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button",
-                  onClick: handleRevertDraft,
-                  disabled: saveState.isSaving,
-                },
-                  React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Revert")
-                ),
                 !draftEnvironment.isDefault && draftEnvironment.id && draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
                   ? React.createElement("button", {
                       type: "button",
@@ -23659,15 +24365,6 @@ const html = `<!doctype html>
                       disabled: saveState.isSaving,
                     }, "Set Default")
                   : null,
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button is-primary",
-                  onClick: () => void handleSaveEnvironment(),
-                  disabled: saveState.isSaving || isLoadingCurrentEnvironment,
-                },
-                  React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, saveState.isSaving ? "Saving..." : "Save")
-                ),
                 draftEnvironment.id && !draftEnvironment.isSystem && !draftEnvironment.isDefault
                   ? React.createElement("button", {
                       type: "button",
@@ -23686,23 +24383,140 @@ const html = `<!doctype html>
                 ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, saveState.error)
                 : saveState.message
                   ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, saveState.message)
-                  : editorDirtyRef.current
-                    ? React.createElement("div", { className: "playground-environments-muted playground-environments-editor-notice" }, "Unsaved changes")
-                    : null,
-              environmentFactsSection,
+                  : isLoadingCurrentEnvironment
+                      ? React.createElement("div", { className: "playground-environments-muted playground-environments-editor-notice" }, "Loading environment...")
+                      : null,
               descriptionSection,
-              renderEditorSection("runtimes", "Runtime Versions", "Configure language runtime versions for your environment.", runtimesSection),
-              renderEditorSection("packages", "Packages", "Install system, Python, and Node.js packages.", React.createElement("div", { className: "playground-environments-stack" },
+              environmentFactsSection,
+              renderEditorSection("runtimes", "Runtime Versions", "", runtimesSection, null, false),
+              renderEditorSection(
+                "packages-system",
+                "System Packages",
+                "",
                 renderPackageGroup("system", "System", "ffmpeg, curl, imagemagick..."),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-tasks-skills-manage-button",
+                  onClick: () => openPackageComposer("system"),
+                }, "Add Package"),
+                false
+              ),
+              renderEditorSection(
+                "packages-python",
+                "Python Packages",
+                "",
                 renderPackageGroup("python", "Python", "numpy, pandas, flask..."),
-                renderPackageGroup("node", "Node.js", "express, typescript, axios...")
-              )),
-              renderEditorSection("variables", "Environment Variables & Secrets", "Configure environment variables and secret values.", variablesSection),
-              renderEditorSection("mcp", "MCP Servers", "Configure Model Context Protocol servers for your environment.", mcpSection),
-              renderEditorSection("scripts", "Setup Scripts", "Configure commands to run when setting up the environment.", setupScriptsSection),
-              renderEditorSection("git", "Git Repository", "Clone a repository into the environment on startup.", gitSection),
-              renderEditorSection("docs", "Context Files", "Files that give your agent context about this environment.", contextFilesSection),
-              renderEditorSection("dockerfile", "Dockerfile", "View and customize the generated Dockerfile for your environment.", dockerfileSection)
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-tasks-skills-manage-button",
+                  onClick: () => openPackageComposer("python"),
+                }, "Add Package"),
+                false
+              ),
+              renderEditorSection(
+                "packages-node",
+                "Node.js Packages",
+                "",
+                renderPackageGroup("node", "Node.js", "express, typescript, axios..."),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-tasks-skills-manage-button",
+                  onClick: () => openPackageComposer("node"),
+                }, "Add Package"),
+                false
+              ),
+              renderEditorSection(
+                "variables",
+                "Environment Variables",
+                "",
+                environmentVariablesSection,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-tasks-skills-manage-button",
+                  onClick: addEnvironmentVariable,
+                }, "Add Variable"),
+                false
+              ),
+              renderEditorSection(
+                "secrets",
+                "Secrets",
+                "",
+                secretsSection,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-tasks-skills-manage-button",
+                  onClick: addSecret,
+                }, "Add Secret"),
+                false
+              ),
+              renderEditorSection(
+                "mcp",
+                "MCP Servers",
+                "",
+                mcpSection,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-tasks-skills-manage-button",
+                  onClick: addMcpServer,
+                }, "Add Server"),
+                false
+              ),
+              renderEditorSection(
+                "scripts",
+                "Setup Scripts",
+                "",
+                setupScriptsSection,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-tasks-skills-manage-button",
+                  onClick: addSetupScript,
+                }, "Add Script"),
+                false
+              ),
+              renderEditorSection("git", "Git Repository", "", gitSection, null, false),
+              renderEditorSection(
+                "docs",
+                "Context Files",
+                "",
+                contextFilesSection,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-tasks-skills-manage-button",
+                  onClick: addDocumentationFile,
+                }, "Add File"),
+                false
+              ),
+              renderEditorSection(
+                "dockerfile",
+                "Dockerfile",
+                "",
+                dockerfileSection,
+                React.createElement("div", { className: "playground-environments-dockerfile-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => selectedEnvironmentId && selectedEnvironmentId !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
+                      ? void loadDockerfilePreview(selectedEnvironmentId)
+                      : null,
+                    disabled: !selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID || dockerfileState.isLoading,
+                  },
+                    React.createElement(RefreshCw, {
+                      width: 14,
+                      height: 14,
+                      strokeWidth: 1.8,
+                      className: dockerfileState.isLoading ? "playground-environments-spin" : "",
+                    }),
+                    React.createElement("span", null, dockerfileState.isLoading ? "Loading..." : "Refresh")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: copyDockerfilePreview,
+                    disabled: !generatedDockerfile,
+                  }, dockerfileState.copied ? "Copied" : "Copy")
+                ),
+                false
+              ),
             )
           );
         }
@@ -25140,6 +25954,7 @@ const html = `<!doctype html>
         currentUserName,
         currentUserAvatarUrl,
         canStartThreads,
+        taskRunStates,
         onThreadStarted,
         onTaskRunStateChange,
         onTaskDeleted,
@@ -26389,8 +27204,25 @@ const html = `<!doctype html>
         }
 
         function getTaskBoardStatus(task) {
+          const normalizedTaskId = typeof task?.id === "string" ? task.id.trim() : "";
+          const taskRunState = normalizedTaskId && taskRunStates[normalizedTaskId] && typeof taskRunStates[normalizedTaskId] === "object"
+            ? taskRunStates[normalizedTaskId]
+            : null;
+          const taskRunPhase = typeof taskRunState?.phase === "string" ? taskRunState.phase.trim().toLowerCase() : "";
+          const isOptimisticallyInProgress =
+            Boolean(normalizedTaskId)
+            && (
+              taskRunPendingIds.includes(normalizedTaskId)
+              || taskRunPendingIdsRef.current.has(normalizedTaskId)
+              || taskRunPhase === "starting"
+              || taskRunPhase === "running"
+            );
+
           if (task?.status === "done" || task?.status === "blocked") {
             return task.status;
+          }
+          if (isOptimisticallyInProgress) {
+            return "in_progress";
           }
           if (task?.status === "in_progress") {
             return taskHasStartedThread(task) ? "in_progress" : "todo";
@@ -38309,6 +39141,83 @@ const html = `<!doctype html>
           });
         }, []);
 
+        const upsertRealThreadRecord = useCallback(function upsertRealThreadRecord(threadRecord, options = {}) {
+          const normalizedThreadId = typeof threadRecord?.id === "string" ? threadRecord.id.trim() : "";
+          if (!normalizedThreadId) {
+            return;
+          }
+
+          const nowIso = new Date().toISOString();
+          const nextTaskPreview = options?.taskPreview && typeof options.taskPreview === "object" && !Array.isArray(options.taskPreview)
+            ? options.taskPreview
+            : null;
+          const fallbackStatus = typeof options?.status === "string" ? options.status.trim() : "";
+
+          setRealThreads((current) => {
+            const existingThread = current.find((thread) => thread.id === normalizedThreadId) || null;
+            const existingMetadata = existingThread?.metadata && typeof existingThread.metadata === "object" && !Array.isArray(existingThread.metadata)
+              ? existingThread.metadata
+              : {};
+            const incomingMetadata = threadRecord?.metadata && typeof threadRecord.metadata === "object" && !Array.isArray(threadRecord.metadata)
+              ? threadRecord.metadata
+              : {};
+            const existingRunnerPlayground = existingMetadata?.runnerPlayground && typeof existingMetadata.runnerPlayground === "object" && !Array.isArray(existingMetadata.runnerPlayground)
+              ? existingMetadata.runnerPlayground
+              : {};
+            const incomingRunnerPlayground = incomingMetadata?.runnerPlayground && typeof incomingMetadata.runnerPlayground === "object" && !Array.isArray(incomingMetadata.runnerPlayground)
+              ? incomingMetadata.runnerPlayground
+              : {};
+            const existingTaskPreview = existingRunnerPlayground?.taskPreview && typeof existingRunnerPlayground.taskPreview === "object" && !Array.isArray(existingRunnerPlayground.taskPreview)
+              ? existingRunnerPlayground.taskPreview
+              : null;
+            const incomingTaskPreview = incomingRunnerPlayground?.taskPreview && typeof incomingRunnerPlayground.taskPreview === "object" && !Array.isArray(incomingRunnerPlayground.taskPreview)
+              ? incomingRunnerPlayground.taskPreview
+              : null;
+            const mergedTaskPreview = nextTaskPreview || incomingTaskPreview || existingTaskPreview;
+
+            const normalizedThread = normalizeThreadItem({
+              ...(existingThread || {}),
+              ...(threadRecord || {}),
+              id: normalizedThreadId,
+              status: typeof threadRecord?.status === "string" && threadRecord.status.trim()
+                ? threadRecord.status.trim()
+                : fallbackStatus || existingThread?.status || "",
+              createdAt: typeof threadRecord?.createdAt === "string" && threadRecord.createdAt.trim()
+                ? threadRecord.createdAt.trim()
+                : existingThread?.createdAt || nowIso,
+              updatedAt: typeof threadRecord?.updatedAt === "string" && threadRecord.updatedAt.trim()
+                ? threadRecord.updatedAt.trim()
+                : existingThread?.updatedAt
+                  || (typeof threadRecord?.createdAt === "string" && threadRecord.createdAt.trim() ? threadRecord.createdAt.trim() : "")
+                  || nowIso,
+              metadata: {
+                ...existingMetadata,
+                ...incomingMetadata,
+                runnerPlayground: {
+                  ...existingRunnerPlayground,
+                  ...incomingRunnerPlayground,
+                  ...(mergedTaskPreview
+                    ? {
+                        taskPreview: {
+                          ...(existingTaskPreview || {}),
+                          ...(incomingTaskPreview || {}),
+                          ...mergedTaskPreview,
+                          threadId: normalizedThreadId,
+                        },
+                      }
+                    : {}),
+                },
+              },
+            });
+
+            const existingIndex = current.findIndex((thread) => thread.id === normalizedThreadId);
+            if (existingIndex === -1) {
+              return [normalizedThread].concat(current);
+            }
+            return current.map((thread) => thread.id === normalizedThreadId ? normalizedThread : thread);
+          });
+        }, []);
+
         const updateThreadTaskPreviewStatus = useCallback(function updateThreadTaskPreviewStatus(threadId, taskId, nextTaskStatus) {
           const normalizedThreadId = String(threadId || "").trim();
           const normalizedTaskId = String(taskId || "").trim();
@@ -42082,31 +42991,25 @@ const html = `<!doctype html>
         function renderSidebarThreadRow(thread, options = {}) {
           try {
             const { pinned = false } = options;
-            const safeThread = normalizeThreadItem(thread);
+            const {
+              safeThread,
+              taskPreview,
+              taskTicketNumber,
+              displayThreadTitle,
+            } = getSidebarThreadTitleParts(thread);
             const safeThreadId = typeof safeThread.id === "string" && safeThread.id.trim() ? safeThread.id.trim() : generateId("thread");
-            const safeThreadTitle = typeof safeThread.title === "string" && safeThread.title.trim() ? safeThread.title.trim() : "Untitled thread";
             const isActive = activeSidebarThreadId === safeThreadId;
             const isRunning = String(safeThread?.status || "").trim().toLowerCase() === "running";
             const isMenuOpen = threadActionMenuState?.threadId === safeThreadId;
             const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === safeThreadId;
             const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === safeThreadId;
-            const runnerPlaygroundMetadata = safeThread?.metadata?.runnerPlayground && typeof safeThread.metadata.runnerPlayground === "object" && !Array.isArray(safeThread.metadata.runnerPlayground)
-              ? safeThread.metadata.runnerPlayground
-              : null;
-            const taskPreview = runnerPlaygroundMetadata?.taskPreview && typeof runnerPlaygroundMetadata.taskPreview === "object" && !Array.isArray(runnerPlaygroundMetadata.taskPreview)
-              ? runnerPlaygroundMetadata.taskPreview
-              : null;
             const threadProjectId = typeof taskPreview?.projectId === "string" ? taskPreview.projectId.trim() : "";
-            const threadProject = threadProjectId ? (projectsById[threadProjectId] || null) : null;
-            const threadProjectIconConfig = threadProjectId
-              ? getPlaygroundProjectIconConfig(threadProject?.icon || "rocket")
-              : null;
-            const ThreadProjectIcon = typeof threadProjectIconConfig?.icon === "function"
-              ? threadProjectIconConfig.icon
-              : Rocket;
-            const threadProjectTitle = typeof threadProject?.name === "string" && threadProject.name.trim()
-              ? threadProject.name.trim()
+            const ThreadProjectIcon = Rocket;
+            const threadProjectTitle = typeof taskPreview?.projectName === "string" && taskPreview.projectName.trim()
+              ? taskPreview.projectName.trim()
               : "Project";
+            const threadTimeLabel = formatRelativeThreadTime(resolveThreadSortTimestamp(safeThread) || safeThread.nextRunAt);
+            const threadMetaText = threadMetaLabel(safeThread);
 
             return React.createElement("div", {
               key: safeThreadId,
@@ -42131,38 +43034,54 @@ const html = `<!doctype html>
                     isRunning
                       ? React.createElement(Loader2, { className: "sidebar-thread-running-indicator", strokeWidth: 1.9 })
                       : null,
-                    React.createElement("span", { className: "sidebar-thread-title" }, safeThreadTitle)
+                    React.createElement("span", { className: "sidebar-thread-title-copy" },
+                      taskTicketNumber
+                        ? React.createElement("span", { className: "sidebar-thread-ticket-number" }, taskTicketNumber)
+                        : null,
+                      React.createElement("span", { className: "sidebar-thread-title" }, displayThreadTitle)
+                    )
                   )
                 )
               ),
               React.createElement("div", { className: "sidebar-thread-side" },
-                isActive
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
-                      onClick: (event) => openThreadActionMenu(event, safeThreadId),
-                      "aria-label": "Thread actions",
-                      "aria-expanded": isMenuOpen ? "true" : "false",
-                      disabled: isDeleting || isPinMutating,
-                    },
-                      isDeleting || isPinMutating
-                        ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
-                        : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
-                    )
-                  : React.createElement("span", { className: "sidebar-thread-meta" },
-                      threadMetaLabel(safeThread)
-                        ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadMetaLabel(safeThread))
-                        : null,
-                      React.createElement("span", { className: "sidebar-thread-meta-neutral" }, formatRelativeThreadTime(safeThread.nextRunAt || safeThread.createdAt || safeThread.updatedAt))
-                    )
+                React.createElement("span", { className: "sidebar-thread-meta" },
+                  threadMetaText
+                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadMetaText)
+                    : null,
+                  threadTimeLabel
+                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadTimeLabel)
+                    : null
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
+                  onClick: (event) => openThreadActionMenu(event, safeThreadId),
+                  "aria-label": "Thread actions",
+                  "aria-expanded": isMenuOpen ? "true" : "false",
+                  disabled: isDeleting || isPinMutating,
+                },
+                  isDeleting || isPinMutating
+                    ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
+                    : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
+                )
               )
             );
           } catch (error) {
             const fallbackThread = normalizeThreadItem(thread);
+            const fallbackSafeThreadId = typeof fallbackThread.id === "string" && fallbackThread.id.trim() ? fallbackThread.id.trim() : generateId("thread");
+            const fallbackTimeLabel = formatRelativeThreadTime(resolveThreadSortTimestamp(fallbackThread) || fallbackThread.nextRunAt);
+            const fallbackMetaText = threadMetaLabel(fallbackThread);
+            const {
+              taskTicketNumber,
+              displayThreadTitle,
+            } = getSidebarThreadTitleParts(fallbackThread);
+            const isMenuOpen = threadActionMenuState?.threadId === fallbackSafeThreadId;
+            const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === fallbackSafeThreadId;
+            const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === fallbackSafeThreadId;
             console.error("Failed to render sidebar thread row", error, thread);
             return React.createElement("div", {
-              key: fallbackThread.id,
-              className: (options?.pinned ? "sidebar-pinned-button" : "sidebar-thread-item"),
+              key: fallbackSafeThreadId,
+              className: (options?.pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (activeSidebarThreadId === fallbackSafeThreadId ? " is-active" : ""),
             },
               options?.pinned
                 ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
@@ -42170,12 +43089,39 @@ const html = `<!doctype html>
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-thread-main",
-                onClick: () => handleThreadSelect(fallbackThread.id),
+                onClick: () => handleThreadSelect(fallbackSafeThreadId),
               },
                 React.createElement("div", { className: "sidebar-thread-content" },
                   React.createElement("div", { className: "sidebar-thread-title-row" },
-                    React.createElement("span", { className: "sidebar-thread-title" }, fallbackThread.title || "Untitled thread")
+                    React.createElement("span", { className: "sidebar-thread-title-copy" },
+                      taskTicketNumber
+                        ? React.createElement("span", { className: "sidebar-thread-ticket-number" }, taskTicketNumber)
+                        : null,
+                      React.createElement("span", { className: "sidebar-thread-title" }, displayThreadTitle)
+                    )
                   )
+                )
+              ),
+              React.createElement("div", { className: "sidebar-thread-side" },
+                React.createElement("span", { className: "sidebar-thread-meta" },
+                  fallbackMetaText
+                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, fallbackMetaText)
+                    : null,
+                  fallbackTimeLabel
+                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, fallbackTimeLabel)
+                    : null
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
+                  onClick: (event) => openThreadActionMenu(event, fallbackSafeThreadId),
+                  "aria-label": "Thread actions",
+                  "aria-expanded": isMenuOpen ? "true" : "false",
+                  disabled: isDeleting || isPinMutating,
+                },
+                  isDeleting || isPinMutating
+                    ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
+                    : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
                 )
               )
             );
@@ -42455,15 +43401,7 @@ const html = `<!doctype html>
               : null,
             React.createElement("div", { className: "sidebar-thread-section" },
               React.createElement("div", { className: "sidebar-thread-section-header" },
-                React.createElement("div", { className: "sidebar-thread-section-title" }, "Threads"),
-                React.createElement("div", { className: "sidebar-thread-section-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "sidebar-thread-section-button",
-                    onClick: openSettingsPage,
-                    "aria-label": "Open settings page"
-                  }, React.createElement(SlidersHorizontal, { className: "sidebar-thread-header-icon", strokeWidth: 1.75 }))
-                )
+                React.createElement("div", { className: "sidebar-thread-section-title" }, "Threads")
               ),
               React.createElement("div", { className: "sidebar-thread-scroll" },
                 displayedThreadItems.length === 0
@@ -42918,17 +43856,14 @@ const html = `<!doctype html>
                             currentUserName: hasSessionAuth ? accountName : "Computer Agents",
                             currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                             canStartThreads: hasRealAccess,
+                            taskRunStates: taskRunStates,
                             openTaskRequest: taskOpenRequest,
                             onTaskRunStateChange: applyTaskRunState,
                             onThreadStarted: (threadId, options = {}) => {
                               if (options?.threadRecord?.id) {
-                                setRealThreads((current) => {
-                                  const normalizedThread = normalizeThreadItem(options.threadRecord);
-                                  const existingIndex = current.findIndex((thread) => thread.id === normalizedThread.id);
-                                  if (existingIndex === -1) {
-                                    return [normalizedThread].concat(current);
-                                  }
-                                  return current.map((thread) => thread.id === normalizedThread.id ? normalizedThread : thread);
+                                upsertRealThreadRecord(options.threadRecord, {
+                                  taskPreview: options?.taskPreview || null,
+                                  status: options?.taskRunRequest?.prompt ? "running" : "",
                                 });
                               }
                               if (options?.taskPreview?.environmentId) {
@@ -43104,17 +44039,14 @@ const html = `<!doctype html>
                               currentUserName: hasSessionAuth ? accountName : "Computer Agents",
                               currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                               canStartThreads: hasRealAccess,
+                              taskRunStates: taskRunStates,
                               openTaskRequest: threadTaskOpenRequest,
                               onTaskRunStateChange: applyTaskRunState,
                               onThreadStarted: (threadId, options = {}) => {
                                 if (options?.threadRecord?.id) {
-                                  setRealThreads((current) => {
-                                    const normalizedThread = normalizeThreadItem(options.threadRecord);
-                                    const existingIndex = current.findIndex((thread) => thread.id === normalizedThread.id);
-                                    if (existingIndex === -1) {
-                                      return [normalizedThread].concat(current);
-                                    }
-                                    return current.map((thread) => thread.id === normalizedThread.id ? normalizedThread : thread);
+                                  upsertRealThreadRecord(options.threadRecord, {
+                                    taskPreview: options?.taskPreview || null,
+                                    status: options?.taskRunRequest?.prompt ? "running" : "",
                                   });
                                 }
                                 if (options?.taskPreview?.environmentId) {

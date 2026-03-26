@@ -31,6 +31,15 @@ type StreamErrorEvent = {
   error?: { message?: string };
 };
 
+type ToolStartedEvent = {
+  type: "tool.started";
+  tool?: string;
+  toolId?: string;
+  description?: string;
+  input?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+};
+
 function normalizeBrowserArtifactPath(filePath?: string | null): string {
   return String(filePath || "").trim().replace(/^\/workspace\//, "").replace(/^workspace\//, "").replace(/^\/+/, "");
 }
@@ -96,6 +105,10 @@ export class RunnerEventNormalizer {
 
     if (type === "response.item.completed") {
       return this.handleCompletedItem(event);
+    }
+
+    if (type === "tool.started") {
+      return this.handleToolStarted(event as ToolStartedEvent);
     }
 
     if (type === "deep_research") {
@@ -183,6 +196,7 @@ export class RunnerEventNormalizer {
     }
 
     if (itemType === "reasoning") {
+      const metadata = this.asObject(item.metadata);
       return {
         logs: [
           {
@@ -191,6 +205,7 @@ export class RunnerEventNormalizer {
             type: "info",
             eventType: "reasoning",
             isReasoning: true,
+            metadata: metadata || undefined,
           },
         ],
       };
@@ -210,6 +225,7 @@ export class RunnerEventNormalizer {
             type: "info",
             eventType: isLLMResponse ? "llm_response" : "agent_message",
             isLLMResponse: isLLMResponse || undefined,
+            metadata: metadata || undefined,
           },
         ],
       };
@@ -299,9 +315,61 @@ export class RunnerEventNormalizer {
     return { logs: [] };
   }
 
+  private handleToolStarted(event: ToolStartedEvent): RunnerEventHandleResult {
+    const metadata = this.asObject(event.metadata);
+    if (!metadata) {
+      return { logs: [] };
+    }
+
+    const delegatedTo = this.asObject(metadata.delegatedTo);
+    const invocationMetadata = this.asObject(metadata.subagentInvocation);
+    if (!delegatedTo || !invocationMetadata) {
+      return { logs: [] };
+    }
+
+    return {
+      logs: [
+        {
+          time: this.formatElapsed(),
+          message: this.asString(event.description, `Delegated to ${this.asString(delegatedTo.agentName, "Subagent")}`),
+          type: "info",
+          eventType: "subagent_invocation",
+          metadata: this.mergeMetadata(metadata, {
+            status: "started",
+          }),
+        },
+      ],
+    };
+  }
+
   private handleToolCall(item: Record<string, unknown>): RunnerEventHandleResult {
     const tool = this.asObject(item.tool);
     if (!tool) return { logs: [] };
+    const metadata = this.asObject(item.metadata);
+    const subagentInvocation = this.asObject(metadata?.subagentInvocation);
+    if (subagentInvocation) {
+      const delegatedTo = this.asObject(metadata?.delegatedTo);
+      const agentName =
+        this.optionalString(subagentInvocation.agentName) ||
+        this.optionalString(delegatedTo?.agentName) ||
+        "Subagent";
+      return {
+        logs: [
+          {
+            time: this.formatElapsed(),
+            message: `Completed ${agentName}`,
+            type: this.optionalNumber(tool.exit_code) === 0 ? "success" : "error",
+            eventType: "subagent_invocation",
+            metadata: this.mergeMetadata(metadata, {
+              command: this.optionalString(tool.command),
+              exitCode: this.optionalNumber(tool.exit_code),
+              status: this.asCommandStatus(metadata?.status) ?? this.asCommandStatus(item.status) ?? "completed",
+              output: this.optionalString(tool.output)?.trim(),
+            }),
+          },
+        ],
+      };
+    }
 
     const toolType = this.asString(tool.type);
     if (toolType === "file_write") {
@@ -320,7 +388,7 @@ export class RunnerEventNormalizer {
             message: filePath || this.asString(tool.command, "Write file"),
             type: exitCode === 0 ? "success" : "error",
             eventType: "file_change",
-            metadata: {
+            metadata: this.mergeMetadata(metadata, {
               filePaths: filePath ? [filePath] : [],
               changeKinds: [operationKind],
               diffs:
@@ -336,7 +404,7 @@ export class RunnerEventNormalizer {
               fileContents: filePath && fileContent ? { [filePath]: fileContent } : {},
               exitCode,
               output: output?.trim(),
-            },
+            }),
           },
         ],
       };
@@ -354,19 +422,18 @@ export class RunnerEventNormalizer {
             message: this.asString(tool.command, "Read"),
             type: exitCode === 0 ? "success" : "error",
             eventType: "command_execution",
-            metadata: {
+            metadata: this.mergeMetadata(metadata, {
               command: filePath ? `cat "${filePath}"` : this.asString(tool.command),
               exitCode,
               status: this.asCommandStatus(item.status),
               output: fileContent || output?.trim(),
-            },
+            }),
           },
         ],
       };
     }
 
     if (toolType === "command_execution" || toolType === "image_generation_skill") {
-      const metadata = this.asObject(item.metadata);
       const isImageGeneration = toolType === "image_generation_skill" || Boolean(metadata?.isImageGeneration);
       const command = this.optionalString(tool.command);
       if (isBrowserSkillLaunchCommand(command)) {
@@ -379,7 +446,7 @@ export class RunnerEventNormalizer {
             message: this.asString(tool.command, "Unknown command"),
             type: this.optionalNumber(tool.exit_code) === 0 ? "success" : "error",
             eventType: "command_execution",
-            metadata: {
+            metadata: this.mergeMetadata(metadata, {
               command,
               exitCode: this.optionalNumber(tool.exit_code),
               status: this.asCommandStatus(metadata?.status) ?? this.asCommandStatus(item.status),
@@ -395,14 +462,13 @@ export class RunnerEventNormalizer {
                     error: metadata?.error,
                   }
                 : {}),
-            },
+            }),
           },
         ],
       };
     }
 
     if (toolType === "mcp_tool") {
-      const metadata = this.asObject(item.metadata);
       const status = this.asString(item.status);
       return {
         logs: [
@@ -411,7 +477,7 @@ export class RunnerEventNormalizer {
             message: `${this.asString(tool.server, "MCP")}.${this.asString(tool.name, "unknown")}`,
             type: status === "failed" ? "error" : "success",
             eventType: "mcp_tool_call",
-            metadata: {
+            metadata: this.mergeMetadata(metadata, {
               serverName: this.optionalString(tool.server),
               toolName: this.optionalString(tool.name),
               status: this.asCommandStatus(item.status),
@@ -420,7 +486,7 @@ export class RunnerEventNormalizer {
               error: tool.error,
               args: tool.arguments,
               savedImagePath: this.optionalString(metadata?.savedImagePath),
-            },
+            }),
           },
         ],
       };
@@ -602,6 +668,7 @@ export class RunnerEventNormalizer {
       value === "user_message" ||
       value === "agent_message" ||
       value === "reasoning" ||
+      value === "subagent_invocation" ||
       value === "command_execution" ||
       value === "mcp_tool_call" ||
       value === "mcp_log" ||
@@ -632,5 +699,16 @@ export class RunnerEventNormalizer {
       return value;
     }
     return undefined;
+  }
+
+  private mergeMetadata(
+    base: Record<string, unknown> | null,
+    extras?: Record<string, unknown>
+  ): RunnerLog["metadata"] | undefined {
+    const merged = {
+      ...(base || {}),
+      ...(extras || {}),
+    };
+    return Object.keys(merged).length > 0 ? (merged as RunnerLog["metadata"]) : undefined;
   }
 }

@@ -67,7 +67,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, InlineStatusLogBox, RunnerWorkLogEntry, isBrowserSkillCommand, isBrowserSkillLaunchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, isBrowserSkillCommand, isBrowserSkillLaunchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -191,6 +191,11 @@ interface PendingEditConfirmation {
     additions?: number;
     deletions?: number;
   }>;
+}
+
+interface RunnerSelectedSubagentDetail {
+  turnId: string;
+  invocationId: string;
 }
 
 type RunnerForkFileCopyMode = "all" | "thread_only" | "none";
@@ -4505,6 +4510,7 @@ export function RunnerChat({
   const [localThreadId, setLocalThreadId] = useState<string | null>(threadId ?? null);
   const [attachments, setAttachments] = useState<LocalAttachment[]>([]);
   const [previewedDocumentAttachment, setPreviewedDocumentAttachment] = useState<RunnerTurnAttachment | null>(null);
+  const [selectedSubagentDetail, setSelectedSubagentDetail] = useState<RunnerSelectedSubagentDetail | null>(null);
   const [documentPreviewDrawerWidth, setDocumentPreviewDrawerWidth] = useState<number | null>(null);
   const [isThreadHistoryLoading, setIsThreadHistoryLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -5182,6 +5188,18 @@ export function RunnerChat({
     setPreviewedDocumentAttachment(null);
   }
 
+  function closeSubagentDetailDrawer() {
+    setSelectedSubagentDetail(null);
+  }
+
+  function openSubagentDetailDrawer(turnId: string, invocationId: string) {
+    if (!turnId || !invocationId) {
+      return;
+    }
+    closeDocumentAttachmentPreview();
+    setSelectedSubagentDetail({ turnId, invocationId });
+  }
+
   function startDocumentPreviewResize(event: ReactPointerEvent<HTMLButtonElement>) {
     if (typeof window === "undefined") {
       return;
@@ -5201,6 +5219,7 @@ export function RunnerChat({
     if (!isAttachmentDocumentPreviewable(attachment)) {
       return;
     }
+    closeSubagentDetailDrawer();
     setPreviewedDocumentAttachment((current) => (current?.id === attachment.id ? null : attachment));
   }
 
@@ -8929,7 +8948,28 @@ export function RunnerChat({
     return `${turnId}-${index}-${log.eventType || "log"}-${(log.message || "").slice(0, 24)}`;
   }
 
-  type RunnerTimelineItem = { kind: "log"; log: RunnerLog } | { kind: "browser_group"; logs: RunnerLog[] };
+  type RunnerSubagentGroup = {
+    invocationLog: RunnerLog;
+    logs: RunnerLog[];
+    completionLog?: RunnerLog;
+  };
+  type RunnerSubagentPresentation = {
+    invocationId: string;
+    title: string;
+    prompt?: string | null;
+    environmentName: string;
+    running: boolean;
+    timeLabel?: string;
+    responseMessage?: string | null;
+    responseFailed: boolean;
+    previewMessage: string;
+    workLabel: string;
+    nestedItems: RunnerTimelineItem[];
+  };
+  type RunnerTimelineItem =
+    | { kind: "log"; log: RunnerLog }
+    | { kind: "browser_group"; logs: RunnerLog[] }
+    | { kind: "subagent_group"; invocationLog: RunnerLog; logs: RunnerLog[]; completionLog?: RunnerLog };
   type RunnerTurnTimelineState = {
     agentMessage?: RunnerLog;
     displayedTimelineItems: RunnerTimelineItem[];
@@ -8941,16 +8981,118 @@ export function RunnerChat({
     return isBrowserSkillCommand(command) && !isBrowserSkillLaunchCommand(command);
   }
 
-  function buildTimelineItems(logs: RunnerLog[]): RunnerTimelineItem[] {
-    const browserLogs = logs.filter((log) => isBrowserTimelineLog(log));
-    if (browserLogs.length === 0) {
-      return logs.map((log) => ({ kind: "log" as const, log }));
-    }
+  function getSubagentInvocationMetadata(log: RunnerLog) {
+    return log.metadata?.subagentInvocation || null;
+  }
 
-    const items: RunnerTimelineItem[] = [];
-    let browserGroupInserted = false;
+  function getSubagentInvocationId(log: RunnerLog): string | null {
+    const invocationId = getSubagentInvocationMetadata(log)?.invocationId;
+    if (invocationId) {
+      return invocationId;
+    }
+    const actor = log.metadata?.actor;
+    if (actor?.kind === "subagent" && typeof actor.invocationId === "string" && actor.invocationId.trim()) {
+      return actor.invocationId.trim();
+    }
+    return null;
+  }
+
+  function isSubagentInvocationLog(log: RunnerLog): boolean {
+    return log.eventType === "subagent_invocation" && Boolean(getSubagentInvocationMetadata(log));
+  }
+
+  function logBelongsToSubagentInvocation(log: RunnerLog, invocationId: string): boolean {
+    return getSubagentInvocationId(log) === invocationId;
+  }
+
+  function buildSubagentTimelineGroups(logs: RunnerLog[]) {
+    const groups = new Map<string, RunnerSubagentGroup>();
 
     for (const log of logs) {
+      const invocationId = getSubagentInvocationId(log);
+      if (!invocationId) {
+        continue;
+      }
+
+      const existing = groups.get(invocationId);
+      const invocationMetadata = getSubagentInvocationMetadata(log);
+      const invocationStatus = invocationMetadata?.status || log.metadata?.status;
+      const isCompletionLog = isSubagentInvocationLog(log) && invocationStatus && invocationStatus !== "started";
+
+      if (!existing) {
+        groups.set(invocationId, {
+          invocationLog: log,
+          logs: [],
+          completionLog: isCompletionLog ? log : undefined,
+        });
+        continue;
+      }
+
+      if (isSubagentInvocationLog(log) && (!isSubagentInvocationLog(existing.invocationLog) || invocationStatus === "started")) {
+        existing.invocationLog = log;
+      }
+      if (isCompletionLog) {
+        existing.completionLog = log;
+      }
+      existing.logs.push(log);
+    }
+
+    for (const group of groups.values()) {
+      const completionLog = group.completionLog && group.completionLog !== group.invocationLog ? group.completionLog : undefined;
+      group.completionLog = completionLog;
+      group.logs = group.logs.filter((log) => {
+        if (log === group.invocationLog) {
+          return false;
+        }
+        if (completionLog && log === completionLog) {
+          return false;
+        }
+        return !isSubagentInvocationLog(log);
+      });
+    }
+
+    return groups;
+  }
+
+  function collectBrowserTimelineLogs(logs: RunnerLog[], subagentGroups: Map<string, RunnerSubagentGroup>): RunnerLog[] {
+    const browserLogs: RunnerLog[] = [];
+
+    for (const currentLog of logs) {
+      const invocationId = getSubagentInvocationId(currentLog);
+      if (invocationId && subagentGroups.has(invocationId)) {
+        continue;
+      }
+      if (isBrowserTimelineLog(currentLog)) {
+        browserLogs.push(currentLog);
+      }
+    }
+
+    return browserLogs;
+  }
+
+  function buildTimelineItems(logs: RunnerLog[]): RunnerTimelineItem[] {
+    const subagentGroups = buildSubagentTimelineGroups(logs);
+    const browserLogs = collectBrowserTimelineLogs(logs, subagentGroups);
+    const items: RunnerTimelineItem[] = [];
+    let browserGroupInserted = false;
+    const insertedSubagentInvocations = new Set<string>();
+
+    for (let index = 0; index < logs.length; index += 1) {
+      const log = logs[index];
+      const invocationId = getSubagentInvocationId(log);
+      if (invocationId && subagentGroups.has(invocationId)) {
+        const group = subagentGroups.get(invocationId)!;
+        if (!insertedSubagentInvocations.has(invocationId) && log === group.invocationLog) {
+          items.push({
+            kind: "subagent_group",
+            invocationLog: group.invocationLog,
+            logs: group.logs,
+            completionLog: group.completionLog,
+          });
+          insertedSubagentInvocations.add(invocationId);
+        }
+        continue;
+      }
       if (isBrowserTimelineLog(log)) {
         if (!browserGroupInserted) {
           items.push({ kind: "browser_group", logs: browserLogs });
@@ -8961,17 +9103,66 @@ export function RunnerChat({
       items.push({ kind: "log", log });
     }
 
-    if (!browserGroupInserted) {
+    if (!browserGroupInserted && browserLogs.length > 0) {
       items.push({ kind: "browser_group", logs: browserLogs });
     }
 
     return items;
   }
 
+  function buildSubagentGroupPresentation(turn: RunnerTurn, item: RunnerSubagentGroup): RunnerSubagentPresentation {
+    const invocation = getSubagentInvocationMetadata(item.invocationLog);
+    const invocationId = getSubagentInvocationId(item.invocationLog) || `subagent-${turn.id}`;
+    const fallbackCompletionLog =
+      !item.completionLog &&
+      isSubagentInvocationLog(item.invocationLog) &&
+      getSubagentInvocationMetadata(item.invocationLog)?.status !== "started"
+        ? item.invocationLog
+        : undefined;
+    const completionLog = item.completionLog || fallbackCompletionLog;
+    const latestNestedLog = item.logs[item.logs.length - 1] || completionLog || item.invocationLog;
+    const subagentTitle =
+      invocation?.agentName ||
+      item.invocationLog.metadata?.delegatedTo?.agentName ||
+      turn.agentName ||
+      displayedAgentLabel ||
+      "Subagent";
+    const subagentEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
+    const isSubagentRunning = turn.status === "running" && !completionLog;
+    const completionOutput = typeof completionLog?.metadata?.output === "string" ? completionLog.metadata.output : "";
+    const completionFailed =
+      completionLog?.metadata?.status === "failed" ||
+      completionLog?.type === "error" ||
+      completionLog?.metadata?.exitCode === 1;
+    const previewMessage = completionOutput.trim()
+      || (isSubagentRunning ? `${subagentTitle} is working` : completionFailed ? `${subagentTitle} failed` : `${subagentTitle} finished`);
+    const nestedWorkLabel = isSubagentRunning
+      ? "Working..."
+      : `Worked for ${toDurationLabel(completionLog || latestNestedLog) || "0s"}`;
+
+    return {
+      invocationId,
+      title: subagentTitle,
+      prompt: invocation?.message || invocation?.description,
+      environmentName: subagentEnvironmentLabel,
+      running: isSubagentRunning,
+      timeLabel: toDurationLabel(completionLog || latestNestedLog),
+      responseMessage: completionOutput,
+      responseFailed: completionFailed,
+      previewMessage,
+      workLabel: nestedWorkLabel,
+      nestedItems: buildTimelineItems(item.logs),
+    };
+  }
+
   function timelineItemKey(turnId: string, index: number, item: RunnerTimelineItem): string {
     if (item.kind === "browser_group") {
       const anchorLog = item.logs[0] || item.logs[item.logs.length - 1];
       return anchorLog ? `${turnId}-browser-${stepRowKey(turnId, index, anchorLog)}` : `${turnId}-browser-${index}`;
+    }
+    if (item.kind === "subagent_group") {
+      const invocationId = getSubagentInvocationMetadata(item.invocationLog)?.invocationId || index;
+      return `${turnId}-subagent-${invocationId}-${item.logs.length}`;
     }
     return stepRowKey(turnId, index, item.log);
   }
@@ -9176,7 +9367,15 @@ export function RunnerChat({
     return <IconTerminal className="tb-step-row-icon" />;
   }
 
-  function renderTimelineItem(turnId: string, item: RunnerTimelineItem, index: number) {
+  function renderNestedTimelineItems(turn: RunnerTurn, items: RunnerTimelineItem[]) {
+    return items.map((nestedItem, nestedIndex) => (
+      <div key={timelineItemKey(turn.id, nestedIndex, nestedItem)} className="agent-step-item">
+        <div className="agent-step-content">{renderTimelineItem(turn, nestedItem, nestedIndex)}</div>
+      </div>
+    ));
+  }
+
+  function renderTimelineItem(turn: RunnerTurn, item: RunnerTimelineItem, index: number) {
     const runnerEnvironmentId = activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
     const runnerHeaders = buildRunnerHeaders(requestHeaders, apiKey.trim());
 
@@ -9190,6 +9389,20 @@ export function RunnerChat({
           backendUrl={normalizedBackendUrl}
           environmentId={runnerEnvironmentId}
           requestHeaders={runnerHeaders}
+        />
+      );
+    }
+
+    if (item.kind === "subagent_group") {
+      const presentation = buildSubagentGroupPresentation(turn, item);
+
+      return (
+        <SubagentLogBox
+          title={presentation.title}
+          timeLabel={presentation.timeLabel}
+          running={presentation.running}
+          summaryMessage={presentation.previewMessage}
+          onOpenDetails={() => openSubagentDetailDrawer(turn.id, presentation.invocationId)}
         />
       );
     }
@@ -9372,6 +9585,58 @@ export function RunnerChat({
     availableEnvironments.find((environment) => environment.id === selectedEnvironmentId) ||
     availableEnvironments.find((environment) => environment.isDefault) ||
     availableEnvironments[0];
+  const displayedAgentLabel = hasApiKey ? selectedAgent?.name || "Agent" : "Default Agent";
+  const displayedEnvironmentLabel = hasApiKey ? selectedEnvironment?.name || "Default" : "Default";
+  const selectedSubagentDetailPresentation = useMemo(() => {
+    if (!selectedSubagentDetail) {
+      return null;
+    }
+
+    const selectedTurn = turns.find((turn) => turn.id === selectedSubagentDetail.turnId);
+    if (!selectedTurn) {
+      return null;
+    }
+
+    const agentMessage = [...selectedTurn.logs]
+      .reverse()
+      .find((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+    const normalizedAgentResponseMessage = agentMessage?.message
+      ? stripSystemTags(agentMessage.message).replace(/\s+/g, " ").trim()
+      : "";
+    const displayedTimelineLogs = dedupeAdjacentRunnerLogs(
+      selectedTurn.logs.filter(
+        (log) =>
+          shouldDisplayTimelineLog(log) &&
+          !(
+            (log.eventType === "reasoning" || log.isReasoning) &&
+            normalizedAgentResponseMessage &&
+            stripSystemTags(log.message || "").replace(/\s+/g, " ").trim() === normalizedAgentResponseMessage
+          )
+      )
+    );
+    const subagentGroups = buildSubagentTimelineGroups(
+      displayedTimelineLogs.length === 0 && selectedTurn.status === "running"
+        ? [
+            {
+              time: "00:00",
+              message: "Setting up workspace...",
+              type: "info" as const,
+              eventType: "setup" as const,
+            },
+          ]
+        : displayedTimelineLogs
+    );
+    const selectedGroup = subagentGroups.get(selectedSubagentDetail.invocationId);
+
+    if (!selectedGroup) {
+      return null;
+    }
+
+    return {
+      turn: selectedTurn,
+      ...buildSubagentGroupPresentation(selectedTurn, selectedGroup),
+    };
+  }, [displayedAgentLabel, displayedEnvironmentLabel, selectedSubagentDetail, turns]);
   const orderedAgents = useMemo(() => orderOptionsWithPinnedTop(agents, initialAgentTopId), [agents, initialAgentTopId]);
   const filteredOrderedAgents = useMemo(
     () => orderedAgents.filter((agent) => getRunnerAgentSelectorMode(agent) === agentPopupMode),
@@ -9530,6 +9795,21 @@ export function RunnerChat({
       showResizeHandle
     />
   ) : null;
+  const subagentDetailDrawer = selectedSubagentDetailPresentation ? (
+    <SubagentDetailDrawer
+      title={selectedSubagentDetailPresentation.title}
+      prompt={selectedSubagentDetailPresentation.prompt}
+      environmentName={selectedSubagentDetailPresentation.environmentName}
+      workLabel={selectedSubagentDetailPresentation.workLabel}
+      timeLabel={selectedSubagentDetailPresentation.timeLabel}
+      running={selectedSubagentDetailPresentation.running}
+      responseMessage={selectedSubagentDetailPresentation.responseMessage}
+      responseFailed={selectedSubagentDetailPresentation.responseFailed}
+      onClose={closeSubagentDetailDrawer}
+    >
+      {renderNestedTimelineItems(selectedSubagentDetailPresentation.turn, selectedSubagentDetailPresentation.nestedItems)}
+    </SubagentDetailDrawer>
+  ) : null;
   const isClosingPopupStackTogether =
     sidePopupPhase === "exit" &&
     mainPopupPhase === "exit" &&
@@ -9588,9 +9868,7 @@ export function RunnerChat({
     btw: canUseBtwThreadContextAction,
     fork: canStageThreadContextManagementActions,
   };
-  const displayedAgentLabel = hasApiKey ? selectedAgent?.name || "Agent" : "Default Agent";
   const agentPopupEmptyLabel = agentPopupMode === "teams" ? "No teams available." : "No agents available.";
-  const displayedEnvironmentLabel = hasApiKey ? selectedEnvironment?.name || "Default" : "Default";
   const speechToTextTitle = !hasApiKey
     ? "Enter an API key to enable speech-to-text"
     : supportsSpeechToText
@@ -9598,6 +9876,16 @@ export function RunnerChat({
         ? "Stop speech to text"
         : "Start speech to text"
       : "Speech-to-text is not supported in this browser";
+
+  useEffect(() => {
+    if (selectedSubagentDetail && !selectedSubagentDetailPresentation) {
+      setSelectedSubagentDetail(null);
+    }
+  }, [selectedSubagentDetail, selectedSubagentDetailPresentation]);
+
+  useEffect(() => {
+    setSelectedSubagentDetail(null);
+  }, [localThreadId]);
 
   useEffect(() => {
     if (!currentThreadId || !hasApiKey || !normalizedBackendUrl || isRunning) {
@@ -10311,7 +10599,7 @@ export function RunnerChat({
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${className || ""}`.trim()}
       style={
         {
           "--tb-document-preview-width": previewedDocumentAttachment
@@ -10556,7 +10844,7 @@ export function RunnerChat({
                                     className="agent-step-item"
                                     style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
                                   >
-                                    <div className="agent-step-content">{renderTimelineItem(turn.id, item, index)}</div>
+                                    <div className="agent-step-content">{renderTimelineItem(turn, item, index)}</div>
                                   </div>
                                 ))}
                               </div>
@@ -10717,7 +11005,7 @@ export function RunnerChat({
                                   className="agent-step-item"
                                   style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
                                 >
-                                  <div className="agent-step-content">{renderTimelineItem(turn.id, item, index)}</div>
+                                  <div className="agent-step-content">{renderTimelineItem(turn, item, index)}</div>
                                 </div>
                               ))}
                             </div>
@@ -11881,6 +12169,7 @@ export function RunnerChat({
         </div>
       ) : null}
 
+      {subagentDetailDrawer}
       {documentAttachmentPreviewDrawer}
 
       {showFileBrowserModal && typeof document !== "undefined"

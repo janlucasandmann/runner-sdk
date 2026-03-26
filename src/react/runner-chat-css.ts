@@ -1963,6 +1963,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 12px;
 }
 
+.tb-runner-chat .tb-log-card.tb-log-card-subagent .tb-log-card-panel {
+  padding: 12px;
+}
+
 .tb-runner-chat .tb-log-card.tb-log-card-browser {
   width: min(100%, 800px);
   max-width: 100%;
@@ -1970,8 +1974,17 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   border-radius: 15px;
 }
 
+.tb-runner-chat .tb-log-card.tb-log-card-subagent {
+  width: min(100%, 860px);
+  max-width: 100%;
+  padding: 0 12px 12px;
+  border-radius: 15px;
+}
+
 .tb-runner-chat .tb-log-card.tb-log-card-browser .tb-log-card-header,
-.tb-runner-chat .tb-log-card.tb-log-card-browser .tb-log-card-panel {
+.tb-runner-chat .tb-log-card.tb-log-card-browser .tb-log-card-panel,
+.tb-runner-chat .tb-log-card.tb-log-card-subagent .tb-log-card-header,
+.tb-runner-chat .tb-log-card.tb-log-card-subagent .tb-log-card-panel {
   width: 100%;
   max-width: 100%;
 }
@@ -2006,6 +2019,201 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   flex-direction: column;
   gap: 10px;
   width: 100%;
+}
+
+.tb-runner-chat .tb-subagent-log-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tb-runner-chat .tb-subagent-log-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tb-runner-chat .tb-subagent-log-preview-copy {
+  max-height: 176px;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.tb-runner-chat .tb-subagent-log-preview-copy.is-running {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.tb-runner-chat .tb-subagent-log-preview-markdown > *:first-child {
+  margin-top: 0;
+}
+
+.tb-runner-chat .tb-subagent-log-preview-markdown > *:last-child {
+  margin-bottom: 0;
+}
+
+.tb-runner-chat .tb-subagent-log-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.tb-runner-chat .tb-subagent-log-open-button {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  line-height: 1;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.tb-runner-chat .tb-subagent-log-open-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.tb-runner-chat .tb-subagent-log-open-button-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.tb-runner-chat .tb-subagent-log-prompt {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  width: min(85%, 100%);
+  margin-left: auto;
+}
+
+.tb-runner-chat .tb-subagent-log-prompt-markdown {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.tb-runner-chat .tb-subagent-log-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tb-runner-chat .tb-subagent-log-work {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.tb-runner-chat .tb-subagent-log-steps {
+  padding-top: 0;
+}
+
+.tb-runner-chat .tb-subagent-log-steps .agent-step-item:last-child {
+  margin-bottom: 0;
+}
+
+.tb-runner-chat .tb-subagent-log-summary {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tb-runner-chat .tb-subagent-log-summary.is-error {
+  background: rgba(255, 95, 87, 0.08);
+}
+
+.tb-runner-chat .tb-subagent-detail-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  width: min(100%, 460px);
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 10, 0.96);
+  box-shadow: -32px 0 80px rgba(0, 0, 0, 0.42);
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 220ms ease;
+}
+
+.tb-runner-chat.tb-runner-chat-subagent-detail-open .tb-subagent-detail-drawer {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tb-runner-chat .tb-subagent-detail-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 50px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tb-runner-chat .tb-subagent-detail-drawer-header-copy {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tb-runner-chat .tb-subagent-detail-drawer-header-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tb-runner-chat .tb-subagent-detail-drawer-label {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tb-runner-chat .tb-subagent-detail-drawer-title {
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-runner-chat .tb-subagent-detail-drawer-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tb-runner-chat .tb-subagent-detail-drawer-time {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.tb-runner-chat .tb-subagent-detail-drawer-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 16px;
 }
 
 .tb-runner-chat .tb-browser-carousel-path {
