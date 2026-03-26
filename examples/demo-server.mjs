@@ -22437,6 +22437,7 @@ const html = `<!doctype html>
         const editorDirtyRef = useRef(false);
         const environmentDetailMainRef = useRef(null);
         const environmentDescriptionTextareaRef = useRef(null);
+        const environmentDockerfileTextareaRef = useRef(null);
         const environmentRuntimePopoverRef = useRef(null);
         const environmentAutosaveTimerRef = useRef(null);
         const environmentAutosaveQueuedRef = useRef(null);
@@ -22471,12 +22472,6 @@ const html = `<!doctype html>
         const [packageComposerState, setPackageComposerState] = useState({
           type: "",
           value: "",
-        });
-        const [generatedDockerfile, setGeneratedDockerfile] = useState("");
-        const [dockerfileState, setDockerfileState] = useState({
-          isLoading: false,
-          error: "",
-          copied: false,
         });
 
         const orderedEnvironments = useMemo(() => {
@@ -22556,12 +22551,6 @@ const html = `<!doctype html>
           });
           setModifiedSecrets({});
           setModifiedMcpTokens({});
-          setGeneratedDockerfile("");
-          setDockerfileState({
-            isLoading: false,
-            error: "",
-            copied: false,
-          });
           setSaveState({
             isSaving: false,
             error: "",
@@ -22815,47 +22804,6 @@ const html = `<!doctype html>
           }
         }, [backendUrl, requestHeaders]);
 
-        const loadDockerfilePreview = useCallback(async (environmentId) => {
-          if (!environmentId || environmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
-            setGeneratedDockerfile("");
-            return;
-          }
-
-          setDockerfileState((current) => ({
-            ...current,
-            isLoading: true,
-            error: "",
-            copied: false,
-          }));
-
-          try {
-            const response = await fetch(backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/dockerfile", {
-              method: "GET",
-              headers: requestHeaders,
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load Dockerfile.");
-            }
-            const dockerfile = typeof data?.effectiveDockerfile === "string"
-              ? data.effectiveDockerfile
-              : typeof data?.dockerfile === "string"
-                ? data.dockerfile
-                : "";
-            setGeneratedDockerfile(dockerfile);
-          } catch (error) {
-            setDockerfileState((current) => ({
-              ...current,
-              error: error instanceof Error ? error.message : "Failed to load Dockerfile.",
-            }));
-          } finally {
-            setDockerfileState((current) => ({
-              ...current,
-              isLoading: false,
-            }));
-          }
-        }, [backendUrl, requestHeaders]);
-
         useEffect(() => {
           setEnvironmentDetailsById((current) => {
             const next = {};
@@ -22962,20 +22910,6 @@ const html = `<!doctype html>
           };
         }, [environmentRuntimePopover]);
 
-        useEffect(() => {
-          if (!expandedSections.has("dockerfile")) {
-            return;
-          }
-          if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
-            setGeneratedDockerfile("");
-            return;
-          }
-          if (generatedDockerfile || dockerfileState.isLoading) {
-            return;
-          }
-          void loadDockerfilePreview(selectedEnvironmentId);
-        }, [dockerfileState.isLoading, expandedSections, generatedDockerfile, loadDockerfilePreview, selectedEnvironmentId]);
-
         useEffect(() => () => {
           if (environmentAutosaveTimerRef.current) {
             window.clearTimeout(environmentAutosaveTimerRef.current);
@@ -22986,6 +22920,10 @@ const html = `<!doctype html>
         useLayoutEffect(() => {
           resizeEnvironmentDescriptionTextarea(environmentDescriptionTextareaRef.current);
         }, [draftEnvironment?.description, draftEnvironment?.id]);
+
+        useLayoutEffect(() => {
+          resizeEnvironmentDescriptionTextarea(environmentDockerfileTextareaRef.current);
+        }, [draftEnvironment?.dockerfileExtensions, draftEnvironment?.id]);
 
         useEffect(() => {
           const textarea = environmentDescriptionTextareaRef.current;
@@ -23000,6 +22938,7 @@ const html = `<!doctype html>
             }
             frameId = window.requestAnimationFrame(() => {
               resizeEnvironmentDescriptionTextarea(environmentDescriptionTextareaRef.current);
+              resizeEnvironmentDescriptionTextarea(environmentDockerfileTextareaRef.current);
             });
           };
 
@@ -24387,104 +24326,21 @@ const html = `<!doctype html>
               : React.createElement("div", { className: "playground-environments-empty-copy" }, "No setup scripts configured.")
           );
 
-          const gitSection = React.createElement("div", { className: "playground-environments-editor-surface" },
-            React.createElement("div", { className: "playground-environments-field-grid" },
-              React.createElement("label", { className: "playground-environments-field playground-environments-field-span" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Repository URL"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: getDraftEnvironmentVariableValue("GIT_REPO_URL"),
-                  onChange: (event) => updateGitField("GIT_REPO_URL", event.target.value),
-                  placeholder: "https://github.com/user/repo.git",
-                })
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Branch"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: getDraftEnvironmentVariableValue("GIT_BRANCH"),
-                  onChange: (event) => updateGitField("GIT_BRANCH", event.target.value),
-                  placeholder: "main",
-                })
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Access Token"),
-                React.createElement("div", { className: "playground-environments-secret-field" },
-                  React.createElement("input", {
-                    type: "password",
-                    className: "playground-environments-input",
-                    value: gitTokenValue,
-                    onChange: (event) => updateGitToken(event.target.value),
-                    placeholder: gitTokenIsSet ? "Enter new token to change" : "ghp_... or personal access token",
-                  }),
-                  gitTokenIsSet && modifiedSecrets.GITHUB_TOKEN === undefined
-                    ? React.createElement("span", { className: "playground-environments-secret-indicator" }, "(set)")
-                    : null
-                )
-              )
-            )
-          );
-
-          const contextFilesSection = React.createElement("div", { className: "playground-environments-stack" },
-            draftEnvironment.documentation.length > 0
-              ? draftEnvironment.documentation.map((document, index) =>
-                  React.createElement("div", { className: "playground-environments-mcp-card playground-environments-editor-surface", key: document.id || index },
-                    React.createElement("div", { className: "playground-environments-inline-row" },
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-environments-input",
-                        value: document.name,
-                        onChange: (event) => updateDocumentationFile(index, (current) => ({
-                          ...current,
-                          name: event.target.value,
-                        })),
-                        placeholder: "README.md",
-                      }),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-remove-button",
-                        onClick: () => removeDocumentationFile(index),
-                        "aria-label": "Remove context file",
-                      }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                    ),
-                    React.createElement("textarea", {
-                      className: "playground-environments-textarea",
-                      rows: 6,
-                      value: document.content,
-                      onChange: (event) => updateDocumentationFile(index, (current) => ({
-                        ...current,
-                        content: event.target.value,
-                      })),
-                      placeholder: "File content...",
-                    })
-                  )
-                )
-              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No context files configured.")
-          );
-
-          const dockerfileSection = React.createElement("div", { className: "playground-environments-editor-surface playground-environments-editor-surface-stack" },
-            React.createElement("label", { className: "playground-environments-field" },
-              React.createElement("span", { className: "playground-environments-field-label" }, "Dockerfile Extensions"),
+          const dockerfileSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-environments-dockerfile-extension-section" },
+            React.createElement("div", { className: "playground-tasks-detail-description-editor is-editing" },
               React.createElement("textarea", {
-                className: "playground-environments-textarea",
-                rows: 6,
-                value: draftEnvironment.dockerfileExtensions || "",
-                onChange: (event) => updateEnvironmentField("dockerfileExtensions", event.target.value),
+                ref: environmentDockerfileTextareaRef,
+                className: "playground-tasks-detail-description-input is-editing playground-environments-dockerfile-extension-input",
+                rows: 1,
                 placeholder: "RUN apt-get update && apt-get install -y custom-tool",
+                value: draftEnvironment.dockerfileExtensions || "",
+                onChange: (event) => {
+                  updateEnvironmentField("dockerfileExtensions", event.target.value);
+                  resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                },
+                onBlur: commitDraftEnvironmentIfDirty,
               })
-            ),
-            dockerfileState.error
-              ? React.createElement("div", { className: "playground-environments-error" }, dockerfileState.error)
-              : null,
-            generatedDockerfile
-              ? React.createElement("pre", { className: "playground-environments-dockerfile-preview" }, generatedDockerfile)
-              : React.createElement("div", { className: "playground-environments-empty-copy" },
-                  selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID
-                    ? "Save the environment first to generate the Dockerfile preview."
-                    : "Open or refresh this section to load the generated Dockerfile."
-                )
+            )
           );
 
           return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: environmentDetailMainRef },
@@ -24622,48 +24478,12 @@ const html = `<!doctype html>
                 }, "Add Script"),
                 false
               ),
-              renderEditorSection("git", "Git Repository", "", gitSection, null, false),
-              renderEditorSection(
-                "docs",
-                "Context Files",
-                "",
-                contextFilesSection,
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button playground-tasks-skills-manage-button",
-                  onClick: addDocumentationFile,
-                }, "Add File"),
-                false
-              ),
               renderEditorSection(
                 "dockerfile",
-                "Dockerfile",
+                "Dockerfile Extension",
                 "",
                 dockerfileSection,
-                React.createElement("div", { className: "playground-environments-dockerfile-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: () => selectedEnvironmentId && selectedEnvironmentId !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
-                      ? void loadDockerfilePreview(selectedEnvironmentId)
-                      : null,
-                    disabled: !selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID || dockerfileState.isLoading,
-                  },
-                    React.createElement(RefreshCw, {
-                      width: 14,
-                      height: 14,
-                      strokeWidth: 1.8,
-                      className: dockerfileState.isLoading ? "playground-environments-spin" : "",
-                    }),
-                    React.createElement("span", null, dockerfileState.isLoading ? "Loading..." : "Refresh")
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: copyDockerfilePreview,
-                    disabled: !generatedDockerfile,
-                  }, dockerfileState.copied ? "Copied" : "Copy")
-                ),
+                null,
                 false
               ),
             )
