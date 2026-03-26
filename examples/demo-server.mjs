@@ -720,6 +720,24 @@ const html = `<!doctype html>
         gap: 6px;
       }
 
+      .sidebar-thread-project-icon {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        border-radius: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.84);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .sidebar-thread-project-icon svg {
+        width: 10px;
+        height: 10px;
+      }
+
       .sidebar-thread-title {
         min-width: 0;
         flex: 1;
@@ -14367,6 +14385,28 @@ const html = `<!doctype html>
       }
 
       function normalizeThreadItem(thread) {
+        const rawId = typeof thread?.id === "string"
+          ? thread.id
+          : typeof thread?.id === "number"
+            ? String(thread.id)
+            : "";
+        const rawTitle = typeof thread?.title === "string"
+          ? thread.title
+          : typeof thread?.title === "number"
+            ? String(thread.title)
+            : "";
+        const rawStatus = typeof thread?.status === "string"
+          ? thread.status
+          : typeof thread?.status === "number"
+            ? String(thread.status)
+            : "";
+        const rawCreatedAt = typeof thread?.createdAt === "string" ? thread.createdAt : "";
+        const rawUpdatedAt = typeof thread?.updatedAt === "string" ? thread.updatedAt : "";
+        const rawNextRunAt = typeof thread?.nextRunAt === "string"
+          ? thread.nextRunAt
+          : typeof thread?.scheduledTime === "string"
+            ? thread.scheduledTime
+            : "";
         const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
           ? thread.metadata
           : {};
@@ -14374,18 +14414,43 @@ const html = `<!doctype html>
           ? metadata.runnerPlayground
           : {};
         return {
-          id: thread.id,
-          title: thread.title || "Untitled thread",
-          status: thread.status || "",
+          id: rawId || generateId("thread"),
+          title: rawTitle || "Untitled thread",
+          status: rawStatus,
           messageCount: Number.isFinite(thread.messageCount) ? thread.messageCount : 0,
-          createdAt: thread.createdAt || "",
-          updatedAt: thread.updatedAt || "",
-          nextRunAt: thread.nextRunAt || thread.scheduledTime || "",
-          isScheduled: Boolean(thread.nextRunAt || thread.scheduledTime),
+          createdAt: rawCreatedAt,
+          updatedAt: rawUpdatedAt,
+          nextRunAt: rawNextRunAt,
+          isScheduled: Boolean(rawNextRunAt),
           metadata,
           isPinned: Boolean(runnerPlaygroundMetadata.pinnedInSidebar),
           pinnedAt: typeof runnerPlaygroundMetadata.pinnedAt === "string" ? runnerPlaygroundMetadata.pinnedAt : "",
         };
+      }
+
+      function normalizeThreadList(items) {
+        const next = [];
+        const seenIds = new Set();
+
+        (Array.isArray(items) ? items : []).forEach((item) => {
+          try {
+            const normalizedThread = normalizeThreadItem(item);
+            const normalizedId = typeof normalizedThread?.id === "string" ? normalizedThread.id.trim() : "";
+            const threadId = normalizedId || generateId("thread");
+            if (seenIds.has(threadId)) {
+              return;
+            }
+            seenIds.add(threadId);
+            next.push({
+              ...normalizedThread,
+              id: threadId,
+            });
+          } catch (error) {
+            console.error("Failed to normalize thread item", error, item);
+          }
+        });
+
+        return next;
       }
 
       function getThreadPinnedSortTimestamp(thread) {
@@ -25469,9 +25534,20 @@ const html = `<!doctype html>
             .filter((skill) => !skill.isDefault && !skill.isSystem)
             .map((skill) => ({
               id: skill.id,
-              name: skill.name,
+              name: typeof skill.name === "string" && skill.name.trim() ? skill.name.trim() : skill.id,
               description: skill.description || "",
               icon: typeof skill.icon === "string" ? skill.icon : null,
+              markdown: typeof skill.markdown === "string" ? skill.markdown : "",
+              codeFiles: Array.isArray(skill.codeFiles)
+                ? skill.codeFiles
+                    .filter((file) => file && typeof file === "object")
+                    .map((file) => ({
+                      name: typeof file.name === "string" ? file.name : "",
+                      content: typeof file.content === "string" ? file.content : "",
+                      language: typeof file.language === "string" ? file.language : undefined,
+                    }))
+                    .filter((file) => file.name)
+                : [],
               isCustom: true,
               enabled: true,
             }));
@@ -26084,7 +26160,33 @@ const html = `<!doctype html>
           });
           const customSkillIds = enabledSkillIds.filter((skillId) => !defaultSkillMap[skillId]);
           if (customSkillIds.length > 0) {
-            payload.customSkills = customSkillIds;
+            payload.customSkills = customSkillIds
+              .map((skillId) => {
+                const matchingSkill = projectCustomSkills.find((skill) => skill?.id === skillId) || null;
+                if (!matchingSkill) {
+                  return null;
+                }
+
+                return {
+                  id: matchingSkill.id,
+                  name: typeof matchingSkill.name === "string" && matchingSkill.name.trim()
+                    ? matchingSkill.name.trim()
+                    : matchingSkill.id,
+                  description: typeof matchingSkill.description === "string" ? matchingSkill.description : "",
+                  markdown: typeof matchingSkill.markdown === "string" ? matchingSkill.markdown : "",
+                  codeFiles: Array.isArray(matchingSkill.codeFiles)
+                    ? matchingSkill.codeFiles
+                        .filter((file) => file && typeof file === "object")
+                        .map((file) => ({
+                          name: typeof file.name === "string" ? file.name : "",
+                          content: typeof file.content === "string" ? file.content : "",
+                          language: typeof file.language === "string" ? file.language : undefined,
+                        }))
+                        .filter((file) => file.name)
+                    : [],
+                };
+              })
+              .filter((skill) => skill && Array.isArray(skill.codeFiles));
           }
           return payload;
         }
@@ -38045,8 +38147,6 @@ const html = `<!doctype html>
             return "";
           }
         }, [resolvedUpstreamUrl]);
-        const threadFetchLimit = useMemo(() => Math.max(20, threadDisplayCount + 10), [threadDisplayCount]);
-
         const refreshThreads = useCallback(async function refreshThreads(limitOverride) {
           if (!hasRealAccess) {
             setRealThreads([]);
@@ -38057,7 +38157,7 @@ const html = `<!doctype html>
           const requestedLimit =
             Number.isFinite(limitOverride) && limitOverride > 0
               ? Math.max(1, Math.round(limitOverride))
-              : threadFetchLimit;
+              : 20;
 
           setIsThreadsLoading(true);
           try {
@@ -38074,7 +38174,7 @@ const html = `<!doctype html>
             }
 
             const items = Array.isArray(data?.data) ? data.data : Array.isArray(data?.threads) ? data.threads : [];
-            setRealThreads(items.map(normalizeThreadItem));
+            setRealThreads(normalizeThreadList(items));
             setRealThreadsHasMore(Boolean(data?.has_more) || items.length >= requestedLimit);
           } catch {
             setRealThreads([]);
@@ -38082,7 +38182,18 @@ const html = `<!doctype html>
           } finally {
             setIsThreadsLoading(false);
           }
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, threadFetchLimit]);
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase]);
+
+        const handleShowMoreThreads = useCallback(async function handleShowMoreThreads() {
+          const nextDisplayCount = threadDisplayCount + 10;
+          setThreadDisplayCount(nextDisplayCount);
+          if (!hasRealAccess || isThreadsLoading) {
+            return;
+          }
+          if (realThreadsHasMore && realThreads.length < nextDisplayCount) {
+            void refreshThreads(Math.max(20, nextDisplayCount + 10));
+          }
+        }, [hasRealAccess, isThreadsLoading, realThreads.length, realThreadsHasMore, refreshThreads, threadDisplayCount]);
 
         const updateRealThreadStatus = useCallback(function updateRealThreadStatus(threadId, nextStatus) {
           const normalizedThreadId = String(threadId || "").trim();
@@ -41194,7 +41305,7 @@ const html = `<!doctype html>
         }, [hasRealAccess, refreshAgents]);
 
         useEffect(() => {
-          void refreshThreads();
+          void refreshThreads(20);
         }, [refreshThreads]);
 
         useEffect(() => {
@@ -41751,56 +41862,106 @@ const html = `<!doctype html>
         }
 
         function renderSidebarThreadRow(thread, options = {}) {
-          const { pinned = false } = options;
-          const isActive = activeSidebarThreadId === thread.id;
-          const isRunning = String(thread?.status || "").trim().toLowerCase() === "running";
-          const isMenuOpen = threadActionMenuState?.threadId === thread.id;
-          const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === thread.id;
-          const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === thread.id;
+          try {
+            const { pinned = false } = options;
+            const safeThread = normalizeThreadItem(thread);
+            const safeThreadId = typeof safeThread.id === "string" && safeThread.id.trim() ? safeThread.id.trim() : generateId("thread");
+            const safeThreadTitle = typeof safeThread.title === "string" && safeThread.title.trim() ? safeThread.title.trim() : "Untitled thread";
+            const isActive = activeSidebarThreadId === safeThreadId;
+            const isRunning = String(safeThread?.status || "").trim().toLowerCase() === "running";
+            const isMenuOpen = threadActionMenuState?.threadId === safeThreadId;
+            const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === safeThreadId;
+            const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === safeThreadId;
+            const runnerPlaygroundMetadata = safeThread?.metadata?.runnerPlayground && typeof safeThread.metadata.runnerPlayground === "object" && !Array.isArray(safeThread.metadata.runnerPlayground)
+              ? safeThread.metadata.runnerPlayground
+              : null;
+            const taskPreview = runnerPlaygroundMetadata?.taskPreview && typeof runnerPlaygroundMetadata.taskPreview === "object" && !Array.isArray(runnerPlaygroundMetadata.taskPreview)
+              ? runnerPlaygroundMetadata.taskPreview
+              : null;
+            const threadProjectId = typeof taskPreview?.projectId === "string" ? taskPreview.projectId.trim() : "";
+            const threadProject = threadProjectId ? (projectsById[threadProjectId] || null) : null;
+            const threadProjectIconConfig = threadProjectId
+              ? getPlaygroundProjectIconConfig(threadProject?.icon || "rocket")
+              : null;
+            const ThreadProjectIcon = typeof threadProjectIconConfig?.icon === "function"
+              ? threadProjectIconConfig.icon
+              : Rocket;
+            const threadProjectTitle = typeof threadProject?.name === "string" && threadProject.name.trim()
+              ? threadProject.name.trim()
+              : "Project";
 
-          return React.createElement("div", {
-            key: thread.id,
-            className: (pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (isActive ? " is-active" : ""),
-          },
-            pinned
-              ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
-              : null,
-            React.createElement("button", {
-              type: "button",
-              className: "sidebar-thread-main",
-              onClick: () => handleThreadSelect(thread.id),
+            return React.createElement("div", {
+              key: safeThreadId,
+              className: (pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (isActive ? " is-active" : ""),
             },
-              React.createElement("div", { className: "sidebar-thread-content" },
-                React.createElement("div", { className: "sidebar-thread-title-row" },
-                  isRunning
-                    ? React.createElement(Loader2, { className: "sidebar-thread-running-indicator", strokeWidth: 1.9 })
-                    : null,
-                  React.createElement("span", { className: "sidebar-thread-title" }, thread.title)
+              pinned
+                ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
+                : null,
+              React.createElement("button", {
+                type: "button",
+                className: "sidebar-thread-main",
+                onClick: () => handleThreadSelect(safeThreadId),
+              },
+                React.createElement("div", { className: "sidebar-thread-content" },
+                  React.createElement("div", { className: "sidebar-thread-title-row" },
+                    threadProjectId
+                      ? React.createElement("span", {
+                          className: "sidebar-thread-project-icon",
+                          title: threadProjectTitle,
+                        }, React.createElement(ThreadProjectIcon, { strokeWidth: 1.85 }))
+                      : null,
+                    isRunning
+                      ? React.createElement(Loader2, { className: "sidebar-thread-running-indicator", strokeWidth: 1.9 })
+                      : null,
+                    React.createElement("span", { className: "sidebar-thread-title" }, safeThreadTitle)
+                  )
+                )
+              ),
+              React.createElement("div", { className: "sidebar-thread-side" },
+                isActive
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
+                      onClick: (event) => openThreadActionMenu(event, safeThreadId),
+                      "aria-label": "Thread actions",
+                      "aria-expanded": isMenuOpen ? "true" : "false",
+                      disabled: isDeleting || isPinMutating,
+                    },
+                      isDeleting || isPinMutating
+                        ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
+                        : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
+                    )
+                  : React.createElement("span", { className: "sidebar-thread-meta" },
+                      threadMetaLabel(safeThread)
+                        ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadMetaLabel(safeThread))
+                        : null,
+                      React.createElement("span", { className: "sidebar-thread-meta-neutral" }, formatRelativeThreadTime(safeThread.nextRunAt || safeThread.createdAt || safeThread.updatedAt))
+                    )
+              )
+            );
+          } catch (error) {
+            const fallbackThread = normalizeThreadItem(thread);
+            console.error("Failed to render sidebar thread row", error, thread);
+            return React.createElement("div", {
+              key: fallbackThread.id,
+              className: (options?.pinned ? "sidebar-pinned-button" : "sidebar-thread-item"),
+            },
+              options?.pinned
+                ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
+                : null,
+              React.createElement("button", {
+                type: "button",
+                className: "sidebar-thread-main",
+                onClick: () => handleThreadSelect(fallbackThread.id),
+              },
+                React.createElement("div", { className: "sidebar-thread-content" },
+                  React.createElement("div", { className: "sidebar-thread-title-row" },
+                    React.createElement("span", { className: "sidebar-thread-title" }, fallbackThread.title || "Untitled thread")
+                  )
                 )
               )
-            ),
-            React.createElement("div", { className: "sidebar-thread-side" },
-              isActive
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
-                    onClick: (event) => openThreadActionMenu(event, thread.id),
-                    "aria-label": "Thread actions",
-                    "aria-expanded": isMenuOpen ? "true" : "false",
-                    disabled: isDeleting || isPinMutating,
-                  },
-                    isDeleting || isPinMutating
-                      ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
-                      : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
-                  )
-                : React.createElement("span", { className: "sidebar-thread-meta" },
-                    threadMetaLabel(thread)
-                      ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadMetaLabel(thread))
-                      : null,
-                    React.createElement("span", { className: "sidebar-thread-meta-neutral" }, formatRelativeThreadTime(thread.nextRunAt || thread.createdAt || thread.updatedAt))
-                  )
-            )
-          );
+            );
+          }
         }
 
         function renderThreadActionMenu() {
@@ -42097,7 +42258,7 @@ const html = `<!doctype html>
                         ? React.createElement("button", {
                             type: "button",
                             className: "sidebar-show-more",
-                            onClick: () => setThreadDisplayCount((current) => current + 10)
+                            onClick: () => void handleShowMoreThreads()
                           }, "Show more threads")
                         : null
                     )
