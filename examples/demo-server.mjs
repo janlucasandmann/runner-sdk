@@ -11537,6 +11537,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 8px;
+        flex: 1 1 auto;
         min-width: 0;
       }
 
@@ -11562,6 +11563,11 @@ const html = `<!doctype html>
         text-align: right;
       }
 
+      .playground-tasks-release-header-meta.is-inline {
+        justify-content: flex-start;
+        text-align: left;
+      }
+
       .playground-tasks-release-name-pill {
         display: inline-flex;
         align-items: center;
@@ -11575,9 +11581,16 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-release-backlog-copy {
+        display: block;
+        width: 100%;
         font-size: 12px;
         line-height: 1.45;
         color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-tasks-backlog-heading-count {
+        position: relative;
+        top: -2px;
       }
 
       .playground-tasks-backlog-empty {
@@ -33127,20 +33140,17 @@ const html = `<!doctype html>
                   React.createElement("div", { className: "playground-tasks-release-backlog-title-row" },
                     React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
                       React.createElement("div", { className: "playground-tasks-backlog-heading" }, selectedRelease.name || "Release"),
-                      React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, "(" + openScopedBacklogTaskCount + " Tasks)")
-                    ),
-                    renderReleaseHeaderMeta(selectedRelease, {
-                      className: "playground-tasks-release-header-meta",
-                      dateClassName: "playground-tasks-release-header-date",
-                    })
-                  ),
-                  selectedRelease.description
-                    ? React.createElement("div", { className: "playground-tasks-release-backlog-copy" }, selectedRelease.description)
-                    : null
+                      React.createElement("span", { className: "playground-tasks-board-release-box-count playground-tasks-backlog-heading-count" }, String(openScopedBacklogTaskCount)),
+                      renderReleaseHeaderMeta(selectedRelease, {
+                        className: "playground-tasks-release-header-meta is-inline",
+                        dateClassName: "playground-tasks-release-header-date",
+                      })
+                    )
+                  )
                 )
               : React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
                   React.createElement("div", { className: "playground-tasks-backlog-heading" }, "Backlog"),
-                  React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, "(" + openScopedBacklogTaskCount + " Tasks)")
+                  React.createElement("span", { className: "playground-tasks-board-release-box-count playground-tasks-backlog-heading-count" }, String(openScopedBacklogTaskCount))
                 ),
             toolbarRef: backlogToolbarActionsRef,
             toolbarPopover: backlogToolbarPopover,
