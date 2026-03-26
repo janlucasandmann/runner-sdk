@@ -9579,9 +9579,12 @@ export function RunnerChat({
                         }}
                       >
                         <div className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</div>
-                        <div className="tb-task-preview-card-description">
-                          {String(taskPreviewForTurn.description || "").trim() || "No description"}
-                        </div>
+                        <RunnerMarkdown
+                          content={String(taskPreviewForTurn.description || "").trim() || "No description"}
+                          className="tb-task-preview-card-description tb-message-markdown"
+                          softBreaks
+                          disallowHeadings
+                        />
                         <div className="tb-task-preview-card-bottom">
                           <div className="tb-task-preview-card-meta-left">
                             <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
@@ -9736,9 +9739,12 @@ export function RunnerChat({
                               }}
                             >
                               <div className="tb-task-preview-title">{taskPreviewForTurn.title || "Untitled Task"}</div>
-                              <div className="tb-task-preview-card-description">
-                                {String(taskPreviewForTurn.description || "").trim() || "No description"}
-                              </div>
+                              <RunnerMarkdown
+                                content={String(taskPreviewForTurn.description || "").trim() || "No description"}
+                                className="tb-task-preview-card-description tb-message-markdown"
+                                softBreaks
+                                disallowHeadings
+                              />
                               <div className="tb-task-preview-card-bottom">
                                 <div className="tb-task-preview-card-meta-left">
                                   <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreviewForTurn.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>

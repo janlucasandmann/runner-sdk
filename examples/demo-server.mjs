@@ -9004,8 +9004,62 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 4px;
-        padding: 1px 0 12px;
-        border-bottom: 0;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 5px 10px;
+        border-radius: 8px;
+      }
+
+      .playground-tasks-detail-facts .playground-tasks-detail-section-title {
+        margin-bottom: 6px;
+      }
+
+      .playground-tasks-detail-facts-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+
+      .playground-tasks-detail-facts-header .playground-tasks-detail-section-title {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+
+      .playground-tasks-detail-facts-toggle {
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.58);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-tasks-detail-facts-toggle:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-tasks-detail-facts-toggle svg {
+        transition: transform 160ms ease;
+      }
+
+      .playground-tasks-detail-facts-toggle.is-collapsed svg {
+        transform: rotate(-90deg);
+      }
+
+      .playground-tasks-detail-facts-body {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
       }
 
       .playground-tasks-detail-fact {
@@ -9329,6 +9383,23 @@ const html = `<!doctype html>
         padding: 2px 0 0;
       }
 
+      .playground-tasks-detail-description-editor {
+        position: relative;
+        min-height: 36px;
+      }
+
+      .playground-tasks-detail-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .playground-tasks-detail-section-header .playground-tasks-detail-section-title {
+        margin-bottom: 0;
+      }
+
       .playground-tasks-detail-section-title {
         margin: 0 0 10px;
         color: rgba(255, 255, 255, 0.92);
@@ -9337,31 +9408,124 @@ const html = `<!doctype html>
         line-height: 1.3;
       }
 
+      .playground-tasks-detail-format-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+
+      .playground-tasks-detail-format-button {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 150ms ease, color 150ms ease;
+      }
+
+      .playground-tasks-detail-format-button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tasks-detail-format-button:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+      }
+
       .playground-tasks-detail-description-input {
         display: block;
         width: 100%;
         min-width: 0;
-        min-height: 0;
+        min-height: 36px;
         padding: 0 0 14px;
         border: 0;
         border-radius: 0;
         outline: none;
         background: transparent;
-        color: rgba(255, 255, 255, 0.7);
+        color: transparent;
+        caret-color: rgba(255, 255, 255, 0.96);
         font-family: inherit;
         font-size: 12px;
         line-height: 1.6;
         box-sizing: border-box;
         resize: none;
         overflow: hidden;
+        position: relative;
+        z-index: 2;
+      }
+
+      .playground-tasks-detail-description-input.is-editing {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-tasks-detail-description-input.is-preview {
+        color: transparent;
       }
 
       .playground-tasks-detail-description-input::placeholder {
+        color: transparent;
+      }
+
+      .playground-tasks-detail-description-input.is-editing::placeholder {
         color: rgba(255, 255, 255, 0.38);
       }
 
       .playground-tasks-detail-description-input[readonly] {
         cursor: default;
+      }
+
+      .playground-tasks-detail-description-preview-scope.tb-runner-chat {
+        position: absolute;
+        inset: 0;
+        display: block;
+        grid-template-rows: none;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        flex: none;
+        overflow: visible;
+        background: transparent;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .playground-tasks-detail-description-editor.is-editing .playground-tasks-detail-description-preview-scope.tb-runner-chat {
+        display: none;
+      }
+
+      .playground-tasks-detail-description-preview {
+        padding: 0 0 14px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        line-height: 1.6;
+        min-height: 36px;
+      }
+
+      .playground-tasks-detail-description-preview.tb-message-markdown,
+      .playground-tasks-detail-description-preview .tb-message-markdown,
+      .playground-tasks-detail-description-preview .tb-message-markdown-paragraph,
+      .playground-tasks-detail-description-preview .tb-message-markdown-list,
+      .playground-tasks-detail-description-preview .tb-message-markdown-heading {
+        font-size: 12px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-tasks-detail-description-placeholder {
+        color: rgba(255, 255, 255, 0.38);
+      }
+
+      .playground-tasks-detail-markdown-underline {
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
       }
 
       .playground-tasks-attachments {
@@ -10720,6 +10884,14 @@ const html = `<!doctype html>
         padding-bottom: 0;
       }
 
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll:not(.is-calendar) {
+        scrollbar-width: none;
+      }
+
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll:not(.is-calendar)::-webkit-scrollbar {
+        display: none;
+      }
+
       .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll {
         padding: 0 18px 0;
         gap: 14px;
@@ -10900,8 +11072,13 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         overflow: auto;
+        scrollbar-width: none;
         gap: 8px;
         padding-top: 17px;
+      }
+
+      .playground-tasks-backlog-list::-webkit-scrollbar {
+        display: none;
       }
 
       .playground-tasks-backlog-item {
@@ -10909,9 +11086,9 @@ const html = `<!doctype html>
         width: 100%;
         min-width: 0;
         padding: 10px;
-        border: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 10px;
-        background: transparent;
+        background: rgba(255, 255, 255, 0.05);
         color: rgba(255, 255, 255, 0.72);
         text-align: left;
         cursor: pointer;
@@ -10948,7 +11125,7 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-backlog-item.is-subtask {
-        background: transparent;
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .playground-tasks-backlog-item.is-draggable {
@@ -11241,11 +11418,11 @@ const html = `<!doctype html>
         position: relative;
         flex: 0 0 auto;
         margin-left: 0;
-        width: 28px;
-        min-width: 28px;
-        height: 28px;
-        min-height: 28px;
-        max-height: 28px;
+        width: 24px;
+        min-width: 24px;
+        height: 24px;
+        min-height: 24px;
+        max-height: 24px;
         padding: 0;
         border: 0;
         border-radius: 999px;
@@ -11284,6 +11461,8 @@ const html = `<!doctype html>
       .playground-tasks-backlog-run-button svg {
         position: relative;
         z-index: 1;
+        width: 12px;
+        height: 12px;
       }
 
       .playground-tasks-backlog-run-button:hover:not(:disabled) {
@@ -11517,7 +11696,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 0;
-        padding: 16px 18px;
+        padding: 12px;
         border: 0;
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.05);
@@ -11552,9 +11731,11 @@ const html = `<!doctype html>
         font-weight: 500;
         color: white;
         min-width: 0;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: clip;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
         word-break: break-word;
         overflow-wrap: anywhere;
       }
@@ -11564,7 +11745,7 @@ const html = `<!doctype html>
       .playground-tasks-backlog-title.is-complete {
         text-decoration-line: line-through;
         text-decoration-thickness: 1px;
-        text-decoration-color: rgba(255, 255, 255, 0.55);
+        text-decoration-color: white;
       }
 
       .playground-tasks-card-copy,
@@ -11573,13 +11754,32 @@ const html = `<!doctype html>
         line-height: 1.45;
         color: rgba(255, 255, 255, 0.7);
         font-weight: 400;
-        white-space: pre-wrap;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
         word-break: break-word;
         overflow-wrap: anywhere;
       }
 
       .playground-tasks-lane-card-copy {
         margin-top: 4px;
+      }
+
+      .playground-tasks-lane-card-copy .tb-message-markdown-paragraph,
+      .playground-tasks-lane-card-copy .tb-message-markdown-list,
+      .playground-tasks-lane-card-copy .tb-message-markdown-heading {
+        margin: 0;
+        font-size: inherit;
+        line-height: inherit;
+        color: inherit;
+      }
+
+      .playground-tasks-lane-card-copy .tb-message-markdown-strong,
+      .playground-tasks-lane-card-copy .tb-message-markdown-em,
+      .playground-tasks-lane-card-copy .tb-message-markdown-inline-code,
+      .playground-tasks-lane-card-copy .tb-message-markdown-link {
+        color: inherit;
       }
 
       .playground-tasks-board-assignee-avatar {
@@ -11764,6 +11964,11 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 18px;
+        scrollbar-width: none;
+      }
+
+      .playground-tasks-board-sections::-webkit-scrollbar {
+        display: none;
       }
 
       .playground-tasks-board-release-section {
@@ -11824,11 +12029,44 @@ const html = `<!doctype html>
         min-width: 0;
         display: flex;
         flex-direction: column;
+        gap: 12px;
         min-height: 120px;
         padding: 12px;
         border-radius: 5px;
         background: rgba(255, 255, 255, 0.025);
         transition: background-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .playground-tasks-board-release-box-header {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-tasks-board-release-box-title {
+        min-width: 0;
+        font-size: 10px;
+        line-height: 1.2;
+        font-weight: 400;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      .playground-tasks-board-release-box-count {
+        min-width: 20px;
+        height: 20px;
+        padding: 0 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 500;
       }
 
       .playground-tasks-lane {
@@ -13070,6 +13308,7 @@ const html = `<!doctype html>
           "lucide-react": "https://esm.sh/lucide-react@0.547.0?external=react",
           "react-big-calendar": "https://esm.sh/react-big-calendar@1.19.4?bundle&external=react,react-dom",
           "react-markdown": "https://esm.sh/react-markdown@10.1.0?bundle&external=react",
+          "rehype-raw": "https://esm.sh/rehype-raw@7.0.0?bundle",
           "remark-gfm": "https://esm.sh/remark-gfm@4.0.1?bundle",
           "unist-util-visit": "https://esm.sh/unist-util-visit@5.0.0"
         }
@@ -13085,7 +13324,11 @@ const html = `<!doctype html>
       import { format, getDay, parse, startOfWeek } from "date-fns";
       import * as enUSLocale from "date-fns/locale/en-US";
       import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Key, Layers, LayoutGrid, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
+      import ReactMarkdown from "react-markdown";
+      import rehypeRaw from "rehype-raw";
+      import remarkGfm from "remark-gfm";
+      import { visit as unistVisit } from "unist-util-visit";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -13103,6 +13346,79 @@ const html = `<!doctype html>
         getDay,
         locales: PLAYGROUND_CALENDAR_LOCALES,
       });
+
+      function remarkPlaygroundSoftbreaksToBreaks() {
+        return (tree) => {
+          unistVisit(tree, "text", (node, index, parent) => {
+            if (!parent || typeof index !== "number") return;
+            if (!node?.value || typeof node.value !== "string" || !node.value.includes("\\n")) return;
+
+            const parts = node.value.split("\\n");
+            const replacement = [];
+            for (let partIndex = 0; partIndex < parts.length; partIndex += 1) {
+              if (parts[partIndex]) replacement.push({ type: "text", value: parts[partIndex] });
+              if (partIndex < parts.length - 1) replacement.push({ type: "break" });
+            }
+
+            parent.children.splice(index, 1, ...replacement);
+            return index + replacement.length;
+          });
+        };
+      }
+
+      const playgroundMarkdownComponents = {
+        p: ({ node, ...props }) => React.createElement("p", { className: "tb-message-markdown-paragraph", ...props }),
+        strong: ({ node, ...props }) => React.createElement("strong", { className: "tb-message-markdown-strong", ...props }),
+        em: ({ node, ...props }) => React.createElement("em", { className: "tb-message-markdown-em", ...props }),
+        code: ({ node, className, ...props }) => React.createElement("code", {
+          className: className ? "tb-message-markdown-code" : "tb-message-markdown-inline-code",
+          ...props,
+        }),
+        pre: ({ node, ...props }) => React.createElement("pre", { className: "tb-message-markdown-pre", ...props }),
+        ul: ({ node, ...props }) => React.createElement("ul", { className: "tb-message-markdown-list", ...props }),
+        ol: ({ node, ...props }) => React.createElement("ol", { className: "tb-message-markdown-list tb-message-markdown-list-ordered", ...props }),
+        li: ({ node, ...props }) => React.createElement("li", { className: "tb-message-markdown-list-item", ...props }),
+        h1: ({ node, ...props }) => React.createElement("h1", { className: "tb-message-markdown-heading", ...props }),
+        h2: ({ node, ...props }) => React.createElement("h2", { className: "tb-message-markdown-heading", ...props }),
+        h3: ({ node, ...props }) => React.createElement("h3", { className: "tb-message-markdown-heading", ...props }),
+        h4: ({ node, ...props }) => React.createElement("h4", { className: "tb-message-markdown-heading", ...props }),
+        a: ({ node, ...props }) => React.createElement("a", { className: "tb-message-markdown-link", target: "_blank", rel: "noopener noreferrer", ...props }),
+        blockquote: ({ node, ...props }) => React.createElement("blockquote", { className: "tb-message-markdown-quote", ...props }),
+        table: ({ node, ...props }) => React.createElement("div", { className: "tb-message-markdown-table-wrap" },
+          React.createElement("table", { className: "tb-message-markdown-table", ...props })
+        ),
+        thead: ({ node, ...props }) => React.createElement("thead", { className: "tb-message-markdown-thead", ...props }),
+        tbody: ({ node, ...props }) => React.createElement("tbody", props),
+        tr: ({ node, ...props }) => React.createElement("tr", { className: "tb-message-markdown-row", ...props }),
+        th: ({ node, ...props }) => React.createElement("th", { className: "tb-message-markdown-th", ...props }),
+        td: ({ node, ...props }) => React.createElement("td", { className: "tb-message-markdown-td", ...props }),
+        hr: ({ node, ...props }) => React.createElement("hr", { className: "tb-message-markdown-rule", ...props }),
+        img: ({ node, ...props }) => React.createElement("img", { className: "tb-message-markdown-image", ...props }),
+        u: ({ node, ...props }) => React.createElement("u", { className: "playground-tasks-detail-markdown-underline", ...props }),
+      };
+
+      function escapePlaygroundMarkdownHtml(text) {
+        return String(text || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function prepareTaskDescriptionMarkdown(content) {
+        return escapePlaygroundMarkdownHtml(content)
+          .replace(/&lt;u&gt;([\\s\\S]*?)&lt;\\/u&gt;/g, "<u>$1</u>")
+          .replace(/\\+\\+([\\s\\S]*?)\\+\\+/g, "<u>$1</u>");
+      }
+
+      function PlaygroundTaskDescriptionMarkdown({ content, className }) {
+        return React.createElement("div", { className },
+          React.createElement(ReactMarkdown, {
+            remarkPlugins: [remarkGfm, remarkPlaygroundSoftbreaksToBreaks],
+            rehypePlugins: [rehypeRaw],
+            components: playgroundMarkdownComponents,
+          }, prepareTaskDescriptionMarkdown(content))
+        );
+      }
 
       const STATUS_INDICATOR_PENDING_STORAGE_KEY = "runner_demo_pending_status_indicators_v1";
       const INTEGRATION_STATUS_STORAGE_KEY = "runner_demo_integration_status_v1";
@@ -15743,12 +16059,23 @@ const html = `<!doctype html>
       }
 
       function formatPlaygroundTaskReleaseDateRange(release) {
-        const startLabel = release?.startAt ? formatPlaygroundFileDate(release.startAt) : "";
-        const endLabel = release?.endAt ? formatPlaygroundFileDate(release.endAt) : "";
+        const startDate = release?.startAt ? new Date(release.startAt) : null;
+        const endDate = release?.endAt ? new Date(release.endAt) : null;
+        const startLabel = startDate && !Number.isNaN(startDate.getTime()) ? format(startDate, "MMM d, yyyy") : "";
+        const endLabel = endDate && !Number.isNaN(endDate.getTime()) ? format(endDate, "MMM d, yyyy") : "";
         if (startLabel && endLabel) {
+          if (startLabel === endLabel) {
+            return startLabel;
+          }
           return startLabel + " - " + endLabel;
         }
-        return startLabel || endLabel || "No dates";
+        if (startLabel) {
+          return "Starts " + startLabel;
+        }
+        if (endLabel) {
+          return "Ends " + endLabel;
+        }
+        return "No dates";
       }
 
       function getPlaygroundTaskReleaseDeadlineLabel(release) {
@@ -24797,6 +25124,8 @@ const html = `<!doctype html>
         });
         const [selectedTaskId, setSelectedTaskId] = useState("");
         const [draftTask, setDraftTask] = useState(null);
+        const [isTaskDescriptionEditing, setIsTaskDescriptionEditing] = useState(false);
+        const [taskDetailsCollapsed, setTaskDetailsCollapsed] = useState(false);
         const [taskTitleInputValue, setTaskTitleInputValue] = useState("");
         const [backlogEditingTaskId, setBacklogEditingTaskId] = useState("");
         const [backlogTitleInputValue, setBacklogTitleInputValue] = useState("");
@@ -26662,6 +26991,138 @@ const html = `<!doctype html>
           textarea.style.height = nextHeight + "px";
         }
 
+        function applyTaskDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateDraftField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = taskDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          if (safeStart !== safeEnd) {
+            if (
+              selectedText.startsWith(prefix)
+              && selectedText.endsWith(suffix)
+              && selectedText.length >= prefix.length + suffix.length
+            ) {
+              const unwrappedText = selectedText.slice(prefix.length, selectedText.length - suffix.length);
+              const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
+              return {
+                value: nextValue,
+                selectionStart: safeStart,
+                selectionEnd: safeStart + unwrappedText.length,
+              };
+            }
+
+            const surroundingPrefix = value.slice(Math.max(0, safeStart - prefix.length), safeStart);
+            const surroundingSuffix = value.slice(safeEnd, safeEnd + suffix.length);
+            if (surroundingPrefix === prefix && surroundingSuffix === suffix) {
+              const nextValue =
+                value.slice(0, safeStart - prefix.length)
+                + selectedText
+                + value.slice(safeEnd + suffix.length);
+              return {
+                value: nextValue,
+                selectionStart: safeStart - prefix.length,
+                selectionEnd: safeStart - prefix.length + selectedText.length,
+              };
+            }
+
+            const wrappedText = prefix + selectedText + suffix;
+            const nextValue = value.slice(0, safeStart) + wrappedText + value.slice(safeEnd);
+            return {
+              value: nextValue,
+              selectionStart: safeStart + prefix.length,
+              selectionEnd: safeStart + prefix.length + selectedText.length,
+            };
+          }
+
+          const insertedText = prefix + suffix;
+          const nextValue = value.slice(0, safeStart) + insertedText + value.slice(safeEnd);
+          return {
+            value: nextValue,
+            selectionStart: safeStart + prefix.length,
+            selectionEnd: safeStart + prefix.length,
+          };
+        }
+
+        function buildTaskDescriptionListEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
+          let lineEnd = value.indexOf("\\n", safeEnd);
+          if (lineEnd === -1) {
+            lineEnd = value.length;
+          }
+          const block = value.slice(lineStart, lineEnd);
+          const lines = block.split("\\n");
+          const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => /^(\\s*)-\\s+/.test(line));
+          const nextLines = lines.map((line) => {
+            if (!line.trim()) {
+              return shouldRemoveList ? line : "- ";
+            }
+            if (shouldRemoveList) {
+              return line.replace(/^(\\s*)-\\s+/, "$1");
+            }
+            if (/^(\\s*)-\\s+/.test(line)) {
+              return line;
+            }
+            return line.replace(/^(\\s*)/, "$1- ");
+          });
+          const nextBlock = nextLines.join("\\n");
+          const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
+          const collapsedSelection = safeStart === safeEnd;
+          const nextCaretOffset = shouldRemoveList
+            ? Math.max(0, safeStart - lineStart - 2)
+            : safeStart - lineStart + 2;
+          return {
+            value: nextValue,
+            selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
+            selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+
+        function handleTaskDescriptionFormat(formatType) {
+          const textarea = taskDescriptionTextareaRef.current;
+          const isDescriptionLocked = Boolean(getTaskStartedThreadId(draftTask));
+          if (!textarea || !draftTask?.id || isDescriptionLocked) {
+            return;
+          }
+          const value = String(draftTask?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyTaskDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
         function buildProjectScheduleDraft(projectRecord = selectedProject) {
           const base = buildPlaygroundDefaultScheduleDraft();
           const defaultEnvironment = availableBacklogEnvironments.find((environment) => environment.isDefault) || availableBacklogEnvironments[0] || null;
@@ -27776,6 +28237,11 @@ const html = `<!doctype html>
 
         useEffect(() => {
           setTaskCommentInputValue("");
+        }, [draftTask?.id]);
+
+        useEffect(() => {
+          setIsTaskDescriptionEditing(false);
+          setTaskDetailsCollapsed(false);
         }, [draftTask?.id]);
 
         useEffect(() => {
@@ -29561,7 +30027,7 @@ const html = `<!doctype html>
             ),
             normalizedRelease?.id
               ? React.createElement("button", {
-                  type: "button",
+                type: "button",
                   className: "playground-tasks-release-edit-button",
                   onClick: (event) => {
                     event.stopPropagation();
@@ -29569,7 +30035,7 @@ const html = `<!doctype html>
                   },
                   title: "Edit release",
                   "aria-label": "Edit release",
-                }, React.createElement(SquarePen, { width: 12, height: 12, strokeWidth: 1.9 }))
+                }, React.createElement(Ellipsis, { width: 12, height: 12, strokeWidth: 1.9 }))
               : null
           );
         }
@@ -32610,6 +33076,8 @@ const html = `<!doctype html>
 
         function renderBacklogView() {
           const isReleaseBacklogView = Boolean(selectedRelease);
+          const scopedBacklogTasks = isReleaseBacklogView ? projectReleaseTasks : tasks;
+          const openScopedBacklogTaskCount = scopedBacklogTasks.filter((task) => task.status !== "done").length;
           const activeBacklogFilterValue = isReleaseBacklogView ? releaseBacklogFilterMode : backlogFilterMode;
           const activeBacklogSortValue = isReleaseBacklogView ? releaseBacklogSortMode : backlogSortMode;
           const activeBacklogFilterOptionValue = isReleaseBacklogView ? activeReleaseBacklogFilterOption : activeBacklogFilterOption;
@@ -32657,7 +33125,10 @@ const html = `<!doctype html>
             headerContent: isReleaseBacklogView
               ? React.createElement("div", { className: "playground-tasks-release-backlog-header-main" },
                   React.createElement("div", { className: "playground-tasks-release-backlog-title-row" },
-                    React.createElement("div", { className: "playground-tasks-backlog-heading" }, selectedRelease.name || "Release"),
+                    React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
+                      React.createElement("div", { className: "playground-tasks-backlog-heading" }, selectedRelease.name || "Release"),
+                      React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, "(" + openScopedBacklogTaskCount + " Tasks)")
+                    ),
                     renderReleaseHeaderMeta(selectedRelease, {
                       className: "playground-tasks-release-header-meta",
                       dateClassName: "playground-tasks-release-header-date",
@@ -32667,7 +33138,10 @@ const html = `<!doctype html>
                     ? React.createElement("div", { className: "playground-tasks-release-backlog-copy" }, selectedRelease.description)
                     : null
                 )
-              : React.createElement("div", { className: "playground-tasks-backlog-heading" }, "Backlog"),
+              : React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
+                  React.createElement("div", { className: "playground-tasks-backlog-heading" }, "Backlog"),
+                  React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, "(" + openScopedBacklogTaskCount + " Tasks)")
+                ),
             toolbarRef: backlogToolbarActionsRef,
             toolbarPopover: backlogToolbarPopover,
             setToolbarPopover: setBacklogToolbarPopover,
@@ -33009,7 +33483,10 @@ const html = `<!doctype html>
                     ? renderAgentNameAvatar(assigneeName, "playground-tasks-board-assignee-avatar")
                     : null
                 ),
-                React.createElement("div", { className: "playground-tasks-lane-card-copy" }, taskDescription),
+                React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                  content: taskDescription,
+                  className: "playground-tasks-lane-card-copy tb-message-markdown",
+                }),
                 React.createElement("div", { className: "playground-tasks-lane-card-bottom" },
                   React.createElement("div", { className: "playground-tasks-lane-card-meta-left" },
                     React.createElement("div", {
@@ -33040,6 +33517,10 @@ const html = `<!doctype html>
                 key: section.key + ":" + lane.id,
                 className: "playground-tasks-board-release-box" + (isLaneDropTarget ? " is-drop-target" : ""),
               },
+              React.createElement("div", { className: "playground-tasks-board-release-box-header" },
+                React.createElement("div", { className: "playground-tasks-board-release-box-title" }, lane.label),
+                React.createElement("span", { className: "playground-tasks-board-release-box-count" }, String(laneTasks.length))
+              ),
               React.createElement("div", {
                   className: "playground-tasks-lane playground-tasks-board-release-lane-body",
                   onDragOver: (event) => {
@@ -33122,11 +33603,6 @@ const html = `<!doctype html>
             renderBoardToolbar(),
             shouldRenderBoardSections
               ? React.createElement(React.Fragment, null,
-                  React.createElement("div", { className: "playground-tasks-board-header" },
-                    PLAYGROUND_TASK_BOARD_LANES.map((lane) =>
-                      React.createElement("div", { key: lane.id, className: "playground-tasks-board-header-cell" }, lane.label)
-                    )
-                  ),
                   React.createElement("div", { className: "playground-tasks-board-sections" },
                     boardReleaseSections.map((section) => renderBoardSection(section))
                   )
@@ -33886,7 +34362,95 @@ const html = `<!doctype html>
                       )
                     )
                   : null,
+                React.createElement("div", { className: "playground-tasks-detail-description" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                      [
+                        {
+                          id: "bold",
+                          label: "Bold",
+                          icon: Bold,
+                        },
+                        {
+                          id: "italic",
+                          label: "Italic",
+                          icon: Italic,
+                        },
+                        {
+                          id: "underline",
+                          label: "Underline",
+                          icon: Underline,
+                        },
+                        {
+                          id: "list",
+                          label: "List",
+                          icon: List,
+                        },
+                      ].map((action) =>
+                        React.createElement("button", {
+                          key: action.id,
+                          type: "button",
+                          className: "playground-tasks-detail-format-button",
+                          title: action.label,
+                          "aria-label": action.label,
+                          disabled: isTaskConfigLocked,
+                          onMouseDown: (event) => event.preventDefault(),
+                          onClick: () => handleTaskDescriptionFormat(action.id),
+                        }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isTaskDescriptionEditing ? " is-editing" : " is-preview") },
+                    !isTaskDescriptionEditing
+                      ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                          String(draftTask.description || "").trim()
+                            ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                content: draftTask.description,
+                                className: "playground-tasks-detail-description-preview tb-message-markdown",
+                              })
+                            : React.createElement("div", {
+                                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                              }, "Add Description here")
+                        )
+                      : null,
+                    React.createElement("textarea", {
+                      ref: taskDescriptionTextareaRef,
+                      className: "playground-tasks-detail-description-input " + (isTaskDescriptionEditing ? "is-editing" : "is-preview"),
+                      rows: 1,
+                      placeholder: isTaskDescriptionEditing ? "Add Description here" : "",
+                      value: draftTask.description,
+                      readOnly: isTaskConfigLocked,
+                      onFocus: () => {
+                        if (!isTaskConfigLocked) {
+                          setIsTaskDescriptionEditing(true);
+                        }
+                      },
+                      onChange: (event) => {
+                        updateDraftField("description", event.target.value);
+                        resizeTaskDescriptionTextarea(event.currentTarget);
+                      },
+                      onBlur: () => {
+                        setIsTaskDescriptionEditing(false);
+                        commitDraftTaskIfDirty();
+                      },
+                    })
+                  )
+                ),
                 React.createElement("div", { className: "playground-tasks-detail-facts" },
+                React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-detail-facts-toggle" + (taskDetailsCollapsed ? " is-collapsed" : ""),
+                    onClick: () => setTaskDetailsCollapsed((current) => !current),
+                    title: taskDetailsCollapsed ? "Expand details" : "Collapse details",
+                    "aria-label": taskDetailsCollapsed ? "Expand details" : "Collapse details",
+                    "aria-expanded": taskDetailsCollapsed ? "false" : "true",
+                  }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
+                ),
+                !taskDetailsCollapsed
+                  ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Type"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
@@ -34031,24 +34595,9 @@ const html = `<!doctype html>
                       renderTaskScheduleDialog()
                     )
                   )
-                )
+                ))
+                  : null
               ),
-                React.createElement("div", { className: "playground-tasks-detail-description" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                  React.createElement("textarea", {
-                    ref: taskDescriptionTextareaRef,
-                    className: "playground-tasks-detail-description-input",
-                    rows: 1,
-                    placeholder: "Add Description here",
-                    value: draftTask.description,
-                    readOnly: isTaskConfigLocked,
-                    onChange: (event) => {
-                      updateDraftField("description", event.target.value);
-                      resizeTaskDescriptionTextarea(event.currentTarget);
-                    },
-                    onBlur: commitDraftTaskIfDirty,
-                  })
-                ),
                 React.createElement("div", { className: "playground-tasks-attachments" },
                   React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),

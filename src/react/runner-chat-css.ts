@@ -1124,9 +1124,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   font-size: 12px;
   font-weight: 500;
   line-height: 1.35;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
   word-break: break-word;
   overflow-wrap: anywhere;
 }
@@ -1179,9 +1181,28 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   font-size: 12px;
   line-height: 1.45;
   font-weight: 400;
-  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   word-break: break-word;
   overflow-wrap: anywhere;
+}
+
+.tb-runner-chat .tb-task-preview-card-description .tb-message-markdown-paragraph,
+.tb-runner-chat .tb-task-preview-card-description .tb-message-markdown-list,
+.tb-runner-chat .tb-task-preview-card-description .tb-message-markdown-heading {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.tb-runner-chat .tb-task-preview-card-description .tb-message-markdown-strong,
+.tb-runner-chat .tb-task-preview-card-description .tb-message-markdown-em,
+.tb-runner-chat .tb-task-preview-card-description .tb-message-markdown-inline-code,
+.tb-runner-chat .tb-task-preview-card-description .tb-message-markdown-link {
+  color: inherit;
 }
 
 .tb-runner-chat .tb-user-turn-actions {
@@ -5636,7 +5657,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   justify-content: center;
   gap: 6px;
   border: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 14px;
+  border-radius: 8px;
   background: transparent;
   color: rgba(255, 255, 255, 0.78);
   cursor: pointer;
