@@ -11075,6 +11075,35 @@ const html = `<!doctype html>
         color: white;
       }
 
+      .playground-thread-nav-popup-shell {
+        position: relative;
+        z-index: 35;
+      }
+
+      .playground-thread-nav-popup-shell .playground-thread-nav-popup-menu {
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        bottom: auto;
+        width: 280px;
+        min-width: 280px;
+        transform-origin: top right;
+      }
+
+      .playground-thread-nav-popup-static-row {
+        cursor: default;
+        user-select: text;
+      }
+
+      .playground-thread-nav-popup-static-row:hover {
+        background: transparent;
+      }
+
+      .playground-thread-nav-popup-thread-id {
+        font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        word-break: break-all;
+      }
+
       .playground-tasks-toolbar-popup-item-copy {
         min-width: 0;
         flex: 1;
@@ -35129,6 +35158,7 @@ const html = `<!doctype html>
         const [runnerRenderKey, setRunnerRenderKey] = useState(0);
         const [threadDisplayCount, setThreadDisplayCount] = useState(10);
         const [threadActionMenuState, setThreadActionMenuState] = useState(null);
+        const [threadNavMenuOpen, setThreadNavMenuOpen] = useState(false);
         const [threadRenameState, setThreadRenameState] = useState(null);
         const [threadRenameValue, setThreadRenameValue] = useState("");
         const [threadRenameError, setThreadRenameError] = useState("");
@@ -35298,6 +35328,7 @@ const html = `<!doctype html>
         const profileImageInputRef = useRef(null);
         const threadSearchInputRef = useRef(null);
         const threadRenameInputRef = useRef(null);
+        const threadNavMenuRef = useRef(null);
         const accountMenuAnimationTimerRef = useRef(null);
         const taskCompletionSyncInFlightRef = useRef(new Set());
 
@@ -38232,6 +38263,52 @@ const html = `<!doctype html>
           });
         }, []);
 
+        const upsertRealThreadTitle = useCallback(function upsertRealThreadTitle(threadId, nextTitle) {
+          const normalizedThreadId = String(threadId || "").trim();
+          const normalizedTitle = String(nextTitle || "").trim();
+          if (!normalizedThreadId || !normalizedTitle) {
+            return;
+          }
+
+          const nowIso = new Date().toISOString();
+          setRealThreads((current) => {
+            let didFind = false;
+            let didChange = false;
+            const nextThreads = current.map((thread) => {
+              if (thread.id !== normalizedThreadId) {
+                return thread;
+              }
+
+              didFind = true;
+              if (String(thread.title || "").trim() === normalizedTitle) {
+                return thread;
+              }
+
+              didChange = true;
+              return normalizeThreadItem({
+                ...thread,
+                title: normalizedTitle,
+                updatedAt: nowIso,
+              });
+            });
+
+            if (didFind) {
+              return didChange ? nextThreads : current;
+            }
+
+            return [
+              normalizeThreadItem({
+                id: normalizedThreadId,
+                title: normalizedTitle,
+                status: "active",
+                createdAt: nowIso,
+                updatedAt: nowIso,
+              }),
+              ...current,
+            ];
+          });
+        }, []);
+
         const updateThreadTaskPreviewStatus = useCallback(function updateThreadTaskPreviewStatus(threadId, taskId, nextTaskStatus) {
           const normalizedThreadId = String(threadId || "").trim();
           const normalizedTaskId = String(taskId || "").trim();
@@ -38680,6 +38757,7 @@ const html = `<!doctype html>
         function handleThreadSelect(threadId) {
           if (!threadId) return;
           if (hasRealAccess && !isRealThreadId(threadId)) return;
+          setThreadNavMenuOpen(false);
           setActivePage("thread");
           setCurrentThreadId(threadId);
           setPendingThreadRunRequest(null);
@@ -38708,6 +38786,7 @@ const html = `<!doctype html>
             Math.max(12, window.innerWidth - menuWidth - 12),
           );
 
+          setThreadNavMenuOpen(false);
           setThreadActionMenuState({
             threadId,
             top,
@@ -38715,9 +38794,20 @@ const html = `<!doctype html>
           });
         }
 
+        function toggleThreadNavMenu(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!selectedKnownThread?.id) {
+            return;
+          }
+          setThreadActionMenuState(null);
+          setThreadNavMenuOpen((current) => !current);
+        }
+
         function openThreadRenameDialog(thread) {
           if (!thread?.id) return;
           setThreadActionMenuState(null);
+          setThreadNavMenuOpen(false);
           setThreadRenameState({
             threadId: thread.id,
             originalTitle: thread.title || "Untitled thread",
@@ -38778,6 +38868,7 @@ const html = `<!doctype html>
           const nextPinned = !targetThread.isPinned;
           const nextMetadata = buildThreadPinnedMetadata(targetThread, nextPinned);
 
+          setThreadNavMenuOpen(false);
           setThreadMutationState({
             threadId,
             action: "pin",
@@ -38905,6 +38996,7 @@ const html = `<!doctype html>
 
         async function handleThreadDelete(threadId) {
           setThreadActionMenuState(null);
+          setThreadNavMenuOpen(false);
           setThreadMutationState({
             threadId,
             action: "delete",
@@ -41569,6 +41661,50 @@ const html = `<!doctype html>
         }, [activeSidebarThreadId, baseThreadItems, threadActionMenuState]);
 
         useEffect(() => {
+          if (!threadNavMenuOpen) {
+            return;
+          }
+
+          const hasThreadTaskDetailOpen = activePage === "thread" && Boolean(threadTaskOpenRequest) && hasRealAccess;
+          const hasThreadTarget = Boolean(currentThreadId) && baseThreadItems.some((thread) => thread.id === currentThreadId);
+
+          if (activePage !== "thread" || hasThreadTaskDetailOpen || !hasThreadTarget) {
+            setThreadNavMenuOpen(false);
+            return;
+          }
+
+          function handlePointerDown(event) {
+            const target = event.target instanceof Node ? event.target : null;
+            if (!target || !threadNavMenuRef.current || threadNavMenuRef.current.contains(target)) {
+              return;
+            }
+            setThreadNavMenuOpen(false);
+          }
+
+          function handleKeyDown(event) {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setThreadNavMenuOpen(false);
+            }
+          }
+
+          function handleViewportChange() {
+            setThreadNavMenuOpen(false);
+          }
+
+          document.addEventListener("mousedown", handlePointerDown);
+          window.addEventListener("keydown", handleKeyDown);
+          window.addEventListener("resize", handleViewportChange);
+          window.addEventListener("scroll", handleViewportChange, true);
+          return () => {
+            document.removeEventListener("mousedown", handlePointerDown);
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("resize", handleViewportChange);
+            window.removeEventListener("scroll", handleViewportChange, true);
+          };
+        }, [activePage, baseThreadItems, currentThreadId, hasRealAccess, threadNavMenuOpen, threadTaskOpenRequest]);
+
+        useEffect(() => {
           if (!threadRenameState || !threadRenameInputRef.current) {
             return;
           }
@@ -42662,11 +42798,63 @@ const html = `<!doctype html>
                         ),
                         React.createElement("div", { className: "playground-content-nav-right" },
                           activePage === "thread" && !isThreadTaskDetailOpen
-                            ? React.createElement("button", {
-                                type: "button",
-                                className: "playground-content-menu-button",
-                                "aria-label": "Thread actions"
-                              }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 }))
+                            ? React.createElement("div", {
+                                className: "playground-thread-nav-popup-shell playground-tasks-toolbar-popup-shell",
+                                ref: threadNavMenuRef,
+                              },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-content-menu-button",
+                                  "aria-label": "Thread actions",
+                                  "aria-expanded": threadNavMenuOpen ? "true" : "false",
+                                  onClick: toggleThreadNavMenu,
+                                  disabled: !selectedKnownThread?.id,
+                                }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                                threadNavMenuOpen && selectedKnownThread?.id
+                                  ? React.createElement("div", {
+                                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-thread-nav-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                                      onClick: (event) => event.stopPropagation(),
+                                    },
+                                      React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                                        React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                          React.createElement("span", null, "Thread ID"),
+                                          React.createElement("span", {
+                                            className: "playground-thread-nav-popup-thread-id",
+                                            title: selectedKnownThread.id,
+                                          }, selectedKnownThread.id)
+                                        )
+                                      ),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "tb-popup-row",
+                                        onClick: () => {
+                                          void handleThreadPinToggle(selectedKnownThread.id);
+                                        },
+                                        disabled: threadMutationState.action === "pin" && threadMutationState.threadId === selectedKnownThread.id,
+                                      },
+                                        React.createElement(Pin, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                          React.createElement("span", null,
+                                            threadMutationState.action === "pin" && threadMutationState.threadId === selectedKnownThread.id
+                                              ? (selectedKnownThread.isPinned ? "Unpinning thread..." : "Pinning thread...")
+                                              : (selectedKnownThread.isPinned ? "Unpin thread" : "Pin thread")
+                                          )
+                                        )
+                                      ),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "tb-popup-row",
+                                        onClick: () => openThreadRenameDialog(selectedKnownThread),
+                                      },
+                                        React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                          React.createElement("span", null, "Rename thread")
+                                        )
+                                      )
+                                    )
+                                  : null
+                              )
                             : null
                         )
                       ),
@@ -42826,6 +43014,10 @@ const html = `<!doctype html>
                                       setPendingThreadRunRequest((current) => (
                                         current && current.threadId === threadId ? current : null
                                       ));
+                                      void refreshThreads();
+                                    },
+                                    onThreadTitleChange: (threadId, nextTitle) => {
+                                      upsertRealThreadTitle(threadId, nextTitle);
                                       void refreshThreads();
                                     },
                                     onRunStart: (threadId) => {
@@ -44958,6 +45150,17 @@ const server = http.createServer((req, res) => {
       req,
       res,
       `/threads/${encodeURIComponent(decodeURIComponent(threadCancelMatch[1]))}/cancel`,
+      "POST",
+    );
+    return;
+  }
+
+  const threadGenerateTitleMatch = url.pathname.match(/^\/api\/real\/threads\/([^/]+)\/generate-title$/);
+  if (req.method === "POST" && threadGenerateTitleMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/threads/${encodeURIComponent(decodeURIComponent(threadGenerateTitleMatch[1]))}/generate-title`,
       "POST",
     );
     return;

@@ -619,6 +619,7 @@ export interface RunnerChatProps {
   uploadFiles?: (files: File[]) => Promise<RunnerAttachment[]>;
   mapFileToAttachment?: (file: File) => Promise<RunnerAttachment> | RunnerAttachment;
   onThreadIdChange?: (threadId: string) => void;
+  onThreadTitleChange?: (threadId: string, title: string) => void;
   onRunStart?: (threadId: string) => void;
   onRunFinish?: (result: RunnerExecuteResult, threadId: string) => void;
   onRunCancel?: (threadId: string) => void;
@@ -2238,7 +2239,7 @@ async function createThread(params: {
   appId?: string;
   environmentId?: string;
   agentId?: string;
-}): Promise<string> {
+}): Promise<{ threadId: string; title: string | null }> {
   const backendUrl = sanitizeBackendUrl(params.backendUrl);
   const headers = new Headers(params.requestHeaders || {});
   headers.set("Content-Type", "application/json");
@@ -2272,7 +2273,58 @@ async function createThread(params: {
     throw new Error("Thread creation succeeded but response.thread.id is missing");
   }
 
-  return threadId;
+  return {
+    threadId,
+    title: typeof parsed?.thread?.title === "string" ? parsed.thread.title : null,
+  };
+}
+
+const DEFAULT_NEW_THREAD_TITLE = "New Thread";
+
+function isDefaultThreadTitle(title: string | null | undefined): boolean {
+  return !title || title.trim().toLowerCase() === DEFAULT_NEW_THREAD_TITLE.toLowerCase();
+}
+
+async function generateThreadTitle(params: {
+  backendUrl: string;
+  apiKey: string;
+  requestHeaders?: HeadersInit;
+  threadId: string;
+  message: string;
+}): Promise<string> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = new Headers(params.requestHeaders || {});
+  headers.set("Content-Type", "application/json");
+  headers.set("X-API-Key", params.apiKey);
+
+  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/generate-title`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      message: params.message,
+    }),
+  });
+
+  const body = await response.text();
+  let parsed: any = {};
+  try {
+    parsed = body ? JSON.parse(body) : {};
+  } catch {
+    parsed = { message: body };
+  }
+
+  if (!response.ok) {
+    throw new Error(parsed?.message || parsed?.error || `Failed to generate thread title (${response.status})`);
+  }
+
+  const nextTitle =
+    (typeof parsed?.thread?.title === "string" ? parsed.thread.title : "") ||
+    (typeof parsed?.title === "string" ? parsed.title : "");
+  if (!nextTitle.trim()) {
+    throw new Error("Thread title generation succeeded but response title is missing");
+  }
+
+  return nextTitle.trim();
 }
 
 async function startEnvironment(params: {
@@ -4427,6 +4479,7 @@ export function RunnerChat({
   uploadFiles,
   mapFileToAttachment,
   onThreadIdChange,
+  onThreadTitleChange,
   onRunStart,
   onRunFinish,
   onRunCancel,
@@ -6074,7 +6127,15 @@ export function RunnerChat({
         : hasResolvedThread
           ? activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
           : effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
-    const threadId = options?.threadIdOverride || (await ensureThread(taskText));
+    const ensuredThread =
+      options?.threadIdOverride
+        ? {
+            threadId: options.threadIdOverride,
+            didCreateThread: false,
+            initialTitle: null,
+          }
+        : await ensureThread(taskText);
+    const threadId = ensuredThread.threadId;
     initializedThreadHistoryIdRef.current = threadId;
     const githubRepo =
       options?.githubRepoOverride !== undefined
@@ -6135,6 +6196,27 @@ export function RunnerChat({
           ...turn,
           attachments: pickTurnAttachments(turnAttachments, turn.attachments),
         }));
+      }
+
+      if (
+        ensuredThread.didCreateThread &&
+        !title?.trim() &&
+        taskText.trim() &&
+        isDefaultThreadTitle(ensuredThread.initialTitle)
+      ) {
+        void generateThreadTitle({
+          backendUrl: normalizedBackendUrl,
+          apiKey,
+          requestHeaders,
+          threadId,
+          message: taskText,
+        })
+          .then((nextTitle) => {
+            onThreadTitleChange?.(threadId, nextTitle);
+          })
+          .catch((error) => {
+            console.warn("[RunnerChat] Failed to generate thread title", error);
+          });
       }
 
       const executionResult = await execute({
@@ -7106,30 +7188,45 @@ export function RunnerChat({
     void stopSpeechToText();
   }, [isRunning]);
 
-  async function ensureThread(taskText: string): Promise<string> {
+  async function ensureThread(taskText: string): Promise<{
+    threadId: string;
+    didCreateThread: boolean;
+    initialTitle: string | null;
+  }> {
     if (currentThreadId) {
-      return currentThreadId;
+      return {
+        threadId: currentThreadId,
+        didCreateThread: false,
+        initialTitle: null,
+      };
     }
 
     if (!autoCreateThread) {
       throw new Error("No threadId available. Provide threadId or enable autoCreateThread.");
     }
 
-    const createdThreadId = await createThread({
+    const createdThread = await createThread({
       backendUrl: normalizedBackendUrl,
       apiKey,
       requestHeaders,
       appId,
       environmentId: effectiveEnvironmentId,
       agentId: effectiveAgentId,
-      title: title || taskText.slice(0, 50),
+      title: title || DEFAULT_NEW_THREAD_TITLE,
     });
 
-    setLocalThreadId(createdThreadId);
+    setLocalThreadId(createdThread.threadId);
     setActiveThreadEnvironmentId(effectiveEnvironmentId || null);
     setActiveThreadEnvironmentName(selectedEnvironment?.name || null);
-    onThreadIdChange?.(createdThreadId);
-    return createdThreadId;
+    onThreadIdChange?.(createdThread.threadId);
+    if (createdThread.title) {
+      onThreadTitleChange?.(createdThread.threadId, createdThread.title);
+    }
+    return {
+      threadId: createdThread.threadId,
+      didCreateThread: true,
+      initialTitle: createdThread.title,
+    };
   }
 
   function resolveAttachmentUploadEnvironmentId(): string | null {
