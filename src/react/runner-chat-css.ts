@@ -2042,7 +2042,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-subagent-log-preview-copy {
-  max-height: 176px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   overflow: hidden;
   color: rgba(255, 255, 255, 0.86);
 }
@@ -2051,10 +2053,27 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   color: rgba(255, 255, 255, 0.62);
 }
 
+.tb-runner-chat .tb-subagent-log-preview-prompt {
+  padding-bottom: 14px;
+}
+
+.tb-runner-chat .tb-subagent-log-preview-divider {
+  width: 100%;
+  height: 1px;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tb-runner-chat .tb-subagent-log-preview-response {
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-subagent-log-preview-prompt-markdown > *:first-child,
 .tb-runner-chat .tb-subagent-log-preview-markdown > *:first-child {
   margin-top: 0;
 }
 
+.tb-runner-chat .tb-subagent-log-preview-prompt-markdown > *:last-child,
 .tb-runner-chat .tb-subagent-log-preview-markdown > *:last-child {
   margin-bottom: 0;
 }

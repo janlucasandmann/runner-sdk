@@ -58,6 +58,14 @@ function sanitizeSubagentDisplayText(value: string | null | undefined): string {
     .trim();
 }
 
+function truncateSubagentPreviewText(value: string | null | undefined, maxLength = 300): string {
+  const cleaned = sanitizeSubagentDisplayText(value);
+  if (cleaned.length <= maxLength) {
+    return cleaned;
+  }
+  return `${cleaned.slice(0, maxLength).trimEnd()}...`;
+}
+
 interface RunnerWorkLogEntryProps {
   log: RunnerLog;
   timeLabel?: string;
@@ -3186,19 +3194,22 @@ export function BrowserSkillLogBox({
 
 export function SubagentLogBox({
   title,
+  prompt,
   timeLabel,
   running = false,
   summaryMessage,
   onOpenDetails,
 }: {
   title: string;
+  prompt?: string | null;
   timeLabel?: string;
   running?: boolean;
   summaryMessage?: string | null;
   onOpenDetails?: () => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const cleanedSummaryMessage = sanitizeSubagentDisplayText(summaryMessage) || `${title} is working`;
+  const cleanedPrompt = truncateSubagentPreviewText(prompt);
+  const cleanedSummaryMessage = truncateSubagentPreviewText(summaryMessage) || `${title} is working`;
 
   return (
     <div className="tb-log-card tb-log-card-subagent">
@@ -3214,11 +3225,26 @@ export function SubagentLogBox({
       <LogPanel collapsed={collapsed}>
         <div className="tb-subagent-log-preview">
           <div className={`tb-subagent-log-preview-copy ${running ? "is-running" : ""}`.trim()}>
-            <RunnerMarkdown
-              content={cleanedSummaryMessage}
-              className="tb-message-markdown tb-message-markdown-summary tb-subagent-log-preview-markdown"
-              softBreaks
-            />
+            {cleanedPrompt ? (
+              <>
+                <div className="tb-subagent-log-preview-prompt">
+                  <RunnerMarkdown
+                    content={cleanedPrompt}
+                    className="tb-message-markdown tb-message-markdown-summary tb-subagent-log-preview-prompt-markdown"
+                    softBreaks
+                    disallowHeadings
+                  />
+                </div>
+                <div className="tb-subagent-log-preview-divider" aria-hidden="true" />
+              </>
+            ) : null}
+            <div className="tb-subagent-log-preview-response">
+              <RunnerMarkdown
+                content={cleanedSummaryMessage}
+                className="tb-message-markdown tb-message-markdown-summary tb-subagent-log-preview-markdown"
+                softBreaks
+              />
+            </div>
           </div>
           <div className="tb-subagent-log-preview-footer">
             <button type="button" className="tb-subagent-log-open-button" onClick={onOpenDetails}>

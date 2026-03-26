@@ -9427,6 +9427,7 @@ export function RunnerChat({
       return (
         <SubagentLogBox
           title={presentation.title}
+          prompt={presentation.prompt}
           timeLabel={presentation.timeLabel}
           running={presentation.running}
           summaryMessage={presentation.previewMessage}
