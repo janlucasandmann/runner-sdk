@@ -7942,7 +7942,7 @@ const html = `<!doctype html>
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll {
         padding: var(--playground-environments-nav-top-offset) 18px 24px;
-        gap: 12px;
+        gap: 24px;
       }
 
       .playground-environments-detail-empty {
@@ -8084,7 +8084,7 @@ const html = `<!doctype html>
       }
 
       .playground-environments-editor-scroll {
-        gap: 14px;
+        gap: 42px;
       }
 
       .playground-environments-editor-notice {
@@ -8092,6 +8092,7 @@ const html = `<!doctype html>
       }
 
       .playground-environments-editor-facts {
+        margin-top: -12px;
         padding-bottom: 4px;
       }
 
@@ -8341,6 +8342,10 @@ const html = `<!doctype html>
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-section-header {
         padding: 0 0 10px;
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-section-header.is-static {
+        padding-bottom: 6px;
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-section.is-runtimes .playground-environments-section-header {
@@ -14755,6 +14760,11 @@ const html = `<!doctype html>
           : typeof thread?.status === "number"
             ? String(thread.status)
             : "";
+        const rawAgentId = typeof thread?.agentId === "string"
+          ? thread.agentId
+          : typeof thread?.agentId === "number"
+            ? String(thread.agentId)
+            : "";
         const rawCreatedAt = typeof thread?.createdAt === "string" ? thread.createdAt : "";
         const rawUpdatedAt = typeof thread?.updatedAt === "string" ? thread.updatedAt : "";
         const rawNextRunAt = typeof thread?.nextRunAt === "string"
@@ -14772,6 +14782,7 @@ const html = `<!doctype html>
           id: rawId || generateId("thread"),
           title: rawTitle || "Untitled thread",
           status: rawStatus,
+          agentId: rawAgentId,
           messageCount: Number.isFinite(thread.messageCount) ? thread.messageCount : 0,
           createdAt: rawCreatedAt,
           updatedAt: rawUpdatedAt,
@@ -23923,7 +23934,9 @@ const html = `<!doctype html>
                     )
                   )
                 )
-              : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No " + label.toLowerCase() + " packages."),
+              : !isComposerOpen
+                ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No " + label.toLowerCase() + " packages.")
+                : null,
             isComposerOpen
               ? React.createElement("div", { className: "playground-environments-package-composer" },
                   React.createElement("input", {
@@ -24189,9 +24202,7 @@ const html = `<!doctype html>
                     )
                   )
                 )
-              : React.createElement("div", { className: "playground-environments-editor-surface" },
-                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No environment variables configured.")
-                )
+              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No environment variables configured.")
           );
 
           const secretsSection = React.createElement("div", { className: "playground-environments-stack" },
@@ -24233,9 +24244,7 @@ const html = `<!doctype html>
                     );
                   })
                 )
-              : React.createElement("div", { className: "playground-environments-editor-surface" },
-                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No secrets configured.")
-                )
+              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No secrets configured.")
           );
 
           const mcpSection = React.createElement("div", { className: "playground-environments-stack" },
@@ -24353,9 +24362,7 @@ const html = `<!doctype html>
                     )
                   );
                 })
-              : React.createElement("div", { className: "playground-environments-editor-surface" },
-                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No MCP servers configured.")
-                )
+              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No MCP servers configured.")
           );
 
           const setupScriptsSection = React.createElement("div", { className: "playground-environments-stack" },
@@ -24377,9 +24384,7 @@ const html = `<!doctype html>
                     }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
                   )
                 )
-              : React.createElement("div", { className: "playground-environments-editor-surface" },
-                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No setup scripts configured.")
-                )
+              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No setup scripts configured.")
           );
 
           const gitSection = React.createElement("div", { className: "playground-environments-editor-surface" },
@@ -24456,9 +24461,7 @@ const html = `<!doctype html>
                     })
                   )
                 )
-              : React.createElement("div", { className: "playground-environments-editor-surface" },
-                  React.createElement("div", { className: "playground-environments-empty-copy" }, "No context files configured.")
-                )
+              : React.createElement("div", { className: "playground-environments-empty-copy" }, "No context files configured.")
           );
 
           const dockerfileSection = React.createElement("div", { className: "playground-environments-editor-surface playground-environments-editor-surface-stack" },
@@ -36192,7 +36195,14 @@ const html = `<!doctype html>
         const [settingsVerificationResent, setSettingsVerificationResent] = useState(false);
         const [settingsVerificationError, setSettingsVerificationError] = useState("");
         const [environmentId, setEnvironmentId] = useState("");
-        const [agentId, setAgentId] = useState("");
+        const [preferredAgentId, setPreferredAgentId] = useState(() => {
+          try {
+            return localStorage.getItem("runner_demo_preferred_agent_id") || "";
+          } catch {
+            return "";
+          }
+        });
+        const [threadAgentSelectionOverride, setThreadAgentSelectionOverride] = useState(null);
         const [currentThreadId, setCurrentThreadId] = useState("");
         const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
         const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
@@ -37699,7 +37709,7 @@ const html = `<!doctype html>
             source: "github",
             event: "push",
             environmentId: resolvedEnvironmentId || "",
-            agentId: resolvedAgentId || "",
+            agentId: resolvedPreferredAgentId || "",
             actionType: "message",
             message: "",
             template: "",
@@ -38726,6 +38736,16 @@ const html = `<!doctype html>
         }, [projectId]);
 
         useEffect(() => {
+          try {
+            if (preferredAgentId.trim()) {
+              localStorage.setItem("runner_demo_preferred_agent_id", preferredAgentId.trim());
+            } else {
+              localStorage.removeItem("runner_demo_preferred_agent_id");
+            }
+          } catch {}
+        }, [preferredAgentId]);
+
+        useEffect(() => {
           writeCachedIntegrationStatus("github", githubStatus);
         }, [githubStatus]);
 
@@ -39005,16 +39025,16 @@ const html = `<!doctype html>
           }
           return hasRealAccess ? "" : computerAgentsMode ? "env_default" : "";
         }, [computerAgentsMode, environmentId, hasRealAccess, realEnvironments]);
-        const resolvedAgentId = useMemo(() => {
-          if (agentId.trim()) {
-            return agentId.trim();
+        const resolvedPreferredAgentId = useMemo(() => {
+          if (preferredAgentId.trim()) {
+            return preferredAgentId.trim();
           }
           if (hasRealAccess && realAgents.length > 0) {
             const defaultAgent = realAgents.find((agent) => agent.isDefault) || realAgents[0];
             return defaultAgent?.id || "";
           }
           return hasRealAccess ? "" : computerAgentsMode ? "agent_default" : "";
-        }, [agentId, computerAgentsMode, hasRealAccess, realAgents]);
+        }, [computerAgentsMode, hasRealAccess, preferredAgentId, realAgents]);
         const buildLiveThreadTaskPreview = useCallback(function buildLiveThreadTaskPreview(taskRecord, existingPreview, threadId = "") {
           const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
           const normalizedThreadId = String(threadId || existingPreview?.threadId || "").trim();
@@ -39059,9 +39079,9 @@ const html = `<!doctype html>
             || (resolvedEnvironmentId ? resolvedEnvironmentId : "Automatic");
         }, [resolvedEnvironmentId, runtimeEnvironments]);
         const resolvedAgentName = useMemo(() => {
-          return runtimeAgents.find((agent) => agent.id === resolvedAgentId)?.name
-            || (resolvedAgentId ? resolvedAgentId : "Automatic");
-        }, [resolvedAgentId, runtimeAgents]);
+          return runtimeAgents.find((agent) => agent.id === resolvedPreferredAgentId)?.name
+            || (resolvedPreferredAgentId ? resolvedPreferredAgentId : "Automatic");
+        }, [resolvedPreferredAgentId, runtimeAgents]);
         const connectedIntegrationCount = useMemo(() => {
           return [
             githubStatus.connected,
@@ -39807,6 +39827,7 @@ const html = `<!doctype html>
         function handleNewThread() {
           setActivePage("thread");
           setCurrentThreadId("");
+          setThreadAgentSelectionOverride(null);
           setPendingThreadRunRequest(null);
           setContentMode("chat");
           setChangesNavigationTarget(null);
@@ -39820,6 +39841,7 @@ const html = `<!doctype html>
           setThreadNavMenuOpen(false);
           setActivePage("thread");
           setCurrentThreadId(threadId);
+          setThreadAgentSelectionOverride(null);
           setPendingThreadRunRequest(null);
           setChangesNavigationTarget(null);
           setThreadListMode("threads");
@@ -42947,6 +42969,39 @@ const html = `<!doctype html>
           }
           return rawSelectedThreadTaskPreview;
         }, [currentThreadId, rawSelectedThreadTaskPreview, threadTaskPreviewOverrides]);
+        const selectedThreadAgentId = useMemo(() => {
+          const explicitThreadAgentId = typeof selectedKnownThread?.agentId === "string"
+            ? selectedKnownThread.agentId.trim()
+            : "";
+          if (explicitThreadAgentId) {
+            return explicitThreadAgentId;
+          }
+          return typeof selectedThreadTaskPreview?.assigneeAgentId === "string"
+            ? selectedThreadTaskPreview.assigneeAgentId.trim()
+            : "";
+        }, [selectedKnownThread, selectedThreadTaskPreview]);
+        const resolvedTaskInputAgentId = useMemo(() => {
+          const overrideAgentId =
+            activePage === "thread"
+            && currentThreadId
+            && threadAgentSelectionOverride
+            && threadAgentSelectionOverride.threadId === currentThreadId
+              ? String(threadAgentSelectionOverride.agentId || "").trim()
+              : "";
+          if (overrideAgentId) {
+            return overrideAgentId;
+          }
+          if (activePage === "thread" && currentThreadId && selectedThreadAgentId) {
+            return selectedThreadAgentId;
+          }
+          return resolvedPreferredAgentId;
+        }, [
+          activePage,
+          currentThreadId,
+          resolvedPreferredAgentId,
+          selectedThreadAgentId,
+          threadAgentSelectionOverride,
+        ]);
         const selectedThreadTaskPreviewTaskId = typeof selectedThreadTaskPreview?.taskId === "string"
           ? selectedThreadTaskPreview.taskId.trim()
           : "";
@@ -43034,10 +43089,14 @@ const html = `<!doctype html>
           if (selectedThreadTaskPreview.environmentId) {
             setEnvironmentId(selectedThreadTaskPreview.environmentId);
           }
-          if (selectedThreadTaskPreview.assigneeAgentId) {
-            setAgentId(selectedThreadTaskPreview.assigneeAgentId);
-          }
         }, [activePage, selectedThreadTaskPreview]);
+
+        useEffect(() => {
+          if (activePage === "thread") {
+            return;
+          }
+          setThreadAgentSelectionOverride(null);
+        }, [activePage]);
 
         useEffect(() => {
           if (!threadTaskOpenRequest) {
@@ -43982,7 +44041,7 @@ const html = `<!doctype html>
                               environments: realEnvironments,
                               initialEnvironmentId: resolvedEnvironmentId || "",
                               apiKey,
-                              agentId: resolvedAgentId || "",
+                              agentId: resolvedPreferredAgentId || "",
                               onFileChatThreadMutated: () => {
                                 void refreshThreads();
                               },
@@ -44009,7 +44068,7 @@ const html = `<!doctype html>
                               backendUrl: proxyBackendBase,
                               requestHeaders,
                               agents: realAgents,
-                              initialAgentId: resolvedAgentId || "",
+                              initialAgentId: resolvedPreferredAgentId || "",
                               onAgentMutated: async () => {
                                 await refreshAgents();
                               },
@@ -44022,7 +44081,7 @@ const html = `<!doctype html>
                             agents: runtimeAgents,
                             environments: runtimeEnvironments,
                             initialEnvironmentId: resolvedEnvironmentId || "",
-                            initialAgentId: resolvedAgentId || "",
+                            initialAgentId: resolvedPreferredAgentId || "",
                             apiKey: apiKey,
                             upstreamUrl: resolvedUpstreamUrl,
                             speechToTextUrl: speechToTextUrl || "",
@@ -44044,9 +44103,7 @@ const html = `<!doctype html>
                               if (options?.taskPreview?.environmentId) {
                                 setEnvironmentId(options.taskPreview.environmentId);
                               }
-                              if (options?.taskPreview?.assigneeAgentId) {
-                                setAgentId(options.taskPreview.assigneeAgentId);
-                              }
+                              setThreadAgentSelectionOverride(null);
                               if (options?.taskRunRequest?.prompt) {
                                 setPendingThreadRunRequest(null);
                                 void startThreadRunInBackground(threadId, options.taskRunRequest, options.taskPreview || null);
@@ -44087,11 +44144,11 @@ const html = `<!doctype html>
                                     })) : undefined,
                                     agents: computerAgentsMode ? runtimeAgents.map((agent) => ({
                                       ...agent,
-                                      ...(resolvedAgentId && agent.id === resolvedAgentId ? { isDefault: true } : {})
+                                      ...(resolvedTaskInputAgentId && agent.id === resolvedTaskInputAgentId ? { isDefault: true } : {})
                                     })) : undefined,
                                     skills: computerAgentsMode ? demoSkills : undefined,
                                     environmentId: resolvedEnvironmentId || undefined,
-                                    agentId: resolvedAgentId || undefined,
+                                    agentId: resolvedTaskInputAgentId || undefined,
                                     autoFocusComposer: true,
                                     keepFocusOnSubmit: true,
                                     showUsageInStatus: false,
@@ -44160,6 +44217,18 @@ const html = `<!doctype html>
                                     onSubagentDetailOpenChange: (isOpen) => {
                                       setThreadSubagentDetailOpen(isOpen);
                                     },
+                                    onAgentChange: (nextAgentId) => {
+                                      const normalizedAgentId = String(nextAgentId || "").trim();
+                                      setPreferredAgentId(normalizedAgentId);
+                                      if (activePage === "thread" && currentThreadId) {
+                                        setThreadAgentSelectionOverride({
+                                          threadId: currentThreadId,
+                                          agentId: normalizedAgentId,
+                                        });
+                                      } else {
+                                        setThreadAgentSelectionOverride(null);
+                                      }
+                                    },
                                     onActionSummaryClick: (summary) => {
                                       if (!activeRunnerThreadId || !summary?.revertedChangeStepId) {
                                         return;
@@ -44210,7 +44279,7 @@ const html = `<!doctype html>
                               agents: runtimeAgents,
                               environments: runtimeEnvironments,
                               initialEnvironmentId: resolvedEnvironmentId || "",
-                              initialAgentId: resolvedAgentId || "",
+                              initialAgentId: resolvedPreferredAgentId || "",
                               apiKey: apiKey,
                               upstreamUrl: resolvedUpstreamUrl,
                               speechToTextUrl: speechToTextUrl || "",
@@ -44232,9 +44301,7 @@ const html = `<!doctype html>
                                 if (options?.taskPreview?.environmentId) {
                                   setEnvironmentId(options.taskPreview.environmentId);
                                 }
-                                if (options?.taskPreview?.assigneeAgentId) {
-                                  setAgentId(options.taskPreview.assigneeAgentId);
-                                }
+                                setThreadAgentSelectionOverride(null);
                                 if (options?.taskRunRequest?.prompt) {
                                   setPendingThreadRunRequest({
                                     token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
