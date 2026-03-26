@@ -428,7 +428,7 @@ export interface RunnerChatOption {
   isDefault?: boolean;
 }
 
-type RunnerAgentSelectorMode = "agents" | "teams";
+type RunnerAgentSelectorMode = "agents" | "teams" | "humans";
 
 type RunnerAgentOptionRecord = RunnerChatOption & {
   agentType?: string | null;
@@ -484,7 +484,29 @@ function isRunnerTeamAgentOption(option: RunnerChatOption | null | undefined): b
   return kind === "team" && Boolean(team);
 }
 
+function isRunnerHumanAgentOption(option: RunnerChatOption | null | undefined): boolean {
+  if (!option) {
+    return false;
+  }
+
+  const candidate = option as RunnerAgentOptionRecord;
+  if (typeof candidate.agentType === "string" && candidate.agentType.trim() === "human") {
+    return true;
+  }
+
+  const metadata = candidate.metadata;
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return false;
+  }
+
+  const kind = "kind" in metadata && typeof metadata.kind === "string" ? metadata.kind.trim() : "";
+  return kind === "human";
+}
+
 function getRunnerAgentSelectorMode(option: RunnerChatOption | null | undefined): RunnerAgentSelectorMode {
+  if (isRunnerHumanAgentOption(option)) {
+    return "humans";
+  }
   return isRunnerTeamAgentOption(option) ? "teams" : "agents";
 }
 
@@ -9667,6 +9689,16 @@ export function RunnerChat({
     };
   }, [displayedAgentLabel, displayedEnvironmentLabel, selectedSubagentDetail, turns]);
   const orderedAgents = useMemo(() => orderOptionsWithPinnedTop(agents, initialAgentTopId), [agents, initialAgentTopId]);
+  const availableAgentPopupModes = useMemo<RunnerAgentSelectorMode[]>(() => {
+    const nextModes: RunnerAgentSelectorMode[] = [];
+    for (const agent of orderedAgents) {
+      const nextMode = getRunnerAgentSelectorMode(agent);
+      if (!nextModes.includes(nextMode)) {
+        nextModes.push(nextMode);
+      }
+    }
+    return nextModes.length > 0 ? nextModes : ["agents"];
+  }, [orderedAgents]);
   const filteredOrderedAgents = useMemo(
     () => orderedAgents.filter((agent) => getRunnerAgentSelectorMode(agent) === agentPopupMode),
     [agentPopupMode, orderedAgents]
@@ -9676,6 +9708,19 @@ export function RunnerChat({
     [availableEnvironments, initialEnvironmentTopId]
   );
   const activeWorkspaceEnvironmentId = selectedEnvironment?.id || environmentId || "";
+  useEffect(() => {
+    if (availableAgentPopupModes.includes(agentPopupMode)) {
+      return;
+    }
+    const nextMode = getRunnerAgentSelectorMode(
+      orderedAgents.find((agent) => agent.id === selectedAgentId) || orderedAgents[0] || null
+    );
+    const fallbackMode = (availableAgentPopupModes[0] || "agents") as RunnerAgentSelectorMode;
+    const resolvedMode: RunnerAgentSelectorMode = availableAgentPopupModes.includes(nextMode)
+      ? nextMode
+      : fallbackMode;
+    setAgentPopupMode(resolvedMode);
+  }, [agentPopupMode, availableAgentPopupModes, orderedAgents, selectedAgentId]);
   const sourceThreadEnvironmentId = activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
   const sourceThreadEnvironmentName = activeThreadEnvironmentName || selectedEnvironment?.name || null;
   const selectedForkExistingEnvironment =
@@ -9901,7 +9946,12 @@ export function RunnerChat({
     btw: canUseBtwThreadContextAction,
     fork: canStageThreadContextManagementActions,
   };
-  const agentPopupEmptyLabel = agentPopupMode === "teams" ? "No teams available." : "No agents available.";
+  const agentPopupEmptyLabel =
+    agentPopupMode === "teams"
+      ? "No teams available."
+      : agentPopupMode === "humans"
+        ? "No humans available."
+        : "No agents available.";
   const speechToTextTitle = !hasApiKey
     ? "Enter an API key to enable speech-to-text"
     : supportsSpeechToText
@@ -11678,20 +11728,33 @@ export function RunnerChat({
                                 <div className="tb-popup-menu-title">Agent</div>
                                 <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
                                   <div className="tb-popup-nav">
-                                    <button
-                                      type="button"
-                                      className={`tb-popup-nav-button ${agentPopupMode === "agents" ? "active" : ""}`}
-                                      onClick={() => setAgentPopupMode("agents")}
-                                    >
-                                      Agents
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className={`tb-popup-nav-button ${agentPopupMode === "teams" ? "active" : ""}`}
-                                      onClick={() => setAgentPopupMode("teams")}
-                                    >
-                                      Teams
-                                    </button>
+                                    {availableAgentPopupModes.includes("agents") ? (
+                                      <button
+                                        type="button"
+                                        className={`tb-popup-nav-button ${agentPopupMode === "agents" ? "active" : ""}`}
+                                        onClick={() => setAgentPopupMode("agents")}
+                                      >
+                                        Agents
+                                      </button>
+                                    ) : null}
+                                    {availableAgentPopupModes.includes("teams") ? (
+                                      <button
+                                        type="button"
+                                        className={`tb-popup-nav-button ${agentPopupMode === "teams" ? "active" : ""}`}
+                                        onClick={() => setAgentPopupMode("teams")}
+                                      >
+                                        Teams
+                                      </button>
+                                    ) : null}
+                                    {availableAgentPopupModes.includes("humans") ? (
+                                      <button
+                                        type="button"
+                                        className={`tb-popup-nav-button ${agentPopupMode === "humans" ? "active" : ""}`}
+                                        onClick={() => setAgentPopupMode("humans")}
+                                      >
+                                        Humans
+                                      </button>
+                                    ) : null}
                                   </div>
                                 </div>
                                 <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent">
