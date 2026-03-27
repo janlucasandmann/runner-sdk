@@ -1412,6 +1412,55 @@ const html = `<!doctype html>
         pointer-events: auto;
       }
 
+      .playground-thread-preview-drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 12;
+        width: var(--playground-thread-task-detail-width);
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        background: transparent;
+        opacity: 0;
+        transform: translateX(100%);
+        pointer-events: none;
+        transition:
+          transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+          opacity 220ms ease;
+      }
+
+      .playground-thread-preview-drawer.is-open {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+
+      .playground-thread-preview-drawer .tb-runner-document-preview-host,
+      .playground-thread-preview-drawer .tb-runner-document-preview-host-inline {
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-drawer-inline {
+        position: relative;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        height: 100%;
+        border-left: 0;
+        background: #101010;
+        box-shadow: none;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+      }
+
       .playground-thread-subagent-drawer-host {
         flex: 1;
         min-height: 0;
@@ -2134,12 +2183,6 @@ const html = `<!doctype html>
 
       .playground-view-pane.is-hidden {
         display: none;
-      }
-
-      .tb-runner-document-preview-host .tb-attachment-preview-drawer {
-        transform: translateX(0);
-        opacity: 1;
-        pointer-events: auto;
       }
 
       .changes-view {
@@ -42229,31 +42272,19 @@ const html = `<!doctype html>
           }
         }
 
-        async function handleOpenWelcomeDailyBriefingPreview(event) {
+        function handleOpenWelcomeDailyBriefingPreview(event) {
           event?.stopPropagation?.();
-          try {
-            const response = await fetch("/api/aios/briefing/url", {
-              method: "GET",
-              headers: authRequestHeaders,
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok || !String(data?.url || "").trim()) {
-              throw new Error(data?.message || data?.error || "No daily briefing available.");
-            }
-            setSidebarOpen(false);
-            setThreadTaskOpenRequest(null);
-            setThreadSubagentDetailOpen(false);
-            setWelcomeWidgetPreviewAttachment({
-              id: "welcome-daily-briefing",
-              filename: "daily-briefing.html",
-              mimeType: "text/html",
-              type: "document",
-              htmlPreviewUrl: String(data.url || "").trim(),
-              htmlSandbox: null,
-            });
-          } catch (error) {
-            window.alert(error instanceof Error ? error.message : "Failed to open the daily briefing.");
-          }
+          setSidebarOpen(false);
+          setThreadTaskOpenRequest(null);
+          setThreadSubagentDetailOpen(false);
+          setWelcomeWidgetPreviewAttachment({
+            id: "welcome-daily-briefing",
+            filename: "daily-briefing.html",
+            mimeType: "text/html",
+            type: "document",
+            htmlPreviewUrl: "/api/aios/briefing/latest-html",
+            htmlSandbox: null,
+          });
         }
 
         function handleOpenWelcomeWidgetTaskDetail(taskRecord, event) {
@@ -48992,6 +49023,11 @@ const html = `<!doctype html>
           }
         }, [activePage, sidebarOpen, threadSubagentDetailOpen]);
         useEffect(() => {
+          if (activePage === "thread" && welcomeWidgetPreviewAttachment && sidebarOpen) {
+            setSidebarOpen(false);
+          }
+        }, [activePage, sidebarOpen, welcomeWidgetPreviewAttachment]);
+        useEffect(() => {
           if (activePage !== "thread") {
             setThreadSubagentDetailOpen(false);
           }
@@ -49037,7 +49073,13 @@ const html = `<!doctype html>
           Boolean(threadSubagentDetailOpen) &&
           !threadTaskOpenRequest &&
           hasRealAccess;
-        const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen;
+        const isThreadPreviewDetailOpen =
+          activePage === "thread" &&
+          Boolean(welcomeWidgetPreviewAttachment) &&
+          !threadTaskOpenRequest &&
+          !threadSubagentDetailOpen &&
+          hasRealAccess;
+        const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen || isThreadPreviewDetailOpen;
 
         function renderAuthGate() {
           return React.createElement("div", { className: "playground-auth-panel" },
@@ -50324,17 +50366,7 @@ const html = `<!doctype html>
                                   })
                                 : renderAuthGate()
                               : null
-                          ),
-                          activePage === "thread" && hasRealAccess && welcomeWidgetPreviewAttachment
-                            ? React.createElement("div", { className: "tb-runner-document-preview-host" },
-                                React.createElement(RunnerDocumentPreviewDrawer, {
-                                  attachment: welcomeWidgetPreviewAttachment,
-                                  requestHeaders,
-                                  apiKey: apiKey,
-                                  onClose: () => setWelcomeWidgetPreviewAttachment(null),
-                                })
-                              )
-                            : null
+                          )
                         )
                   )
                   ,
@@ -50434,6 +50466,23 @@ const html = `<!doctype html>
                             "playground-thread-subagent-drawer-host tb-runner-chat" +
                             (isThreadSubagentDetailOpen ? " tb-runner-chat-subagent-detail-open" : ""),
                         })
+                      )
+                    : null,
+                  activePage === "thread" && hasRealAccess
+                    ? React.createElement("aside", {
+                        className: "playground-thread-preview-drawer" + (isThreadPreviewDetailOpen ? " is-open" : ""),
+                        "aria-hidden": isThreadPreviewDetailOpen ? "false" : "true",
+                      },
+                        welcomeWidgetPreviewAttachment
+                          ? React.createElement(RunnerDocumentPreviewDrawer, {
+                              attachment: welcomeWidgetPreviewAttachment,
+                              requestHeaders,
+                              apiKey: apiKey,
+                              inline: true,
+                              showResizeHandle: false,
+                              onClose: () => setWelcomeWidgetPreviewAttachment(null),
+                            })
+                          : null
                       )
                     : null
                 ),
@@ -51781,11 +51830,28 @@ async function proxyAiosLatestBriefingHtml(req, res) {
       });
     }
 
+    const escapedBaseHref = briefingPublicUrl
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    const baseTag = `<base href="${escapedBaseHref}" />`;
+    const shellStyles =
+      '<style>html,body{margin:0;padding:0;background:#fff;color:#111;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}img,svg,video,canvas,iframe{max-width:100%;height:auto;}pre{white-space:pre-wrap;word-break:break-word;}table{max-width:100%;border-collapse:collapse;}*{box-sizing:border-box;}</style>';
+    let rewrittenHtml = String(briefingHtml || "");
+    if (/<head[\s>]/i.test(rewrittenHtml)) {
+      rewrittenHtml = rewrittenHtml.replace(/<head(\s[^>]*)?>/i, (match) => `${match}${baseTag}${shellStyles}`);
+    } else if (/<html[\s>]/i.test(rewrittenHtml)) {
+      rewrittenHtml = rewrittenHtml.replace(/<html(\s[^>]*)?>/i, (match) => `${match}<head>${baseTag}${shellStyles}</head>`);
+    } else {
+      rewrittenHtml = `<!doctype html><html><head><meta charset="utf-8" />${baseTag}${shellStyles}</head><body>${rewrittenHtml}</body></html>`;
+    }
+
     res.writeHead(200, {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
     });
-    res.end(briefingHtml);
+    res.end(rewrittenHtml);
   } catch (error) {
     return sendJson(res, 502, {
       error: "Failed to proxy latest briefing HTML",
