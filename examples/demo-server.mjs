@@ -11448,6 +11448,68 @@ const html = `<!doctype html>
         margin-top: 18px;
       }
 
+      .playground-tasks-project-wallpaper-field {
+        margin-top: 16px;
+      }
+
+      .playground-tasks-project-wallpaper-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-tasks-project-wallpaper-option {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        padding: 0;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        cursor: pointer;
+        transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+      }
+
+      .playground-tasks-project-wallpaper-option:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+      }
+
+      .playground-tasks-project-wallpaper-option.is-active {
+        border-color: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-tasks-project-wallpaper-option-image {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .playground-tasks-project-wallpaper-option-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.26);
+      }
+
+      .playground-tasks-project-wallpaper-option-label {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 16px 10px 8px;
+        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.78));
+        font-size: 11px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+        text-align: left;
+      }
+
       .playground-tasks-project-modal-actions {
         display: flex;
         align-items: center;
@@ -11560,16 +11622,16 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-project-card {
-        --playground-project-accent: #79d0ff;
         display: flex;
         flex-direction: column;
         min-width: 0;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        border: 0;
         border-radius: 22px;
-        background:
-          radial-gradient(circle at top left, color-mix(in srgb, var(--playground-project-accent) 46%, transparent), transparent 54%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
       }
 
       .playground-tasks-project-card-hero {
@@ -11578,54 +11640,89 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
-        gap: 10px;
-        background:
-          radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--playground-project-accent) 58%, transparent), transparent 48%),
-          radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--playground-project-accent) 38%, #ffffff 4%), transparent 52%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(15, 15, 15, 0.02));
+        gap: 0;
+      }
+
+      .playground-tasks-project-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .playground-tasks-project-card-actions {
+        flex: 0 0 auto;
+        align-self: flex-start;
+        z-index: 2;
       }
 
       .playground-tasks-project-card-icon {
+        position: relative;
         width: 42px;
         height: 42px;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: rgba(0, 0, 0, 0.18);
+        border-radius: 50%;
+        border: 0;
+        background: transparent;
         color: rgba(255, 255, 255, 0.92);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+      }
+
+      .playground-tasks-project-card-icon::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-tasks-project-card-kicker {
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 12px;
+        font-weight: 400;
         letter-spacing: 0.04em;
-        text-transform: uppercase;
         color: rgba(255, 255, 255, 0.56);
+        margin-bottom: 12px;
       }
 
       .playground-tasks-project-card-title {
         font-size: 22px;
         line-height: 1.1;
-        font-weight: 600;
+        font-weight: 400;
         color: rgba(255, 255, 255, 0.98);
       }
 
       .playground-tasks-project-card-copy {
         font-size: 13px;
         line-height: 1.55;
+        font-weight: 400;
         color: rgba(255, 255, 255, 0.7);
         max-width: 520px;
+        margin-top: 10px;
       }
 
       .playground-tasks-project-card-body {
         padding: 16px 18px 18px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 0;
       }
 
       .playground-tasks-project-card-metrics {
@@ -11633,6 +11730,15 @@ const html = `<!doctype html>
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
+      }
+
+      .playground-tasks-project-card .playground-tasks-chip {
+        border: 0;
+        background: rgba(0, 0, 0, 0.22);
+        color: rgba(255, 255, 255, 0.82);
+        font-weight: 400;
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
       }
 
       .playground-tasks-project-card-footer {
@@ -11742,6 +11848,11 @@ const html = `<!doctype html>
         display: flex;
         align-items: center;
         gap: 6px;
+      }
+
+      .playground-tasks-project-navbar {
+        padding-left: 0;
+        padding-right: 0;
       }
 
       .playground-tasks-project-navbar-title .playground-content-title {
@@ -14204,6 +14315,9 @@ const html = `<!doctype html>
         .playground-tasks-project-icon-picker {
           width: min(224px, calc(100vw - 60px));
         }
+        .playground-tasks-project-wallpaper-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
         .playground-environments-detail-header {
           flex-direction: column;
           align-items: stretch;
@@ -15925,6 +16039,16 @@ const html = `<!doctype html>
         { id: "subtask", label: "Subtask" },
       ];
       const PLAYGROUND_TASK_HUMAN_ME_ID = "__runner_playground_human_me__";
+      const PLAYGROUND_PROJECT_WALLPAPER_OPTIONS = [
+        { id: "mountains", name: "Mountains", url: "/img/bg/mountain.avif", thumbnail: "/img/bg/mountain.avif" },
+        { id: "aurora", name: "Road", url: "/img/bg/road.avif", thumbnail: "/img/bg/road.avif?auto=compress&cs=tinysrgb&w=300" },
+        { id: "desert", name: "Desert", url: "/img/bg/newdesert.avif", thumbnail: "/img/bg/newdesert.avif" },
+        { id: "ocean", name: "Ocean", url: "/img/bg/water.avif", thumbnail: "/img/bg/water.avif" },
+        { id: "forest", name: "Color Blend", url: "/img/bg/blend.avif", thumbnail: "/img/bg/blend.avif" },
+        { id: "night-sky", name: "Dune", url: "/img/bg/dune.avif", thumbnail: "/img/bg/dune.avif" },
+        { id: "abstract-dark", name: "Abstract Dark", url: "/img/bg/bg-abstract.avif", thumbnail: "/img/bg/bg-abstract.avif?auto=compress&cs=tinysrgb&w=300" },
+        { id: "gradient-orange", name: "Moon", url: "/img/bg/moon.avif", thumbnail: "/img/bg/moon.avif" },
+      ];
       const PLAYGROUND_PROJECT_ACCENT_COLORS = [
         "#79d0ff",
         "#f67ab7",
@@ -16033,6 +16157,29 @@ const html = `<!doctype html>
         return PLAYGROUND_PROJECT_ACCENT_COLORS[index % PLAYGROUND_PROJECT_ACCENT_COLORS.length];
       }
 
+      function getPlaygroundProjectWallpaperId(value, fallbackId = "") {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (PLAYGROUND_PROJECT_WALLPAPER_OPTIONS.some((option) => option.id === normalized)) {
+          return normalized;
+        }
+        if (!fallbackId) {
+          return "";
+        }
+        const normalizedFallback = String(fallbackId || "").trim().toLowerCase();
+        return PLAYGROUND_PROJECT_WALLPAPER_OPTIONS.some((option) => option.id === normalizedFallback)
+          ? normalizedFallback
+          : PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id;
+      }
+
+      function getPlaygroundProjectWallpaperConfig(projectOrWallpaperId, index = 0) {
+        const fallback = PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[index % PLAYGROUND_PROJECT_WALLPAPER_OPTIONS.length]
+          || PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0];
+        const wallpaperId = typeof projectOrWallpaperId === "string"
+          ? getPlaygroundProjectWallpaperId(projectOrWallpaperId, "")
+          : getPlaygroundProjectWallpaperId(projectOrWallpaperId?.wallpaperId || projectOrWallpaperId?.metadata?.wallpaperId, "");
+        return PLAYGROUND_PROJECT_WALLPAPER_OPTIONS.find((option) => option.id === wallpaperId) || fallback;
+      }
+
       function getPlaygroundProjectIconId(value) {
         const normalized = String(value || "").trim().toLowerCase();
         return PLAYGROUND_PROJECT_ICON_OPTIONS.some((option) => option.id === normalized)
@@ -16123,6 +16270,7 @@ const html = `<!doctype html>
           name: "",
           description: "",
           icon: PLAYGROUND_PROJECT_ICON_OPTIONS[0].id,
+          wallpaperId: PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id,
           color: null,
           defaultEnvironmentId: null,
           metadata: null,
@@ -17236,6 +17384,7 @@ const html = `<!doctype html>
           ? project.metadata
           : null;
         const icon = getPlaygroundProjectIconId(project.icon || metadata?.icon);
+        const wallpaperId = getPlaygroundProjectWallpaperId(project.wallpaperId || metadata?.wallpaperId, "");
 
         return {
           ...draft,
@@ -17244,6 +17393,7 @@ const html = `<!doctype html>
           name: typeof project.name === "string" ? project.name : draft.name,
           description: typeof project.description === "string" ? project.description : draft.description,
           icon,
+          wallpaperId,
           color: typeof project.color === "string" && project.color.trim() ? project.color.trim() : null,
           defaultEnvironmentId: typeof project.defaultEnvironmentId === "string" && project.defaultEnvironmentId.trim()
             ? project.defaultEnvironmentId.trim()
@@ -29305,6 +29455,7 @@ const html = `<!doctype html>
         const [projectComposerMode, setProjectComposerMode] = useState("create");
         const [projectIconPickerOpen, setProjectIconPickerOpen] = useState(false);
         const [projectSidebarPopover, setProjectSidebarPopover] = useState("");
+        const [projectCardMenuProjectId, setProjectCardMenuProjectId] = useState("");
         const [projectsHomeSortMode, setProjectsHomeSortMode] = useState("updated-desc");
         const [projectDraft, setProjectDraft] = useState(buildPlaygroundDefaultProjectDraft());
         const projectDescriptionTextareaRef = useRef(null);
@@ -31768,8 +31919,14 @@ const html = `<!doctype html>
         }
 
         function openProjectComposerForEdit(projectRecord) {
+          const normalizedProject = normalizePlaygroundProjectRecord(projectRecord || selectedProject || buildPlaygroundDefaultProjectDraft());
+          const projectIndex = projects.findIndex((project) => project.id === normalizedProject.id);
+          const wallpaperConfig = getPlaygroundProjectWallpaperConfig(projectRecord || normalizedProject, projectIndex >= 0 ? projectIndex : 0);
           setProjectComposerMode("edit");
-          setProjectDraft(normalizePlaygroundProjectRecord(projectRecord || selectedProject || buildPlaygroundDefaultProjectDraft()));
+          setProjectDraft({
+            ...normalizedProject,
+            wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, wallpaperConfig.id),
+          });
           setIsProjectDescriptionEditing(false);
           setProjectSaveState({
             isSaving: false,
@@ -32383,6 +32540,21 @@ const html = `<!doctype html>
           document.addEventListener("mousedown", handleProjectSidebarPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handleProjectSidebarPopoverPointerDown);
         }, [projectSidebarPopover]);
+
+        useEffect(() => {
+          if (!projectCardMenuProjectId) return undefined;
+
+          function handleProjectCardMenuPointerDown(event) {
+            const target = event?.target instanceof Element ? event.target : null;
+            if (target?.closest(".playground-tasks-project-card-actions")) {
+              return;
+            }
+            setProjectCardMenuProjectId("");
+          }
+
+          document.addEventListener("mousedown", handleProjectCardMenuPointerDown);
+          return () => document.removeEventListener("mousedown", handleProjectCardMenuPointerDown);
+        }, [projectCardMenuProjectId]);
 
         useEffect(() => {
           if (!backlogToolbarPopover) return undefined;
@@ -34466,6 +34638,7 @@ const html = `<!doctype html>
                 metadata: {
                   ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
                   icon: getPlaygroundProjectIconId(projectDraft.icon),
+                  wallpaperId: getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
                 },
               }),
             });
@@ -34524,6 +34697,7 @@ const html = `<!doctype html>
                 metadata: {
                   ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
                   icon: getPlaygroundProjectIconId(projectDraft.icon),
+                  wallpaperId: getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
                 },
               }),
             });
@@ -36995,9 +37169,10 @@ const html = `<!doctype html>
             ...buildEmptyPlaygroundProjectSummary(),
             ...(project.summary && typeof project.summary === "object" ? project.summary : {}),
           };
-          const accent = getPlaygroundProjectAccent(project, index);
+          const wallpaper = getPlaygroundProjectWallpaperConfig(project, index);
           const projectIconConfig = getPlaygroundProjectIconConfig(project.icon);
           const ProjectIcon = projectIconConfig.icon;
+          const isProjectCardMenuOpen = projectCardMenuProjectId === project.id;
 
           return React.createElement("div", {
               key: project.id,
@@ -37005,7 +37180,7 @@ const html = `<!doctype html>
               role: "button",
               tabIndex: 0,
               style: {
-                "--playground-project-accent": accent,
+                backgroundImage: 'linear-gradient(180deg, rgba(9, 10, 12, 0.12), rgba(9, 10, 12, 0.48)), url("' + wallpaper.url + '")',
               },
               onClick: () => handleSelectProject(project.id),
               onKeyDown: (event) => {
@@ -37013,11 +37188,63 @@ const html = `<!doctype html>
                   event.preventDefault();
                   handleSelectProject(project.id);
                 }
-              },
+            },
             },
               React.createElement("div", { className: "playground-tasks-project-card-hero" },
-                React.createElement("div", { className: "playground-tasks-project-card-icon" },
-                  React.createElement(ProjectIcon, { width: 20, height: 20, strokeWidth: 1.9 })
+                React.createElement("div", { className: "playground-tasks-project-card-top" },
+                  React.createElement("div", { className: "playground-tasks-project-card-icon" },
+                    React.createElement(ProjectIcon, { width: 20, height: 20, strokeWidth: 1.9 })
+                  ),
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-project-card-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain" + (isProjectCardMenuOpen ? " is-active" : ""),
+                      "aria-label": "Project actions",
+                      "aria-expanded": isProjectCardMenuOpen ? "true" : "false",
+                      onClick: (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setProjectCardMenuProjectId((current) => current === project.id ? "" : project.id);
+                      },
+                    }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+                    isProjectCardMenuOpen
+                      ? React.createElement("div", {
+                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in",
+                          onClick: (event) => event.stopPropagation(),
+                        },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: (event) => {
+                              event.stopPropagation();
+                              setProjectCardMenuProjectId("");
+                              openProjectComposerForEdit(project);
+                            },
+                          },
+                            React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "Edit Project"),
+                              React.createElement("span", null, "Change icon, title, instructions, and card background.")
+                            )
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                            onClick: (event) => {
+                              event.stopPropagation();
+                              setProjectCardMenuProjectId("");
+                              void handleDeleteProject(project.id);
+                            },
+                          },
+                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "Delete Project"),
+                              React.createElement("span", null, "Remove this project and its planning scope.")
+                            )
+                          )
+                        )
+                      : null
+                  )
                 ),
                 React.createElement("div", { className: "playground-tasks-project-card-kicker" }, "Project Workspace"),
                 React.createElement("div", { className: "playground-tasks-project-card-title" }, project.name || "Untitled Project"),
@@ -37025,14 +37252,8 @@ const html = `<!doctype html>
               ),
               React.createElement("div", { className: "playground-tasks-project-card-body" },
                 React.createElement("div", { className: "playground-tasks-project-card-metrics" },
-                  React.createElement("span", { className: "playground-tasks-chip" }, summary.environmentsCount + " env"),
                   React.createElement("span", { className: "playground-tasks-chip" }, summary.threadsCount + " threads"),
-                  React.createElement("span", { className: "playground-tasks-chip" }, summary.openTasksCount + " open tasks"),
-                  React.createElement("span", { className: "playground-tasks-chip" }, summary.activeSprintCount + " active sprint" + (summary.activeSprintCount === 1 ? "" : "s"))
-                ),
-                React.createElement("div", { className: "playground-tasks-project-card-footer" },
-                  React.createElement("div", { className: "playground-tasks-project-card-updated" }, "Updated " + (formatRelativeThreadTime(project.updatedAt || project.createdAt) || "recently")),
-                  React.createElement("span", { className: "playground-tasks-chip" }, "Open project")
+                  React.createElement("span", { className: "playground-tasks-chip" }, summary.openTasksCount + " open tasks")
                 )
               )
             );
@@ -37103,6 +37324,36 @@ const html = `<!doctype html>
                     onClick: () => closeProjectComposer(),
                     title: "Close",
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-tasks-project-wallpaper-field" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Card Background")
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-wallpaper-grid" },
+                    PLAYGROUND_PROJECT_WALLPAPER_OPTIONS.map((wallpaper) => {
+                      const isSelected = getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id) === wallpaper.id;
+                      return React.createElement("button", {
+                        key: wallpaper.id,
+                        type: "button",
+                        className: "playground-tasks-project-wallpaper-option" + (isSelected ? " is-active" : ""),
+                        onClick: () => setProjectDraft((current) => ({ ...current, wallpaperId: wallpaper.id })),
+                        title: wallpaper.name,
+                      },
+                        React.createElement("img", {
+                          src: wallpaper.thumbnail,
+                          alt: wallpaper.name,
+                          className: "playground-tasks-project-wallpaper-option-image",
+                          draggable: false,
+                        }),
+                        isSelected
+                          ? React.createElement("div", { className: "playground-tasks-project-wallpaper-option-overlay" },
+                              React.createElement(Check, { width: 18, height: 18, strokeWidth: 2.1 })
+                            )
+                          : null,
+                        React.createElement("div", { className: "playground-tasks-project-wallpaper-option-label" }, wallpaper.name)
+                      );
+                    })
+                  )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
                   React.createElement("div", { className: "playground-tasks-detail-section-header" },
