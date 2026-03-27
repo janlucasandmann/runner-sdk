@@ -9510,6 +9510,10 @@ const html = `<!doctype html>
         gap: 0;
       }
 
+      .playground-tasks-main-scroll.is-projects-home {
+        padding-top: 0;
+      }
+
       .playground-tasks-detail-scroll {
         padding: 9px 18px 28px;
         gap: 12px;
@@ -11149,9 +11153,10 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-header.is-projects-home {
-        padding-bottom: 18px;
+        align-items: center;
+        padding: 2px 0 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        margin-bottom: 20px;
+        margin-bottom: 17px;
       }
 
       .playground-tasks-title-block {
@@ -11166,8 +11171,10 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-title.is-projects-home {
-        font-size: 24px;
-        font-weight: 400;
+        font-size: 15px;
+        line-height: 1.2;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.94);
       }
 
       .playground-tasks-copy {
@@ -11747,6 +11754,11 @@ const html = `<!doctype html>
 
       .playground-tasks-project-nav-switch {
         width: fit-content;
+      }
+
+      .playground-tasks-project-home-navbar {
+        margin-bottom: 17px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .playground-tasks-project-workspace .playground-environments-detail-scroll {
@@ -29293,6 +29305,7 @@ const html = `<!doctype html>
         const [projectComposerMode, setProjectComposerMode] = useState("create");
         const [projectIconPickerOpen, setProjectIconPickerOpen] = useState(false);
         const [projectSidebarPopover, setProjectSidebarPopover] = useState("");
+        const [projectsHomeSortMode, setProjectsHomeSortMode] = useState("updated-desc");
         const [projectDraft, setProjectDraft] = useState(buildPlaygroundDefaultProjectDraft());
         const projectDescriptionTextareaRef = useRef(null);
         const [isProjectDescriptionEditing, setIsProjectDescriptionEditing] = useState(false);
@@ -30314,6 +30327,11 @@ const html = `<!doctype html>
           { id: "recent-desc", label: "Recently Updated" },
           { id: "title-asc", label: "Name (A-Z)" },
         ];
+        const projectsHomeSortOptions = [
+          { id: "updated-desc", label: "Recently Updated", description: "Show the latest touched projects first" },
+          { id: "name-asc", label: "Name (A-Z)", description: "Sort projects alphabetically" },
+          { id: "tasks-desc", label: "Most Open Tasks", description: "Surface projects with the most remaining work" },
+        ];
         const activeBacklogFilterOption = backlogFilterOptions.find((option) => option.id === backlogFilterMode) || backlogFilterOptions[0];
         const activeBoardFilterOption = boardFilterOptions.find((option) => option.id === boardFilterMode) || boardFilterOptions[0];
         const activeBacklogSortOption = backlogSortOptions.find((option) => option.id === backlogSortMode) || backlogSortOptions[0];
@@ -30321,6 +30339,7 @@ const html = `<!doctype html>
         const activeReleaseSortOption = releaseSortOptions.find((option) => option.id === releaseSortMode) || releaseSortOptions[0];
         const activeReleaseBacklogFilterOption = backlogFilterOptions.find((option) => option.id === releaseBacklogFilterMode) || backlogFilterOptions[0];
         const activeReleaseBacklogSortOption = backlogSortOptions.find((option) => option.id === releaseBacklogSortMode) || backlogSortOptions[0];
+        const activeProjectsHomeSortOption = projectsHomeSortOptions.find((option) => option.id === projectsHomeSortMode) || projectsHomeSortOptions[0];
         const sortedReleaseOptions = useMemo(() => releases.slice().sort(compareTaskReleaseOrder), [releases, releaseSortMode]);
 
         function taskHasStartedThread(task) {
@@ -30826,13 +30845,22 @@ const html = `<!doctype html>
               return haystack.includes(normalizedSearchQuery);
             })
             .sort((left, right) => {
-              const updatedOrder = String(right.updatedAt || "").localeCompare(String(left.updatedAt || ""));
+              if (projectsHomeSortMode === "name-asc") {
+                return String(left.name || "").localeCompare(String(right.name || ""));
+              }
+              if (projectsHomeSortMode === "tasks-desc") {
+                const openTaskDelta = Number(right.summary?.openTasksCount || 0) - Number(left.summary?.openTasksCount || 0);
+                if (openTaskDelta !== 0) {
+                  return openTaskDelta;
+                }
+              }
+              const updatedOrder = String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || ""));
               if (updatedOrder !== 0) {
                 return updatedOrder;
               }
               return String(left.name || "").localeCompare(String(right.name || ""));
             });
-        }, [normalizedSearchQuery, projects]);
+        }, [normalizedSearchQuery, projects, projectsHomeSortMode]);
 
         const sortedTasks = useMemo(() => {
           return [...tasks]
@@ -38766,15 +38794,17 @@ const html = `<!doctype html>
 
           return React.createElement("div", { className: "playground-environments-page playground-tasks-project-workspace" },
             React.createElement("section", { className: "playground-environments-detail playground-tasks-project-workspace-detail" },
-              React.createElement("div", { className: "playground-content-nav playground-tasks-project-navbar" },
-                React.createElement("div", { className: "playground-tasks-project-navbar-title" },
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-tasks-project-navbar" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
                   React.createElement("button", {
                     type: "button",
                     className: "playground-files-header-icon-button is-plain playground-tasks-project-title-back",
                     onClick: () => handleSelectProject(""),
                     title: "All Projects",
                   }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
-                  React.createElement("div", { className: "playground-content-title" }, selectedProject.name || "Project")
+                  React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                    React.createElement("div", { className: "playground-content-title" }, selectedProject.name || "Project")
+                  )
                 ),
                 React.createElement("div", { className: "playground-content-nav-center" },
                   React.createElement("div", { className: "content-mode-switch playground-tasks-nav playground-tasks-project-nav-switch" },
@@ -38795,7 +38825,7 @@ const html = `<!doctype html>
                     )
                   )
                 ),
-                React.createElement("div", { className: "playground-content-nav-right playground-tasks-project-navbar-actions", ref: projectSidebarActionsRef },
+                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions", ref: projectSidebarActionsRef },
                   React.createElement("div", { className: "playground-files-toolbar-anchor" },
                     React.createElement("button", {
                       type: "button",
@@ -39986,23 +40016,57 @@ const html = `<!doctype html>
           React.createElement("div", { className: "playground-tasks-shell" + (isDetailOpen ? " is-detail-open" : "") + (isTaskAttachmentPreviewOpen ? " is-preview-open" : "") },
             React.createElement("section", { className: "playground-tasks-main" },
               React.createElement("div", {
-                  className: "playground-tasks-main-scroll" + (selectedProject ? " is-project-workspace" : ""),
+                  className: "playground-tasks-main-scroll" + (selectedProject ? " is-project-workspace" : " is-projects-home"),
                   onClick: handleTaskSurfaceClick,
                 },
                 !selectedProject
-                  ? React.createElement("div", { className: "playground-tasks-header playground-tasks-home-width is-projects-home" },
-                      React.createElement("div", { className: "playground-tasks-title-block" },
-                        React.createElement("div", { className: "playground-tasks-title is-projects-home" }, "Projects")
-                      ),
-                      React.createElement("div", { className: "playground-tasks-toolbar" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button is-primary",
-                          onClick: () => openProjectComposer(),
-                        },
-                          React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "New Project")
+                  ? React.createElement("div", { className: "playground-content-nav playground-tasks-project-navbar playground-tasks-project-home-navbar playground-tasks-home-width" },
+                      React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
+                        React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                          React.createElement("div", { className: "playground-content-title" }, "Projects")
                         )
+                      ),
+                      React.createElement("div", { className: "playground-content-nav-center" }),
+                      React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions", ref: projectSidebarActionsRef },
+                        React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-files-header-icon-button is-plain" + (projectSidebarPopover === "search" ? " is-active" : ""),
+                            onClick: () => setProjectSidebarPopover((current) => current === "search" ? "" : "search"),
+                            title: "Search projects",
+                          }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
+                          projectSidebarPopover === "search"
+                            ? React.createElement("div", { className: "playground-files-search-popover" },
+                                React.createElement("div", { className: "playground-files-search-popover-header" },
+                                  React.createElement("div", { className: "playground-files-search-popover-title" }, "Search Projects"),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-files-search-popover-close",
+                                    onClick: () => setProjectSidebarPopover(""),
+                                  }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
+                                ),
+                                React.createElement("div", { className: "playground-files-search-popover-body" },
+                                  React.createElement("div", { className: "playground-files-search-field" },
+                                    React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
+                                    React.createElement("input", {
+                                      type: "text",
+                                      className: "playground-files-search-field-input",
+                                      placeholder: "Search projects by name or description...",
+                                      value: searchQuery,
+                                      onChange: (event) => setSearchQuery(event.target.value),
+                                    })
+                                  ),
+                                  React.createElement("div", { className: "playground-files-search-empty" }, "Filter projects by name, description, open tasks, threads, or environments.")
+                                )
+                              )
+                      : null
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-header-icon-button",
+                          onClick: () => openProjectComposer(),
+                          title: "New project",
+                        }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
                       )
                     )
                   : null,
@@ -47043,6 +47107,12 @@ const html = `<!doctype html>
         }, [activePage]);
 
         useEffect(() => {
+          if (activePage === "settings") {
+            setSidebarOpen(false);
+          }
+        }, [activePage]);
+
+        useEffect(() => {
           if (!threadTaskOpenRequest) {
             return;
           }
@@ -47741,14 +47811,6 @@ const html = `<!doctype html>
                       React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
                     ),
                     React.createElement("div", { className: "account-menu-section" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "account-menu-item",
-                        onClick: handleOpenSkillsShortcut,
-                      },
-                        React.createElement(Layers, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "account-menu-item-label" }, "Skills")
-                      ),
                       React.createElement("button", {
                         type: "button",
                         className: "account-menu-item",
