@@ -223,7 +223,7 @@
   display: flex;
   justify-content: center;
   padding: 10px 12px 12px;
-  background: linear-gradient(to top, rgba(15, 15, 15, 0.96) 68%, rgba(15, 15, 15, 0));
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.96) 68%, rgba(0, 0, 0, 0));
   pointer-events: none;
   transition: right 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }

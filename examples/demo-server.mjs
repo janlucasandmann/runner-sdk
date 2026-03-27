@@ -30,6 +30,8 @@ const html = `<!doctype html>
         --border-subtle: rgba(255, 255, 255, 0.08);
         --text: #f3f6ff;
         --text-dim: rgba(243, 246, 255, 0.68);
+        --playground-app-bg:
+          linear-gradient(to top, #000000 0%, #111111 100%);
       }
 
       * { box-sizing: border-box; }
@@ -38,7 +40,7 @@ const html = `<!doctype html>
         margin: 0;
         color: var(--text);
         font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-        background: #000;
+        background: var(--playground-app-bg);
         width: 100vw;
         height: 100vh;
         overflow: hidden;
@@ -57,7 +59,7 @@ const html = `<!doctype html>
         margin: 0;
         border-radius: 0;
         border: 0;
-        background: #000;
+        background: var(--playground-app-bg);
         overflow: hidden;
         display: grid;
         grid-template-columns: 340px minmax(0, 1fr);
@@ -347,7 +349,7 @@ const html = `<!doctype html>
         height: 100vh;
         display: grid;
         grid-template-columns: 320px minmax(0, 1fr);
-        background: #0f0f0f;
+        background: var(--playground-app-bg);
         transition: grid-template-columns 260ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
@@ -594,7 +596,7 @@ const html = `<!doctype html>
       }
 
       .sidebar-rail-button.is-active {
-        background: rgba(255, 255, 255, 0.1);
+        background: linear-gradient(180deg, rgba(132, 136, 149, 0.72), rgba(78, 80, 88, 0.78));
         color: #fff;
       }
 
@@ -1458,15 +1460,24 @@ const html = `<!doctype html>
       }
 
       .playground-thread-welcome {
-        width: min(100%, 760px);
+        width: min(100%, 780px);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        padding: 0 24px;
+        gap: 18px;
+        padding: 18px 20px;
         text-align: center;
-        pointer-events: none;
+        pointer-events: auto;
+      }
+
+      .playground-thread-welcome-copy {
+        width: min(100%, 760px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        text-align: center;
       }
 
       .playground-thread-welcome-plan {
@@ -1481,11 +1492,528 @@ const html = `<!doctype html>
       .playground-thread-welcome-title {
         margin: 0;
         color: rgba(255, 255, 255, 0.96);
-        font-size: clamp(36px, 4vw, 48px);
-        font-weight: 600;
+        font-size: 32px;
+        font-weight: 500;
         line-height: 1.04;
         letter-spacing: -0.04em;
         text-wrap: balance;
+      }
+
+      .playground-thread-welcome-widgets {
+        width: min(100%, 536px);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 260px));
+        gap: 16px;
+        align-items: stretch;
+        justify-content: center;
+      }
+
+      .playground-thread-widget {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 25px;
+        background: #171717;
+        box-shadow: 0 22px 52px rgba(0, 0, 0, 0.24);
+        color: rgba(255, 255, 255, 0.96);
+        text-align: left;
+        overflow: hidden;
+        transition: transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .playground-thread-widget.is-clickable {
+        cursor: pointer;
+        outline: none;
+      }
+
+      .playground-thread-widget.is-clickable:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 26px 58px rgba(0, 0, 0, 0.28);
+      }
+
+      .playground-thread-widget.is-clickable:focus-visible {
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 24px 56px rgba(0, 0, 0, 0.26);
+      }
+
+      .playground-thread-widget-calendar {
+        min-height: 0;
+        aspect-ratio: 1 / 1;
+        padding: 18px 18px 16px;
+      }
+
+      .playground-thread-widget-calendar-month {
+        margin: 0 0 10px;
+        color: #ff5151;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .playground-thread-widget-calendar-weekdays,
+      .playground-thread-widget-calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+      }
+
+      .playground-thread-widget-calendar-weekdays {
+        gap: 0;
+        margin-bottom: 4px;
+      }
+
+      .playground-thread-widget-calendar-weekday {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 20px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .playground-thread-widget-calendar-grid {
+        gap: 2px 0;
+      }
+
+      .playground-thread-widget-calendar-day {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 24px;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+
+      .playground-thread-widget-calendar-day.is-empty {
+        color: transparent;
+      }
+
+      .playground-thread-widget-calendar-day.is-muted {
+        color: rgba(255, 255, 255, 0.44);
+      }
+
+      .playground-thread-widget-calendar-day.has-events:not(.is-today)::after {
+        content: "";
+        position: absolute;
+        bottom: 2px;
+        left: 50%;
+        width: 3px;
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.75);
+        transform: translateX(-50%);
+      }
+
+      .playground-thread-widget-calendar-day.is-today .playground-thread-widget-calendar-day-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        background: #ff4d57;
+        color: #ffffff;
+      }
+
+      .playground-thread-widget-calendar-footer {
+        margin-top: auto;
+        padding-top: 8px;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .playground-thread-widget-tasks {
+        width: 260px;
+        height: 260px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        background: #212121;
+      }
+
+      .playground-thread-widget-tasks-media {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        height: 36%;
+        min-height: 0;
+        border-radius: 0;
+        overflow: visible;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+
+      .playground-thread-widget-tasks-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.2));
+        pointer-events: none;
+      }
+
+      .playground-thread-widget-tasks-pill {
+        position: absolute;
+        left: 50%;
+        bottom: -22px;
+        z-index: 4;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: calc(100% - 40px);
+        min-height: 42px;
+        padding: 0 18px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        transform: translateX(-50%);
+      }
+
+      .playground-thread-widget-tasks-pill::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: 10px;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-thread-widget-tasks-pill-text {
+        min-width: 0;
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-thread-widget-tasks-surface {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1 1 auto;
+        padding: 34px 16px 16px;
+        margin-top: 0;
+        border-radius: 0;
+        background: #171717;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-thread-widget-tasks-header {
+        display: none;
+      }
+
+      .playground-thread-widget-tasks-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        min-width: 0;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-thread-widget-tasks-list {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-thread-widget-tasks-item {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: space-between;
+      }
+
+      .playground-thread-widget-tasks-item-main {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      .playground-thread-widget-tasks-item-main:focus-visible {
+        outline: 1px solid rgba(255, 255, 255, 0.16);
+        outline-offset: 2px;
+        border-radius: 8px;
+      }
+
+      .playground-thread-widget-tasks-item-priority {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-thread-widget-tasks-item-priority .playground-tasks-priority-value-icon {
+        width: 13px;
+        height: 13px;
+      }
+
+      .playground-thread-widget-tasks-item-label {
+        min-width: 0;
+        flex: 1 1 auto;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-thread-widget-tasks .playground-tasks-backlog-run-button {
+        width: 20px;
+        min-width: 20px;
+        height: 20px;
+        min-height: 20px;
+        max-height: 20px;
+      }
+
+      .playground-thread-widget-tasks .playground-tasks-backlog-run-button svg {
+        width: 8px;
+        height: 8px;
+      }
+
+      .playground-thread-widget-today {
+        width: 260px;
+        height: 260px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px;
+        background: #171717;
+      }
+
+      .playground-thread-widget-today-header {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-bottom: 5px;
+      }
+
+      .playground-thread-widget-today-header-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-thread-widget-today-date {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        text-align: left;
+      }
+
+      .playground-thread-widget-today-date-weekday {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1;
+        letter-spacing: 0.02em;
+      }
+
+      .playground-thread-widget-today-date-value {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+
+      .playground-thread-widget-today-body {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-thread-widget-today-events {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-thread-widget-today-event {
+        min-width: 0;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: opacity 160ms ease;
+      }
+
+      .playground-thread-widget-today-event:hover {
+        opacity: 0.86;
+      }
+
+      .playground-thread-widget-today-event-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .playground-thread-widget-today-event-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .playground-thread-widget-today-event-meta-item {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .playground-thread-widget-today-event-meta-item.is-time {
+        margin-left: auto;
+        flex: 0 0 auto;
+      }
+
+      .playground-thread-widget-today-event-meta-item span {
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-thread-widget-today-event-meta-icon {
+        width: 11px;
+        height: 11px;
+        flex-shrink: 0;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-thread-widget-today-divider {
+        width: 100%;
+        height: 1px;
+        margin: 0;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-thread-widget-today-action {
+        margin-top: auto;
+        padding-top: 5px;
+        align-self: center;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.2;
+        cursor: pointer;
+        transition: opacity 160ms ease, color 160ms ease;
+      }
+
+      .playground-thread-widget-today-action:hover {
+        opacity: 0.86;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .playground-thread-widget-today-empty {
+        margin-top: auto;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .playground-thread-widget-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 0 2px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.5;
+        text-align: left;
+      }
+
+      @media (max-width: 940px) {
+        .playground-thread-welcome-widgets {
+          width: min(100%, 260px);
+          grid-template-columns: minmax(0, 1fr);
+          gap: 14px;
+        }
+
+        .playground-thread-widget {
+          max-width: 260px;
+          margin: 0 auto;
+        }
+
+        .playground-thread-widget-tasks,
+        .playground-thread-widget-today {
+          width: min(100%, 260px);
+        }
       }
 
       .playground-auth-panel {
@@ -1606,6 +2134,12 @@ const html = `<!doctype html>
 
       .playground-view-pane.is-hidden {
         display: none;
+      }
+
+      .tb-runner-document-preview-host .tb-attachment-preview-drawer {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
       }
 
       .changes-view {
@@ -10748,7 +11282,7 @@ const html = `<!doctype html>
       .playground-tasks-comment-dock {
         flex: 0 0 auto;
         padding: 8px 18px 10px;
-        background: linear-gradient(to top, rgba(15, 15, 15, 0.98) 74%, rgba(15, 15, 15, 0));
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.98) 74%, rgba(0, 0, 0, 0));
         position: relative;
         z-index: 1;
       }
@@ -12448,7 +12982,6 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-backlog-run-button {
-        position: relative;
         flex: 0 0 auto;
         margin-left: 0;
         width: 24px;
@@ -12457,43 +12990,18 @@ const html = `<!doctype html>
         min-height: 24px;
         max-height: 24px;
         padding: 0;
-        border: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 999px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255, 255, 255, 0.1);
+        background: transparent;
         color: rgba(255, 255, 255, 0.92);
         cursor: pointer;
-        overflow: hidden;
-        transition: background-color 150ms ease, color 150ms ease;
-      }
-
-      .playground-tasks-backlog-run-button::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: 999px;
-        padding: 1px;
-        background: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
+        transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
       }
 
       .playground-tasks-backlog-run-button svg {
-        position: relative;
-        z-index: 1;
         width: 12px;
         height: 12px;
       }
@@ -14399,7 +14907,7 @@ const html = `<!doctype html>
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -17564,14 +18072,75 @@ const html = `<!doctype html>
         return items.map(normalizePlaygroundProjectRecord);
       }
 
-      function getPlaygroundProjectResponseRecord(data) {
+      function mergePlaygroundProjectRecords(primaryProject, fallbackProject) {
+        const normalizedPrimary = primaryProject && typeof primaryProject === "object"
+          ? normalizePlaygroundProjectRecord(primaryProject)
+          : null;
+        const normalizedFallback = fallbackProject && typeof fallbackProject === "object"
+          ? normalizePlaygroundProjectRecord(fallbackProject)
+          : null;
+
+        if (!normalizedPrimary && !normalizedFallback) {
+          return null;
+        }
+        if (!normalizedPrimary) {
+          return normalizedFallback;
+        }
+        if (!normalizedFallback) {
+          return normalizedPrimary;
+        }
+
+        const fallbackMetadata = normalizedFallback.metadata && typeof normalizedFallback.metadata === "object" && !Array.isArray(normalizedFallback.metadata)
+          ? normalizedFallback.metadata
+          : {};
+        const primaryMetadata = normalizedPrimary.metadata && typeof normalizedPrimary.metadata === "object" && !Array.isArray(normalizedPrimary.metadata)
+          ? normalizedPrimary.metadata
+          : {};
+        const mergedMetadata = {
+          ...fallbackMetadata,
+          ...primaryMetadata,
+        };
+        const mergedWallpaperId = getPlaygroundProjectWallpaperId(
+          normalizedPrimary.wallpaperId
+            || primaryMetadata.wallpaperId
+            || normalizedFallback.wallpaperId
+            || fallbackMetadata.wallpaperId,
+          normalizedFallback.wallpaperId || PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id
+        );
+        const mergedIcon = getPlaygroundProjectIconId(
+          normalizedPrimary.icon
+            || primaryMetadata.icon
+            || normalizedFallback.icon
+            || fallbackMetadata.icon
+        );
+
+        return normalizePlaygroundProjectRecord({
+          ...normalizedFallback,
+          ...normalizedPrimary,
+          icon: mergedIcon,
+          wallpaperId: mergedWallpaperId,
+          metadata: {
+            ...mergedMetadata,
+            icon: mergedIcon,
+            wallpaperId: mergedWallpaperId,
+          },
+          summary: {
+            ...buildEmptyPlaygroundProjectSummary(),
+            ...(normalizedFallback.summary && typeof normalizedFallback.summary === "object" ? normalizedFallback.summary : {}),
+            ...(normalizedPrimary.summary && typeof normalizedPrimary.summary === "object" ? normalizedPrimary.summary : {}),
+          },
+        });
+      }
+
+      function getPlaygroundProjectResponseRecord(data, fallbackProject) {
         const source = data?.project || data?.data || data;
-        return source && typeof source === "object" && typeof source.id === "string"
+        const normalizedSource = source && typeof source === "object" && typeof source.id === "string"
           ? normalizePlaygroundProjectRecord({
               ...source,
               summary: data?.summary && typeof data.summary === "object" ? data.summary : source.summary,
             })
           : null;
+        return mergePlaygroundProjectRecords(normalizedSource, fallbackProject);
       }
 
       function toPlaygroundDatetimeLocalValue(value) {
@@ -17971,6 +18540,320 @@ const html = `<!doctype html>
           hour: "numeric",
           minute: "2-digit",
         });
+      }
+
+      function buildPlaygroundWelcomeCalendarRange(value) {
+        const referenceDate = value instanceof Date ? new Date(value) : new Date(value || Date.now());
+        if (Number.isNaN(referenceDate.getTime())) {
+          return buildPlaygroundWelcomeCalendarRange(new Date());
+        }
+
+        const monthStart = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+        const monthEnd = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0);
+        const start = startOfPlaygroundDay(monthStart);
+        const end = endOfPlaygroundDay(monthEnd);
+        const startOffset = (start.getDay() + 6) % 7;
+        const endOffset = (6 - ((end.getDay() + 6) % 7));
+        start.setDate(start.getDate() - startOffset);
+        end.setDate(end.getDate() + endOffset);
+        return { start, end };
+      }
+
+      function buildPlaygroundWelcomeCalendarWeekdayLabels() {
+        const labels = [];
+        const mondayReference = new Date(Date.UTC(2024, 0, 1));
+        for (let index = 0; index < 7; index += 1) {
+          const date = new Date(mondayReference);
+          date.setUTCDate(mondayReference.getUTCDate() + index);
+          const label = new Intl.DateTimeFormat(undefined, { weekday: "narrow" }).format(date);
+          labels.push(String(label || "").slice(0, 1).toUpperCase() || "");
+        }
+        return labels;
+      }
+
+      function buildPlaygroundWelcomeCalendarMonthLabel(value) {
+        const date = value instanceof Date ? new Date(value) : new Date(value || Date.now());
+        if (Number.isNaN(date.getTime())) {
+          return "";
+        }
+        return new Intl.DateTimeFormat(undefined, { month: "long" }).format(date).toUpperCase();
+      }
+
+      function buildPlaygroundWelcomeCalendarCells(value, eventDateKeys = new Set()) {
+        const referenceDate = value instanceof Date ? new Date(value) : new Date(value || Date.now());
+        if (Number.isNaN(referenceDate.getTime())) {
+          return [];
+        }
+
+        const year = referenceDate.getFullYear();
+        const month = referenceDate.getMonth();
+        const monthStart = new Date(year, month, 1);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const leadingOffset = (monthStart.getDay() + 6) % 7;
+        const totalCells = Math.ceil((leadingOffset + daysInMonth) / 7) * 7;
+        const todayKey = new Date().toISOString().slice(0, 10);
+        const cells = [];
+
+        for (let index = 0; index < totalCells; index += 1) {
+          const dayNumber = index - leadingOffset + 1;
+          if (dayNumber < 1 || dayNumber > daysInMonth) {
+            cells.push({
+              key: "empty:" + index,
+              value: "",
+              isEmpty: true,
+              isToday: false,
+              hasEvents: false,
+            });
+            continue;
+          }
+
+          const date = new Date(year, month, dayNumber);
+          const key = date.toISOString().slice(0, 10);
+          cells.push({
+            key,
+            value: String(dayNumber),
+            isEmpty: false,
+            isToday: key === todayKey,
+            hasEvents: eventDateKeys instanceof Set ? eventDateKeys.has(key) : false,
+          });
+        }
+
+        return cells;
+      }
+
+      function choosePlaygroundWelcomeProject(projects, preferredProjectId) {
+        const normalizedProjects = Array.isArray(projects) ? projects.filter((project) => project?.id) : [];
+        const preferredId = String(preferredProjectId || "").trim();
+        if (preferredId) {
+          const matchedProject = normalizedProjects.find((project) => project.id === preferredId);
+          if (matchedProject) {
+            return matchedProject;
+          }
+        }
+
+        return normalizedProjects
+          .slice()
+          .sort((left, right) => {
+            const rightUpdatedAt = Date.parse(right?.updatedAt || right?.createdAt || 0) || 0;
+            const leftUpdatedAt = Date.parse(left?.updatedAt || left?.createdAt || 0) || 0;
+            return rightUpdatedAt - leftUpdatedAt;
+          })[0] || null;
+      }
+
+      function buildPlaygroundWelcomeTaskRows(tasks, ticketNumbersById) {
+        const normalizedTasks = (Array.isArray(tasks) ? tasks : [])
+          .filter((task) => task?.id)
+          .filter((task) => task.status !== "done")
+          .slice()
+          .sort((left, right) => {
+            const leftUpdatedAt = Date.parse(left?.updatedAt || left?.createdAt || 0) || 0;
+            const rightUpdatedAt = Date.parse(right?.updatedAt || right?.createdAt || 0) || 0;
+            if (leftUpdatedAt !== rightUpdatedAt) {
+              return rightUpdatedAt - leftUpdatedAt;
+            }
+            const leftTicketNumber = parsePlaygroundTaskTicketNumber(ticketNumbersById?.[left.id] || left?.ticketNumber);
+            const rightTicketNumber = parsePlaygroundTaskTicketNumber(ticketNumbersById?.[right.id] || right?.ticketNumber);
+            return rightTicketNumber - leftTicketNumber;
+          });
+
+        return normalizedTasks.slice(0, 4).map((task) => {
+          const normalizedTask = normalizePlaygroundTaskRecord(task);
+          const label = String(task.title || "").trim() || (ticketNumbersById?.[task.id] || task.ticketNumber || "Untitled Task");
+          return {
+            id: normalizedTask.id,
+            label,
+            priority: normalizedTask.priority,
+            isSubtask: isPlaygroundSubtaskRecord(normalizedTask),
+            ticketNumber: ticketNumbersById?.[normalizedTask.id] || normalizedTask.ticketNumber || "",
+            task: normalizedTask,
+          };
+        });
+      }
+
+      function formatPlaygroundWelcomeWeekdayLabel(value) {
+        const date = value instanceof Date ? value : new Date(value || "");
+        if (Number.isNaN(date.getTime())) {
+          return "";
+        }
+        return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
+      }
+
+      function formatPlaygroundWelcomeMonthDayLabel(value) {
+        const date = value instanceof Date ? value : new Date(value || "");
+        if (Number.isNaN(date.getTime())) {
+          return "";
+        }
+        return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
+      }
+
+      function formatPlaygroundWelcomeTimeLabel(value) {
+        const date = value instanceof Date ? value : new Date(value || "");
+        if (Number.isNaN(date.getTime())) {
+          return "";
+        }
+        return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(date);
+      }
+
+      function buildPlaygroundWelcomeTodayState(referenceDate, schedules, projectRecord) {
+        const now = referenceDate instanceof Date ? new Date(referenceDate) : new Date(referenceDate || Date.now());
+        if (Number.isNaN(now.getTime())) {
+          return buildPlaygroundWelcomeTodayState(new Date(), schedules, projectRecord);
+        }
+
+        const projectName = typeof projectRecord?.name === "string" && projectRecord.name.trim()
+          ? projectRecord.name.trim()
+          : "Project calendar";
+        const todayStart = startOfPlaygroundDay(now);
+        const todayEnd = endOfPlaygroundDay(now);
+        const todayEvents = [];
+
+        (Array.isArray(schedules) ? schedules : []).forEach((schedule) => {
+          buildPlaygroundScheduleCalendarEvents(schedule, { start: todayStart, end: todayEnd }).forEach((event) => {
+            const start = event?.start instanceof Date ? event.start : new Date(event?.start || "");
+            if (Number.isNaN(start.getTime())) {
+              return;
+            }
+            todayEvents.push({
+              id: event?.id || schedule?.id || "",
+              start,
+              title: typeof event?.title === "string" && event.title.trim()
+                ? event.title.trim()
+                : (schedule?.name || schedule?.task || "Scheduled run"),
+              schedule: normalizePlaygroundScheduleRecord(event?.resource || schedule),
+            });
+          });
+        });
+
+        todayEvents.sort((left, right) => left.start.getTime() - right.start.getTime());
+
+        const upcomingSchedule = todayEvents[0] || (Array.isArray(schedules) ? schedules : [])
+          .map((schedule) => {
+            const normalizedSchedule = normalizePlaygroundScheduleRecord(schedule);
+            const anchorValue = normalizedSchedule.scheduleType === "one-time"
+              ? normalizedSchedule.scheduledTime || normalizedSchedule.nextRunAt || ""
+              : normalizedSchedule.nextRunAt || normalizedSchedule.scheduledTime || "";
+            const start = new Date(anchorValue);
+            if (Number.isNaN(start.getTime()) || start.getTime() < now.getTime()) {
+              return null;
+            }
+            return {
+              id: normalizedSchedule.id,
+              start,
+              title: normalizedSchedule.name || normalizedSchedule.task || "Scheduled run",
+              schedule: normalizedSchedule,
+            };
+          })
+          .filter(Boolean)
+          .sort((left, right) => left.start.getTime() - right.start.getTime())[0] || null;
+
+        const dailyBriefingDate = new Date(now);
+        dailyBriefingDate.setHours(7, 0, 0, 0);
+        const visibleTodayEvents = todayEvents.slice(0, 2);
+        const fallbackUpcomingEvents = (Array.isArray(schedules) ? schedules : [])
+          .map((schedule) => {
+            const normalizedSchedule = normalizePlaygroundScheduleRecord(schedule);
+            const anchorValue = normalizedSchedule.scheduleType === "one-time"
+              ? normalizedSchedule.scheduledTime || normalizedSchedule.nextRunAt || ""
+              : normalizedSchedule.nextRunAt || normalizedSchedule.scheduledTime || "";
+            const start = new Date(anchorValue);
+            if (Number.isNaN(start.getTime()) || start.getTime() < now.getTime()) {
+              return null;
+            }
+            return {
+              id: normalizedSchedule.id,
+              start,
+              title: normalizedSchedule.name || normalizedSchedule.task || "Scheduled run",
+              schedule: normalizedSchedule,
+            };
+          })
+          .filter(Boolean)
+          .filter((event) => !visibleTodayEvents.some((item) => String(item.id || "") === String(event.id || "")))
+          .sort((left, right) => left.start.getTime() - right.start.getTime())
+          .slice(0, Math.max(0, 2 - visibleTodayEvents.length));
+        const visibleScheduleEvents = visibleTodayEvents.concat(fallbackUpcomingEvents);
+        const primaryEvent = todayEvents[0] || upcomingSchedule || null;
+        const eventCountToday = todayEvents.length;
+        const primaryDate = primaryEvent?.start || now;
+        const primarySchedule = primaryEvent?.schedule || null;
+        const locationLabel = String(
+          primarySchedule?.environmentName
+          || primarySchedule?.contextName
+          || primarySchedule?.metadata?.projectName
+          || projectName
+          || "Project calendar"
+        ).trim() || "Project calendar";
+
+        const copy = eventCountToday > 0
+          ? "You have " + eventCountToday + " scheduled event" + (eventCountToday === 1 ? "" : "s") + " today — don't miss " + (eventCountToday === 1 ? "it" : "them") + "!"
+          : primaryEvent
+            ? "Your next scheduled event is coming up."
+            : "No scheduled events today in this project.";
+
+        const items = [{
+          id: "daily-briefing",
+          kind: "briefing",
+          title: "Daily Briefing",
+          locationLabel: "Default",
+          timeLabel: formatPlaygroundWelcomeTimeLabel(dailyBriefingDate),
+        }]
+          .concat(
+            visibleScheduleEvents.map((event) => {
+              const scheduleRecord = normalizePlaygroundScheduleRecord(event?.schedule);
+              return {
+                id: event.id || scheduleRecord.id || generateId("schedule"),
+                kind: "schedule",
+                title: event.title || "Scheduled run",
+                locationLabel: String(
+                  scheduleRecord?.environmentName
+                  || scheduleRecord?.contextName
+                  || scheduleRecord?.metadata?.projectName
+                  || projectName
+                  || "Project calendar"
+                ).trim() || "Project calendar",
+                timeLabel: formatPlaygroundWelcomeTimeLabel(event.start),
+              };
+            })
+          );
+
+        return {
+          hasEventToday: eventCountToday > 0,
+          eventCountToday,
+          title: primaryEvent?.title || "No event scheduled",
+          copy,
+          items,
+          locationLabel,
+          timeLabel: primaryEvent ? formatPlaygroundWelcomeTimeLabel(primaryDate) : "Free today",
+          weekdayLabel: formatPlaygroundWelcomeWeekdayLabel(now),
+          monthDayLabel: formatPlaygroundWelcomeMonthDayLabel(now),
+          actionLabel: "Open calendar",
+        };
+      }
+
+      function buildPlaygroundWelcomeCalendarEventDateKeys(referenceDate, tasks, schedules, ticketNumbersById) {
+        const visibleRange = buildPlaygroundWelcomeCalendarRange(referenceDate);
+        const nextKeys = new Set();
+
+        (Array.isArray(schedules) ? schedules : []).forEach((schedule) => {
+          buildPlaygroundScheduleCalendarEvents(schedule, visibleRange).forEach((event) => {
+            const start = event?.start instanceof Date ? event.start : new Date(event?.start || "");
+            if (Number.isNaN(start.getTime())) return;
+            nextKeys.add(start.toISOString().slice(0, 10));
+          });
+        });
+
+        (Array.isArray(tasks) ? tasks : []).forEach((task) => {
+          buildPlaygroundTaskCalendarEvents(
+            task,
+            ticketNumbersById?.[task.id] || task.ticketNumber || "",
+            visibleRange
+          ).forEach((event) => {
+            const start = event?.start instanceof Date ? event.start : new Date(event?.start || "");
+            if (Number.isNaN(start.getTime())) return;
+            nextKeys.add(start.toISOString().slice(0, 10));
+          });
+        });
+
+        return nextKeys;
       }
 
       function getPlaygroundTaskStatusLabel(status) {
@@ -29401,6 +30284,9 @@ const html = `<!doctype html>
         onTaskRunStateChange,
         onTaskDeleted,
         openTaskRequest,
+        navigationRequest,
+        onNavigationRequestHandled,
+        onProjectScopeChange,
         onRequireAuth,
         onRequestSidebarCollapse,
         detailOnly,
@@ -32397,7 +33283,7 @@ const html = `<!doctype html>
             const nextTasks = parsePlaygroundTaskListResponse(tasksData);
             const nextReleases = parsePlaygroundTaskReleaseListResponse(releasesData);
             const nextSprints = parsePlaygroundTaskSprintListResponse(sprintsData);
-            const projectRecord = getPlaygroundProjectResponseRecord(projectData)
+            const projectRecord = getPlaygroundProjectResponseRecord(projectData, selectedProjectSnapshot)
               || selectedProjectSnapshot
               || normalizePlaygroundProjectRecord({
                   id: projectId,
@@ -32469,6 +33355,13 @@ const html = `<!doctype html>
             }
           } catch {}
         }, [selectedProjectId]);
+
+        useEffect(() => {
+          if (!selectedProjectId || typeof onProjectScopeChange !== "function") {
+            return;
+          }
+          onProjectScopeChange(selectedProjectId);
+        }, [onProjectScopeChange, selectedProjectId]);
 
         useEffect(() => {
           setBacklogComposerSubtaskCommandRequest(null);
@@ -32851,6 +33744,35 @@ const html = `<!doctype html>
             isActive = false;
           };
         }, [backendUrl, requestHeaders, selectedProjectId, selectedTaskId, taskView]);
+
+        useEffect(() => {
+          const requestToken = String(navigationRequest?.token || "").trim();
+          if (!requestToken) {
+            return;
+          }
+
+          const requestedProjectId = String(navigationRequest?.projectId || "").trim();
+          const requestedView = navigationRequest?.view === "calendar" ? "calendar" : "backlog";
+
+          if (requestedProjectId) {
+            handleSelectProject(requestedProjectId);
+          } else {
+            handleSelectProject("");
+          }
+
+          setTaskView(requestedView);
+          if (requestedView === "calendar") {
+            setSelectedTaskId("");
+            setSelectedScheduleId("");
+            setScheduleViewMode("calendar");
+            setScheduleEditorMode("create");
+            resetScheduleSaveState("");
+          }
+
+          if (typeof onNavigationRequestHandled === "function") {
+            onNavigationRequestHandled(requestToken);
+          }
+        }, [navigationRequest, onNavigationRequestHandled]);
 
         useEffect(() => {
           if (!selectedScheduleId) return;
@@ -34647,7 +35569,7 @@ const html = `<!doctype html>
               throw new Error(data?.message || data?.error || "Failed to create project.");
             }
 
-            const createdProject = getPlaygroundProjectResponseRecord(data);
+            const createdProject = getPlaygroundProjectResponseRecord(data, projectDraft);
             if (!createdProject?.id) {
               throw new Error("Project creation failed.");
             }
@@ -34706,7 +35628,7 @@ const html = `<!doctype html>
               throw new Error(data?.message || data?.error || "Failed to update project.");
             }
 
-            const updatedProject = getPlaygroundProjectResponseRecord(data);
+            const updatedProject = getPlaygroundProjectResponseRecord(data, projectDraft);
             if (!updatedProject?.id) {
               throw new Error("Project update failed.");
             }
@@ -40430,6 +41352,26 @@ const html = `<!doctype html>
         const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
         const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
         const [taskOpenRequest, setTaskOpenRequest] = useState(null);
+        const [latestInteractedProjectId, setLatestInteractedProjectId] = useState(() => {
+          try {
+            return localStorage.getItem("runner_demo_tasks_last_project_id")
+              || localStorage.getItem("runner_demo_tasks_project_scope_id")
+              || "";
+          } catch {
+            return "";
+          }
+        });
+        const [tasksPageNavigationRequest, setTasksPageNavigationRequest] = useState(null);
+        const [welcomeWidgetsState, setWelcomeWidgetsState] = useState({
+          status: "idle",
+          error: "",
+          projectId: "",
+          project: null,
+          tasks: [],
+          schedules: [],
+        });
+        const [welcomeWidgetBusyTaskIds, setWelcomeWidgetBusyTaskIds] = useState([]);
+        const [welcomeWidgetPreviewAttachment, setWelcomeWidgetPreviewAttachment] = useState(null);
         const [threadTaskOpenRequest, setThreadTaskOpenRequest] = useState(null);
         const [threadSubagentDetailOpen, setThreadSubagentDetailOpen] = useState(false);
         const [threadSubagentDetailHost, setThreadSubagentDetailHost] = useState(null);
@@ -40587,6 +41529,151 @@ const html = `<!doctype html>
         ), [sessionState.displayName, sessionState.email]);
         const initialThreadPlanLabel = hasSessionAuth ? accountTier + " Plan" : "";
         const showInitialThreadWelcome = activePage === "thread" && hasRealAccess && !currentThreadId;
+        const welcomeWidgetProject = welcomeWidgetsState.project;
+        const welcomeWidgetTicketNumbersById = useMemo(() => (
+          buildPlaygroundTaskTicketNumberMap(welcomeWidgetsState.tasks)
+        ), [welcomeWidgetsState.tasks]);
+        const welcomeWidgetOpenTaskCount = useMemo(() => (
+          welcomeWidgetsState.tasks.filter((task) => task.status !== "done").length
+        ), [welcomeWidgetsState.tasks]);
+        const welcomeWidgetTaskRows = useMemo(() => (
+          buildPlaygroundWelcomeTaskRows(welcomeWidgetsState.tasks, welcomeWidgetTicketNumbersById)
+        ), [welcomeWidgetTicketNumbersById, welcomeWidgetsState.tasks]);
+        const welcomeWidgetTodayState = useMemo(() => (
+          buildPlaygroundWelcomeTodayState(new Date(), welcomeWidgetsState.schedules, welcomeWidgetProject)
+        ), [welcomeWidgetProject, welcomeWidgetsState.schedules]);
+        const welcomeWidgetCalendarEventDateKeys = useMemo(() => (
+          buildPlaygroundWelcomeCalendarEventDateKeys(new Date(), welcomeWidgetsState.tasks, welcomeWidgetsState.schedules, welcomeWidgetTicketNumbersById)
+        ), [welcomeWidgetTicketNumbersById, welcomeWidgetsState.schedules, welcomeWidgetsState.tasks]);
+        const welcomeWidgetCalendarWeekdayLabels = useMemo(() => (
+          buildPlaygroundWelcomeCalendarWeekdayLabels()
+        ), []);
+        const welcomeWidgetCalendarMonthLabel = useMemo(() => (
+          buildPlaygroundWelcomeCalendarMonthLabel(new Date())
+        ), []);
+        const welcomeWidgetCalendarCells = useMemo(() => (
+          buildPlaygroundWelcomeCalendarCells(new Date(), welcomeWidgetCalendarEventDateKeys)
+        ), [welcomeWidgetCalendarEventDateKeys]);
+
+        useEffect(() => {
+          try {
+            if (latestInteractedProjectId) {
+              localStorage.setItem("runner_demo_tasks_last_project_id", latestInteractedProjectId);
+            }
+          } catch {}
+        }, [latestInteractedProjectId]);
+
+        useEffect(() => {
+          if (!showInitialThreadWelcome || !hasRealAccess) {
+            return undefined;
+          }
+
+          const controller = new AbortController();
+          const welcomeRequestHeaders = {
+            ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
+            "X-Runner-Upstream-Url": String(upstreamUrl || "").trim() || ${JSON.stringify(defaultUpstreamOrigin)},
+          };
+
+          setWelcomeWidgetsState((current) => ({
+            ...current,
+            status: "loading",
+            error: "",
+          }));
+
+          void (async () => {
+            try {
+              const projectsResponse = await fetch(proxyBackendBase + "/projects", {
+                method: "GET",
+                headers: welcomeRequestHeaders,
+                signal: controller.signal,
+              });
+              const projectsData = await projectsResponse.json().catch(() => ({}));
+              if (!projectsResponse.ok) {
+                throw new Error(projectsData?.message || projectsData?.error || "Failed to load projects.");
+              }
+
+              const availableProjects = parsePlaygroundProjectListResponse(projectsData);
+              const resolvedProject = choosePlaygroundWelcomeProject(availableProjects, latestInteractedProjectId);
+              if (!resolvedProject?.id) {
+                setWelcomeWidgetsState({
+                  status: "ready",
+                  error: "",
+                  projectId: "",
+                  project: null,
+                  tasks: [],
+                  schedules: [],
+                });
+                return;
+              }
+
+              const resolvedProjectId = resolvedProject.id;
+              const [projectResponse, tasksResponse, schedulesResponse] = await Promise.all([
+                fetch(proxyBackendBase + "/projects/" + encodeURIComponent(resolvedProjectId), {
+                  method: "GET",
+                  headers: welcomeRequestHeaders,
+                  signal: controller.signal,
+                }),
+                fetch(proxyBackendBase + "/tasks?projectId=" + encodeURIComponent(resolvedProjectId), {
+                  method: "GET",
+                  headers: welcomeRequestHeaders,
+                  signal: controller.signal,
+                }),
+                fetch(proxyBackendBase + "/projects/" + encodeURIComponent(resolvedProjectId) + "/schedules", {
+                  method: "GET",
+                  headers: welcomeRequestHeaders,
+                  signal: controller.signal,
+                }),
+              ]);
+
+              const projectData = await projectResponse.json().catch(() => ({}));
+              const tasksData = await tasksResponse.json().catch(() => ({}));
+              const schedulesData = await schedulesResponse.json().catch(() => ({}));
+
+              if (!projectResponse.ok || !tasksResponse.ok || !schedulesResponse.ok) {
+                throw new Error(
+                  projectData?.message || projectData?.error
+                  || tasksData?.message || tasksData?.error
+                  || schedulesData?.message || schedulesData?.error
+                  || "Failed to load welcome widgets."
+                );
+              }
+
+              const projectRecord = getPlaygroundProjectResponseRecord(projectData, resolvedProject) || resolvedProject;
+              const projectSummary = projectData?.summary && typeof projectData.summary === "object"
+                ? projectData.summary
+                : projectRecord.summary;
+
+              setWelcomeWidgetsState({
+                status: "ready",
+                error: "",
+                projectId: resolvedProjectId,
+                project: {
+                  ...projectRecord,
+                  summary: {
+                    ...buildEmptyPlaygroundProjectSummary(),
+                    ...(projectSummary && typeof projectSummary === "object" ? projectSummary : {}),
+                  },
+                },
+                tasks: parsePlaygroundTaskListResponse(tasksData),
+                schedules: parsePlaygroundScheduleListResponse(schedulesData),
+              });
+            } catch (error) {
+              if (controller.signal.aborted) {
+                return;
+              }
+              setWelcomeWidgetsState({
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load welcome widgets.",
+                projectId: "",
+                project: null,
+                tasks: [],
+                schedules: [],
+              });
+            }
+          })();
+
+          return () => controller.abort();
+        }, [apiKey, hasRealAccess, latestInteractedProjectId, proxyBackendBase, showInitialThreadWelcome, upstreamUrl]);
 
         function buildAiosLoginUrl() {
           const loginUrl = new URL("/login", ${JSON.stringify(aiosOrigin)});
@@ -40735,6 +41822,459 @@ const html = `<!doctype html>
         function openHelpPage() {
           setAccountMenuOpen(false);
           window.open(${JSON.stringify(aiosOrigin + "/support")}, "_blank", "noopener,noreferrer");
+        }
+
+        function handleWelcomeWidgetOpen(view) {
+          const resolvedProjectId = String(welcomeWidgetsState.projectId || latestInteractedProjectId || "").trim();
+          if (resolvedProjectId) {
+            try {
+              localStorage.setItem("runner_demo_tasks_last_project_id", resolvedProjectId);
+            } catch {}
+            setLatestInteractedProjectId(resolvedProjectId);
+          }
+          setTasksPageNavigationRequest({
+            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            projectId: resolvedProjectId,
+            view: view === "calendar" ? "calendar" : "backlog",
+          });
+          setActivePage("tasks");
+        }
+
+        async function loadWelcomeWidgetProjectCustomSkills(projectId) {
+          const normalizedProjectId = String(projectId || "").trim();
+          if (!normalizedProjectId) {
+            return [];
+          }
+
+          const requestUrl = new URL("/api/playground/custom-skills", window.location.origin);
+          requestUrl.searchParams.set("projectId", normalizedProjectId);
+
+          const response = await fetch(requestUrl.toString(), {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
+              "X-Runner-Upstream-Url": upstreamUrl,
+            },
+          });
+          const data = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to load custom skills.");
+          }
+
+          const items = Array.isArray(data?.data) ? data.data : Array.isArray(data?.skills) ? data.skills : [];
+          return items
+            .filter((skill) => skill && typeof skill === "object" && !skill.isDefault && !skill.isSystem)
+            .map((skill) => ({
+              id: skill.id,
+              name: typeof skill.name === "string" && skill.name.trim() ? skill.name.trim() : skill.id,
+              description: typeof skill.description === "string" ? skill.description : "",
+              markdown: typeof skill.markdown === "string" ? skill.markdown : "",
+              codeFiles: Array.isArray(skill.codeFiles)
+                ? skill.codeFiles
+                    .filter((file) => file && typeof file === "object")
+                    .map((file) => ({
+                      name: typeof file.name === "string" ? file.name : "",
+                      content: typeof file.content === "string" ? file.content : "",
+                      language: typeof file.language === "string" ? file.language : undefined,
+                    }))
+                    .filter((file) => file.name)
+                : [],
+            }));
+        }
+
+        function getWelcomeWidgetTaskAssigneeName(taskRecord) {
+          const normalizedAssigneeId = String(taskRecord?.assigneeAgentId || "").trim();
+          if (!normalizedAssigneeId) {
+            return "None";
+          }
+          if (isPlaygroundHumanAssigneeId(normalizedAssigneeId)) {
+            return "Me";
+          }
+          return realAgents.find((agent) => agent?.id === normalizedAssigneeId)?.name || normalizedAssigneeId;
+        }
+
+        function getWelcomeWidgetTaskEnvironmentName(taskRecord) {
+          const normalizedEnvironmentId = String(taskRecord?.environmentId || "").trim();
+          if (!normalizedEnvironmentId) {
+            return "None";
+          }
+          return realEnvironments.find((environment) => environment?.id === normalizedEnvironmentId)?.name || normalizedEnvironmentId;
+        }
+
+        function welcomeWidgetTaskHasStartedThread(taskRecord) {
+          const lastStartedThreadId = typeof taskRecord?.lastStartedThreadId === "string"
+            ? taskRecord.lastStartedThreadId.trim()
+            : "";
+          if (lastStartedThreadId) {
+            return true;
+          }
+          const linkedThreadIds = Array.isArray(taskRecord?.linkedThreadIds)
+            ? taskRecord.linkedThreadIds.filter((value) => typeof value === "string" && value.trim())
+            : [];
+          return linkedThreadIds.length > 0;
+        }
+
+        function isWelcomeWidgetTaskLaunchLocked(taskRecord) {
+          const normalizedTaskId = String(taskRecord?.id || "").trim();
+          if (!normalizedTaskId) {
+            return false;
+          }
+          const taskRunState = taskRunStates[normalizedTaskId];
+          const phase = typeof taskRunState?.phase === "string" ? taskRunState.phase.trim().toLowerCase() : "";
+          return welcomeWidgetTaskHasStartedThread(taskRecord)
+            || welcomeWidgetBusyTaskIds.includes(normalizedTaskId)
+            || phase === "starting"
+            || phase === "running";
+        }
+
+        function updateWelcomeWidgetTaskLocally(taskRecord) {
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          setWelcomeWidgetsState((current) => ({
+            ...current,
+            tasks: (Array.isArray(current.tasks) ? current.tasks : []).map((task) => task?.id === normalizedTask.id ? normalizedTask : task),
+          }));
+        }
+
+        async function patchWelcomeWidgetTaskRecord(taskRecord, overrides = {}) {
+          const normalizedTask = normalizePlaygroundTaskRecord({
+            ...normalizePlaygroundTaskRecord(taskRecord),
+            ...overrides,
+          });
+          const metadata = buildPlaygroundTaskMetadata(normalizedTask, {
+            ticketNumber: normalizedTask.ticketNumber,
+            taskType: normalizedTask.taskType,
+            parentTaskId: normalizedTask.parentTaskId,
+            assigneeAgentId: normalizedTask.assigneeAgentId,
+            environmentId: normalizedTask.environmentId,
+            attachments: normalizedTask.attachments,
+            enabledSkills: normalizedTask.enabledSkills,
+            connectors: normalizedTask.connectors,
+            comments: normalizedTask.comments,
+          });
+          const nextAssigneeAgentId = isPlaygroundHumanAssigneeId(normalizedTask.assigneeAgentId)
+            ? null
+            : normalizedTask.assigneeAgentId;
+
+          const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTask.id), {
+            method: "PATCH",
+            headers: {
+              ...authRequestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              projectId: normalizedTask.projectId || welcomeWidgetsState.projectId || "",
+              releaseId: normalizedTask.releaseId,
+              ticketNumber: normalizedTask.ticketNumber,
+              type: normalizedTask.taskType,
+              parentTaskId: normalizedTask.taskType === "subtask" ? normalizedTask.parentTaskId : null,
+              title: normalizedTask.title,
+              description: normalizedTask.description,
+              status: normalizedTask.status,
+              priority: normalizedTask.priority,
+              sprintId: normalizedTask.sprintId,
+              assigneeAgentId: nextAssigneeAgentId,
+              environmentId: normalizedTask.environmentId,
+              dependencyIds: normalizedTask.dependencyIds,
+              linkedThreadIds: normalizedTask.linkedThreadIds,
+              lastStartedThreadId: normalizedTask.lastStartedThreadId,
+              scheduledStartAt: normalizedTask.scheduledStartAt,
+              scheduledEndAt: normalizedTask.scheduledEndAt,
+              dueAt: normalizedTask.dueAt,
+              completedAt: normalizedTask.completedAt,
+              sortOrder: Number.isFinite(normalizedTask.sortOrder) ? Number(normalizedTask.sortOrder) : Date.now(),
+              metadata,
+            }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to update task.");
+          }
+          const updatedTask = getPlaygroundTaskResponseRecord(data);
+          if (!updatedTask?.id) {
+            throw new Error("Task update failed.");
+          }
+          return updatedTask;
+        }
+
+        async function buildWelcomeWidgetEnabledSkillsPayload(taskRecord) {
+          const enabledSkillIds = normalizePlaygroundEnabledSkillIds(taskRecord?.enabledSkills);
+          const defaultSkillMap = {
+            image_generation: "imageGeneration",
+            web_search: "webSearch",
+            research: "research",
+            pdf: "pdf",
+            frontend_design: "frontendDesign",
+            pptx: "pptx",
+            memory: "memory",
+            task_management: "taskManagement",
+          };
+          const payload = {};
+          Object.entries(defaultSkillMap).forEach(([skillId, payloadKey]) => {
+            payload[payloadKey] = enabledSkillIds.includes(skillId);
+          });
+          const customSkillIds = enabledSkillIds.filter((skillId) => !defaultSkillMap[skillId]);
+          if (customSkillIds.length > 0) {
+            const projectCustomSkills = await loadWelcomeWidgetProjectCustomSkills(taskRecord?.projectId || welcomeWidgetsState.projectId || "");
+            payload.customSkills = customSkillIds
+              .map((skillId) => projectCustomSkills.find((skill) => skill?.id === skillId) || null)
+              .filter(Boolean)
+              .map((skill) => ({
+                id: skill.id,
+                name: skill.name,
+                description: skill.description,
+                markdown: skill.markdown,
+                codeFiles: Array.isArray(skill.codeFiles) ? skill.codeFiles : [],
+              }));
+          }
+          return payload;
+        }
+
+        function buildWelcomeWidgetGithubRepoReference(taskRecord) {
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const attachments = normalizePlaygroundTaskAttachmentList(normalizedTask.attachments);
+          const githubAttachment = attachments.find((attachment) =>
+            getPlaygroundTaskAttachmentConnectorSource(attachment) === "github"
+            && attachment.connectorRepoFullName
+          ) || null;
+          if (githubAttachment?.connectorRepoFullName && githubAttachment?.connectorRef) {
+            const repoFullName = githubAttachment.connectorRepoFullName;
+            return {
+              repoFullName,
+              repoName: repoFullName.split("/").pop() || repoFullName,
+              branch: githubAttachment.connectorRef,
+            };
+          }
+
+          const connectors = normalizePlaygroundTaskConnectorSelections(normalizedTask.connectors);
+          const githubSelection = connectors.github;
+          const githubItem = (Array.isArray(githubSelection?.items) ? githubSelection.items : [])
+            .map((item) => normalizePlaygroundTaskConnectorItem(item))
+            .filter(Boolean)
+            .find((item) => item.repoFullName) || null;
+          if (!githubItem?.repoFullName || !githubItem?.ref) {
+            return null;
+          }
+          return {
+            repoFullName: githubItem.repoFullName,
+            repoName: githubItem.repoFullName.split("/").pop() || githubItem.repoFullName,
+            branch: githubItem.ref,
+          };
+        }
+
+        function buildWelcomeWidgetTaskPreview(taskRecord, threadId = "") {
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          return {
+            taskId: normalizedTask.id,
+            projectId: normalizedTask.projectId || welcomeWidgetsState.projectId || "",
+            projectName: welcomeWidgetProject?.name || "",
+            threadId: String(threadId || "").trim(),
+            ticketNumber: welcomeWidgetTicketNumbersById[normalizedTask.id] || normalizedTask.ticketNumber || "000",
+            title: normalizedTask.title || "Untitled Task",
+            description: normalizedTask.description || "",
+            status: normalizedTask.status || "todo",
+            priority: normalizedTask.priority || "medium",
+            taskType: normalizePlaygroundTaskType(normalizedTask.taskType),
+            assigneeAgentId: normalizedTask.assigneeAgentId || "",
+            assigneeName: getWelcomeWidgetTaskAssigneeName(normalizedTask),
+            environmentId: normalizedTask.environmentId || "",
+            environmentName: getWelcomeWidgetTaskEnvironmentName(normalizedTask),
+          };
+        }
+
+        function buildWelcomeWidgetTaskRunPrompt(taskRecord) {
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const ticketNumber = welcomeWidgetTicketNumbersById[normalizedTask.id] || normalizedTask.ticketNumber || "000";
+          const newline = String.fromCharCode(10);
+          const paragraphBreak = newline + newline;
+          return [
+            "Run this backlog ticket as configured.",
+            "Ticket: " + ticketNumber,
+            "Title: " + (normalizedTask.title || "Untitled Task"),
+            "Type: " + getPlaygroundTaskTypeLabel(normalizedTask.taskType),
+            "Priority: " + getPlaygroundTaskPriorityLabel(normalizedTask.priority),
+            "Assignee: " + getWelcomeWidgetTaskAssigneeName(normalizedTask),
+            "Environment: " + getWelcomeWidgetTaskEnvironmentName(normalizedTask),
+            normalizedTask.description
+              ? "Description:" + newline + normalizedTask.description
+              : "Description:" + newline + "None provided.",
+          ].filter(Boolean).join(paragraphBreak);
+        }
+
+        async function handleWelcomeWidgetToggleTaskDone(taskRecord, event) {
+          event?.stopPropagation?.();
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const normalizedTaskId = String(normalizedTask.id || "").trim();
+          if (!normalizedTaskId) {
+            return;
+          }
+
+          setWelcomeWidgetBusyTaskIds((current) => current.includes(normalizedTaskId) ? current : current.concat(normalizedTaskId));
+          try {
+            const updatedTask = await patchWelcomeWidgetTaskRecord(normalizedTask, {
+              status: normalizedTask.status === "done" ? "todo" : "done",
+              completedAt: normalizedTask.status === "done" ? null : new Date().toISOString(),
+            });
+            updateWelcomeWidgetTaskLocally(updatedTask);
+          } catch (error) {
+            window.alert(error instanceof Error ? error.message : "Failed to update task.");
+          } finally {
+            setWelcomeWidgetBusyTaskIds((current) => current.filter((taskId) => taskId !== normalizedTaskId));
+          }
+        }
+
+        async function handleWelcomeWidgetStartTaskThread(taskRecord, event) {
+          event?.stopPropagation?.();
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const normalizedTaskId = String(normalizedTask.id || "").trim();
+          if (!normalizedTaskId || isPlaygroundHumanAssigneeId(normalizedTask.assigneeAgentId) || isWelcomeWidgetTaskLaunchLocked(normalizedTask)) {
+            return;
+          }
+          if (!hasRealAccess) {
+            handleSignInWithComputerAgents();
+            return;
+          }
+
+          const taskPreview = buildWelcomeWidgetTaskPreview(normalizedTask);
+          setWelcomeWidgetBusyTaskIds((current) => current.includes(normalizedTaskId) ? current : current.concat(normalizedTaskId));
+          applyTaskRunState({
+            taskId: normalizedTaskId,
+            projectId: taskPreview.projectId || "",
+            ticketNumber: taskPreview.ticketNumber || "",
+            title: taskPreview.title || normalizedTask.title || "Untitled Task",
+            phase: "starting",
+          });
+
+          try {
+            const enabledSkillsPayload = await buildWelcomeWidgetEnabledSkillsPayload(normalizedTask);
+            const githubRepo = buildWelcomeWidgetGithubRepoReference(normalizedTask);
+            const launchPrompt = buildWelcomeWidgetTaskRunPrompt(normalizedTask);
+            const launchAttachments = normalizePlaygroundTaskAttachmentList(normalizedTask.attachments);
+            const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/start-thread", {
+              method: "POST",
+              headers: {
+                ...authRequestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                title: taskPreview.ticketNumber + " " + taskPreview.title,
+                environmentId: normalizedTask.environmentId || undefined,
+                agentId: !isPlaygroundHumanAssigneeId(normalizedTask.assigneeAgentId) ? (normalizedTask.assigneeAgentId || undefined) : undefined,
+                enabledSkills: enabledSkillsPayload,
+                attachments: launchAttachments,
+                githubRepo: githubRepo || undefined,
+                connectors: normalizePlaygroundTaskConnectorSelections(normalizedTask.connectors),
+                launchPrompt,
+                taskPreview,
+              }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to start thread from task.");
+            }
+
+            const threadRecord = getPlaygroundThreadResponseRecord(data);
+            const updatedTask = getPlaygroundTaskResponseRecord(data);
+            if (!threadRecord?.id || !updatedTask?.id) {
+              throw new Error("Task thread creation failed.");
+            }
+
+            updateWelcomeWidgetTaskLocally(updatedTask);
+            upsertRealThreadRecord(threadRecord, {
+              taskPreview: buildWelcomeWidgetTaskPreview(updatedTask, threadRecord.id),
+              status: "running",
+            });
+            if (updatedTask.environmentId) {
+              setEnvironmentId(updatedTask.environmentId);
+            }
+            setLatestInteractedProjectId(updatedTask.projectId || welcomeWidgetsState.projectId || latestInteractedProjectId || "");
+            setThreadAgentSelectionOverride(null);
+            setPendingThreadRunRequest(null);
+            setActivePage("thread");
+            setCurrentThreadId(threadRecord.id);
+            setContentMode("chat");
+            setThreadListMode("threads");
+            setChangesNavigationTarget(null);
+            setRunnerRenderKey((current) => current + 1);
+            applyTaskRunState({
+              taskId: updatedTask.id,
+              projectId: taskPreview.projectId || "",
+              threadId: threadRecord.id,
+              ticketNumber: taskPreview.ticketNumber || "",
+              title: updatedTask.title || taskPreview.title || "Untitled Task",
+              phase: "running",
+            });
+            void refreshThreads();
+            void startThreadRunInBackground(threadRecord.id, {
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              prompt: launchPrompt,
+              attachments: launchAttachments,
+              githubRepo: githubRepo || null,
+              enabledSkills: enabledSkillsPayload || null,
+              environmentId: typeof updatedTask.environmentId === "string" ? updatedTask.environmentId : "",
+            }, buildWelcomeWidgetTaskPreview(updatedTask, threadRecord.id));
+          } catch (error) {
+            applyTaskRunState({
+              taskId: normalizedTaskId,
+              projectId: taskPreview.projectId || "",
+              ticketNumber: taskPreview.ticketNumber || "",
+              title: taskPreview.title || normalizedTask.title || "Untitled Task",
+              phase: "failed",
+              error: error instanceof Error ? error.message : "Failed to start task thread.",
+            });
+            window.alert(error instanceof Error ? error.message : "Failed to start task thread.");
+          } finally {
+            setWelcomeWidgetBusyTaskIds((current) => current.filter((taskId) => taskId !== normalizedTaskId));
+          }
+        }
+
+        async function handleOpenWelcomeDailyBriefingPreview(event) {
+          event?.stopPropagation?.();
+          try {
+            const response = await fetch("/api/aios/briefing/url", {
+              method: "GET",
+              headers: authRequestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !String(data?.url || "").trim()) {
+              throw new Error(data?.message || data?.error || "No daily briefing available.");
+            }
+            setSidebarOpen(false);
+            setThreadTaskOpenRequest(null);
+            setThreadSubagentDetailOpen(false);
+            setWelcomeWidgetPreviewAttachment({
+              id: "welcome-daily-briefing",
+              filename: "daily-briefing.html",
+              mimeType: "text/html",
+              type: "document",
+              htmlPreviewUrl: String(data.url || "").trim(),
+              htmlSandbox: null,
+            });
+          } catch (error) {
+            window.alert(error instanceof Error ? error.message : "Failed to open the daily briefing.");
+          }
+        }
+
+        function handleOpenWelcomeWidgetTaskDetail(taskRecord, event) {
+          event?.stopPropagation?.();
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const normalizedTaskId = String(normalizedTask.id || "").trim();
+          const normalizedProjectId = String(normalizedTask.projectId || welcomeWidgetsState.projectId || "").trim();
+          if (!normalizedTaskId || !normalizedProjectId) {
+            return;
+          }
+          if (!hasRealAccess) {
+            handleSignInWithComputerAgents();
+            return;
+          }
+          setSidebarOpen(false);
+          setThreadTaskOpenRequest({
+            projectId: normalizedProjectId,
+            taskId: normalizedTaskId,
+            threadId: activeRunnerThreadId || currentThreadId || "",
+            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+          });
         }
 
         function openAiosAppPage() {
@@ -44678,6 +46218,58 @@ const html = `<!doctype html>
             + " Z";
         }
 
+        function PlaygroundSettingsResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
+          const frameRef = useRef(null);
+          const [measuredWidth, setMeasuredWidth] = useState(0);
+
+          useLayoutEffect(() => {
+            const node = frameRef.current;
+            if (!node) {
+              return undefined;
+            }
+
+            const updateWidth = () => {
+              const nextWidth = Math.max(1, Math.round(node.clientWidth || fallbackWidth));
+              setMeasuredWidth((current) => current === nextWidth ? current : nextWidth);
+            };
+
+            updateWidth();
+
+            if (typeof ResizeObserver === "undefined") {
+              window.addEventListener("resize", updateWidth);
+              return () => window.removeEventListener("resize", updateWidth);
+            }
+
+            const observer = new ResizeObserver(() => updateWidth());
+            observer.observe(node);
+            return () => observer.disconnect();
+          }, [fallbackWidth]);
+
+          const resolvedSvgWidth = Math.max(1, Math.round(measuredWidth || fallbackWidth));
+          const resolvedSvgHeight = Math.max(1, Math.round(svgHeight || frameHeight || 208));
+
+          return React.createElement("div", {
+              ref: frameRef,
+              className: frameClassName,
+              style: frameHeight ? { height: String(frameHeight) + "px" } : undefined,
+            },
+            React.createElement("svg", {
+              className: "playground-settings-usage-chart-svg",
+              viewBox: "0 0 " + resolvedSvgWidth + " " + resolvedSvgHeight,
+              preserveAspectRatio: "none",
+              role: "img",
+              "aria-label": ariaLabel || "Usage chart",
+            },
+              typeof children === "function"
+                ? children({
+                    svgWidth: resolvedSvgWidth,
+                    svgHeight: resolvedSvgHeight,
+                  })
+                : children
+            )
+          );
+        }
+
         function renderSettingsUsageMixedChart(config) {
           const labels = Array.isArray(config?.labels) ? config.labels : [];
           const barValues = Array.isArray(config?.barValues) ? config.barValues : [];
@@ -44686,155 +46278,152 @@ const html = `<!doctype html>
             return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No usage data in this period");
           }
 
-          const svgWidth = 640;
-          const svgHeight = 240;
+          const chartFrameHeight = config?.tall ? 288 : 208;
+          const baseSvgHeight = 240;
           const marginTop = 12;
           const marginRight = 14;
           const marginBottom = 38;
           const marginLeft = 40;
-          const plotWidth = svgWidth - marginLeft - marginRight;
-          const plotHeight = svgHeight - marginTop - marginBottom;
-          const slotWidth = plotWidth / Math.max(labels.length, 1);
-          const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
           const yMax = Math.max(1, Number(config?.yMax || 0));
-          const baselineY = marginTop + plotHeight;
           const gridLineCount = 4;
           const tickFormatter = typeof config?.tickFormatter === "function"
             ? config.tickFormatter
             : (value) => String(Math.round(value));
           const labelStep = Math.max(1, Math.ceil(labels.length / 8));
-
-          const barRects = barValues.map((value, index) => {
-            const normalizedValue = Math.max(0, Number(value || 0));
-            const height = normalizedValue > 0 ? (normalizedValue / yMax) * plotHeight : 0;
-            return {
-              x: marginLeft + slotWidth * index + (slotWidth - barWidth) / 2,
-              y: baselineY - height,
-              width: barWidth,
-              height,
-            };
-          });
-
-          const linePoints = lineValues.reduce((points, value, index) => {
-            if (value == null || value === undefined || Number.isNaN(Number(value))) {
-              return points;
-            }
-
-            points.push({
-              x: marginLeft + slotWidth * index + slotWidth / 2,
-              y: baselineY - (Math.max(0, Number(value)) / yMax) * plotHeight,
-            });
-            return points;
-          }, []);
-
-          const linePath = buildSettingsSvgLinePath(linePoints);
-          const areaPath = buildSettingsSvgAreaPath(linePoints, baselineY);
           const limitValue = Number(config?.limitValue);
-          const hasLimitLine = Number.isFinite(limitValue) && limitValue > 0;
-          const limitY = hasLimitLine
-            ? baselineY - (Math.min(limitValue, yMax) / yMax) * plotHeight
-            : baselineY;
-
-          return React.createElement("div", { className: "playground-settings-usage-chart-frame" + (config?.tall ? " is-tall" : "") },
-            React.createElement("svg", {
-              className: "playground-settings-usage-chart-svg",
-              viewBox: "0 0 " + svgWidth + " " + svgHeight,
-              preserveAspectRatio: "none",
-              role: "img",
-              "aria-label": config?.ariaLabel || "Usage chart",
-            },
-              Array.from({ length: gridLineCount + 1 }).map((_, index) => {
-                const y = marginTop + (plotHeight / gridLineCount) * index;
-                const tickValue = yMax - (yMax / gridLineCount) * index;
-                return React.createElement(React.Fragment, { key: "grid:" + index },
-                  React.createElement("line", {
-                    x1: marginLeft,
-                    y1: y,
-                    x2: svgWidth - marginRight,
-                    y2: y,
-                    stroke: "rgba(255,255,255,0.10)",
-                    strokeWidth: "1",
-                  }),
-                  React.createElement("text", {
-                    x: marginLeft - 8,
-                    y: y + 3,
-                    textAnchor: "end",
-                    fill: "rgba(255,255,255,0.4)",
-                    fontSize: "10",
-                  }, tickFormatter(tickValue))
-                );
-              }),
-              hasLimitLine
-                ? React.createElement(React.Fragment, null,
-                    React.createElement("line", {
-                      x1: marginLeft,
-                      y1: limitY,
-                      x2: svgWidth - marginRight,
-                      y2: limitY,
-                      stroke: "rgba(255,255,255,0.5)",
-                      strokeWidth: "1",
-                      strokeDasharray: "6 6",
-                    }),
-                    React.createElement("rect", {
-                      x: svgWidth - marginRight - 122,
-                      y: Math.max(marginTop, limitY - 18),
-                      width: "118",
-                      height: "16",
-                      rx: "4",
-                      fill: "rgba(255,255,255,1)",
-                    }),
-                    React.createElement("text", {
-                      x: svgWidth - marginRight - 63,
-                      y: Math.max(marginTop + 11, limitY - 7),
-                      textAnchor: "middle",
-                      fill: "#000",
-                      fontSize: "10",
-                      fontWeight: "500",
-                    }, config?.limitLabel || ("Limit: " + tickFormatter(limitValue)))
-                  )
-                : null,
-              areaPath
-                ? React.createElement("path", {
-                    d: areaPath,
-                    fill: config?.areaColor || "rgba(24,59,184,0.10)",
-                  })
-                : null,
-              barRects.map((bar, index) =>
-                React.createElement("rect", {
-                  key: "bar:" + index,
-                  x: bar.x,
-                  y: bar.y,
-                  width: bar.width,
-                  height: Math.max(bar.height, 1),
-                  rx: "3",
-                  fill: config?.barColor || "rgb(143,196,255)",
-                })
-              ),
-              linePath
-                ? React.createElement("path", {
-                    d: linePath,
-                    fill: "none",
-                    stroke: config?.lineColor || "rgb(24,59,184)",
-                    strokeWidth: "2",
-                    strokeLinecap: "round",
-                    strokeLinejoin: "round",
-                  })
-                : null,
-              labels.map((label, index) => {
-                if (index % labelStep !== 0 && index !== labels.length - 1) {
-                  return null;
+          return React.createElement(PlaygroundSettingsResponsiveSvg, {
+              frameClassName: "playground-settings-usage-chart-frame" + (config?.tall ? " is-tall" : ""),
+              frameHeight: chartFrameHeight,
+              svgHeight: baseSvgHeight,
+              ariaLabel: config?.ariaLabel || "Usage chart",
+            }, ({ svgWidth, svgHeight }) => {
+              const plotWidth = svgWidth - marginLeft - marginRight;
+              const plotHeight = svgHeight - marginTop - marginBottom;
+              const slotWidth = plotWidth / Math.max(labels.length, 1);
+              const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+              const baselineY = marginTop + plotHeight;
+              const barRects = barValues.map((value, index) => {
+                const normalizedValue = Math.max(0, Number(value || 0));
+                const height = normalizedValue > 0 ? (normalizedValue / yMax) * plotHeight : 0;
+                return {
+                  x: marginLeft + slotWidth * index + (slotWidth - barWidth) / 2,
+                  y: baselineY - height,
+                  width: barWidth,
+                  height,
+                };
+              });
+              const linePoints = lineValues.reduce((points, value, index) => {
+                if (value == null || value === undefined || Number.isNaN(Number(value))) {
+                  return points;
                 }
 
-                return React.createElement("text", {
-                  key: "label:" + index,
+                points.push({
                   x: marginLeft + slotWidth * index + slotWidth / 2,
-                  y: svgHeight - 10,
-                  textAnchor: "middle",
-                  fill: "rgba(255,255,255,0.4)",
-                  fontSize: "10",
-                }, label);
-              })
-            )
+                  y: baselineY - (Math.max(0, Number(value)) / yMax) * plotHeight,
+                });
+                return points;
+              }, []);
+              const linePath = buildSettingsSvgLinePath(linePoints);
+              const areaPath = buildSettingsSvgAreaPath(linePoints, baselineY);
+              const hasLimitLine = Number.isFinite(limitValue) && limitValue > 0;
+              const limitY = hasLimitLine
+                ? baselineY - (Math.min(limitValue, yMax) / yMax) * plotHeight
+                : baselineY;
+
+              return React.createElement(React.Fragment, null,
+                Array.from({ length: gridLineCount + 1 }).map((_, index) => {
+                  const y = marginTop + (plotHeight / gridLineCount) * index;
+                  const tickValue = yMax - (yMax / gridLineCount) * index;
+                  return React.createElement(React.Fragment, { key: "grid:" + index },
+                    React.createElement("line", {
+                      x1: marginLeft,
+                      y1: y,
+                      x2: svgWidth - marginRight,
+                      y2: y,
+                      stroke: "rgba(255,255,255,0.10)",
+                      strokeWidth: "1",
+                    }),
+                    React.createElement("text", {
+                      x: marginLeft - 8,
+                      y: y + 3,
+                      textAnchor: "end",
+                      fill: "rgba(255,255,255,0.4)",
+                      fontSize: "10",
+                    }, tickFormatter(tickValue))
+                  );
+                }),
+                hasLimitLine
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement("line", {
+                        x1: marginLeft,
+                        y1: limitY,
+                        x2: svgWidth - marginRight,
+                        y2: limitY,
+                        stroke: "rgba(255,255,255,0.5)",
+                        strokeWidth: "1",
+                        strokeDasharray: "6 6",
+                      }),
+                      React.createElement("rect", {
+                        x: svgWidth - marginRight - 122,
+                        y: Math.max(marginTop, limitY - 18),
+                        width: "118",
+                        height: "16",
+                        rx: "4",
+                        fill: "rgba(255,255,255,1)",
+                      }),
+                      React.createElement("text", {
+                        x: svgWidth - marginRight - 63,
+                        y: Math.max(marginTop + 11, limitY - 7),
+                        textAnchor: "middle",
+                        fill: "#000",
+                        fontSize: "10",
+                        fontWeight: "500",
+                      }, config?.limitLabel || ("Limit: " + tickFormatter(limitValue)))
+                    )
+                  : null,
+                areaPath
+                  ? React.createElement("path", {
+                      d: areaPath,
+                      fill: config?.areaColor || "rgba(24,59,184,0.10)",
+                    })
+                  : null,
+                barRects.map((bar, index) =>
+                  React.createElement("rect", {
+                    key: "bar:" + index,
+                    x: bar.x,
+                    y: bar.y,
+                    width: bar.width,
+                    height: Math.max(bar.height, 1),
+                    rx: "3",
+                    fill: config?.barColor || "rgb(143,196,255)",
+                  })
+                ),
+                linePath
+                  ? React.createElement("path", {
+                      d: linePath,
+                      fill: "none",
+                      stroke: config?.lineColor || "rgb(24,59,184)",
+                      strokeWidth: "2",
+                      strokeLinecap: "round",
+                      strokeLinejoin: "round",
+                    })
+                  : null,
+                labels.map((label, index) => {
+                  if (index % labelStep !== 0 && index !== labels.length - 1) {
+                    return null;
+                  }
+
+                  return React.createElement("text", {
+                    key: "label:" + index,
+                    x: marginLeft + slotWidth * index + slotWidth / 2,
+                    y: svgHeight - 10,
+                    textAnchor: "middle",
+                    fill: "rgba(255,255,255,0.4)",
+                    fontSize: "10",
+                  }, label);
+                })
+              );
+            }
           );
         }
 
@@ -44846,79 +46435,80 @@ const html = `<!doctype html>
             return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No usage data in this period");
           }
 
-          const svgWidth = 640;
-          const svgHeight = 210;
+          const chartFrameHeight = 208;
+          const baseSvgHeight = 210;
           const marginTop = 12;
           const marginRight = 14;
           const marginBottom = 38;
           const marginLeft = 34;
-          const plotWidth = svgWidth - marginLeft - marginRight;
-          const plotHeight = svgHeight - marginTop - marginBottom;
-          const slotWidth = plotWidth / Math.max(labels.length, 1);
-          const barWidth = Math.min(22, Math.max(8, slotWidth * 0.56));
           const totals = labels.map((_, index) => Math.max(0, Number(primaryValues[index] || 0)) + Math.max(0, Number(secondaryValues[index] || 0)));
           const yMax = Math.max(1, Number(config?.yMax || Math.max(...totals, 1)));
-          const baselineY = marginTop + plotHeight;
           const labelStep = Math.max(1, Math.ceil(labels.length / 8));
 
-          return React.createElement("div", { className: "playground-settings-usage-chart-frame is-medium" },
-            React.createElement("svg", {
-              className: "playground-settings-usage-chart-svg",
-              viewBox: "0 0 " + svgWidth + " " + svgHeight,
-              preserveAspectRatio: "none",
-              role: "img",
-              "aria-label": config?.ariaLabel || "Usage breakdown chart",
-            },
-              Array.from({ length: 5 }).map((_, index) => {
-                const y = marginTop + (plotHeight / 4) * index;
-                return React.createElement("line", {
-                  key: "grid:" + index,
-                  x1: marginLeft,
-                  y1: y,
-                  x2: svgWidth - marginRight,
-                  y2: y,
-                  stroke: "rgba(255,255,255,0.10)",
-                  strokeWidth: "1",
-                });
-              }),
-              labels.map((label, index) => {
-                const primary = Math.max(0, Number(primaryValues[index] || 0));
-                const secondary = Math.max(0, Number(secondaryValues[index] || 0));
-                const secondaryHeight = secondary > 0 ? (secondary / yMax) * plotHeight : 0;
-                const primaryHeight = primary > 0 ? (primary / yMax) * plotHeight : 0;
-                const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
-                const secondaryY = baselineY - secondaryHeight;
-                const primaryY = secondaryY - primaryHeight;
+          return React.createElement(PlaygroundSettingsResponsiveSvg, {
+              frameClassName: "playground-settings-usage-chart-frame is-medium",
+              frameHeight: chartFrameHeight,
+              svgHeight: baseSvgHeight,
+              ariaLabel: config?.ariaLabel || "Usage breakdown chart",
+            }, ({ svgWidth, svgHeight }) => {
+              const plotWidth = svgWidth - marginLeft - marginRight;
+              const plotHeight = svgHeight - marginTop - marginBottom;
+              const slotWidth = plotWidth / Math.max(labels.length, 1);
+              const barWidth = Math.min(22, Math.max(8, slotWidth * 0.56));
+              const baselineY = marginTop + plotHeight;
 
-                return React.createElement(React.Fragment, { key: "stack:" + index },
-                  React.createElement("rect", {
-                    x,
-                    y: secondaryY,
-                    width: barWidth,
-                    height: Math.max(secondaryHeight, 1),
-                    rx: "3",
-                    fill: config?.secondaryColor || "rgb(150,150,150)",
-                  }),
-                  React.createElement("rect", {
-                    x,
-                    y: primaryY,
-                    width: barWidth,
-                    height: Math.max(primaryHeight, 1),
-                    rx: "3",
-                    fill: config?.primaryColor || "rgb(255,255,255)",
-                  }),
-                  index % labelStep === 0 || index === labels.length - 1
-                    ? React.createElement("text", {
-                        x: marginLeft + slotWidth * index + slotWidth / 2,
-                        y: svgHeight - 10,
-                        textAnchor: "middle",
-                        fill: "rgba(255,255,255,0.4)",
-                        fontSize: "9",
-                      }, label)
-                    : null
-                );
-              })
-            )
+              return React.createElement(React.Fragment, null,
+                Array.from({ length: 5 }).map((_, index) => {
+                  const y = marginTop + (plotHeight / 4) * index;
+                  return React.createElement("line", {
+                    key: "grid:" + index,
+                    x1: marginLeft,
+                    y1: y,
+                    x2: svgWidth - marginRight,
+                    y2: y,
+                    stroke: "rgba(255,255,255,0.10)",
+                    strokeWidth: "1",
+                  });
+                }),
+                labels.map((label, index) => {
+                  const primary = Math.max(0, Number(primaryValues[index] || 0));
+                  const secondary = Math.max(0, Number(secondaryValues[index] || 0));
+                  const secondaryHeight = secondary > 0 ? (secondary / yMax) * plotHeight : 0;
+                  const primaryHeight = primary > 0 ? (primary / yMax) * plotHeight : 0;
+                  const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                  const secondaryY = baselineY - secondaryHeight;
+                  const primaryY = secondaryY - primaryHeight;
+
+                  return React.createElement(React.Fragment, { key: "stack:" + index },
+                    React.createElement("rect", {
+                      x,
+                      y: secondaryY,
+                      width: barWidth,
+                      height: Math.max(secondaryHeight, 1),
+                      rx: "3",
+                      fill: config?.secondaryColor || "rgb(150,150,150)",
+                    }),
+                    React.createElement("rect", {
+                      x,
+                      y: primaryY,
+                      width: barWidth,
+                      height: Math.max(primaryHeight, 1),
+                      rx: "3",
+                      fill: config?.primaryColor || "rgb(255,255,255)",
+                    }),
+                    index % labelStep === 0 || index === labels.length - 1
+                      ? React.createElement("text", {
+                          x: marginLeft + slotWidth * index + slotWidth / 2,
+                          y: svgHeight - 10,
+                          textAnchor: "middle",
+                          fill: "rgba(255,255,255,0.4)",
+                          fontSize: "9",
+                        }, label)
+                      : null
+                  );
+                })
+              );
+            }
           );
         }
 
@@ -47411,6 +49001,16 @@ const html = `<!doctype html>
             setThreadSubagentDetailOpen(false);
           }
         }, [threadTaskOpenRequest]);
+        useEffect(() => {
+          if (activePage !== "thread") {
+            setWelcomeWidgetPreviewAttachment(null);
+          }
+        }, [activePage]);
+        useEffect(() => {
+          if (threadTaskOpenRequest || threadSubagentDetailOpen) {
+            setWelcomeWidgetPreviewAttachment(null);
+          }
+        }, [threadSubagentDetailOpen, threadTaskOpenRequest]);
         const threadActionTarget = useMemo(() => {
           if (!threadActionMenuState?.threadId) {
             return null;
@@ -47479,11 +49079,173 @@ const html = `<!doctype html>
         }
 
         function renderInitialThreadWelcome() {
+          const currentWelcomeProject = welcomeWidgetProject || null;
+          const welcomeProjectName = currentWelcomeProject?.name || "Latest Project";
+          const welcomeProjectWallpaper = getPlaygroundProjectWallpaperConfig(currentWelcomeProject, 0);
+          const welcomeWidgetHeadline = welcomeProjectName + " • " + welcomeWidgetOpenTaskCount + " task" + (welcomeWidgetOpenTaskCount === 1 ? "" : "s");
+
           return React.createElement("div", { className: "playground-thread-welcome" },
-            initialThreadPlanLabel
-              ? React.createElement("p", { className: "playground-thread-welcome-plan" }, initialThreadPlanLabel)
-              : null,
-            React.createElement("h1", { className: "playground-thread-welcome-title" }, initialThreadGreeting)
+            React.createElement("div", { className: "playground-thread-welcome-copy" },
+              initialThreadPlanLabel
+                ? React.createElement("p", { className: "playground-thread-welcome-plan" }, initialThreadPlanLabel)
+                : null,
+              React.createElement("h1", { className: "playground-thread-welcome-title" }, initialThreadGreeting)
+            ),
+            React.createElement("div", { className: "playground-thread-welcome-widgets" },
+              React.createElement("div", {
+                  className: "playground-thread-widget playground-thread-widget-tasks is-clickable",
+                  role: "button",
+                  tabIndex: 0,
+                  onClick: () => handleWelcomeWidgetOpen("backlog"),
+                  onKeyDown: (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleWelcomeWidgetOpen("backlog");
+                    }
+                  },
+                },
+                React.createElement("div", {
+                    className: "playground-thread-widget-tasks-media",
+                    style: {
+                      backgroundImage: 'url("' + welcomeProjectWallpaper.url + '")',
+                    },
+                  },
+                  React.createElement("div", { className: "playground-thread-widget-tasks-pill" },
+                    React.createElement("span", { className: "playground-thread-widget-tasks-pill-text" }, welcomeWidgetHeadline)
+                  )
+                ),
+                React.createElement("div", { className: "playground-thread-widget-tasks-surface" },
+                  React.createElement("div", { className: "playground-thread-widget-tasks-header" },
+                    React.createElement("p", { className: "playground-thread-widget-tasks-title" }, welcomeProjectName),
+                    null
+                  ),
+                  React.createElement("div", { className: "playground-thread-widget-tasks-list" },
+                    welcomeWidgetsState.status === "loading" && welcomeWidgetTaskRows.length === 0
+                      ? React.createElement("div", { className: "playground-thread-widget-empty" }, "Loading project tasks...")
+                      : welcomeWidgetsState.status === "error"
+                        ? React.createElement("div", { className: "playground-thread-widget-empty" }, welcomeWidgetsState.error || "Failed to load project tasks.")
+                        : welcomeWidgetTaskRows.length === 0
+                          ? React.createElement("div", { className: "playground-thread-widget-empty" },
+                              welcomeWidgetProject
+                                ? "No open tasks in this project."
+                                : "Open Projects to pick a project workspace."
+                            )
+                          : welcomeWidgetTaskRows.map((item) =>
+                              (() => {
+                                const taskRecord = item.task;
+                                const isHumanTask = isPlaygroundHumanAssigneeId(taskRecord?.assigneeAgentId);
+                                const isTaskBusy = welcomeWidgetBusyTaskIds.includes(item.id);
+                                return React.createElement("div", {
+                                  key: item.id,
+                                  className: "playground-thread-widget-tasks-item",
+                                },
+                                  React.createElement("div", {
+                                      className: "playground-thread-widget-tasks-item-main",
+                                      role: "button",
+                                      tabIndex: 0,
+                                      onClick: (event) => handleOpenWelcomeWidgetTaskDetail(taskRecord, event),
+                                      onKeyDown: (event) => {
+                                        if (event.key === "Enter" || event.key === " ") {
+                                          event.preventDefault();
+                                          handleOpenWelcomeWidgetTaskDetail(taskRecord, event);
+                                        }
+                                      },
+                                    },
+                                    renderPlaygroundTaskPriorityIcon(item.priority, "playground-thread-widget-tasks-item-priority"),
+                                    React.createElement("span", {
+                                      className: "playground-thread-widget-tasks-item-label",
+                                    }, item.label)
+                                  ),
+                                  React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-tasks-backlog-run-button" + (isHumanTask ? " is-human-unchecked" : ""),
+                                      "aria-label": isHumanTask ? "Complete task" : "Run task",
+                                      title: isHumanTask ? "Complete task" : "Run task",
+                                      disabled: isTaskBusy || (!isHumanTask && isWelcomeWidgetTaskLaunchLocked(taskRecord)),
+                                      onClick: (event) => {
+                                        if (isHumanTask) {
+                                          void handleWelcomeWidgetToggleTaskDone(taskRecord, event);
+                                          return;
+                                        }
+                                        void handleWelcomeWidgetStartTaskThread(taskRecord, event);
+                                      },
+                                    },
+                                    isHumanTask
+                                      ? null
+                                      : React.createElement(Play, {
+                                          width: 13,
+                                          height: 13,
+                                          strokeWidth: 1.9,
+                                          fill: "currentColor",
+                                          "aria-hidden": "true",
+                                        })
+                                  )
+                                );
+                              })()
+                            )
+                  )
+                )
+              ),
+              React.createElement("div", {
+                  className: "playground-thread-widget playground-thread-widget-today is-clickable",
+                  role: "button",
+                  tabIndex: 0,
+                  onClick: () => handleWelcomeWidgetOpen("calendar"),
+                  onKeyDown: (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleWelcomeWidgetOpen("calendar");
+                    }
+                  },
+                },
+                React.createElement("div", { className: "playground-thread-widget-today-header" },
+                  React.createElement("div", { className: "playground-thread-widget-today-date" },
+                    React.createElement("span", { className: "playground-thread-widget-today-date-weekday" }, welcomeWidgetTodayState.weekdayLabel || formatPlaygroundWelcomeWeekdayLabel(new Date())),
+                    React.createElement("span", { className: "playground-thread-widget-today-date-value" }, welcomeWidgetTodayState.monthDayLabel || formatPlaygroundWelcomeMonthDayLabel(new Date()))
+                  )
+                ),
+                React.createElement("div", { className: "playground-thread-widget-today-body" },
+                  React.createElement("div", { className: "playground-thread-widget-today-events" },
+                    (Array.isArray(welcomeWidgetTodayState.items) ? welcomeWidgetTodayState.items : []).map((item) =>
+                      React.createElement("button", {
+                        key: item.id,
+                        type: "button",
+                        className: "playground-thread-widget-today-event",
+                        onClick: (event) => {
+                          if (item.kind === "briefing") {
+                            handleOpenWelcomeDailyBriefingPreview(event);
+                            return;
+                          }
+                          event.stopPropagation();
+                          handleWelcomeWidgetOpen("calendar");
+                        },
+                      },
+                        React.createElement("p", { className: "playground-thread-widget-today-event-title" }, item.title),
+                        React.createElement("div", { className: "playground-thread-widget-today-event-meta" },
+                          React.createElement("div", { className: "playground-thread-widget-today-event-meta-item" },
+                            React.createElement(HardDrive, { className: "playground-thread-widget-today-event-meta-icon", strokeWidth: 1.8 }),
+                            React.createElement("span", null, item.locationLabel)
+                          ),
+                          React.createElement("div", { className: "playground-thread-widget-today-event-meta-item is-time" },
+                            React.createElement(Clock, { className: "playground-thread-widget-today-event-meta-icon", strokeWidth: 1.8 }),
+                            React.createElement("span", null, item.timeLabel)
+                          )
+                        )
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-thread-widget-today-divider" }),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-thread-widget-today-action",
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      handleWelcomeWidgetOpen("calendar");
+                    },
+                  }, welcomeWidgetTodayState.actionLabel)
+                )
+              )
+            )
           );
         }
 
@@ -48375,7 +50137,20 @@ const html = `<!doctype html>
                             canStartThreads: hasRealAccess,
                             taskRunStates: taskRunStates,
                             openTaskRequest: taskOpenRequest,
+                            navigationRequest: tasksPageNavigationRequest,
                             onTaskRunStateChange: applyTaskRunState,
+                            onNavigationRequestHandled: (token) => {
+                              setTasksPageNavigationRequest((current) => (
+                                current && current.token === token ? null : current
+                              ));
+                            },
+                            onProjectScopeChange: (nextProjectId) => {
+                              const normalizedProjectId = String(nextProjectId || "").trim();
+                              if (!normalizedProjectId) {
+                                return;
+                              }
+                              setLatestInteractedProjectId(normalizedProjectId);
+                            },
                             onThreadStarted: (threadId, options = {}) => {
                               if (options?.threadRecord?.id) {
                                 upsertRealThreadRecord(options.threadRecord, {
@@ -48549,7 +50324,17 @@ const html = `<!doctype html>
                                   })
                                 : renderAuthGate()
                               : null
-                          )
+                          ),
+                          activePage === "thread" && hasRealAccess && welcomeWidgetPreviewAttachment
+                            ? React.createElement("div", { className: "tb-runner-document-preview-host" },
+                                React.createElement(RunnerDocumentPreviewDrawer, {
+                                  attachment: welcomeWidgetPreviewAttachment,
+                                  requestHeaders,
+                                  apiKey: apiKey,
+                                  onClose: () => setWelcomeWidgetPreviewAttachment(null),
+                                })
+                              )
+                            : null
                         )
                   )
                   ,
@@ -48573,7 +50358,16 @@ const html = `<!doctype html>
                               canStartThreads: hasRealAccess,
                               taskRunStates: taskRunStates,
                               openTaskRequest: threadTaskOpenRequest,
+                              navigationRequest: null,
                               onTaskRunStateChange: applyTaskRunState,
+                              onNavigationRequestHandled: () => {},
+                              onProjectScopeChange: (nextProjectId) => {
+                                const normalizedProjectId = String(nextProjectId || "").trim();
+                                if (!normalizedProjectId) {
+                                  return;
+                                }
+                                setLatestInteractedProjectId(normalizedProjectId);
+                              },
                               onThreadStarted: (threadId, options = {}) => {
                                 if (options?.threadRecord?.id) {
                                   upsertRealThreadRecord(options.threadRecord, {
@@ -49948,6 +51742,58 @@ async function proxyAiosJsonRequest(req, res, upstreamPath, method) {
   }
 }
 
+async function proxyAiosLatestBriefingHtml(req, res) {
+  try {
+    const briefingMetaResponse = await fetch(new URL("/api/briefing/url", aiosOrigin).toString(), {
+      method: "GET",
+    });
+    const briefingMetaText = await briefingMetaResponse.text();
+    let briefingMeta = {};
+    try {
+      briefingMeta = briefingMetaText ? JSON.parse(briefingMetaText) : {};
+    } catch {
+      briefingMeta = {};
+    }
+
+    if (!briefingMetaResponse.ok) {
+      return sendJson(res, briefingMetaResponse.status, {
+        error: "Failed to resolve briefing URL",
+        message: briefingMeta?.message || briefingMeta?.error || "Failed to load the latest daily briefing.",
+      });
+    }
+
+    const briefingPublicUrl = typeof briefingMeta?.url === "string" ? briefingMeta.url.trim() : "";
+    if (!briefingPublicUrl) {
+      return sendJson(res, 404, {
+        error: "No briefing found",
+        message: "No daily briefing is available yet.",
+      });
+    }
+
+    const briefingHtmlResponse = await fetch(briefingPublicUrl, {
+      method: "GET",
+    });
+    const briefingHtml = await briefingHtmlResponse.text();
+    if (!briefingHtmlResponse.ok) {
+      return sendJson(res, briefingHtmlResponse.status, {
+        error: "Failed to load briefing HTML",
+        message: briefingHtml || "Unable to load the daily briefing preview.",
+      });
+    }
+
+    res.writeHead(200, {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+    });
+    res.end(briefingHtml);
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to proxy latest briefing HTML",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 async function proxyPlaygroundCustomSkills(req, res) {
   try {
     const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
@@ -50276,6 +52122,16 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/aios/user/profile") {
     void proxyAiosJsonRequest(req, res, "/api/user/profile", "GET");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/aios/briefing/url") {
+    void proxyAiosJsonRequest(req, res, "/api/briefing/url", "GET");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/aios/briefing/latest-html") {
+    void proxyAiosLatestBriefingHtml(req, res);
     return;
   }
 

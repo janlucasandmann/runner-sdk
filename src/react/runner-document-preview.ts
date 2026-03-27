@@ -14,6 +14,8 @@ export interface RunnerPreviewAttachment {
   githubRef?: string | null;
   githubItemPath?: string;
   githubSelectionType?: "repo" | "file";
+  htmlPreviewUrl?: string;
+  htmlSandbox?: string | null;
 }
 
 const RUNNER_PREVIEW_MIME_TYPES_BY_EXTENSION: Record<string, string> = {

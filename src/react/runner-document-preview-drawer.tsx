@@ -92,6 +92,11 @@ export function RunnerDocumentPreviewDrawer({
       "",
     [attachment.id, attachment.previewUrl, attachment.url, backendUrl]
   );
+  const resolvedDirectHtmlPreviewUrl = useMemo(
+    () => resolveRunnerPreviewAssetUrl(attachment.htmlPreviewUrl, backendUrl, attachment.id) || "",
+    [attachment.htmlPreviewUrl, attachment.id, backendUrl]
+  );
+  const htmlIframeSandbox = attachment.htmlSandbox === null ? undefined : attachment.htmlSandbox ?? "";
 
   useEffect(() => {
     mountRunnerChatStyles();
@@ -190,6 +195,13 @@ export function RunnerDocumentPreviewDrawer({
     const previewUrl =
       resolveRunnerPreviewAssetUrl(attachment.url, backendUrl, attachment.id) ||
       resolveRunnerPreviewAssetUrl(attachment.previewUrl, backendUrl, attachment.id);
+    if (previewKind === "html" && resolvedDirectHtmlPreviewUrl) {
+      setDocumentPreviewState({
+        status: "ready",
+        kind: "html",
+      });
+      return;
+    }
     if (!previewUrl) {
       setDocumentPreviewState({
         status: "error",
@@ -231,7 +243,7 @@ export function RunnerDocumentPreviewDrawer({
           setDocumentPreviewState({
             status: "ready",
             kind: "html",
-            blob: new Blob([previewDocument], { type: "text/html;charset=utf-8" }),
+            text: previewDocument,
           });
           return;
         }
@@ -256,7 +268,7 @@ export function RunnerDocumentPreviewDrawer({
       });
 
     return () => controller.abort();
-  }, [attachment, backendUrl, isImageAttachment, requestHeadersWithApiKey]);
+  }, [attachment, backendUrl, isImageAttachment, requestHeadersWithApiKey, resolvedDirectHtmlPreviewUrl]);
 
   useEffect(() => {
     if (
@@ -721,10 +733,11 @@ export function RunnerDocumentPreviewDrawer({
                 </div>
               </div>
             )
-          ) : documentPreviewState.kind === "html" && documentPreviewUrl ? (
+          ) : documentPreviewState.kind === "html" && (resolvedDirectHtmlPreviewUrl || typeof documentPreviewState.text === "string" || documentPreviewUrl) ? (
             <iframe
-              src={documentPreviewUrl}
-              sandbox=""
+              src={resolvedDirectHtmlPreviewUrl || documentPreviewUrl || undefined}
+              srcDoc={resolvedDirectHtmlPreviewUrl ? undefined : (typeof documentPreviewState.text === "string" ? documentPreviewState.text : undefined)}
+              sandbox={htmlIframeSandbox}
               title={attachment.filename}
               className="tb-attachment-preview-frame"
             />
