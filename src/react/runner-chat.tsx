@@ -524,6 +524,7 @@ export interface RunnerChatFileNode {
   name: string;
   parentId?: string | null;
   isFolder?: boolean;
+  hasChildren?: boolean;
   mimeType?: string;
   size?: number;
   modifiedTime?: string;
@@ -1203,6 +1204,12 @@ function normalizeEnvironmentWorkspaceItems(input: unknown): RunnerChatFileNode[
       const parentId = parentSegments.length ? parentSegments.join("/") : null;
       const type = typeof file.type === "string" ? file.type : "";
       const isFolder = type === "directory" || type === "folder";
+      const hasChildren =
+        typeof file.hasChildren === "boolean"
+          ? file.hasChildren
+          : typeof file.childCount === "number"
+            ? file.childCount > 0
+            : undefined;
 
       return {
         id: normalizedPath || name,
@@ -1210,6 +1217,7 @@ function normalizeEnvironmentWorkspaceItems(input: unknown): RunnerChatFileNode[
         path: `/${normalizedPath}`,
         parentId,
         isFolder,
+        hasChildren,
         mimeType: typeof file.mimeType === "string" ? file.mimeType : undefined,
         size: typeof file.size === "number" ? file.size : undefined,
         modifiedTime,
@@ -1261,6 +1269,25 @@ function isBrowserFilePreviewable(file: RunnerChatFileNode): boolean {
 
 function buildEnvironmentFileDownloadUrl(backendUrl: string, environmentId: string, filePath?: string): string | null {
   return buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath);
+}
+
+function normalizeRunnerWorkspaceFolderPath(folderPath?: string | null): string {
+  return String(folderPath || "").trim().replace(/^\/+/, "").replace(/\/+$/, "");
+}
+
+function buildEnvironmentFileListUrl(backendUrl: string, environmentId: string, folderPath = "", depth = 1): string | null {
+  const normalizedBackendUrl = sanitizeBackendUrl(backendUrl);
+  const normalizedEnvironmentId = String(environmentId || "").trim();
+  if (!normalizedBackendUrl || !normalizedEnvironmentId) {
+    return null;
+  }
+  const normalizedFolderPath = normalizeRunnerWorkspaceFolderPath(folderPath);
+  const params = new URLSearchParams();
+  params.set("depth", String(depth));
+  if (normalizedFolderPath) {
+    params.set("path", normalizedFolderPath);
+  }
+  return `${normalizedBackendUrl}/environments/${encodeURIComponent(normalizedEnvironmentId)}/files?${params.toString()}`;
 }
 
 function isInternalTurnPreviewPath(filePath: string): boolean {
@@ -4577,6 +4604,9 @@ export function RunnerChat({
   const [fileBrowserHistory, setFileBrowserHistory] = useState<Array<{ source: RunnerFileBrowserSource; folderId: string | null }>>([]);
   const [fileBrowserHistoryIndex, setFileBrowserHistoryIndex] = useState(-1);
   const [remoteWorkspaceItems, setRemoteWorkspaceItems] = useState<RunnerChatFileNode[]>([]);
+  const [loadedWorkspaceFolderIds, setLoadedWorkspaceFolderIds] = useState<string[]>([]);
+  const [loadingWorkspaceFolderIds, setLoadingWorkspaceFolderIds] = useState<string[]>([]);
+  const [workspaceFolderErrorsById, setWorkspaceFolderErrorsById] = useState<Record<string, string>>({});
   const [remoteGoogleDriveItems, setRemoteGoogleDriveItems] = useState<RunnerChatFileNode[]>([]);
   const [remoteOneDriveItems, setRemoteOneDriveItems] = useState<RunnerChatFileNode[]>([]);
   const [remoteGithubItems, setRemoteGithubItems] = useState<RunnerChatFileNode[]>([]);
@@ -7721,7 +7751,13 @@ export function RunnerChat({
     setFileBrowserSearchQuery("");
     setFileBrowserPreviewId(null);
     setExpandedFileBrowserFolderIds([]);
-    if (initialSource === "google-drive") {
+    if (initialSource === "workspace") {
+      setRemoteWorkspaceItems([]);
+      setLoadedWorkspaceFolderIds([]);
+      setLoadingWorkspaceFolderIds([]);
+      setWorkspaceFolderErrorsById({});
+      setWorkspaceBrowserError(null);
+    } else if (initialSource === "google-drive") {
       setRemoteGoogleDriveItems([]);
       setLoadedGoogleDriveFolderIds([]);
       setLoadingGoogleDriveFolderIds([]);
@@ -7754,6 +7790,11 @@ export function RunnerChat({
     setIsFileBrowserAttaching(false);
     setFileBrowserHistory([]);
     setFileBrowserHistoryIndex(-1);
+    setRemoteWorkspaceItems([]);
+    setLoadedWorkspaceFolderIds([]);
+    setLoadingWorkspaceFolderIds([]);
+    setWorkspaceFolderErrorsById({});
+    setWorkspaceBrowserError(null);
     setGoogleDriveBrowserError(null);
     setOneDriveBrowserError(null);
     setGithubBrowserError(null);
@@ -7762,6 +7803,76 @@ export function RunnerChat({
 
   function closeFileBrowserApiKeyPrompt() {
     setShowFileBrowserApiKeyPrompt(false);
+  }
+
+  async function loadWorkspaceFolder(folderId: string | null, options?: { inline?: boolean }) {
+    const normalizedFolderId = normalizeRunnerWorkspaceFolderPath(folderId) || "root";
+    const requestedFolderPath = normalizedFolderId === "root" ? "" : normalizedFolderId;
+    const requestUrl = buildEnvironmentFileListUrl(normalizedBackendUrl, activeWorkspaceEnvironmentId || "", requestedFolderPath, 1);
+    if (!requestUrl) {
+      setRemoteWorkspaceItems([]);
+      setWorkspaceBrowserError("Select an environment to browse workspace files.");
+      setIsWorkspaceBrowserLoading(false);
+      return;
+    }
+
+    if (options?.inline) {
+      setLoadingWorkspaceFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
+    } else {
+      setIsWorkspaceBrowserLoading(true);
+      setWorkspaceBrowserError(null);
+    }
+    setWorkspaceFolderErrorsById((current) => ({
+      ...current,
+      [normalizedFolderId]: "",
+    }));
+
+    try {
+      const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
+      const response = await fetch(requestUrl, {
+        method: "GET",
+        headers,
+      });
+      const text = await response.text();
+      let parsed: any = {};
+      try {
+        parsed = text ? JSON.parse(text) : {};
+      } catch {
+        parsed = { message: text };
+      }
+
+      if (!response.ok) {
+        throw new Error(parsed?.message || parsed?.error || `Failed to load workspace files (${response.status})`);
+      }
+
+      const nextItems = normalizeEnvironmentWorkspaceItems(parsed);
+      setRemoteWorkspaceItems((current) => mergeDriveFolderItems(current, normalizedFolderId, nextItems));
+      setLoadedWorkspaceFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
+      setWorkspaceFolderErrorsById((current) => ({
+        ...current,
+        [normalizedFolderId]: "",
+      }));
+      if (!options?.inline) {
+        setWorkspaceBrowserError(null);
+      }
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      const message = normalizedError.message || "Failed to load workspace files.";
+      setWorkspaceFolderErrorsById((current) => ({
+        ...current,
+        [normalizedFolderId]: message,
+      }));
+      if (normalizedFolderId === "root" || !options?.inline) {
+        setRemoteWorkspaceItems([]);
+        setWorkspaceBrowserError(message);
+      }
+    } finally {
+      if (options?.inline) {
+        setLoadingWorkspaceFolderIds((current) => current.filter((id) => id !== normalizedFolderId));
+      } else {
+        setIsWorkspaceBrowserLoading(false);
+      }
+    }
   }
 
   async function loadGoogleDriveFolder(folderId: string, options?: { inline?: boolean }) {
@@ -8535,7 +8646,13 @@ export function RunnerChat({
     setFileBrowserPreviewId(null);
     setFileBrowserSearchQuery("");
     setExpandedFileBrowserFolderIds([]);
-    if (nextSource === "google-drive") {
+    if (nextSource === "workspace") {
+      setRemoteWorkspaceItems([]);
+      setLoadedWorkspaceFolderIds([]);
+      setLoadingWorkspaceFolderIds([]);
+      setWorkspaceFolderErrorsById({});
+      setWorkspaceBrowserError(null);
+    } else if (nextSource === "google-drive") {
       setRemoteGoogleDriveItems([]);
       setLoadedGoogleDriveFolderIds([]);
       setLoadingGoogleDriveFolderIds([]);
@@ -8590,6 +8707,9 @@ export function RunnerChat({
   async function toggleFileBrowserFolderExpansion(folderId: string, event: MouseEvent<HTMLButtonElement>) {
     event.stopPropagation();
     const isExpanded = expandedFileBrowserFolderIds.includes(folderId);
+    if (!isExpanded && currentFileBrowserSource === "workspace" && !loadedWorkspaceFolderIds.includes(folderId)) {
+      await loadWorkspaceFolder(folderId, { inline: true });
+    }
     if (!isExpanded && currentFileBrowserSource === "google-drive" && googleDriveConfig?.fetchItems && !loadedGoogleDriveFolderIds.includes(folderId)) {
       await loadGoogleDriveFolder(folderId, { inline: true });
     }
@@ -10216,13 +10336,19 @@ export function RunnerChat({
     const isPreviewActive = previewFileBrowserItem?.id === effectiveItemId;
     const isExpanded = expandedFileBrowserFolderIds.includes(effectiveItemId);
     const isFolderLoading =
-      currentFileBrowserSource === "google-drive"
-        ? loadingGoogleDriveFolderIds.includes(effectiveItemId)
-        : currentFileBrowserSource === "one-drive"
-          ? loadingOneDriveFolderIds.includes(effectiveItemId)
-          : currentFileBrowserSource === "github"
-            ? loadingGithubFolderIds.includes(effectiveItemId)
-            : false;
+      currentFileBrowserSource === "workspace"
+        ? loadingWorkspaceFolderIds.includes(effectiveItemId)
+        : currentFileBrowserSource === "google-drive"
+          ? loadingGoogleDriveFolderIds.includes(effectiveItemId)
+          : currentFileBrowserSource === "one-drive"
+            ? loadingOneDriveFolderIds.includes(effectiveItemId)
+            : currentFileBrowserSource === "github"
+              ? loadingGithubFolderIds.includes(effectiveItemId)
+              : false;
+    const workspaceFolderError =
+      currentFileBrowserSource === "workspace"
+        ? workspaceFolderErrorsById[effectiveItemId] || ""
+        : "";
     const nestedItems = fileBrowserSearchQuery.trim() ? [] : fileItemsForParent(fileBrowserItems, effectiveItemId);
     const showGithubFolderCheckbox = currentFileBrowserSource === "github" && item.isFolder;
     const githubRepoFullName = String(effectiveItem.repoFullName || "").trim();
@@ -10314,8 +10440,13 @@ export function RunnerChat({
           )}
         </div>
 
-        {item.isFolder && isExpanded && nestedItems.length > 0 ? (
-          <div className="tb-file-browser-item-children">{nestedItems.map((nestedItem) => renderFileBrowserItem(nestedItem, depth + 1))}</div>
+        {item.isFolder && isExpanded ? (
+          <div className="tb-file-browser-item-children">
+            {nestedItems.length > 0 ? nestedItems.map((nestedItem) => renderFileBrowserItem(nestedItem, depth + 1)) : null}
+            {workspaceFolderError && nestedItems.length === 0 ? (
+              <div className="tb-file-browser-empty">{workspaceFolderError}</div>
+            ) : null}
+          </div>
         ) : null}
       </div>
     );
@@ -10337,6 +10468,9 @@ export function RunnerChat({
 
     if (!hasApiKey) {
       setRemoteWorkspaceItems([]);
+      setLoadedWorkspaceFolderIds([]);
+      setLoadingWorkspaceFolderIds([]);
+      setWorkspaceFolderErrorsById({});
       setWorkspaceBrowserError(null);
       setIsWorkspaceBrowserLoading(false);
       return;
@@ -10344,55 +10478,28 @@ export function RunnerChat({
 
     if (!activeWorkspaceEnvironmentId) {
       setRemoteWorkspaceItems([]);
+      setLoadedWorkspaceFolderIds([]);
+      setLoadingWorkspaceFolderIds([]);
+      setWorkspaceFolderErrorsById({});
       setWorkspaceBrowserError("Select an environment to browse workspace files.");
       setIsWorkspaceBrowserLoading(false);
       return;
     }
 
-    const controller = new AbortController();
-    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
-    setIsWorkspaceBrowserLoading(true);
-    setWorkspaceBrowserError(null);
+    const folderId = currentFileBrowserFolderId || "root";
+    if (loadedWorkspaceFolderIds.includes(folderId) || loadingWorkspaceFolderIds.includes(folderId)) {
+      return;
+    }
 
-    fetch(`${normalizedBackendUrl}/environments/${activeWorkspaceEnvironmentId}/files?depth=-1`, {
-      method: "GET",
-      headers,
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const text = await response.text();
-        let parsed: any = {};
-        try {
-          parsed = text ? JSON.parse(text) : {};
-        } catch {
-          parsed = { message: text };
-        }
-
-        if (!response.ok) {
-          throw new Error(parsed?.message || parsed?.error || `Failed to load workspace files (${response.status})`);
-        }
-
-        setRemoteWorkspaceItems(normalizeEnvironmentWorkspaceItems(parsed));
-      })
-      .catch((error) => {
-        if (controller.signal.aborted) return;
-        const normalizedError = error instanceof Error ? error : new Error(String(error));
-        setRemoteWorkspaceItems([]);
-        setWorkspaceBrowserError(normalizedError.message || "Failed to load workspace files.");
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setIsWorkspaceBrowserLoading(false);
-        }
-      });
-
-    return () => controller.abort();
+    void loadWorkspaceFolder(folderId);
   }, [
     apiKey,
+    currentFileBrowserFolderId,
     currentFileBrowserSource,
     hasApiKey,
+    loadedWorkspaceFolderIds,
+    loadingWorkspaceFolderIds,
     normalizedBackendUrl,
-    requestHeaders,
     activeWorkspaceEnvironmentId,
     showFileBrowserModal,
   ]);

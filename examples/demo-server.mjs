@@ -1013,10 +1013,10 @@ const html = `<!doctype html>
         height: 40px;
         padding: 0 12px;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
+        border-radius: 999px;
         background: rgba(255, 255, 255, 0.08);
         color: #fff;
-        font-size: 13px;
+        font-size: 14px;
         outline: none;
       }
 
@@ -1044,9 +1044,9 @@ const html = `<!doctype html>
         gap: 8px;
         padding: 0 12px;
         border: 0;
-        border-radius: 10px;
+        border-radius: 999px;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 500;
         cursor: pointer;
         transition: opacity 160ms ease, background-color 160ms ease, color 160ms ease;
       }
@@ -2861,19 +2861,20 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        border-radius: 22px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: #121214;
-        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.46);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #323232;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
       }
 
       .thread-search-input-row {
         position: relative;
         display: flex;
         align-items: center;
-        min-height: 54px;
-        padding: 0 18px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        min-height: 46px;
+        padding: 0 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .thread-search-input {
@@ -2884,7 +2885,7 @@ const html = `<!doctype html>
         background: transparent;
         color: rgba(255, 255, 255, 0.96);
         outline: none;
-        font-size: 15px;
+        font-size: 12px;
         font-weight: 400;
       }
 
@@ -2894,7 +2895,7 @@ const html = `<!doctype html>
 
       .thread-search-input-icon {
         position: absolute;
-        right: 18px;
+        right: 16px;
         width: 18px;
         height: 18px;
         color: rgba(255, 255, 255, 0.56);
@@ -2905,7 +2906,7 @@ const html = `<!doctype html>
         min-height: 0;
         flex: 1;
         overflow: auto;
-        padding: 0 18px 8px;
+        padding: 0 16px 10px;
       }
 
       .thread-search-section {
@@ -2949,19 +2950,20 @@ const html = `<!doctype html>
         display: flex;
         align-items: center;
         gap: 10px;
-        min-height: 46px;
-        padding: 0 14px;
-        border: 0;
-        border-radius: 15px;
-        background: #353535;
+        min-height: 42px;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
         color: rgba(255, 255, 255, 0.96);
         cursor: pointer;
         text-align: left;
-        transition: background-color 160ms ease;
+        transition: background-color 160ms ease, border-color 160ms ease;
       }
 
       .thread-search-action-card:hover {
-        background: #3b3b3b;
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.14);
       }
 
       .thread-search-action-icon {
@@ -2978,6 +2980,7 @@ const html = `<!doctype html>
       .thread-search-result-list {
         display: flex;
         flex-direction: column;
+        gap: 6px;
       }
 
       .thread-search-result {
@@ -2986,19 +2989,22 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        min-height: 48px;
-        padding: 0 4px;
-        border: 0;
+        min-height: 42px;
+        padding: 0 12px;
+        border: 1px solid transparent;
+        border-radius: 8px;
         background: transparent;
         color: rgba(255, 255, 255, 0.96);
         cursor: pointer;
         text-align: left;
-        transition: opacity 160ms ease;
+        transition: background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
       }
 
       .thread-search-result:hover,
       .thread-search-result.is-active {
-        opacity: 0.82;
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.1);
       }
 
       .thread-search-result-title {
@@ -3032,9 +3038,9 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        min-height: 48px;
+        min-height: 44px;
         padding: 0 16px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.5);
         font-size: 12px;
         font-weight: 500;
@@ -8890,6 +8896,17 @@ const html = `<!doctype html>
         padding-bottom: 6px;
       }
 
+      .playground-agents-page .playground-environments-section[data-section-id="model"] > .playground-environments-section-header.is-static {
+        padding-bottom: 11px;
+      }
+
+      .playground-agents-page .playground-environments-section[data-section-id="model"],
+      .playground-agents-page .playground-environments-section[data-section-id="model"] > .playground-environments-section-body {
+        position: relative;
+        overflow: visible;
+        z-index: 4;
+      }
+
       .playground-agents-page .playground-environments-section-body {
         padding: 0;
         border-top: 0;
@@ -8948,14 +8965,89 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.48);
       }
 
+      .playground-agents-model-panel {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        position: relative;
+        overflow: visible;
+      }
+
+      .playground-agents-model-header {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 24px;
+        padding-bottom: 19px;
+        margin-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .playground-agents-model-header .playground-environments-field {
+        min-width: 0;
+      }
+
+      .playground-agents-model-header .playground-environments-field-span {
+        grid-column: 1 / -1;
+      }
+
+      .playground-agents-model-select-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+      }
+
+      .playground-agents-model-select-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.44);
+        line-height: 1.3;
+        white-space: nowrap;
+      }
+
+      .playground-agents-model-select-popup {
+        min-width: 0;
+      }
+
+      .playground-agents-model-select-popup .playground-environments-runtime-value-button {
+        width: auto;
+        min-width: 0;
+        max-width: 100%;
+        justify-content: flex-end;
+      }
+
+      .playground-agents-model-select-popup .playground-environments-runtime-value-label {
+        text-align: right;
+      }
+
+      .playground-agents-model-select-popup.is-open,
+      .playground-agents-model-select-popup.is-open .playground-tasks-toolbar-popup-menu {
+        z-index: 80;
+      }
+
       .playground-agents-model-metrics {
-        margin-top: 10px;
+        margin-top: 0;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
+        align-items: stretch;
+      }
+
+      .playground-agents-model-metrics.playground-agents-model-metrics-surface {
+        padding: 3px 10px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .playground-agents-model-metric {
+        min-height: 64px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-start;
         padding: 0;
         border: 0;
         border-radius: 0;
@@ -8963,15 +9055,43 @@ const html = `<!doctype html>
       }
 
       .playground-agents-model-metric-label {
-        font-size: 11px;
+        font-size: 12px;
         color: rgba(255, 255, 255, 0.42);
       }
 
       .playground-agents-model-metric-value {
         margin-top: 6px;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-agents-model-metric.is-stack {
+        justify-content: flex-end;
+      }
+
+      .playground-agents-model-metric.is-stack .playground-agents-model-metric-value {
+        margin-top: 0;
+        font-size: 20px;
+        line-height: 1.05;
+      }
+
+      .playground-agents-model-metric.is-stack .playground-agents-model-metric-label {
+        margin-top: 6px;
+      }
+
+      .playground-agents-model-inline-copy {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-top: 0;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      .playground-agents-model-inline-copy .playground-agents-model-metric-label,
+      .playground-agents-model-inline-copy .playground-agents-model-metric-value {
+        margin-top: 0;
       }
 
       .playground-agents-intelligence-metric {
@@ -9404,6 +9524,8 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-detail-navbar {
+        position: relative;
+        z-index: 40;
         flex-shrink: 0;
         border-bottom: 0;
       }
@@ -9471,6 +9593,8 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-detail-navbar-actions {
+        position: relative;
+        z-index: 41;
         gap: 4px;
       }
 
@@ -9594,26 +9718,25 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-detail-facts-toggle {
-        width: 22px;
-        height: 22px;
         padding: 0;
         border: 0;
-        border-radius: 6px;
         background: transparent;
-        color: rgba(255, 255, 255, 0.58);
+        color: rgba(255, 255, 255, 0.46);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
+        transition: color 160ms ease;
       }
 
       .playground-tasks-detail-facts-toggle:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.92);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
       }
 
       .playground-tasks-detail-facts-toggle svg {
+        width: 14px;
+        height: 14px;
         transition: transform 160ms ease;
       }
 
@@ -9777,6 +9900,185 @@ const html = `<!doctype html>
 
       .playground-tasks-detail-fact-button.is-empty {
         color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-tasks-detail-select-shell.playground-environments-runtime-popup-shell {
+        width: auto;
+        max-width: 100%;
+      }
+
+      .playground-tasks-detail-select-shell .playground-tasks-toolbar-popup-menu {
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        bottom: auto;
+        width: 280px;
+        min-width: 220px;
+        max-width: min(320px, calc(100vw - 40px));
+        transform-origin: top right;
+      }
+
+      .playground-tasks-detail-select-trigger {
+        gap: 6px;
+      }
+
+      .playground-tasks-detail-select-trigger.is-active {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tasks-detail-select-trigger-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-tasks-detail-type-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .playground-tasks-detail-type-icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-tasks-detail-type-prefix {
+        min-width: 0;
+        white-space: nowrap;
+      }
+
+      .playground-tasks-detail-type-ticket {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #66a6ff;
+      }
+
+      .playground-tasks-detail-select-trigger-chevron {
+        flex: 0 0 auto;
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      .playground-tasks-detail-select-trigger.is-active .playground-tasks-detail-select-trigger-chevron {
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-menu-inline-agent {
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        bottom: auto;
+        width: 280px;
+        min-width: 220px;
+        max-width: min(320px, calc(100vw - 40px));
+        max-height: min(320px, calc(100vh - 180px));
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transform-origin: top right;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-menu-title {
+        padding: 12px 16px 0;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-panel-section-attach-header {
+        padding: 0 16px 0;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-nav {
+        display: flex;
+        gap: 8px;
+        padding: 2px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        line-height: 1rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-nav-button {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 4px 12px;
+        border: 0;
+        border-radius: 20px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1rem;
+        cursor: pointer;
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-nav-button.active {
+        background: rgba(255, 255, 255, 0.35);
+        color: white;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-menu-inline-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-menu-inline-body::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-menu-inline-body-agent {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-menu-inline-empty {
+        padding: 0 16px 12px;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-row-select .tb-popup-check-slot {
+        order: 2;
+        margin-left: auto;
+      }
+
+      .playground-tasks-detail-assignee-shell .tb-popup-row-agent.selected .tb-popup-icon {
+        color: white;
+      }
+
+      .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu-environment {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu-environment::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+      }
+
+      .playground-tasks-detail-select-popup-label-slot {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
 
       .playground-tasks-schedule-panel {
@@ -10094,7 +10396,7 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-attachments {
-        padding-top: 4px;
+        padding-top: 12px;
       }
 
       .playground-tasks-attachments-toolbar {
@@ -10834,7 +11136,8 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-detail-menu-item-danger,
-      .playground-tasks-detail-menu-item-danger .playground-files-toolbar-menu-item-copy span:first-child {
+      .playground-tasks-detail-menu-item-danger .playground-files-toolbar-menu-item-copy span:first-child,
+      .playground-tasks-detail-menu-item-danger .playground-tasks-toolbar-popup-item-copy span:first-child {
         color: #ffb0b0;
       }
 
@@ -10983,12 +11286,13 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-project-modal {
-        width: min(680px, 100%);
-        padding: 18px 20px 20px;
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: linear-gradient(180deg, rgba(20, 20, 24, 0.98), rgba(16, 16, 18, 0.98));
-        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+        width: min(560px, 100%);
+        padding: 12px 16px 16px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #323232;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
       }
 
       .playground-tasks-project-modal-top {
@@ -10996,7 +11300,7 @@ const html = `<!doctype html>
         align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 18px;
+        margin-bottom: 14px;
       }
 
       .playground-tasks-project-modal-name-row {
@@ -11006,7 +11310,7 @@ const html = `<!doctype html>
         display: flex;
         align-items: center;
         gap: 14px;
-        padding-bottom: 12px;
+        padding-bottom: 4px;
       }
 
       .playground-tasks-project-modal-icon-trigger {
@@ -11049,9 +11353,11 @@ const html = `<!doctype html>
 
       .playground-tasks-project-modal-close {
         flex: 0 0 auto;
-        width: 40px;
-        min-width: 40px;
-        height: 40px;
+        width: auto;
+        min-width: 0;
+        height: 36px;
+        padding-left: 0;
+        padding-right: 0;
         border: 0;
         background: transparent;
         color: rgba(255, 255, 255, 0.72);
@@ -11131,6 +11437,10 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.42);
       }
 
+      .playground-tasks-project-modal-description {
+        margin-top: 18px;
+      }
+
       .playground-tasks-project-modal-actions {
         display: flex;
         align-items: center;
@@ -11142,7 +11452,7 @@ const html = `<!doctype html>
       .playground-tasks-project-modal-actions .playground-environments-action-button {
         min-height: 40px;
         padding: 0 18px;
-        border-radius: 12px;
+        border-radius: 999px;
       }
 
       .playground-tasks-project-modal-actions .playground-environments-action-button.is-primary:not(:disabled),
@@ -11161,11 +11471,12 @@ const html = `<!doctype html>
 
       .playground-tasks-release-modal {
         width: min(560px, 100%);
-        padding: 18px 20px 20px;
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: linear-gradient(180deg, rgba(20, 20, 24, 0.98), rgba(16, 16, 18, 0.98));
-        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+        padding: 12px 16px 16px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #323232;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
       }
 
       .playground-tasks-release-modal-top {
@@ -11173,27 +11484,17 @@ const html = `<!doctype html>
         align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 18px;
+        margin-bottom: 14px;
       }
 
-      .playground-tasks-release-modal-title-block {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+      .playground-tasks-release-modal-name-row {
+        position: relative;
+        flex: 1;
         min-width: 0;
-      }
-
-      .playground-tasks-release-modal-title {
-        font-size: 17px;
-        line-height: 1.2;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.98);
-      }
-
-      .playground-tasks-release-modal-copy {
-        font-size: 12px;
-        line-height: 1.45;
-        color: rgba(255, 255, 255, 0.56);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding-bottom: 4px;
       }
 
       .playground-tasks-release-modal-field {
@@ -11202,23 +11503,28 @@ const html = `<!doctype html>
         gap: 10px;
       }
 
+      .playground-tasks-release-modal-field .playground-tasks-detail-section-title {
+        margin-bottom: 0;
+      }
+
       .playground-tasks-release-modal-date-row {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
-        margin-top: 12px;
+        margin-top: 0;
       }
 
       .playground-tasks-release-modal-input {
         width: 100%;
         height: 42px;
         padding: 0 14px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
         color: rgba(255, 255, 255, 0.94);
         font: inherit;
-        font-size: 14px;
+        font-size: 12px;
+        color-scheme: dark;
         outline: none;
       }
 
@@ -11226,8 +11532,18 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.42);
       }
 
+      .playground-tasks-release-modal-input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) brightness(1.08);
+        opacity: 0.92;
+        cursor: pointer;
+      }
+
       .playground-tasks-release-modal-textarea {
         min-height: 110px;
+      }
+
+      .playground-tasks-release-modal-description {
+        margin-top: 18px;
       }
 
       .playground-tasks-project-grid {
@@ -11680,7 +11996,7 @@ const html = `<!doctype html>
         width: 100%;
         min-width: 0;
         padding: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 0;
         border-radius: 10px;
         background: rgba(255, 255, 255, 0.05);
         color: rgba(255, 255, 255, 0.72);
@@ -12066,6 +12382,21 @@ const html = `<!doctype html>
       .playground-tasks-backlog-run-button:disabled {
         opacity: 0.48;
         cursor: not-allowed;
+      }
+
+      .playground-tasks-backlog-run-button.is-human-unchecked {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-tasks-backlog-run-button.is-human-unchecked::before {
+        display: none;
+      }
+
+      .playground-tasks-backlog-run-button.is-human-unchecked:hover:not(:disabled) {
+        background: transparent;
+        border-color: rgba(255, 255, 255, 0.28);
       }
 
       .playground-tasks-release-item {
@@ -13942,7 +14273,7 @@ const html = `<!doctype html>
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Square, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -15290,6 +15621,13 @@ const html = `<!doctype html>
 
       function getPlaygroundAgentListMode(agent) {
         return agent?.agentType === "team" || isPlaygroundTeamAgent(agent) ? "teams" : "agents";
+      }
+
+      function getPlaygroundTaskAssigneePopupMode(actor) {
+        if (isPlaygroundHumanAssigneeId(actor?.id)) {
+          return "humans";
+        }
+        return getPlaygroundAgentListMode(actor);
       }
 
       function getPlaygroundAgentModelMeta(modelId) {
@@ -20786,31 +21124,6 @@ const html = `<!doctype html>
         }, [toolbarPopover]);
 
         useEffect(() => {
-          if (!agentActionsPopoverOpen) return undefined;
-
-          function handleAgentActionsPopoverPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !agentActionsPopoverRef.current || agentActionsPopoverRef.current.contains(target)) {
-              return;
-            }
-            setAgentActionsPopoverOpen(false);
-          }
-
-          function handleAgentActionsPopoverEscape(event) {
-            if (event.key === "Escape") {
-              setAgentActionsPopoverOpen(false);
-            }
-          }
-
-          document.addEventListener("mousedown", handleAgentActionsPopoverPointerDown);
-          window.addEventListener("keydown", handleAgentActionsPopoverEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleAgentActionsPopoverPointerDown);
-            window.removeEventListener("keydown", handleAgentActionsPopoverEscape);
-          };
-        }, [agentActionsPopoverOpen]);
-
-        useEffect(() => {
           if (!contextMenu) return;
 
           function handleKeyDown(event) {
@@ -22740,6 +23053,7 @@ const html = `<!doctype html>
         const environmentDockerfileTextareaRef = useRef(null);
         const environmentRuntimePopoverRef = useRef(null);
         const environmentActionsPopoverRef = useRef(null);
+        const environmentRenameInputRef = useRef(null);
         const environmentAutosaveTimerRef = useRef(null);
         const environmentAutosaveQueuedRef = useRef(null);
         const environmentAutosaveInFlightRef = useRef(false);
@@ -22767,6 +23081,9 @@ const html = `<!doctype html>
         const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
         const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
         const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
+        const [environmentRenameState, setEnvironmentRenameState] = useState(null);
+        const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
+        const [environmentRenameError, setEnvironmentRenameError] = useState("");
         const [availableRuntimes, setAvailableRuntimes] = useState(PLAYGROUND_DEFAULT_AVAILABLE_RUNTIMES);
         const [expandedSections, setExpandedSections] = useState(() => new Set(["general", "overview", "runtimes", "packages-system", "packages-python", "packages-node", "variables"]));
         const [modifiedSecrets, setModifiedSecrets] = useState({});
@@ -23237,6 +23554,30 @@ const html = `<!doctype html>
             window.removeEventListener("keydown", handleEnvironmentActionsPopoverEscape);
           };
         }, [environmentActionsPopoverOpen]);
+
+        useEffect(() => {
+          if (!environmentRenameState || !environmentRenameInputRef.current) {
+            return undefined;
+          }
+
+          const focusFrame = window.requestAnimationFrame(() => {
+            environmentRenameInputRef.current?.focus();
+            environmentRenameInputRef.current?.select();
+          });
+
+          function handleEnvironmentRenameEscape(event) {
+            if (event.key === "Escape" && !saveState.isSaving) {
+              event.preventDefault();
+              closeEnvironmentRenameDialog();
+            }
+          }
+
+          window.addEventListener("keydown", handleEnvironmentRenameEscape);
+          return () => {
+            window.cancelAnimationFrame(focusFrame);
+            window.removeEventListener("keydown", handleEnvironmentRenameEscape);
+          };
+        }, [environmentRenameState, saveState.isSaving]);
 
         useEffect(() => () => {
           if (environmentAutosaveTimerRef.current) {
@@ -23766,6 +24107,138 @@ const html = `<!doctype html>
             ...current,
             [field]: value,
           }));
+        }
+
+        function closeEnvironmentRenameDialog() {
+          setEnvironmentRenameState(null);
+          setEnvironmentRenameValue("");
+          setEnvironmentRenameError("");
+        }
+
+        function openEnvironmentRenameDialog(environment) {
+          if (!environment?.id || environment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            return;
+          }
+          setEnvironmentActionsPopoverOpen(false);
+          setEnvironmentRenameState({
+            environmentId: environment.id,
+            originalName: String(environment.name || "").trim(),
+          });
+          setEnvironmentRenameValue(String(environment.name || ""));
+          setEnvironmentRenameError("");
+        }
+
+        async function handleEnvironmentRenameSubmit(event) {
+          event.preventDefault();
+          if (!environmentRenameState?.environmentId || !draftEnvironment) {
+            return;
+          }
+
+          const nextName = String(environmentRenameValue || "").trim().replace(/\s+/g, " ");
+          if (!nextName) {
+            setEnvironmentRenameError("Environment name cannot be empty.");
+            return;
+          }
+
+          if (nextName === environmentRenameState.originalName) {
+            closeEnvironmentRenameDialog();
+            return;
+          }
+
+          if (environmentAutosaveTimerRef.current) {
+            window.clearTimeout(environmentAutosaveTimerRef.current);
+            environmentAutosaveTimerRef.current = null;
+          }
+          environmentAutosaveQueuedRef.current = null;
+          editorDirtyRef.current = false;
+
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+          setEnvironmentRenameError("");
+
+          try {
+            const savedEnvironment = await persistEnvironmentRecord({
+              ...draftEnvironment,
+              name: nextName,
+            });
+            setEnvironmentDetailsById((current) => ({
+              ...current,
+              [savedEnvironment.id]: savedEnvironment,
+            }));
+            setSelectedEnvironmentId(savedEnvironment.id);
+            setDraftEnvironment(savedEnvironment);
+            setModifiedSecrets({});
+            setModifiedMcpTokens({});
+            setSaveState({
+              isSaving: false,
+              error: "",
+              message: "Saved",
+            });
+            closeEnvironmentRenameDialog();
+            if (onEnvironmentMutated) {
+              await onEnvironmentMutated();
+            }
+          } catch (error) {
+            setEnvironmentRenameError(error instanceof Error ? error.message : "Failed to rename environment.");
+            setSaveState({
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+          }
+        }
+
+        function renderEnvironmentRenameModal() {
+          if (!environmentRenameState) {
+            return null;
+          }
+
+          return React.createElement("div", {
+              className: "sidebar-thread-rename-scrim",
+              onClick: () => {
+                if (!saveState.isSaving) {
+                  closeEnvironmentRenameDialog();
+                }
+              },
+            },
+              React.createElement("form", {
+                className: "sidebar-thread-rename-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  void handleEnvironmentRenameSubmit(event);
+                },
+              },
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Rename Environment"),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" }, "Choose a new name for this environment."),
+                React.createElement("input", {
+                  ref: environmentRenameInputRef,
+                  className: "sidebar-thread-rename-input",
+                  value: environmentRenameValue,
+                  onChange: (event) => setEnvironmentRenameValue(event.target.value),
+                  placeholder: "Environment name",
+                  disabled: saveState.isSaving,
+                }),
+                environmentRenameError
+                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, environmentRenameError)
+                  : null,
+                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "sidebar-thread-rename-button is-secondary",
+                    onClick: closeEnvironmentRenameDialog,
+                    disabled: saveState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "sidebar-thread-rename-button is-primary",
+                    disabled: saveState.isSaving,
+                  }, saveState.isSaving ? "Saving..." : "Save")
+                )
+              )
+            );
         }
 
         function updateRuntime(key, value) {
@@ -24715,6 +25188,16 @@ const html = `<!doctype html>
                             React.createElement("button", {
                               type: "button",
                               className: "tb-popup-row",
+                              onClick: () => openEnvironmentRenameDialog(draftEnvironment),
+                            },
+                              React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, "Rename")
+                              )
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "tb-popup-row",
                               onClick: () => {
                                 setEnvironmentActionsPopoverOpen(false);
                                 void handleDeleteEnvironment(draftEnvironment.id);
@@ -24967,7 +25450,8 @@ const html = `<!doctype html>
                   )
                 : renderCurrentEnvironmentEditor()
             )
-          )
+          ),
+          renderEnvironmentRenameModal()
         );
       }
 
@@ -24978,6 +25462,8 @@ const html = `<!doctype html>
         const agentDescriptionTextareaRef = useRef(null);
         const agentInstructionsTextareaRef = useRef(null);
         const agentActionsPopoverRef = useRef(null);
+        const agentRenameInputRef = useRef(null);
+        const agentModelPopoverRef = useRef(null);
         const [selectedAgentId, setSelectedAgentId] = useState(initialAgentId || "");
         const [agentDetailsById, setAgentDetailsById] = useState(() => {
           const next = {};
@@ -25004,6 +25490,10 @@ const html = `<!doctype html>
         const [isAgentInstructionsEditing, setIsAgentInstructionsEditing] = useState(false);
         const [agentDetailsCollapsed, setAgentDetailsCollapsed] = useState(false);
         const [agentActionsPopoverOpen, setAgentActionsPopoverOpen] = useState(false);
+        const [agentRenameState, setAgentRenameState] = useState(null);
+        const [agentRenameValue, setAgentRenameValue] = useState("");
+        const [agentRenameError, setAgentRenameError] = useState("");
+        const [agentModelPopover, setAgentModelPopover] = useState("");
         const [expandedSections, setExpandedSections] = useState(() => new Set(["team", "model", "instructions"]));
 
         const orderedAgents = useMemo(() => {
@@ -25130,6 +25620,7 @@ const html = `<!doctype html>
           setIsAgentDescriptionEditing(false);
           setIsAgentInstructionsEditing(false);
           setAgentActionsPopoverOpen(false);
+          setAgentModelPopover("");
           setSaveState({
             isSaving: false,
             error: "",
@@ -25504,6 +25995,57 @@ const html = `<!doctype html>
           void loadAgentDetails(selectedAgentId);
         }, [loadAgentDetails, orderedAgents, selectedAgentId]);
 
+        useEffect(() => {
+          if (!agentActionsPopoverOpen) {
+            return undefined;
+          }
+
+          function handleAgentActionsPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentActionsPopoverRef.current || agentActionsPopoverRef.current.contains(target)) {
+              return;
+            }
+            setAgentActionsPopoverOpen(false);
+          }
+
+          function handleAgentActionsPopoverEscape(event) {
+            if (event.key === "Escape") {
+              setAgentActionsPopoverOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentActionsPopoverPointerDown);
+          window.addEventListener("keydown", handleAgentActionsPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentActionsPopoverPointerDown);
+            window.removeEventListener("keydown", handleAgentActionsPopoverEscape);
+          };
+        }, [agentActionsPopoverOpen]);
+
+        useEffect(() => {
+          if (!agentRenameState || !agentRenameInputRef.current) {
+            return undefined;
+          }
+
+          const focusFrame = window.requestAnimationFrame(() => {
+            agentRenameInputRef.current?.focus();
+            agentRenameInputRef.current?.select();
+          });
+
+          function handleAgentRenameEscape(event) {
+            if (event.key === "Escape" && !saveState.isSaving) {
+              event.preventDefault();
+              closeAgentRenameDialog();
+            }
+          }
+
+          window.addEventListener("keydown", handleAgentRenameEscape);
+          return () => {
+            window.cancelAnimationFrame(focusFrame);
+            window.removeEventListener("keydown", handleAgentRenameEscape);
+          };
+        }, [agentRenameState, saveState.isSaving]);
+
         useLayoutEffect(() => {
           resizeAgentDescriptionTextarea(agentDescriptionTextareaRef.current);
         }, [draftAgent?.description, draftAgent?.id]);
@@ -25589,6 +26131,25 @@ const html = `<!doctype html>
           setDraftAgent(buildPlaygroundDefaultAgentDraft("team"));
         }
 
+        function closeAgentRenameDialog() {
+          setAgentRenameState(null);
+          setAgentRenameValue("");
+          setAgentRenameError("");
+        }
+
+        function openAgentRenameDialog(agent) {
+          if (!agent?.id || agent.id === PLAYGROUND_AGENT_DRAFT_ID || agent.isSystem) {
+            return;
+          }
+          setAgentActionsPopoverOpen(false);
+          setAgentRenameState({
+            agentId: agent.id,
+            originalName: String(agent.name || "").trim(),
+          });
+          setAgentRenameValue(String(agent.name || ""));
+          setAgentRenameError("");
+        }
+
         function buildPlaygroundAgentPersistedMetadata(agent) {
           const agentType = agent?.agentType === "team" ? "team" : "single";
           if (agentType !== "team") {
@@ -25646,38 +26207,64 @@ const html = `<!doctype html>
           };
         }
 
-        async function handleSaveAgent() {
-          if (!draftAgent || isSystemAgent) {
-            return;
+        async function persistAgentRecord(agentRecord) {
+          if (!agentRecord) {
+            throw new Error("Agent save failed.");
           }
 
-          const payload = buildSanitizedAgentPayload(draftAgent);
-          if (draftAgent.agentType === "team") {
+          const payload = buildSanitizedAgentPayload(agentRecord);
+          if (agentRecord.agentType === "team") {
             const orchestratorAgentId = String(payload?.metadata?.team?.orchestratorAgentId || "").trim();
             const subagentIds = Array.isArray(payload?.metadata?.team?.subagentIds)
               ? payload.metadata.team.subagentIds
               : [];
 
             if (!orchestratorAgentId) {
-              setSaveState({
-                isSaving: false,
-                error: "Choose an orchestrator agent for the team.",
-                message: "",
-              });
-              return;
+              throw new Error("Choose an orchestrator agent for the team.");
             }
 
             if (subagentIds.length === 0) {
-              setSaveState({
-                isSaving: false,
-                error: "Select at least one fixed subagent for the team.",
-                message: "",
-              });
-              return;
+              throw new Error("Select at least one fixed subagent for the team.");
             }
           }
           if (!payload.enabledSkills.includes("deep_research")) {
             payload.deepResearchModel = null;
+          }
+
+          const isCreating = agentRecord.id === PLAYGROUND_AGENT_DRAFT_ID || !agentRecord.id;
+          const response = await fetch(
+            isCreating
+              ? backendUrl + "/agents"
+              : backendUrl + "/agents/" + encodeURIComponent(agentRecord.id),
+            {
+              method: isCreating ? "POST" : "PATCH",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            },
+          );
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to save agent.");
+          }
+
+          const savedAgent = getPlaygroundAgentResponseRecord(data) || normalizePlaygroundAgentRecord({
+            ...agentRecord,
+            ...payload,
+            updatedAt: new Date().toISOString(),
+          });
+          if (!savedAgent?.id) {
+            throw new Error("Agent save failed.");
+          }
+
+          return savedAgent;
+        }
+
+        async function handleSaveAgent() {
+          if (!draftAgent || isSystemAgent) {
+            return;
           }
 
           setSaveState({
@@ -25687,34 +26274,7 @@ const html = `<!doctype html>
           });
 
           try {
-            const isCreating = selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID || !draftAgent.id;
-            const response = await fetch(
-              isCreating
-                ? backendUrl + "/agents"
-                : backendUrl + "/agents/" + encodeURIComponent(draftAgent.id),
-              {
-                method: isCreating ? "POST" : "PATCH",
-                headers: {
-                  ...requestHeaders,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-              },
-            );
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to save agent.");
-            }
-
-            const savedAgent = getPlaygroundAgentResponseRecord(data) || normalizePlaygroundAgentRecord({
-              ...draftAgent,
-              ...payload,
-              updatedAt: new Date().toISOString(),
-            });
-            if (!savedAgent?.id) {
-              throw new Error("Agent save failed.");
-            }
-
+            const savedAgent = await persistAgentRecord(draftAgent);
             editorDirtyRef.current = false;
             setAgentDetailsById((current) => ({
               ...current,
@@ -25735,6 +26295,72 @@ const html = `<!doctype html>
             setSaveState({
               isSaving: false,
               error: error instanceof Error ? error.message : "Failed to save agent.",
+              message: "",
+            });
+          }
+        }
+
+        async function handleAgentRenameSubmit(event) {
+          event.preventDefault();
+          if (!agentRenameState?.agentId) {
+            return;
+          }
+
+          const nextName = String(agentRenameValue || "").trim().replace(/\s+/g, " ");
+          if (!nextName) {
+            setAgentRenameError("Agent name cannot be empty.");
+            return;
+          }
+
+          if (nextName === agentRenameState.originalName) {
+            closeAgentRenameDialog();
+            return;
+          }
+
+          const renameBaseAgent = normalizePlaygroundAgentRecord({
+            ...(selectedAgentSnapshot || draftAgent || {}),
+            id: agentRenameState.agentId,
+            name: nextName,
+          });
+
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+          setAgentRenameError("");
+
+          try {
+            const savedAgent = await persistAgentRecord(renameBaseAgent);
+            setAgentDetailsById((current) => ({
+              ...current,
+              [savedAgent.id]: savedAgent,
+            }));
+            setSelectedAgentId(savedAgent.id);
+            setDraftAgent((current) => current && current.id === savedAgent.id
+              ? normalizePlaygroundAgentRecord({
+                  ...current,
+                  name: savedAgent.name,
+                  updatedAt: savedAgent.updatedAt,
+                  isDefault: savedAgent.isDefault,
+                  isSystem: savedAgent.isSystem,
+                })
+              : savedAgent
+            );
+            setSaveState({
+              isSaving: false,
+              error: "",
+              message: "Saved",
+            });
+            closeAgentRenameDialog();
+            if (onAgentMutated) {
+              await onAgentMutated();
+            }
+          } catch (error) {
+            setAgentRenameError(error instanceof Error ? error.message : "Failed to rename agent.");
+            setSaveState({
+              isSaving: false,
+              error: "",
               message: "",
             });
           }
@@ -25803,9 +26429,59 @@ const html = `<!doctype html>
           resetEditorAuxiliaryState();
         }
 
+        function renderAgentRenameModal() {
+          if (!agentRenameState) {
+            return null;
+          }
+
+          return React.createElement("div", {
+              className: "sidebar-thread-rename-scrim",
+              onClick: () => {
+                if (!saveState.isSaving) {
+                  closeAgentRenameDialog();
+                }
+              },
+            },
+              React.createElement("form", {
+                className: "sidebar-thread-rename-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  void handleAgentRenameSubmit(event);
+                },
+              },
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Rename " + (draftAgent?.agentType === "team" ? "Team" : "Agent")),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" }, "Choose a new name for this " + (draftAgent?.agentType === "team" ? "team." : "agent.")),
+                React.createElement("input", {
+                  ref: agentRenameInputRef,
+                  className: "sidebar-thread-rename-input",
+                  value: agentRenameValue,
+                  onChange: (event) => setAgentRenameValue(event.target.value),
+                  placeholder: draftAgent?.agentType === "team" ? "Team name" : "Agent name",
+                  disabled: saveState.isSaving,
+                }),
+                agentRenameError
+                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, agentRenameError)
+                  : null,
+                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "sidebar-thread-rename-button is-secondary",
+                    onClick: closeAgentRenameDialog,
+                    disabled: saveState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "sidebar-thread-rename-button is-primary",
+                    disabled: saveState.isSaving,
+                  }, saveState.isSaving ? "Saving..." : "Save")
+                )
+              )
+            );
+        }
+
         function renderEditorSection(sectionId, title, description, content, headerActions, collapsible = true) {
           const isExpanded = collapsible ? expandedSections.has(sectionId) : true;
-          return React.createElement("section", { className: "playground-environments-section", key: sectionId },
+          return React.createElement("section", { className: "playground-environments-section", key: sectionId, "data-section-id": sectionId },
             React.createElement(collapsible ? "button" : "div", collapsible ? {
               type: "button",
               className: "playground-environments-section-header",
@@ -25850,6 +26526,12 @@ const html = `<!doctype html>
 
           const modelMeta = getPlaygroundAgentModelMeta(draftAgent.model);
           const enabledSkills = Array.isArray(draftAgent.enabledSkills) ? draftAgent.enabledSkills : [];
+          const selectedAgentModel = PLAYGROUND_AGENT_MODEL_OPTIONS.find((option) => option.id === (draftAgent.model || "claude-haiku-4-5")) || PLAYGROUND_AGENT_MODEL_OPTIONS[0];
+          const reasoningOptions = ["minimal", "low", "medium", "high"].map((value) => ({
+            id: value,
+            label: value.charAt(0).toUpperCase() + value.slice(1),
+          }));
+          const selectedReasoningOption = reasoningOptions.find((option) => option.id === (draftAgent.reasoningEffort || "medium")) || reasoningOptions[2];
           const isTeamAgent = draftAgent.agentType === "team";
           const selectedTeamOrchestrator = draftAgent.teamOrchestratorAgentId
             ? availableTeamMemberAgentsById[draftAgent.teamOrchestratorAgentId] || null
@@ -26066,53 +26748,109 @@ const html = `<!doctype html>
                 )
               )
             : React.createElement("div", { className: "playground-environments-stack" },
-                React.createElement("div", { className: "playground-environments-field-grid" },
-                  React.createElement("label", { className: "playground-environments-field" },
-                    React.createElement("span", { className: "playground-environments-field-label" }, "Model"),
-                    React.createElement("select", {
-                      className: "playground-environments-select",
-                      value: draftAgent.model || "claude-haiku-4-5",
-                      onChange: (event) => updateAgentField("model", event.target.value),
-                      disabled: isSystemAgent,
-                    },
-                      PLAYGROUND_AGENT_MODEL_OPTIONS.map((option) =>
-                        React.createElement("option", { key: option.id, value: option.id }, option.label)
-                      )
-                    )
-                  ),
-                  React.createElement("label", { className: "playground-environments-field" },
-                    React.createElement("span", { className: "playground-environments-field-label" }, "Reasoning Effort"),
-                    React.createElement("select", {
-                      className: "playground-environments-select",
-                      value: draftAgent.reasoningEffort || "medium",
-                      onChange: (event) => updateAgentField("reasoningEffort", event.target.value),
-                      disabled: isSystemAgent,
-                    },
-                      ["minimal", "low", "medium", "high"].map((value) =>
-                        React.createElement("option", { key: value, value }, value.charAt(0).toUpperCase() + value.slice(1))
-                      )
-                    )
-                  ),
-                  enabledSkills.includes("deep_research")
-                    ? React.createElement("label", { className: "playground-environments-field playground-environments-field-span" },
-                        React.createElement("span", { className: "playground-environments-field-label" }, "Deep Research Model"),
-                        React.createElement("select", {
-                          className: "playground-environments-select",
-                          value: draftAgent.deepResearchModel || "gemini-3-flash-preview",
-                          onChange: (event) => updateAgentField("deepResearchModel", event.target.value),
+                React.createElement("div", { className: "playground-agents-model-panel" },
+                  React.createElement("div", { className: "playground-agents-model-header" },
+                    React.createElement("div", { className: "playground-agents-model-select-row" },
+                      React.createElement("span", { className: "playground-agents-model-select-label" }, "Model"),
+                      React.createElement("div", {
+                          className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "model" ? " is-open" : ""),
+                          ref: agentModelPopover === "model" ? agentModelPopoverRef : null,
+                        },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-runtime-value-button",
+                          onClick: () => {
+                            if (isSystemAgent) return;
+                            setAgentModelPopover((current) => current === "model" ? "" : "model");
+                          },
                           disabled: isSystemAgent,
                         },
-                          PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.map((option) =>
-                            React.createElement("option", { key: option.id, value: option.id }, option.label)
+                          React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedAgentModel?.label || "Select model"),
+                          React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                        ),
+                        agentModelPopover === "model"
+                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                              PLAYGROUND_AGENT_MODEL_OPTIONS.map((option) =>
+                                React.createElement("button", {
+                                    key: option.id,
+                                    type: "button",
+                                    className: "tb-popup-row tb-popup-row-select" + ((draftAgent.model || "claude-haiku-4-5") === option.id ? " selected" : ""),
+                                    onClick: () => {
+                                      updateAgentField("model", option.id);
+                                      setAgentModelPopover("");
+                                    },
+                                  },
+                                    React.createElement("span", { className: "tb-popup-check-slot" },
+                                      (draftAgent.model || "claude-haiku-4-5") === option.id
+                                        ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                        : null
+                                    ),
+                                    React.createElement("span", null, option.label)
+                                  )
+                              )
+                            )
+                          : null
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-agents-model-select-row" },
+                      React.createElement("span", { className: "playground-agents-model-select-label" }, "Reasoning Effort"),
+                      React.createElement("div", {
+                          className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "reasoning" ? " is-open" : ""),
+                          ref: agentModelPopover === "reasoning" ? agentModelPopoverRef : null,
+                        },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-runtime-value-button",
+                          onClick: () => {
+                            if (isSystemAgent) return;
+                            setAgentModelPopover((current) => current === "reasoning" ? "" : "reasoning");
+                          },
+                          disabled: isSystemAgent,
+                        },
+                          React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedReasoningOption?.label || "Medium"),
+                          React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                        ),
+                        agentModelPopover === "reasoning"
+                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                              reasoningOptions.map((option) =>
+                                React.createElement("button", {
+                                    key: option.id,
+                                    type: "button",
+                                    className: "tb-popup-row tb-popup-row-select" + ((draftAgent.reasoningEffort || "medium") === option.id ? " selected" : ""),
+                                    onClick: () => {
+                                      updateAgentField("reasoningEffort", option.id);
+                                      setAgentModelPopover("");
+                                    },
+                                  },
+                                    React.createElement("span", { className: "tb-popup-check-slot" },
+                                      (draftAgent.reasoningEffort || "medium") === option.id
+                                        ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                        : null
+                                    ),
+                                    React.createElement("span", null, option.label)
+                                  )
+                              )
+                            )
+                          : null
+                      )
+                    ),
+                    enabledSkills.includes("deep_research")
+                      ? React.createElement("label", { className: "playground-environments-field playground-environments-field-span" },
+                          React.createElement("span", { className: "playground-environments-field-label" }, "Deep Research Model"),
+                          React.createElement("select", {
+                            className: "playground-environments-select",
+                            value: draftAgent.deepResearchModel || "gemini-3-flash-preview",
+                            onChange: (event) => updateAgentField("deepResearchModel", event.target.value),
+                            disabled: isSystemAgent,
+                          },
+                            PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.map((option) =>
+                              React.createElement("option", { key: option.id, value: option.id }, option.label)
+                            )
                           )
                         )
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-agents-model-hint" },
-                  React.createElement("div", { className: "playground-agents-model-hint-title" }, modelMeta.label),
-                  React.createElement("div", { className: "playground-agents-model-hint-copy" }, modelMeta.description),
-                  React.createElement("div", { className: "playground-agents-model-metrics" },
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-agents-model-metrics playground-agents-model-metrics-surface" },
                     React.createElement("div", { className: "playground-agents-model-metric playground-agents-intelligence-metric" },
                       React.createElement("div", { className: "playground-agents-intelligence-bulbs" },
                         [1, 2, 3, 4].map((level) =>
@@ -26128,13 +26866,13 @@ const html = `<!doctype html>
                         React.createElement("span", null, " Intelligence")
                       )
                     ),
-                    React.createElement("div", { className: "playground-agents-model-metric" },
-                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Context Window"),
-                      React.createElement("div", { className: "playground-agents-model-metric-value" }, modelMeta.contextWindow)
+                    React.createElement("div", { className: "playground-agents-model-metric is-stack" },
+                      React.createElement("div", { className: "playground-agents-model-metric-value" }, modelMeta.contextWindow),
+                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Context Window")
                     ),
-                    React.createElement("div", { className: "playground-agents-model-metric" },
-                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Speed"),
-                      React.createElement("div", { className: "playground-agents-model-metric-value" }, modelMeta.speed)
+                    React.createElement("div", { className: "playground-agents-model-metric is-stack" },
+                      React.createElement("div", { className: "playground-agents-model-metric-value" }, modelMeta.speed),
+                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Speed")
                     )
                   )
                 )
@@ -26246,6 +26984,16 @@ const html = `<!doctype html>
                             React.createElement("button", {
                               type: "button",
                               className: "tb-popup-row",
+                              onClick: () => openAgentRenameDialog(draftAgent),
+                            },
+                              React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, "Rename")
+                              )
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "tb-popup-row",
                               onClick: () => {
                                 setAgentActionsPopoverOpen(false);
                                 void handleDeleteAgent(draftAgent.id);
@@ -26268,9 +27016,6 @@ const html = `<!doctype html>
                 : null,
               descriptionSection,
               agentFactsSection,
-              isSystemAgent
-                ? React.createElement("div", { className: "playground-agents-readonly-note" }, "System agents follow the aiOS behavior and are view-only in the playground.")
-                : null,
               isTeamAgent
                 ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
                 : null,
@@ -26466,22 +27211,78 @@ const html = `<!doctype html>
                   )
                 : renderCurrentAgentEditor()
             )
-          )
+          ),
+          renderAgentRenameModal()
         );
       }
 
-      function PlaygroundSkillsPage({ skills, fetchCustomSkills }) {
+      function PlaygroundSkillsPage({
+        skills,
+        fetchSkills,
+        backendUrl,
+        requestHeaders,
+        environments,
+        projectId,
+        apiKey,
+        upstreamUrl,
+      }) {
         const searchPopupInputRef = useRef(null);
+        const skillCodeFileInputRef = useRef(null);
+        const skillActionsPopoverRef = useRef(null);
+        const skillRenameInputRef = useRef(null);
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [skillListMode, setSkillListMode] = useState("system");
         const [selectedSkillId, setSelectedSkillId] = useState("");
-        const [customSkills, setCustomSkills] = useState([]);
-        const [customSkillsLoading, setCustomSkillsLoading] = useState(false);
-        const [customSkillsLoaded, setCustomSkillsLoaded] = useState(false);
-        const [customSkillsError, setCustomSkillsError] = useState("");
+        const [skillActionsPopoverOpen, setSkillActionsPopoverOpen] = useState(false);
+        const [skillRenameState, setSkillRenameState] = useState(null);
+        const [skillRenameValue, setSkillRenameValue] = useState("");
+        const [skillRenameError, setSkillRenameError] = useState("");
+        const [loadedSkills, setLoadedSkills] = useState([]);
+        const [skillsLoading, setSkillsLoading] = useState(false);
+        const [skillsLoaded, setSkillsLoaded] = useState(false);
+        const [skillsError, setSkillsError] = useState("");
+        const [skillSaveState, setSkillSaveState] = useState({
+          isSaving: false,
+          error: "",
+        });
+        const [skillCodeFilesTransferState, setSkillCodeFilesTransferState] = useState({
+          isProcessing: false,
+          error: "",
+        });
+        const [skillSectionEditing, setSkillSectionEditing] = useState({
+          description: false,
+          usage: false,
+          process: false,
+          outputFormat: false,
+          configuration: false,
+          examplePrompts: false,
+        });
+        const [isSkillCodeDragging, setIsSkillCodeDragging] = useState(false);
+        const [skillEnvironmentFilePickerOpen, setSkillEnvironmentFilePickerOpen] = useState(false);
+        const [skillEnvironmentFilePickerInventory, setSkillEnvironmentFilePickerInventory] = useState([]);
+        const [skillEnvironmentFilePickerState, setSkillEnvironmentFilePickerState] = useState({
+          status: "idle",
+          error: "",
+        });
+        const [skillEnvironmentFilePickerSearch, setSkillEnvironmentFilePickerSearch] = useState("");
+        const [skillEnvironmentFilePickerExpandedFolders, setSkillEnvironmentFilePickerExpandedFolders] = useState([]);
+        const [skillEnvironmentFilePickerSelectedPaths, setSkillEnvironmentFilePickerSelectedPaths] = useState([]);
+        const [skillEnvironmentSelectionId, setSkillEnvironmentSelectionId] = useState("");
+        const [skillEnvironmentPopoverOpen, setSkillEnvironmentPopoverOpen] = useState(false);
+        const skillDescriptionTextareaRef = useRef(null);
+        const skillUsageTextareaRef = useRef(null);
+        const skillProcessTextareaRef = useRef(null);
+        const skillOutputTextareaRef = useRef(null);
+        const skillConfigurationTextareaRef = useRef(null);
+        const skillExamplesTextareaRef = useRef(null);
 
         const skillCatalogMetaById = useMemo(() => ({
+          browser: {
+            name: "Browser",
+            description: "Open websites visually, navigate pages, and inspect browser state from the agent.",
+            icon: "globe",
+          },
           image_generation: {
             name: "Image Generation",
             description: "Generate and edit images directly from prompts and visual references.",
@@ -26529,37 +27330,165 @@ const html = `<!doctype html>
           },
         }), []);
 
-        const systemSkills = useMemo(() => {
+        function parsePlaygroundSkillMarkdownSections(markdown) {
+          const sections = {
+            usage: "",
+            process: "",
+            outputFormat: "",
+            configuration: "",
+            examplePrompts: "",
+          };
+
+          if (!markdown) {
+            return sections;
+          }
+
+          const sectionRegex = new RegExp("##\\\\s+(Usage|Process|Output Format|Configuration|Example Prompts)\\\\s*\\\\n([\\\\s\\\\S]*?)(?=##\\\\s+|$)", "gi");
+          let match;
+          while ((match = sectionRegex.exec(markdown)) !== null) {
+            const sectionName = String(match[1] || "").toLowerCase();
+            const content = String(match[2] || "").trim();
+            if (sectionName === "usage") {
+              sections.usage = content;
+            } else if (sectionName === "process") {
+              sections.process = content;
+            } else if (sectionName === "output format") {
+              sections.outputFormat = content;
+            } else if (sectionName === "configuration") {
+              sections.configuration = content;
+            } else if (sectionName === "example prompts") {
+              sections.examplePrompts = content;
+            }
+          }
+          return sections;
+        }
+
+        function computePlaygroundSkillMarkdownFromSections(skillName, sections) {
+          const lines = [];
+          lines.push("# " + (String(skillName || "").trim() || "Skill"));
+          lines.push("");
+          lines.push("## Usage");
+          lines.push("");
+          lines.push(String(sections?.usage || "").trim() || "Describe when this skill should be invoked...");
+          lines.push("");
+          lines.push("## Process");
+          lines.push("");
+          lines.push(String(sections?.process || "").trim() || "1. Step one\\n2. Step two");
+          lines.push("");
+          lines.push("## Output Format");
+          lines.push("");
+          lines.push(String(sections?.outputFormat || "").trim() || "Describe the expected output format.");
+          lines.push("");
+          lines.push("## Configuration");
+          lines.push("");
+          lines.push(String(sections?.configuration || "").trim() || "Nothing");
+          lines.push("");
+          lines.push("## Example Prompts");
+          lines.push("");
+          lines.push(String(sections?.examplePrompts || "").trim() || "- Example prompt 1\\n- Example prompt 2");
+          return lines.join("\\n");
+        }
+
+        function normalizeSkillCodeFiles(codeFiles) {
+          return (Array.isArray(codeFiles) ? codeFiles : [])
+            .map((file, index) => {
+              const name = typeof file?.name === "string" ? file.name.trim() : "";
+              if (!name) {
+                return null;
+              }
+              const languageCandidate = typeof file?.language === "string" && file.language.trim()
+                ? file.language.trim()
+                : getPlaygroundCodeEditorLanguage({ path: name, isDirectory: false, mimeType: "" });
+              return {
+                id: typeof file?.id === "string" && file.id.trim()
+                  ? file.id.trim()
+                  : "code-file-" + index + "-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                name,
+                content: typeof file?.content === "string" ? file.content : "",
+                language: languageCandidate || "plaintext",
+              };
+            })
+            .filter(Boolean);
+        }
+
+        const normalizeSkillRecord = useCallback((skill) => {
+          const skillId = typeof skill?.id === "string" ? skill.id.trim() : "";
+          if (!skillId) {
+            return null;
+          }
+
+          const meta = skillCatalogMetaById[skillId] || {};
+          const isSystemSkill = skill?.isSystem === true || skill?.isDefault === true;
+          const isCustomSkill = !isSystemSkill;
+
+          return {
+            id: skillId,
+            projectId: typeof skill?.projectId === "string" && skill.projectId.trim()
+              ? skill.projectId.trim()
+              : String(projectId || "__runner_playground__").trim() || "__runner_playground__",
+            name: typeof skill?.name === "string" && skill.name.trim()
+              ? skill.name.trim()
+              : typeof meta.name === "string" && meta.name.trim()
+                ? meta.name.trim()
+                : skillId,
+            description: typeof skill?.description === "string" && skill.description.trim()
+              ? skill.description.trim()
+              : typeof meta.description === "string"
+                ? meta.description
+                : "",
+            markdown: typeof skill?.markdown === "string" ? skill.markdown : "",
+            codeFiles: normalizeSkillCodeFiles(skill?.codeFiles),
+            icon: typeof skill?.icon === "string" && skill.icon.trim()
+              ? skill.icon.trim()
+              : typeof meta.icon === "string"
+                ? meta.icon
+                : "",
+            isCustom: isCustomSkill,
+            isSystem: isSystemSkill,
+            statusLabel: isCustomSkill ? "Custom" : "System",
+            category: typeof skill?.category === "string" && skill.category.trim() ? skill.category.trim() : "",
+            isActive: skill?.isActive !== false,
+            createdAt: typeof skill?.createdAt === "string" ? skill.createdAt : "",
+            updatedAt: typeof skill?.updatedAt === "string" ? skill.updatedAt : "",
+          };
+        }, [projectId, skillCatalogMetaById]);
+
+        const availableSkillEnvironments = useMemo(() => {
+          return (Array.isArray(environments) ? environments : [])
+            .filter((environment) => environment?.id)
+            .slice()
+            .sort((left, right) => {
+              if (Boolean(left?.isDefault) !== Boolean(right?.isDefault)) {
+                return left?.isDefault ? -1 : 1;
+              }
+              return String(left?.name || "").localeCompare(String(right?.name || ""));
+            });
+        }, [environments]);
+
+        useEffect(() => {
+          if (availableSkillEnvironments.length === 0) {
+            if (skillEnvironmentSelectionId) {
+              setSkillEnvironmentSelectionId("");
+            }
+            return;
+          }
+          if (availableSkillEnvironments.some((environment) => environment.id === skillEnvironmentSelectionId)) {
+            return;
+          }
+          setSkillEnvironmentSelectionId(availableSkillEnvironments[0].id);
+        }, [availableSkillEnvironments, skillEnvironmentSelectionId]);
+
+        const fallbackSystemSkills = useMemo(() => {
           const next = [];
           const seen = new Set();
 
           const appendSkill = (skill) => {
-            const skillId = typeof skill?.id === "string" ? skill.id.trim() : "";
-            if (!skillId || seen.has(skillId)) {
+            const normalized = normalizeSkillRecord({ ...skill, isSystem: true, isDefault: true });
+            if (!normalized || seen.has(normalized.id)) {
               return;
             }
-            seen.add(skillId);
-            const meta = skillCatalogMetaById[skillId] || {};
-            next.push({
-              id: skillId,
-              name: typeof skill?.name === "string" && skill.name.trim()
-                ? skill.name.trim()
-                : typeof meta.name === "string" && meta.name.trim()
-                  ? meta.name.trim()
-                  : skillId,
-              description: typeof skill?.description === "string" && skill.description.trim()
-                ? skill.description.trim()
-                : typeof meta.description === "string"
-                  ? meta.description
-                  : "",
-              icon: typeof skill?.icon === "string" && skill.icon.trim()
-                ? skill.icon.trim()
-                : typeof meta.icon === "string"
-                  ? meta.icon
-                  : "",
-              isCustom: false,
-              statusLabel: "System",
-            });
+            seen.add(normalized.id);
+            next.push(normalized);
           };
 
           (Array.isArray(skills) ? skills : []).forEach((skill) => appendSkill(skill));
@@ -26570,29 +27499,20 @@ const html = `<!doctype html>
           }));
 
           return next;
-        }, [skillCatalogMetaById, skills]);
+        }, [normalizeSkillRecord, skills]);
+
+        const normalizedLoadedSkills = useMemo(() => {
+          return (Array.isArray(loadedSkills) ? loadedSkills : []).filter(Boolean);
+        }, [loadedSkills]);
+
+        const systemSkills = useMemo(() => {
+          const fetchedSystemSkills = normalizedLoadedSkills.filter((skill) => !skill.isCustom);
+          return fetchedSystemSkills.length > 0 ? fetchedSystemSkills : fallbackSystemSkills;
+        }, [fallbackSystemSkills, normalizedLoadedSkills]);
 
         const normalizedCustomSkills = useMemo(() => {
-          return (Array.isArray(customSkills) ? customSkills : [])
-            .map((skill) => {
-              const skillId = typeof skill?.id === "string" ? skill.id.trim() : "";
-              if (!skillId) {
-                return null;
-              }
-
-              return {
-                id: skillId,
-                name: typeof skill?.name === "string" && skill.name.trim()
-                  ? skill.name.trim()
-                  : skillId,
-                description: typeof skill?.description === "string" ? skill.description : "",
-                icon: typeof skill?.icon === "string" ? skill.icon.trim() : "",
-                isCustom: true,
-                statusLabel: "Custom",
-              };
-            })
-            .filter(Boolean);
-        }, [customSkills]);
+          return normalizedLoadedSkills.filter((skill) => skill.isCustom);
+        }, [normalizedLoadedSkills]);
 
         const displaySkills = useMemo(() => {
           return skillListMode === "custom" ? normalizedCustomSkills : systemSkills;
@@ -26601,6 +27521,10 @@ const html = `<!doctype html>
         const selectedSkill = useMemo(() => {
           return displaySkills.find((skill) => skill.id === selectedSkillId) || null;
         }, [displaySkills, selectedSkillId]);
+
+        const selectedSkillSections = useMemo(() => {
+          return parsePlaygroundSkillMarkdownSections(selectedSkill?.markdown || "");
+        }, [selectedSkill?.markdown]);
 
         const searchResults = useMemo(() => {
           const query = searchPopupQuery.trim().toLowerCase();
@@ -26613,38 +27537,78 @@ const html = `<!doctype html>
             .slice(0, 12);
         }, [displaySkills, searchPopupQuery]);
 
-        const loadCustomSkills = useCallback(async ({ force = false } = {}) => {
-          if (typeof fetchCustomSkills !== "function") {
-            setCustomSkills([]);
-            setCustomSkillsLoaded(true);
-            setCustomSkillsError("");
+        const selectedSkillProjectId = String(selectedSkill?.projectId || projectId || "__runner_playground__").trim() || "__runner_playground__";
+        const selectedSkillEnvironment = useMemo(() => {
+          return availableSkillEnvironments.find((environment) => environment.id === skillEnvironmentSelectionId) || null;
+        }, [availableSkillEnvironments, skillEnvironmentSelectionId]);
+        const isSelectedSkillCodeFilesEditable = Boolean(selectedSkill?.isCustom);
+        const isSelectedSkillEditable = Boolean(selectedSkill?.isCustom);
+
+        const skillEnvironmentFilePickerExpandedSet = useMemo(() => {
+          return new Set(skillEnvironmentFilePickerExpandedFolders);
+        }, [skillEnvironmentFilePickerExpandedFolders]);
+
+        const skillEnvironmentFilePickerTree = useMemo(() => {
+          return buildPlaygroundEnvironmentTree(skillEnvironmentFilePickerInventory);
+        }, [skillEnvironmentFilePickerInventory]);
+
+        const skillEnvironmentFilePickerRows = useMemo(() => {
+          const searchValue = skillEnvironmentFilePickerSearch.trim().toLowerCase();
+          if (searchValue) {
+            return skillEnvironmentFilePickerInventory
+              .filter((entry) => {
+                const haystack = [entry?.name || "", entry?.path || ""].join(" ").toLowerCase();
+                return haystack.includes(searchValue);
+              })
+              .map((entry) => ({ entry, level: 0, searchMatch: true }));
+          }
+          return buildPlaygroundEnvironmentVisibleRows(
+            skillEnvironmentFilePickerTree,
+            "",
+            skillEnvironmentFilePickerExpandedSet
+          );
+        }, [
+          skillEnvironmentFilePickerExpandedSet,
+          skillEnvironmentFilePickerInventory,
+          skillEnvironmentFilePickerSearch,
+          skillEnvironmentFilePickerTree,
+        ]);
+
+        const loadSkills = useCallback(async ({ force = false } = {}) => {
+          if (typeof fetchSkills !== "function") {
+            setLoadedSkills([]);
+            setSkillsLoaded(true);
+            setSkillsError("");
             return;
           }
-          if (customSkillsLoading) {
+          if (skillsLoading) {
             return;
           }
-          if (customSkillsLoaded && !force) {
+          if (skillsLoaded && !force) {
             return;
           }
 
-          setCustomSkillsLoading(true);
-          setCustomSkillsError("");
+          setSkillsLoading(true);
+          setSkillsError("");
           try {
-            const nextSkills = await fetchCustomSkills();
-            setCustomSkills(Array.isArray(nextSkills) ? nextSkills : []);
-            setCustomSkillsLoaded(true);
+            const nextSkills = await fetchSkills();
+            const normalizedSkills = (Array.isArray(nextSkills) ? nextSkills : [])
+              .map((skill) => normalizeSkillRecord(skill))
+              .filter(Boolean);
+            setLoadedSkills(normalizedSkills);
+            setSkillsLoaded(true);
           } catch (error) {
-            setCustomSkills([]);
-            setCustomSkillsLoaded(true);
-            setCustomSkillsError(error instanceof Error ? error.message : "Failed to load custom skills.");
+            setLoadedSkills([]);
+            setSkillsLoaded(true);
+            setSkillsError(error instanceof Error ? error.message : "Failed to load skills.");
           } finally {
-            setCustomSkillsLoading(false);
+            setSkillsLoading(false);
           }
-        }, [customSkillsLoaded, customSkillsLoading, fetchCustomSkills]);
+        }, [fetchSkills, normalizeSkillRecord, skillsLoaded, skillsLoading]);
 
         useEffect(() => {
-          void loadCustomSkills();
-        }, [loadCustomSkills]);
+          void loadSkills();
+        }, [loadSkills]);
 
         useEffect(() => {
           if (!toolbarPopover) return;
@@ -26674,10 +27638,31 @@ const html = `<!doctype html>
         }, [toolbarPopover]);
 
         useEffect(() => {
-          if (skillListMode === "custom" && !customSkillsLoaded && !customSkillsLoading) {
-            void loadCustomSkills();
+          if (!skillActionsPopoverOpen) {
+            return undefined;
           }
-        }, [customSkillsLoaded, customSkillsLoading, loadCustomSkills, skillListMode]);
+
+          function handleSkillActionsPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !skillActionsPopoverRef.current || skillActionsPopoverRef.current.contains(target)) {
+              return;
+            }
+            setSkillActionsPopoverOpen(false);
+          }
+
+          function handleSkillActionsPopoverEscape(event) {
+            if (event.key === "Escape") {
+              setSkillActionsPopoverOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleSkillActionsPopoverPointerDown);
+          window.addEventListener("keydown", handleSkillActionsPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleSkillActionsPopoverPointerDown);
+            window.removeEventListener("keydown", handleSkillActionsPopoverEscape);
+          };
+        }, [skillActionsPopoverOpen]);
 
         useEffect(() => {
           if (selectedSkillId && displaySkills.some((skill) => skill.id === selectedSkillId)) {
@@ -26685,6 +27670,156 @@ const html = `<!doctype html>
           }
           setSelectedSkillId(displaySkills[0]?.id || "");
         }, [displaySkills, selectedSkillId]);
+
+        useEffect(() => {
+          setSkillActionsPopoverOpen(false);
+          setSkillRenameState(null);
+          setSkillRenameValue("");
+          setSkillRenameError("");
+          setSkillSectionEditing({
+            description: false,
+            usage: false,
+            process: false,
+            outputFormat: false,
+            configuration: false,
+            examplePrompts: false,
+          });
+          setSkillSaveState({
+            isSaving: false,
+            error: "",
+          });
+        }, [selectedSkill?.id]);
+
+        useEffect(() => {
+          if (!skillRenameState || !skillRenameInputRef.current) {
+            return undefined;
+          }
+
+          const focusFrame = window.requestAnimationFrame(() => {
+            skillRenameInputRef.current?.focus();
+            skillRenameInputRef.current?.select();
+          });
+
+          function handleSkillRenameEscape(event) {
+            if (event.key === "Escape" && !skillSaveState.isSaving) {
+              event.preventDefault();
+              setSkillRenameState(null);
+              setSkillRenameValue("");
+              setSkillRenameError("");
+            }
+          }
+
+          window.addEventListener("keydown", handleSkillRenameEscape);
+          return () => {
+            window.cancelAnimationFrame(focusFrame);
+            window.removeEventListener("keydown", handleSkillRenameEscape);
+          };
+        }, [skillRenameState, skillSaveState.isSaving]);
+
+        function resizeSkillTextarea(textarea) {
+          if (!textarea) return;
+          const computedStyles = window.getComputedStyle(textarea);
+          const lineHeight = Number.parseFloat(computedStyles.lineHeight) || 21;
+          const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
+          const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
+          const borderTopWidth = Number.parseFloat(computedStyles.borderTopWidth) || 0;
+          const borderBottomWidth = Number.parseFloat(computedStyles.borderBottomWidth) || 0;
+          const singleLineHeight = Math.ceil(lineHeight + paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
+          textarea.style.height = "auto";
+          const nextHeight = String(textarea.value || "").trim()
+            ? Math.max(singleLineHeight, textarea.scrollHeight)
+            : singleLineHeight;
+          textarea.style.height = nextHeight + "px";
+        }
+
+        useEffect(() => {
+          const textareas = [
+            skillDescriptionTextareaRef.current,
+            skillUsageTextareaRef.current,
+            skillProcessTextareaRef.current,
+            skillOutputTextareaRef.current,
+            skillConfigurationTextareaRef.current,
+            skillExamplesTextareaRef.current,
+          ];
+          let frameId = 0;
+          const timeoutIds = [];
+          const scheduleResize = () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            frameId = window.requestAnimationFrame(() => {
+              textareas.forEach((textarea) => resizeSkillTextarea(textarea));
+            });
+          };
+          scheduleResize();
+          [120, 240].forEach((delay) => {
+            timeoutIds.push(window.setTimeout(scheduleResize, delay));
+          });
+          return () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+          };
+        }, [selectedSkill?.id, selectedSkill?.description, selectedSkill?.markdown]);
+
+        useEffect(() => {
+          if (!skillEnvironmentFilePickerOpen) {
+            return undefined;
+          }
+
+          if (!selectedSkillEnvironment?.id) {
+            setSkillEnvironmentFilePickerInventory([]);
+            setSkillEnvironmentFilePickerState({
+              status: "error",
+              error: "Select an environment before browsing files.",
+            });
+            return undefined;
+          }
+
+          const controller = new AbortController();
+          setSkillEnvironmentFilePickerState({
+            status: "loading",
+            error: "",
+          });
+          setSkillEnvironmentFilePickerSelectedPaths([]);
+          setSkillEnvironmentFilePickerExpandedFolders([]);
+
+          void fetch(
+            buildPlaygroundEnvironmentFilesListUrl(backendUrl, selectedSkillEnvironment.id, "", -1),
+            {
+              method: "GET",
+              headers: requestHeaders,
+              signal: controller.signal,
+            }
+          )
+            .then(async (response) => {
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load environment files.");
+              }
+              if (controller.signal.aborted) {
+                return;
+              }
+              setSkillEnvironmentFilePickerInventory(normalizePlaygroundEnvironmentInventory(data?.files || data?.items || data));
+              setSkillEnvironmentFilePickerState({
+                status: "ready",
+                error: "",
+              });
+            })
+            .catch((error) => {
+              if (controller.signal.aborted) {
+                return;
+              }
+              setSkillEnvironmentFilePickerInventory([]);
+              setSkillEnvironmentFilePickerState({
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load environment files.",
+              });
+            });
+
+          return () => controller.abort();
+        }, [backendUrl, requestHeaders, selectedSkillEnvironment?.id, skillEnvironmentFilePickerOpen]);
 
         function toggleToolbarPopover(nextValue) {
           setToolbarPopover((current) => current === nextValue ? "" : nextValue);
@@ -26729,6 +27864,7 @@ const html = `<!doctype html>
             if (normalizedCustomIcon === "list") return ListTodo;
             return Wand2;
           }
+          if (skill?.id === "browser") return Globe;
           if (skill?.id === "image_generation") return ImageIcon;
           if (skill?.id === "web_search") return Globe;
           if (skill?.id === "research" || skill?.id === "deep_research") return Telescope;
@@ -26752,93 +27888,1091 @@ const html = `<!doctype html>
           );
         }
 
+        function buildPlaygroundSkillCodeFileRecord(name, content, language = "") {
+          const normalizedName = String(name || "").trim();
+          return {
+            id: "code-file-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
+            name: normalizedName,
+            content: typeof content === "string" ? content : "",
+            language: language || getPlaygroundCodeEditorLanguage({ path: normalizedName, isDirectory: false, mimeType: "" }) || "plaintext",
+          };
+        }
+
+        function mergePlaygroundSkillCodeFiles(currentCodeFiles, nextCodeFiles) {
+          const mergedByName = new Map();
+          normalizeSkillCodeFiles(currentCodeFiles).forEach((file) => {
+            mergedByName.set(normalizeHistoryPath(file.name).toLowerCase(), file);
+          });
+          normalizeSkillCodeFiles(nextCodeFiles).forEach((file) => {
+            mergedByName.set(normalizeHistoryPath(file.name).toLowerCase(), file);
+          });
+          return Array.from(mergedByName.values()).sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
+        }
+
+        function updateLoadedSkillRecord(skillId, nextSkill) {
+          setLoadedSkills((current) => {
+            let replaced = false;
+            const next = current.map((skill) => {
+              if (skill.id !== skillId) {
+                return skill;
+              }
+              replaced = true;
+              return nextSkill;
+            });
+            return replaced ? next : next.concat(nextSkill);
+          });
+        }
+
+        function updateSelectedSkillLocal(updater) {
+          if (!selectedSkill?.id) {
+            return;
+          }
+          setLoadedSkills((current) =>
+            current.map((skill) => {
+              if (skill.id !== selectedSkill.id) {
+                return skill;
+              }
+              return typeof updater === "function" ? updater(skill) : updater;
+            })
+          );
+          setSkillSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
+        function closeSkillRenameDialog() {
+          setSkillRenameState(null);
+          setSkillRenameValue("");
+          setSkillRenameError("");
+        }
+
+        function openSkillRenameDialog() {
+          if (!selectedSkill?.id || !selectedSkill.isCustom) {
+            return;
+          }
+          setSkillActionsPopoverOpen(false);
+          setSkillRenameState({
+            skillId: selectedSkill.id,
+            originalName: String(selectedSkill.name || "").trim(),
+          });
+          setSkillRenameValue(String(selectedSkill.name || ""));
+          setSkillRenameError("");
+        }
+
+        async function patchSelectedSkillFields(partial) {
+          if (!selectedSkill || !selectedSkill.isCustom) {
+            throw new Error("Only custom skills can be updated.");
+          }
+
+          const response = await fetch(
+            "/api/aios/projects/" + encodeURIComponent(selectedSkillProjectId) + "/skills/" + encodeURIComponent(selectedSkill.id),
+            {
+              method: "PATCH",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+                ...(apiKey && String(apiKey).trim() ? { "X-API-Key": String(apiKey).trim() } : {}),
+                ...(upstreamUrl ? { "X-Runner-Upstream-Url": upstreamUrl } : {}),
+              },
+              body: JSON.stringify(partial),
+            }
+          );
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to save skill.");
+          }
+          const normalizedUpdatedSkill = normalizeSkillRecord(data?.skill || {
+            ...selectedSkill,
+            ...partial,
+          });
+          if (normalizedUpdatedSkill) {
+            updateLoadedSkillRecord(selectedSkill.id, normalizedUpdatedSkill);
+          }
+          return normalizedUpdatedSkill;
+        }
+
+        async function saveSelectedSkillFields(partial) {
+          if (!selectedSkill || !selectedSkill.isCustom) {
+            return;
+          }
+
+          setSkillSaveState({
+            isSaving: true,
+            error: "",
+          });
+
+          try {
+            await patchSelectedSkillFields(partial);
+            setSkillSaveState({
+              isSaving: false,
+              error: "",
+            });
+          } catch (error) {
+            setSkillSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to save skill.",
+            });
+          }
+        }
+
+        async function handleSkillRenameSubmit(event) {
+          event.preventDefault();
+          if (!skillRenameState?.skillId || !selectedSkill?.isCustom) {
+            return;
+          }
+
+          const nextName = String(skillRenameValue || "").trim().replace(/\s+/g, " ");
+          if (!nextName) {
+            setSkillRenameError("Skill name cannot be empty.");
+            return;
+          }
+
+          if (nextName === skillRenameState.originalName) {
+            closeSkillRenameDialog();
+            return;
+          }
+
+          setSkillSaveState({
+            isSaving: true,
+            error: "",
+          });
+          setSkillRenameError("");
+
+          try {
+            await patchSelectedSkillFields({
+              name: nextName,
+            });
+            setSkillSaveState({
+              isSaving: false,
+              error: "",
+            });
+            closeSkillRenameDialog();
+          } catch (error) {
+            setSkillRenameError(error instanceof Error ? error.message : "Failed to rename skill.");
+            setSkillSaveState({
+              isSaving: false,
+              error: "",
+            });
+          }
+        }
+
+        async function handleDeleteSelectedSkill() {
+          if (!selectedSkill?.id || !selectedSkill.isCustom) {
+            return;
+          }
+          if (!window.confirm("Delete this skill?")) {
+            return;
+          }
+
+          const deletingSkillId = selectedSkill.id;
+          const nextSelectedCustomSkillId = normalizedCustomSkills.find((skill) => skill.id !== deletingSkillId)?.id || "";
+          setSkillSaveState({
+            isSaving: true,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              "/api/aios/projects/" + encodeURIComponent(selectedSkillProjectId) + "/skills/" + encodeURIComponent(deletingSkillId),
+              {
+                method: "DELETE",
+                credentials: "include",
+                headers: {
+                  ...(apiKey && String(apiKey).trim() ? { "X-API-Key": String(apiKey).trim() } : {}),
+                  ...(upstreamUrl ? { "X-Runner-Upstream-Url": upstreamUrl } : {}),
+                },
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to delete skill.");
+            }
+
+            setLoadedSkills((current) => current.filter((skill) => skill.id !== deletingSkillId));
+            setSelectedSkillId(nextSelectedCustomSkillId);
+            setSkillActionsPopoverOpen(false);
+            closeSkillRenameDialog();
+            setSkillSaveState({
+              isSaving: false,
+              error: "",
+            });
+          } catch (error) {
+            setSkillSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to delete skill.",
+            });
+          }
+        }
+
+        function getSkillTextareaRef(sectionId) {
+          if (sectionId === "description") return skillDescriptionTextareaRef;
+          if (sectionId === "usage") return skillUsageTextareaRef;
+          if (sectionId === "process") return skillProcessTextareaRef;
+          if (sectionId === "outputFormat") return skillOutputTextareaRef;
+          if (sectionId === "configuration") return skillConfigurationTextareaRef;
+          return skillExamplesTextareaRef;
+        }
+
+        function applySkillMarkdownSelection(sectionId, nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          const textareaRef = getSkillTextareaRef(sectionId);
+          if (sectionId === "description") {
+            updateSelectedSkillLocal((current) => ({
+              ...current,
+              description: nextValue,
+            }));
+          } else {
+            updateSelectedSkillLocal((current) => {
+              const currentSections = parsePlaygroundSkillMarkdownSections(current?.markdown || "");
+              const nextSections = {
+                ...currentSections,
+                [sectionId]: nextValue,
+              };
+              return {
+                ...current,
+                markdown: computePlaygroundSkillMarkdownFromSections(current?.name || "Skill", nextSections),
+              };
+            });
+          }
+
+          window.requestAnimationFrame(() => {
+            const textarea = textareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeSkillTextarea(textarea);
+          });
+        }
+
+        function buildWrappedSkillMarkdownEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          if (safeStart !== safeEnd) {
+            if (
+              selectedText.startsWith(prefix)
+              && selectedText.endsWith(suffix)
+              && selectedText.length >= prefix.length + suffix.length
+            ) {
+              const unwrappedText = selectedText.slice(prefix.length, selectedText.length - suffix.length);
+              return {
+                value: value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd),
+                selectionStart: safeStart,
+                selectionEnd: safeStart + unwrappedText.length,
+              };
+            }
+
+            const surroundingPrefix = value.slice(Math.max(0, safeStart - prefix.length), safeStart);
+            const surroundingSuffix = value.slice(safeEnd, safeEnd + suffix.length);
+            if (surroundingPrefix === prefix && surroundingSuffix === suffix) {
+              return {
+                value: value.slice(0, safeStart - prefix.length) + selectedText + value.slice(safeEnd + suffix.length),
+                selectionStart: safeStart - prefix.length,
+                selectionEnd: safeStart - prefix.length + selectedText.length,
+              };
+            }
+
+            const wrappedText = prefix + selectedText + suffix;
+            return {
+              value: value.slice(0, safeStart) + wrappedText + value.slice(safeEnd),
+              selectionStart: safeStart + prefix.length,
+              selectionEnd: safeStart + prefix.length + selectedText.length,
+            };
+          }
+
+          const insertedText = prefix + suffix;
+          return {
+            value: value.slice(0, safeStart) + insertedText + value.slice(safeEnd),
+            selectionStart: safeStart + prefix.length,
+            selectionEnd: safeStart + prefix.length,
+          };
+        }
+
+        function buildSkillMarkdownListEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
+          let lineEnd = value.indexOf("\\n", safeEnd);
+          if (lineEnd === -1) {
+            lineEnd = value.length;
+          }
+          const block = value.slice(lineStart, lineEnd);
+          const lines = block.split("\\n");
+          const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => /^(\\s*)-\\s+/.test(line));
+          const nextLines = lines.map((line) => {
+            if (!line.trim()) {
+              return shouldRemoveList ? line : "- ";
+            }
+            if (shouldRemoveList) {
+              return line.replace(/^(\\s*)-\\s+/, "$1");
+            }
+            if (/^(\\s*)-\\s+/.test(line)) {
+              return line;
+            }
+            return line.replace(/^(\\s*)/, "$1- ");
+          });
+          const nextBlock = nextLines.join("\\n");
+          const collapsedSelection = safeStart === safeEnd;
+          const nextCaretOffset = shouldRemoveList
+            ? Math.max(0, safeStart - lineStart - 2)
+            : safeStart - lineStart + 2;
+          return {
+            value: value.slice(0, lineStart) + nextBlock + value.slice(lineEnd),
+            selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
+            selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+
+        function handleSkillMarkdownFormat(sectionId, formatType) {
+          if (!selectedSkill || !selectedSkill.isCustom) {
+            return;
+          }
+          const textareaRef = getSkillTextareaRef(sectionId);
+          const textarea = textareaRef.current;
+          if (!textarea) {
+            return;
+          }
+
+          const currentValue = sectionId === "description"
+            ? String(selectedSkill.description || "")
+            : String(selectedSkillSections?.[sectionId] || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : currentValue.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+          if (formatType === "bold") {
+            edit = buildWrappedSkillMarkdownEdit(currentValue, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedSkillMarkdownEdit(currentValue, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedSkillMarkdownEdit(currentValue, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildSkillMarkdownListEdit(currentValue, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          setSkillSectionEditing((current) => ({
+            ...current,
+            [sectionId]: true,
+          }));
+          applySkillMarkdownSelection(sectionId, edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        async function saveSelectedSkillCodeFiles(nextCodeFiles) {
+          if (!selectedSkill || !selectedSkill.isCustom) {
+            return;
+          }
+
+          setSkillCodeFilesTransferState({
+            isProcessing: true,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              "/api/aios/projects/" + encodeURIComponent(selectedSkillProjectId) + "/skills/" + encodeURIComponent(selectedSkill.id),
+              {
+                method: "PATCH",
+                credentials: "include",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(apiKey && String(apiKey).trim() ? { "X-API-Key": String(apiKey).trim() } : {}),
+                  ...(upstreamUrl ? { "X-Runner-Upstream-Url": upstreamUrl } : {}),
+                },
+                body: JSON.stringify({
+                  codeFiles: normalizeSkillCodeFiles(nextCodeFiles).map((file) => ({
+                    id: file.id,
+                    name: file.name,
+                    content: file.content,
+                    language: file.language,
+                  })),
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to save skill code files.");
+            }
+
+            const normalizedUpdatedSkill = normalizeSkillRecord(data?.skill || {
+              ...selectedSkill,
+              codeFiles: nextCodeFiles,
+            });
+            if (normalizedUpdatedSkill) {
+              updateLoadedSkillRecord(selectedSkill.id, normalizedUpdatedSkill);
+            }
+            setSkillCodeFilesTransferState({
+              isProcessing: false,
+              error: "",
+            });
+          } catch (error) {
+            setSkillCodeFilesTransferState({
+              isProcessing: false,
+              error: error instanceof Error ? error.message : "Failed to save skill code files.",
+            });
+          }
+        }
+
+        async function handleSkillCodeFileSelection(fileList) {
+          if (!selectedSkill || !selectedSkill.isCustom || !fileList?.length) {
+            return;
+          }
+
+          setSkillCodeFilesTransferState({
+            isProcessing: true,
+            error: "",
+          });
+
+          try {
+            const nextFiles = await Promise.all(
+              Array.from(fileList).map(async (file) => {
+                const content = await file.text();
+                return buildPlaygroundSkillCodeFileRecord(file.name, content);
+              })
+            );
+            const mergedFiles = mergePlaygroundSkillCodeFiles(selectedSkill.codeFiles, nextFiles);
+            await saveSelectedSkillCodeFiles(mergedFiles);
+          } catch (error) {
+            setSkillCodeFilesTransferState({
+              isProcessing: false,
+              error: error instanceof Error ? error.message : "Failed to add code files.",
+            });
+          }
+        }
+
+        async function handleSkillCodeFileInputChange(event) {
+          try {
+            await handleSkillCodeFileSelection(event.target.files);
+          } finally {
+            if (event.target) {
+              event.target.value = "";
+            }
+          }
+        }
+
+        async function handleSkillCodeFileDrop(event) {
+          event.preventDefault();
+          setIsSkillCodeDragging(false);
+          if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing) {
+            return;
+          }
+          await handleSkillCodeFileSelection(event.dataTransfer?.files);
+        }
+
+        async function handleAttachSkillEnvironmentFiles() {
+          if (!selectedSkill || !selectedSkill.isCustom || !selectedSkillEnvironment?.id) {
+            return;
+          }
+
+          const selectedEntries = skillEnvironmentFilePickerInventory.filter((entry) =>
+            !entry.isFolder && skillEnvironmentFilePickerSelectedPaths.includes(normalizeHistoryPath(entry.path))
+          );
+          if (selectedEntries.length === 0) {
+            return;
+          }
+
+          setSkillCodeFilesTransferState({
+            isProcessing: true,
+            error: "",
+          });
+
+          try {
+            const nextCodeFiles = await Promise.all(
+              selectedEntries.map(async (entry) => {
+                const response = await fetch(
+                  buildPlaygroundEnvironmentDownloadUrl(backendUrl, selectedSkillEnvironment.id, entry.path),
+                  {
+                    method: "GET",
+                    headers: requestHeaders,
+                  }
+                );
+                if (!response.ok) {
+                  const text = await response.text().catch(() => "");
+                  throw new Error(text || ("Failed to load " + entry.name));
+                }
+                const content = await response.text();
+                return buildPlaygroundSkillCodeFileRecord(entry.path, content);
+              })
+            );
+            const mergedFiles = mergePlaygroundSkillCodeFiles(selectedSkill.codeFiles, nextCodeFiles);
+            await saveSelectedSkillCodeFiles(mergedFiles);
+            setSkillEnvironmentFilePickerOpen(false);
+            setSkillEnvironmentFilePickerSelectedPaths([]);
+          } catch (error) {
+            setSkillCodeFilesTransferState({
+              isProcessing: false,
+              error: error instanceof Error ? error.message : "Failed to add environment files.",
+            });
+          }
+        }
+
+        function handleRemoveSkillCodeFile(codeFileId) {
+          if (!selectedSkill || !selectedSkill.isCustom) {
+            return;
+          }
+          const nextCodeFiles = normalizeSkillCodeFiles(selectedSkill.codeFiles).filter((file) => file.id !== codeFileId);
+          void saveSelectedSkillCodeFiles(nextCodeFiles);
+        }
+
+        function openSkillCodeFilePicker() {
+          if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing) {
+            return;
+          }
+          skillCodeFileInputRef.current?.click?.();
+        }
+
+        function openSkillEnvironmentFilePicker() {
+          if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing || availableSkillEnvironments.length === 0) {
+            return;
+          }
+          setSkillEnvironmentFilePickerSearch("");
+          setSkillEnvironmentFilePickerOpen(true);
+        }
+
+        function toggleSkillEnvironmentFileSelection(path) {
+          const normalizedPath = normalizeHistoryPath(path);
+          setSkillEnvironmentFilePickerSelectedPaths((current) => {
+            if (current.includes(normalizedPath)) {
+              return current.filter((value) => value !== normalizedPath);
+            }
+            return current.concat(normalizedPath);
+          });
+        }
+
+        function toggleSkillEnvironmentFileFolder(path) {
+          const normalizedPath = normalizeHistoryPath(path);
+          setSkillEnvironmentFilePickerExpandedFolders((current) =>
+            current.includes(normalizedPath)
+              ? current.filter((value) => value !== normalizedPath)
+              : current.concat(normalizedPath)
+          );
+        }
+
+        function renderSkillMarkdownSection({ sectionId, title, content, emptyLabel }) {
+          const textareaRef = getSkillTextareaRef(sectionId);
+          const isEditing = Boolean(skillSectionEditing[sectionId]);
+          const canEdit = isSelectedSkillEditable;
+
+          return React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description", key: sectionId },
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, title),
+              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                [
+                  { id: "bold", label: "Bold", icon: Bold },
+                  { id: "italic", label: "Italic", icon: Italic },
+                  { id: "underline", label: "Underline", icon: Underline },
+                  { id: "list", label: "List", icon: List },
+                ].map((action) =>
+                  React.createElement("button", {
+                    key: action.id,
+                    type: "button",
+                    className: "playground-tasks-detail-format-button",
+                    title: action.label,
+                    "aria-label": action.label,
+                    disabled: !canEdit,
+                    onMouseDown: (event) => event.preventDefault(),
+                    onClick: () => handleSkillMarkdownFormat(sectionId, action.id),
+                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEditing ? " is-editing" : " is-preview") },
+              React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                String(content || "").trim()
+                  ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                      content: content,
+                      className: "playground-tasks-detail-description-preview tb-message-markdown",
+                    })
+                  : React.createElement("div", {
+                      className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                    }, emptyLabel)
+              ),
+              React.createElement("textarea", {
+                ref: textareaRef,
+                className: "playground-tasks-detail-description-input " + (isEditing ? "is-editing" : "is-preview"),
+                rows: 1,
+                placeholder: isEditing ? emptyLabel : "",
+                value: content || "",
+                readOnly: !canEdit,
+                onFocus: () => {
+                  if (!canEdit) {
+                    return;
+                  }
+                  setSkillSectionEditing((current) => ({
+                    ...current,
+                    [sectionId]: true,
+                  }));
+                },
+                onChange: (event) => {
+                  const nextValue = event.target.value;
+                  if (sectionId === "description") {
+                    updateSelectedSkillLocal((current) => ({
+                      ...current,
+                      description: nextValue,
+                    }));
+                  } else {
+                    updateSelectedSkillLocal((current) => {
+                      const currentSections = parsePlaygroundSkillMarkdownSections(current?.markdown || "");
+                      const nextSections = {
+                        ...currentSections,
+                        [sectionId]: nextValue,
+                      };
+                      return {
+                        ...current,
+                        markdown: computePlaygroundSkillMarkdownFromSections(current?.name || "Skill", nextSections),
+                      };
+                    });
+                  }
+                  resizeSkillTextarea(event.currentTarget);
+                },
+                onBlur: (event) => {
+                  setSkillSectionEditing((current) => ({
+                    ...current,
+                    [sectionId]: false,
+                  }));
+                  if (!canEdit) {
+                    return;
+                  }
+                  if (sectionId === "description") {
+                    void saveSelectedSkillFields({
+                      description: event.currentTarget.value,
+                    });
+                    return;
+                  }
+                  const nextSections = {
+                    ...parsePlaygroundSkillMarkdownSections(selectedSkill?.markdown || ""),
+                    [sectionId]: event.currentTarget.value,
+                  };
+                  void saveSelectedSkillFields({
+                    markdown: computePlaygroundSkillMarkdownFromSections(selectedSkill?.name || "Skill", nextSections),
+                  });
+                },
+              })
+            )
+          );
+        }
+
+        function renderSkillCodeFileChip(codeFile) {
+          return React.createElement("div", {
+              key: codeFile.id,
+              className: "runner-attachment runner-attachment-file",
+            },
+            React.createElement("div", {
+              className: "runner-attachment-file-button",
+              title: codeFile.name,
+            },
+              React.createElement("span", { className: "runner-attachment-file-icon-slot", "aria-hidden": "true" },
+                React.createElement("img", {
+                  src: PLAYGROUND_TEXT_FILE_ICON_URL,
+                  alt: "",
+                  draggable: false,
+                  className: "runner-attachment-file-icon",
+                })
+              ),
+              React.createElement("div", { className: "runner-attachment-file-name" }, codeFile.name)
+            ),
+            isSelectedSkillCodeFilesEditable
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "runner-attachment-remove runner-attachment-remove-file",
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    handleRemoveSkillCodeFile(codeFile.id);
+                  },
+                  "aria-label": "Remove " + codeFile.name,
+                }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
+              : null
+          );
+        }
+
+        function renderSkillEnvironmentFilePickerIcon(entry) {
+          if (entry?.isFolder) {
+            return React.createElement("img", {
+              src: PLAYGROUND_FOLDER_ICON_URL,
+              alt: "",
+              draggable: false,
+              className: "tb-file-browser-item-icon tb-file-browser-icon-asset",
+            });
+          }
+          return React.createElement("img", {
+            src: PLAYGROUND_TEXT_FILE_ICON_URL,
+            alt: "",
+            draggable: false,
+            className: "tb-file-browser-item-icon tb-file-browser-icon-asset",
+          });
+        }
+
+        function renderSkillEnvironmentFilePickerRow(row) {
+          const entry = row.entry;
+          const normalizedPath = normalizeHistoryPath(entry.path);
+          const isSelected = skillEnvironmentFilePickerSelectedPaths.includes(normalizedPath);
+          const isExpanded = skillEnvironmentFilePickerExpandedFolders.includes(normalizedPath);
+          const metaValue = row.searchMatch
+            ? getPlaygroundEntryParentPath(normalizedPath) || "Root"
+            : formatPlaygroundFileDate(entry.modifiedTime || entry.createdTime);
+
+          return React.createElement("div", { key: normalizedPath || entry.id },
+            React.createElement("div", {
+              className: "tb-file-browser-item" + (isSelected ? " selected" : ""),
+              role: "button",
+              tabIndex: 0,
+              onClick: () => {
+                if (entry.isFolder && !row.searchMatch) {
+                  toggleSkillEnvironmentFileFolder(normalizedPath);
+                  return;
+                }
+                toggleSkillEnvironmentFileSelection(normalizedPath);
+              },
+              onKeyDown: (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  if (entry.isFolder && !row.searchMatch) {
+                    toggleSkillEnvironmentFileFolder(normalizedPath);
+                    return;
+                  }
+                  toggleSkillEnvironmentFileSelection(normalizedPath);
+                }
+              },
+              style: row.searchMatch ? undefined : { paddingLeft: String(12 + row.level * 20) + "px" },
+            },
+              entry.isFolder && !row.searchMatch
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "tb-file-browser-item-leading",
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      toggleSkillEnvironmentFileFolder(normalizedPath);
+                    },
+                  },
+                    isExpanded
+                      ? React.createElement(ChevronDown, { className: "tb-file-browser-folder-chevron", strokeWidth: 1.75 })
+                      : React.createElement(ChevronRight, { className: "tb-file-browser-folder-chevron", strokeWidth: 1.75 })
+                  )
+                : React.createElement("div", {
+                    className: "tb-file-browser-check" + (isSelected ? " selected" : ""),
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      toggleSkillEnvironmentFileSelection(normalizedPath);
+                    },
+                  },
+                    isSelected ? React.createElement(Check, { className: "tb-file-browser-check-icon", strokeWidth: 2.2 }) : null
+                  ),
+              renderSkillEnvironmentFilePickerIcon(entry),
+              React.createElement("span", { className: "tb-file-browser-item-name", title: entry.name }, entry.name),
+              React.createElement("span", { className: "tb-file-browser-item-meta", title: metaValue }, metaValue || "-"),
+              React.createElement("span", { className: "tb-file-browser-item-size" }, entry.isFolder ? "" : formatPlaygroundFileSize(entry.size))
+            )
+          );
+        }
+
+        function renderSkillEnvironmentFilePicker() {
+          if (!skillEnvironmentFilePickerOpen) {
+            return null;
+          }
+
+          const selectedFilesCount = skillEnvironmentFilePickerInventory.filter((entry) =>
+            !entry.isFolder && skillEnvironmentFilePickerSelectedPaths.includes(normalizeHistoryPath(entry.path))
+          ).length;
+
+          return React.createElement("div", { className: "tb-runner-chat" },
+            React.createElement("div", {
+              className: "tb-file-browser-scrim",
+              onClick: () => {
+                setSkillEnvironmentFilePickerOpen(false);
+                setSkillEnvironmentPopoverOpen(false);
+              },
+            },
+              React.createElement("div", {
+                className: "tb-file-browser-modal",
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", { className: "tb-file-browser-main" },
+                  React.createElement("div", { className: "tb-file-browser-header" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "tb-file-browser-nav-button",
+                      onClick: () => {
+                        setSkillEnvironmentFilePickerOpen(false);
+                        setSkillEnvironmentPopoverOpen(false);
+                      },
+                      "aria-label": "Close environment files",
+                    }, React.createElement(X, { className: "tb-file-browser-nav-icon", strokeWidth: 1.9 })),
+                    React.createElement("div", { className: "tb-file-browser-header-icon" },
+                      React.createElement(Cloud, { className: "tb-file-browser-source-icon", strokeWidth: 1.75 })
+                    ),
+                    React.createElement("div", { className: "tb-file-browser-breadcrumbs" },
+                      availableSkillEnvironments.length > 1
+                        ? React.createElement("div", {
+                            className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell" + (skillEnvironmentPopoverOpen ? " is-open" : ""),
+                          },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-environments-runtime-value-button",
+                              onClick: () => setSkillEnvironmentPopoverOpen((current) => !current),
+                            },
+                              React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedSkillEnvironment?.name || "Environment"),
+                              React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                            ),
+                            skillEnvironmentPopoverOpen
+                              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                  availableSkillEnvironments.map((environment) =>
+                                    React.createElement("button", {
+                                        key: environment.id,
+                                        type: "button",
+                                        className: "tb-popup-row tb-popup-row-select" + (environment.id === skillEnvironmentSelectionId ? " selected" : ""),
+                                        onClick: () => {
+                                          setSkillEnvironmentSelectionId(environment.id);
+                                          setSkillEnvironmentPopoverOpen(false);
+                                        },
+                                      },
+                                        React.createElement("span", { className: "tb-popup-check-slot" },
+                                          environment.id === skillEnvironmentSelectionId
+                                            ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                            : null
+                                        ),
+                                        React.createElement("span", null, environment.name || "Environment")
+                                      )
+                                  )
+                                )
+                              : null
+                          )
+                        : React.createElement("span", { className: "tb-file-browser-breadcrumb-chip" },
+                            React.createElement("span", { className: "tb-file-browser-breadcrumb active" }, selectedSkillEnvironment?.name || "Environment")
+                          )
+                    ),
+                    React.createElement("div", { className: "tb-file-browser-count" }, selectedFilesCount + (selectedFilesCount === 1 ? " file selected" : " files selected"))
+                  ),
+                  React.createElement("div", { className: "tb-file-browser-search-wrap" },
+                    React.createElement("div", { className: "tb-file-browser-search" },
+                      React.createElement(Search, { className: "tb-file-browser-search-icon", strokeWidth: 1.9 }),
+                      React.createElement("input", {
+                        className: "tb-file-browser-search-input",
+                        value: skillEnvironmentFilePickerSearch,
+                        placeholder: "Search files...",
+                        onChange: (event) => setSkillEnvironmentFilePickerSearch(event.target.value),
+                      }),
+                      skillEnvironmentFilePickerSearch
+                        ? React.createElement("button", {
+                            type: "button",
+                            className: "tb-file-browser-search-clear",
+                            onClick: () => setSkillEnvironmentFilePickerSearch(""),
+                            "aria-label": "Clear search",
+                          }, React.createElement(X, { className: "tb-file-browser-search-clear-icon", strokeWidth: 1.9 }))
+                        : null
+                    )
+                  ),
+                  React.createElement("div", { className: "tb-file-browser-list" },
+                    skillEnvironmentFilePickerState.status === "loading"
+                      ? React.createElement("div", { className: "tb-file-browser-empty" }, "Loading environment files...")
+                      : skillEnvironmentFilePickerState.error
+                        ? React.createElement("div", { className: "tb-file-browser-empty" }, skillEnvironmentFilePickerState.error)
+                        : skillEnvironmentFilePickerRows.length === 0
+                          ? React.createElement("div", { className: "tb-file-browser-empty" }, skillEnvironmentFilePickerSearch.trim() ? "No matching files found." : "No files found in this environment.")
+                          : React.createElement("div", { className: "tb-file-browser-list-inner" },
+                              skillEnvironmentFilePickerRows.map((row) => renderSkillEnvironmentFilePickerRow(row))
+                            )
+                  )
+                ),
+                React.createElement("div", { className: "tb-file-browser-footer" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "tb-file-browser-footer-button tb-file-browser-footer-button-secondary",
+                    onClick: () => {
+                      setSkillEnvironmentFilePickerOpen(false);
+                      setSkillEnvironmentPopoverOpen(false);
+                    },
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "tb-file-browser-footer-button tb-file-browser-footer-button-primary",
+                    onClick: () => void handleAttachSkillEnvironmentFiles(),
+                    disabled: selectedFilesCount === 0 || skillCodeFilesTransferState.isProcessing,
+                  },
+                    React.createElement("span", { className: "tb-file-browser-footer-button-content" },
+                      skillCodeFilesTransferState.isProcessing
+                        ? React.createElement("span", { className: "runner-spinner tb-file-browser-footer-button-spinner" })
+                        : null,
+                      React.createElement("span", { className: "tb-file-browser-footer-button-label" },
+                        skillCodeFilesTransferState.isProcessing ? "Adding Files..." : "Add Files"
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          );
+        }
+
+        function renderSkillRenameModal() {
+          if (!skillRenameState) {
+            return null;
+          }
+
+          return React.createElement("div", {
+              className: "sidebar-thread-rename-scrim",
+              onClick: () => {
+                if (!skillSaveState.isSaving) {
+                  closeSkillRenameDialog();
+                }
+              },
+            },
+              React.createElement("form", {
+                className: "sidebar-thread-rename-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  void handleSkillRenameSubmit(event);
+                },
+              },
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Rename Skill"),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" }, "Choose a new name for this skill."),
+                React.createElement("input", {
+                  ref: skillRenameInputRef,
+                  className: "sidebar-thread-rename-input",
+                  value: skillRenameValue,
+                  onChange: (event) => setSkillRenameValue(event.target.value),
+                  placeholder: "Skill name",
+                  disabled: skillSaveState.isSaving,
+                }),
+                skillRenameError
+                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, skillRenameError)
+                  : null,
+                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "sidebar-thread-rename-button is-secondary",
+                    onClick: closeSkillRenameDialog,
+                    disabled: skillSaveState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "sidebar-thread-rename-button is-primary",
+                    disabled: skillSaveState.isSaving,
+                  }, skillSaveState.isSaving ? "Saving..." : "Save")
+                )
+              )
+            );
+        }
+
         function renderCurrentSkillDetail() {
           if (!selectedSkill) {
             return React.createElement("div", { className: "playground-files-state" },
-              customSkillsLoading && skillListMode === "custom"
+              skillsLoading
                 ? React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                 : null,
               React.createElement("span", null,
                 skillListMode === "custom"
-                  ? (customSkillsLoading ? "Loading skills..." : "Select a custom skill")
+                  ? (skillsLoading ? "Loading skills..." : "Select a skill")
                   : "Select a system skill"
               )
             );
           }
 
-          const detailBadgeTone = selectedSkill.isCustom ? "Team" : "Default";
-          const usageCopy = selectedSkill.isCustom
-            ? "Custom skills are loaded from your project scope and can be attached to threads and tasks."
-            : "System skills are available by default across agents, tasks, and the runner playground.";
           const detailMeta = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
             React.createElement("div", { className: "playground-tasks-detail-facts-header" },
               React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details")
             ),
-            React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-              renderSkillFactRow("Type", selectedSkill.isCustom ? "Custom skill" : "System skill"),
+              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+              renderSkillFactRow("Type", selectedSkill.isCustom ? "Project skill" : "System skill"),
               renderSkillFactRow("Identifier", selectedSkill.id),
               renderSkillFactRow("Availability", selectedSkill.isCustom ? "Project scope" : "Default in playground"),
-              renderSkillFactRow("Status", "Enabled")
+              renderSkillFactRow("Status", selectedSkill.isActive ? "Enabled" : "Disabled"),
+              renderSkillFactRow("Code Files", String(selectedSkill.codeFiles.length || 0))
             )
           );
 
-          const descriptionSection = React.createElement("section", {
-              className: "playground-environments-editor-surface playground-environments-section",
-            },
-              React.createElement("div", { className: "playground-environments-section-header is-static" },
-                React.createElement("div", null,
-                  React.createElement("div", { className: "playground-environments-section-title" }, "Description"),
-                  React.createElement("div", { className: "playground-environments-section-copy" }, usageCopy)
-                )
-              ),
-              React.createElement("div", { className: "playground-environments-section-body" },
-                String(selectedSkill.description || "").trim()
-                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                      React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                        content: selectedSkill.description,
-                        className: "playground-tasks-detail-description-preview tb-message-markdown",
-                      })
-                    )
-                  : React.createElement("div", {
-                      className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                    }, "No description available for this skill.")
-              )
-            );
-
-          const availabilitySection = React.createElement("section", {
-              className: "playground-environments-editor-surface playground-environments-section",
-            },
-              React.createElement("div", { className: "playground-environments-section-header is-static" },
-                React.createElement("div", null,
-                  React.createElement("div", { className: "playground-environments-section-title" }, "Usage"),
-                  React.createElement("div", { className: "playground-environments-section-copy" }, "How this skill appears inside the playground.")
-                )
-              ),
-              React.createElement("div", { className: "playground-environments-section-body" },
-                React.createElement("div", { className: "playground-agents-model-hint" },
-                  React.createElement("div", { className: "playground-agents-model-hint-title" }, selectedSkill.isCustom ? "Project-managed skill" : "Built-in playground skill"),
-                  React.createElement("div", { className: "playground-agents-model-hint-copy" },
-                    selectedSkill.isCustom
-                      ? "Custom skills are discovered from your current project and can be enabled on tasks and runner threads."
-                      : "System skills ship with the playground and can be enabled anywhere an agent or task supports skill selection."
-                  ),
-                  React.createElement("div", { className: "playground-agents-model-metrics" },
-                    React.createElement("div", { className: "playground-agents-model-metric" },
-                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Kind"),
-                      React.createElement("div", { className: "playground-agents-model-metric-value" }, selectedSkill.isCustom ? "Custom" : "System")
-                    ),
-                    React.createElement("div", { className: "playground-agents-model-metric" },
-                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Scope"),
-                      React.createElement("div", { className: "playground-agents-model-metric-value" }, selectedSkill.isCustom ? "Project" : "Global")
-                    ),
-                    React.createElement("div", { className: "playground-agents-model-metric" },
-                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Runner"),
-                      React.createElement("div", { className: "playground-agents-model-metric-value" }, "Available")
-                    )
+          const codeFilesSection = React.createElement("div", { className: "playground-tasks-attachments" },
+            React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Code Files"),
+              isSelectedSkillCodeFilesEditable
+                ? React.createElement("div", { className: "playground-tasks-attachments-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                      onClick: openSkillEnvironmentFilePicker,
+                      disabled: skillCodeFilesTransferState.isProcessing || availableSkillEnvironments.length === 0,
+                      title: availableSkillEnvironments.length > 0
+                        ? "Add files from " + (selectedSkillEnvironment?.name || "an environment")
+                        : "No environments available",
+                    }, "From Environment")
                   )
-                )
+                : null
+            ),
+            isSelectedSkillCodeFilesEditable
+              ? React.createElement("input", {
+                  ref: skillCodeFileInputRef,
+                  type: "file",
+                  multiple: true,
+                  hidden: true,
+                  onChange: (event) => void handleSkillCodeFileInputChange(event),
+                })
+              : null,
+            React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+              React.createElement("div", {
+                className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isSkillCodeDragging ? " dragging" : "") + (selectedSkill.codeFiles.length > 0 ? " is-filled" : ""),
+                onDragOver: (event) => {
+                  event.preventDefault();
+                  if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing) {
+                    return;
+                  }
+                  setIsSkillCodeDragging(true);
+                },
+                onDragLeave: (event) => {
+                  if (event.currentTarget.contains(event.relatedTarget)) {
+                    return;
+                  }
+                  setIsSkillCodeDragging(false);
+                },
+                onDrop: (event) => void handleSkillCodeFileDrop(event),
+              },
+                selectedSkill.codeFiles.length > 0
+                  ? React.createElement(React.Fragment, null,
+                      isSelectedSkillCodeFilesEditable
+                        ? React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                            React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                            React.createElement("span", null, isSkillCodeDragging ? "Drop files here" : "Drop files to attach, or"),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-tasks-attachments-browse",
+                              disabled: skillCodeFilesTransferState.isProcessing,
+                              onClick: openSkillCodeFilePicker,
+                            }, "browse.")
+                          )
+                        : null,
+                      React.createElement("div", { className: "runner-attachments" },
+                        selectedSkill.codeFiles.map((codeFile) => renderSkillCodeFileChip(codeFile))
+                      )
+                    )
+                  : isSelectedSkillCodeFilesEditable
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-tasks-attachments-empty-button",
+                        disabled: skillCodeFilesTransferState.isProcessing,
+                        onClick: openSkillCodeFilePicker,
+                      },
+                        React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                        React.createElement("span", { className: "tb-popup-dropzone-title" }, isSkillCodeDragging ? "Drop files here" : "Drag & drop files here"),
+                        React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
+                      )
+                    : React.createElement("div", {
+                        className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                      }, "No code files attached to this skill.")
               )
-            );
+            ),
+            skillCodeFilesTransferState.isProcessing
+              ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Saving code files...")
+              : null,
+            skillCodeFilesTransferState.error
+              ? React.createElement("div", { className: "playground-environments-error" }, skillCodeFilesTransferState.error)
+              : null
+          );
 
           return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
             React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
@@ -26849,20 +28983,102 @@ const html = `<!doctype html>
               ),
               React.createElement("div", { className: "playground-content-nav-center" }),
               React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                React.createElement("span", { className: "playground-environments-badge" }, selectedSkill.isCustom ? "Custom" : "System"),
                 !selectedSkill.isCustom
-                  ? React.createElement("span", { className: "playground-environments-badge" }, "Default")
+                  ? React.createElement("span", { className: "playground-environments-badge" }, "System")
+                  : null,
+                selectedSkill.isCustom
+                  ? React.createElement("div", {
+                      className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                      ref: skillActionsPopoverRef,
+                    },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-content-menu-button",
+                        "aria-label": "Skill actions",
+                        "aria-expanded": skillActionsPopoverOpen ? "true" : "false",
+                        onClick: () => setSkillActionsPopoverOpen((current) => !current),
+                        disabled: skillSaveState.isSaving,
+                      }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                      skillActionsPopoverOpen
+                        ? React.createElement("div", {
+                            className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                            onClick: (event) => event.stopPropagation(),
+                          },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "tb-popup-row",
+                              onClick: openSkillRenameDialog,
+                            },
+                              React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, "Rename")
+                              )
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "tb-popup-row",
+                              onClick: () => {
+                                void handleDeleteSelectedSkill();
+                              },
+                            },
+                              React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, "Delete")
+                              )
+                            )
+                          )
+                        : null
+                    )
                   : null
               )
             ),
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-              customSkillsError && skillListMode === "custom"
-                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, customSkillsError)
+              skillsError && skillListMode === "custom"
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, skillsError)
                 : null,
-              descriptionSection,
+              skillSaveState.error
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, skillSaveState.error)
+                : null,
+              renderSkillMarkdownSection({
+                sectionId: "description",
+                title: "Description",
+                content: selectedSkill.description,
+                emptyLabel: "Add Description here",
+              }),
               detailMeta,
-              availabilitySection
-            )
+              renderSkillMarkdownSection({
+                sectionId: "usage",
+                title: "Usage",
+                content: selectedSkillSections.usage,
+                emptyLabel: "Add Usage here",
+              }),
+              renderSkillMarkdownSection({
+                sectionId: "process",
+                title: "Process",
+                content: selectedSkillSections.process,
+                emptyLabel: "Add Process here",
+              }),
+              renderSkillMarkdownSection({
+                sectionId: "outputFormat",
+                title: "Output",
+                content: selectedSkillSections.outputFormat,
+                emptyLabel: "Add Output guidance here",
+              }),
+              renderSkillMarkdownSection({
+                sectionId: "configuration",
+                title: "Config",
+                content: selectedSkillSections.configuration,
+                emptyLabel: "Add Config here",
+              }),
+              renderSkillMarkdownSection({
+                sectionId: "examplePrompts",
+                title: "Examples",
+                content: selectedSkillSections.examplePrompts,
+                emptyLabel: "Add Examples here",
+              }),
+              codeFilesSection
+            ),
+            renderSkillEnvironmentFilePicker()
           );
         }
 
@@ -26884,12 +29100,12 @@ const html = `<!doctype html>
                         type: "button",
                         className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
                         onClick: () => toggleToolbarPopover("search"),
-                        title: skillListMode === "custom" ? "Search custom skills" : "Search system skills",
+                        title: skillListMode === "custom" ? "Search skills" : "Search system skills",
                       }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
                       toolbarPopover === "search"
                         ? React.createElement("div", { className: "playground-files-search-popover" },
                             React.createElement("div", { className: "playground-files-search-popover-header" },
-                              React.createElement("div", { className: "playground-files-search-popover-title" }, skillListMode === "custom" ? "Search Custom Skills" : "Search System Skills"),
+                              React.createElement("div", { className: "playground-files-search-popover-title" }, skillListMode === "custom" ? "Search Skills" : "Search System Skills"),
                               React.createElement("button", {
                                 type: "button",
                                 className: "playground-files-search-popover-close",
@@ -26904,7 +29120,7 @@ const html = `<!doctype html>
                                   type: "text",
                                   className: "playground-files-search-field-input",
                                   placeholder: skillListMode === "custom"
-                                    ? "Search custom skills by name or description..."
+                                    ? "Search skills by name or description..."
                                     : "Search system skills by name or description...",
                                   value: searchPopupQuery,
                                   onChange: (event) => setSearchPopupQuery(event.target.value),
@@ -26928,23 +29144,23 @@ const html = `<!doctype html>
                                           )
                                       )
                                     )
-                                  : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "No matching custom skills found." : "No matching system skills found.")
-                                : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "Type a custom skill name or description to search." : "Type a system skill name or description to search.")
+                                  : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "No matching skills found." : "No matching system skills found.")
+                                : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "Type a skill name or description to search." : "Type a system skill name or description to search.")
                             )
                           )
                         : null
                     ),
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-files-header-icon-button is-plain",
+                      className: "playground-files-header-icon-button",
                       onClick: () => {
-                        void loadCustomSkills({ force: true });
+                        void loadSkills({ force: true });
                       },
                       title: "Refresh skills",
-                      disabled: customSkillsLoading,
-                    }, customSkillsLoading
+                      disabled: skillsLoading,
+                    }, skillsLoading
                       ? React.createElement(Loader2, { width: 16, height: 16, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                      : React.createElement(RefreshCw, { width: 16, height: 16, strokeWidth: 1.8 }))
+                      : React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
                   )
                 ),
                 React.createElement("div", { className: "playground-agents-list-switch-row" },
@@ -26977,17 +29193,19 @@ const html = `<!doctype html>
                           React.createElement("div", { className: "playground-environments-list-item-copy" },
                             React.createElement("div", { className: "playground-environments-list-item-title" }, skill.name || skill.id)
                           ),
-                          React.createElement("span", { className: "playground-environments-badge" }, skill.isCustom ? "Custom" : "System")
+                          !skill.isCustom
+                            ? React.createElement("span", { className: "playground-environments-badge" }, "System")
+                            : null
                         )
                     )
                   : React.createElement("div", { className: "playground-environments-empty-state" },
-                      customSkillsLoading && skillListMode === "custom"
+                      skillsLoading
                         ? React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                         : null,
-                      React.createElement("div", { className: "playground-environments-empty-title" }, skillListMode === "custom" ? "No custom skills" : "No system skills"),
+                      React.createElement("div", { className: "playground-environments-empty-title" }, skillListMode === "custom" ? "No skills" : "No system skills"),
                       React.createElement("div", { className: "playground-environments-empty-copy" },
                         skillListMode === "custom"
-                          ? (customSkillsError || "Custom skills from the current project will appear here.")
+                          ? (skillsError || "Skills from the current project will appear here.")
                           : "System skills available to the runner will appear here."
                       )
                     )
@@ -26996,7 +29214,8 @@ const html = `<!doctype html>
             React.createElement("section", { className: "playground-environments-detail" },
               renderCurrentSkillDetail()
             )
-          )
+          ),
+          renderSkillRenameModal()
         );
       }
 
@@ -27036,6 +29255,7 @@ const html = `<!doctype html>
         const releaseToolbarActionsRef = useRef(null);
         const releaseBacklogToolbarActionsRef = useRef(null);
         const taskDetailActionsRef = useRef(null);
+        const taskDetailSelectPopoverRef = useRef(null);
         const taskSkillsActionsRef = useRef(null);
         const taskDetailMainRef = useRef(null);
         const taskDescriptionTextareaRef = useRef(null);
@@ -27074,14 +29294,19 @@ const html = `<!doctype html>
         const [projectIconPickerOpen, setProjectIconPickerOpen] = useState(false);
         const [projectSidebarPopover, setProjectSidebarPopover] = useState("");
         const [projectDraft, setProjectDraft] = useState(buildPlaygroundDefaultProjectDraft());
+        const projectDescriptionTextareaRef = useRef(null);
+        const [isProjectDescriptionEditing, setIsProjectDescriptionEditing] = useState(false);
         const [taskView, setTaskView] = useState("backlog");
         const [backlogToolbarPopover, setBacklogToolbarPopover] = useState("");
         const [backlogFilterMode, setBacklogFilterMode] = useState("open");
         const [backlogSortMode, setBacklogSortMode] = useState("default");
+        const [backlogSessionCompletedTaskIds, setBacklogSessionCompletedTaskIds] = useState(() => new Set());
         const [boardToolbarPopover, setBoardToolbarPopover] = useState("");
         const [releaseToolbarPopover, setReleaseToolbarPopover] = useState("");
         const [releaseBacklogToolbarPopover, setReleaseBacklogToolbarPopover] = useState("");
         const [taskDetailPopover, setTaskDetailPopover] = useState("");
+        const [taskDetailSelectPopover, setTaskDetailSelectPopover] = useState("");
+        const [taskDetailAssigneePopupMode, setTaskDetailAssigneePopupMode] = useState("agents");
         const [taskSkillsPopoverOpen, setTaskSkillsPopoverOpen] = useState(false);
         const [taskSkillsTab, setTaskSkillsTab] = useState("system");
         const [boardFilterMode, setBoardFilterMode] = useState("all");
@@ -27117,6 +29342,8 @@ const html = `<!doctype html>
           isSaving: false,
           error: "",
         });
+        const releaseDescriptionTextareaRef = useRef(null);
+        const [isReleaseDescriptionEditing, setIsReleaseDescriptionEditing] = useState(false);
         const [selectedTaskId, setSelectedTaskId] = useState("");
         const [draftTask, setDraftTask] = useState(null);
         const [isTaskDescriptionEditing, setIsTaskDescriptionEditing] = useState(false);
@@ -27227,6 +29454,19 @@ const html = `<!doctype html>
 
         const humanAssigneeOptions = useMemo(() => [buildPlaygroundHumanAssigneeOption()], []);
         const assignableActors = useMemo(() => [...sortedAgents, ...humanAssigneeOptions], [humanAssigneeOptions, sortedAgents]);
+        const taskDetailAvailableAssigneePopupModes = useMemo(() => {
+          const nextModes = [];
+          assignableActors.forEach((actor) => {
+            const nextMode = getPlaygroundTaskAssigneePopupMode(actor);
+            if (!nextModes.includes(nextMode)) {
+              nextModes.push(nextMode);
+            }
+          });
+          return nextModes.length > 0 ? nextModes : ["agents"];
+        }, [assignableActors]);
+        const filteredTaskDetailAssignableActors = useMemo(() => {
+          return assignableActors.filter((actor) => getPlaygroundTaskAssigneePopupMode(actor) === taskDetailAssigneePopupMode);
+        }, [assignableActors, taskDetailAssigneePopupMode]);
 
         const agentsById = useMemo(() => {
           const next = {};
@@ -27245,6 +29485,20 @@ const html = `<!doctype html>
           });
           return next;
         }, [assignableActors]);
+
+        const defaultTaskAssigneeId = useMemo(() => {
+          if (backlogComposerAgentId && assignableActorsById[backlogComposerAgentId] && !isPlaygroundHumanAssigneeId(backlogComposerAgentId)) {
+            return backlogComposerAgentId;
+          }
+          if (initialAgentId && assignableActorsById[initialAgentId] && !isPlaygroundHumanAssigneeId(initialAgentId)) {
+            return initialAgentId;
+          }
+          const explicitDefaultAgent = sortedAgents.find((agent) => agent?.isDefault && agent?.id);
+          if (explicitDefaultAgent?.id) {
+            return explicitDefaultAgent.id;
+          }
+          return sortedAgents[0]?.id || "";
+        }, [assignableActorsById, backlogComposerAgentId, initialAgentId, sortedAgents]);
 
         function getTaskAssigneeName(assigneeId, fallback = "") {
           const normalizedAssigneeId = String(assigneeId || "").trim();
@@ -28324,7 +30578,16 @@ const html = `<!doctype html>
           return "todo";
         }
 
-        function matchesBacklogFilter(task, filterMode) {
+        function matchesBacklogFilter(task, filterMode, options = {}) {
+          const keepVisibleCompletedTaskIds = options?.keepVisibleCompletedTaskIds instanceof Set
+            ? options.keepVisibleCompletedTaskIds
+            : null;
+          const shouldKeepCompletedTaskVisible = Boolean(
+            keepVisibleCompletedTaskIds
+            && task?.status === "done"
+            && typeof task?.id === "string"
+            && keepVisibleCompletedTaskIds.has(task.id)
+          );
           if (filterMode === "all") {
             return true;
           }
@@ -28336,6 +30599,9 @@ const html = `<!doctype html>
           }
           if (filterMode === "done") {
             return task.status === "done";
+          }
+          if (shouldKeepCompletedTaskVisible) {
+            return true;
           }
           if (task.status === "done") {
             return false;
@@ -28593,7 +30859,9 @@ const html = `<!doctype html>
         const backlogVisibleTaskIds = useMemo(() => {
           const next = new Set();
           tasks.forEach((task) => {
-            if (!matchesTaskSearch(task) || !matchesBacklogFilter(task, backlogFilterMode)) {
+            if (!matchesTaskSearch(task) || !matchesBacklogFilter(task, backlogFilterMode, {
+              keepVisibleCompletedTaskIds: backlogSessionCompletedTaskIds,
+            })) {
               return;
             }
             let currentTask = task;
@@ -28606,7 +30874,7 @@ const html = `<!doctype html>
             }
           });
           return next;
-        }, [agentsById, backlogFilterMode, environmentsById, normalizedSearchQuery, sprintsById, taskTicketNumbersById, tasks, tasksById]);
+        }, [agentsById, backlogFilterMode, backlogSessionCompletedTaskIds, environmentsById, normalizedSearchQuery, sprintsById, taskTicketNumbersById, tasks, tasksById]);
 
         const backlogTaskRoots = useMemo(() => {
           return [...tasks]
@@ -28637,13 +30905,15 @@ const html = `<!doctype html>
         const releaseVisibleTaskIds = useMemo(() => {
           const next = new Set();
           projectReleaseTasks.forEach((task) => {
-            if (!matchesTaskSearch(task) || !matchesBacklogFilter(task, releaseBacklogFilterMode)) {
+            if (!matchesTaskSearch(task) || !matchesBacklogFilter(task, releaseBacklogFilterMode, {
+              keepVisibleCompletedTaskIds: backlogSessionCompletedTaskIds,
+            })) {
               return;
             }
             next.add(task.id);
           });
           return next;
-        }, [agentsById, environmentsById, normalizedSearchQuery, projectReleaseTasks, releaseBacklogFilterMode, releasesById, sprintsById, taskTicketNumbersById]);
+        }, [agentsById, backlogSessionCompletedTaskIds, environmentsById, normalizedSearchQuery, projectReleaseTasks, releaseBacklogFilterMode, releasesById, sprintsById, taskTicketNumbersById]);
 
         const releaseTaskChildrenByParentId = useMemo(() => {
           const next = {};
@@ -29205,6 +31475,98 @@ const html = `<!doctype html>
           applyTaskDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
+        function applyReleaseDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setReleaseDraft((current) => ({
+            ...current,
+            description: nextValue,
+          }));
+          window.requestAnimationFrame(() => {
+            const textarea = releaseDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleReleaseDescriptionFormat(formatType) {
+          const textarea = releaseDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(releaseDraft?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyReleaseDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        function applyProjectDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setProjectDraft((current) => ({
+            ...current,
+            description: nextValue,
+          }));
+          window.requestAnimationFrame(() => {
+            const textarea = projectDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleProjectDescriptionFormat(formatType) {
+          const textarea = projectDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(projectDraft?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyProjectDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
         function buildProjectScheduleDraft(projectRecord = selectedProject) {
           const base = buildPlaygroundDefaultScheduleDraft();
           const defaultEnvironment = availableBacklogEnvironments.find((environment) => environment.isDefault) || availableBacklogEnvironments[0] || null;
@@ -29367,6 +31729,7 @@ const html = `<!doctype html>
         function openProjectComposer() {
           setProjectComposerMode("create");
           setProjectDraft(buildPlaygroundDefaultProjectDraft());
+          setIsProjectDescriptionEditing(false);
           setProjectSaveState({
             isSaving: false,
             error: "",
@@ -29379,6 +31742,7 @@ const html = `<!doctype html>
         function openProjectComposerForEdit(projectRecord) {
           setProjectComposerMode("edit");
           setProjectDraft(normalizePlaygroundProjectRecord(projectRecord || selectedProject || buildPlaygroundDefaultProjectDraft()));
+          setIsProjectDescriptionEditing(false);
           setProjectSaveState({
             isSaving: false,
             error: "",
@@ -29393,6 +31757,7 @@ const html = `<!doctype html>
           setProjectComposerMode("create");
           setProjectIconPickerOpen(false);
           setProjectDraft(buildPlaygroundDefaultProjectDraft());
+          setIsProjectDescriptionEditing(false);
           setProjectSaveState({
             isSaving: false,
             error: "",
@@ -29957,6 +32322,26 @@ const html = `<!doctype html>
         }, [releaseComposerOpen]);
 
         useEffect(() => {
+          if (!releaseComposerOpen) {
+            return undefined;
+          }
+          const frame = window.requestAnimationFrame(() => {
+            resizeTaskDescriptionTextarea(releaseDescriptionTextareaRef.current);
+          });
+          return () => window.cancelAnimationFrame(frame);
+        }, [releaseComposerOpen, releaseDraft.description]);
+
+        useEffect(() => {
+          if (!projectComposerOpen) {
+            return undefined;
+          }
+          const frame = window.requestAnimationFrame(() => {
+            resizeTaskDescriptionTextarea(projectDescriptionTextareaRef.current);
+          });
+          return () => window.cancelAnimationFrame(frame);
+        }, [projectComposerOpen, projectDraft.description]);
+
+        useEffect(() => {
           if (!projectSidebarPopover) return undefined;
 
           function handleProjectSidebarPopoverPointerDown(event) {
@@ -30047,6 +32432,47 @@ const html = `<!doctype html>
         }, [taskDetailPopover]);
 
         useEffect(() => {
+          if (!taskDetailSelectPopover) return undefined;
+
+          function handleTaskDetailSelectPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !taskDetailSelectPopoverRef.current || taskDetailSelectPopoverRef.current.contains(target)) {
+              return;
+            }
+            setTaskDetailSelectPopover("");
+          }
+
+          function handleTaskDetailSelectPopoverEscape(event) {
+            if (event.key === "Escape") {
+              setTaskDetailSelectPopover("");
+            }
+          }
+
+          document.addEventListener("mousedown", handleTaskDetailSelectPopoverPointerDown);
+          window.addEventListener("keydown", handleTaskDetailSelectPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleTaskDetailSelectPopoverPointerDown);
+            window.removeEventListener("keydown", handleTaskDetailSelectPopoverEscape);
+          };
+        }, [taskDetailSelectPopover]);
+
+        useEffect(() => {
+          if (taskDetailPopover) {
+            setTaskDetailSelectPopover("");
+          }
+        }, [taskDetailPopover]);
+
+        useEffect(() => {
+          if (taskSkillsPopoverOpen) {
+            setTaskDetailSelectPopover("");
+          }
+        }, [taskSkillsPopoverOpen]);
+
+        useEffect(() => {
+          setTaskDetailSelectPopover("");
+        }, [draftTask?.id, taskDetailsCollapsed]);
+
+        useEffect(() => {
           if (!taskSkillsPopoverOpen) return undefined;
 
           function handleTaskSkillsPopoverPointerDown(event) {
@@ -30128,6 +32554,16 @@ const html = `<!doctype html>
         }, [assignableActors, backlogComposerAgentId, humanAssigneeOptions, initialAgentId, sortedAgents]);
 
         useEffect(() => {
+          if (taskDetailAvailableAssigneePopupModes.includes(taskDetailAssigneePopupMode)) {
+            return;
+          }
+          const nextMode = taskDetailAvailableAssigneePopupModes[0] || "agents";
+          if (nextMode !== taskDetailAssigneePopupMode) {
+            setTaskDetailAssigneePopupMode(nextMode);
+          }
+        }, [taskDetailAssigneePopupMode, taskDetailAvailableAssigneePopupModes]);
+
+        useEffect(() => {
           if (taskView === "threads") {
             setTaskView("backlog");
           }
@@ -30136,8 +32572,13 @@ const html = `<!doctype html>
         useEffect(() => {
           if (taskView !== "backlog") {
             setBacklogToolbarPopover("");
+            setBacklogSessionCompletedTaskIds((current) => current.size ? new Set() : current);
           }
         }, [taskView]);
+
+        useEffect(() => {
+          setBacklogSessionCompletedTaskIds(new Set());
+        }, [selectedProjectId]);
 
         useEffect(() => {
           if (taskView !== "board") {
@@ -30313,6 +32754,13 @@ const html = `<!doctype html>
             ticketNumber: taskTicketNumbersById[selectedTaskSnapshot.id] || selectedTaskSnapshot.ticketNumber,
           }));
         }, [draftTask?.id, selectedTaskSnapshot, taskTicketNumbersById]);
+
+        useEffect(() => {
+          if (!draftTask?.id || draftTask.assigneeAgentId || !defaultTaskAssigneeId) {
+            return;
+          }
+          updateDraftField("assigneeAgentId", defaultTaskAssigneeId, { autosave: true });
+        }, [defaultTaskAssigneeId, draftTask?.assigneeAgentId, draftTask?.id]);
 
         useEffect(() => {
           setTaskTitleInputValue(draftTask?.title || "");
@@ -32111,6 +34559,7 @@ const html = `<!doctype html>
         function openReleaseComposer() {
           setReleaseComposerMode("create");
           setReleaseDraft(buildProjectReleaseDraft(selectedProject));
+          setIsReleaseDescriptionEditing(false);
           setReleaseSaveState({
             isSaving: false,
             error: "",
@@ -32128,6 +34577,7 @@ const html = `<!doctype html>
           }
           setReleaseComposerMode("edit");
           setReleaseDraft(normalizedRelease);
+          setIsReleaseDescriptionEditing(false);
           setReleaseSaveState({
             isSaving: false,
             error: "",
@@ -32142,6 +34592,7 @@ const html = `<!doctype html>
           setReleaseComposerOpen(false);
           setReleaseComposerMode("create");
           setReleaseDraft(buildPlaygroundDefaultReleaseDraft());
+          setIsReleaseDescriptionEditing(false);
           setReleaseSaveState({
             isSaving: false,
             error: "",
@@ -32591,12 +35042,24 @@ const html = `<!doctype html>
           }
 
           const nextStatus = task.status === "done" ? "todo" : "done";
+          const nextBacklogSessionCompletedTaskIds = new Set(backlogSessionCompletedTaskIds);
+          if (taskView === "backlog") {
+            if (nextStatus === "done") {
+              nextBacklogSessionCompletedTaskIds.add(task.id);
+            } else {
+              nextBacklogSessionCompletedTaskIds.delete(task.id);
+            }
+          } else {
+            nextBacklogSessionCompletedTaskIds.delete(task.id);
+          }
           const optimisticTask = normalizePlaygroundTaskRecord({
             ...task,
             status: nextStatus,
             completedAt: nextStatus === "done" ? new Date().toISOString() : null,
           });
-          const shouldHideAfterUpdate = taskView === "backlog" && !matchesBacklogFilter(optimisticTask, backlogFilterMode);
+          const shouldHideAfterUpdate = taskView === "backlog" && !matchesBacklogFilter(optimisticTask, backlogFilterMode, {
+            keepVisibleCompletedTaskIds: nextBacklogSessionCompletedTaskIds,
+          });
           const shouldKeepSelection = selectedTaskId === task.id && !shouldHideAfterUpdate;
 
           setSaveState({
@@ -32611,6 +35074,7 @@ const html = `<!doctype html>
               completedAt: optimisticTask.completedAt,
             });
 
+            setBacklogSessionCompletedTaskIds(nextBacklogSessionCompletedTaskIds);
             commitLocalTaskRecord(updatedTask, {
               selectTask: shouldKeepSelection,
             });
@@ -34612,15 +37076,57 @@ const html = `<!doctype html>
                     title: "Close",
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
-                React.createElement("label", { className: "playground-tasks-project-modal-field" },
-                  React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Project Instructions"),
-                  React.createElement("textarea", {
-                    className: "playground-tasks-project-modal-textarea",
-                    rows: 6,
-                    value: projectDraft.description,
-                    onChange: (event) => setProjectDraft((current) => ({ ...current, description: event.target.value })),
-                    placeholder: "Add instructions about the scope, goals, working style, and constraints for this project.",
-                  })
+                React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Project Instructions"),
+                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                      [
+                        { id: "bold", label: "Bold", icon: Bold },
+                        { id: "italic", label: "Italic", icon: Italic },
+                        { id: "underline", label: "Underline", icon: Underline },
+                        { id: "list", label: "List", icon: List },
+                      ].map((action) =>
+                        React.createElement("button", {
+                          key: action.id,
+                          type: "button",
+                          className: "playground-tasks-detail-format-button",
+                          title: action.label,
+                          "aria-label": action.label,
+                          onMouseDown: (event) => event.preventDefault(),
+                          onClick: () => handleProjectDescriptionFormat(action.id),
+                        }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isProjectDescriptionEditing ? " is-editing" : " is-preview") },
+                    !isProjectDescriptionEditing
+                      ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                          String(projectDraft.description || "").trim()
+                            ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                content: projectDraft.description,
+                                className: "playground-tasks-detail-description-preview tb-message-markdown",
+                              })
+                            : React.createElement("div", {
+                                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                              }, "Add instructions about the scope, goals, working style, and constraints for this project.")
+                        )
+                      : null,
+                    React.createElement("textarea", {
+                      ref: projectDescriptionTextareaRef,
+                      className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
+                      rows: 1,
+                      placeholder: isProjectDescriptionEditing ? "Add instructions about the scope, goals, working style, and constraints for this project." : "",
+                      value: projectDraft.description,
+                      onFocus: () => setIsProjectDescriptionEditing(true),
+                      onChange: (event) => {
+                        setProjectDraft((current) => ({ ...current, description: event.target.value }));
+                        resizeTaskDescriptionTextarea(event.currentTarget);
+                      },
+                      onBlur: () => {
+                        setIsProjectDescriptionEditing(false);
+                      },
+                    })
+                  )
                 ),
                 projectSaveState.error
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, projectSaveState.error)
@@ -34660,13 +37166,15 @@ const html = `<!doctype html>
                   onSubmit: (event) => void handleSaveRelease(event),
                 },
                 React.createElement("div", { className: "playground-tasks-release-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-release-modal-title-block" },
-                    React.createElement("div", { className: "playground-tasks-release-modal-title" }, isEditingRelease ? "Edit Release" : "New Release"),
-                    React.createElement("div", { className: "playground-tasks-release-modal-copy" },
-                      isEditingRelease
-                        ? "Update the title, description, and milestone dates for this release."
-                        : "Group project tickets into a milestone release."
-                    )
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row playground-tasks-release-modal-name-row" },
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-tasks-project-modal-name-input",
+                      value: releaseDraft.name,
+                      placeholder: isEditingRelease ? "Release name" : "New Release",
+                      autoFocus: true,
+                      onChange: (event) => setReleaseDraft((current) => ({ ...current, name: event.target.value })),
+                    })
                   ),
                   React.createElement("button", {
                     type: "button",
@@ -34675,20 +37183,9 @@ const html = `<!doctype html>
                     title: "Close",
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
-                React.createElement("label", { className: "playground-tasks-release-modal-field" },
-                  React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Name"),
-                  React.createElement("input", {
-                    type: "text",
-                    className: "playground-tasks-release-modal-input",
-                    value: releaseDraft.name,
-                    placeholder: "Release version",
-                    autoFocus: true,
-                    onChange: (event) => setReleaseDraft((current) => ({ ...current, name: event.target.value })),
-                  })
-                ),
                 React.createElement("div", { className: "playground-tasks-release-modal-date-row" },
                   React.createElement("label", { className: "playground-tasks-release-modal-field" },
-                    React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Start date"),
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Start date"),
                     React.createElement("input", {
                       type: "date",
                       className: "playground-tasks-release-modal-input",
@@ -34700,7 +37197,7 @@ const html = `<!doctype html>
                     })
                   ),
                   React.createElement("label", { className: "playground-tasks-release-modal-field" },
-                    React.createElement("span", { className: "playground-tasks-project-modal-label" }, "End date"),
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "End date"),
                     React.createElement("input", {
                       type: "date",
                       className: "playground-tasks-release-modal-input",
@@ -34712,15 +37209,57 @@ const html = `<!doctype html>
                     })
                   )
                 ),
-                React.createElement("label", { className: "playground-tasks-release-modal-field" },
-                  React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Description"),
-                  React.createElement("textarea", {
-                    className: "playground-tasks-project-modal-textarea playground-tasks-release-modal-textarea",
-                    rows: 5,
-                    value: releaseDraft.description,
-                    placeholder: "Optional milestone details for this release.",
-                    onChange: (event) => setReleaseDraft((current) => ({ ...current, description: event.target.value })),
-                  })
+                React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-release-modal-description" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                      [
+                        { id: "bold", label: "Bold", icon: Bold },
+                        { id: "italic", label: "Italic", icon: Italic },
+                        { id: "underline", label: "Underline", icon: Underline },
+                        { id: "list", label: "List", icon: List },
+                      ].map((action) =>
+                        React.createElement("button", {
+                          key: action.id,
+                          type: "button",
+                          className: "playground-tasks-detail-format-button",
+                          title: action.label,
+                          "aria-label": action.label,
+                          onMouseDown: (event) => event.preventDefault(),
+                          onClick: () => handleReleaseDescriptionFormat(action.id),
+                        }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isReleaseDescriptionEditing ? " is-editing" : " is-preview") },
+                    !isReleaseDescriptionEditing
+                      ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                          String(releaseDraft.description || "").trim()
+                            ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                content: releaseDraft.description,
+                                className: "playground-tasks-detail-description-preview tb-message-markdown",
+                              })
+                            : React.createElement("div", {
+                                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                              }, "Optional milestone details for this release.")
+                        )
+                      : null,
+                    React.createElement("textarea", {
+                      ref: releaseDescriptionTextareaRef,
+                      className: "playground-tasks-detail-description-input " + (isReleaseDescriptionEditing ? "is-editing" : "is-preview"),
+                      rows: 1,
+                      placeholder: isReleaseDescriptionEditing ? "Optional milestone details for this release." : "",
+                      value: releaseDraft.description,
+                      onFocus: () => setIsReleaseDescriptionEditing(true),
+                      onChange: (event) => {
+                        setReleaseDraft((current) => ({ ...current, description: event.target.value }));
+                        resizeTaskDescriptionTextarea(event.currentTarget);
+                      },
+                      onBlur: () => {
+                        setIsReleaseDescriptionEditing(false);
+                      },
+                    })
+                  )
                 ),
                 releaseSaveState.error
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, releaseSaveState.error)
@@ -35198,7 +37737,7 @@ const html = `<!doctype html>
                     ),
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-tasks-backlog-run-button",
+                      className: "playground-tasks-backlog-run-button" + (isHumanTask && task.status !== "done" ? " is-human-unchecked" : ""),
                       "aria-label": isHumanTask ? (task.status === "done" ? "Reopen task" : "Complete task") : "Run task",
                       title: isHumanTask ? (task.status === "done" ? "Reopen task" : "Complete task") : "Run task",
                       onClick: (event) => {
@@ -35222,12 +37761,7 @@ const html = `<!doctype html>
                                 strokeWidth: 2,
                                 "aria-hidden": "true",
                               })
-                            : React.createElement(Square, {
-                                width: 13,
-                                height: 13,
-                                strokeWidth: 1.9,
-                                "aria-hidden": "true",
-                              })
+                            : null
                         )
                         : React.createElement(Play, {
                             width: 13,
@@ -36301,7 +38835,7 @@ const html = `<!doctype html>
                         )
                       : null
                   ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-header-icon-button is-plain" + (projectSidebarPopover === "menu" ? " is-active" : ""),
@@ -36309,15 +38843,18 @@ const html = `<!doctype html>
                       title: "Project actions",
                     }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
                     projectSidebarPopover === "menu"
-                      ? React.createElement("div", { className: "playground-files-toolbar-menu" },
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
                           taskView === "calendar"
                             ? React.createElement("button", {
                                 type: "button",
-                                className: "playground-files-toolbar-menu-item",
-                                onClick: () => openScheduleComposer(),
+                                className: "tb-popup-row",
+                                onClick: () => {
+                                  setProjectSidebarPopover("");
+                                  openScheduleComposer();
+                                },
                               },
-                                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                                   React.createElement("span", null, "New Scheduled Task"),
                                   React.createElement("span", null, "Create a new calendar automation for this project.")
                                 )
@@ -36325,22 +38862,28 @@ const html = `<!doctype html>
                             : null,
                           React.createElement("button", {
                             type: "button",
-                            className: "playground-files-toolbar-menu-item",
-                            onClick: () => openProjectComposerForEdit(selectedProject),
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setProjectSidebarPopover("");
+                              openProjectComposerForEdit(selectedProject);
+                            },
                           },
-                            React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                            React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                               React.createElement("span", null, "Edit Project"),
                               React.createElement("span", null, "Change icon, title, and instructions.")
                             )
                           ),
                           React.createElement("button", {
                             type: "button",
-                            className: "playground-files-toolbar-menu-item playground-tasks-project-menu-item is-danger",
-                            onClick: () => void handleDeleteProject(selectedProject.id),
+                            className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                            onClick: () => {
+                              setProjectSidebarPopover("");
+                              void handleDeleteProject(selectedProject.id);
+                            },
                           },
-                            React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                               React.createElement("span", null, "Delete Project"),
                               React.createElement("span", null, "Remove this project and its planning scope.")
                             )
@@ -36446,6 +38989,9 @@ const html = `<!doctype html>
           const draftTaskParentLabel = draftTaskParentTask
             ? ((taskTicketNumbersById[draftTaskParentTask.id] || draftTaskParentTask.ticketNumber || "000") + " " + (draftTaskParentTask.title || "Untitled Task"))
             : "Choose parent";
+          const draftTaskParentTicketNumber = draftTaskParentTask
+            ? (taskTicketNumbersById[draftTaskParentTask.id] || draftTaskParentTask.ticketNumber || "000")
+            : "";
           const taskComments = normalizePlaygroundTaskCommentList(draftTask.comments)
             .slice()
             .sort((left, right) => String(left.createdAt || "").localeCompare(String(right.createdAt || "")));
@@ -36478,6 +39024,116 @@ const html = `<!doctype html>
                   : draftTask.status === "done"
                     ? " is-done"
                     : "");
+          const activeTaskTypeLabel = PLAYGROUND_TASK_TYPE_OPTIONS.find((option) => option.id === activeTaskType)?.label || "Task";
+          const activeReleaseLabel = activeTaskReleaseId
+            ? (releasesById[activeTaskReleaseId]?.name || releases.find((release) => release.id === activeTaskReleaseId)?.name || "Release")
+            : "None";
+          const resolvedTaskAssigneeId = draftTask.assigneeAgentId || defaultTaskAssigneeId || "";
+          const activeAssigneeLabel = resolvedTaskAssigneeId
+            ? getTaskAssigneeName(resolvedTaskAssigneeId, "Unassigned")
+            : "Unassigned";
+          const activeEnvironmentLabel = draftTask.environmentId
+            ? (availableBacklogEnvironments.find((environment) => environment.id === draftTask.environmentId)?.name || "Environment")
+            : "None";
+          const activeBlockedByTask = blockedByTaskId ? (tasksById[blockedByTaskId] || null) : null;
+          const activeBlockedByLabel = activeBlockedByTask
+            ? ((taskTicketNumbersById[activeBlockedByTask.id] || activeBlockedByTask.ticketNumber || "000") + " - " + (activeBlockedByTask.title || "Untitled Task"))
+            : "None";
+          const activeAssigneeActor = resolvedTaskAssigneeId
+            ? (assignableActorsById[resolvedTaskAssigneeId] || null)
+            : null;
+          const defaultTaskAssigneePopupMode = taskDetailAvailableAssigneePopupModes.includes(getPlaygroundTaskAssigneePopupMode(activeAssigneeActor))
+            ? getPlaygroundTaskAssigneePopupMode(activeAssigneeActor)
+            : (taskDetailAvailableAssigneePopupModes[0] || "agents");
+
+          function toggleTaskDetailSelectPopover(nextPopoverId) {
+            setTaskDetailPopover("");
+            setTaskSkillsPopoverOpen(false);
+            if (nextPopoverId === "assignee" && taskDetailSelectPopover !== "assignee") {
+              setTaskDetailAssigneePopupMode(defaultTaskAssigneePopupMode);
+            }
+            setTaskDetailSelectPopover((current) => current === nextPopoverId ? "" : nextPopoverId);
+          }
+
+          function renderTaskDetailSelectOptionRow({ key, label, description, selected, onClick, disabled = false }) {
+            return React.createElement("button", {
+                key,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+                onClick,
+                disabled,
+              },
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                selected
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, label),
+                description
+                  ? React.createElement("span", null, description)
+                  : null
+              )
+            );
+          }
+
+          function renderTaskDetailSelectControl({
+            popoverId,
+            valueLabel,
+            disabled = false,
+            isEmpty = false,
+            buttonContent = null,
+            menuClassName = "",
+            children,
+          }) {
+            const isOpen = taskDetailSelectPopover === popoverId;
+            return React.createElement("div", {
+                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isOpen ? " is-open" : ""),
+                ref: isOpen ? taskDetailSelectPopoverRef : null,
+              },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
+                disabled,
+                onClick: () => {
+                  if (disabled) return;
+                  toggleTaskDetailSelectPopover(popoverId);
+                },
+                title: valueLabel,
+                "aria-expanded": isOpen ? "true" : "false",
+              },
+                buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
+                React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+              ),
+              isOpen
+                ? React.createElement("div", {
+                    className: ("tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in " + menuClassName).trim(),
+                  }, children)
+                : null
+            );
+          }
+
+          function renderTaskDetailAssigneeRow(actor) {
+            const mode = getPlaygroundTaskAssigneePopupMode(actor);
+            const IconComponent = mode === "teams" ? Layers : User;
+            return React.createElement("button", {
+                key: actor.id,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (resolvedTaskAssigneeId === actor.id ? " selected" : ""),
+                onClick: () => {
+                  updateDraftField("assigneeAgentId", actor.id, { autosave: true });
+                  setTaskDetailSelectPopover("");
+                },
+              },
+              React.createElement(IconComponent, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("span", { className: "tb-popup-label" }, mode === "humans" ? "Me" : (actor.name || "Unknown")),
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                resolvedTaskAssigneeId === actor.id
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              )
+            );
+          }
 
           return React.createElement("div", {
               className: "playground-tasks-detail-shell" + (previewedTaskAttachment ? " is-preview-open" : ""),
@@ -36531,7 +39187,7 @@ const html = `<!doctype html>
                   ref: taskDetailActionsRef,
                 },
                   React.createElement("span", { className: activeTaskStatusClassName, title: activeTaskStatusLabel }, activeTaskStatusLabel),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
@@ -36540,10 +39196,10 @@ const html = `<!doctype html>
                       "aria-label": "Task actions",
                     }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
                     taskDetailPopover === "menu"
-                      ? React.createElement("div", { className: "playground-files-toolbar-menu" },
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
                           React.createElement("button", {
                             type: "button",
-                            className: "playground-files-toolbar-menu-item",
+                            className: "tb-popup-row",
                             onClick: () => {
                               setTaskDetailPopover("");
                               if (isHumanAssignedTask(draftTask)) {
@@ -36557,21 +39213,21 @@ const html = `<!doctype html>
                               : saveState.isSaving || isTaskThreadLaunchLocked(draftTask),
                           },
                             isHumanAssignedTask(draftTask)
-                              ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
-                              : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                              ? React.createElement(Check, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 })
+                              : React.createElement(Play, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                               React.createElement("span", null, isHumanAssignedTask(draftTask) ? (draftTask?.status === "done" ? "Reopen task" : "Mark complete") : "Run thread"),
                               React.createElement("span", null, isHumanAssignedTask(draftTask) ? "Move this human task into Finished." : "Start a fresh agent thread from this task.")
                             )
                           ),
                           React.createElement("button", {
                             type: "button",
-                            className: "playground-files-toolbar-menu-item",
+                            className: "tb-popup-row",
                             onClick: () => handleOpenTaskThreadChanges(draftTask),
                             disabled: saveState.isSaving || !canRevertTaskChanges,
                           },
-                            React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                            React.createElement(RotateCcw, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                               React.createElement("span", null, "Revert Changes"),
                               React.createElement("span", null, canRevertTaskChanges
                                 ? "Open the last started thread in Changes view."
@@ -36581,12 +39237,12 @@ const html = `<!doctype html>
                           ),
                           React.createElement("button", {
                             type: "button",
-                            className: "playground-files-toolbar-menu-item playground-tasks-detail-menu-item-danger",
+                            className: "tb-popup-row playground-tasks-detail-menu-item-danger",
                             onClick: () => void handleDeleteTask(draftTask.id),
                             disabled: saveState.isSaving,
                           },
-                            React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                               React.createElement("span", null, "Delete"),
                               React.createElement("span", null, "Remove this task from the project.")
                             )
@@ -36722,131 +39378,247 @@ const html = `<!doctype html>
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Type"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                     React.createElement("div", { className: "playground-tasks-type-control" },
-                      React.createElement("select", {
-                        className: "playground-environments-select playground-tasks-detail-fact-select",
-                        value: activeTaskType,
+                      renderTaskDetailSelectControl({
+                        popoverId: "type",
+                        valueLabel: activeTaskType === "subtask" && draftTaskParentTicketNumber
+                          ? ("Subtask to " + draftTaskParentTicketNumber)
+                          : activeTaskTypeLabel,
                         disabled: isTaskConfigLocked,
-                        onChange: (event) => handleTaskTypeSelection(event.target.value),
-                        "aria-label": "Task type",
-                      },
-                        PLAYGROUND_TASK_TYPE_OPTIONS.map((option) =>
-                          React.createElement("option", { key: option.id, value: option.id }, option.label)
-                        )
-                      ),
-                      activeTaskType === "subtask"
-                        ? React.createElement("button", {
-                            type: "button",
-                            className: "playground-tasks-type-parent-button",
-                            disabled: isTaskConfigLocked,
-                            onClick: openTaskParentPicker,
-                            title: draftTaskParentLabel,
-                          }, draftTaskParentLabel)
-                        : null
+                        buttonContent: React.createElement("span", {
+                            className: "playground-tasks-detail-type-value",
+                          },
+                            React.createElement(ActiveTaskTypeIcon, { className: "playground-tasks-detail-type-icon", strokeWidth: 1.9 }),
+                            activeTaskType === "subtask"
+                              ? React.createElement(React.Fragment, null,
+                                  React.createElement("span", { className: "playground-tasks-detail-type-prefix" }, "Subtask to"),
+                                  draftTaskParentTicketNumber
+                                    ? React.createElement("span", { className: "playground-tasks-detail-type-ticket", title: draftTaskParentLabel }, draftTaskParentTicketNumber)
+                                    : null
+                                )
+                              : React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeTaskTypeLabel)
+                          ),
+                        children: PLAYGROUND_TASK_TYPE_OPTIONS.map((option) =>
+                          renderTaskDetailSelectOptionRow({
+                            key: option.id,
+                            label: option.label,
+                            selected: activeTaskType === option.id,
+                            onClick: () => {
+                              handleTaskTypeSelection(option.id);
+                              setTaskDetailSelectPopover("");
+                            },
+                          })
+                        ),
+                      }),
                     )
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Priority"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                    React.createElement("div", {
-                        className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + activeTaskPriorityPresentation.toneClassName,
-                      },
-                      React.createElement(ActiveTaskPriorityIcon, { className: "playground-tasks-priority-value-icon", strokeWidth: 1.9 }),
-                      React.createElement("select", {
-                        className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
-                        value: draftTask.priority,
-                        disabled: isTaskConfigLocked,
-                        onChange: (event) => updateDraftField("priority", event.target.value, { autosave: true }),
-                      },
-                        PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
-                          React.createElement("option", { key: option.id, value: option.id }, option.label)
+                    renderTaskDetailSelectControl({
+                      popoverId: "priority",
+                      valueLabel: activeTaskPriorityPresentation.label,
+                      disabled: isTaskConfigLocked,
+                      buttonContent: React.createElement(React.Fragment, null,
+                        React.createElement("span", {
+                          className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + activeTaskPriorityPresentation.toneClassName,
+                        },
+                          React.createElement(ActiveTaskPriorityIcon, { className: "playground-tasks-priority-value-icon", strokeWidth: 1.9 }),
+                          React.createElement("span", { className: "playground-tasks-priority-value-text playground-tasks-detail-select-trigger-label" }, activeTaskPriorityPresentation.label)
                         )
-                      )
-                    )
+                      ),
+                      children: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
+                        renderTaskDetailSelectOptionRow({
+                          key: option.id,
+                          label: getPlaygroundTaskPriorityPresentation(option.id).label,
+                          selected: draftTask.priority === option.id,
+                          onClick: () => {
+                            updateDraftField("priority", option.id, { autosave: true });
+                            setTaskDetailSelectPopover("");
+                          },
+                        })
+                      ),
+                    })
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Release"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                    React.createElement("select", {
-                      className: "playground-environments-select playground-tasks-detail-fact-select",
-                      value: activeTaskReleaseId,
-                      onChange: (event) => updateDraftField("releaseId", event.target.value || null, { autosave: true }),
-                    },
-                      React.createElement("option", { value: "" }, "None"),
-                      releases
-                        .slice()
-                        .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
-                        .map((release) =>
-                          React.createElement("option", { key: release.id, value: release.id }, release.name || "Untitled Release")
-                        )
-                    )
+                    renderTaskDetailSelectControl({
+                      popoverId: "release",
+                      valueLabel: activeReleaseLabel,
+                      isEmpty: !activeTaskReleaseId,
+                      children: [
+                        renderTaskDetailSelectOptionRow({
+                          key: "__none__",
+                          label: "None",
+                          selected: !activeTaskReleaseId,
+                          onClick: () => {
+                            updateDraftField("releaseId", null, { autosave: true });
+                            setTaskDetailSelectPopover("");
+                          },
+                        }),
+                        ...releases
+                          .slice()
+                          .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
+                          .map((release) =>
+                            renderTaskDetailSelectOptionRow({
+                              key: release.id,
+                              label: release.name || "Untitled Release",
+                              description: release.description || formatPlaygroundTaskReleaseDateRange(release),
+                              selected: activeTaskReleaseId === release.id,
+                              onClick: () => {
+                                updateDraftField("releaseId", release.id, { autosave: true });
+                                setTaskDetailSelectPopover("");
+                              },
+                            })
+                          ),
+                      ],
+                    })
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Assignee"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                    React.createElement("select", {
-                      className: "playground-environments-select playground-tasks-detail-fact-select",
-                      value: draftTask.assigneeAgentId || "",
-                      disabled: isTaskConfigLocked,
-                      onChange: (event) => updateDraftField("assigneeAgentId", event.target.value || null, { autosave: true }),
-                    },
-                      React.createElement("option", { value: "" }, "None"),
-                      assignableActors.map((agent) =>
-                        React.createElement("option", { key: agent.id, value: agent.id }, getTaskAssigneeOptionLabel(agent))
-                      )
+                    React.createElement("div", {
+                        className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell playground-tasks-detail-assignee-shell" + (taskDetailSelectPopover === "assignee" ? " is-open" : ""),
+                        ref: taskDetailSelectPopover === "assignee" ? taskDetailSelectPopoverRef : null,
+                      },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (!resolvedTaskAssigneeId ? " is-empty" : "") + (taskDetailSelectPopover === "assignee" ? " is-active" : ""),
+                        disabled: isTaskConfigLocked,
+                        onClick: () => {
+                          if (isTaskConfigLocked) return;
+                          toggleTaskDetailSelectPopover("assignee");
+                        },
+                        title: activeAssigneeLabel,
+                        "aria-expanded": taskDetailSelectPopover === "assignee" ? "true" : "false",
+                      },
+                        React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeAssigneeLabel),
+                        React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                      ),
+                      taskDetailSelectPopover === "assignee"
+                        ? React.createElement("div", { className: "tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            React.createElement("div", { className: "tb-popup-menu-title" }, "Assignee"),
+                            React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
+                              React.createElement("div", { className: "tb-popup-nav" },
+                                taskDetailAvailableAssigneePopupModes.includes("agents")
+                                  ? React.createElement("button", {
+                                      type: "button",
+                                      className: "tb-popup-nav-button" + (taskDetailAssigneePopupMode === "agents" ? " active" : ""),
+                                      onClick: () => setTaskDetailAssigneePopupMode("agents"),
+                                    }, "Agents")
+                                  : null,
+                                taskDetailAvailableAssigneePopupModes.includes("teams")
+                                  ? React.createElement("button", {
+                                      type: "button",
+                                      className: "tb-popup-nav-button" + (taskDetailAssigneePopupMode === "teams" ? " active" : ""),
+                                      onClick: () => setTaskDetailAssigneePopupMode("teams"),
+                                    }, "Teams")
+                                  : null,
+                                taskDetailAvailableAssigneePopupModes.includes("humans")
+                                  ? React.createElement("button", {
+                                      type: "button",
+                                      className: "tb-popup-nav-button" + (taskDetailAssigneePopupMode === "humans" ? " active" : ""),
+                                      onClick: () => setTaskDetailAssigneePopupMode("humans"),
+                                    }, "Humans")
+                                  : null
+                              )
+                            ),
+                            React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent" },
+                              filteredTaskDetailAssignableActors.length > 0
+                                ? filteredTaskDetailAssignableActors.map((actor) => renderTaskDetailAssigneeRow(actor))
+                                : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
+                                    React.createElement("div", { className: "tb-popup-empty-state" }, "No assignees yet.")
+                                  )
+                            )
+                          )
+                        : null
                     )
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Environment"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                    React.createElement("select", {
-                      className: "playground-environments-select playground-tasks-detail-fact-select",
-                      value: draftTask.environmentId || "",
+                    renderTaskDetailSelectControl({
+                      popoverId: "environment",
+                      valueLabel: activeEnvironmentLabel,
                       disabled: isTaskConfigLocked,
-                      onChange: (event) => handleTaskEnvironmentSelectionChange(event.target.value || ""),
-                    },
-                      React.createElement("option", { value: "" }, "None"),
-                      availableBacklogEnvironments.map((environment) =>
-                        React.createElement("option", { key: environment.id, value: environment.id }, environment.name + (environment.isDefault ? " (Default)" : ""))
-                      )
-                    )
+                      isEmpty: !draftTask.environmentId,
+                      menuClassName: "playground-tasks-toolbar-popup-menu-environment",
+                      children: [
+                        renderTaskDetailSelectOptionRow({
+                          key: "__none__",
+                          label: "None",
+                          selected: !draftTask.environmentId,
+                          onClick: () => {
+                            handleTaskEnvironmentSelectionChange("");
+                            setTaskDetailSelectPopover("");
+                          },
+                        }),
+                        ...availableBacklogEnvironments.map((environment) =>
+                          renderTaskDetailSelectOptionRow({
+                            key: environment.id,
+                            label: environment.name + (environment.isDefault ? " (Default)" : ""),
+                            selected: draftTask.environmentId === environment.id,
+                            onClick: () => {
+                              handleTaskEnvironmentSelectionChange(environment.id);
+                              setTaskDetailSelectPopover("");
+                            },
+                          })
+                        ),
+                      ],
+                    })
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Blocked by"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                    React.createElement("select", {
-                      className: "playground-environments-select playground-tasks-detail-fact-select",
-                      value: blockedByTaskId,
+                    renderTaskDetailSelectControl({
+                      popoverId: "blocked-by",
+                      valueLabel: activeBlockedByLabel,
                       disabled: isTaskConfigLocked,
-                      onChange: (event) => {
-                        const nextBlockedByTaskId = String(event.target.value || "").trim();
-                        updateDraftTask((current) => {
-                          const nextStatus = nextBlockedByTaskId
-                            ? "blocked"
-                            : current.status === "blocked"
-                              ? "todo"
-                              : current.status;
-                          return {
-                            ...current,
-                            dependencyIds: nextBlockedByTaskId ? [nextBlockedByTaskId] : [],
-                            status: nextStatus,
-                            completedAt: nextStatus === "done"
-                              ? (current.completedAt || new Date().toISOString())
-                              : null,
-                          };
-                        }, { autosave: true });
-                      },
-                    },
-                      React.createElement("option", { value: "" }, "None"),
-                      dependencyCandidates.map((task) => {
-                        const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "000";
-                        return React.createElement("option", { key: task.id, value: task.id }, taskTicketNumber + " - " + (task.title || "Untitled Task"));
-                      })
-                    )
+                      isEmpty: !blockedByTaskId,
+                      menuClassName: "playground-tasks-toolbar-popup-menu-wide",
+                      children: [
+                        renderTaskDetailSelectOptionRow({
+                          key: "__none__",
+                          label: "None",
+                          selected: !blockedByTaskId,
+                          onClick: () => {
+                            updateDraftTask((current) => ({
+                              ...current,
+                              dependencyIds: [],
+                              status: current.status === "blocked" ? "todo" : current.status,
+                              completedAt: current.status === "done"
+                                ? (current.completedAt || new Date().toISOString())
+                                : null,
+                            }), { autosave: true });
+                            setTaskDetailSelectPopover("");
+                          },
+                        }),
+                        ...dependencyCandidates.map((task) => {
+                          const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "000";
+                          return renderTaskDetailSelectOptionRow({
+                            key: task.id,
+                            label: taskTicketNumber + " - " + (task.title || "Untitled Task"),
+                            selected: blockedByTaskId === task.id,
+                            onClick: () => {
+                              updateDraftTask((current) => ({
+                                ...current,
+                                dependencyIds: [task.id],
+                                status: "blocked",
+                                completedAt: current.status === "done"
+                                  ? (current.completedAt || new Date().toISOString())
+                                  : null,
+                              }), { autosave: true });
+                              setTaskDetailSelectPopover("");
+                            },
+                          });
+                        }),
+                      ],
+                    })
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
@@ -36855,10 +39627,13 @@ const html = `<!doctype html>
                     React.createElement("div", { className: "playground-tasks-schedule-anchor" },
                       React.createElement("button", {
                         type: "button",
-                        className: "playground-tasks-detail-fact-button" + (taskScheduleSummary ? "" : " is-empty"),
+                        className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (taskScheduleSummary ? "" : " is-empty") + (taskScheduleDialogState ? " is-active" : ""),
                         disabled: isTaskConfigLocked,
                         onClick: openTaskScheduleDialog,
-                      }, taskScheduleSummary || "None"),
+                      },
+                        React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, taskScheduleSummary || "None"),
+                        React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                      ),
                       renderTaskScheduleDialog()
                     )
                   )
@@ -39805,6 +42580,33 @@ const html = `<!doctype html>
           }
 
           return normalizeSkills(data.data || data.skills || []);
+        }, [activeProjectId, apiKey, resolvedUpstreamUrl]);
+
+        const handleFetchSkills = useCallback(async function handleFetchSkills() {
+          const requestUrl = new URL("/api/playground/skills", window.location.origin);
+          if (activeProjectId) {
+            requestUrl.searchParams.set("projectId", activeProjectId);
+          }
+
+          const response = await fetch(requestUrl.toString(), {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
+              "X-Runner-Upstream-Url": resolvedUpstreamUrl,
+            },
+          });
+          const data = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to fetch skills");
+          }
+
+          return Array.isArray(data?.skills)
+            ? data.skills
+            : Array.isArray(data?.data)
+              ? data.data
+              : [];
         }, [activeProjectId, apiKey, resolvedUpstreamUrl]);
 
         useEffect(() => {
@@ -45192,7 +47994,13 @@ const html = `<!doctype html>
                         ? hasRealAccess
                           ? React.createElement(PlaygroundSkillsPage, {
                               skills: demoSkills,
-                              fetchCustomSkills: handleFetchCustomSkills,
+                              fetchSkills: handleFetchSkills,
+                              backendUrl: proxyBackendBase,
+                              requestHeaders,
+                              environments: realEnvironments,
+                              projectId: settingsProjectRoutingId,
+                              apiKey,
+                              upstreamUrl: resolvedUpstreamUrl,
                             })
                           : renderAuthGate()
                       : activePage === "files"
@@ -47052,7 +49860,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === "GET" && url.pathname === "/api/playground/custom-skills") {
+  if (req.method === "GET" && (url.pathname === "/api/playground/custom-skills" || url.pathname === "/api/playground/skills")) {
     void proxyPlaygroundCustomSkills(req, res);
     return;
   }
@@ -47317,6 +50125,17 @@ const server = http.createServer((req, res) => {
   const projectSkillsMatch = url.pathname.match(/^\/api\/aios\/projects\/([^/]+)\/skills$/);
   if (req.method === "GET" && projectSkillsMatch) {
     void proxyAiosJsonRequest(req, res, `/api/projects/${projectSkillsMatch[1]}/skills`, "GET");
+    return;
+  }
+
+  const projectSkillDetailMatch = url.pathname.match(/^\/api\/aios\/projects\/([^/]+)\/skills\/([^/]+)$/);
+  if (["GET", "PUT", "PATCH", "DELETE"].includes(req.method || "") && projectSkillDetailMatch) {
+    void proxyAiosJsonRequest(
+      req,
+      res,
+      `/api/projects/${projectSkillDetailMatch[1]}/skills/${projectSkillDetailMatch[2]}`,
+      req.method,
+    );
     return;
   }
 
