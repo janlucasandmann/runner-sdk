@@ -529,7 +529,7 @@ const html = `<!doctype html>
         height: 40px;
         padding: 0;
         border: 0;
-        border-radius: 14px;
+        border-radius: 10px;
         background: transparent;
         color: rgba(255, 255, 255, 0.76);
         display: inline-flex;
@@ -596,7 +596,8 @@ const html = `<!doctype html>
       }
 
       .sidebar-rail-button.is-active {
-        background: linear-gradient(180deg, rgba(132, 136, 149, 0.72), rgba(78, 80, 88, 0.78));
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
         color: #fff;
       }
 
@@ -607,7 +608,7 @@ const html = `<!doctype html>
         margin-bottom: 10px;
         padding: 0;
         border: 0;
-        border-radius: 14px;
+        border-radius: 10px;
         background: transparent;
         color: rgba(255, 255, 255, 0.76);
         display: inline-flex;
@@ -1415,10 +1416,10 @@ const html = `<!doctype html>
       .playground-thread-preview-drawer {
         position: absolute;
         top: 0;
-        right: 0;
+        right: -6px;
         bottom: 0;
         z-index: 12;
-        width: var(--playground-thread-task-detail-width);
+        width: calc(var(--playground-thread-task-detail-width) + 6px);
         min-width: 0;
         display: flex;
         flex-direction: column;
@@ -1860,6 +1861,10 @@ const html = `<!doctype html>
         max-height: 20px;
       }
 
+      .playground-thread-widget-tasks .playground-tasks-backlog-run-button.is-human-unchecked {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
       .playground-thread-widget-tasks .playground-tasks-backlog-run-button svg {
         width: 8px;
         height: 8px;
@@ -1882,7 +1887,7 @@ const html = `<!doctype html>
         align-items: flex-start;
         justify-content: flex-start;
         gap: 10px;
-        margin-bottom: 5px;
+        margin-bottom: 2.5px;
       }
 
       .playground-thread-widget-today-header-copy {
@@ -1911,8 +1916,8 @@ const html = `<!doctype html>
 
       .playground-thread-widget-today-date-value {
         color: rgba(255, 255, 255, 0.96);
-        font-size: 20px;
-        font-weight: 600;
+        font-size: 26px;
+        font-weight: 500;
         line-height: 1;
         letter-spacing: -0.02em;
       }
@@ -1956,7 +1961,7 @@ const html = `<!doctype html>
       .playground-thread-widget-today-event-title {
         margin: 0;
         color: rgba(255, 255, 255, 0.96);
-        font-size: 13px;
+        font-size: 10px;
         font-weight: 500;
         line-height: 1.25;
         display: -webkit-box;
@@ -1972,7 +1977,7 @@ const html = `<!doctype html>
         gap: 10px;
         min-width: 0;
         color: rgba(255, 255, 255, 0.6);
-        font-size: 11px;
+        font-size: 10px;
         line-height: 1.35;
       }
 
@@ -2016,7 +2021,7 @@ const html = `<!doctype html>
         border: 0;
         background: transparent;
         color: rgba(255, 255, 255, 0.96);
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 500;
         line-height: 1.2;
         cursor: pointer;
@@ -18856,7 +18861,8 @@ const html = `<!doctype html>
                 timeLabel: formatPlaygroundWelcomeTimeLabel(event.start),
               };
             })
-          );
+          )
+          .slice(0, 3);
 
         return {
           hasEventToday: eventCountToday > 0,
