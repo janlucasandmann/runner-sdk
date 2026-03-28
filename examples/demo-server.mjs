@@ -1313,7 +1313,7 @@ const html = `<!doctype html>
         background: transparent;
         color: rgba(255, 255, 255, 0.72);
         font-size: 12px;
-        font-weight: 500;
+        font-weight: 400;
         line-height: 1rem;
         cursor: pointer;
         transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
@@ -1460,6 +1460,18 @@ const html = `<!doctype html>
         transform: none;
         opacity: 1;
         pointer-events: auto;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-drawer-header {
+        min-height: 56px;
+        padding: 2px 18px 12px;
+        box-sizing: border-box;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-drawer-body,
+      .playground-thread-preview-drawer .tb-attachment-preview-markdown-shell,
+      .playground-thread-preview-drawer .tb-attachment-preview-text {
+        background: transparent;
       }
 
       .playground-thread-subagent-drawer-host {
@@ -10137,6 +10149,18 @@ const html = `<!doctype html>
         align-items: center;
       }
 
+      .playground-tasks-detail-navbar-title-editable {
+        gap: 8px;
+      }
+
+      .playground-tasks-detail-navbar-title-hint {
+        flex: 0 0 auto;
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.42);
+        pointer-events: none;
+      }
+
       .playground-tasks-detail-navbar-title .playground-content-title {
         min-width: 0;
       }
@@ -10747,6 +10771,149 @@ const html = `<!doctype html>
         margin-top: 12px;
         padding: 12px 16px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-panel-section-attach-header {
+        padding: 0;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-panel-section-divider {
+        padding: 16px 0 0;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-field-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-field-row-followup {
+        margin-top: 12px;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-field-label {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.2;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-link-button {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-link-button:hover {
+        color: white;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-link-button-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-link-chevron {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-nav {
+        display: flex;
+        gap: 8px;
+        padding: 2px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        line-height: 1rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-nav-button {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 4px 12px;
+        border: 0;
+        border-radius: 20px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1rem;
+        cursor: pointer;
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-nav-button.active {
+        background: rgba(255, 255, 255, 0.35);
+        color: white;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-select-wrap-schedule {
+        margin-top: 10px;
+        border-radius: 20px;
+        background: transparent;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-select-wrap-schedule::before {
+        display: none;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-select-schedule {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 28px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        color-scheme: dark;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-select-schedule::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-preset-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-preset-row {
+        width: 100%;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: white;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .playground-tasks-schedule-panel .tb-popup-preset-row:hover,
+      .playground-tasks-schedule-panel .tb-popup-preset-row.selected {
+        background: rgba(255, 255, 255, 0.08);
       }
 
       .playground-tasks-schedule-row {
@@ -12724,7 +12891,7 @@ const html = `<!doctype html>
         padding: 10px;
         border: 0;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.05));
         color: rgba(255, 255, 255, 0.72);
         text-align: left;
         cursor: pointer;
@@ -12761,7 +12928,7 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-backlog-item.is-subtask {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.05));
       }
 
       .playground-tasks-backlog-item.is-draggable {
@@ -12770,7 +12937,7 @@ const html = `<!doctype html>
 
       .playground-tasks-backlog-item.is-dragging {
         opacity: 0.5;
-        background: rgba(255, 255, 255, 0.12);
+        background: var(--playground-task-color-surface-active, rgba(255, 255, 255, 0.1));
       }
 
       .playground-tasks-backlog-tree-node {
@@ -12927,19 +13094,19 @@ const html = `<!doctype html>
 
       .playground-tasks-backlog-ticket {
         flex: 0 0 auto;
-        color: #66a6ff;
+        color: var(--playground-task-color-accent, rgba(255, 255, 255, 0.92));
         font-size: 12px;
         font-weight: 500;
         line-height: 1;
       }
 
       .playground-tasks-backlog-item:hover {
-        background: rgba(255, 255, 255, 0.07);
+        background: var(--playground-task-color-surface-hover, rgba(255, 255, 255, 0.07));
         color: rgba(255, 255, 255, 0.96);
       }
 
       .playground-tasks-backlog-item.is-active {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--playground-task-color-surface-active, rgba(255, 255, 255, 0.1));
         color: rgba(255, 255, 255, 0.98);
       }
 
@@ -13337,7 +13504,7 @@ const html = `<!doctype html>
         padding: 12px;
         border: 0;
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.05));
         box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
         color: rgba(255, 255, 255, 0.92);
         text-align: left;
@@ -13346,12 +13513,12 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-lane-card:hover {
-        background: rgba(255, 255, 255, 0.07);
+        background: var(--playground-task-color-surface-hover, rgba(255, 255, 255, 0.07));
       }
 
       .playground-tasks-lane-card.is-active {
-        background: rgba(255, 255, 255, 0.1);
-        box-shadow: inset 0 0 0 1px rgba(102, 166, 255, 0.35);
+        background: var(--playground-task-color-surface-active, rgba(255, 255, 255, 0.1));
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
       }
 
       .playground-tasks-card-header,
@@ -13564,9 +13731,26 @@ const html = `<!doctype html>
 
       .playground-tasks-lane-card-ticket {
         flex: 0 0 auto;
-        color: rgba(102, 166, 255, 1);
+        color: var(--playground-task-color-accent, rgba(255, 255, 255, 0.92));
         font-size: 12px;
         font-weight: 500;
+      }
+
+      .playground-tasks-detail-color-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .playground-tasks-detail-color-swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        flex: 0 0 auto;
+        background: var(--playground-task-color-accent, #016bcb);
+        box-shadow: inset 0 0 0 1px var(--playground-task-color-border, rgba(1, 107, 203, 0.2));
       }
 
       .playground-tasks-board-toolbar,
@@ -14226,6 +14410,10 @@ const html = `<!doctype html>
         justify-content: flex-end;
       }
 
+      .playground-tasks-schedule-inline-description {
+        margin-top: 8px;
+      }
+
       .playground-tasks-schedule-detail-input {
         width: min(100%, 290px);
       }
@@ -14466,16 +14654,36 @@ const html = `<!doctype html>
       .playground-tasks-scheduler .rbc-event {
         margin: 0.25rem !important;
         width: calc(100% - 0.5rem) !important;
-        border-radius: 10px !important;
-        background: rgba(1, 107, 203, 0.2) !important;
+        border-radius: 8px !important;
+        background: var(--playground-calendar-event-surface, rgba(1, 107, 203, 0.1)) !important;
         border: none !important;
       }
 
       .playground-tasks-scheduler .rbc-event-content {
         font-size: 0.75rem !important;
-        padding-left: 0.25rem !important;
-        padding-right: 0.25rem !important;
-        color: #016bdf !important;
+        padding: 4px 4px 2px !important;
+        color: var(--playground-calendar-event-text, rgba(124, 197, 255, 0.95)) !important;
+      }
+
+      .playground-tasks-scheduler .rbc-month-view .rbc-event {
+        border-radius: 5px !important;
+      }
+
+      .playground-tasks-scheduler .rbc-time-view .rbc-event {
+        margin: 0 !important;
+        width: calc(100% - 4px) !important;
+        border-radius: 5px !important;
+      }
+
+      .playground-tasks-scheduler .rbc-day-slot .rbc-event,
+      .playground-tasks-scheduler .rbc-day-slot .rbc-background-event {
+        left: 2px !important;
+        right: 2px !important;
+        width: auto !important;
+      }
+
+      .playground-tasks-scheduler .rbc-time-view .rbc-event-content {
+        padding: 4px 4px 2px !important;
       }
 
       .playground-tasks-scheduler .rbc-label {
@@ -16652,6 +16860,58 @@ const html = `<!doctype html>
         { id: "task", label: "Task" },
         { id: "subtask", label: "Subtask" },
       ];
+      const PLAYGROUND_TASK_COLOR_OPTIONS = [
+        {
+          id: "gray",
+          label: "Gray",
+          accent: "rgba(255, 255, 255, 0.92)",
+          surface: "rgba(255, 255, 255, 0.05)",
+          surfaceHover: "rgba(255, 255, 255, 0.07)",
+          surfaceActive: "rgba(255, 255, 255, 0.1)",
+          border: "rgba(255, 255, 255, 0.08)",
+          text: "rgba(255, 255, 255, 0.96)",
+        },
+        {
+          id: "blue",
+          label: "Blue",
+          accent: "#016bcb",
+          surface: "rgba(1, 107, 203, 0.12)",
+          surfaceHover: "rgba(1, 107, 203, 0.16)",
+          surfaceActive: "rgba(1, 107, 203, 0.22)",
+          border: "rgba(1, 107, 203, 0.2)",
+          text: "rgba(184, 224, 255, 0.98)",
+        },
+        {
+          id: "green",
+          label: "Green",
+          accent: "#2ca36b",
+          surface: "rgba(44, 163, 107, 0.12)",
+          surfaceHover: "rgba(44, 163, 107, 0.16)",
+          surfaceActive: "rgba(44, 163, 107, 0.22)",
+          border: "rgba(44, 163, 107, 0.2)",
+          text: "rgba(194, 246, 220, 0.98)",
+        },
+        {
+          id: "amber",
+          label: "Amber",
+          accent: "#c98a1f",
+          surface: "rgba(201, 138, 31, 0.12)",
+          surfaceHover: "rgba(201, 138, 31, 0.16)",
+          surfaceActive: "rgba(201, 138, 31, 0.22)",
+          border: "rgba(201, 138, 31, 0.2)",
+          text: "rgba(255, 230, 180, 0.98)",
+        },
+        {
+          id: "rose",
+          label: "Rose",
+          accent: "#c45b87",
+          surface: "rgba(196, 91, 135, 0.12)",
+          surfaceHover: "rgba(196, 91, 135, 0.16)",
+          surfaceActive: "rgba(196, 91, 135, 0.22)",
+          border: "rgba(196, 91, 135, 0.2)",
+          text: "rgba(255, 214, 230, 0.98)",
+        },
+      ];
       const PLAYGROUND_TASK_HUMAN_ME_ID = "__runner_playground_human_me__";
       const PLAYGROUND_PROJECT_WALLPAPER_OPTIONS = [
         { id: "mountains", name: "Mountains", url: "/img/bg/mountain.avif", thumbnail: "/img/bg/mountain.avif" },
@@ -16691,6 +16951,30 @@ const html = `<!doctype html>
 
       function isPlaygroundHumanAssigneeId(value) {
         return String(value || "").trim() === PLAYGROUND_TASK_HUMAN_ME_ID;
+      }
+
+      function getPlaygroundTaskColorId(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        return PLAYGROUND_TASK_COLOR_OPTIONS.some((option) => option.id === normalized)
+          ? normalized
+          : PLAYGROUND_TASK_COLOR_OPTIONS[0].id;
+      }
+
+      function getPlaygroundTaskColorPresentation(value) {
+        return PLAYGROUND_TASK_COLOR_OPTIONS.find((option) => option.id === getPlaygroundTaskColorId(value))
+          || PLAYGROUND_TASK_COLOR_OPTIONS[0];
+      }
+
+      function getPlaygroundTaskColorStyle(value) {
+        const presentation = getPlaygroundTaskColorPresentation(value);
+        return {
+          "--playground-task-color-accent": presentation.accent,
+          "--playground-task-color-surface": presentation.surface,
+          "--playground-task-color-surface-hover": presentation.surfaceHover,
+          "--playground-task-color-surface-active": presentation.surfaceActive,
+          "--playground-task-color-border": presentation.border,
+          "--playground-task-color-text": presentation.text,
+        };
       }
 
       function buildPlaygroundHumanAssigneeOption() {
@@ -16785,8 +17069,39 @@ const html = `<!doctype html>
           : PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id;
       }
 
+      function getPlaygroundStableOptionIndex(seed, length, fallbackIndex = 0) {
+        const resolvedLength = Number(length) || 0;
+        if (resolvedLength <= 0) {
+          return 0;
+        }
+        const normalizedSeed = String(seed || "").trim();
+        if (!normalizedSeed) {
+          const normalizedFallback = Number.isFinite(fallbackIndex) ? Math.trunc(fallbackIndex) : 0;
+          const safeFallback = ((normalizedFallback % resolvedLength) + resolvedLength) % resolvedLength;
+          return safeFallback;
+        }
+        let hash = 0;
+        for (let index = 0; index < normalizedSeed.length; index += 1) {
+          hash = (hash * 31 + normalizedSeed.charCodeAt(index)) >>> 0;
+        }
+        return hash % resolvedLength;
+      }
+
       function getPlaygroundProjectWallpaperConfig(projectOrWallpaperId, index = 0) {
-        const fallback = PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[index % PLAYGROUND_PROJECT_WALLPAPER_OPTIONS.length]
+        const fallbackSource = projectOrWallpaperId && typeof projectOrWallpaperId === "object" && !Array.isArray(projectOrWallpaperId)
+          ? projectOrWallpaperId
+          : null;
+        const fallbackSeed = [
+          typeof fallbackSource?.id === "string" ? fallbackSource.id.trim() : "",
+          typeof fallbackSource?.createdAt === "string" ? fallbackSource.createdAt.trim() : "",
+          typeof fallbackSource?.name === "string" ? fallbackSource.name.trim() : "",
+        ].find(Boolean) || "";
+        const fallbackOptionIndex = getPlaygroundStableOptionIndex(
+          fallbackSeed,
+          PLAYGROUND_PROJECT_WALLPAPER_OPTIONS.length,
+          index
+        );
+        const fallback = PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[fallbackOptionIndex]
           || PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0];
         const wallpaperId = typeof projectOrWallpaperId === "string"
           ? getPlaygroundProjectWallpaperId(projectOrWallpaperId, "")
@@ -16808,6 +17123,13 @@ const html = `<!doctype html>
 
       function buildPlaygroundDefaultTaskDraft() {
         const now = new Date().toISOString();
+        const defaultTimezone = (() => {
+          try {
+            return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+          } catch {
+            return "UTC";
+          }
+        })();
         return {
           id: "",
           projectId: null,
@@ -16817,6 +17139,7 @@ const html = `<!doctype html>
           parentTaskId: null,
           title: "New Task",
           description: "",
+          taskColor: PLAYGROUND_TASK_COLOR_OPTIONS[0].id,
           status: "todo",
           priority: "medium",
           sprintId: null,
@@ -16831,6 +17154,10 @@ const html = `<!doctype html>
           lastStartedThreadId: null,
           scheduledStartAt: null,
           scheduledEndAt: null,
+          scheduleType: "one-time",
+          cronExpression: null,
+          scheduleTimezone: defaultTimezone,
+          scheduleEnabled: true,
           dueAt: null,
           completedAt: null,
           sortOrder: Date.now(),
@@ -16900,8 +17227,16 @@ const html = `<!doctype html>
         return {
           id: "",
           userId: "",
-          name: "",
+          name: "New Scheduled Task",
           description: "",
+          taskColor: PLAYGROUND_TASK_COLOR_OPTIONS[0].id,
+          priority: "medium",
+          releaseId: null,
+          dependencyIds: [],
+          attachments: [],
+          enabledSkills: [],
+          connectors: buildPlaygroundDefaultTaskConnectors(),
+          comments: [],
           agentId: null,
           agentName: null,
           task: "",
@@ -17631,6 +17966,15 @@ const html = `<!doctype html>
           }
         }
 
+        if (Object.prototype.hasOwnProperty.call(overrides, "taskColor")) {
+          const nextTaskColor = getPlaygroundTaskColorId(overrides.taskColor);
+          if (nextTaskColor) {
+            nextRunnerPlayground.taskColor = nextTaskColor;
+          } else {
+            delete nextRunnerPlayground.taskColor;
+          }
+        }
+
         if (Object.prototype.hasOwnProperty.call(overrides, "assigneeAgentId")) {
           const nextAssigneeAgentId = typeof overrides.assigneeAgentId === "string" && overrides.assigneeAgentId.trim()
             ? overrides.assigneeAgentId.trim()
@@ -17710,6 +18054,68 @@ const html = `<!doctype html>
           }
         }
 
+        if (Object.prototype.hasOwnProperty.call(overrides, "scheduleType")) {
+          const nextScheduleType = overrides.scheduleType === "recurring" ? "recurring" : "one-time";
+          if (nextScheduleType === "recurring") {
+            nextRunnerPlayground.scheduleType = "recurring";
+          } else {
+            delete nextRunnerPlayground.scheduleType;
+          }
+          if (Object.keys(nextRunnerPlayground).length > 0) {
+            currentMetadata.runnerPlayground = nextRunnerPlayground;
+          } else {
+            delete currentMetadata.runnerPlayground;
+          }
+        }
+
+        if (Object.prototype.hasOwnProperty.call(overrides, "cronExpression")) {
+          const nextCronExpression = typeof overrides.cronExpression === "string" && overrides.cronExpression.trim()
+            ? overrides.cronExpression.trim()
+            : "";
+          if (nextCronExpression) {
+            nextRunnerPlayground.cronExpression = nextCronExpression;
+            currentMetadata.runnerPlayground = nextRunnerPlayground;
+          } else {
+            delete nextRunnerPlayground.cronExpression;
+            if (Object.keys(nextRunnerPlayground).length > 0) {
+              currentMetadata.runnerPlayground = nextRunnerPlayground;
+            } else {
+              delete currentMetadata.runnerPlayground;
+            }
+          }
+        }
+
+        if (Object.prototype.hasOwnProperty.call(overrides, "scheduleTimezone")) {
+          const nextScheduleTimezone = typeof overrides.scheduleTimezone === "string" && overrides.scheduleTimezone.trim()
+            ? overrides.scheduleTimezone.trim()
+            : "";
+          if (nextScheduleTimezone) {
+            nextRunnerPlayground.scheduleTimezone = nextScheduleTimezone;
+            currentMetadata.runnerPlayground = nextRunnerPlayground;
+          } else {
+            delete nextRunnerPlayground.scheduleTimezone;
+            if (Object.keys(nextRunnerPlayground).length > 0) {
+              currentMetadata.runnerPlayground = nextRunnerPlayground;
+            } else {
+              delete currentMetadata.runnerPlayground;
+            }
+          }
+        }
+
+        if (Object.prototype.hasOwnProperty.call(overrides, "scheduleEnabled")) {
+          if (overrides.scheduleEnabled === false) {
+            nextRunnerPlayground.scheduleEnabled = false;
+            currentMetadata.runnerPlayground = nextRunnerPlayground;
+          } else {
+            delete nextRunnerPlayground.scheduleEnabled;
+            if (Object.keys(nextRunnerPlayground).length > 0) {
+              currentMetadata.runnerPlayground = nextRunnerPlayground;
+            } else {
+              delete currentMetadata.runnerPlayground;
+            }
+          }
+        }
+
         if (nextRunnerPlayground.taskType !== "subtask") {
           delete nextRunnerPlayground.parentTaskId;
         }
@@ -17730,6 +18136,11 @@ const html = `<!doctype html>
             parentTaskId: task.parentTaskId,
             assigneeAgentId: task.assigneeAgentId,
             environmentId: task.environmentId,
+            taskColor: task.taskColor,
+            scheduleType: task.scheduleType,
+            cronExpression: task.cronExpression,
+            scheduleTimezone: task.scheduleTimezone,
+            scheduleEnabled: task.scheduleEnabled,
             enabledSkills: task.enabledSkills,
             attachments: task.attachments,
             connectors: task.connectors,
@@ -17822,6 +18233,30 @@ const html = `<!doctype html>
           : typeof runnerPlaygroundMetadata?.environmentId === "string" && runnerPlaygroundMetadata.environmentId.trim()
             ? runnerPlaygroundMetadata.environmentId.trim()
             : null;
+        const rawTaskScheduleType = typeof task.scheduleType === "string" && task.scheduleType.trim()
+          ? task.scheduleType.trim().toLowerCase()
+          : typeof runnerPlaygroundMetadata?.scheduleType === "string" && runnerPlaygroundMetadata.scheduleType.trim()
+            ? runnerPlaygroundMetadata.scheduleType.trim().toLowerCase()
+            : "";
+        const taskCronExpression = typeof task.cronExpression === "string" && task.cronExpression.trim()
+          ? task.cronExpression.trim()
+          : typeof runnerPlaygroundMetadata?.cronExpression === "string" && runnerPlaygroundMetadata.cronExpression.trim()
+            ? runnerPlaygroundMetadata.cronExpression.trim()
+            : null;
+        const taskScheduleType = rawTaskScheduleType === "recurring" || taskCronExpression
+          ? "recurring"
+          : "one-time";
+        const taskScheduleTimezone = typeof task.scheduleTimezone === "string" && task.scheduleTimezone.trim()
+          ? task.scheduleTimezone.trim()
+          : typeof runnerPlaygroundMetadata?.scheduleTimezone === "string" && runnerPlaygroundMetadata.scheduleTimezone.trim()
+            ? runnerPlaygroundMetadata.scheduleTimezone.trim()
+            : draft.scheduleTimezone;
+        const taskScheduleEnabled = task.scheduleEnabled === false
+          ? false
+          : runnerPlaygroundMetadata?.scheduleEnabled === false
+            ? false
+            : true;
+        const taskColor = getPlaygroundTaskColorId(task.taskColor || runnerPlaygroundMetadata?.taskColor);
         const directEnabledSkills = normalizePlaygroundEnabledSkillIds(task.enabledSkills);
         const metadataEnabledSkills = normalizePlaygroundEnabledSkillIds(runnerPlaygroundMetadata?.enabledSkills);
         const enabledSkills = directEnabledSkills.length > 0
@@ -17854,6 +18289,7 @@ const html = `<!doctype html>
           parentTaskId,
           title: typeof task.title === "string" && task.title.trim() ? task.title.trim() : draft.title,
           description: typeof task.description === "string" ? task.description : draft.description,
+          taskColor,
           status,
           priority,
           sprintId: typeof task.sprintId === "string" && task.sprintId.trim() ? task.sprintId.trim() : null,
@@ -17868,6 +18304,10 @@ const html = `<!doctype html>
           lastStartedThreadId: normalizedLastStartedThreadId,
           scheduledStartAt: typeof task.scheduledStartAt === "string" && task.scheduledStartAt ? task.scheduledStartAt : null,
           scheduledEndAt: typeof task.scheduledEndAt === "string" && task.scheduledEndAt ? task.scheduledEndAt : null,
+          scheduleType: taskScheduleType,
+          cronExpression: taskCronExpression,
+          scheduleTimezone: taskScheduleTimezone,
+          scheduleEnabled: taskScheduleEnabled,
           dueAt: typeof task.dueAt === "string" && task.dueAt ? task.dueAt : null,
           completedAt: typeof task.completedAt === "string" && task.completedAt ? task.completedAt : (status === "done" ? updatedAt : null),
           sortOrder: Number.isFinite(task.sortOrder) ? Number(task.sortOrder) : draft.sortOrder,
@@ -18070,6 +18510,45 @@ const html = `<!doctype html>
           : rawScheduleType === "one-time"
             ? "one-time"
             : (hasCronExpression ? "recurring" : "one-time");
+        const metadata = schedule.metadata && typeof schedule.metadata === "object" && !Array.isArray(schedule.metadata) ? schedule.metadata : null;
+        const taskColor = getPlaygroundTaskColorId(
+          schedule.taskColor
+          || metadata?.taskColor
+          || metadata?.color
+        );
+        const priority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === schedule.priority)
+          ? schedule.priority
+          : (PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === metadata?.priority)
+            ? metadata.priority
+            : draft.priority);
+        const releaseId = typeof schedule.releaseId === "string" && schedule.releaseId.trim()
+          ? schedule.releaseId.trim()
+          : (typeof metadata?.releaseId === "string" && metadata.releaseId.trim() ? metadata.releaseId.trim() : null);
+        const dependencyIds = normalizePlaygroundIdList(
+          Array.isArray(schedule.dependencyIds)
+            ? schedule.dependencyIds
+            : (Array.isArray(metadata?.dependencyIds) ? metadata.dependencyIds : [])
+        );
+        const directEnabledSkills = normalizePlaygroundEnabledSkillIds(schedule.enabledSkills);
+        const metadataEnabledSkills = normalizePlaygroundEnabledSkillIds(metadata?.enabledSkills);
+        const enabledSkills = directEnabledSkills.length > 0
+          ? directEnabledSkills
+          : metadataEnabledSkills;
+        const directAttachments = normalizePlaygroundTaskAttachmentList(schedule.attachments);
+        const metadataAttachments = normalizePlaygroundTaskAttachmentList(metadata?.attachments);
+        const attachments = directAttachments.length > 0
+          ? directAttachments
+          : metadataAttachments;
+        const directConnectors = normalizePlaygroundTaskConnectorSelections(schedule.connectors);
+        const metadataConnectors = normalizePlaygroundTaskConnectorSelections(metadata?.connectors);
+        const connectors = hasPlaygroundTaskConnectorSelections(directConnectors)
+          ? directConnectors
+          : metadataConnectors;
+        const directComments = normalizePlaygroundTaskCommentList(schedule.comments);
+        const metadataComments = normalizePlaygroundTaskCommentList(metadata?.comments);
+        const comments = directComments.length > 0
+          ? directComments
+          : metadataComments;
 
         return {
           ...draft,
@@ -18081,6 +18560,14 @@ const html = `<!doctype html>
           agentId: typeof schedule.agentId === "string" && schedule.agentId.trim() ? schedule.agentId.trim() : null,
           agentName: typeof schedule.agentName === "string" && schedule.agentName.trim() ? schedule.agentName.trim() : null,
           task: typeof schedule.task === "string" ? schedule.task : draft.task,
+          taskColor,
+          priority,
+          releaseId,
+          dependencyIds,
+          attachments,
+          enabledSkills,
+          connectors,
+          comments,
           environmentId: typeof schedule.environmentId === "string" ? schedule.environmentId : draft.environmentId,
           environmentName: typeof schedule.environmentName === "string" && schedule.environmentName.trim() ? schedule.environmentName.trim() : null,
           appId: typeof schedule.appId === "string" && schedule.appId.trim() ? schedule.appId.trim() : null,
@@ -18118,7 +18605,7 @@ const html = `<!doctype html>
               })
               .filter(Boolean)
             : [],
-          metadata: schedule.metadata && typeof schedule.metadata === "object" && !Array.isArray(schedule.metadata) ? schedule.metadata : null,
+          metadata,
           createdAt,
           updatedAt,
         };
@@ -18229,6 +18716,17 @@ const html = `<!doctype html>
               ? data.items
               : [];
         return items.map(normalizePlaygroundProjectRecord);
+      }
+
+      function sortPlaygroundProjectsByRecent(projectList) {
+        const items = Array.isArray(projectList) ? projectList.slice() : [];
+        return items.sort((left, right) => {
+          const updatedOrder = String(right?.updatedAt || right?.createdAt || "").localeCompare(String(left?.updatedAt || left?.createdAt || ""));
+          if (updatedOrder !== 0) {
+            return updatedOrder;
+          }
+          return String(left?.name || "").localeCompare(String(right?.name || ""));
+        });
       }
 
       function mergePlaygroundProjectRecords(primaryProject, fallbackProject) {
@@ -18828,13 +19326,76 @@ const html = `<!doctype html>
       }
 
       const PLAYGROUND_TASK_CALENDAR_BLOCK_MS = 30 * 60 * 1000;
+      const PLAYGROUND_TASK_SCHEDULE_PRESETS = [
+        { id: "daily", label: "Every day", cron: "0 9 * * *" },
+        { id: "weekdays", label: "Every weekday", cron: "0 9 * * 1-5" },
+        { id: "weekly", label: "Every week", cron: "0 9 * * 1" },
+      ];
+
+      function getPlaygroundTaskSchedulePresetId(cronExpression) {
+        const normalizedCronExpression = typeof cronExpression === "string" ? cronExpression.trim() : "";
+        return PLAYGROUND_TASK_SCHEDULE_PRESETS.find((preset) => preset.cron === normalizedCronExpression)?.id || "";
+      }
+
+      function getPlaygroundTaskSchedulePreset(presetId) {
+        const normalizedPresetId = typeof presetId === "string" ? presetId.trim() : "";
+        return PLAYGROUND_TASK_SCHEDULE_PRESETS.find((preset) => preset.id === normalizedPresetId) || PLAYGROUND_TASK_SCHEDULE_PRESETS[0];
+      }
+
+      function getPlaygroundTaskScheduleConfig(task) {
+        const normalizedTask = normalizePlaygroundTaskRecord(task);
+        const scheduleType = normalizedTask.scheduleType === "recurring" || normalizedTask.cronExpression
+          ? "recurring"
+          : "one-time";
+        return {
+          scheduleType,
+          scheduledStartAt: normalizedTask.scheduledStartAt || null,
+          cronExpression: typeof normalizedTask.cronExpression === "string" && normalizedTask.cronExpression.trim()
+            ? normalizedTask.cronExpression.trim()
+            : null,
+          timezone: typeof normalizedTask.scheduleTimezone === "string" && normalizedTask.scheduleTimezone.trim()
+            ? normalizedTask.scheduleTimezone.trim()
+            : "UTC",
+          enabled: normalizedTask.scheduleEnabled !== false,
+        };
+      }
 
       function buildPlaygroundTaskCalendarEvents(task, ticketNumber, visibleRange) {
-        if (!task?.id || !task.scheduledStartAt || !visibleRange?.start || !visibleRange?.end) {
+        if (!task?.id || !visibleRange?.start || !visibleRange?.end) {
           return [];
         }
 
-        const start = new Date(task.scheduledStartAt);
+        const scheduleConfig = getPlaygroundTaskScheduleConfig(task);
+        const taskTitle = (ticketNumber ? ticketNumber + " " : "") + (task.title || "Untitled Task");
+
+        if (scheduleConfig.scheduleType === "recurring" && scheduleConfig.cronExpression) {
+          return buildPlaygroundScheduleCalendarEvents({
+            id: task.id,
+            name: taskTitle,
+            task: task.description || task.title || "Untitled Task",
+            scheduleType: "recurring",
+            scheduledTime: scheduleConfig.scheduledStartAt || task.createdAt || null,
+            cronExpression: scheduleConfig.cronExpression,
+            timezone: scheduleConfig.timezone,
+            enabled: scheduleConfig.enabled,
+            createdAt: task.createdAt || null,
+          }, visibleRange).map((event) => ({
+            ...event,
+            id: "task-calendar:" + task.id + ":" + event.start.toISOString(),
+            title: taskTitle,
+            resource: {
+              kind: "task",
+              taskId: task.id,
+              taskColor: getPlaygroundTaskColorId(task.taskColor),
+            },
+          }));
+        }
+
+        if (!scheduleConfig.scheduledStartAt) {
+          return [];
+        }
+
+        const start = new Date(scheduleConfig.scheduledStartAt);
         if (Number.isNaN(start.getTime())) {
           return [];
         }
@@ -18853,12 +19414,13 @@ const html = `<!doctype html>
 
         return [{
           id: "task-calendar:" + task.id,
-          title: (ticketNumber ? ticketNumber + " " : "") + (task.title || "Untitled Task"),
+          title: taskTitle,
           start,
           end,
           resource: {
             kind: "task",
             taskId: task.id,
+            taskColor: getPlaygroundTaskColorId(task.taskColor),
           },
         }];
       }
@@ -18875,8 +19437,13 @@ const html = `<!doctype html>
         });
       }
 
-      function formatPlaygroundTaskScheduleSummary(startValue) {
-        const startLabel = formatPlaygroundTaskDateTime(startValue);
+      function formatPlaygroundTaskScheduleSummary(taskRecord) {
+        const scheduleConfig = getPlaygroundTaskScheduleConfig(taskRecord);
+        if (scheduleConfig.scheduleType === "recurring") {
+          const presetLabel = PLAYGROUND_TASK_SCHEDULE_PRESETS.find((preset) => preset.cron === scheduleConfig.cronExpression)?.label || "";
+          return presetLabel || "Recurring";
+        }
+        const startLabel = formatPlaygroundTaskDateTime(scheduleConfig.scheduledStartAt);
         return startLabel || "";
       }
 
@@ -30648,6 +31215,11 @@ const html = `<!doctype html>
         const editorDirtyRef = useRef(false);
         const taskAutosaveInFlightRef = useRef(false);
         const taskAutosaveQueuedRef = useRef(null);
+        const scheduleDraftRef = useRef(buildPlaygroundDefaultScheduleDraft());
+        const scheduleAutosaveTimerRef = useRef(null);
+        const scheduleAutosaveInFlightRef = useRef(false);
+        const scheduleAutosaveQueuedRef = useRef(null);
+        const scheduleEditorDirtyRef = useRef(false);
         const selectedTaskIdRef = useRef("");
         const projectSidebarActionsRef = useRef(null);
         const backlogToolbarActionsRef = useRef(null);
@@ -30660,6 +31232,7 @@ const html = `<!doctype html>
         const taskDetailMainRef = useRef(null);
         const taskDescriptionTextareaRef = useRef(null);
         const scheduleTaskTextareaRef = useRef(null);
+        const scheduleDescriptionTextareaRef = useRef(null);
         const taskCommentTextareaRef = useRef(null);
         const taskAttachmentInputRef = useRef(null);
         const taskScheduleDialogTimerRef = useRef(null);
@@ -30734,6 +31307,7 @@ const html = `<!doctype html>
           error: "",
         });
         const [isScheduleTaskEditing, setIsScheduleTaskEditing] = useState(false);
+        const [isScheduleDescriptionEditing, setIsScheduleDescriptionEditing] = useState(false);
         const [scheduleDetailsCollapsed, setScheduleDetailsCollapsed] = useState(false);
         const [scheduleCalendarView, setScheduleCalendarView] = useState("week");
         const [scheduleCalendarDate, setScheduleCalendarDate] = useState(() => new Date());
@@ -31006,9 +31580,17 @@ const html = `<!doctype html>
           }));
         }, [availableBacklogEnvironments, backlogComposerEnvironmentId]);
 
+        const isCalendarScheduleDetailMode = Boolean(!draftTask && taskView === "calendar" && scheduleViewMode === "setup");
+
         const activeTaskEnvironmentId = useMemo(() => {
-          return String(draftTask?.environmentId || backlogComposerEnvironmentId || initialEnvironmentId || "").trim();
-        }, [backlogComposerEnvironmentId, draftTask?.environmentId, initialEnvironmentId]);
+          return String(
+            draftTask?.environmentId
+            || (isCalendarScheduleDetailMode ? scheduleDraft?.environmentId : "")
+            || backlogComposerEnvironmentId
+            || initialEnvironmentId
+            || ""
+          ).trim();
+        }, [backlogComposerEnvironmentId, draftTask?.environmentId, initialEnvironmentId, isCalendarScheduleDetailMode, scheduleDraft?.environmentId]);
 
         const activeTaskEnvironment = useMemo(() => {
           return activeTaskEnvironmentId ? environmentsById[activeTaskEnvironmentId] || null : null;
@@ -31073,8 +31655,11 @@ const html = `<!doctype html>
         }, [taskConnectorBrowserItems, taskConnectorBrowserPreviewId]);
 
         const taskConnectorBrowserCurrentSelection = useMemo(() => {
-          return getDraftTaskConnectorSelection(taskConnectorBrowserCurrentSource);
-        }, [draftTask, taskConnectorBrowserCurrentSource]);
+          return getDraftTaskConnectorSelection(
+            taskConnectorBrowserCurrentSource,
+            isCalendarScheduleDetailMode ? scheduleDraft : draftTask
+          );
+        }, [draftTask, isCalendarScheduleDetailMode, scheduleDraft, taskConnectorBrowserCurrentSource]);
 
         const taskConnectorBrowserSelectedItems = useMemo(() => {
           return resolvePlaygroundTaskConnectorSelectedItems(
@@ -31645,13 +32230,23 @@ const html = `<!doctype html>
           };
         }
 
+        const activeDetailAttachments = useMemo(() => {
+          if (draftTask?.attachments?.length) {
+            return draftTask.attachments;
+          }
+          if (isCalendarScheduleDetailMode && Array.isArray(scheduleDraft?.attachments)) {
+            return scheduleDraft.attachments;
+          }
+          return [];
+        }, [draftTask?.attachments, isCalendarScheduleDetailMode, scheduleDraft?.attachments]);
+
         const previewedTaskAttachment = useMemo(() => {
-          if (!draftTask?.attachments?.length || !previewedTaskAttachmentId) {
+          if (!activeDetailAttachments.length || !previewedTaskAttachmentId) {
             return null;
           }
-          const matchedAttachment = draftTask.attachments.find((attachment) => attachment.id === previewedTaskAttachmentId) || null;
+          const matchedAttachment = activeDetailAttachments.find((attachment) => attachment.id === previewedTaskAttachmentId) || null;
           return buildResolvedTaskAttachmentRecord(matchedAttachment);
-        }, [backendUrl, draftTask?.attachments, previewedTaskAttachmentId]);
+        }, [activeDetailAttachments, backendUrl, previewedTaskAttachmentId]);
 
         const schedulesById = useMemo(() => {
           const next = {};
@@ -31855,6 +32450,7 @@ const html = `<!doctype html>
             ticketNumber,
             title: normalizedTask.title || "Untitled Task",
             description: normalizedTask.description || "",
+            taskColor: normalizedTask.taskColor || PLAYGROUND_TASK_COLOR_OPTIONS[0].id,
             status: normalizedTask.status || "todo",
             priority: normalizedTask.priority || "medium",
             taskType: normalizePlaygroundTaskType(normalizedTask.taskType),
@@ -32222,36 +32818,40 @@ const html = `<!doctype html>
         }, []);
 
         const filteredProjects = useMemo(() => {
-          return [...projects]
-            .filter((project) => {
-              if (!normalizedSearchQuery) return true;
-              const haystack = [
-                project.name || "",
-                project.description || "",
-                String(project.summary?.tasksCount || ""),
-                String(project.summary?.threadsCount || ""),
-                String(project.summary?.environmentsCount || ""),
-              ]
-                .join(" ")
-                .toLowerCase();
-              return haystack.includes(normalizedSearchQuery);
-            })
-            .sort((left, right) => {
-              if (projectsHomeSortMode === "name-asc") {
-                return String(left.name || "").localeCompare(String(right.name || ""));
-              }
-              if (projectsHomeSortMode === "tasks-desc") {
-                const openTaskDelta = Number(right.summary?.openTasksCount || 0) - Number(left.summary?.openTasksCount || 0);
-                if (openTaskDelta !== 0) {
-                  return openTaskDelta;
-                }
-              }
-              const updatedOrder = String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || ""));
-              if (updatedOrder !== 0) {
-                return updatedOrder;
-              }
+          const matchedProjects = projects.filter((project) => {
+            if (!normalizedSearchQuery) return true;
+            const haystack = [
+              project.name || "",
+              project.description || "",
+              String(project.summary?.tasksCount || ""),
+              String(project.summary?.threadsCount || ""),
+              String(project.summary?.environmentsCount || ""),
+            ]
+              .join(" ")
+              .toLowerCase();
+            return haystack.includes(normalizedSearchQuery);
+          });
+
+          if (projectsHomeSortMode === "updated-desc") {
+            return matchedProjects;
+          }
+
+          return matchedProjects.slice().sort((left, right) => {
+            if (projectsHomeSortMode === "name-asc") {
               return String(left.name || "").localeCompare(String(right.name || ""));
-            });
+            }
+            if (projectsHomeSortMode === "tasks-desc") {
+              const openTaskDelta = Number(right.summary?.openTasksCount || 0) - Number(left.summary?.openTasksCount || 0);
+              if (openTaskDelta !== 0) {
+                return openTaskDelta;
+              }
+            }
+            const updatedOrder = String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || ""));
+            if (updatedOrder !== 0) {
+              return updatedOrder;
+            }
+            return String(left.name || "").localeCompare(String(right.name || ""));
+          });
         }, [normalizedSearchQuery, projects, projectsHomeSortMode]);
 
         const sortedTasks = useMemo(() => {
@@ -32730,6 +33330,17 @@ const html = `<!doctype html>
           }), { autosave: true });
         }
 
+        function appendUploadedScheduleAttachments(attachments) {
+          const normalizedAttachments = normalizePlaygroundTaskAttachmentList(attachments);
+          if (!normalizedAttachments.length) {
+            return null;
+          }
+          return updateScheduleDraft((current) => ({
+            ...(current || buildProjectScheduleDraft(selectedProject)),
+            attachments: normalizePlaygroundTaskAttachmentList((current?.attachments || []).concat(normalizedAttachments)),
+          }));
+        }
+
         function resizeTaskDescriptionTextarea(textarea) {
           if (!textarea) return;
           const computedStyles = window.getComputedStyle(textarea);
@@ -32895,7 +33506,7 @@ const html = `<!doctype html>
         }
 
         function applyScheduleTaskSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          setScheduleDraft((current) => ({
+          updateScheduleDraft((current) => ({
             ...(current || buildProjectScheduleDraft(selectedProject)),
             task: nextValue,
           }));
@@ -32938,6 +33549,52 @@ const html = `<!doctype html>
           }
 
           applyScheduleTaskSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        function applyScheduleDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateScheduleDraft((current) => ({
+            ...(current || buildProjectScheduleDraft(selectedProject)),
+            description: nextValue,
+          }));
+          window.requestAnimationFrame(() => {
+            const textarea = scheduleDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleScheduleDescriptionFormat(formatType) {
+          const textarea = scheduleDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(scheduleDraft?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyScheduleDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         function applyReleaseDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
@@ -33042,7 +33699,6 @@ const html = `<!doctype html>
 
           return {
             ...base,
-            name: projectRecord?.name ? projectRecord.name + " Schedule" : base.name,
             agentId: defaultAgent?.id || null,
             agentName: defaultAgent?.name || null,
             environmentId: defaultEnvironment?.id || "",
@@ -33053,6 +33709,7 @@ const html = `<!doctype html>
             metadata: {
               projectId: projectRecord?.id || null,
               projectName: projectRecord?.name || null,
+              taskColor: base.taskColor,
               source: "runner_playground_project_calendar",
             },
           };
@@ -33351,6 +34008,17 @@ const html = `<!doctype html>
         }
 
         function closeScheduleDetail() {
+          scheduleEditorDirtyRef.current = false;
+          scheduleAutosaveQueuedRef.current = null;
+          if (scheduleAutosaveTimerRef.current) {
+            window.clearTimeout(scheduleAutosaveTimerRef.current);
+            scheduleAutosaveTimerRef.current = null;
+          }
+          setTaskDetailPopover("");
+          setTaskDetailSelectPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setTaskCommentInputValue("");
+          setPreviewedTaskAttachmentId("");
           setSelectedTaskId("");
           setSelectedScheduleId("");
           setScheduleEditorMode("create");
@@ -33361,10 +34029,22 @@ const html = `<!doctype html>
         }
 
         function openScheduleComposer() {
+          scheduleEditorDirtyRef.current = false;
+          scheduleAutosaveQueuedRef.current = null;
+          if (scheduleAutosaveTimerRef.current) {
+            window.clearTimeout(scheduleAutosaveTimerRef.current);
+            scheduleAutosaveTimerRef.current = null;
+          }
+          setTaskDetailPopover("");
+          setTaskDetailSelectPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setTaskCommentInputValue("");
+          setPreviewedTaskAttachmentId("");
           if (typeof onRequestSidebarCollapse === "function") {
             onRequestSidebarCollapse();
           }
           setSelectedTaskId("");
+          setDraftTask(null);
           setScheduleEditorMode("create");
           setSelectedScheduleId("");
           setScheduleDraft(buildProjectScheduleDraft(selectedProject));
@@ -33374,6 +34054,17 @@ const html = `<!doctype html>
         }
 
         function openScheduleComposerFromSlot(slotInfo) {
+          scheduleEditorDirtyRef.current = false;
+          scheduleAutosaveQueuedRef.current = null;
+          if (scheduleAutosaveTimerRef.current) {
+            window.clearTimeout(scheduleAutosaveTimerRef.current);
+            scheduleAutosaveTimerRef.current = null;
+          }
+          setTaskDetailPopover("");
+          setTaskDetailSelectPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setTaskCommentInputValue("");
+          setPreviewedTaskAttachmentId("");
           const nextDraft = buildProjectScheduleDraft(selectedProject);
           const rawStart = slotInfo && slotInfo.start instanceof Date && !Number.isNaN(slotInfo.start.getTime())
             ? new Date(slotInfo.start)
@@ -33391,6 +34082,7 @@ const html = `<!doctype html>
             onRequestSidebarCollapse();
           }
           setSelectedTaskId("");
+          setDraftTask(null);
           setScheduleEditorMode("create");
           setSelectedScheduleId("");
           setScheduleDraft(nextDraft);
@@ -33401,10 +34093,22 @@ const html = `<!doctype html>
 
         function openScheduleEditor(scheduleRecord) {
           const resolved = normalizePlaygroundScheduleRecord(scheduleRecord || selectedScheduleSnapshot || buildProjectScheduleDraft(selectedProject));
+          scheduleEditorDirtyRef.current = false;
+          scheduleAutosaveQueuedRef.current = null;
+          if (scheduleAutosaveTimerRef.current) {
+            window.clearTimeout(scheduleAutosaveTimerRef.current);
+            scheduleAutosaveTimerRef.current = null;
+          }
+          setTaskDetailPopover("");
+          setTaskDetailSelectPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setTaskCommentInputValue("");
+          setPreviewedTaskAttachmentId("");
           if (typeof onRequestSidebarCollapse === "function") {
             onRequestSidebarCollapse();
           }
           setSelectedTaskId("");
+          setDraftTask(null);
           setScheduleEditorMode("edit");
           setSelectedScheduleId(resolved.id || "");
           setScheduleDraft({
@@ -33431,72 +34135,86 @@ const html = `<!doctype html>
           openScheduleEditor(scheduleRecord);
         }
 
-        async function handleSaveSchedule() {
-          if (!selectedProjectId) return;
+        function getScheduleDraftValidationError(scheduleRecord) {
+          const normalizedSchedule = normalizePlaygroundScheduleRecord(scheduleRecord || buildProjectScheduleDraft(selectedProject));
+          const trimmedTask = String(normalizedSchedule.task || normalizedSchedule.name || "").trim();
+          const normalizedType = normalizedSchedule.scheduleType === "recurring" ? "recurring" : "one-time";
+          const selectedAgent = agentsById[String(normalizedSchedule.agentId || "").trim()] || null;
+          const selectedEnvironment = availableBacklogEnvironments.find((environment) => environment.id === String(normalizedSchedule.environmentId || "").trim()) || null;
 
-          const trimmedTask = String(scheduleDraft?.task || "").trim();
-          const trimmedName = String(scheduleDraft?.name || "").trim();
-          const normalizedType = scheduleDraft?.scheduleType === "recurring" ? "recurring" : "one-time";
-          const selectedAgent = agentsById[String(scheduleDraft?.agentId || "").trim()] || null;
-          const selectedEnvironment = availableBacklogEnvironments.find((environment) => environment.id === String(scheduleDraft?.environmentId || "").trim()) || null;
+          if (!trimmedTask) return "Please enter a task.";
+          if (!selectedAgent) return "Please choose an agent.";
+          if (!selectedEnvironment) return "Please choose an environment.";
+          if (normalizedType === "one-time" && !normalizedSchedule.scheduledTime) return "Please choose a date and time.";
+          if (normalizedType === "recurring" && !String(normalizedSchedule.cronExpression || "").trim()) return "Please enter a cron expression.";
+          return "";
+        }
 
-          if (!trimmedTask) {
-            resetScheduleSaveState("Please enter a task.");
-            return;
+        function buildScheduleSavePayload(scheduleRecord) {
+          const normalizedSchedule = normalizePlaygroundScheduleRecord(scheduleRecord || buildProjectScheduleDraft(selectedProject));
+          const trimmedTask = String(normalizedSchedule.task || normalizedSchedule.name || "").trim();
+          const trimmedName = String(normalizedSchedule.name || "").trim();
+          const normalizedType = normalizedSchedule.scheduleType === "recurring" ? "recurring" : "one-time";
+          const selectedAgent = agentsById[String(normalizedSchedule.agentId || "").trim()] || null;
+          const selectedEnvironment = availableBacklogEnvironments.find((environment) => environment.id === String(normalizedSchedule.environmentId || "").trim()) || null;
+
+          return {
+            normalizedSchedule,
+            payload: {
+              name: trimmedName || trimmedTask.slice(0, 50),
+              description: typeof normalizedSchedule.description === "string" ? normalizedSchedule.description : "",
+              task: trimmedTask,
+              taskColor: getPlaygroundTaskColorId(normalizedSchedule.taskColor),
+              agentId: selectedAgent?.id || null,
+              agentName: selectedAgent?.name || "Agent",
+              environmentId: selectedEnvironment?.id || "",
+              environmentName: selectedEnvironment?.name || "Environment",
+              appId: "runner_project_calendar",
+              contextId: selectedProjectId,
+              contextName: selectedProject?.name || null,
+              scheduleType: normalizedType,
+              scheduledTime: normalizedType === "one-time" ? normalizedSchedule.scheduledTime || null : null,
+              cronExpression: normalizedType === "recurring" ? String(normalizedSchedule.cronExpression || "").trim() : null,
+              timezone: String(normalizedSchedule.timezone || "").trim() || "UTC",
+              enabled: normalizedSchedule.enabled !== false,
+              metadata: {
+                ...(normalizedSchedule.metadata && typeof normalizedSchedule.metadata === "object" ? normalizedSchedule.metadata : {}),
+                taskColor: getPlaygroundTaskColorId(normalizedSchedule.taskColor),
+                priority: normalizedSchedule.priority,
+                releaseId: normalizedSchedule.releaseId || null,
+                dependencyIds: normalizePlaygroundIdList(normalizedSchedule.dependencyIds),
+                enabledSkills: normalizePlaygroundEnabledSkillIds(normalizedSchedule.enabledSkills),
+                attachments: normalizePlaygroundTaskAttachmentList(normalizedSchedule.attachments),
+                connectors: normalizePlaygroundTaskConnectorSelections(normalizedSchedule.connectors),
+                comments: normalizePlaygroundTaskCommentList(normalizedSchedule.comments),
+                projectId: selectedProjectId,
+                projectName: selectedProject?.name || null,
+                source: "runner_playground_project_calendar",
+              },
+            },
+          };
+        }
+
+        async function persistScheduleDraft(scheduleRecord, options = {}) {
+          if (!selectedProjectId) return null;
+
+          const validationError = getScheduleDraftValidationError(scheduleRecord);
+          if (validationError) {
+            if (options.reportError !== false) {
+              resetScheduleSaveState(validationError);
+            }
+            return null;
           }
 
-          if (!selectedAgent) {
-            resetScheduleSaveState("Please choose an agent.");
-            return;
-          }
-
-          if (!selectedEnvironment) {
-            resetScheduleSaveState("Please choose an environment.");
-            return;
-          }
-
-          if (normalizedType === "one-time" && !scheduleDraft?.scheduledTime) {
-            resetScheduleSaveState("Please choose a date and time.");
-            return;
-          }
-
-          if (normalizedType === "recurring" && !String(scheduleDraft?.cronExpression || "").trim()) {
-            resetScheduleSaveState("Please enter a cron expression.");
-            return;
-          }
-
+          const { normalizedSchedule, payload } = buildScheduleSavePayload(scheduleRecord);
           setScheduleSaveState({
             isSaving: true,
             error: "",
           });
 
-          const payload = {
-            name: trimmedName || trimmedTask.slice(0, 50),
-            description: typeof scheduleDraft?.description === "string" ? scheduleDraft.description : "",
-            task: trimmedTask,
-            agentId: selectedAgent.id,
-            agentName: selectedAgent.name || "Agent",
-            environmentId: selectedEnvironment.id,
-            environmentName: selectedEnvironment.name || "Environment",
-            appId: "runner_project_calendar",
-            contextId: selectedProjectId,
-            contextName: selectedProject?.name || null,
-            scheduleType: normalizedType,
-            scheduledTime: normalizedType === "one-time" ? scheduleDraft?.scheduledTime || null : null,
-            cronExpression: normalizedType === "recurring" ? String(scheduleDraft?.cronExpression || "").trim() : null,
-            timezone: String(scheduleDraft?.timezone || "").trim() || "UTC",
-            enabled: scheduleDraft?.enabled !== false,
-            metadata: {
-              ...(scheduleDraft?.metadata && typeof scheduleDraft.metadata === "object" ? scheduleDraft.metadata : {}),
-              projectId: selectedProjectId,
-              projectName: selectedProject?.name || null,
-              source: "runner_playground_project_calendar",
-            },
-          };
-
           try {
-            const isEditing = scheduleEditorMode === "edit" && scheduleDraft?.id;
-            const targetUrl = backendUrl + "/projects/" + encodeURIComponent(selectedProjectId) + "/schedules" + (isEditing ? "/" + encodeURIComponent(scheduleDraft.id) : "");
+            const isEditing = (options.mode || scheduleEditorMode) === "edit" && normalizedSchedule?.id;
+            const targetUrl = backendUrl + "/projects/" + encodeURIComponent(selectedProjectId) + "/schedules" + (isEditing ? "/" + encodeURIComponent(normalizedSchedule.id) : "");
             const response = await fetch(targetUrl, {
               method: isEditing ? "PATCH" : "POST",
               headers: requestHeaders,
@@ -33509,7 +34227,7 @@ const html = `<!doctype html>
 
             const savedSchedule = getPlaygroundScheduleResponseRecord(data) || normalizePlaygroundScheduleRecord({
               ...payload,
-              id: isEditing ? scheduleDraft.id : "",
+              id: isEditing ? normalizedSchedule.id : "",
             });
             await loadProjectSchedules(selectedProjectId);
             if (savedSchedule?.id) {
@@ -33517,18 +34235,68 @@ const html = `<!doctype html>
               setScheduleEditorMode("edit");
               setScheduleDraft(savedSchedule);
               setScheduleViewMode("setup");
-            } else {
-              closeScheduleDetail();
             }
+            scheduleEditorDirtyRef.current = false;
             resetScheduleSaveState("");
+            return savedSchedule;
           } catch (error) {
-            resetScheduleSaveState(error instanceof Error ? error.message : "Failed to save schedule.");
+            const message = error instanceof Error ? error.message : "Failed to save schedule.";
+            if (options.reportError !== false) {
+              resetScheduleSaveState(message);
+            } else {
+              setScheduleSaveState({
+                isSaving: false,
+                error: message,
+              });
+            }
+            return null;
           } finally {
             setScheduleSaveState((current) => ({
               ...current,
               isSaving: false,
             }));
           }
+        }
+
+        async function flushQueuedScheduleAutosave() {
+          if (scheduleAutosaveInFlightRef.current || !selectedProjectId) {
+            return;
+          }
+
+          scheduleAutosaveInFlightRef.current = true;
+          try {
+            while (scheduleAutosaveQueuedRef.current) {
+              const nextScheduleToSave = normalizePlaygroundScheduleRecord(scheduleAutosaveQueuedRef.current);
+              scheduleAutosaveQueuedRef.current = null;
+              if (getScheduleDraftValidationError(nextScheduleToSave)) {
+                continue;
+              }
+              const savedSchedule = await persistScheduleDraft(nextScheduleToSave, { reportError: true });
+              if (!savedSchedule) {
+                break;
+              }
+            }
+          } finally {
+            scheduleAutosaveInFlightRef.current = false;
+          }
+        }
+
+        function queueScheduleAutosave(scheduleRecord) {
+          if (!selectedProjectId) {
+            return;
+          }
+          scheduleAutosaveQueuedRef.current = normalizePlaygroundScheduleRecord(scheduleRecord);
+          if (scheduleAutosaveTimerRef.current) {
+            window.clearTimeout(scheduleAutosaveTimerRef.current);
+          }
+          scheduleAutosaveTimerRef.current = window.setTimeout(() => {
+            scheduleAutosaveTimerRef.current = null;
+            void flushQueuedScheduleAutosave();
+          }, 450);
+        }
+
+        async function handleSaveSchedule() {
+          await persistScheduleDraft(scheduleDraft, { reportError: true });
         }
 
         async function handleDeleteSchedule(scheduleId) {
@@ -33610,7 +34378,7 @@ const html = `<!doctype html>
               throw new Error(data?.message || data?.error || "Projects API unavailable.");
             }
 
-            const nextProjects = parsePlaygroundProjectListResponse(data);
+            const nextProjects = sortPlaygroundProjectsByRecent(parsePlaygroundProjectListResponse(data));
             setProjects(nextProjects);
             setProjectLoadState({
               status: "ready",
@@ -33832,9 +34600,10 @@ const html = `<!doctype html>
           }
           const frame = window.requestAnimationFrame(() => {
             resizeTaskDescriptionTextarea(scheduleTaskTextareaRef.current);
+            resizeTaskDescriptionTextarea(scheduleDescriptionTextareaRef.current);
           });
           return () => window.cancelAnimationFrame(frame);
-        }, [scheduleDraft.task, scheduleViewMode]);
+        }, [scheduleDraft.description, scheduleDraft.task, scheduleViewMode]);
 
         useEffect(() => {
           if (!projectSidebarPopover) return undefined;
@@ -34116,7 +34885,7 @@ const html = `<!doctype html>
         }, [scheduleViewMode, selectedScheduleId, taskView]);
 
         useEffect(() => {
-          if (!selectedTaskId || taskView === "calendar" || taskView === "threads") {
+          if (!selectedTaskId || taskView === "threads") {
             setTaskDetailPopover("");
             setTaskSkillsPopoverOpen(false);
             setTaskConnectorBrowserOpen(false);
@@ -34145,7 +34914,18 @@ const html = `<!doctype html>
         }, [selectedTaskId]);
 
         useEffect(() => {
-          if (!selectedProjectId || !selectedTaskId || taskView === "calendar") {
+          scheduleDraftRef.current = scheduleDraft;
+        }, [scheduleDraft]);
+
+        useEffect(() => () => {
+          if (scheduleAutosaveTimerRef.current) {
+            window.clearTimeout(scheduleAutosaveTimerRef.current);
+            scheduleAutosaveTimerRef.current = null;
+          }
+        }, []);
+
+        useEffect(() => {
+          if (!selectedProjectId || !selectedTaskId || taskView === "threads") {
             return;
           }
 
@@ -34201,8 +34981,14 @@ const html = `<!doctype html>
 
         useEffect(() => {
           setIsScheduleTaskEditing(false);
+          setIsScheduleDescriptionEditing(false);
           setScheduleDetailsCollapsed(false);
+          setTaskDetailSelectPopover("");
         }, [scheduleViewMode, selectedScheduleId]);
+
+        useEffect(() => {
+          setTaskDetailSelectPopover("");
+        }, [scheduleDetailsCollapsed]);
 
         useEffect(() => {
           if (!selectedReleaseId) return;
@@ -34662,7 +35448,7 @@ const html = `<!doctype html>
 
         useLayoutEffect(() => {
           resizeTaskCommentTextarea(taskCommentTextareaRef.current);
-        }, [draftTask?.id, taskCommentInputValue]);
+        }, [draftTask?.id, isCalendarScheduleDetailMode, selectedScheduleId, taskCommentInputValue]);
 
         useEffect(() => {
           const textarea = taskDescriptionTextareaRef.current;
@@ -34712,11 +35498,11 @@ const html = `<!doctype html>
 
         useEffect(() => {
           if (!previewedTaskAttachmentId) return;
-          if (draftTask?.attachments?.some((attachment) => attachment.id === previewedTaskAttachmentId)) {
+          if (activeDetailAttachments.some((attachment) => attachment.id === previewedTaskAttachmentId)) {
             return;
           }
           setPreviewedTaskAttachmentId("");
-        }, [draftTask?.attachments, previewedTaskAttachmentId]);
+        }, [activeDetailAttachments, previewedTaskAttachmentId]);
 
         useEffect(() => () => {
           taskAttachmentObjectUrlsRef.current.forEach((url) => {
@@ -35533,6 +36319,27 @@ const html = `<!doctype html>
           }
         }
 
+        function handleAddScheduleComment() {
+          const nextCommentBody = String(taskCommentInputValue || "").replaceAll(String.fromCharCode(13), "").trim();
+          if (!nextCommentBody) {
+            return;
+          }
+          const createdComment = normalizePlaygroundTaskCommentRecord({
+            id: "schedule_comment_" + Date.now(),
+            body: nextCommentBody,
+            text: nextCommentBody,
+            authorType: "user",
+            authorName: currentUserName || "You",
+            createdAt: new Date().toISOString(),
+          });
+          updateScheduleDraft((current) => ({
+            ...(current || buildProjectScheduleDraft(selectedProject)),
+            comments: normalizePlaygroundTaskCommentList((current?.comments || []).concat(createdComment)),
+          }));
+          setTaskCommentInputValue("");
+          resetScheduleSaveState("");
+        }
+
         function toggleTaskSkill(skillId) {
           if (taskHasStartedThread(draftTask)) {
             return;
@@ -35566,6 +36373,33 @@ const html = `<!doctype html>
           }), { autosave: true });
         }
 
+        function toggleScheduleSkill(skillId) {
+          const normalizedSkillId = normalizePlaygroundEnabledSkillIds([skillId])[0];
+          if (!normalizedSkillId) {
+            return;
+          }
+          updateScheduleDraft((current) => {
+            const currentSkillIds = normalizePlaygroundEnabledSkillIds(current?.enabledSkills);
+            return {
+              ...(current || buildProjectScheduleDraft(selectedProject)),
+              enabledSkills: currentSkillIds.includes(normalizedSkillId)
+                ? currentSkillIds.filter((value) => value !== normalizedSkillId)
+                : currentSkillIds.concat(normalizedSkillId),
+            };
+          });
+        }
+
+        function removeScheduleSkill(skillId) {
+          const normalizedSkillId = normalizePlaygroundEnabledSkillIds([skillId])[0];
+          if (!normalizedSkillId) {
+            return;
+          }
+          updateScheduleDraft((current) => ({
+            ...(current || buildProjectScheduleDraft(selectedProject)),
+            enabledSkills: normalizePlaygroundEnabledSkillIds(current?.enabledSkills).filter((value) => value !== normalizedSkillId),
+          }));
+        }
+
         function closeTaskScheduleDialog() {
           if (!taskScheduleDialogState) {
             return;
@@ -35581,11 +36415,48 @@ const html = `<!doctype html>
           }, 180);
         }
 
-        function openTaskScheduleDialog() {
-          if (!draftTask?.id || taskHasStartedThread(draftTask)) {
+        function buildTaskScheduleDialogStateFromTask(taskRecord) {
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const scheduleConfig = getPlaygroundTaskScheduleConfig(normalizedTask);
+          const presetId = getPlaygroundTaskSchedulePresetId(scheduleConfig.cronExpression);
+          return {
+            target: "task",
+            scheduleType: scheduleConfig.scheduleType,
+            start: toPlaygroundDatetimeLocalValue(scheduleConfig.scheduledStartAt),
+            cronExpression: scheduleConfig.cronExpression || getPlaygroundTaskSchedulePreset(presetId).cron,
+            presetId,
+            timezone: scheduleConfig.timezone || "UTC",
+            enabled: scheduleConfig.enabled !== false,
+            error: "",
+          };
+        }
+
+        function buildTaskScheduleDialogStateFromSchedule(scheduleRecord) {
+          const normalizedSchedule = normalizePlaygroundScheduleRecord(scheduleRecord);
+          const presetId = getPlaygroundTaskSchedulePresetId(normalizedSchedule.cronExpression);
+          return {
+            target: "schedule",
+            scheduleType: normalizedSchedule.scheduleType === "recurring" ? "recurring" : "one-time",
+            start: toPlaygroundDatetimeLocalValue(normalizedSchedule.scheduledTime),
+            cronExpression: normalizedSchedule.cronExpression || getPlaygroundTaskSchedulePreset(presetId).cron,
+            presetId,
+            timezone: normalizedSchedule.timezone || "UTC",
+            enabled: normalizedSchedule.enabled !== false,
+            error: "",
+          };
+        }
+
+        function openTaskScheduleDialog(target = "task") {
+          if (target === "schedule") {
+            if (scheduleViewMode !== "setup") {
+              return;
+            }
+          } else if (!draftTask?.id || taskHasStartedThread(draftTask)) {
             return;
           }
           setTaskDetailPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setTaskDetailSelectPopover("");
           if (taskScheduleDialogState) {
             closeTaskScheduleDialog();
             return;
@@ -35595,18 +36466,25 @@ const html = `<!doctype html>
             taskScheduleDialogTimerRef.current = null;
           }
           setTaskScheduleDialogPhase("enter");
-          setTaskScheduleDialogState({
-            start: toPlaygroundDatetimeLocalValue(draftTask.scheduledStartAt),
-            error: "",
-          });
+          setTaskScheduleDialogState(
+            target === "schedule"
+              ? buildTaskScheduleDialogStateFromSchedule(scheduleDraft)
+              : buildTaskScheduleDialogStateFromTask(draftTask)
+          );
         }
 
         function handleTaskScheduleDialogSave() {
-          if (!draftTask?.id || !taskScheduleDialogState) {
+          if (!taskScheduleDialogState) {
             return;
           }
 
           const nextStart = fromPlaygroundDatetimeLocalValue(taskScheduleDialogState.start);
+          const nextScheduleType = taskScheduleDialogState.scheduleType === "recurring" ? "recurring" : "one-time";
+          const nextTimezone = String(taskScheduleDialogState.timezone || "").trim() || "UTC";
+          const nextCronExpression = nextScheduleType === "recurring"
+            ? String(taskScheduleDialogState.cronExpression || "").trim()
+            : null;
+
           if (!nextStart) {
             setTaskScheduleDialogState((current) => current
               ? {
@@ -35618,15 +36496,64 @@ const html = `<!doctype html>
             return;
           }
 
+          if (nextScheduleType === "recurring" && !nextCronExpression) {
+            setTaskScheduleDialogState((current) => current
+              ? {
+                  ...current,
+                  error: "Choose a recurring schedule.",
+                }
+              : current
+            );
+            return;
+          }
+
+          if (taskScheduleDialogState.target === "schedule") {
+            updateScheduleDraft((current) => ({
+              ...(current || buildProjectScheduleDraft(selectedProject)),
+              scheduleType: nextScheduleType,
+              scheduledTime: nextStart,
+              nextRunAt: nextStart,
+              cronExpression: nextScheduleType === "recurring" ? nextCronExpression : null,
+              timezone: nextTimezone,
+              enabled: taskScheduleDialogState.enabled !== false,
+            }));
+            closeTaskScheduleDialog();
+            return;
+          }
+
+          if (!draftTask?.id) {
+            return;
+          }
+
           updateDraftTask((current) => ({
             ...current,
             scheduledStartAt: nextStart,
             scheduledEndAt: null,
+            scheduleType: nextScheduleType,
+            cronExpression: nextScheduleType === "recurring" ? nextCronExpression : null,
+            scheduleTimezone: nextTimezone,
+            scheduleEnabled: taskScheduleDialogState.enabled !== false,
           }), { autosave: true });
           closeTaskScheduleDialog();
         }
 
         function handleTaskScheduleDialogClear() {
+          if (!taskScheduleDialogState) {
+            return;
+          }
+
+          if (taskScheduleDialogState.target === "schedule") {
+            updateScheduleDraft((current) => ({
+              ...(current || buildProjectScheduleDraft(selectedProject)),
+              scheduleType: "one-time",
+              scheduledTime: null,
+              nextRunAt: null,
+              cronExpression: null,
+            }));
+            closeTaskScheduleDialog();
+            return;
+          }
+
           if (!draftTask?.id) {
             return;
           }
@@ -35634,6 +36561,8 @@ const html = `<!doctype html>
             ...current,
             scheduledStartAt: null,
             scheduledEndAt: null,
+            scheduleType: "one-time",
+            cronExpression: null,
           }), { autosave: true });
           closeTaskScheduleDialog();
         }
@@ -35691,15 +36620,28 @@ const html = `<!doctype html>
           queueTaskAutosave(draftTask);
         }
 
-        function updateScheduleDraftField(field, value) {
-          setScheduleDraft((current) => ({
-            ...(current || buildProjectScheduleDraft(selectedProject)),
-            [field]: value,
-          }));
+        function updateScheduleDraft(updater, options = {}) {
+          const baseSchedule = normalizePlaygroundScheduleRecord(scheduleDraft || buildProjectScheduleDraft(selectedProject));
+          const nextSchedule = normalizePlaygroundScheduleRecord(
+            typeof updater === "function" ? updater(baseSchedule) : updater
+          );
+          setScheduleDraft(nextSchedule);
+          scheduleEditorDirtyRef.current = true;
           setScheduleSaveState((current) => ({
             ...current,
             error: "",
           }));
+          if (options.autosave !== false) {
+            queueScheduleAutosave(nextSchedule);
+          }
+          return nextSchedule;
+        }
+
+        function updateScheduleDraftField(field, value, options = {}) {
+          return updateScheduleDraft((current) => ({
+            ...current,
+            [field]: value,
+          }), options);
         }
 
         function handleSelectTask(taskId) {
@@ -35722,7 +36664,6 @@ const html = `<!doctype html>
           setSelectedScheduleId("");
           setScheduleViewMode("calendar");
           setScheduleEditorMode("create");
-          setTaskView("backlog");
           setSelectedTaskId(taskId);
           if (typeof onRequestSidebarCollapse === "function") {
             onRequestSidebarCollapse();
@@ -35834,6 +36775,11 @@ const html = `<!doctype html>
             parentTaskId: mergedTask.parentTaskId,
             assigneeAgentId: mergedTask.assigneeAgentId,
             environmentId: mergedTask.environmentId,
+            taskColor: mergedTask.taskColor,
+            scheduleType: mergedTask.scheduleType,
+            cronExpression: mergedTask.cronExpression,
+            scheduleTimezone: mergedTask.scheduleTimezone,
+            scheduleEnabled: mergedTask.scheduleEnabled,
             attachments: mergedTask.attachments,
             enabledSkills: mergedTask.enabledSkills,
             connectors: mergedTask.connectors,
@@ -36955,7 +37901,7 @@ const html = `<!doctype html>
           const normalizedSource = getPlaygroundTaskConnectorSource(source) || "github";
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
-          syncTaskConnectorBrowserSelectionsFromTask(draftTask);
+          syncTaskConnectorBrowserSelectionsFromTask(isCalendarScheduleDetailMode ? scheduleDraft : draftTask);
           switchTaskConnectorBrowserSource(normalizedSource);
           setTaskConnectorBrowserOpen(true);
         }
@@ -37035,11 +37981,12 @@ const html = `<!doctype html>
         }
 
         async function handleApplyTaskConnectorSelection() {
-          if (!draftTask?.id) {
+          if (!draftTask?.id && !isCalendarScheduleDetailMode) {
             return;
           }
 
-          const currentSelection = getDraftTaskConnectorSelection(taskConnectorBrowserCurrentSource);
+          const connectorRecord = isCalendarScheduleDetailMode ? scheduleDraft : draftTask;
+          const currentSelection = getDraftTaskConnectorSelection(taskConnectorBrowserCurrentSource, connectorRecord);
           const selectedIds = taskConnectorBrowserCurrentSource === "notion"
             ? (taskConnectorBrowserSelectedNotionId ? [taskConnectorBrowserSelectedNotionId] : [])
             : (taskConnectorBrowserSelectedIds[taskConnectorBrowserCurrentKey] || []);
@@ -37057,6 +38004,18 @@ const html = `<!doctype html>
           }
 
           if (taskConnectorBrowserCurrentSource === "notion") {
+            if (isCalendarScheduleDetailMode) {
+              updateScheduleDraft((current) => {
+                const nextConnectors = normalizePlaygroundTaskConnectorSelections(current?.connectors);
+                nextConnectors[taskConnectorBrowserCurrentKey] = nextSelection;
+                return {
+                  ...(current || buildProjectScheduleDraft(selectedProject)),
+                  connectors: nextConnectors,
+                };
+              });
+              closeTaskConnectorBrowser();
+              return;
+            }
             updateDraftTask((current) => {
               const nextConnectors = normalizePlaygroundTaskConnectorSelections(current.connectors);
               nextConnectors[taskConnectorBrowserCurrentKey] = nextSelection;
@@ -37116,8 +38075,9 @@ const html = `<!doctype html>
             }
           }
 
+          const currentAttachments = normalizePlaygroundTaskAttachmentList(connectorRecord?.attachments);
           const removedAttachments = getPlaygroundTaskConnectorRemovedAttachments(
-            draftTask.attachments,
+            currentAttachments,
             taskConnectorBrowserCurrentSource,
             selectedItems
           );
@@ -37128,20 +38088,37 @@ const html = `<!doctype html>
             }
           }
 
-          updateDraftTask((current) => {
-            const nextConnectors = normalizePlaygroundTaskConnectorSelections(current.connectors);
-            nextConnectors[taskConnectorBrowserCurrentKey] = nextSelection;
-            return {
-              ...current,
-              connectors: nextConnectors,
-              attachments: reconcilePlaygroundTaskConnectorAttachments(
-                current.attachments,
-                taskConnectorBrowserCurrentSource,
-                selectedItems,
-                uploadedAttachments
-              ),
-            };
-          }, { autosave: true });
+          if (isCalendarScheduleDetailMode) {
+            updateScheduleDraft((current) => {
+              const nextConnectors = normalizePlaygroundTaskConnectorSelections(current?.connectors);
+              nextConnectors[taskConnectorBrowserCurrentKey] = nextSelection;
+              return {
+                ...(current || buildProjectScheduleDraft(selectedProject)),
+                connectors: nextConnectors,
+                attachments: reconcilePlaygroundTaskConnectorAttachments(
+                  current?.attachments,
+                  taskConnectorBrowserCurrentSource,
+                  selectedItems,
+                  uploadedAttachments
+                ),
+              };
+            });
+          } else {
+            updateDraftTask((current) => {
+              const nextConnectors = normalizePlaygroundTaskConnectorSelections(current.connectors);
+              nextConnectors[taskConnectorBrowserCurrentKey] = nextSelection;
+              return {
+                ...current,
+                connectors: nextConnectors,
+                attachments: reconcilePlaygroundTaskConnectorAttachments(
+                  current.attachments,
+                  taskConnectorBrowserCurrentSource,
+                  selectedItems,
+                  uploadedAttachments
+                ),
+              };
+            }, { autosave: true });
+          }
           setTaskAttachmentTransferState((current) => ({
             ...current,
             error: "",
@@ -37198,7 +38175,7 @@ const html = `<!doctype html>
         }
 
         async function appendTaskAttachmentFiles(files, options = {}) {
-          if (!draftTask?.id) {
+          if (!draftTask?.id && !isCalendarScheduleDetailMode) {
             return false;
           }
           const normalizedFiles = (Array.isArray(files) ? files : []).filter((file) =>
@@ -37221,8 +38198,9 @@ const html = `<!doctype html>
             return false;
           }
 
-          const sourceTaskId = draftTask.id;
+          const sourceTaskId = draftTask?.id || "";
           let lastTask = null;
+          let lastSchedule = null;
 
           setTaskAttachmentTransferState((current) => ({
             ...current,
@@ -37236,6 +38214,10 @@ const html = `<!doctype html>
                 environmentId: targetEnvironmentId,
                 sourcePath: Array.isArray(options.sourcePaths) ? options.sourcePaths[index] : "",
               });
+              if (isCalendarScheduleDetailMode) {
+                lastSchedule = appendUploadedScheduleAttachments([uploadedAttachment]);
+                continue;
+              }
               if (selectedTaskIdRef.current !== sourceTaskId) {
                 continue;
               }
@@ -37247,7 +38229,7 @@ const html = `<!doctype html>
               error: "",
               isProcessing: false,
             }));
-            return Boolean(lastTask);
+            return Boolean(lastTask || lastSchedule);
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to upload attachment.";
             setTaskAttachmentTransferState((current) => ({
@@ -37524,12 +38506,33 @@ const html = `<!doctype html>
           }), { autosave: true });
         }
 
+        function handleRemoveScheduleAttachment(attachmentId) {
+          const targetAttachment = (Array.isArray(scheduleDraft?.attachments) ? scheduleDraft.attachments : []).find((attachment) => attachment.id === attachmentId) || null;
+          if (!targetAttachment) return;
+          revokeTaskAttachmentObjectUrl(targetAttachment.previewUrl);
+          revokeTaskAttachmentObjectUrl(targetAttachment.url);
+          if (previewedTaskAttachmentId === attachmentId) {
+            setPreviewedTaskAttachmentId("");
+          }
+          updateScheduleDraft((current) => ({
+            ...(current || buildProjectScheduleDraft(selectedProject)),
+            attachments: normalizePlaygroundTaskAttachmentList((current?.attachments || []).filter((attachment) => attachment.id !== attachmentId)),
+            connectors: removePlaygroundAttachmentFromConnectorSelections(current?.connectors, targetAttachment),
+          }));
+        }
+
         function renderTaskAttachmentChip(attachment, options = {}) {
           const resolvedAttachment = buildResolvedTaskAttachmentRecord(attachment) || attachment;
           const previewUrl = resolveTaskAttachmentPreviewUrl(resolvedAttachment);
           const isImage = resolvedAttachment.type === "image" || String(resolvedAttachment.mimeType || "").toLowerCase().startsWith("image/");
           const isActive = previewedTaskAttachmentId === resolvedAttachment.id;
           const isRemovable = options.removable !== false;
+          const handlePreview = typeof options.onPreview === "function"
+            ? options.onPreview
+            : handleTaskAttachmentPreviewToggle;
+          const handleRemove = typeof options.onRemove === "function"
+            ? options.onRemove
+            : handleRemoveTaskAttachment;
           const imageFetchHeaders = previewUrl && !String(previewUrl).startsWith("blob:") && !String(previewUrl).startsWith("data:")
             ? requestHeaders
             : undefined;
@@ -37549,7 +38552,7 @@ const html = `<!doctype html>
                           className: "runner-attachment-image-button is-clickable",
                           imageClassName: "runner-attachment-image-preview",
                           fetchHeaders: imageFetchHeaders,
-                          onActivate: () => handleTaskAttachmentPreviewToggle(resolvedAttachment),
+                          onActivate: () => handlePreview(resolvedAttachment),
                         })
                       : React.createElement("span", { className: "runner-attachment-image-placeholder", "aria-hidden": "true" },
                           React.createElement("img", { src: PLAYGROUND_TEXT_FILE_ICON_URL, alt: "", draggable: false })
@@ -37561,7 +38564,7 @@ const html = `<!doctype html>
                         className: "runner-attachment-remove runner-attachment-remove-image",
                         onClick: (event) => {
                           event.stopPropagation();
-                          handleRemoveTaskAttachment(resolvedAttachment.id);
+                          handleRemove(resolvedAttachment.id);
                         },
                         "aria-label": "Remove " + resolvedAttachment.filename,
                       }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
@@ -37571,7 +38574,7 @@ const html = `<!doctype html>
                   React.createElement("button", {
                     type: "button",
                     className: "runner-attachment-file-button",
-                    onClick: () => handleTaskAttachmentPreviewToggle(resolvedAttachment),
+                    onClick: () => handlePreview(resolvedAttachment),
                     "aria-label": "Preview " + resolvedAttachment.filename,
                   },
                     React.createElement("span", { className: "runner-attachment-file-icon-slot", "aria-hidden": "true" },
@@ -37590,7 +38593,7 @@ const html = `<!doctype html>
                         className: "runner-attachment-remove runner-attachment-remove-file",
                         onClick: (event) => {
                           event.stopPropagation();
-                          handleRemoveTaskAttachment(resolvedAttachment.id);
+                          handleRemove(resolvedAttachment.id);
                         },
                         "aria-label": "Remove " + resolvedAttachment.filename,
                       }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
@@ -38008,7 +39011,10 @@ const html = `<!doctype html>
           const isConnected = Boolean(currentConfig?.connected);
           const currentError = taskConnectorBrowserErrors[taskConnectorBrowserCurrentKey] || "";
           const isLoading = Boolean(taskConnectorBrowserLoadingState[taskConnectorBrowserCurrentKey]);
-          const currentSavedSelection = getDraftTaskConnectorSelection(taskConnectorBrowserCurrentSource);
+          const currentSavedSelection = getDraftTaskConnectorSelection(
+            taskConnectorBrowserCurrentSource,
+            isCalendarScheduleDetailMode ? scheduleDraft : draftTask
+          );
           const hasSelection = taskConnectorBrowserSelectedFileIds.length > 0;
           const primaryActionLabel = hasSelection
             ? (taskConnectorBrowserCurrentSource === "notion"
@@ -38377,7 +39383,11 @@ const html = `<!doctype html>
             return null;
           }
 
-          const hasExistingSchedule = Boolean(draftTask?.scheduledStartAt);
+          const hasExistingSchedule = taskScheduleDialogState.target === "schedule"
+            ? Boolean(scheduleDraft?.scheduledTime || (scheduleDraft?.scheduleType === "recurring" && scheduleDraft?.cronExpression))
+            : Boolean(draftTask?.scheduledStartAt || (draftTask?.scheduleType === "recurring" && draftTask?.cronExpression));
+          const isRecurring = taskScheduleDialogState.scheduleType === "recurring";
+          const selectedPresetId = taskScheduleDialogState.presetId || getPlaygroundTaskSchedulePresetId(taskScheduleDialogState.cronExpression);
           const animationClass = taskScheduleDialogPhase === "exit"
             ? " is-exit"
             : " is-enter";
@@ -38401,34 +39411,90 @@ const html = `<!doctype html>
               }, React.createElement(Check, { className: "playground-tasks-schedule-topbar-icon", strokeWidth: 2 }))
             ),
             React.createElement("div", { className: "playground-tasks-schedule-body" },
-              React.createElement("div", { className: "playground-tasks-schedule-row" },
-                React.createElement("label", { className: "playground-tasks-schedule-label" }, "Run at"),
-                hasExistingSchedule
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-tasks-schedule-remove",
-                      onClick: handleTaskScheduleDialogClear,
-                    },
-                      React.createElement(Trash2, { className: "playground-tasks-schedule-remove-icon", strokeWidth: 1.75 }),
-                      "Remove"
+              React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
+                React.createElement("div", { className: "tb-popup-nav" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "tb-popup-nav-button" + (isRecurring ? "" : " active"),
+                    onClick: () => setTaskScheduleDialogState((current) => current ? {
+                      ...current,
+                      scheduleType: "one-time",
+                      error: "",
+                    } : current),
+                  }, "One-time"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "tb-popup-nav-button" + (isRecurring ? " active" : ""),
+                    onClick: () => setTaskScheduleDialogState((current) => current ? {
+                      ...current,
+                      scheduleType: "recurring",
+                      cronExpression: current.cronExpression || getPlaygroundTaskSchedulePreset(current.presetId).cron,
+                      error: "",
+                    } : current),
+                  }, "Recurring")
+                )
+              ),
+              React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced" },
+                React.createElement("div", { className: "tb-popup-field-row" },
+                  React.createElement("label", { className: "tb-popup-field-label" }, "Run at"),
+                  hasExistingSchedule
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-link-button tb-popup-link-button-inline",
+                        onClick: handleTaskScheduleDialogClear,
+                      },
+                        React.createElement(Trash2, { className: "tb-popup-link-chevron", strokeWidth: 1.75 }),
+                        "Remove"
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "tb-popup-select-wrap tb-popup-select-wrap-schedule" },
+                  React.createElement("input", {
+                    type: "datetime-local",
+                    className: "tb-popup-select tb-popup-select-schedule playground-tasks-schedule-input",
+                    value: taskScheduleDialogState.start,
+                    min: toPlaygroundDatetimeLocalValue(new Date()),
+                    onChange: (event) => setTaskScheduleDialogState((current) => current
+                      ? {
+                          ...current,
+                          start: event.target.value,
+                          error: "",
+                        }
+                      : current
+                    ),
+                    autoFocus: true,
+                  })
+                ),
+                isRecurring
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement("div", { className: "tb-popup-field-row tb-popup-field-row-followup" },
+                        React.createElement("label", { className: "tb-popup-field-label" }, "Repeat")
+                      ),
+                      React.createElement("div", { className: "tb-popup-preset-list" },
+                        PLAYGROUND_TASK_SCHEDULE_PRESETS.map((preset) =>
+                          React.createElement("button", {
+                              key: preset.id,
+                              type: "button",
+                              className: "tb-popup-preset-row" + (selectedPresetId === preset.id ? " selected" : ""),
+                              onClick: () => setTaskScheduleDialogState((current) => current ? {
+                                ...current,
+                                presetId: preset.id,
+                                cronExpression: preset.cron,
+                                error: "",
+                              } : current),
+                            },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              selectedPresetId === preset.id
+                                ? React.createElement(Check, { className: "tb-popup-check", strokeWidth: 1.75 })
+                                : null
+                            ),
+                            React.createElement("span", null, preset.label)
+                          )
+                        )
+                      )
                     )
                   : null
               ),
-              React.createElement("input", {
-                type: "datetime-local",
-                className: "playground-tasks-schedule-input",
-                value: taskScheduleDialogState.start,
-                min: toPlaygroundDatetimeLocalValue(new Date()),
-                onChange: (event) => setTaskScheduleDialogState((current) => current
-                  ? {
-                      ...current,
-                      start: event.target.value,
-                      error: "",
-                    }
-                  : current
-                ),
-                autoFocus: true,
-              }),
               taskScheduleDialogState.error
                 ? React.createElement("div", { className: "playground-environments-error" }, taskScheduleDialogState.error)
                 : null
@@ -39231,13 +40297,14 @@ const html = `<!doctype html>
               React.createElement("div", {
                   role: "button",
                   tabIndex: 0,
-                  className: "playground-tasks-backlog-item"
+                className: "playground-tasks-backlog-item"
                     + (selectedTaskId === task.id ? " is-active" : "")
                     + (depth > 0 ? " is-subtask" : "")
                     + (isDraggable ? " is-draggable" : "")
                     + (backlogDraggingTaskId === task.id ? " is-dragging" : "")
                     + (isDropBefore ? " is-drop-before" : "")
                     + (isDropAfter ? " is-drop-after" : ""),
+                  style: getPlaygroundTaskColorStyle(task.taskColor),
                   draggable: isDraggable,
                   onClick: () => handleSelectTask(task.id),
                   onKeyDown: (event) => {
@@ -39875,6 +40942,7 @@ const html = `<!doctype html>
                   + (selectedTaskId === task.id ? " is-active" : "")
                   + (isDraggable ? " is-draggable" : "")
                   + (boardDraggingTaskId === task.id ? " is-dragging" : ""),
+                style: getPlaygroundTaskColorStyle(task.taskColor),
                 onClick: () => handleSelectTask(task.id),
                 draggable: isDraggable,
                 onDragStart: (event) => {
@@ -40041,20 +41109,163 @@ const html = `<!doctype html>
             );
           }
 
-          const isRecurring = scheduleDraft?.scheduleType === "recurring";
           const isEditing = scheduleEditorMode === "edit" && Boolean(scheduleDraft?.id);
           const scheduleStats = selectedScheduleSnapshot || scheduleDraft || buildProjectScheduleDraft(selectedProject);
           const statusMeta = getPlaygroundScheduleStatusMeta(scheduleStats);
-          const totalRuns = Number(scheduleStats?.successCount || 0) + Number(scheduleStats?.failureCount || 0);
-          const successRatio = totalRuns > 0 ? (Number(scheduleStats?.successCount || 0) / totalRuns) * 100 : 0;
-          const failureRatio = totalRuns > 0 ? (Number(scheduleStats?.failureCount || 0) / totalRuns) * 100 : 0;
-          const panelTitle = scheduleDraft?.name || (isEditing ? "Scheduled Task" : "New Scheduled Task");
+          const panelTitle = scheduleDraft?.name || "New Scheduled Task";
+          const dependencyCandidates = sortedTasks
+            .slice()
+            .sort((left, right) => {
+              const leftTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[left.id] || left.ticketNumber);
+              const rightTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[right.id] || right.ticketNumber);
+              if (leftTicketNumber !== rightTicketNumber) {
+                return leftTicketNumber - rightTicketNumber;
+              }
+              return String(left.title || "").localeCompare(String(right.title || ""));
+            });
+          const activeSchedulePriorityPresentation = getPlaygroundTaskPriorityPresentation(scheduleDraft?.priority);
+          const activeScheduleColorPresentation = getPlaygroundTaskColorPresentation(scheduleDraft?.taskColor);
+          const ActiveSchedulePriorityIcon = activeSchedulePriorityPresentation.Icon;
+          const selectedScheduleAgent = agentsById[String(scheduleDraft?.agentId || "").trim()] || null;
+          const selectedScheduleEnvironment = availableBacklogEnvironments.find((environment) => environment.id === String(scheduleDraft?.environmentId || "").trim()) || null;
+          const activeScheduleReleaseId = String(scheduleDraft?.releaseId || "").trim();
+          const activeScheduleReleaseLabel = activeScheduleReleaseId
+            ? (releasesById[activeScheduleReleaseId]?.name || "Release")
+            : "None";
+          const blockedByTaskId = normalizePlaygroundIdList(scheduleDraft?.dependencyIds)[0] || "";
+          const activeBlockedByTask = blockedByTaskId ? (tasksById[blockedByTaskId] || null) : null;
+          const activeBlockedByLabel = activeBlockedByTask
+            ? ((taskTicketNumbersById[activeBlockedByTask.id] || activeBlockedByTask.ticketNumber || "000") + " - " + (activeBlockedByTask.title || "Untitled Task"))
+            : "None";
+          const activeScheduleSummaryLabel = formatPlaygroundTaskScheduleSummary({
+            scheduledStartAt: scheduleDraft?.scheduledTime || null,
+            scheduleType: scheduleDraft?.scheduleType,
+            cronExpression: scheduleDraft?.cronExpression,
+            scheduleTimezone: scheduleDraft?.timezone,
+            scheduleEnabled: scheduleDraft?.enabled,
+          });
+          const activeAssigneeActor = selectedScheduleAgent;
+          const defaultScheduleAssigneePopupMode = taskDetailAvailableAssigneePopupModes.includes(getPlaygroundTaskAssigneePopupMode(activeAssigneeActor))
+            ? getPlaygroundTaskAssigneePopupMode(activeAssigneeActor)
+            : (taskDetailAvailableAssigneePopupModes[0] || "agents");
+          const scheduleAttachments = normalizePlaygroundTaskAttachmentList(scheduleDraft?.attachments);
+          const hasScheduleAttachments = scheduleAttachments.length > 0;
+          const scheduleComments = normalizePlaygroundTaskCommentList(scheduleDraft?.comments)
+            .slice()
+            .sort((left, right) => String(left.createdAt || "").localeCompare(String(right.createdAt || "")));
+          const scheduleSkillEntries = normalizePlaygroundEnabledSkillIds(scheduleDraft?.enabledSkills)
+            .map((skillId) => resolveTaskSkillItem(skillId))
+            .filter(Boolean);
+          const scheduleConnectorEntries = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => {
+            const selection = getDraftTaskConnectorSelection(option.source, scheduleDraft);
+            return {
+              ...option,
+              selection,
+              valueLabel: selection?.valueLabel || "None",
+            };
+          });
+
+          function toggleScheduleDetailSelectPopover(nextPopoverId) {
+            setTaskDetailPopover("");
+            if (nextPopoverId === "assignee" && taskDetailSelectPopover !== "assignee") {
+              setTaskDetailAssigneePopupMode(defaultScheduleAssigneePopupMode);
+            }
+            setTaskDetailSelectPopover((current) => current === nextPopoverId ? "" : nextPopoverId);
+          }
+
+          function renderScheduleDetailSelectOptionRow({ key, label, description, selected, onClick, disabled = false }) {
+            return React.createElement("button", {
+                key,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+                onClick,
+                disabled,
+              },
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                selected
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, label),
+                description
+                  ? React.createElement("span", null, description)
+                  : null
+              )
+            );
+          }
+
+          function renderScheduleDetailSelectControl({
+            popoverId,
+            valueLabel,
+            isEmpty = false,
+            buttonContent = null,
+            menuClassName = "",
+            children,
+          }) {
+            const isOpen = taskDetailSelectPopover === popoverId;
+            return React.createElement("div", {
+                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isOpen ? " is-open" : ""),
+                ref: isOpen ? taskDetailSelectPopoverRef : null,
+              },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
+                onClick: () => toggleScheduleDetailSelectPopover(popoverId),
+                title: valueLabel,
+                "aria-expanded": isOpen ? "true" : "false",
+              },
+                buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
+                React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+              ),
+              isOpen
+                ? React.createElement("div", {
+                    className: ("tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in " + menuClassName).trim(),
+                  }, children)
+                : null
+            );
+          }
+
+          function renderScheduleDetailAssigneeRow(actor) {
+            const mode = getPlaygroundTaskAssigneePopupMode(actor);
+            const IconComponent = mode === "teams" ? Layers : User;
+            return React.createElement("button", {
+                key: actor.id,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (scheduleDraft?.agentId === actor.id ? " selected" : ""),
+                onClick: () => {
+                  updateScheduleDraft((current) => ({
+                    ...(current || buildProjectScheduleDraft(selectedProject)),
+                    agentId: actor.id,
+                    agentName: actor.name || null,
+                  }));
+                  setTaskDetailSelectPopover("");
+                },
+              },
+              React.createElement(IconComponent, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("span", { className: "tb-popup-label" }, mode === "humans" ? "Me" : (actor.name || "Unknown")),
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                scheduleDraft?.agentId === actor.id
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              )
+            );
+          }
 
           return React.createElement("div", { className: "playground-tasks-detail-shell playground-tasks-schedule-detail-shell" },
             React.createElement("div", { className: "playground-tasks-detail-main" },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
                 React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
-                  React.createElement("span", { className: "playground-tasks-detail-navbar-ticket" }, isEditing ? "Schedule" : "New"),
+                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
+                    React.createElement("div", {
+                      className: "playground-tasks-backlog-project-icon is-task",
+                      "aria-hidden": "true",
+                    },
+                      React.createElement(Bookmark, { width: 14, height: 14, strokeWidth: 1.9 })
+                    ),
+                    renderPlaygroundTaskPriorityIcon(scheduleDraft?.priority, "playground-tasks-backlog-priority"),
+                    React.createElement("span", { className: "playground-tasks-detail-navbar-ticket" }, isEditing ? "Schedule" : "New")
+                  ),
                   React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
                     React.createElement("input", {
                       type: "text",
@@ -40068,40 +41279,75 @@ const html = `<!doctype html>
                   )
                 ),
                 React.createElement("div", { className: "playground-content-nav-center" }),
-                React.createElement("div", { className: "playground-content-nav-right playground-tasks-detail-navbar-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button is-primary",
-                    onClick: () => void handleSaveSchedule(),
-                    disabled: scheduleSaveState.isSaving,
+                React.createElement("div", {
+                    className: "playground-content-nav-right playground-tasks-detail-navbar-actions",
+                    ref: taskDetailActionsRef,
                   },
-                    React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 }),
-                    React.createElement("span", null, scheduleSaveState.isSaving ? "Saving..." : "Save")
+                  React.createElement("span", { className: "playground-tasks-schedule-status " + statusMeta.className }, statusMeta.label),
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
+                      onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
+                      title: "Task actions",
+                      "aria-label": "Task actions",
+                    }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+                    taskDetailPopover === "menu"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          isEditing
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row",
+                                onClick: () => {
+                                  setTaskDetailPopover("");
+                                  void handleTriggerSchedule(scheduleDraft.id);
+                                },
+                              },
+                                React.createElement(Play, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                  React.createElement("span", null, "Run schedule now"),
+                                  React.createElement("span", null, "Trigger this scheduled task immediately.")
+                                )
+                              )
+                            : React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row",
+                                onClick: () => {
+                                  setTaskDetailPopover("");
+                                  closeScheduleDetail();
+                                },
+                              },
+                                React.createElement(X, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                  React.createElement("span", null, "Discard"),
+                                  React.createElement("span", null, "Close this scheduled task draft.")
+                                )
+                              ),
+                          isEditing
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                                onClick: () => {
+                                  setTaskDetailPopover("");
+                                  void handleDeleteSchedule(scheduleDraft.id);
+                                },
+                              },
+                                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                  React.createElement("span", null, "Delete"),
+                                  React.createElement("span", null, "Remove this scheduled task from the project.")
+                                )
+                              )
+                            : null
+                        )
+                      : null
                   ),
-                  isEditing
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: () => void handleTriggerSchedule(scheduleDraft.id),
-                        disabled: scheduleSaveState.isSaving,
-                        title: "Run schedule now",
-                      }, React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.9 }))
-                    : null,
-                  isEditing
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button is-danger",
-                        onClick: () => void handleDeleteSchedule(scheduleDraft.id),
-                        disabled: scheduleSaveState.isSaving,
-                        title: "Delete schedule",
-                      }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.9 }))
-                    : null,
                   React.createElement("button", {
                     type: "button",
                     className: "playground-files-header-icon-button is-plain",
                     onClick: closeScheduleDetail,
-                    title: "Close schedule detail",
-                    "aria-label": "Close schedule detail",
+                    title: "Close task detail",
+                    "aria-label": "Close task detail",
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 )
               ),
@@ -40112,7 +41358,7 @@ const html = `<!doctype html>
                     : null,
                   React.createElement("div", { className: "playground-tasks-detail-description" },
                     React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Task"),
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
                       React.createElement("div", { className: "playground-tasks-detail-format-actions" },
                         [
                           { id: "bold", label: "Bold", icon: Bold },
@@ -40124,6 +41370,7 @@ const html = `<!doctype html>
                             key: action.id,
                             type: "button",
                             className: "playground-tasks-detail-format-button",
+                            onMouseDown: (event) => event.preventDefault(),
                             onClick: () => handleScheduleTaskFormat(action.id),
                             title: action.label,
                             "aria-label": action.label,
@@ -40141,15 +41388,15 @@ const html = `<!doctype html>
                                 })
                               : React.createElement("div", {
                                   className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                }, "Describe what the scheduled run should do.")
+                                }, "Add Description here")
                           )
                         : null,
                       React.createElement("textarea", {
                         ref: scheduleTaskTextareaRef,
                         className: "playground-tasks-detail-description-input " + (isScheduleTaskEditing ? "is-editing" : "is-preview"),
-                        value: scheduleDraft?.task || "",
                         rows: 1,
-                        placeholder: isScheduleTaskEditing ? "Describe what the scheduled run should do." : "",
+                        placeholder: isScheduleTaskEditing ? "Add Description here" : "",
+                        value: scheduleDraft?.task || "",
                         onFocus: () => setIsScheduleTaskEditing(true),
                         onChange: (event) => {
                           updateScheduleDraftField("task", event.target.value);
@@ -40173,196 +41420,558 @@ const html = `<!doctype html>
                     !scheduleDetailsCollapsed
                       ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Status"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Type"),
                             React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                              React.createElement("span", { className: "playground-tasks-schedule-status " + statusMeta.className }, statusMeta.label)
+                              React.createElement("span", { className: "playground-tasks-detail-type-value" },
+                                React.createElement(Bookmark, { className: "playground-tasks-detail-type-icon", strokeWidth: 1.9 }),
+                                React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, "Task")
+                              )
                             )
                           ),
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Description"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
-                              React.createElement("input", {
-                                type: "text",
-                                className: "playground-tasks-scheduler-input playground-tasks-schedule-detail-input",
-                                value: scheduleDraft?.description || "",
-                                placeholder: "Optional description",
-                                onChange: (event) => updateScheduleDraftField("description", event.target.value),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Priority"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              renderScheduleDetailSelectControl({
+                                popoverId: "schedule-priority",
+                                valueLabel: activeSchedulePriorityPresentation.label,
+                                buttonContent: React.createElement("span", {
+                                    className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + activeSchedulePriorityPresentation.toneClassName,
+                                  },
+                                    React.createElement(ActiveSchedulePriorityIcon, { className: "playground-tasks-priority-value-icon", strokeWidth: 1.9 }),
+                                    React.createElement("span", { className: "playground-tasks-priority-value-text playground-tasks-detail-select-trigger-label" }, activeSchedulePriorityPresentation.label)
+                                  ),
+                                children: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
+                                  renderScheduleDetailSelectOptionRow({
+                                    key: option.id,
+                                    label: getPlaygroundTaskPriorityPresentation(option.id).label,
+                                    selected: scheduleDraft?.priority === option.id,
+                                    onClick: () => {
+                                      updateScheduleDraftField("priority", option.id);
+                                      setTaskDetailSelectPopover("");
+                                    },
+                                  })
+                                ),
                               })
                             )
                           ),
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Agent"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
-                              React.createElement("select", {
-                                className: "playground-tasks-scheduler-select playground-tasks-schedule-detail-input",
-                                value: scheduleDraft?.agentId || "",
-                                onChange: (event) => {
-                                  const nextAgent = agentsById[event.target.value] || null;
-                                  setScheduleDraft((current) => ({
-                                    ...(current || buildProjectScheduleDraft(selectedProject)),
-                                    agentId: nextAgent?.id || null,
-                                    agentName: nextAgent?.name || null,
-                                  }));
-                                  resetScheduleSaveState("");
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Color"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              renderScheduleDetailSelectControl({
+                                popoverId: "schedule-color",
+                                valueLabel: activeScheduleColorPresentation.label,
+                                buttonContent: React.createElement("span", {
+                                    className: "playground-tasks-detail-color-value",
+                                    style: getPlaygroundTaskColorStyle(scheduleDraft?.taskColor),
+                                  },
+                                    React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
+                                    React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeScheduleColorPresentation.label)
+                                  ),
+                                children: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
+                                  renderScheduleDetailSelectOptionRow({
+                                    key: option.id,
+                                    label: React.createElement("span", {
+                                        className: "playground-tasks-detail-select-popup-label-slot",
+                                        style: getPlaygroundTaskColorStyle(option.id),
+                                      },
+                                        React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
+                                        React.createElement("span", null, option.label)
+                                      ),
+                                    selected: getPlaygroundTaskColorId(scheduleDraft?.taskColor) === option.id,
+                                    onClick: () => {
+                                      updateScheduleDraft((current) => ({
+                                        ...(current || buildProjectScheduleDraft(selectedProject)),
+                                        taskColor: option.id,
+                                        metadata: {
+                                          ...((current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)) ? current.metadata : {}),
+                                          taskColor: option.id,
+                                        },
+                                      }));
+                                      setTaskDetailSelectPopover("");
+                                    },
+                                  })
+                                ),
+                              })
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Release"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              renderScheduleDetailSelectControl({
+                                popoverId: "schedule-release",
+                                valueLabel: activeScheduleReleaseLabel,
+                                isEmpty: !activeScheduleReleaseId,
+                                children: [
+                                  renderScheduleDetailSelectOptionRow({
+                                    key: "__none__",
+                                    label: "None",
+                                    selected: !activeScheduleReleaseId,
+                                    onClick: () => {
+                                      updateScheduleDraftField("releaseId", null);
+                                      setTaskDetailSelectPopover("");
+                                    },
+                                  }),
+                                  ...releases
+                                    .slice()
+                                    .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
+                                    .map((release) =>
+                                      renderScheduleDetailSelectOptionRow({
+                                        key: release.id,
+                                        label: release.name || "Untitled Release",
+                                        description: release.description || formatPlaygroundTaskReleaseDateRange(release),
+                                        selected: activeScheduleReleaseId === release.id,
+                                        onClick: () => {
+                                          updateScheduleDraftField("releaseId", release.id);
+                                          setTaskDetailSelectPopover("");
+                                        },
+                                      })
+                                    ),
+                                ],
+                              })
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Assignee"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("div", {
+                                  className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell playground-tasks-detail-assignee-shell" + (taskDetailSelectPopover === "assignee" ? " is-open" : ""),
+                                  ref: taskDetailSelectPopover === "assignee" ? taskDetailSelectPopoverRef : null,
                                 },
-                              },
-                                sortedAgents.map((agent) =>
-                                  React.createElement("option", { key: agent.id, value: agent.id }, agent.name || "Agent")
-                                )
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (!selectedScheduleAgent ? " is-empty" : "") + (taskDetailSelectPopover === "assignee" ? " is-active" : ""),
+                                  onClick: () => toggleScheduleDetailSelectPopover("assignee"),
+                                  title: selectedScheduleAgent?.name || "Choose agent",
+                                  "aria-expanded": taskDetailSelectPopover === "assignee" ? "true" : "false",
+                                },
+                                  React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, selectedScheduleAgent?.name || "Choose agent"),
+                                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                                ),
+                                taskDetailSelectPopover === "assignee"
+                                  ? React.createElement("div", { className: "tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                      React.createElement("div", { className: "tb-popup-menu-title" }, "Assignee"),
+                                      React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
+                                        React.createElement("div", { className: "tb-popup-nav" },
+                                          taskDetailAvailableAssigneePopupModes.includes("agents")
+                                            ? React.createElement("button", {
+                                                type: "button",
+                                                className: "tb-popup-nav-button" + (taskDetailAssigneePopupMode === "agents" ? " active" : ""),
+                                                onClick: () => setTaskDetailAssigneePopupMode("agents"),
+                                              }, "Agents")
+                                            : null,
+                                          taskDetailAvailableAssigneePopupModes.includes("teams")
+                                            ? React.createElement("button", {
+                                                type: "button",
+                                                className: "tb-popup-nav-button" + (taskDetailAssigneePopupMode === "teams" ? " active" : ""),
+                                                onClick: () => setTaskDetailAssigneePopupMode("teams"),
+                                              }, "Teams")
+                                            : null,
+                                          taskDetailAvailableAssigneePopupModes.includes("humans")
+                                            ? React.createElement("button", {
+                                                type: "button",
+                                                className: "tb-popup-nav-button" + (taskDetailAssigneePopupMode === "humans" ? " active" : ""),
+                                                onClick: () => setTaskDetailAssigneePopupMode("humans"),
+                                              }, "Humans")
+                                            : null
+                                        )
+                                      ),
+                                      React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent" },
+                                        filteredTaskDetailAssignableActors.length > 0
+                                          ? filteredTaskDetailAssignableActors.map((actor) => renderScheduleDetailAssigneeRow(actor))
+                                          : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
+                                              React.createElement("div", { className: "tb-popup-empty-state" }, "No assignees yet.")
+                                            )
+                                      )
+                                    )
+                                  : null
                               )
                             )
                           ),
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
                             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Environment"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
-                              React.createElement("select", {
-                                className: "playground-tasks-scheduler-select playground-tasks-schedule-detail-input",
-                                value: scheduleDraft?.environmentId || "",
-                                onChange: (event) => {
-                                  const nextEnvironment = availableBacklogEnvironments.find((environment) => environment.id === event.target.value) || null;
-                                  setScheduleDraft((current) => ({
-                                    ...(current || buildProjectScheduleDraft(selectedProject)),
-                                    environmentId: nextEnvironment?.id || "",
-                                    environmentName: nextEnvironment?.name || null,
-                                  }));
-                                  resetScheduleSaveState("");
-                                },
-                              },
-                                availableBacklogEnvironments.map((environment) =>
-                                  React.createElement("option", { key: environment.id, value: environment.id }, environment.name || "Environment")
-                                )
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Schedule Type"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
-                              React.createElement("div", { className: "content-mode-switch playground-tasks-scheduler-switch" },
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "content-mode-button" + (!isRecurring ? " is-active" : ""),
-                                  onClick: () => {
-                                    setScheduleDraft((current) => ({
-                                      ...(current || buildProjectScheduleDraft(selectedProject)),
-                                      scheduleType: "one-time",
-                                    }));
-                                    resetScheduleSaveState("");
-                                  },
-                                }, "One-time"),
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "content-mode-button" + (isRecurring ? " is-active" : ""),
-                                  onClick: () => {
-                                    setScheduleDraft((current) => ({
-                                      ...(current || buildProjectScheduleDraft(selectedProject)),
-                                      scheduleType: "recurring",
-                                    }));
-                                    resetScheduleSaveState("");
-                                  },
-                                }, "Recurring")
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, isRecurring ? "Cron Expression" : "Date & Time"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
-                              isRecurring
-                                ? React.createElement("input", {
-                                    type: "text",
-                                    className: "playground-tasks-scheduler-input playground-tasks-schedule-detail-input",
-                                    value: scheduleDraft?.cronExpression || "",
-                                    placeholder: "0 9 * * *",
-                                    onChange: (event) => updateScheduleDraftField("cronExpression", event.target.value),
-                                  })
-                                : React.createElement("input", {
-                                    type: "datetime-local",
-                                    className: "playground-tasks-scheduler-input playground-tasks-schedule-detail-input",
-                                    value: toPlaygroundDatetimeLocalValue(scheduleDraft?.scheduledTime),
-                                    onChange: (event) => {
-                                      const nextScheduledTime = fromPlaygroundDatetimeLocalValue(event.target.value);
-                                      setScheduleDraft((current) => ({
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              renderScheduleDetailSelectControl({
+                                popoverId: "schedule-environment",
+                                valueLabel: selectedScheduleEnvironment?.name || "None",
+                                isEmpty: !selectedScheduleEnvironment,
+                                menuClassName: "playground-tasks-toolbar-popup-menu-environment",
+                                children: [
+                                  renderScheduleDetailSelectOptionRow({
+                                    key: "__none__",
+                                    label: "None",
+                                    selected: !selectedScheduleEnvironment,
+                                    onClick: () => {
+                                      updateScheduleDraft((current) => ({
                                         ...(current || buildProjectScheduleDraft(selectedProject)),
-                                        scheduledTime: nextScheduledTime,
-                                        nextRunAt: nextScheduledTime,
-                                        cronExpression: buildPlaygroundDailyCronExpression(nextScheduledTime),
+                                        environmentId: "",
+                                        environmentName: null,
                                       }));
-                                      resetScheduleSaveState("");
+                                      setTaskDetailSelectPopover("");
                                     },
-                                  })
+                                  }),
+                                  ...availableBacklogEnvironments.map((environment) =>
+                                    renderScheduleDetailSelectOptionRow({
+                                      key: environment.id,
+                                      label: environment.name + (environment.isDefault ? " (Default)" : ""),
+                                      selected: scheduleDraft?.environmentId === environment.id,
+                                      onClick: () => {
+                                        updateScheduleDraft((current) => ({
+                                          ...(current || buildProjectScheduleDraft(selectedProject)),
+                                          environmentId: environment.id,
+                                          environmentName: environment.name || null,
+                                        }));
+                                        setTaskDetailSelectPopover("");
+                                      },
+                                    })
+                                  ),
+                                ],
+                              })
                             )
                           ),
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Timezone"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
-                              React.createElement("input", {
-                                type: "text",
-                                className: "playground-tasks-scheduler-input playground-tasks-schedule-detail-input",
-                                value: scheduleDraft?.timezone || "",
-                                onChange: (event) => updateScheduleDraftField("timezone", event.target.value),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Blocked by"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              renderScheduleDetailSelectControl({
+                                popoverId: "schedule-blocked-by",
+                                valueLabel: activeBlockedByLabel,
+                                isEmpty: !blockedByTaskId,
+                                menuClassName: "playground-tasks-toolbar-popup-menu-wide",
+                                children: [
+                                  renderScheduleDetailSelectOptionRow({
+                                    key: "__none__",
+                                    label: "None",
+                                    selected: !blockedByTaskId,
+                                    onClick: () => {
+                                      updateScheduleDraftField("dependencyIds", []);
+                                      setTaskDetailSelectPopover("");
+                                    },
+                                  }),
+                                  ...dependencyCandidates.map((task) => {
+                                    const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "000";
+                                    return renderScheduleDetailSelectOptionRow({
+                                      key: task.id,
+                                      label: taskTicketNumber + " - " + (task.title || "Untitled Task"),
+                                      selected: blockedByTaskId === task.id,
+                                      onClick: () => {
+                                        updateScheduleDraftField("dependencyIds", [task.id]);
+                                        setTaskDetailSelectPopover("");
+                                      },
+                                    });
+                                  }),
+                                ],
                               })
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Schedule"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("div", { className: "playground-tasks-schedule-anchor" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (activeScheduleSummaryLabel ? "" : " is-empty") + (taskScheduleDialogState ? " is-active" : ""),
+                                  onClick: () => openTaskScheduleDialog("schedule"),
+                                },
+                                  React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeScheduleSummaryLabel || "None"),
+                                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                                ),
+                                renderTaskScheduleDialog()
+                              )
                             )
                           )
                         )
                       : null
                   ),
-                isEditing
-                  ? React.createElement("div", { className: "playground-tasks-scheduler-card" },
-                      React.createElement("div", { className: "playground-tasks-scheduler-card-stats" },
-                        React.createElement("div", null,
-                          React.createElement("div", { className: "playground-tasks-scheduler-card-label" }, "Next Run"),
-                          React.createElement("div", { className: "playground-tasks-scheduler-card-value" }, formatPlaygroundScheduleDateTime(scheduleStats.nextRunAt || scheduleDraft?.scheduledTime) || "Not scheduled")
-                        ),
-                        React.createElement("div", null,
-                          React.createElement("div", { className: "playground-tasks-scheduler-card-label" }, "Schedule Type"),
-                          React.createElement("div", { className: "playground-tasks-scheduler-card-value" }, isRecurring ? "Recurring" : "One-time")
-                        ),
-                        React.createElement("div", null,
-                          React.createElement("div", { className: "playground-tasks-scheduler-card-label" }, isRecurring ? "Cron" : "Last Run"),
-                          React.createElement("div", { className: "playground-tasks-scheduler-card-value is-mono" }, isRecurring
-                            ? (scheduleDraft?.cronExpression || "Not configured")
-                            : (formatPlaygroundScheduleDateTime(scheduleStats.lastRunAt) || "Never")
-                          )
-                        ),
-                        React.createElement("div", null,
-                          React.createElement("div", { className: "playground-tasks-scheduler-card-label" }, "Timezone"),
-                          React.createElement("div", { className: "playground-tasks-scheduler-card-value" }, scheduleDraft?.timezone || "UTC")
-                        )
+                  React.createElement("div", { className: "playground-tasks-attachments" },
+                    React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
+                      React.createElement("div", { className: "playground-tasks-attachments-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                          onClick: openTaskEnvironmentFilePicker,
+                          disabled: taskAttachmentTransferState.isProcessing || !activeTaskEnvironmentId,
+                          title: activeTaskEnvironmentId
+                            ? "Add files from " + (activeTaskEnvironment?.name || "the selected environment")
+                            : "Select an environment first",
+                        }, "From Environment")
                       )
-                    )
-                  : null,
-                isEditing && totalRuns > 0
-                  ? React.createElement("div", { className: "playground-tasks-scheduler-runs" },
-                      React.createElement("div", { className: "playground-tasks-scheduler-runs-header" },
-                        React.createElement("span", null, totalRuns + " completed Runs"),
-                        React.createElement("div", { className: "playground-tasks-scheduler-runs-legend" },
-                          React.createElement("div", { className: "playground-tasks-scheduler-runs-legend-item" },
-                            React.createElement("span", { className: "playground-tasks-scheduler-runs-legend-dot is-success" }),
-                            React.createElement("span", null, "Successful (" + Number(scheduleStats.successCount || 0) + ")")
-                          ),
-                          React.createElement("div", { className: "playground-tasks-scheduler-runs-legend-item" },
-                            React.createElement("span", { className: "playground-tasks-scheduler-runs-legend-dot is-failure" }),
-                            React.createElement("span", null, "Failed (" + Number(scheduleStats.failureCount || 0) + ")")
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-tasks-scheduler-runs-bar" },
-                        successRatio > 0
-                          ? React.createElement("div", {
-                              className: "playground-tasks-scheduler-runs-segment is-success",
-                              style: { width: successRatio + "%" },
-                            })
-                          : null,
-                        failureRatio > 0
-                          ? React.createElement("div", {
-                              className: "playground-tasks-scheduler-runs-segment is-failure",
-                              style: { width: failureRatio + "%" },
-                            })
+                    ),
+                    React.createElement("input", {
+                      ref: taskAttachmentInputRef,
+                      type: "file",
+                      multiple: true,
+                      hidden: true,
+                      onChange: (event) => void handleTaskAttachmentInputChange(event),
+                    }),
+                    React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+                      React.createElement("div", {
+                        className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isTaskAttachmentDragging ? " dragging" : "") + (hasScheduleAttachments ? " is-filled" : ""),
+                        onDragOver: (event) => {
+                          event.preventDefault();
+                          if (!activeTaskEnvironmentId) {
+                            return;
+                          }
+                          setIsTaskAttachmentDragging(true);
+                        },
+                        onDragLeave: (event) => {
+                          if (event.currentTarget.contains(event.relatedTarget)) {
+                            return;
+                          }
+                          setIsTaskAttachmentDragging(false);
+                        },
+                        onDrop: (event) => void handleTaskAttachmentDrop(event),
+                      },
+                        hasScheduleAttachments
+                          ? React.createElement(React.Fragment, null,
+                              React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                                React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                                React.createElement("span", null, isTaskAttachmentDragging ? "Drop files here" : "Drop files to attach, or"),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-tasks-attachments-browse",
+                                  onClick: openTaskAttachmentPicker,
+                                }, "browse.")
+                              ),
+                              React.createElement("div", { className: "runner-attachments" },
+                                scheduleAttachments.map((attachment) =>
+                                  renderTaskAttachmentChip(attachment, {
+                                    removable: true,
+                                    onRemove: handleRemoveScheduleAttachment,
+                                  })
+                                )
+                              )
+                            )
+                          : React.createElement("button", {
+                              type: "button",
+                              className: "playground-tasks-attachments-empty-button",
+                              onClick: openTaskAttachmentPicker,
+                            },
+                              React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                              React.createElement("span", { className: "tb-popup-dropzone-title" }, isTaskAttachmentDragging ? "Drop files here" : "Drag & drop files here"),
+                              React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
+                            )
+                      )
+                    ),
+                    taskAttachmentTransferState.isProcessing
+                      ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
+                      : null,
+                    taskAttachmentTransferState.error
+                      ? React.createElement("div", { className: "playground-environments-error" }, taskAttachmentTransferState.error)
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-tasks-skills" },
+                    React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Skills"),
+                      React.createElement("div", {
+                        className: "playground-tasks-skills-popup-shell tb-runner-chat",
+                        ref: taskSkillsActionsRef,
+                      },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button playground-tasks-skills-manage-button" + (taskSkillsPopoverOpen ? " is-active" : ""),
+                          onClick: () => {
+                            setTaskDetailPopover("");
+                            setTaskSkillsPopoverOpen((current) => !current);
+                          },
+                        }, "Manage Skills"),
+                        taskSkillsPopoverOpen
+                          ? React.createElement("div", { className: "tb-popup-menu tb-popup-menu-skills tb-popup-menu-animate-up-in" },
+                              React.createElement("div", { className: "tb-popup-attach-topbar" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close",
+                                  onClick: () => setTaskSkillsPopoverOpen(false),
+                                  "aria-label": "Close skills popup",
+                                }, React.createElement(X, { className: "tb-popup-attach-topbar-icon", strokeWidth: 1.75 })),
+                                React.createElement("div", { className: "tb-popup-attach-topbar-title" }, "Skills"),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "tb-popup-attach-topbar-button tb-popup-attach-topbar-button-confirm",
+                                  onClick: () => setTaskSkillsPopoverOpen(false),
+                                  "aria-label": "Done",
+                                }, React.createElement(Check, { className: "tb-popup-attach-topbar-icon", strokeWidth: 2 }))
+                              ),
+                              React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
+                                React.createElement("div", { className: "tb-popup-nav" },
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "tb-popup-nav-button" + (taskSkillsTab === "system" ? " active" : ""),
+                                    onClick: () => setTaskSkillsTab("system"),
+                                  }, "System"),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "tb-popup-nav-button" + (taskSkillsTab === "custom" ? " active" : ""),
+                                    onClick: () => setTaskSkillsTab("custom"),
+                                  }, "Custom")
+                                )
+                              ),
+                              React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced tb-popup-panel-section-skills-body" },
+                                (taskSkillsTab === "system" ? taskSystemSkillItems : taskCustomSkillItems).map((skill) => {
+                                  const isEnabled = normalizePlaygroundEnabledSkillIds(scheduleDraft?.enabledSkills).includes(skill.id);
+                                  return React.createElement("button", {
+                                      key: skill.id,
+                                      type: "button",
+                                      className: "tb-popup-row tb-popup-row-skill" + (isEnabled ? " selected" : ""),
+                                      onClick: () => toggleScheduleSkill(skill.id),
+                                    },
+                                      renderTaskSkillIcon(skill, "tb-popup-icon"),
+                                      React.createElement("span", { className: "tb-popup-label" }, skill.name),
+                                      React.createElement("span", { className: "tb-popup-check-slot" },
+                                        isEnabled
+                                          ? React.createElement(Check, { className: "tb-popup-check", strokeWidth: 1.75 })
+                                          : null
+                                      )
+                                    );
+                                }),
+                                taskSkillsTab === "custom" && projectCustomSkillsLoading
+                                  ? React.createElement("div", { className: "tb-popup-loading-row" },
+                                      React.createElement("span", { className: "tb-popup-loading-spinner", "aria-hidden": "true" }),
+                                      React.createElement("span", { className: "tb-popup-loading-label" }, "Loading custom skills...")
+                                    )
+                                  : null,
+                                taskSkillsTab === "custom" && !projectCustomSkillsLoading && taskCustomSkillItems.length === 0
+                                  ? React.createElement("div", { className: "tb-popup-empty-state" }, "No custom skills yet.")
+                                  : null
+                              )
+                            )
                           : null
                       )
+                    ),
+                    scheduleSkillEntries.length > 0
+                      ? React.createElement("div", { className: "playground-tasks-skills-list" },
+                          scheduleSkillEntries.map((skill) =>
+                            React.createElement("div", {
+                              key: skill.id,
+                              className: "playground-tasks-skill-pill",
+                              title: skill.name,
+                            },
+                              renderTaskSkillIcon(skill, "playground-tasks-skill-pill-icon"),
+                              React.createElement("span", { className: "playground-tasks-skill-pill-label" }, skill.name),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-tasks-skill-pill-remove",
+                                onClick: (event) => {
+                                  event.stopPropagation();
+                                  removeScheduleSkill(skill.id);
+                                },
+                                "aria-label": "Remove " + skill.name,
+                                title: "Remove " + skill.name,
+                              }, React.createElement(X, { width: 12, height: 12, strokeWidth: 1.9 }))
+                            )
+                          )
+                        )
+                      : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No skills selected.")
+                  ),
+                  React.createElement("div", { className: "playground-tasks-connectors" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Connectors"),
+                    React.createElement("div", { className: "playground-tasks-connectors-list" },
+                      scheduleConnectorEntries.map((connector) =>
+                        React.createElement("div", {
+                          key: connector.key,
+                          className: "playground-tasks-connector-row",
+                        },
+                          React.createElement("div", { className: "playground-tasks-connector-service" },
+                            renderTaskConnectorServiceIcon(connector.source, "playground-tasks-connector-service-icon"),
+                            React.createElement("span", { className: "playground-tasks-connector-service-label" }, connector.label)
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-tasks-detail-fact-button" + (connector.selection ? "" : " is-empty"),
+                              onClick: () => openTaskConnectorBrowser(connector.source),
+                            }, connector.valueLabel)
+                          )
+                        )
+                      )
                     )
-                  : null
+                  ),
+                  React.createElement("div", { className: "playground-tasks-subtasks" },
+                    React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Subtasks"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button playground-tasks-subtasks-add-button",
+                        disabled: true,
+                        title: "Scheduled tasks do not support subtasks yet",
+                        "aria-label": "Add subtask",
+                      }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
+                    ),
+                    React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No subtasks yet.")
+                  ),
+                  React.createElement("div", { className: "playground-tasks-comments" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Comments"),
+                    scheduleComments.length > 0
+                      ? React.createElement("div", { className: "playground-tasks-comments-list" },
+                          scheduleComments.map((comment) =>
+                            React.createElement("div", {
+                              key: comment.id,
+                              className: "playground-tasks-comment",
+                            },
+                              renderTaskCommentAvatar(comment, "playground-tasks-comment-avatar"),
+                              React.createElement("div", { className: "playground-tasks-comment-body" },
+                                React.createElement("div", { className: "playground-tasks-comment-meta" },
+                                  React.createElement("span", { className: "playground-tasks-comment-author" }, getTaskCommentDisplayName(comment)),
+                                  React.createElement("span", { className: "playground-tasks-comment-time" }, formatRelativeThreadTime(comment.createdAt) || formatPlaygroundFileDate(comment.createdAt))
+                                ),
+                                React.createElement("div", { className: "playground-tasks-comment-text" }, comment.text)
+                              )
+                            )
+                          )
+                        )
+                      : React.createElement("div", { className: "playground-tasks-secondary-copy playground-tasks-comment-empty" }, "No comments yet.")
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-comment-dock" },
+                  scheduleSaveState.error
+                    ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, scheduleSaveState.error)
+                    : null,
+                  React.createElement("div", { className: "playground-tasks-comment-runner" },
+                    React.createElement("div", { className: "playground-tasks-comment-bar" },
+                      React.createElement("textarea", {
+                        ref: taskCommentTextareaRef,
+                        rows: 1,
+                        className: "playground-tasks-comment-input",
+                        placeholder: "Add a comment",
+                        value: taskCommentInputValue,
+                        onChange: (event) => {
+                          setTaskCommentInputValue(event.target.value);
+                          resizeTaskCommentTextarea(event.currentTarget);
+                        },
+                        onKeyDown: (event) => {
+                          if (event.key === "Enter" && !event.shiftKey) {
+                            event.preventDefault();
+                            handleAddScheduleComment();
+                          }
+                        },
+                      }),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-tasks-comment-send-button",
+                        onClick: handleAddScheduleComment,
+                        disabled: scheduleSaveState.isSaving || !String(taskCommentInputValue || "").trim(),
+                        "aria-label": "Send comment",
+                        title: "Send comment",
+                      },
+                        React.createElement(ArrowUp, { className: "playground-tasks-comment-send-icon", strokeWidth: 1.9 })
+                      )
+                    )
+                  )
                 )
               )
+            ),
+            React.createElement("div", { className: "playground-tasks-detail-preview-pane" },
+              previewedTaskAttachment
+                ? React.createElement("div", { className: "tb-runner-document-preview-host tb-runner-document-preview-host-inline playground-tasks-detail-preview-host" },
+                    React.createElement(RunnerDocumentPreviewDrawer, {
+                      attachment: previewedTaskAttachment,
+                      backendUrl,
+                      requestHeaders,
+                      inline: true,
+                      onClose: () => setPreviewedTaskAttachmentId(""),
+                      showResizeHandle: false,
+                    })
+                  )
+                : null
             )
           );
         }
@@ -40448,6 +42057,20 @@ const html = `<!doctype html>
           );
         }
 
+        function getProjectCalendarEventProps(event) {
+          const eventColorId = event?.resource?.taskColor;
+          if (!eventColorId) {
+            return {};
+          }
+          const presentation = getPlaygroundTaskColorPresentation(eventColorId);
+          return {
+            style: {
+              "--playground-calendar-event-surface": presentation.surface,
+              "--playground-calendar-event-text": presentation.text,
+            },
+          };
+        }
+
         function renderCalendarView() {
           return React.createElement("div", { className: "playground-tasks-scheduler" },
             React.createElement("div", { className: "playground-tasks-scheduler-main" },
@@ -40476,6 +42099,7 @@ const html = `<!doctype html>
                   onView: (nextView) => setScheduleCalendarView(allowedScheduleCalendarViews.includes(nextView) ? nextView : "week"),
                   date: scheduleCalendarDate,
                   onNavigate: setScheduleCalendarDate,
+                  eventPropGetter: getProjectCalendarEventProps,
                   selectable: true,
                   onSelectSlot: (slotInfo) => openScheduleComposerFromSlot(slotInfo),
                   onSelectEvent: (event) => {
@@ -40700,6 +42324,10 @@ const html = `<!doctype html>
         }
 
         function renderTaskDetail() {
+          if (!draftTask && taskView === "calendar" && scheduleViewMode === "setup") {
+            return renderScheduleDetailPanel();
+          }
+
           if (!draftTask) {
             if (taskLoadState.status === "loading" || pendingExternalTaskOpenRequest) {
               return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-detail-empty" },
@@ -40751,7 +42379,7 @@ const html = `<!doctype html>
           const activeTaskReleaseId = draftTask.releaseId || "";
           const blockedByTaskId = draftTask.dependencyIds[0] || "";
           const hasTaskAttachments = draftTask.attachments.length > 0;
-          const taskScheduleSummary = formatPlaygroundTaskScheduleSummary(draftTask.scheduledStartAt);
+          const taskScheduleSummary = formatPlaygroundTaskScheduleSummary(draftTask);
           const draftTaskParentLabel = draftTaskParentTask
             ? ((taskTicketNumbersById[draftTaskParentTask.id] || draftTaskParentTask.ticketNumber || "000") + " " + (draftTaskParentTask.title || "Untitled Task"))
             : "Choose parent";
@@ -40773,6 +42401,7 @@ const html = `<!doctype html>
             };
           });
           const activeTaskPriorityPresentation = getPlaygroundTaskPriorityPresentation(draftTask.priority);
+          const activeTaskColorPresentation = getPlaygroundTaskColorPresentation(draftTask.taskColor);
           const ActiveTaskPriorityIcon = activeTaskPriorityPresentation.Icon;
           const ActiveTaskTypeIcon = activeTaskType === "subtask" ? Check : Bookmark;
           const activeTaskStatusLabel = getPlaygroundTaskStatusLabel(draftTask.status);
@@ -41200,6 +42829,40 @@ const html = `<!doctype html>
                           selected: draftTask.priority === option.id,
                           onClick: () => {
                             updateDraftField("priority", option.id, { autosave: true });
+                            setTaskDetailSelectPopover("");
+                          },
+                        })
+                      ),
+                    })
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-fact" },
+                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Color"),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                    renderTaskDetailSelectControl({
+                      popoverId: "color",
+                      valueLabel: activeTaskColorPresentation.label,
+                      disabled: isTaskConfigLocked,
+                      buttonContent: React.createElement("span", {
+                          className: "playground-tasks-detail-color-value",
+                          style: getPlaygroundTaskColorStyle(draftTask.taskColor),
+                        },
+                          React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
+                          React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeTaskColorPresentation.label)
+                        ),
+                      children: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
+                        renderTaskDetailSelectOptionRow({
+                          key: option.id,
+                          label: React.createElement("span", {
+                              className: "playground-tasks-detail-select-popup-label-slot",
+                              style: getPlaygroundTaskColorStyle(option.id),
+                            },
+                              React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
+                              React.createElement("span", null, option.label)
+                            ),
+                          selected: getPlaygroundTaskColorId(draftTask.taskColor) === option.id,
+                          onClick: () => {
+                            updateDraftField("taskColor", option.id, { autosave: true });
                             setTaskDetailSelectPopover("");
                           },
                         })
@@ -41727,10 +43390,10 @@ const html = `<!doctype html>
           );
         }
 
-        const isTaskDetailOpen = Boolean(selectedProjectId && draftTask?.id && taskView !== "calendar" && taskView !== "threads");
+        const isTaskDetailOpen = Boolean(selectedProjectId && draftTask?.id && taskView !== "threads");
         const isScheduleDetailOpen = Boolean(selectedProjectId && taskView === "calendar" && scheduleViewMode === "setup");
         const isDetailOpen = isTaskDetailOpen || isScheduleDetailOpen;
-        const isTaskAttachmentPreviewOpen = Boolean(isTaskDetailOpen && previewedTaskAttachment);
+        const isTaskAttachmentPreviewOpen = Boolean((isTaskDetailOpen || isScheduleDetailOpen) && previewedTaskAttachment);
 
         if (isDetailOnlyMode) {
           return React.createElement("div", { className: "playground-tasks-page is-inline-detail" },
@@ -41820,7 +43483,7 @@ const html = `<!doctype html>
               )
             ),
             React.createElement("aside", { className: "playground-environments-detail playground-tasks-detail-panel" },
-              taskView === "calendar" ? renderScheduleDetailPanel() : renderTaskDetail()
+              renderTaskDetail()
             )
           ),
           renderTaskEnvironmentFilePicker(),
@@ -42636,6 +44299,7 @@ const html = `<!doctype html>
             ticketNumber: welcomeWidgetTicketNumbersById[normalizedTask.id] || normalizedTask.ticketNumber || "000",
             title: normalizedTask.title || "Untitled Task",
             description: normalizedTask.description || "",
+            taskColor: normalizedTask.taskColor || PLAYGROUND_TASK_COLOR_OPTIONS[0].id,
             status: normalizedTask.status || "todo",
             priority: normalizedTask.priority || "medium",
             taskType: normalizePlaygroundTaskType(normalizedTask.taskType),

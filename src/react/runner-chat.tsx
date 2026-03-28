@@ -76,8 +76,8 @@ const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.
 const RUNNER_THINKING_STATUS_FADE_DURATION_MS = 120;
 const RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS = 500;
 const RUNNER_THREAD_HISTORY_PREVIEW_LENGTH = 50;
-const RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH = 18;
-const RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH = 12;
+const RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH = 15;
+const RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH = 10;
 const RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH = 5;
 
 export interface RunnerAttachment {
@@ -186,6 +186,7 @@ interface RunnerTaskPreview {
   ticketNumber: string;
   title: string;
   description?: string;
+  taskColor?: string;
   status?: string;
   priority?: string;
   taskType?: string;
@@ -324,10 +325,10 @@ function getRunnerThreadHistoryLineWidth(index: number, activeIndex: number): nu
   if (index === activeIndex) {
     return RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH;
   }
-  if (activeIndex < 0) {
-    return index % 2 === 0 ? RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH : RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH;
+  if (index === 0) {
+    return RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH;
   }
-  return Math.abs(index - activeIndex) % 2 === 1
+  return index % 2 === 1
     ? RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH
     : RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH;
 }
@@ -1102,6 +1103,58 @@ function normalizeRunnerTaskPreviewType(value: string | null | undefined): "task
   return String(value || "").trim().toLowerCase() === "subtask" ? "subtask" : "task";
 }
 
+function normalizeRunnerTaskPreviewColor(value: string | null | undefined): "gray" | "blue" | "green" | "amber" | "rose" {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "gray" || normalized === "green" || normalized === "amber" || normalized === "rose") {
+    return normalized;
+  }
+  return normalized === "blue" ? "blue" : "gray";
+}
+
+function getRunnerTaskPreviewColorStyle(value: string | null | undefined): CSSProperties {
+  const normalized = normalizeRunnerTaskPreviewColor(value);
+  const presentation = normalized === "gray"
+    ? {
+        accent: "rgba(255, 255, 255, 0.92)",
+        surface: "rgba(255, 255, 255, 0.05)",
+        surfaceHover: "rgba(255, 255, 255, 0.07)",
+        border: "rgba(255, 255, 255, 0.08)",
+      }
+    : normalized === "green"
+    ? {
+        accent: "#2ca36b",
+        surface: "rgba(44, 163, 107, 0.12)",
+        surfaceHover: "rgba(44, 163, 107, 0.16)",
+        border: "rgba(44, 163, 107, 0.2)",
+      }
+    : normalized === "amber"
+      ? {
+          accent: "#c98a1f",
+          surface: "rgba(201, 138, 31, 0.12)",
+          surfaceHover: "rgba(201, 138, 31, 0.16)",
+          border: "rgba(201, 138, 31, 0.2)",
+        }
+      : normalized === "rose"
+        ? {
+            accent: "#c45b87",
+            surface: "rgba(196, 91, 135, 0.12)",
+            surfaceHover: "rgba(196, 91, 135, 0.16)",
+            border: "rgba(196, 91, 135, 0.2)",
+          }
+        : {
+            accent: "#016bcb",
+            surface: "rgba(1, 107, 203, 0.12)",
+            surfaceHover: "rgba(1, 107, 203, 0.16)",
+            border: "rgba(1, 107, 203, 0.2)",
+          };
+  return {
+    "--tb-task-preview-accent": presentation.accent,
+    "--tb-task-preview-surface": presentation.surface,
+    "--tb-task-preview-surface-hover": presentation.surfaceHover,
+    "--tb-task-preview-border": presentation.border,
+  } as CSSProperties;
+}
+
 function getRunnerTaskPreviewStatusLabel(value: string | null | undefined): string {
   const normalized = normalizeRunnerTaskPreviewStatus(value);
   if (normalized === "in_progress") return "In doing";
@@ -1151,6 +1204,7 @@ function renderRunnerTaskPreviewCard(
     <button
       type="button"
       className="tb-task-preview-card"
+      style={getRunnerTaskPreviewColorStyle(taskPreview.taskColor)}
       disabled={isTaskPreviewDeleted}
       onClick={() => {
         if (!isTaskPreviewDeleted && typeof options.onClick === "function") {
@@ -4739,6 +4793,7 @@ export function RunnerChat({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const logsRef = useRef<HTMLDivElement | null>(null);
+  const contentWidthRef = useRef<HTMLDivElement | null>(null);
   const threadHistoryAnchorElementsRef = useRef<Record<string, HTMLDivElement | null>>({});
   const threadHistoryMeasureFrameRef = useRef<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -4784,6 +4839,7 @@ export function RunnerChat({
   const [activeThreadHistoryItemId, setActiveThreadHistoryItemId] = useState<string | null>(null);
   const [hoveredThreadHistoryItemId, setHoveredThreadHistoryItemId] = useState<string | null>(null);
   const [isThreadHistoryRailHovered, setIsThreadHistoryRailHovered] = useState(false);
+  const [isThreadHistoryAtMaxWidth, setIsThreadHistoryAtMaxWidth] = useState(true);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -9622,6 +9678,10 @@ export function RunnerChat({
           timeLabel={presentation.timeLabel}
           running={presentation.running}
           summaryMessage={presentation.previewMessage}
+          isDetailOpen={
+            selectedSubagentDetail?.turnId === turn.id &&
+            selectedSubagentDetail?.invocationId === presentation.invocationId
+          }
           onOpenDetails={() => openSubagentDetailDrawer(turn.id, presentation.invocationId)}
         />
       );
@@ -9871,6 +9931,7 @@ export function RunnerChat({
     [threadHistoryItems]
   );
   const shouldRenderThreadHistoryRail = threadHistoryUserMessageCount > 1 && threadHistoryItems.length > 0;
+  const shouldDisplayThreadHistoryRail = shouldRenderThreadHistoryRail && isThreadHistoryAtMaxWidth;
   const activeThreadHistoryIndex = threadHistoryItems.findIndex((item) => item.id === activeThreadHistoryItemId);
   const hoveredThreadHistoryIndex = threadHistoryItems.findIndex((item) => item.id === hoveredThreadHistoryItemId);
   const previousThreadHistoryItem =
@@ -9890,13 +9951,17 @@ export function RunnerChat({
   }
 
   function updateActiveThreadHistoryItem() {
-    if (!shouldRenderThreadHistoryRail) {
+    if (!shouldDisplayThreadHistoryRail) {
       setActiveThreadHistoryItemId(null);
       return;
     }
 
     const scrollElement = logsRef.current;
     if (!scrollElement) {
+      return;
+    }
+    if (scrollElement.scrollTop <= 8 && threadHistoryItems[0]) {
+      setActiveThreadHistoryItemId((current) => current === threadHistoryItems[0].id ? current : threadHistoryItems[0].id);
       return;
     }
 
@@ -9972,14 +10037,14 @@ export function RunnerChat({
   }
 
   useLayoutEffect(() => {
-    if (!shouldRenderThreadHistoryRail) {
+    if (!shouldDisplayThreadHistoryRail) {
       return;
     }
     scheduleThreadHistoryMeasurement();
-  }, [expandedTurns, logs, shouldRenderThreadHistoryRail, threadHistoryItems, turns]);
+  }, [expandedTurns, logs, shouldDisplayThreadHistoryRail, threadHistoryItems, turns]);
 
   useEffect(() => {
-    if (!shouldRenderThreadHistoryRail) {
+    if (!shouldDisplayThreadHistoryRail) {
       setHoveredThreadHistoryItemId(null);
       setIsThreadHistoryRailHovered(false);
       setActiveThreadHistoryItemId(null);
@@ -10010,7 +10075,7 @@ export function RunnerChat({
       resizeObserver?.disconnect();
       window.removeEventListener("resize", handleThreadHistoryViewportChange);
     };
-  }, [shouldRenderThreadHistoryRail, threadHistoryItems]);
+  }, [shouldDisplayThreadHistoryRail, threadHistoryItems]);
 
   useEffect(() => {
     if (activeThreadHistoryItemId && !threadHistoryItems.some((item) => item.id === activeThreadHistoryItemId)) {
@@ -10020,6 +10085,38 @@ export function RunnerChat({
       setHoveredThreadHistoryItemId(null);
     }
   }, [activeThreadHistoryItemId, hoveredThreadHistoryItemId, threadHistoryItems]);
+
+  useLayoutEffect(() => {
+    const contentElement = contentWidthRef.current;
+    if (!contentElement) {
+      return;
+    }
+    const resolvedContentElement = contentElement;
+
+    function updateThreadHistoryWidthEligibility() {
+      const computedMaxWidth = Number.parseFloat(window.getComputedStyle(resolvedContentElement).maxWidth);
+      const actualWidth = resolvedContentElement.getBoundingClientRect().width;
+      const nextIsAtMaxWidth =
+        Number.isFinite(computedMaxWidth) && computedMaxWidth > 0
+          ? actualWidth >= computedMaxWidth - 1
+          : true;
+      setIsThreadHistoryAtMaxWidth((current) => current === nextIsAtMaxWidth ? current : nextIsAtMaxWidth);
+    }
+
+    updateThreadHistoryWidthEligibility();
+    const resizeObserver = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => {
+          updateThreadHistoryWidthEligibility();
+        })
+      : null;
+    resizeObserver?.observe(resolvedContentElement);
+    window.addEventListener("resize", updateThreadHistoryWidthEligibility);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", updateThreadHistoryWidthEligibility);
+    };
+  }, [previewedDocumentAttachment, turns.length]);
 
   const selectedSubagentDetailPresentation = useMemo(() => {
     if (!selectedSubagentDetail) {
@@ -11108,7 +11205,10 @@ export function RunnerChat({
           ref={logsRef}
           onMouseUp={handleQuotedSelectionMouseUp}
         >
-          <div className={`tb-content-width ${hasCustomEmptyState ? "is-custom-empty-state" : ""}`.trim()}>
+          <div
+            ref={contentWidthRef}
+            className={`tb-content-width ${hasCustomEmptyState ? "is-custom-empty-state" : ""}`.trim()}
+          >
             {turns.length === 0
               ? hasCustomEmptyState
                 ? emptyState
@@ -11546,7 +11646,7 @@ export function RunnerChat({
             })}
           </div>
         </div>
-        {shouldRenderThreadHistoryRail ? (
+        {shouldDisplayThreadHistoryRail ? (
           <div
             className={`tb-thread-history-rail ${areThreadHistoryControlsVisible ? "is-controls-visible" : ""}`.trim()}
             onMouseEnter={() => setIsThreadHistoryRailHovered(true)}

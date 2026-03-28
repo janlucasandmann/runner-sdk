@@ -868,11 +868,12 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-thread-history-rail {
   position: absolute;
-  top: 50%;
+  top: calc(50% - 29px);
   right: 12px;
   transform: translateY(-50%);
   z-index: 14;
-  width: 44px;
+  width: 36px;
+  padding: 32px 0;
   pointer-events: auto;
 }
 
@@ -921,7 +922,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-thread-history-preview-bubble {
   position: absolute;
   top: 50%;
-  right: calc(100% + 12px);
+  right: calc(100% + 8px);
   transform: translateY(-50%);
   width: min(240px, calc(100vw - 92px));
   padding: 12px 14px;
@@ -955,8 +956,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   position: absolute;
   right: 0;
   width: 100%;
-  height: 24px;
+  height: 26px;
   padding: 0;
+  margin: 0;
   border: 0;
   background: transparent;
   color: rgba(255, 255, 255, 0.7);
@@ -970,11 +972,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-thread-history-chevron-up {
-  bottom: calc(100% + 10px);
+  top: 0;
 }
 
 .tb-runner-chat .tb-thread-history-chevron-down {
-  top: calc(100% + 10px);
+  bottom: 0;
 }
 
 .tb-runner-chat .tb-thread-history-rail.is-controls-visible .tb-thread-history-chevron {
@@ -987,13 +989,17 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-thread-history-chevron:disabled {
-  opacity: 0.3;
   cursor: default;
+}
+
+.tb-runner-chat .tb-thread-history-rail.is-controls-visible .tb-thread-history-chevron:disabled {
+  opacity: 0.3;
 }
 
 .tb-runner-chat .tb-thread-history-chevron-icon {
   width: 18px;
   height: 18px;
+  transform: translateX(3px);
 }
 
 .tb-runner-chat .tb-thread-history-anchor {
@@ -1173,8 +1179,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 12px;
   border-radius: 8px;
   border: 0;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
+  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
+  box-shadow: inset 0 0 0 1px var(--tb-task-preview-border, rgba(255, 255, 255, 0.08)), 0px 2px 5px rgba(0, 0, 0, 0.15);
   color: rgba(255, 255, 255, 0.92);
   text-align: left;
   cursor: pointer;
@@ -1182,7 +1188,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-task-preview-card:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--tb-task-preview-surface-hover, rgba(255, 255, 255, 0.07));
 }
 
 .tb-runner-chat .tb-task-preview-card:disabled {
@@ -1191,11 +1197,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-task-preview-card:disabled:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
 }
 
 .tb-runner-chat .tb-task-preview-card:focus-visible {
-  outline: 2px solid rgba(102, 166, 255, 0.45);
+  outline: 2px solid var(--tb-task-preview-accent, rgba(255, 255, 255, 0.92));
   outline-offset: 2px;
 }
 
@@ -1276,7 +1282,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-task-preview-ticket {
-  color: rgba(102, 166, 255, 1);
+  color: var(--tb-task-preview-accent, rgba(255, 255, 255, 0.92));
   font-size: 12px;
   font-weight: 500;
   flex: 0 0 auto;
@@ -2106,8 +2112,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 12px;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-subagent .tb-log-card-panel {
+.tb-runner-chat .tb-log-card.tb-log-card-subagent.is-detail-open .tb-log-card-panel {
   padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .tb-runner-chat .tb-log-card.tb-log-card-browser {
@@ -2371,6 +2379,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 16px;
 }
 
+.tb-runner-chat .tb-subagent-detail-drawer .tb-subagent-log-shell {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .tb-runner-chat .tb-subagent-detail-drawer .tb-subagent-log-summary {
   padding: 0;
   border-radius: 0;
@@ -2589,6 +2604,20 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-log-card-code .monaco-editor .cursor {
+  display: none !important;
+}
+
+.tb-runner-chat .tb-log-card-code.tb-log-card-code-hide-scrollbars .monaco-scrollable-element {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.tb-runner-chat .tb-log-card-code.tb-log-card-code-hide-scrollbars .monaco-scrollable-element::-webkit-scrollbar {
+  display: none !important;
+}
+
+.tb-runner-chat .tb-log-card-code.tb-log-card-code-hide-scrollbars .scrollbar,
+.tb-runner-chat .tb-log-card-code.tb-log-card-code-hide-scrollbars .decorationsOverviewRuler {
   display: none !important;
 }
 

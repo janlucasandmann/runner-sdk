@@ -468,12 +468,14 @@ function RunnerCodeViewer({
   language,
   maxHeight,
   showLineNumbers = false,
+  className,
 }: {
   content: string;
   filePath?: string;
   language?: string;
   maxHeight?: number;
   showLineNumbers?: boolean;
+  className?: string;
 }) {
   const [EditorComponent, setEditorComponent] = useState<any>(null);
   const resolvedLanguage = language || detectCodeLanguage(content, filePath);
@@ -498,7 +500,7 @@ function RunnerCodeViewer({
   }, []);
 
   return (
-    <div className="tb-log-card-code">
+    <div className={`tb-log-card-code ${className || ""}`.trim()}>
       {EditorComponent ? (
         <EditorComponent
           key={editorKey}
@@ -1100,6 +1102,7 @@ function ReadFileLogBox({
                   language={detectedLanguage}
                   maxHeight={500}
                   showLineNumbers
+                  className="tb-log-card-code-hide-scrollbars"
                 />
               </div>
             </div>
@@ -1267,7 +1270,7 @@ function WriteFileSingleLogBox({
               />
             ) : output ? (
               <>
-                <RunnerCodeViewer content={output} filePath={filePath || undefined} />
+                <RunnerCodeViewer content={output} filePath={filePath || undefined} className="tb-log-card-code-hide-scrollbars" />
                 <div className="tb-log-card-note">Diff unavailable for this log.</div>
               </>
             ) : (
@@ -3199,6 +3202,7 @@ export function SubagentLogBox({
   running = false,
   summaryMessage,
   onOpenDetails,
+  isDetailOpen = false,
 }: {
   title: string;
   prompt?: string | null;
@@ -3206,13 +3210,14 @@ export function SubagentLogBox({
   running?: boolean;
   summaryMessage?: string | null;
   onOpenDetails?: () => void;
+  isDetailOpen?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const cleanedPrompt = truncateSubagentPreviewText(prompt);
   const cleanedSummaryMessage = truncateSubagentPreviewText(summaryMessage) || `${title} is working`;
 
   return (
-    <div className="tb-log-card tb-log-card-subagent">
+    <div className={`tb-log-card tb-log-card-subagent ${isDetailOpen ? "is-detail-open" : ""}`.trim()}>
       <LogHeader
         icon={<Bot className="tb-log-card-small-icon tb-log-card-small-icon-subagent" strokeWidth={1.5} />}
         label="Subagent"
