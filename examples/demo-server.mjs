@@ -11117,6 +11117,13 @@ const html = `<!doctype html>
         z-index: 1;
       }
 
+      .playground-tasks-detail-shell .playground-tasks-detail-description-preview-scope.tb-runner-chat {
+        position: relative;
+        inset: auto;
+        height: auto;
+        min-height: 36px;
+      }
+
       .playground-tasks-detail-description-editor.is-editing .playground-tasks-detail-description-preview-scope.tb-runner-chat {
         display: none;
       }
@@ -11127,6 +11134,22 @@ const html = `<!doctype html>
         font-size: 12px;
         line-height: 1.6;
         min-height: 36px;
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-detail-description-preview {
+        padding-bottom: 9px;
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-detail-description-input {
+        padding-bottom: 9px;
+      }
+
+      .playground-tasks-detail-shell .playground-tasks-detail-description-input.is-preview {
+        position: absolute;
+        inset: 0;
+        height: 100% !important;
+        min-height: 100%;
+        padding-bottom: 0;
       }
 
       .playground-tasks-detail-description-preview.tb-message-markdown,
@@ -17233,6 +17256,8 @@ const html = `<!doctype html>
           priority: "medium",
           releaseId: null,
           dependencyIds: [],
+          taskType: "task",
+          parentTaskId: null,
           attachments: [],
           enabledSkills: [],
           connectors: buildPlaygroundDefaultTaskConnectors(),
@@ -18521,6 +18546,15 @@ const html = `<!doctype html>
           : (PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === metadata?.priority)
             ? metadata.priority
             : draft.priority);
+        const normalizedParentTaskId = normalizePlaygroundParentTaskId(
+          schedule.parentTaskId
+          || metadata?.parentTaskId
+        );
+        const taskType = normalizePlaygroundTaskType(
+          schedule.taskType
+          || metadata?.taskType
+          || (normalizedParentTaskId ? "subtask" : draft.taskType)
+        );
         const releaseId = typeof schedule.releaseId === "string" && schedule.releaseId.trim()
           ? schedule.releaseId.trim()
           : (typeof metadata?.releaseId === "string" && metadata.releaseId.trim() ? metadata.releaseId.trim() : null);
@@ -18562,6 +18596,8 @@ const html = `<!doctype html>
           task: typeof schedule.task === "string" ? schedule.task : draft.task,
           taskColor,
           priority,
+          taskType: normalizedParentTaskId ? taskType : "task",
+          parentTaskId: normalizedParentTaskId,
           releaseId,
           dependencyIds,
           attachments,
@@ -33042,6 +33078,20 @@ const html = `<!doctype html>
             });
         }, [allTaskChildrenByParentId, draftTask?.id, taskTicketNumbersById, tasks]);
 
+        const scheduleParentCandidateTasks = useMemo(() => {
+          return tasks
+            .filter((task) => task?.id && !isPlaygroundSubtaskRecord(task))
+            .slice()
+            .sort((left, right) => {
+              const leftTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[left.id] || left.ticketNumber);
+              const rightTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[right.id] || right.ticketNumber);
+              if (leftTicketNumber !== rightTicketNumber) {
+                return leftTicketNumber - rightTicketNumber;
+              }
+              return String(left.title || "").localeCompare(String(right.title || ""));
+            });
+        }, [taskTicketNumbersById, tasks]);
+
         const boardBlockedTaskCandidates = useMemo(() => {
           const blockedTaskId = String(boardBlockedPickerState?.taskId || "").trim();
           if (!blockedTaskId) {
@@ -34181,6 +34231,8 @@ const html = `<!doctype html>
                 ...(normalizedSchedule.metadata && typeof normalizedSchedule.metadata === "object" ? normalizedSchedule.metadata : {}),
                 taskColor: getPlaygroundTaskColorId(normalizedSchedule.taskColor),
                 priority: normalizedSchedule.priority,
+                taskType: normalizePlaygroundTaskType(normalizedSchedule.taskType),
+                parentTaskId: normalizePlaygroundParentTaskId(normalizedSchedule.parentTaskId),
                 releaseId: normalizedSchedule.releaseId || null,
                 dependencyIds: normalizePlaygroundIdList(normalizedSchedule.dependencyIds),
                 enabledSkills: normalizePlaygroundEnabledSkillIds(normalizedSchedule.enabledSkills),
@@ -36578,6 +36630,16 @@ const html = `<!doctype html>
           });
         }
 
+        function openScheduleTaskParentPicker() {
+          setTaskDetailPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setTaskDetailSelectPopover("");
+          setTaskParentPickerState({
+            mode: "schedule",
+            selectedParentTaskId: normalizePlaygroundParentTaskId(scheduleDraft?.parentTaskId) || "",
+          });
+        }
+
         function handleTaskTypeSelection(nextType) {
           const normalizedType = normalizePlaygroundTaskType(nextType);
           if (!draftTask?.id || taskHasStartedThread(draftTask)) {
@@ -36598,6 +36660,23 @@ const html = `<!doctype html>
           }), { autosave: true });
         }
 
+        function handleScheduleTaskTypeSelection(nextType) {
+          const normalizedType = normalizePlaygroundTaskType(nextType);
+          const currentTaskType = normalizePlaygroundTaskType(scheduleDraft?.taskType);
+          if (normalizedType === "subtask") {
+            openScheduleTaskParentPicker();
+            return;
+          }
+          if (currentTaskType === "task" && !normalizePlaygroundParentTaskId(scheduleDraft?.parentTaskId)) {
+            return;
+          }
+          updateScheduleDraft((current) => ({
+            ...(current || buildProjectScheduleDraft(selectedProject)),
+            taskType: "task",
+            parentTaskId: null,
+          }));
+        }
+
         function handleSelectTaskParent(parentTaskId) {
           const normalizedParentTaskId = normalizePlaygroundParentTaskId(parentTaskId);
           const parentTask = normalizedParentTaskId ? tasksById[normalizedParentTaskId] || null : null;
@@ -36610,6 +36689,20 @@ const html = `<!doctype html>
             taskType: "subtask",
             parentTaskId: normalizedParentTaskId,
           }), { autosave: true });
+          setTaskParentPickerState(null);
+        }
+
+        function handleSelectScheduleParent(parentTaskId) {
+          const normalizedParentTaskId = normalizePlaygroundParentTaskId(parentTaskId);
+          const parentTask = normalizedParentTaskId ? tasksById[normalizedParentTaskId] || null : null;
+          if (!normalizedParentTaskId || !parentTask || isPlaygroundSubtaskRecord(parentTask)) {
+            return;
+          }
+          updateScheduleDraft((current) => ({
+            ...(current || buildProjectScheduleDraft(selectedProject)),
+            taskType: "subtask",
+            parentTaskId: normalizedParentTaskId,
+          }));
           setTaskParentPickerState(null);
         }
 
@@ -39151,9 +39244,12 @@ const html = `<!doctype html>
         }
 
         function renderTaskParentPickerDialog() {
-          if (!taskParentPickerState || !draftTask?.id) {
+          const isScheduleParentPicker = taskParentPickerState?.mode === "schedule";
+          if (!taskParentPickerState || (!draftTask?.id && !isScheduleParentPicker)) {
             return null;
           }
+
+          const parentCandidateTasks = isScheduleParentPicker ? scheduleParentCandidateTasks : taskParentCandidateTasks;
 
           return React.createElement("div", {
               className: "playground-tasks-confirm-scrim playground-tasks-parent-picker-scrim",
@@ -39167,15 +39263,21 @@ const html = `<!doctype html>
               React.createElement("div", { className: "playground-tasks-confirm-copy" },
                 "Subtasks stay nested under their parent in backlog and are hidden from the board."
               ),
-              taskParentCandidateTasks.length > 0
+              parentCandidateTasks.length > 0
                 ? React.createElement("div", { className: "playground-tasks-parent-picker-list" },
-                    taskParentCandidateTasks.map((task) => {
+                    parentCandidateTasks.map((task) => {
                       const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "000";
                       return React.createElement("button", {
                           key: task.id,
                           type: "button",
                           className: "playground-tasks-parent-picker-row",
-                          onClick: () => handleSelectTaskParent(task.id),
+                          onClick: () => {
+                            if (isScheduleParentPicker) {
+                              handleSelectScheduleParent(task.id);
+                              return;
+                            }
+                            handleSelectTaskParent(task.id);
+                          },
                         },
                           React.createElement("div", { className: "playground-tasks-parent-picker-row-main" },
                             React.createElement("div", { className: "playground-tasks-parent-picker-row-title" }, task.title || "Untitled Task"),
@@ -41132,6 +41234,17 @@ const html = `<!doctype html>
           const activeScheduleReleaseLabel = activeScheduleReleaseId
             ? (releasesById[activeScheduleReleaseId]?.name || "Release")
             : "None";
+          const activeScheduleTaskType = normalizePlaygroundTaskType(scheduleDraft?.taskType);
+          const scheduleParentTaskId = normalizePlaygroundParentTaskId(scheduleDraft?.parentTaskId);
+          const scheduleParentTask = scheduleParentTaskId ? (tasksById[scheduleParentTaskId] || null) : null;
+          const scheduleParentTicketNumber = scheduleParentTask
+            ? (taskTicketNumbersById[scheduleParentTask.id] || scheduleParentTask.ticketNumber || "000")
+            : "";
+          const scheduleParentLabel = scheduleParentTask
+            ? (scheduleParentTicketNumber + " " + (scheduleParentTask.title || "Untitled Task"))
+            : "Choose parent";
+          const activeScheduleTypeLabel = PLAYGROUND_TASK_TYPE_OPTIONS.find((option) => option.id === activeScheduleTaskType)?.label || "Task";
+          const ActiveScheduleTypeIcon = activeScheduleTaskType === "subtask" ? Check : Bookmark;
           const blockedByTaskId = normalizePlaygroundIdList(scheduleDraft?.dependencyIds)[0] || "";
           const activeBlockedByTask = blockedByTaskId ? (tasksById[blockedByTaskId] || null) : null;
           const activeBlockedByLabel = activeBlockedByTask
@@ -41422,9 +41535,37 @@ const html = `<!doctype html>
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
                             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Type"),
                             React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                              React.createElement("span", { className: "playground-tasks-detail-type-value" },
-                                React.createElement(Bookmark, { className: "playground-tasks-detail-type-icon", strokeWidth: 1.9 }),
-                                React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, "Task")
+                              React.createElement("div", { className: "playground-tasks-type-control" },
+                                renderScheduleDetailSelectControl({
+                                  popoverId: "schedule-type",
+                                  valueLabel: activeScheduleTaskType === "subtask" && scheduleParentTicketNumber
+                                    ? ("Subtask to " + scheduleParentTicketNumber)
+                                    : activeScheduleTypeLabel,
+                                  buttonContent: React.createElement("span", {
+                                      className: "playground-tasks-detail-type-value",
+                                    },
+                                      React.createElement(ActiveScheduleTypeIcon, { className: "playground-tasks-detail-type-icon", strokeWidth: 1.9 }),
+                                      activeScheduleTaskType === "subtask"
+                                        ? React.createElement(React.Fragment, null,
+                                            React.createElement("span", { className: "playground-tasks-detail-type-prefix" }, "Subtask to"),
+                                            scheduleParentTicketNumber
+                                              ? React.createElement("span", { className: "playground-tasks-detail-type-ticket", title: scheduleParentLabel }, scheduleParentTicketNumber)
+                                              : null
+                                          )
+                                        : React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeScheduleTypeLabel)
+                                    ),
+                                  children: PLAYGROUND_TASK_TYPE_OPTIONS.map((option) =>
+                                    renderScheduleDetailSelectOptionRow({
+                                      key: option.id,
+                                      label: option.label,
+                                      selected: activeScheduleTaskType === option.id,
+                                      onClick: () => {
+                                        handleScheduleTaskTypeSelection(option.id);
+                                        setTaskDetailSelectPopover("");
+                                      },
+                                    })
+                                  ),
+                                })
                               )
                             )
                           ),
