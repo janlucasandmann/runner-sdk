@@ -41,6 +41,9 @@ const html = `<!doctype html>
         color: var(--text);
         font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
         background: var(--playground-app-bg);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         width: 100vw;
         height: 100vh;
         overflow: hidden;
@@ -53,6 +56,11 @@ const html = `<!doctype html>
         font-family: inherit;
       }
 
+      aside {
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+      }
+
       .page {
         width: 100vw;
         height: 100vh;
@@ -60,6 +68,9 @@ const html = `<!doctype html>
         border-radius: 0;
         border: 0;
         background: var(--playground-app-bg);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         overflow: hidden;
         display: grid;
         grid-template-columns: 340px minmax(0, 1fr);
@@ -350,6 +361,9 @@ const html = `<!doctype html>
         display: grid;
         grid-template-columns: 320px minmax(0, 1fr);
         background: var(--playground-app-bg);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         transition: grid-template-columns 260ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
@@ -365,7 +379,14 @@ const html = `<!doctype html>
         padding: 0;
         overflow: hidden;
         background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
         transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .playground-shell.is-projects-page .playground-sidebar {
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
       }
 
       .playground-sidebar-panel,
@@ -1215,6 +1236,10 @@ const html = `<!doctype html>
         height: 100%;
         padding: 6px;
         overflow: hidden;
+      }
+
+      .playground-shell.is-projects-page .playground-main {
+        padding: 0;
       }
 
       .playground-content-shell {
@@ -7117,6 +7142,8 @@ const html = `<!doctype html>
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 999px;
         background: transparent;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         color: rgba(255, 255, 255, 0.9);
         font-size: 13px;
         font-weight: 500;
@@ -11525,6 +11552,10 @@ const html = `<!doctype html>
         z-index: 1;
       }
 
+      .playground-tasks-detail-main.is-project-wallpaper-active .playground-tasks-comment-dock {
+        background: transparent;
+      }
+
       .playground-tasks-comment-feedback {
         padding: 0 2px 10px;
       }
@@ -11544,6 +11575,10 @@ const html = `<!doctype html>
         background: rgba(15, 15, 15, 0.92);
         box-shadow: none;
         backdrop-filter: blur(50px);
+      }
+
+      .playground-tasks-detail-main.is-project-wallpaper-active .playground-tasks-comment-bar {
+        background: transparent;
       }
 
       .playground-tasks-comment-bar::before {
@@ -11990,6 +12025,8 @@ const html = `<!doctype html>
         padding: 3px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
       }
 
       .playground-tasks-nav .content-mode-button {
@@ -12222,6 +12259,16 @@ const html = `<!doctype html>
 
       .playground-tasks-project-wallpaper-field {
         margin-top: 16px;
+      }
+
+      .playground-tasks-project-wallpaper-toggle {
+        margin-top: 14px;
+      }
+
+      .playground-tasks-project-wallpaper-toggle-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.94);
       }
 
       .playground-tasks-project-wallpaper-grid {
@@ -12915,6 +12962,8 @@ const html = `<!doctype html>
         border: 0;
         border-radius: 10px;
         background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         color: rgba(255, 255, 255, 0.72);
         text-align: left;
         cursor: pointer;
@@ -13427,6 +13476,10 @@ const html = `<!doctype html>
         background: transparent;
       }
 
+      .playground-tasks-backlog-composer-shell.is-project-wallpaper-active .tb-runner-chat.playground-tasks-backlog-runner .task-input-box {
+        --tb-task-input-base-bg: transparent;
+      }
+
       .tb-runner-chat.playground-tasks-backlog-runner {
         width: 100%;
         min-width: 0;
@@ -13877,6 +13930,8 @@ const html = `<!doctype html>
 
       .playground-tasks-calendar-today-button.is-active {
         background: rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         color: rgba(255, 255, 255, 0.98);
       }
 
@@ -13954,6 +14009,8 @@ const html = `<!doctype html>
         padding: 12px;
         border-radius: 5px;
         background: rgba(255, 255, 255, 0.025);
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
         transition: background-color 160ms ease, box-shadow 160ms ease;
       }
 
@@ -14614,11 +14671,15 @@ const html = `<!doctype html>
         border-left: none !important;
         border-right: none !important;
         margin-top: 10px;
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
       }
 
       .playground-tasks-scheduler .rbc-time-view,
       .playground-tasks-scheduler .rbc-agenda-view {
         margin-top: 10px;
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
       }
 
       .playground-tasks-scheduler .rbc-month-header {
@@ -17132,6 +17193,24 @@ const html = `<!doctype html>
         return PLAYGROUND_PROJECT_WALLPAPER_OPTIONS.find((option) => option.id === wallpaperId) || fallback;
       }
 
+      function getPlaygroundProjectUseCardBackgroundAsWallpaper(...values) {
+        for (const value of values) {
+          if (typeof value === "boolean") {
+            return value;
+          }
+          if (typeof value === "number") {
+            if (value === 1) return true;
+            if (value === 0) return false;
+          }
+          if (typeof value === "string") {
+            const normalized = value.trim().toLowerCase();
+            if (normalized === "true") return true;
+            if (normalized === "false") return false;
+          }
+        }
+        return true;
+      }
+
       function getPlaygroundProjectIconId(value) {
         const normalized = String(value || "").trim().toLowerCase();
         return PLAYGROUND_PROJECT_ICON_OPTIONS.some((option) => option.id === normalized)
@@ -17235,6 +17314,7 @@ const html = `<!doctype html>
           description: "",
           icon: PLAYGROUND_PROJECT_ICON_OPTIONS[0].id,
           wallpaperId: PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id,
+          useCardBackgroundAsWallpaper: true,
           color: null,
           defaultEnvironmentId: null,
           metadata: null,
@@ -18464,6 +18544,10 @@ const html = `<!doctype html>
           : null;
         const icon = getPlaygroundProjectIconId(project.icon || metadata?.icon);
         const wallpaperId = getPlaygroundProjectWallpaperId(project.wallpaperId || metadata?.wallpaperId, "");
+        const useCardBackgroundAsWallpaper = getPlaygroundProjectUseCardBackgroundAsWallpaper(
+          project.useCardBackgroundAsWallpaper,
+          metadata?.useCardBackgroundAsWallpaper
+        );
 
         return {
           ...draft,
@@ -18473,6 +18557,7 @@ const html = `<!doctype html>
           description: typeof project.description === "string" ? project.description : draft.description,
           icon,
           wallpaperId,
+          useCardBackgroundAsWallpaper,
           color: typeof project.color === "string" && project.color.trim() ? project.color.trim() : null,
           defaultEnvironmentId: typeof project.defaultEnvironmentId === "string" && project.defaultEnvironmentId.trim()
             ? project.defaultEnvironmentId.trim()
@@ -18806,16 +18891,24 @@ const html = `<!doctype html>
             || normalizedFallback.icon
             || fallbackMetadata.icon
         );
+        const mergedUseCardBackgroundAsWallpaper = getPlaygroundProjectUseCardBackgroundAsWallpaper(
+          normalizedPrimary.useCardBackgroundAsWallpaper,
+          primaryMetadata.useCardBackgroundAsWallpaper,
+          normalizedFallback.useCardBackgroundAsWallpaper,
+          fallbackMetadata.useCardBackgroundAsWallpaper
+        );
 
         return normalizePlaygroundProjectRecord({
           ...normalizedFallback,
           ...normalizedPrimary,
           icon: mergedIcon,
           wallpaperId: mergedWallpaperId,
+          useCardBackgroundAsWallpaper: mergedUseCardBackgroundAsWallpaper,
           metadata: {
             ...mergedMetadata,
             icon: mergedIcon,
             wallpaperId: mergedWallpaperId,
+            useCardBackgroundAsWallpaper: mergedUseCardBackgroundAsWallpaper,
           },
           summary: {
             ...buildEmptyPlaygroundProjectSummary(),
@@ -31562,6 +31655,21 @@ const html = `<!doctype html>
           return selectedProjectSnapshot;
         }, [selectedProjectDetail, selectedProjectId, selectedProjectSnapshot]);
 
+        const selectedProjectShellBackground = useMemo(() => {
+          if (!selectedProject) {
+            return "";
+          }
+          if (!getPlaygroundProjectUseCardBackgroundAsWallpaper(
+            selectedProject.useCardBackgroundAsWallpaper,
+            selectedProject.metadata?.useCardBackgroundAsWallpaper
+          )) {
+            return "";
+          }
+          const selectedProjectIndex = projects.findIndex((project) => project.id === selectedProject.id);
+          const projectWallpaper = getPlaygroundProjectWallpaperConfig(selectedProject, selectedProjectIndex >= 0 ? selectedProjectIndex : 0);
+          return "linear-gradient(180deg, rgba(10, 10, 14, 0.52), rgba(10, 10, 14, 0.82)), url(" + projectWallpaper.url + ")";
+        }, [projects, selectedProject]);
+
         const selectedProjectSummary = useMemo(() => {
           const baseSummary = selectedProjectDetail?.project?.id === selectedProjectId
             ? selectedProjectDetail.summary
@@ -31582,6 +31690,18 @@ const html = `<!doctype html>
 
           return nextSummary;
         }, [releases, selectedProject, selectedProjectDetail, selectedProjectId, sprints, taskLoadState.status, tasks]);
+
+        useEffect(() => {
+          if (typeof document === "undefined") {
+            return undefined;
+          }
+          const rootStyle = document.documentElement.style;
+          const fallbackBackground = "linear-gradient(to top, #000000 0%, #111111 100%)";
+          rootStyle.setProperty("--playground-app-bg", selectedProjectShellBackground || fallbackBackground);
+          return () => {
+            rootStyle.setProperty("--playground-app-bg", fallbackBackground);
+          };
+        }, [selectedProjectShellBackground]);
 
         const selectedProjectEnvironments = useMemo(() => {
           return selectedProjectDetail?.project?.id === selectedProjectId
@@ -37022,6 +37142,7 @@ const html = `<!doctype html>
                   ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
                   icon: getPlaygroundProjectIconId(projectDraft.icon),
                   wallpaperId: getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
+                  useCardBackgroundAsWallpaper: projectDraft.useCardBackgroundAsWallpaper !== false,
                 },
               }),
             });
@@ -37081,6 +37202,7 @@ const html = `<!doctype html>
                   ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
                   icon: getPlaygroundProjectIconId(projectDraft.icon),
                   wallpaperId: getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
+                  useCardBackgroundAsWallpaper: projectDraft.useCardBackgroundAsWallpaper !== false,
                 },
               }),
             });
@@ -39865,6 +39987,23 @@ const html = `<!doctype html>
                         React.createElement("div", { className: "playground-tasks-project-wallpaper-option-label" }, wallpaper.name)
                       );
                     })
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-wallpaper-toggle playground-environments-toggle-row" },
+                    React.createElement("div", { className: "playground-environments-toggle-copy" },
+                      React.createElement("div", { className: "playground-tasks-project-wallpaper-toggle-title" }, "Use card background as Wallpaper")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-toggle" + (projectDraft.useCardBackgroundAsWallpaper !== false ? " is-active" : ""),
+                      role: "switch",
+                      "aria-checked": projectDraft.useCardBackgroundAsWallpaper !== false ? "true" : "false",
+                      onClick: () => setProjectDraft((current) => ({
+                        ...current,
+                        useCardBackgroundAsWallpaper: current.useCardBackgroundAsWallpaper === false,
+                      })),
+                    },
+                      React.createElement("span", { className: "playground-environments-toggle-thumb" })
+                    )
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
@@ -40749,7 +40888,7 @@ const html = `<!doctype html>
             groupRootTasksByRelease: !isReleaseBacklogView,
             showComposer: true,
             composer: React.createElement("div", {
-                className: "playground-tasks-backlog-composer-shell",
+                className: "playground-tasks-backlog-composer-shell" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""),
               },
                 React.createElement(RunnerChat, {
                   key: selectedProjectId + ":" + (selectedReleaseId || "__all__") + ":" + backlogComposerKey,
@@ -41366,7 +41505,7 @@ const html = `<!doctype html>
           }
 
           return React.createElement("div", { className: "playground-tasks-detail-shell playground-tasks-schedule-detail-shell" },
-            React.createElement("div", { className: "playground-tasks-detail-main" },
+            React.createElement("div", { className: "playground-tasks-detail-main" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : "") },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
                 React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
                   React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
@@ -42293,7 +42432,9 @@ const html = `<!doctype html>
             return null;
           }
 
-          return React.createElement("div", { className: "playground-environments-page playground-tasks-project-workspace" },
+          return React.createElement("div", {
+              className: "playground-environments-page playground-tasks-project-workspace",
+            },
             React.createElement("section", { className: "playground-environments-detail playground-tasks-project-workspace-detail" },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-tasks-project-navbar" },
                 React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
@@ -42674,7 +42815,7 @@ const html = `<!doctype html>
           return React.createElement("div", {
               className: "playground-tasks-detail-shell" + (previewedTaskAttachment ? " is-preview-open" : ""),
             },
-            React.createElement("div", { className: "playground-tasks-detail-main", ref: taskDetailMainRef },
+            React.createElement("div", { className: "playground-tasks-detail-main" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
                 React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
                   React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
@@ -50918,7 +51059,7 @@ const html = `<!doctype html>
           }
 
           const targetStillExists = baseThreadItems.some((thread) => thread.id === threadActionMenuState.threadId);
-          if (!targetStillExists || activeSidebarThreadId !== threadActionMenuState.threadId) {
+          if (!targetStillExists) {
             setThreadActionMenuState(null);
             return;
           }
@@ -50942,7 +51083,7 @@ const html = `<!doctype html>
             window.removeEventListener("resize", handleViewportChange);
             window.removeEventListener("scroll", handleViewportChange, true);
           };
-        }, [activeSidebarThreadId, baseThreadItems, threadActionMenuState]);
+        }, [baseThreadItems, threadActionMenuState]);
 
         useEffect(() => {
           if (!threadNavMenuOpen) {
@@ -52330,7 +52471,7 @@ const html = `<!doctype html>
                   )
                 )
               : null,
-            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") },
+            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (activePage === "tasks" ? " is-projects-page" : "") },
               React.createElement("aside", { className: "playground-sidebar" + (sidebarOpen ? "" : " is-collapsed") },
                 React.createElement("div", {
                   className: "playground-sidebar-panel",
