@@ -167,16 +167,23 @@ interface PendingRunnerMessage {
   prompt: string;
   attachments: LocalAttachment[];
   quotedSelection?: RunnerQuotedSelection | null;
-  backlogSubtaskCommand?: {
-    ticketNumber: string;
-    label: string;
-  } | null;
+  backlogCommand?: StagedBacklogCommand | null;
 }
 
-interface StagedBacklogSubtaskCommand {
-  ticketNumber: string;
+interface BaseStagedBacklogCommand {
   label: string;
 }
+
+interface StagedBacklogSubtaskCommand extends BaseStagedBacklogCommand {
+  action: "subtask";
+  ticketNumber: string;
+}
+
+interface StagedBacklogMissionControlCommand extends BaseStagedBacklogCommand {
+  action: "mission_control";
+}
+
+type StagedBacklogCommand = StagedBacklogSubtaskCommand | StagedBacklogMissionControlCommand;
 
 interface RunnerTaskPreview {
   taskId: string;
@@ -727,6 +734,23 @@ export interface RunnerChatProps {
     token: string | number;
     label?: string;
   } | null;
+  enableBacklogMissionControlCommand?: boolean;
+  backlogMissionControlCommand?: {
+    token: string | number;
+    label?: string;
+  } | null;
+  onBacklogMissionControlSubmit?: (payload: {
+    prompt: string;
+    attachments: RunnerAttachment[];
+    environmentId: string | null;
+    agentId: string | null;
+    githubRepo?: {
+      repoFullName: string;
+      repoName: string;
+      branch: string;
+    } | null;
+    enabledSkills?: Record<string, unknown> | null;
+  }) => Promise<void> | void;
 }
 
 export interface RunnerChatActionSummaryClickPayload {
@@ -1068,6 +1092,10 @@ function buildRunnerBacklogSubtaskLabel(ticketNumber: string): string {
   return normalizedTicketNumber ? `Subtask to ${normalizedTicketNumber}` : "Subtask";
 }
 
+function buildRunnerMissionControlLabel(): string {
+  return "Mission Control";
+}
+
 function parseAutoStageBacklogSubtaskCommand(input: string): { ticketNumber: string; prompt: string } | null {
   const match = input.match(/^\/subtask\s+(\d{3})(?:\s+([\s\S]*))$/i);
   if (!match) {
@@ -1080,6 +1108,17 @@ function parseAutoStageBacklogSubtaskCommand(input: string): { ticketNumber: str
   return {
     ticketNumber,
     prompt: match[2] || "",
+  };
+}
+
+function parseAutoStageBacklogMissionControlCommand(input: string): { prompt: string } | null {
+  const match = input.match(/^\/mission-control(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    prompt: match[1] || "",
   };
 }
 
@@ -4652,6 +4691,9 @@ export function RunnerChat({
   keepFocusOnSubmit = false,
   enableBacklogSubtaskCommand = false,
   backlogSubtaskCommand = null,
+  enableBacklogMissionControlCommand = false,
+  backlogMissionControlCommand = null,
+  onBacklogMissionControlSubmit,
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
   const [composerQuotedSelection, setComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
@@ -4784,6 +4826,7 @@ export function RunnerChat({
   const [recordingElapsedSeconds, setRecordingElapsedSeconds] = useState(0);
   const [stagedThreadContextCommand, setStagedThreadContextCommand] = useState<RunnerChatThreadContextAction | null>(null);
   const [stagedBacklogSubtaskCommand, setStagedBacklogSubtaskCommand] = useState<StagedBacklogSubtaskCommand | null>(null);
+  const [stagedBacklogMissionControlCommand, setStagedBacklogMissionControlCommand] = useState<StagedBacklogMissionControlCommand | null>(null);
   const [renderedMainPopup, setRenderedMainPopup] = useState<MainPopupRenderId | null>(null);
   const [mainPopupPhase, setMainPopupPhase] = useState<PopupAnimationPhase>("idle");
   const [renderedSidePopup, setRenderedSidePopup] = useState<SidePopupRenderId | null>(null);
@@ -4828,6 +4871,7 @@ export function RunnerChat({
   const quotedSelectionPopupRef = useRef<HTMLDivElement | null>(null);
   const composerQuotedSelectionAnimationTimerRef = useRef<number | null>(null);
   const appliedBacklogSubtaskCommandTokenRef = useRef<string | number | null>(null);
+  const appliedBacklogMissionControlCommandTokenRef = useRef<string | number | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
   const stopRequestedThreadIdRef = useRef<string | null>(null);
   const visibleTimelineItemCountsRef = useRef<Record<string, number>>({});
@@ -4888,22 +4932,24 @@ export function RunnerChat({
   const trimmedInput = input.trim();
   const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
   const stagedThreadContextCommandLabel = stagedThreadContextCommand ? `/${stagedThreadContextCommand}` : "";
-  const stagedComposerLabel = stagedBacklogSubtaskCommand?.label || stagedThreadContextCommandLabel;
-  const stagedComposerToneValue = stagedBacklogSubtaskCommand ? "compact" : stagedThreadContextCommandToneValue;
-  const stagedComposerOffsetValue = stagedBacklogSubtaskCommand
+  const stagedBacklogCommand = stagedBacklogMissionControlCommand || stagedBacklogSubtaskCommand;
+  const stagedComposerLabel = stagedBacklogCommand?.label || stagedThreadContextCommandLabel;
+  const stagedComposerToneValue = stagedBacklogCommand ? "compact" : stagedThreadContextCommandToneValue;
+  const stagedComposerOffsetValue = stagedBacklogCommand
     ? `${Math.max(120, Math.round(stagedComposerLabel.length * 7.5 + 22))}px`
     : stagedThreadContextCommandOffset(stagedThreadContextCommand);
-  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedBacklogSubtaskCommand);
+  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedBacklogCommand);
   const canRunStagedThreadContextCommand = stagedThreadContextCommand
     ? stagedThreadContextCommand === "btw"
       ? trimmedInput.length > 0
       : true
     : false;
+  const canRunStagedMissionControlCommand = Boolean(stagedBacklogMissionControlCommand && onBacklogMissionControlSubmit);
   const canRun =
     !disabled &&
     !isPreparingRun &&
     (!hasRunningTurn || hasRunningTurnLogs) &&
-    (trimmedInput.length > 0 || canRunStagedThreadContextCommand);
+    (trimmedInput.length > 0 || canRunStagedThreadContextCommand || canRunStagedMissionControlCommand);
   const useComputerAgentsMode = inputMode === "computer-agents";
   const enabledSkillsPayload = useMemo(
     () => (useComputerAgentsMode ? buildEnabledSkillsPayload(enabledSkillIds, displayedSkills) : null),
@@ -5327,6 +5373,8 @@ export function RunnerChat({
     setInput("");
     if (!options?.preserveStagedCommand) {
       setStagedThreadContextCommand(null);
+      setStagedBacklogSubtaskCommand(null);
+      setStagedBacklogMissionControlCommand(null);
     }
     if (!options?.preserveQuotedSelection) {
       setComposerQuotedSelection(null);
@@ -5429,6 +5477,7 @@ export function RunnerChat({
 
   function stageThreadContextCommand(action: RunnerChatThreadContextAction, prompt = "") {
     setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand(null);
     setStagedThreadContextCommand(action);
     setInput(prompt);
     currentInputRef.current = prompt;
@@ -5443,13 +5492,28 @@ export function RunnerChat({
     }
     const nextPrompt = prompt === undefined ? currentInputRef.current : prompt;
     setStagedThreadContextCommand(null);
+    setStagedBacklogMissionControlCommand(null);
     setStagedBacklogSubtaskCommand({
+      action: "subtask",
       ticketNumber: normalizedTicketNumber,
       label: buildRunnerBacklogSubtaskLabel(normalizedTicketNumber),
     });
     setInput(nextPrompt);
     currentInputRef.current = nextPrompt;
     speechBaseInputRef.current = nextPrompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageBacklogMissionControlCommand(prompt = "") {
+    setStagedThreadContextCommand(null);
+    setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand({
+      action: "mission_control",
+      label: buildRunnerMissionControlLabel(),
+    });
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
     speechTranscriptRef.current = "";
   }
 
@@ -6284,7 +6348,7 @@ export function RunnerChat({
       persistFileChanges?: boolean;
       quotedSelection?: RunnerQuotedSelection | null;
       environmentIdOverride?: string | null;
-      backlogSubtaskCommand?: StagedBacklogSubtaskCommand | null;
+      backlogCommand?: StagedBacklogCommand | null;
       resolvedAttachmentsOverride?: RunnerAttachment[] | null;
       githubRepoOverride?: {
         repoFullName: string;
@@ -6398,6 +6462,11 @@ export function RunnerChat({
           });
       }
 
+      const subtaskBacklogCommand =
+        options?.backlogCommand?.action === "subtask"
+          ? options.backlogCommand
+          : null;
+
       const executionResult = await execute({
         run: {
           url: `${normalizedBackendUrl}/threads/${encodeURIComponent(threadId)}/messages`,
@@ -6417,11 +6486,11 @@ export function RunnerChat({
             ...(options?.enabledSkillsOverride !== undefined
               ? (options.enabledSkillsOverride ? { enabledSkills: options.enabledSkillsOverride } : {})
               : (enabledSkillsPayload ? { enabledSkills: enabledSkillsPayload } : {})),
-            ...(options?.backlogSubtaskCommand
+            ...(subtaskBacklogCommand
               ? {
                   backlogTaskCommand: {
-                    action: "subtask",
-                    parentTicketNumber: options.backlogSubtaskCommand.ticketNumber,
+                    action: "subtask" as const,
+                    parentTicketNumber: subtaskBacklogCommand.ticketNumber,
                   },
                 }
               : {}),
@@ -7319,6 +7388,21 @@ export function RunnerChat({
       textareaRef.current?.focus();
     });
   }, [backlogSubtaskCommand, enableBacklogSubtaskCommand]);
+
+  useEffect(() => {
+    if (!enableBacklogMissionControlCommand || !backlogMissionControlCommand) {
+      return;
+    }
+    if (appliedBacklogMissionControlCommandTokenRef.current === backlogMissionControlCommand.token) {
+      return;
+    }
+    appliedBacklogMissionControlCommandTokenRef.current = backlogMissionControlCommand.token;
+    closeAllInputPopups();
+    stageBacklogMissionControlCommand();
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }, [backlogMissionControlCommand, enableBacklogMissionControlCommand]);
 
   useEffect(() => {
     return () => {
@@ -9011,7 +9095,7 @@ export function RunnerChat({
       const attachmentEntries = attachments;
       const queuedTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
       const quotedSelection = composerQuotedSelection;
-      const backlogSubtaskCommand = stagedBacklogSubtaskCommand;
+      const backlogCommand = stagedBacklogCommand;
       if (stagedThreadContextCommand) {
         const stagedPrompt = textareaAllowsPromptAfterStagedCommand ? taskText : "";
         const shouldPreserveComposerState = stagedThreadContextCommand === "fork";
@@ -9040,12 +9124,40 @@ export function RunnerChat({
         await handleThreadContextCommand(threadContextCommand);
         return;
       }
+      if (stagedBacklogMissionControlCommand && onBacklogMissionControlSubmit) {
+        const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
+        const githubRepo = buildSelectedGithubRepoReference(attachmentEntries);
+        clearComposerDraft();
+        clearComposerAttachments(attachmentEntries, {
+          revokePreviews: false,
+        });
+        if (keepFocusOnSubmit) {
+          focusComposerSoon();
+        }
+        await stopSpeechToText();
+        await onBacklogMissionControlSubmit({
+          prompt: taskText,
+          attachments: resolvedAttachments || [],
+          environmentId: effectiveEnvironmentId ?? null,
+          agentId: effectiveAgentId ?? null,
+          ...(githubRepo
+            ? {
+                githubRepo: {
+                  repoFullName: githubRepo.repoFullName,
+                  repoName: githubRepo.repoName || githubRepo.repoFullName.split("/").pop() || githubRepo.repoFullName,
+                  branch: githubRepo.branch || "main",
+                },
+              }
+            : {}),
+          ...(enabledSkillsPayload ? { enabledSkills: enabledSkillsPayload } : {}),
+        });
+        return;
+      }
 
       clearComposerDraft();
       clearComposerAttachments(attachmentEntries, {
         revokePreviews: false,
       });
-      setStagedBacklogSubtaskCommand(null);
       if (keepFocusOnSubmit) {
         focusComposerSoon();
       }
@@ -9076,7 +9188,7 @@ export function RunnerChat({
             prompt: taskText,
             attachments: attachmentEntries,
             quotedSelection,
-            backlogSubtaskCommand,
+            backlogCommand,
           },
         ]);
         return;
@@ -9085,7 +9197,7 @@ export function RunnerChat({
       setIsPreparingRun(true);
       const execution = await executeThreadRun(taskText, attachmentEntries, {
         quotedSelection,
-        backlogSubtaskCommand,
+        backlogCommand,
       });
       ensuredThreadId = execution.threadId;
     } catch (error) {
@@ -9118,7 +9230,7 @@ export function RunnerChat({
         await executeThreadRun(nextQueuedMessage.prompt, nextQueuedMessage.attachments, {
           turnId: nextQueuedMessage.turnId,
           quotedSelection: nextQueuedMessage.quotedSelection,
-          backlogSubtaskCommand: nextQueuedMessage.backlogSubtaskCommand,
+          backlogCommand: nextQueuedMessage.backlogCommand,
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -9135,7 +9247,7 @@ export function RunnerChat({
 
   function handleInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
     const nextValue = event.target.value;
-    if (!stagedThreadContextCommand && !stagedBacklogSubtaskCommand) {
+    if (!stagedThreadContextCommand && !stagedBacklogCommand) {
       const autoStageCommand = parseAutoStageThreadContextCommand(nextValue);
       if (autoStageCommand) {
         stageThreadContextCommand(autoStageCommand.action, autoStageCommand.prompt);
@@ -9145,6 +9257,13 @@ export function RunnerChat({
         const autoStageBacklogSubtaskCommand = parseAutoStageBacklogSubtaskCommand(nextValue);
         if (autoStageBacklogSubtaskCommand) {
           stageBacklogSubtaskCommand(autoStageBacklogSubtaskCommand.ticketNumber, autoStageBacklogSubtaskCommand.prompt);
+          return;
+        }
+      }
+      if (enableBacklogMissionControlCommand) {
+        const autoStageBacklogMissionControlCommand = parseAutoStageBacklogMissionControlCommand(nextValue);
+        if (autoStageBacklogMissionControlCommand) {
+          stageBacklogMissionControlCommand(autoStageBacklogMissionControlCommand.prompt);
           return;
         }
       }
@@ -9166,6 +9285,11 @@ export function RunnerChat({
     if (event.key === "Backspace" && stagedBacklogSubtaskCommand && input.length === 0) {
       event.preventDefault();
       setStagedBacklogSubtaskCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedBacklogMissionControlCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedBacklogMissionControlCommand(null);
       return;
     }
     if (event.key !== "Enter") {

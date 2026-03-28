@@ -3810,6 +3810,145 @@ const html = `<!doctype html>
         gap: 22px;
       }
 
+      .playground-onboarding-concept-step {
+        min-height: 500px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .playground-onboarding-concept-center {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        text-align: center;
+      }
+
+      .playground-onboarding-concept-visual {
+        width: 84px;
+        height: 84px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .playground-onboarding-concept-visual.is-surface {
+        background: linear-gradient(180deg, rgba(15, 15, 15, 0.96) 0%, rgba(28, 28, 28, 0.9) 100%);
+      }
+
+      .playground-onboarding-concept-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .playground-onboarding-concept-icon {
+        width: 34px;
+        height: 34px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-onboarding-concept-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.12;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-onboarding-concept-copy {
+        margin: 0;
+        max-width: 620px;
+        font-size: 14px;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-onboarding-concept-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-onboarding-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-onboarding-detail-card {
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .playground-onboarding-detail-card-title {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-onboarding-detail-card-copy {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-onboarding-plan-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+        gap: 14px;
+      }
+
+      .playground-onboarding-plan-features {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .playground-onboarding-plan-feature {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 13px;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      .playground-onboarding-plan-feature-icon {
+        width: 15px;
+        height: 15px;
+        margin-top: 2px;
+        color: rgba(255, 255, 255, 0.88);
+        flex-shrink: 0;
+      }
+
+      .playground-onboarding-plan-price {
+        font-size: 34px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-onboarding-plan-price-copy {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
       .playground-onboarding-hero {
         display: flex;
         align-items: flex-start;
@@ -4311,7 +4450,9 @@ const html = `<!doctype html>
 
         .playground-onboarding-grid,
         .playground-onboarding-feature-grid,
-        .playground-onboarding-connector-grid {
+        .playground-onboarding-connector-grid,
+        .playground-onboarding-detail-grid,
+        .playground-onboarding-plan-panel {
           grid-template-columns: 1fr;
         }
       }
@@ -13691,6 +13832,102 @@ const html = `<!doctype html>
         gap: 12px;
       }
 
+      .playground-tasks-mission-control-card {
+        margin-top: 10px;
+      }
+
+      .playground-tasks-mission-control-surface {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 94px;
+        cursor: default;
+      }
+
+      .playground-tasks-mission-control-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .playground-tasks-mission-control-title {
+        min-width: 0;
+        flex: 1 1 auto;
+        font-size: 14px;
+        line-height: 1.35;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tasks-mission-control-actions {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-tasks-mission-control-button {
+        min-height: 30px;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.88);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-tasks-mission-control-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+
+      .playground-tasks-mission-control-button.is-primary {
+        background: rgba(72, 132, 255, 0.18);
+        border-color: rgba(72, 132, 255, 0.28);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tasks-mission-control-button.is-primary:hover {
+        background: rgba(72, 132, 255, 0.24);
+        border-color: rgba(72, 132, 255, 0.36);
+      }
+
+      .playground-tasks-mission-control-button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .playground-tasks-mission-control-button-spinner {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+      }
+
+      .playground-tasks-mission-control-summary {
+        font-size: 12px;
+        line-height: 1.6;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-tasks-mission-control-summary.is-empty {
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-tasks-mission-control-error {
+        font-size: 11px;
+        line-height: 1.5;
+        color: rgba(255, 128, 128, 0.88);
+      }
+
       .playground-tasks-backlog-leading {
         flex: 1 1 auto;
         min-width: 0;
@@ -16134,6 +16371,10 @@ const html = `<!doctype html>
       const PLAYGROUND_NOTION_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg";
       const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
       const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
+      const PLAYGROUND_AGENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/agentsappicon.png")};
+      const PLAYGROUND_FILES_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/filesicon.png")};
+      const PLAYGROUND_ENVIRONMENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/envappicon.png")};
+      const PLAYGROUND_SKILLS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/skillsicon.webp")};
       const PLAYGROUND_FOLDER_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/folder.png")};
       const PLAYGROUND_TEXT_FILE_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/txtfile.png")};
       const FIREBASE_WEB_API_KEY = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC_aSR8bjU02Kb1ROYUA7Yki_2Fogvs6-o")};
@@ -17110,6 +17351,11 @@ const html = `<!doctype html>
           : typeof thread?.agentId === "number"
             ? String(thread.agentId)
             : "";
+        const rawProjectId = typeof thread?.projectId === "string"
+          ? thread.projectId
+          : typeof thread?.project_id === "string"
+            ? thread.project_id
+            : "";
         const rawCreatedAt = typeof thread?.createdAt === "string" ? thread.createdAt : "";
         const rawUpdatedAt = typeof thread?.updatedAt === "string" ? thread.updatedAt : "";
         const rawNextRunAt = typeof thread?.nextRunAt === "string"
@@ -17128,6 +17374,7 @@ const html = `<!doctype html>
           title: rawTitle || "Untitled thread",
           status: rawStatus,
           agentId: rawAgentId,
+          projectId: rawProjectId,
           messageCount: Number.isFinite(thread.messageCount) ? thread.messageCount : 0,
           createdAt: rawCreatedAt,
           updatedAt: rawUpdatedAt,
@@ -17317,36 +17564,6 @@ const html = `<!doctype html>
           intelligence: "Highest",
           contextWindow: "1M",
           speed: "Fast",
-        },
-      ];
-      const PLAYGROUND_ONBOARDING_AGENT_PRESETS = [
-        {
-          id: "research",
-          name: "Research Assistant",
-          model: "claude-haiku-4-5",
-          description: "Find, synthesize, and explain information with clear source-aware reasoning.",
-          instructions: "You are an expert research assistant. Investigate topics thoroughly, synthesize findings clearly, call out uncertainty, and prioritize factual accuracy over speed. Structure answers so the main takeaways and next actions are obvious.",
-        },
-        {
-          id: "code",
-          name: "Code Reviewer",
-          model: "claude-haiku-4-5",
-          description: "Review code, spot risks, and suggest concrete improvements.",
-          instructions: "You are an expert code reviewer. Identify bugs, regressions, security issues, performance risks, and maintainability problems. Prioritize critical findings first, explain why they matter, and give specific actionable fixes.",
-        },
-        {
-          id: "writing",
-          name: "Writing Partner",
-          model: "claude-haiku-4-5",
-          description: "Draft, edit, and refine writing while preserving the user's voice.",
-          instructions: "You are a skilled writing partner. Help draft, edit, and refine content for clarity, tone, structure, and accuracy. Improve the writing without flattening the author's intent or voice.",
-        },
-        {
-          id: "custom",
-          name: "Custom Agent",
-          model: "claude-haiku-4-5",
-          description: "Start from a clean slate and shape the agent around your own workflow.",
-          instructions: "",
         },
       ];
       const PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS = [
@@ -18107,11 +18324,41 @@ const html = `<!doctype html>
           color: null,
           defaultEnvironmentId: null,
           attachments: [],
+          missionControl: buildEmptyPlaygroundProjectMissionControl(),
           metadata: null,
           summary: buildEmptyPlaygroundProjectSummary(),
           createdAt: now,
           updatedAt: now,
         };
+      }
+
+      function buildEmptyPlaygroundProjectMissionControl() {
+        return {
+          summary: "",
+          document: "",
+          lastThreadId: "",
+          updatedAt: "",
+        };
+      }
+
+      function normalizePlaygroundProjectMissionControlRecord(value) {
+        const missionControl = value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+        return {
+          ...buildEmptyPlaygroundProjectMissionControl(),
+          summary: typeof missionControl.summary === "string" ? missionControl.summary : "",
+          document: typeof missionControl.document === "string" ? missionControl.document : "",
+          lastThreadId: typeof missionControl.lastThreadId === "string" ? missionControl.lastThreadId : "",
+          updatedAt: typeof missionControl.updatedAt === "string" ? missionControl.updatedAt : "",
+        };
+      }
+
+      function getPlaygroundProjectMissionControlRecord(project) {
+        const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+          ? project.metadata
+          : null;
+        return normalizePlaygroundProjectMissionControlRecord(project?.missionControl || metadata?.missionControl);
       }
 
       function buildPlaygroundDefaultScheduleDraft() {
@@ -19343,6 +19590,7 @@ const html = `<!doctype html>
         const attachments = directAttachments.length > 0
           ? directAttachments
           : metadataAttachments;
+        const missionControl = getPlaygroundProjectMissionControlRecord(project);
 
         return {
           ...draft,
@@ -19360,6 +19608,7 @@ const html = `<!doctype html>
               ? metadata.defaultEnvironmentId.trim()
             : null,
           attachments,
+          missionControl,
           metadata,
           summary: {
             ...buildEmptyPlaygroundProjectSummary(),
@@ -32176,6 +32425,7 @@ const html = `<!doctype html>
         const taskTitleSkipCommitRef = useRef(false);
         const backlogTitleSkipCommitRef = useRef("");
         const taskRunPendingIdsRef = useRef(new Set());
+        const missionControlSyncThreadIdRef = useRef("");
         const handledOpenTaskRequestTokenRef = useRef("");
         const [projects, setProjects] = useState([]);
         const [selectedProjectId, setSelectedProjectId] = useState(() => {
@@ -32300,6 +32550,14 @@ const html = `<!doctype html>
         const [backlogComposerEnvironmentId, setBacklogComposerEnvironmentId] = useState(initialEnvironmentId || "");
         const [backlogComposerAgentId, setBacklogComposerAgentId] = useState(initialAgentId || "");
         const [backlogComposerSubtaskCommandRequest, setBacklogComposerSubtaskCommandRequest] = useState(null);
+        const [backlogComposerMissionControlCommandRequest, setBacklogComposerMissionControlCommandRequest] = useState(null);
+        const [missionControlStrategyOpen, setMissionControlStrategyOpen] = useState(false);
+        const [missionControlRunState, setMissionControlRunState] = useState({
+          threadId: "",
+          projectId: "",
+          status: "idle",
+          error: "",
+        });
         const [pendingExternalTaskOpenRequest, setPendingExternalTaskOpenRequest] = useState(null);
         const [searchQuery, setSearchQuery] = useState("");
         const [boardSprintId, setBoardSprintId] = useState(PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID);
@@ -32515,6 +32773,11 @@ const html = `<!doctype html>
 
           return nextSummary;
         }, [releases, selectedProject, selectedProjectDetail, selectedProjectId, sprints, taskLoadState.status, tasks]);
+        const selectedProjectMissionControl = useMemo(() => {
+          return getPlaygroundProjectMissionControlRecord(selectedProject);
+        }, [selectedProject]);
+        const isSelectedProjectMissionControlRunning = missionControlRunState.projectId === selectedProjectId
+          && (missionControlRunState.status === "running" || missionControlRunState.status === "syncing");
 
         useEffect(() => {
           if (typeof document === "undefined") {
@@ -33658,6 +33921,202 @@ const html = `<!doctype html>
             taskAttachmentsSection,
             projectAttachmentsSection,
           ].filter(Boolean).join(paragraphBreak);
+        }
+
+        function buildPlaygroundMissionControlTaskSnapshot(taskRecords) {
+          const sortedTaskRecords = (Array.isArray(taskRecords) ? taskRecords : [])
+            .map((taskRecord) => normalizePlaygroundTaskRecord(taskRecord))
+            .filter((taskRecord) => taskRecord?.id)
+            .slice()
+            .sort((left, right) => {
+              const leftTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[left.id] || left.ticketNumber);
+              const rightTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[right.id] || right.ticketNumber);
+              if (leftTicketNumber !== rightTicketNumber) {
+                return leftTicketNumber - rightTicketNumber;
+              }
+              return String(left.title || "").localeCompare(String(right.title || ""));
+            });
+
+          if (sortedTaskRecords.length === 0) {
+            return "Existing tasks:\\n- No backlog tasks exist yet.";
+          }
+
+          return [
+            "Existing tasks:",
+            ...sortedTaskRecords.map((taskRecord) => {
+              const ticketNumber = taskTicketNumbersById[taskRecord.id] || taskRecord.ticketNumber || "000";
+              const releaseName = taskRecord.releaseId ? (releasesById[taskRecord.releaseId]?.name || "Release") : "All other";
+              const descriptionPreview = String(taskRecord.description || "").replace(/\\s+/g, " ").trim();
+              return [
+                "- " + ticketNumber + " · " + (taskRecord.title || "Untitled Task"),
+                "  status=" + getPlaygroundTaskStatusLabel(taskRecord.status),
+                "priority=" + getPlaygroundTaskPriorityLabel(taskRecord.priority),
+                "type=" + getPlaygroundTaskTypeLabel(taskRecord.taskType),
+                "release=" + releaseName,
+                descriptionPreview ? ("desc=" + descriptionPreview) : null,
+              ].filter(Boolean).join(" | ");
+            }),
+          ].join("\\n");
+        }
+
+        function stripPlaygroundMissionControlCodeBlock(markdown) {
+          return String(markdown || "").replace(/\\x60\\x60\\x60mission_control_json[\\s\\S]*?\\x60\\x60\\x60/gi, "").trim();
+        }
+
+        function extractPlaygroundMissionControlSummary(document) {
+          const plainText = String(document || "")
+            .replace(/\\x60\\x60\\x60[\\s\\S]*?\\x60\\x60\\x60/g, " ")
+            .replace(/[\\x60*_>#-]/g, " ")
+            .replace(/\\[(.*?)\\]\\((.*?)\\)/g, "$1")
+            .replace(/\\s+/g, " ")
+            .trim();
+          if (!plainText) {
+            return "";
+          }
+          const sentenceMatches = plainText.match(/[^.!?]+[.!?]+/g) || [plainText];
+          const summary = sentenceMatches.slice(0, 2).join(" ").trim() || plainText;
+          return summary.length > 260 ? summary.slice(0, 257).trimEnd() + "…" : summary;
+        }
+
+        function parsePlaygroundMissionControlResponseContent(content) {
+          const rawContent = String(content || "").trim();
+          if (!rawContent) {
+            return buildEmptyPlaygroundProjectMissionControl();
+          }
+
+          const codeBlockMatch = rawContent.match(/\\x60\\x60\\x60mission_control_json\\s*([\\s\\S]*?)\\x60\\x60\\x60/i);
+          let parsedBlock = null;
+          if (codeBlockMatch?.[1]) {
+            try {
+              parsedBlock = JSON.parse(codeBlockMatch[1]);
+            } catch {}
+          }
+
+          const document = String(parsedBlock?.document || "").trim() || stripPlaygroundMissionControlCodeBlock(rawContent) || rawContent;
+          const summary = String(parsedBlock?.summary || "").trim() || extractPlaygroundMissionControlSummary(document);
+          return normalizePlaygroundProjectMissionControlRecord({
+            summary,
+            document,
+            lastThreadId: "",
+            updatedAt: new Date().toISOString(),
+          });
+        }
+
+        async function fetchPlaygroundThreadMessages(threadId) {
+          const normalizedThreadId = String(threadId || "").trim();
+          if (!normalizedThreadId) {
+            return [];
+          }
+
+          const pageSize = 200;
+          const messages = [];
+          let offset = 0;
+
+          while (true) {
+            const response = await fetch(
+              backendUrl + "/threads/" + encodeURIComponent(normalizedThreadId) + "/messages?limit=" + pageSize + "&offset=" + offset,
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load Mission Control thread messages.");
+            }
+            const pageItems = Array.isArray(data?.data) ? data.data : [];
+            messages.push(...pageItems);
+            if (!data?.has_more || pageItems.length === 0) {
+              break;
+            }
+            offset += pageItems.length;
+          }
+
+          return messages;
+        }
+
+        function getPlaygroundThreadMessageText(message) {
+          if (typeof message?.content === "string") {
+            return message.content;
+          }
+          if (Array.isArray(message?.content)) {
+            return message.content
+              .map((item) => {
+                if (typeof item === "string") {
+                  return item;
+                }
+                if (typeof item?.text === "string") {
+                  return item.text;
+                }
+                if (typeof item?.content === "string") {
+                  return item.content;
+                }
+                return "";
+              })
+              .filter(Boolean)
+              .join("\\n")
+              .trim();
+          }
+          return "";
+        }
+
+        function buildPlaygroundMissionControlPrompt(options = {}) {
+          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+          const newline = String.fromCharCode(10);
+          const paragraphBreak = newline + newline;
+          const projectAttachmentsSection = buildPlaygroundAttachmentPromptSection(
+            "Project attachments:",
+            normalizedProject.attachments,
+            {
+              copy: "These files belong to the entire project and describe the shared scope, requirements, or design direction.",
+            }
+          );
+          const runAttachmentsSection = buildPlaygroundAttachmentPromptSection(
+            "Additional operator attachments:",
+            options?.attachments,
+            {
+              copy: "These files were attached specifically for this Mission Control run.",
+            }
+          );
+          const operatorPrompt = String(options?.userPrompt || "").trim();
+          const projectDescription = String(normalizedProject.description || "").trim();
+
+          return [
+            "You are running Mission Control for this software project.",
+            "Your job is to analyze the available project context, define the right strategy, and update the backlog using the Task Management skill where it helps.",
+            "Always use the Task Management skill for creating, reorganizing, or updating backlog tasks instead of only describing them in prose.",
+            "Project: " + (normalizedProject.name || "Untitled Project"),
+            projectDescription
+              ? ("Project instructions / description:" + newline + projectDescription)
+              : "Project instructions / description: None provided.",
+            projectAttachmentsSection,
+            runAttachmentsSection,
+            buildPlaygroundMissionControlTaskSnapshot(tasks),
+            operatorPrompt
+              ? ("Operator note:" + newline + operatorPrompt)
+              : "",
+            [
+              "Required outputs:",
+              "1. Analyze the project attachments, project description, and the existing backlog.",
+              "2. Form a strategy for the project and explain the direction clearly.",
+              "3. Create or update backlog tasks using the Task Management skill whenever the project needs clearer execution steps.",
+              "4. In your human-readable response, provide a strategy document in markdown with these sections:",
+              "   - Strategy Summary",
+              "   - Strategic Breakdown",
+              "   - Risks & Opportunities",
+              "   - Recommended Next Moves",
+              "5. End your final response with a fenced code block labeled mission_control_json.",
+              "6. That JSON must contain exactly these keys:",
+              '   - "summary": a 1-2 sentence summary for the Mission Control card',
+              '   - "document": the full strategy document in markdown',
+            ].join(newline),
+          ].filter(Boolean).join(paragraphBreak);
+        }
+
+        function buildPlaygroundMissionControlEnabledSkillsPayload(basePayload) {
+          const payload = basePayload && typeof basePayload === "object" ? { ...basePayload } : {};
+          payload.taskManagement = true;
+          return payload;
         }
 
         function getTaskBoardStatus(task) {
@@ -36456,6 +36915,87 @@ const html = `<!doctype html>
         }, [selectedProjectId]);
 
         useEffect(() => {
+          setMissionControlStrategyOpen(false);
+          setBacklogComposerMissionControlCommandRequest(null);
+        }, [selectedProjectId]);
+
+        useEffect(() => {
+          const normalizedThreadId = String(missionControlRunState.threadId || "").trim();
+          const normalizedProjectId = String(missionControlRunState.projectId || "").trim();
+          if (!normalizedThreadId || !normalizedProjectId || missionControlRunState.status !== "running") {
+            return undefined;
+          }
+
+          let isActive = true;
+          let timeoutId = 0;
+
+          const pollMissionControlStatus = async () => {
+            try {
+              const response = await fetch(
+                backendUrl + "/threads/" + encodeURIComponent(normalizedThreadId) + "/status",
+                {
+                  method: "GET",
+                  headers: requestHeaders,
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok || !isActive) {
+                return;
+              }
+
+              const nextStatus = typeof data?.status === "string" && data.status.trim()
+                ? data.status.trim().toLowerCase()
+                : typeof data?.thread?.status === "string" && data.thread.status.trim()
+                  ? data.thread.status.trim().toLowerCase()
+                  : typeof data?.data?.status === "string" && data.data.status.trim()
+                    ? data.data.status.trim().toLowerCase()
+                    : "";
+
+              if (!nextStatus || nextStatus === "running" || nextStatus === "queued" || nextStatus === "pending" || nextStatus === "starting") {
+                timeoutId = window.setTimeout(pollMissionControlStatus, 2200);
+                return;
+              }
+
+              if (nextStatus === "completed") {
+                setMissionControlRunState((current) => current.threadId === normalizedThreadId
+                  ? {
+                      ...current,
+                      status: "syncing",
+                      error: "",
+                    }
+                  : current
+                );
+                await syncMissionControlThreadResult(normalizedThreadId, normalizedProjectId);
+                return;
+              }
+
+              setMissionControlRunState((current) => current.threadId === normalizedThreadId
+                ? {
+                    ...current,
+                    status: "failed",
+                    error: "Mission Control run did not complete successfully.",
+                  }
+                : current
+              );
+            } catch {
+              if (!isActive) {
+                return;
+              }
+              timeoutId = window.setTimeout(pollMissionControlStatus, 3000);
+            }
+          };
+
+          void pollMissionControlStatus();
+
+          return () => {
+            isActive = false;
+            if (timeoutId) {
+              window.clearTimeout(timeoutId);
+            }
+          };
+        }, [backendUrl, missionControlRunState.projectId, missionControlRunState.status, missionControlRunState.threadId, requestHeaders]);
+
+        useEffect(() => {
           if (taskView !== "board") {
             setBoardToolbarPopover("");
           }
@@ -38355,6 +38895,7 @@ const html = `<!doctype html>
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
           setTaskParentPickerState(null);
+          setMissionControlStrategyOpen(false);
           setSelectedTaskId(taskId);
           if (!isDetailOnlyMode && (taskView === "backlog" || taskView === "board") && typeof onRequestSidebarCollapse === "function") {
             onRequestSidebarCollapse();
@@ -38367,6 +38908,7 @@ const html = `<!doctype html>
           }
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
+          setMissionControlStrategyOpen(false);
           setSelectedScheduleId("");
           setScheduleViewMode("calendar");
           setScheduleEditorMode("create");
@@ -38377,13 +38919,14 @@ const html = `<!doctype html>
         }
 
         function handleTaskSurfaceClick(event) {
-          if (!selectedProjectId || !selectedTaskId) {
+          if (!selectedProjectId || (!selectedTaskId && !missionControlStrategyOpen)) {
             return;
           }
 
           const target = event?.target instanceof Element ? event.target : null;
           if (!target) {
             setSelectedTaskId("");
+            setMissionControlStrategyOpen(false);
             return;
           }
 
@@ -38392,6 +38935,7 @@ const html = `<!doctype html>
           }
 
           setSelectedTaskId("");
+          setMissionControlStrategyOpen(false);
         }
 
         function commitLocalTaskRecord(taskRecord, options = {}) {
@@ -38925,6 +39469,63 @@ const html = `<!doctype html>
           );
         }
 
+        function renderMissionControlBacklogCard() {
+          if (!selectedProject) {
+            return null;
+          }
+
+          const hasStrategyDocument = Boolean(String(selectedProjectMissionControl.document || "").trim());
+          const summaryText = isSelectedProjectMissionControlRunning
+            ? "Mission Control is analyzing the project context, updating the backlog, and preparing the latest strategy statement."
+            : String(selectedProjectMissionControl.summary || "").trim()
+              || "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.";
+
+          return React.createElement("div", { className: "playground-tasks-mission-control-card" },
+            React.createElement("div", {
+                className: "playground-tasks-backlog-item playground-tasks-mission-control-surface",
+                style: getPlaygroundTaskColorStyle("gray"),
+              },
+              React.createElement("div", { className: "playground-tasks-mission-control-header" },
+                React.createElement("div", { className: "playground-tasks-mission-control-title" }, (selectedProject.name || "Project") + " Mission Control"),
+                React.createElement("div", { className: "playground-tasks-mission-control-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-mission-control-button",
+                    disabled: !hasStrategyDocument,
+                    onClick: () => {
+                      setTaskDetailPopover("");
+                      setTaskSkillsPopoverOpen(false);
+                      setTaskParentPickerState(null);
+                      setSelectedTaskId("");
+                      setDraftTask(null);
+                      setMissionControlStrategyOpen(true);
+                    },
+                  }, "Strategy"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-mission-control-button is-primary",
+                    disabled: isSelectedProjectMissionControlRunning,
+                    onClick: openMissionControlComposer,
+                  },
+                    isSelectedProjectMissionControlRunning
+                      ? React.createElement(React.Fragment, null,
+                          React.createElement(Loader2, { className: "playground-tasks-mission-control-button-spinner", strokeWidth: 1.8 }),
+                          React.createElement("span", null, "Running...")
+                        )
+                      : "Run Mission Control"
+                  )
+                )
+              ),
+              React.createElement("div", {
+                className: "playground-tasks-mission-control-summary" + (hasStrategyDocument || isSelectedProjectMissionControlRunning ? "" : " is-empty"),
+              }, summaryText),
+              missionControlRunState.projectId === selectedProjectId && missionControlRunState.status === "failed" && missionControlRunState.error
+                ? React.createElement("div", { className: "playground-tasks-mission-control-error" }, missionControlRunState.error)
+                : null
+            )
+          );
+        }
+
         function handleBacklogComposerRunStart() {
           setSelectedTaskId("");
           setDraftTask(null);
@@ -38937,8 +39538,267 @@ const html = `<!doctype html>
           setSelectedTaskId("");
           setDraftTask(null);
           setBacklogComposerSubtaskCommandRequest(null);
+          setBacklogComposerMissionControlCommandRequest(null);
           setBacklogComposerKey((current) => current + 1);
           void loadProjectWorkspace(selectedProjectId);
+        }
+
+        function buildPlaygroundProjectSavePayload(projectRecord, metadataOverrides = {}) {
+          const normalizedProject = normalizePlaygroundProjectRecord(projectRecord);
+          const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(normalizedProject.attachments);
+          const projectIndex = Math.max(0, projects.findIndex((project) => project.id === normalizedProject.id));
+          return {
+            name: normalizedProject.name || "Project",
+            description: normalizedProject.description,
+            color: normalizedProject.color || getPlaygroundProjectAccent(normalizedProject, projectIndex),
+            defaultEnvironmentId: normalizedProject.defaultEnvironmentId || undefined,
+            attachments: normalizedProjectAttachments,
+            metadata: {
+              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
+              ...(metadataOverrides && typeof metadataOverrides === "object" ? metadataOverrides : {}),
+              icon: getPlaygroundProjectIconId(normalizedProject.icon),
+              wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
+              useCardBackgroundAsWallpaper: normalizedProject.useCardBackgroundAsWallpaper !== false,
+              defaultEnvironmentId: normalizedProject.defaultEnvironmentId || null,
+              attachments: normalizedProjectAttachments,
+            },
+          };
+        }
+
+        async function persistProjectMissionControlRecord(projectId, missionControlRecord) {
+          const normalizedProjectId = String(projectId || "").trim();
+          if (!normalizedProjectId) {
+            return null;
+          }
+
+          const baseProject = normalizePlaygroundProjectRecord(
+            (selectedProject?.id === normalizedProjectId ? selectedProject : null)
+            || projectsById[normalizedProjectId]
+            || {
+              id: normalizedProjectId,
+              name: "Project",
+            }
+          );
+          const normalizedMissionControlRecord = normalizePlaygroundProjectMissionControlRecord(missionControlRecord);
+          const savePayload = buildPlaygroundProjectSavePayload(baseProject, {
+            missionControl: normalizedMissionControlRecord,
+          });
+          const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
+            method: "PATCH",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(savePayload),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to update Mission Control.");
+          }
+
+          const updatedProject = getPlaygroundProjectResponseRecord(data, {
+            ...baseProject,
+            missionControl: normalizedMissionControlRecord,
+            metadata: savePayload.metadata,
+          });
+          if (updatedProject?.id) {
+            commitLocalProjectRecord(updatedProject, {
+              summary: updatedProject.summary || selectedProjectSummary,
+              environments: selectedProjectEnvironments,
+              recentThreads: selectedProjectRecentThreads,
+              selectImmediately: true,
+            });
+          }
+          return updatedProject;
+        }
+
+        function openMissionControlComposer() {
+          if (!selectedProjectId) {
+            return;
+          }
+          setTaskView("backlog");
+          setTaskDetailPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setTaskParentPickerState(null);
+          setTaskDeleteDialogState(null);
+          setTaskScheduleDialogState(null);
+          setMissionControlStrategyOpen(false);
+          setSelectedTaskId("");
+          setDraftTask(null);
+          setBacklogComposerMissionControlCommandRequest({
+            token: Date.now(),
+            label: "Mission Control",
+          });
+        }
+
+        async function handleBacklogMissionControlSubmit(payload) {
+          if (!selectedProjectId || !selectedProject) {
+            return;
+          }
+
+          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+          const missionControlPrompt = buildPlaygroundMissionControlPrompt({
+            userPrompt: payload?.prompt,
+            attachments: payload?.attachments,
+          });
+          const runAttachments = mergePlaygroundAttachmentLists(
+            normalizedProject.attachments,
+            Array.isArray(payload?.attachments) ? payload.attachments : []
+          );
+          const enabledSkillsPayload = buildPlaygroundMissionControlEnabledSkillsPayload(payload?.enabledSkills);
+          const launchEnvironmentId = String(
+            payload?.environmentId
+            || normalizedProject.defaultEnvironmentId
+            || backlogComposerEnvironmentId
+            || initialEnvironmentId
+            || ""
+          ).trim();
+          const launchAgentId = String(
+            payload?.agentId
+            || backlogComposerAgentId
+            || initialAgentId
+            || ""
+          ).trim();
+          const response = await fetch(backendUrl + "/threads", {
+            method: "POST",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              payload: {
+                title: (normalizedProject.name || "Project") + " Mission Control",
+                appId: "runner-web-sdk-demo",
+                projectId: selectedProjectId,
+                environmentId: launchEnvironmentId || undefined,
+                agentId: launchAgentId || undefined,
+                metadata: {
+                  runnerPlayground: {
+                    missionControl: {
+                      projectId: selectedProjectId,
+                      projectName: normalizedProject.name || "Project",
+                      source: "project_backlog_mission_control",
+                      requestedAt: new Date().toISOString(),
+                      userPrompt: typeof payload?.prompt === "string" ? payload.prompt : "",
+                    },
+                  },
+                },
+              },
+            }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to start Mission Control.");
+          }
+
+          const threadRecord = getPlaygroundThreadResponseRecord(data);
+          if (!threadRecord?.id) {
+            throw new Error("Mission Control thread creation failed.");
+          }
+          const runnerPlaygroundMetadata = threadRecord?.metadata?.runnerPlayground
+            && typeof threadRecord.metadata.runnerPlayground === "object"
+            && !Array.isArray(threadRecord.metadata.runnerPlayground)
+            ? threadRecord.metadata.runnerPlayground
+            : {};
+          const launchedThreadRecord = {
+            ...(threadRecord && typeof threadRecord === "object" ? threadRecord : {}),
+            projectId: selectedProjectId,
+            metadata: {
+              ...(threadRecord?.metadata && typeof threadRecord.metadata === "object" && !Array.isArray(threadRecord.metadata)
+                ? threadRecord.metadata
+                : {}),
+              runnerPlayground: {
+                ...runnerPlaygroundMetadata,
+                missionControl: {
+                  ...(runnerPlaygroundMetadata?.missionControl && typeof runnerPlaygroundMetadata.missionControl === "object" && !Array.isArray(runnerPlaygroundMetadata.missionControl)
+                    ? runnerPlaygroundMetadata.missionControl
+                    : {}),
+                  projectId: selectedProjectId,
+                  projectName: normalizedProject.name || "Project",
+                  source: "project_backlog_mission_control",
+                  requestedAt: new Date().toISOString(),
+                  userPrompt: typeof payload?.prompt === "string" ? payload.prompt : "",
+                },
+              },
+            },
+          };
+
+          setSelectedTaskId("");
+          setDraftTask(null);
+          setBacklogComposerMissionControlCommandRequest(null);
+          setMissionControlRunState({
+            threadId: launchedThreadRecord.id,
+            projectId: selectedProjectId,
+            status: "running",
+            error: "",
+          });
+          if (onThreadStarted) {
+            onThreadStarted(launchedThreadRecord.id, {
+              threadRecord: launchedThreadRecord,
+              taskRunRequest: {
+                token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                prompt: missionControlPrompt,
+                attachments: runAttachments,
+                githubRepo: payload?.githubRepo || null,
+                enabledSkills: enabledSkillsPayload,
+                environmentId: launchEnvironmentId,
+              },
+            });
+          }
+        }
+
+        async function syncMissionControlThreadResult(threadId, projectId) {
+          const normalizedThreadId = String(threadId || "").trim();
+          const normalizedProjectId = String(projectId || "").trim();
+          if (!normalizedThreadId || !normalizedProjectId) {
+            return;
+          }
+          if (missionControlSyncThreadIdRef.current === normalizedThreadId) {
+            return;
+          }
+
+          missionControlSyncThreadIdRef.current = normalizedThreadId;
+          try {
+            const threadMessages = await fetchPlaygroundThreadMessages(normalizedThreadId);
+            const assistantMessages = threadMessages.filter((message) => String(message?.role || "").trim().toLowerCase() === "assistant");
+            const lastAssistantMessage = assistantMessages
+              .slice()
+              .reverse()
+              .find((message) => getPlaygroundThreadMessageText(message)) || null;
+            const parsedMissionControl = parsePlaygroundMissionControlResponseContent(
+              getPlaygroundThreadMessageText(lastAssistantMessage)
+            );
+            await persistProjectMissionControlRecord(normalizedProjectId, {
+              ...parsedMissionControl,
+              lastThreadId: normalizedThreadId,
+              updatedAt: new Date().toISOString(),
+            });
+            if (selectedProjectId === normalizedProjectId) {
+              await loadProjectWorkspace(normalizedProjectId);
+            }
+            setMissionControlRunState((current) => current.threadId === normalizedThreadId
+              ? {
+                  threadId: "",
+                  projectId: "",
+                  status: "idle",
+                  error: "",
+                }
+              : current
+            );
+          } catch (error) {
+            setMissionControlRunState((current) => current.threadId === normalizedThreadId
+              ? {
+                  ...current,
+                  status: "failed",
+                  error: error instanceof Error ? error.message : "Mission Control sync failed.",
+                }
+              : current
+            );
+          } finally {
+            if (missionControlSyncThreadIdRef.current === normalizedThreadId) {
+              missionControlSyncThreadIdRef.current = "";
+            }
+          }
         }
 
         function openBacklogSubtaskComposer(ticketNumber) {
@@ -38950,6 +39810,7 @@ const html = `<!doctype html>
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
           setTaskParentPickerState(null);
+          setMissionControlStrategyOpen(false);
           setBacklogComposerSubtaskCommandRequest({
             ticketNumber: normalizedTicketNumber,
             label: "Subtask to " + normalizedTicketNumber,
@@ -38995,6 +39856,7 @@ const html = `<!doctype html>
           setTaskDeleteDialogState(null);
           setTaskScheduleDialogState(null);
           setTaskScheduleDialogPhase("idle");
+          setMissionControlStrategyOpen(false);
           if (taskScheduleDialogTimerRef.current) {
             window.clearTimeout(taskScheduleDialogTimerRef.current);
             taskScheduleDialogTimerRef.current = null;
@@ -42004,6 +42866,7 @@ const html = `<!doctype html>
           emptyCopy,
           showComposer = false,
           composer = null,
+          listFooter = null,
           allowManualDrag = true,
           extraToolbarContent = null,
           groupRootTasksByRelease = false,
@@ -42470,7 +43333,8 @@ const html = `<!doctype html>
                 : React.createElement("div", { className: "playground-tasks-empty playground-tasks-backlog-empty" },
                     React.createElement("div", { className: "playground-tasks-empty-title" }, emptyTitle),
                     React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy)
-                  )
+                  ),
+              listFooter
             ),
             showComposer ? composer : null
           );
@@ -42522,6 +43386,9 @@ const html = `<!doctype html>
           const backlogComposerBackendUrl = window.location.origin
             + "/api/task-backlog/" + encodeURIComponent(selectedProjectId)
             + (selectedReleaseId ? ("/releases/" + encodeURIComponent(selectedReleaseId)) : "");
+          const shouldShowMissionControlSection = !isReleaseBacklogView
+            && !normalizedSearchQuery
+            && activeBacklogFilterValue === "open";
 
           return renderBacklogTaskListView({
             headerContent: isReleaseBacklogView
@@ -42558,6 +43425,7 @@ const html = `<!doctype html>
             allowManualDrag: !isReleaseBacklogView,
             groupRootTasksByRelease: !isReleaseBacklogView,
             showComposer: true,
+            listFooter: shouldShowMissionControlSection ? renderMissionControlBacklogCard() : null,
             composer: React.createElement("div", {
                 className: "playground-tasks-backlog-composer-shell" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""),
               },
@@ -42581,10 +43449,13 @@ const html = `<!doctype html>
                   keepFocusOnSubmit: true,
                   enableBacklogSubtaskCommand: true,
                   backlogSubtaskCommand: backlogComposerSubtaskCommandRequest,
+                  enableBacklogMissionControlCommand: true,
+                  backlogMissionControlCommand: backlogComposerMissionControlCommandRequest,
                   showUsageInStatus: false,
                   placeholder: "Add a new task",
                   onRunStart: handleBacklogComposerRunStart,
                   onRunFinish: handleBacklogComposerRunFinish,
+                  onBacklogMissionControlSubmit: handleBacklogMissionControlSubmit,
                   onAgentChange: (nextAgentId) => setBacklogComposerAgentId(nextAgentId),
                   onEnvironmentChange: (nextEnvironmentId) => setBacklogComposerEnvironmentId(nextEnvironmentId),
                 })
@@ -44297,6 +45168,54 @@ const html = `<!doctype html>
         }
 
         function renderTaskDetail() {
+          if (missionControlStrategyOpen && selectedProject) {
+            return React.createElement("div", { className: "playground-tasks-detail-shell" },
+              React.createElement("div", { className: "playground-tasks-detail-main" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
+                React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
+                  React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
+                    React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
+                      React.createElement("div", { className: "playground-content-title" }, (selectedProject.name || "Project") + " Mission Control")
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-content-nav-center" }),
+                  React.createElement("div", { className: "playground-content-nav-right playground-tasks-detail-navbar-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain",
+                      onClick: () => setMissionControlStrategyOpen(false),
+                      title: "Close strategy",
+                      "aria-label": "Close strategy",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-body" },
+                  React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
+                    React.createElement("div", { className: "playground-tasks-detail-description" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy")
+                      ),
+                      React.createElement("div", { className: "playground-tasks-detail-description-editor is-preview" },
+                        React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                          String(selectedProjectMissionControl.document || "").trim()
+                            ? React.createElement(ReactMarkdown, {
+                                remarkPlugins: [remarkGfm],
+                                rehypePlugins: [rehypeRaw],
+                                components: playgroundMarkdownComponents,
+                                className: "playground-tasks-detail-description-preview tb-message-markdown",
+                              }, selectedProjectMissionControl.document)
+                            : React.createElement("div", {
+                                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                              }, "Run Mission Control to generate the first project strategy.")
+                        )
+                      )
+                    )
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-preview-pane" })
+            );
+          }
+
           if (!draftTask && taskView === "calendar" && scheduleViewMode === "setup") {
             return renderScheduleDetailPanel();
           }
@@ -45365,7 +46284,8 @@ const html = `<!doctype html>
 
         const isTaskDetailOpen = Boolean(selectedProjectId && draftTask?.id && taskView !== "threads");
         const isScheduleDetailOpen = Boolean(selectedProjectId && taskView === "calendar" && scheduleViewMode === "setup");
-        const isDetailOpen = isTaskDetailOpen || isScheduleDetailOpen;
+        const isMissionControlDetailOpen = Boolean(selectedProjectId && missionControlStrategyOpen);
+        const isDetailOpen = isTaskDetailOpen || isScheduleDetailOpen || isMissionControlDetailOpen;
         const isTaskAttachmentPreviewOpen = Boolean((isTaskDetailOpen || isScheduleDetailOpen) && previewedTaskAttachment);
 
         if (isDetailOnlyMode) {
@@ -45474,176 +46394,28 @@ const html = `<!doctype html>
         open,
         sessionStatus,
         hasRealAccess,
-        accountName,
         existingAgentCount,
+        environmentCount,
         defaultEnvironmentName,
-        canUploadFiles,
-        existingApiKey,
-        upstreamUrl,
-        speechToTextUrl,
-        githubStatus,
-        notionStatus,
-        googleDriveStatus,
-        oneDriveStatus,
+        skillCount,
+        currentPlanId,
         onClose,
         onSignIn,
-        onCreateAgent,
-        onUploadFiles,
-        onCreateApiKey,
-        onConnectGithub,
-        onConnectNotion,
-        onConnectGoogleDrive,
-        onConnectOneDrive,
+        onUpgradeToPro,
       }) {
         const savedState = useMemo(() => readPlaygroundOnboardingState(), []);
-        const defaultPreset = PLAYGROUND_ONBOARDING_AGENT_PRESETS[0];
-        const initialPresetId = typeof savedState?.selectedPresetId === "string"
-          && PLAYGROUND_ONBOARDING_AGENT_PRESETS.some((preset) => preset.id === savedState.selectedPresetId)
-            ? savedState.selectedPresetId
-            : defaultPreset.id;
-        const initialPreset = PLAYGROUND_ONBOARDING_AGENT_PRESETS.find((preset) => preset.id === initialPresetId) || defaultPreset;
         const initialStepIndex = Number.isFinite(savedState?.stepIndex)
-          ? Math.max(0, Math.min(3, Math.round(savedState.stepIndex)))
+          ? Math.max(0, Math.min(4, Math.round(savedState.stepIndex)))
           : 0;
         const [stepIndex, setStepIndex] = useState(initialStepIndex);
-        const [selectedPresetId, setSelectedPresetId] = useState(initialPresetId);
-        const [agentName, setAgentName] = useState(
-          typeof savedState?.agentName === "string" ? savedState.agentName : initialPreset.name
-        );
-        const [agentModel, setAgentModel] = useState(
-          typeof savedState?.agentModel === "string" ? savedState.agentModel : initialPreset.model
-        );
-        const [agentInstructions, setAgentInstructions] = useState(
-          typeof savedState?.agentInstructions === "string" ? savedState.agentInstructions : initialPreset.instructions
-        );
-        const [createdAgent, setCreatedAgent] = useState(
-          savedState?.createdAgent && typeof savedState.createdAgent === "object" && !Array.isArray(savedState.createdAgent)
-            ? savedState.createdAgent
-            : null
-        );
-        const [uploadedFiles, setUploadedFiles] = useState(
-          Array.isArray(savedState?.uploadedFiles)
-            ? savedState.uploadedFiles
-              .filter((item) => item && typeof item === "object")
-              .map((item) => ({
-                name: typeof item.name === "string" ? item.name : "Uploaded file",
-                size: Number.isFinite(item.size) ? item.size : 0,
-              }))
-            : []
-        );
-        const [isDraggingFiles, setIsDraggingFiles] = useState(false);
-        const [isCreatingAgent, setIsCreatingAgent] = useState(false);
-        const [isUploadingFiles, setIsUploadingFiles] = useState(false);
-        const [agentError, setAgentError] = useState("");
-        const [dataError, setDataError] = useState("");
-        const [sdkError, setSdkError] = useState("");
-        const [sdkKey, setSdkKey] = useState(
-          typeof savedState?.sdkKey === "string" && savedState.sdkKey.trim()
-            ? savedState.sdkKey.trim()
-            : String(existingApiKey || "").trim()
-        );
-        const [showSdkKey, setShowSdkKey] = useState(false);
-        const [apiKeyCopied, setApiKeyCopied] = useState(false);
-        const [snippetCopied, setSnippetCopied] = useState(false);
-        const [isCreatingSdkKey, setIsCreatingSdkKey] = useState(false);
-        const uploadInputRef = useRef(null);
-        const totalSteps = 4;
-        const connectedServiceCount = [
-          githubStatus?.connected,
-          notionStatus?.connected,
-          googleDriveStatus?.connected,
-          oneDriveStatus?.connected,
-        ].filter(Boolean).length;
-        const resolvedSdkKey = String(sdkKey || existingApiKey || "").trim();
-        const maskedSdkKey = resolvedSdkKey
-          ? (showSdkKey ? resolvedSdkKey : (PLAYGROUND_MASKED_SECRET_VALUE + PLAYGROUND_MASKED_SECRET_VALUE))
-          : "";
-        const welcomeName = String(accountName || "").trim() || "there";
-        const stepLabels = ["Welcome", "Agent", "Files & Sources", "SDK"];
-        const quickstartSnippet = useMemo(() => {
-          const nextApiKey = resolvedSdkKey || "YOUR_REAL_API_KEY";
-          const nextBackendUrl = String(upstreamUrl || "https://api.computer-agents.com").trim() || "https://api.computer-agents.com";
-          const nextSpeechUrl = String(speechToTextUrl || "").trim() || "wss://api.computer-agents.com/ws/speech-to-text";
-          return [
-            "npm install @computer-agents/runner-web-sdk",
-            "",
-            'import { RunnerChat } from "@computer-agents/runner-web-sdk/react";',
-            "",
-            "export function MyAgentPanel() {",
-            "  return (",
-            '    <div style={{ height: 680 }}>',
-            "      <RunnerChat",
-            '        backendUrl="' + nextBackendUrl + '"',
-            '        apiKey="' + nextApiKey + '"',
-            '        speechToTextUrl="' + nextSpeechUrl + '"',
-            '        appId="my-webapp"',
-            '        inputMode="computer-agents"',
-            "      />",
-            "    </div>",
-            "  );",
-            "}",
-          ].join("\\n");
-        }, [resolvedSdkKey, speechToTextUrl, upstreamUrl]);
-        const connectorItems = [
-          {
-            id: "github",
-            title: "GitHub",
-            description: "Attach repositories and branch context to runner threads.",
-            logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
-            connected: Boolean(githubStatus?.connected),
-            onConnect: onConnectGithub,
-          },
-          {
-            id: "notion",
-            title: "Notion",
-            description: "Bring workspace pages and databases into your runner context.",
-            logoUrl: PLAYGROUND_NOTION_LOGO_URL,
-            connected: Boolean(notionStatus?.connected),
-            onConnect: onConnectNotion,
-          },
-          {
-            id: "google-drive",
-            title: "Google Drive",
-            description: "Use shared docs and folders directly from Drive.",
-            logoUrl: PLAYGROUND_GOOGLE_DRIVE_LOGO_URL,
-            connected: Boolean(googleDriveStatus?.connected),
-            onConnect: onConnectGoogleDrive,
-          },
-          {
-            id: "one-drive",
-            title: "OneDrive",
-            description: "Pull in Microsoft files and shared workspace content.",
-            logoUrl: PLAYGROUND_ONEDRIVE_LOGO_URL,
-            connected: Boolean(oneDriveStatus?.connected),
-            onConnect: onConnectOneDrive,
-          },
-        ];
-
+        const totalSteps = 5;
+        const stepLabels = ["Agents", "Environments", "Skills", "Projects", "Pro"];
+        const normalizedPlanId = String(currentPlanId || "free").trim().toLowerCase() || "free";
+        const isOnProPlan = normalizedPlanId === "pro";
+        const proPlan = SETTINGS_PLAN_CATALOG.find((plan) => plan.id === "pro") || SETTINGS_PLAN_CATALOG[0];
         const buildSnapshot = useCallback((nextStepIndex = stepIndex) => ({
           stepIndex: nextStepIndex,
-          selectedPresetId,
-          agentName,
-          agentModel,
-          agentInstructions,
-          createdAgent,
-          uploadedFiles,
-          sdkKey: resolvedSdkKey,
-        }), [
-          agentInstructions,
-          agentModel,
-          agentName,
-          createdAgent,
-          resolvedSdkKey,
-          selectedPresetId,
-          stepIndex,
-          uploadedFiles,
-        ]);
-
-        useEffect(() => {
-          if (!resolvedSdkKey && existingApiKey) {
-            setSdkKey(String(existingApiKey || "").trim());
-          }
-        }, [existingApiKey, resolvedSdkKey]);
+        }), [stepIndex]);
 
         useEffect(() => {
           if (!open) {
@@ -45666,22 +46438,6 @@ const html = `<!doctype html>
           return () => window.removeEventListener("keydown", handleKeyDown);
         }, [open]);
 
-        useEffect(() => {
-          if (!apiKeyCopied) {
-            return;
-          }
-          const timer = window.setTimeout(() => setApiKeyCopied(false), 1800);
-          return () => window.clearTimeout(timer);
-        }, [apiKeyCopied]);
-
-        useEffect(() => {
-          if (!snippetCopied) {
-            return;
-          }
-          const timer = window.setTimeout(() => setSnippetCopied(false), 1800);
-          return () => window.clearTimeout(timer);
-        }, [snippetCopied]);
-
         const handleClose = useCallback(() => {
           clearPlaygroundOnboardingState();
           if (typeof onClose === "function") {
@@ -45689,119 +46445,20 @@ const html = `<!doctype html>
           }
         }, [onClose]);
 
-        const persistAndConnect = useCallback((onConnect) => {
-          writePlaygroundOnboardingState(buildSnapshot(2));
-          if (typeof onConnect === "function") {
-            void Promise.resolve(onConnect());
-          }
-        }, [buildSnapshot]);
-
-        function handlePresetSelect(presetId) {
-          const nextPreset = PLAYGROUND_ONBOARDING_AGENT_PRESETS.find((preset) => preset.id === presetId);
-          if (!nextPreset) {
-            return;
-          }
-          setSelectedPresetId(nextPreset.id);
-          setAgentError("");
-          setAgentName(nextPreset.id === "custom" ? "" : nextPreset.name);
-          setAgentModel(nextPreset.model);
-          setAgentInstructions(nextPreset.instructions);
-        }
-
-        async function handleCreateAgentClick() {
-          if (createdAgent?.id) {
-            setStepIndex(2);
-            return;
-          }
-
-          const normalizedName = String(agentName || "").trim();
-          if (!normalizedName) {
-            setAgentError("Agent name cannot be empty.");
-            return;
-          }
-
-          setIsCreatingAgent(true);
-          setAgentError("");
-          try {
-            const createdRecord = await Promise.resolve(onCreateAgent({
-              name: normalizedName,
-              model: agentModel,
-              instructions: String(agentInstructions || "").trim(),
-              description: "Created during runner playground onboarding.",
-            }));
-            setCreatedAgent(createdRecord || { id: "", name: normalizedName });
-          } catch (error) {
-            setAgentError(error instanceof Error ? error.message : "Failed to create agent.");
-          } finally {
-            setIsCreatingAgent(false);
-          }
-        }
-
-        async function handleUploadFiles(nextFiles) {
-          const files = Array.from(nextFiles || []).filter(Boolean);
-          if (files.length === 0) {
-            return;
-          }
-
-          setIsUploadingFiles(true);
-          setIsDraggingFiles(false);
-          setDataError("");
-          try {
-            const uploaded = await Promise.resolve(onUploadFiles(files));
-            const normalizedUploaded = Array.isArray(uploaded) && uploaded.length > 0
-              ? uploaded.map((item, index) => ({
-                  name: typeof item?.name === "string" ? item.name : files[index]?.name || "Uploaded file",
-                  size: Number.isFinite(item?.size) ? item.size : Number(files[index]?.size || 0),
-                }))
-              : files.map((file) => ({
-                  name: file.name,
-                  size: Number(file.size || 0),
-                }));
-            setUploadedFiles((current) => current.concat(normalizedUploaded));
-          } catch (error) {
-            setDataError(error instanceof Error ? error.message : "Failed to upload files.");
-          } finally {
-            setIsUploadingFiles(false);
-          }
-        }
-
-        async function handleGenerateApiKey() {
-          if (resolvedSdkKey) {
-            return;
-          }
-          setIsCreatingSdkKey(true);
-          setSdkError("");
-          try {
-            const nextKey = await Promise.resolve(onCreateApiKey());
-            if (!nextKey) {
-              throw new Error("Failed to create API key.");
-            }
-            setSdkKey(nextKey);
-          } catch (error) {
-            setSdkError(error instanceof Error ? error.message : "Failed to create API key.");
-          } finally {
-            setIsCreatingSdkKey(false);
-          }
-        }
-
-        async function handleCopyKey() {
-          if (!resolvedSdkKey) {
-            return;
-          }
-          const copied = await copyTextToClipboard(resolvedSdkKey);
-          if (copied) {
-            setApiKeyCopied(true);
-          }
-        }
-
-        async function handleCopySnippet() {
-          const copied = await copyTextToClipboard(quickstartSnippet);
-          if (copied) {
-            setSnippetCopied(true);
-          }
-        }
-
-        function renderFooter(primaryButton) {
+        function renderFooter(options = {}) {
+          const {
+            primaryLabel = stepIndex === totalSteps - 1 ? "Finish" : "Continue",
+            onPrimary = () => {
+              if (stepIndex === totalSteps - 1) {
+                handleClose();
+              } else {
+                setStepIndex((current) => Math.min(totalSteps - 1, current + 1));
+              }
+            },
+            secondaryLabel = "",
+            onSecondary = null,
+            primaryDisabled = false,
+          } = options;
           return React.createElement("div", { className: "playground-onboarding-footer" },
             React.createElement("div", { className: "playground-onboarding-progress-label" },
               "Step " + (stepIndex + 1) + " of " + totalSteps + " • " + stepLabels[stepIndex]
@@ -45818,7 +46475,19 @@ const html = `<!doctype html>
                     className: "playground-onboarding-button is-ghost",
                     onClick: handleClose,
                   }, "Dismiss"),
-              primaryButton
+              secondaryLabel && typeof onSecondary === "function"
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-button",
+                    onClick: onSecondary,
+                  }, secondaryLabel)
+                : null,
+              React.createElement("button", {
+                type: "button",
+                className: "playground-onboarding-button is-primary",
+                onClick: onPrimary,
+                disabled: primaryDisabled,
+              }, primaryLabel)
             )
           );
         }
@@ -45873,6 +46542,145 @@ const html = `<!doctype html>
             );
         }
 
+        const conceptPages = [
+          {
+            key: "agents",
+            visual: React.createElement("div", { className: "playground-onboarding-concept-visual" },
+              React.createElement("img", {
+                className: "playground-onboarding-concept-image",
+                src: PLAYGROUND_AGENTS_APP_ICON_URL,
+                alt: "Agents",
+              })
+            ),
+            title: "Meet your agents",
+            copy: "Agents are the operators of Computer Agents. Each one has its own model, instructions, and execution style, so you can keep specialists for research, coding, design, or any repeatable workflow.",
+            actionLabel: "Continue",
+            details: [
+              {
+                title: existingAgentCount > 0 ? "Already active" : "Start with one",
+                copy: existingAgentCount > 0
+                  ? "You already have " + existingAgentCount + " agent" + (existingAgentCount === 1 ? "" : "s") + " available in the platform."
+                  : "Create or refine agents for distinct jobs instead of forcing one assistant to do everything.",
+              },
+              {
+                title: "Model + instructions",
+                copy: "Each agent combines a model choice with operating instructions, which makes role-specific behavior much more reliable.",
+              },
+              {
+                title: "Reusable across threads",
+                copy: "Agents stay available across conversations, projects, and scheduled work so your setup compounds over time.",
+              },
+            ],
+          },
+          {
+            key: "environments",
+            visual: React.createElement("div", { className: "playground-onboarding-concept-visual is-surface" },
+              React.createElement("div", {
+                style: {
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                },
+              },
+                React.createElement("img", {
+                  className: "playground-onboarding-concept-image",
+                  src: PLAYGROUND_ENVIRONMENTS_APP_ICON_URL,
+                  alt: "Environments",
+                  style: { width: "38px", height: "38px", borderRadius: "12px" },
+                }),
+                React.createElement("img", {
+                  className: "playground-onboarding-concept-image",
+                  src: PLAYGROUND_FILES_APP_ICON_URL,
+                  alt: "Files",
+                  style: { width: "38px", height: "38px", borderRadius: "12px" },
+                })
+              )
+            ),
+            title: "Environments keep the work grounded",
+            copy: "Environments define the runtime and file base an agent works against. Files live with environments, so each thread can operate on a clear, durable workspace instead of isolated message attachments.",
+            actionLabel: "Continue",
+            details: [
+              {
+                title: environmentCount > 0 ? "Available now" : "Workspace layer",
+                copy: environmentCount > 0
+                  ? "You currently have " + environmentCount + " environment" + (environmentCount === 1 ? "" : "s") + ", with " + defaultEnvironmentName + " selected as the default workspace."
+                  : "Each environment packages runtimes, dependencies, secrets, and files into a reproducible workspace.",
+              },
+              {
+                title: "Files belong here",
+                copy: "Source docs, generated assets, datasets, and working files stay attached to environments so threads can revisit them later.",
+              },
+              {
+                title: "Clean separation",
+                copy: "Switching environments lets you move between products, clients, or experiments without mixing context or file state.",
+              },
+            ],
+          },
+          {
+            key: "skills",
+            visual: React.createElement("div", { className: "playground-onboarding-concept-visual" },
+              React.createElement("img", {
+                className: "playground-onboarding-concept-image",
+                src: PLAYGROUND_SKILLS_APP_ICON_URL,
+                alt: "Skills",
+              })
+            ),
+            title: "Skills shape what an agent can do",
+            copy: "Skills are capability modules that sharpen how agents work. They let you enable the right tools and behaviors per thread or per workflow instead of relying on one generic operating mode.",
+            actionLabel: "Continue",
+            details: [
+              {
+                title: skillCount > 0 ? skillCount + " built-in skills" : "Built-in capabilities",
+                copy: "Use focused skills like web search, image generation, research, or task management only where they actually help.",
+              },
+              {
+                title: "Custom skills",
+                copy: "Add your own reusable instructions and code so specialist workflows stay consistent across agents and projects.",
+              },
+              {
+                title: "Per-thread control",
+                copy: "Skills can be staged right in the runner input flow, which keeps the active toolset explicit for every run.",
+              },
+            ],
+          },
+          {
+            key: "projects",
+            visual: React.createElement("div", { className: "playground-onboarding-concept-visual is-surface" },
+              React.createElement(Rocket, { className: "playground-onboarding-concept-icon", strokeWidth: 1.75 })
+            ),
+            title: "Projects connect planning to execution",
+            copy: "Projects are where structured work lives. They give you backlog views, schedules, task ownership, dependencies, and thread links, so the platform can move from one-off chats into repeatable execution.",
+            actionLabel: "Continue",
+            details: [
+              {
+                title: "Backlog + schedule",
+                copy: "Capture work as tasks, organize it into releases or schedules, and launch threads directly from those plans.",
+              },
+              {
+                title: "Threads stay linked",
+                copy: "A project task can start and track its own runner thread, which keeps planning state and execution history connected.",
+              },
+              {
+                title: "Built for ongoing ops",
+                copy: "This is the part that turns the runner playground into the main Computer Agents product, not just a demo chat surface.",
+              },
+            ],
+          },
+          {
+            key: "pro",
+            visual: React.createElement("div", { className: "playground-onboarding-concept-visual is-surface" },
+              React.createElement(Sparkles, { className: "playground-onboarding-concept-icon", strokeWidth: 1.75 })
+            ),
+            title: isOnProPlan ? "You’re already on Pro" : "Upgrade to Pro when you want more headroom",
+            copy: isOnProPlan
+              ? "Your account already has the upgraded plan, so you’re ready to use the full platform without changing anything."
+              : "Pro is the clean next step once you start using Computer Agents as your main workspace. It gives you more compute and room to run the platform more seriously.",
+            actionLabel: isOnProPlan ? "Enter playground" : "Upgrade to Pro",
+            details: [],
+          },
+        ];
+        const currentPage = conceptPages[stepIndex];
+
         return React.createElement("div", {
             className: "playground-onboarding-scrim",
             onClick: handleClose,
@@ -45895,9 +46703,7 @@ const html = `<!doctype html>
                           style: { width: (((stepIndex + 1) / totalSteps) * 100) + "%" },
                         })
                       ),
-                      React.createElement("div", { className: "playground-onboarding-progress-label" },
-                        stepLabels.map((label, index) => index === stepIndex ? label : null).filter(Boolean).join("")
-                      )
+                      React.createElement("div", { className: "playground-onboarding-progress-label" }, currentPage.title)
                     )
                   )
                 ),
@@ -45909,379 +46715,73 @@ const html = `<!doctype html>
                 }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.9 }))
               ),
               React.createElement("div", { className: "playground-onboarding-body" },
-                stepIndex === 0
-                  ? React.createElement("div", { className: "playground-onboarding-step" },
-                      React.createElement("div", { className: "playground-onboarding-hero" },
-                        React.createElement("img", {
-                          className: "playground-onboarding-hero-logo",
-                          src: RUNNER_TRANSPARENT_LOGO_URL,
-                          alt: "Runner",
-                        }),
-                        React.createElement("div", { className: "playground-onboarding-hero-copy" },
-                          React.createElement("h3", { className: "playground-onboarding-hero-title" }, "Welcome, " + welcomeName + "."),
-                          React.createElement("p", { className: "playground-onboarding-hero-text" },
-                            "This adapts the aiOS onboarding for the runner playground: less ornamental, more practical. You’ll create a real agent, connect live sources, upload starter files into your default environment, and leave with a working SDK key."
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-onboarding-feature-grid" },
-                        React.createElement("div", { className: "playground-onboarding-feature-card" },
-                          React.createElement(Bot, { className: "playground-onboarding-feature-icon", strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-onboarding-feature-title" }, "Create an agent"),
-                          React.createElement("p", { className: "playground-onboarding-feature-copy" }, "Start with a useful preset, then keep the created agent as your active default for the playground.")
-                        ),
-                        React.createElement("div", { className: "playground-onboarding-feature-card" },
-                          React.createElement(FolderOpen, { className: "playground-onboarding-feature-icon", strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-onboarding-feature-title" }, "Connect files and sources"),
-                          React.createElement("p", { className: "playground-onboarding-feature-copy" }, "Attach repos, docs, and cloud storage in the same places the playground already uses for real work.")
-                        ),
-                        React.createElement("div", { className: "playground-onboarding-feature-card" },
-                          React.createElement(Key, { className: "playground-onboarding-feature-icon", strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-onboarding-feature-title" }, "Generate an SDK key"),
-                          React.createElement("p", { className: "playground-onboarding-feature-copy" }, "Finish with a clean RunnerChat quickstart so you can embed the same runner UI in your own app.")
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-onboarding-grid" },
-                        React.createElement("div", { className: "playground-onboarding-panel" },
-                          React.createElement("div", { className: "playground-onboarding-panel-title" }, "What this keeps from aiOS"),
-                          React.createElement("p", { className: "playground-onboarding-panel-copy" }, "Preset-based agent setup, file-base configuration, connector setup, and SDK key handoff.")
-                        ),
-                        React.createElement("div", { className: "playground-onboarding-panel" },
-                          React.createElement("div", { className: "playground-onboarding-panel-title" }, "What changes for the playground"),
-                          React.createElement("p", { className: "playground-onboarding-panel-copy" }, "No wallpaper stage, no heavyweight full-screen treatment, and no upsell detour. The flow stays anchored in the real runner playground primitives.")
-                        )
-                      ),
-                      renderFooter(
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-onboarding-button is-primary",
-                          onClick: () => setStepIndex(1),
-                        }, "Continue")
-                      )
-                    )
-                  : null,
-                stepIndex === 1
-                  ? React.createElement("div", { className: "playground-onboarding-step" },
-                      React.createElement("div", { className: "playground-onboarding-grid" },
-                        React.createElement("div", { className: "playground-onboarding-presets" },
-                          PLAYGROUND_ONBOARDING_AGENT_PRESETS.map((preset) =>
-                            React.createElement("button", {
-                              key: preset.id,
-                              type: "button",
-                              className: "playground-onboarding-preset" + (selectedPresetId === preset.id ? " is-active" : ""),
-                              onClick: () => handlePresetSelect(preset.id),
-                            },
-                              React.createElement("div", { className: "playground-onboarding-preset-title" }, preset.name),
-                              React.createElement("p", { className: "playground-onboarding-preset-copy" }, preset.description)
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-onboarding-panel" },
-                            React.createElement("div", { className: "playground-onboarding-panel-title" }, existingAgentCount > 0 ? "You already have agents" : "Start with one agent"),
-                            React.createElement("p", { className: "playground-onboarding-panel-copy" },
-                              existingAgentCount > 0
-                                ? "The playground already sees " + existingAgentCount + " agent" + (existingAgentCount === 1 ? "" : "s") + ". You can create another one here or skip this step."
-                                : "This agent will be created in your real account and selected as the active playground agent."
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-onboarding-form" },
-                          React.createElement("div", { className: "playground-onboarding-field" },
-                            React.createElement("label", { className: "playground-onboarding-label" }, "Agent name"),
-                            React.createElement("input", {
-                              type: "text",
-                              className: "playground-onboarding-input",
-                              value: agentName,
-                              onChange: (event) => {
-                                setAgentName(event.target.value);
-                                setAgentError("");
-                              },
-                              placeholder: "e.g. Research Assistant",
-                            })
-                          ),
-                          React.createElement("div", { className: "playground-onboarding-field" },
-                            React.createElement("label", { className: "playground-onboarding-label" }, "Model"),
-                            React.createElement("select", {
-                              className: "playground-onboarding-select",
-                              value: agentModel,
-                              onChange: (event) => setAgentModel(event.target.value),
-                            },
-                              PLAYGROUND_AGENT_MODEL_OPTIONS.map((option) =>
-                                React.createElement("option", { key: option.id, value: option.id }, option.label)
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-onboarding-field" },
-                            React.createElement("label", { className: "playground-onboarding-label" }, "Instructions"),
-                            React.createElement("textarea", {
-                              className: "playground-onboarding-textarea",
-                              value: agentInstructions,
-                              onChange: (event) => {
-                                setAgentInstructions(event.target.value);
-                                setAgentError("");
-                              },
-                              placeholder: "Describe how this agent should behave.",
-                            })
-                          ),
-                          createdAgent?.id || createdAgent?.name
-                            ? React.createElement("div", { className: "playground-onboarding-status is-success" },
-                                "Created “" + (createdAgent.name || agentName || "Agent") + "”. It is now available in the playground agent selector."
-                              )
-                            : null,
-                          agentError
-                            ? React.createElement("div", { className: "playground-onboarding-status is-error" }, agentError)
-                            : null
-                        )
-                      ),
-                      renderFooter(
-                        React.createElement(React.Fragment, null,
-                          createdAgent?.id || createdAgent?.name
-                            ? React.createElement("button", {
-                                type: "button",
-                                className: "playground-onboarding-button is-primary",
-                                onClick: () => setStepIndex(2),
-                              }, "Continue")
-                            : React.createElement(React.Fragment, null,
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-onboarding-button",
-                                  onClick: () => setStepIndex(2),
-                                }, "Skip for now"),
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-onboarding-button is-primary",
-                                  onClick: () => {
-                                    void handleCreateAgentClick();
-                                  },
-                                  disabled: isCreatingAgent,
-                                },
-                                  isCreatingAgent
-                                    ? React.createElement(React.Fragment, null,
-                                        React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.9, className: "spin" }),
-                                        React.createElement("span", null, "Creating")
-                                      )
-                                    : "Create agent"
-                                )
-                              )
-                        )
-                      )
-                    )
-                  : null,
-                stepIndex === 2
-                  ? React.createElement("div", { className: "playground-onboarding-step" },
-                      React.createElement("div", { className: "playground-onboarding-grid" },
-                        React.createElement("div", { className: "playground-onboarding-panel" },
-                          React.createElement("div", { className: "playground-onboarding-panel-title" }, "Connect live sources"),
-                          React.createElement("p", { className: "playground-onboarding-panel-copy" }, "These use the same OAuth flows the playground already relies on. The URL parameter stays in place across redirects so you can continue testing the onboarding flow after each connection.")
-                        ),
-                        React.createElement("div", { className: "playground-onboarding-panel" },
-                          React.createElement("div", { className: "playground-onboarding-panel-title" }, "Upload starter files"),
-                          React.createElement("p", { className: "playground-onboarding-panel-copy" },
-                            canUploadFiles
-                              ? "Files upload into " + defaultEnvironmentName + " so they’re immediately available in the runner playground."
-                              : "Uploads become available once your default environment finishes loading."
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-onboarding-connector-grid" },
-                        connectorItems.map((item) =>
-                          React.createElement("div", { key: item.id, className: "playground-onboarding-connector-card" },
-                            React.createElement("div", { className: "playground-onboarding-connector-title-row" },
-                              React.createElement("img", {
-                                className: "playground-onboarding-connector-logo",
-                                src: item.logoUrl,
-                                alt: item.title,
-                              }),
-                              React.createElement("div", { className: "playground-onboarding-connector-title" }, item.title)
-                            ),
-                            React.createElement("div", { className: "playground-onboarding-connector-copy" }, item.description),
-                            React.createElement("div", { className: "playground-onboarding-connector-footer" },
-                              React.createElement("div", {
-                                className: "playground-onboarding-connector-status" + (item.connected ? " is-connected" : ""),
-                              }, item.connected ? "Connected" : "Not connected"),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-onboarding-button",
-                                onClick: () => persistAndConnect(item.onConnect),
-                                disabled: item.connected,
-                              }, item.connected ? "Ready" : "Connect")
-                            )
-                          )
-                        )
-                      ),
-                      React.createElement("input", {
-                        ref: uploadInputRef,
-                        type: "file",
-                        multiple: true,
-                        hidden: true,
-                        onChange: (event) => {
-                          void handleUploadFiles(event.target.files || []);
-                          event.target.value = "";
-                        },
-                      }),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-onboarding-upload-zone" + (isDraggingFiles ? " is-dragging" : ""),
-                        disabled: !canUploadFiles || isUploadingFiles,
-                        onClick: () => canUploadFiles && uploadInputRef.current && uploadInputRef.current.click(),
-                        onDragOver: (event) => {
-                          event.preventDefault();
-                          if (!canUploadFiles || isUploadingFiles) {
-                            return;
-                          }
-                          setIsDraggingFiles(true);
-                        },
-                        onDragLeave: (event) => {
-                          if (event.currentTarget.contains(event.relatedTarget)) {
-                            return;
-                          }
-                          setIsDraggingFiles(false);
-                        },
-                        onDrop: (event) => {
-                          event.preventDefault();
-                          if (!canUploadFiles || isUploadingFiles) {
-                            return;
-                          }
-                          void handleUploadFiles(event.dataTransfer?.files || []);
-                        },
-                      },
-                        React.createElement(ArrowUpFromLine, { className: "playground-onboarding-upload-icon", strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-onboarding-upload-title" },
-                          isUploadingFiles ? "Uploading files..." : "Drop files here or click to browse"
-                        ),
-                        React.createElement("div", { className: "playground-onboarding-upload-copy" },
-                          canUploadFiles
-                            ? "Upload starter docs, datasets, or prompts into " + defaultEnvironmentName + "."
-                            : "Waiting for a default environment."
-                        )
-                      ),
-                      uploadedFiles.length > 0
-                        ? React.createElement("div", { className: "playground-onboarding-upload-list" },
-                            uploadedFiles.map((file, index) =>
-                              React.createElement("div", {
-                                key: file.name + "-" + index,
-                                className: "playground-onboarding-upload-item",
-                              },
-                                React.createElement("div", { className: "playground-onboarding-upload-item-main" },
-                                  React.createElement(FileText, { width: 16, height: 16, strokeWidth: 1.8 }),
-                                  React.createElement("div", { className: "playground-onboarding-upload-item-name" }, file.name)
-                                ),
-                                React.createElement("div", { className: "playground-onboarding-upload-item-meta" }, formatPlaygroundFileSize(file.size))
-                              )
-                            )
-                          )
-                        : null,
-                      dataError
-                        ? React.createElement("div", { className: "playground-onboarding-status is-error" }, dataError)
-                        : null,
-                      connectedServiceCount > 0 || uploadedFiles.length > 0
-                        ? React.createElement("div", { className: "playground-onboarding-status is-success" },
-                            connectedServiceCount + " connected source" + (connectedServiceCount === 1 ? "" : "s")
-                            + " • "
-                            + uploadedFiles.length + " uploaded file" + (uploadedFiles.length === 1 ? "" : "s")
-                          )
-                        : null,
-                      renderFooter(
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-onboarding-button is-primary",
-                          onClick: () => setStepIndex(3),
-                        }, "Continue")
-                      )
-                    )
-                  : null,
-                stepIndex === 3
-                  ? React.createElement("div", { className: "playground-onboarding-step" },
-                      React.createElement("div", { className: "playground-onboarding-grid" },
+                React.createElement("div", { className: "playground-onboarding-concept-step" },
+                  React.createElement("div", { className: "playground-onboarding-concept-center" },
+                    currentPage.visual,
+                    React.createElement("h3", { className: "playground-onboarding-concept-title" }, currentPage.title),
+                    React.createElement("p", { className: "playground-onboarding-concept-copy" }, currentPage.copy)
+                  ),
+                  stepIndex === totalSteps - 1
+                    ? React.createElement("div", { className: "playground-onboarding-plan-panel" },
                         React.createElement("div", { className: "playground-onboarding-sdk-card" },
-                          React.createElement("div", { className: "playground-onboarding-sdk-title-row" },
-                            React.createElement("div", { className: "playground-onboarding-sdk-title" }, "SDK key"),
-                            resolvedSdkKey
-                              ? React.createElement("div", { className: "playground-onboarding-progress-label" }, "Ready")
-                              : null
+                          React.createElement("div", { className: "playground-onboarding-sdk-title" }, proPlan.name + " Plan"),
+                          React.createElement("div", { className: "playground-onboarding-plan-price" },
+                            "$" + proPlan.monthlyPrice
                           ),
+                          React.createElement("div", { className: "playground-onboarding-plan-price-copy" }, "per month"),
                           React.createElement("p", { className: "playground-onboarding-sdk-note" },
-                            resolvedSdkKey
-                              ? "This uses the active playground SDK key. You can copy it directly into your local test app."
-                              : "Generate a key now so the same account can call the runner backend from your own app."
-                          ),
-                          resolvedSdkKey
-                            ? React.createElement("div", { className: "playground-onboarding-key-row" },
-                                React.createElement("div", { className: "playground-onboarding-key-value", title: resolvedSdkKey }, maskedSdkKey),
-                                React.createElement("div", { className: "playground-onboarding-key-actions" },
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-onboarding-icon-button",
-                                    onClick: () => setShowSdkKey((current) => !current),
-                                    title: showSdkKey ? "Hide API key" : "Show API key",
-                                  },
-                                    showSdkKey
-                                      ? React.createElement(EyeOff, { width: 15, height: 15, strokeWidth: 1.8 })
-                                      : React.createElement(Eye, { width: 15, height: 15, strokeWidth: 1.8 })
-                                  ),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-onboarding-icon-button",
-                                    onClick: () => {
-                                      void handleCopyKey();
-                                    },
-                                    title: "Copy API key",
-                                  },
-                                    apiKeyCopied
-                                      ? React.createElement(Check, { width: 15, height: 15, strokeWidth: 2 })
-                                      : React.createElement(Copy, { width: 15, height: 15, strokeWidth: 1.8 })
-                                  )
-                                )
-                              )
-                            : React.createElement("button", {
-                                type: "button",
-                                className: "playground-onboarding-button is-primary",
-                                onClick: () => {
-                                  void handleGenerateApiKey();
-                                },
-                                disabled: isCreatingSdkKey,
-                              },
-                                isCreatingSdkKey
-                                  ? React.createElement(React.Fragment, null,
-                                      React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.9, className: "spin" }),
-                                      React.createElement("span", null, "Generating")
-                                    )
-                                  : "Generate SDK key"
-                              ),
-                          sdkError
-                            ? React.createElement("div", { className: "playground-onboarding-status is-error" }, sdkError)
-                            : null
+                            proPlan.description || "Great for frequent users who want more compute and room to scale."
+                          )
                         ),
                         React.createElement("div", { className: "playground-onboarding-sdk-card" },
-                          React.createElement("div", { className: "playground-onboarding-sdk-title-row" },
-                            React.createElement("div", { className: "playground-onboarding-sdk-title" }, "RunnerChat quickstart"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-onboarding-icon-button",
-                              onClick: () => {
-                                void handleCopySnippet();
+                          React.createElement("ul", { className: "playground-onboarding-plan-features" },
+                            [
+                              "More compute for heavier daily usage",
+                              "A cleaner fit once you start running the platform as your main workspace",
+                              "More room for bigger agents, richer environments, and longer project-driven execution",
+                            ].map((feature) =>
+                              React.createElement("li", {
+                                key: feature,
+                                className: "playground-onboarding-plan-feature",
                               },
-                              title: "Copy quickstart",
-                            },
-                              snippetCopied
-                                ? React.createElement(Check, { width: 15, height: 15, strokeWidth: 2 })
-                                : React.createElement(Copy, { width: 15, height: 15, strokeWidth: 1.8 })
+                                React.createElement(Check, { className: "playground-onboarding-plan-feature-icon", strokeWidth: 2 }),
+                                React.createElement("span", null, feature)
+                              )
                             )
-                          ),
-                          React.createElement("pre", { className: "playground-onboarding-code" }, quickstartSnippet),
-                          React.createElement("p", { className: "playground-onboarding-sdk-note" },
-                            "This is intentionally runner-specific, not the aiOS onboarding Python handoff. It leaves you with the exact package and component that power the playground."
+                          )
+                        )
+                      )
+                    : React.createElement("div", { className: "playground-onboarding-detail-grid" },
+                        currentPage.details.map((detail) =>
+                          React.createElement("div", {
+                            key: detail.title,
+                            className: "playground-onboarding-detail-card",
+                          },
+                            React.createElement("div", { className: "playground-onboarding-detail-card-title" }, detail.title),
+                            React.createElement("p", { className: "playground-onboarding-detail-card-copy" }, detail.copy)
                           )
                         )
                       ),
-                      renderFooter(
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-onboarding-button is-primary",
-                          onClick: handleClose,
-                        }, resolvedSdkKey ? "Enter playground" : "Finish")
-                      )
-                    )
-                  : null
+                  renderFooter(
+                    stepIndex === totalSteps - 1
+                      ? {
+                          primaryLabel: isOnProPlan ? "Enter playground" : "Upgrade to Pro",
+                          onPrimary: isOnProPlan
+                            ? handleClose
+                            : () => {
+                                if (typeof onUpgradeToPro === "function") {
+                                  void Promise.resolve(onUpgradeToPro());
+                                }
+                              },
+                          secondaryLabel: isOnProPlan ? "" : "Skip for now",
+                          onSecondary: isOnProPlan ? null : handleClose,
+                        }
+                      : {
+                          primaryLabel: currentPage.actionLabel,
+                          onPrimary: () => setStepIndex((current) => Math.min(totalSteps - 1, current + 1)),
+                        }
+                  )
+                )
               )
             )
           );
@@ -49933,8 +50433,14 @@ const html = `<!doctype html>
           ].filter(Boolean).length;
         }, [githubStatus.connected, notionStatus.connected, googleDriveStatus.connected, oneDriveStatus.connected]);
         const settingsCurrentTierId = useMemo(() => {
-          return String(settingsBudgetStatus?.tier || sessionState.subscriptionTier || "free").trim().toLowerCase() || "free";
-        }, [settingsBudgetStatus, sessionState.subscriptionTier]);
+          const activeSubscriptionTier = settingsSubscriptions.find((subscription) =>
+            ["active", "on_trial", "past_due"].includes(String(subscription?.status || "").toLowerCase())
+            && !subscription?.cancelled
+            && typeof subscription?.tier === "string"
+            && subscription.tier.trim()
+          )?.tier;
+          return String(activeSubscriptionTier || settingsBudgetStatus?.tier || sessionState.subscriptionTier || "free").trim().toLowerCase() || "free";
+        }, [settingsBudgetStatus, sessionState.subscriptionTier, settingsSubscriptions]);
         const settingsPrimarySubscription = useMemo(() => {
           return settingsSubscriptions.find((subscription) =>
             ["active", "on_trial", "past_due"].includes(String(subscription?.status || "").toLowerCase()) && !subscription?.cancelled
@@ -50665,134 +51171,6 @@ const html = `<!doctype html>
             setRealAgents([]);
           }
         }, [authRequestHeaders, hasRealAccess, proxyBackendBase]);
-
-        const handlePlaygroundOnboardingCreateAgent = useCallback(async function handlePlaygroundOnboardingCreateAgent(draft) {
-          if (!hasRealAccess) {
-            handleSignInWithComputerAgents();
-            throw new Error("Sign in to create an agent.");
-          }
-
-          const normalizedName = String(draft?.name || "").trim();
-          if (!normalizedName) {
-            throw new Error("Agent name cannot be empty.");
-          }
-
-          const response = await fetch(proxyBackendBase + "/agents", {
-            method: "POST",
-            headers: {
-              ...authRequestHeaders,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: normalizedName,
-              description: String(draft?.description || "").trim() || "Created during runner playground onboarding.",
-              model: getPlaygroundAgentModelMeta(String(draft?.model || "").trim()).id,
-              binary: "Claude Code CLI",
-              reasoningEffort: "medium",
-              instructions: String(draft?.instructions || "").trim()
-                || ("You are " + normalizedName + ", a helpful AI assistant. Help users accomplish their tasks efficiently and professionally."),
-            }),
-          });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) {
-            throw new Error(data?.message || data?.error || "Failed to create agent.");
-          }
-
-          const savedAgent = getPlaygroundAgentResponseRecord(data);
-          if (!savedAgent?.id) {
-            throw new Error("Agent creation failed.");
-          }
-
-          setPreferredAgentId(savedAgent.id);
-          setRealAgents((current) => {
-            const remaining = current.filter((agent) => agent?.id !== savedAgent.id);
-            return [savedAgent].concat(remaining);
-          });
-          await refreshAgents();
-          return savedAgent;
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, refreshAgents]);
-
-        const handlePlaygroundOnboardingUploadFiles = useCallback(async function handlePlaygroundOnboardingUploadFiles(files) {
-          if (!hasRealAccess) {
-            handleSignInWithComputerAgents();
-            throw new Error("Sign in to upload files.");
-          }
-
-          const normalizedEnvironmentId = String(resolvedEnvironmentId || "").trim();
-          if (!normalizedEnvironmentId) {
-            throw new Error("No default environment is available yet.");
-          }
-
-          const uploads = Array.from(files || []).filter(Boolean);
-          if (uploads.length === 0) {
-            return [];
-          }
-
-          const uploadedItems = [];
-          for (const file of uploads) {
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("path", "");
-
-            const response = await fetch(
-              proxyBackendBase + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/files/upload",
-              {
-                method: "POST",
-                headers: authRequestHeaders,
-                body: formData,
-              }
-            );
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || ("Failed to upload " + file.name + "."));
-            }
-
-            uploadedItems.push({
-              name: file.name,
-              size: Number(file.size || 0),
-            });
-          }
-
-          return uploadedItems;
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, resolvedEnvironmentId]);
-
-        const handlePlaygroundOnboardingCreateApiKey = useCallback(async function handlePlaygroundOnboardingCreateApiKey() {
-          if (!hasSessionAuth) {
-            handleSignInWithComputerAgents();
-            throw new Error("Sign in to create an API key.");
-          }
-
-          const existingKey = String(apiKey || "").trim();
-          if (existingKey) {
-            return existingKey;
-          }
-
-          const response = await fetch("/api/aios/user/api-keys", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: "Runner SDK Key",
-              description: "Created during runner playground onboarding.",
-              permissions: ["*"],
-            }),
-          });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) {
-            throw new Error(data?.message || data?.error || "Failed to create API key.");
-          }
-
-          const nextKey = typeof data?.key === "string" ? data.key.trim() : "";
-          if (!nextKey) {
-            throw new Error("Failed to create API key.");
-          }
-
-          setApiKey(nextKey);
-          await loadSettingsApiKeys();
-          return nextKey;
-        }, [apiKey, hasSessionAuth, loadSettingsApiKeys]);
 
         function handleNewThread() {
           setActivePage("thread");
@@ -51849,7 +52227,7 @@ const html = `<!doctype html>
                         computeTokens: 150,
                         description: "Get started with basic usage. Perfect for trying out the platform.",
                       };
-                      const userTier = settingsBudgetStatus?.tier || "free";
+                      const userTier = settingsCurrentTierId;
                       const tierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === userTier) || fallbackTierInfo;
                       const tierLimit = Number(tierInfo.computeTokens || fallbackTierInfo.computeTokens);
                       const totalUsedCT = Math.max(
@@ -51883,7 +52261,7 @@ const html = `<!doctype html>
                           React.createElement("div", { className: "playground-settings-plan-heading-title" }, "Choose Your Plan"),
                           React.createElement("div", { className: "playground-settings-plan-heading-copy" }, "Affordable and adaptable pricing to suit your goals.")
                         ),
-                        settingsBudgetStatus?.subscriptionSource === "apple" && settingsBudgetStatus?.tier !== "free"
+                        settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "free"
                           ? React.createElement("div", { className: "playground-settings-plan-system-note" },
                               React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "IOS"),
                               React.createElement("div", null,
@@ -52160,7 +52538,7 @@ const html = `<!doctype html>
             case "costs-overview": {
               detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
                 (() => {
-                  const userTier = settingsBudgetStatus?.tier || "free";
+                  const userTier = settingsCurrentTierId;
                   const tierLimit = Math.max(
                     settingsDollarsToComputeTokens(settingsBudgetStatus?.tierQuota),
                     Number(settingsUsageSummary?.totals?.totalCT || 0),
@@ -54030,9 +54408,9 @@ const html = `<!doctype html>
         const selectedThreadTaskPreviewTaskId = typeof selectedThreadTaskPreview?.taskId === "string"
           ? selectedThreadTaskPreview.taskId.trim()
           : "";
-        const selectedThreadProjectId = typeof selectedThreadTaskPreview?.projectId === "string"
+        const selectedThreadProjectId = typeof selectedThreadTaskPreview?.projectId === "string" && selectedThreadTaskPreview.projectId.trim()
           ? selectedThreadTaskPreview.projectId.trim()
-          : "";
+          : (typeof selectedKnownThread?.projectId === "string" ? selectedKnownThread.projectId.trim() : "");
         const cachedSelectedThreadProjectRecord = selectedThreadProjectId
           ? (threadProjectRecordsById[selectedThreadProjectId] || null)
           : null;
@@ -54541,7 +54919,9 @@ const html = `<!doctype html>
             const isMenuOpen = threadActionMenuState?.threadId === safeThreadId;
             const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === safeThreadId;
             const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === safeThreadId;
-            const threadProjectId = typeof taskPreview?.projectId === "string" ? taskPreview.projectId.trim() : "";
+            const threadProjectId = typeof taskPreview?.projectId === "string" && taskPreview.projectId.trim()
+              ? taskPreview.projectId.trim()
+              : (typeof safeThread?.projectId === "string" ? safeThread.projectId.trim() : "");
             const ThreadProjectIcon = Rocket;
             const threadProjectTitle = typeof taskPreview?.projectName === "string" && taskPreview.projectName.trim()
               ? taskPreview.projectName.trim()
@@ -55067,26 +55447,14 @@ const html = `<!doctype html>
               open: showPlaygroundOnboarding,
               sessionStatus: sessionState.status,
               hasRealAccess,
-              accountName,
               existingAgentCount: realAgents.length,
+              environmentCount: realEnvironments.length,
               defaultEnvironmentName: resolvedEnvironmentName,
-              canUploadFiles: Boolean(resolvedEnvironmentId),
-              existingApiKey: apiKey,
-              upstreamUrl: resolvedUpstreamUrl,
-              speechToTextUrl,
-              githubStatus,
-              notionStatus,
-              googleDriveStatus,
-              oneDriveStatus,
+              skillCount: demoSkills.length,
+              currentPlanId: settingsCurrentTierId,
               onClose: closePlaygroundOnboarding,
               onSignIn: handleSignInWithComputerAgents,
-              onCreateAgent: handlePlaygroundOnboardingCreateAgent,
-              onUploadFiles: handlePlaygroundOnboardingUploadFiles,
-              onCreateApiKey: handlePlaygroundOnboardingCreateApiKey,
-              onConnectGithub: handleGithubAuthConnect,
-              onConnectNotion: handleNotionAuthConnect,
-              onConnectGoogleDrive: handleGoogleDriveAuthConnect,
-              onConnectOneDrive: handleOneDriveAuthConnect,
+              onUpgradeToPro: () => handleSettingsSubscribe("pro"),
             })
           : null;
 
