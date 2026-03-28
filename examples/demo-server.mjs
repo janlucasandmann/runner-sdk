@@ -3682,6 +3682,640 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.24);
       }
 
+      .playground-onboarding-scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 98;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+        background: rgba(0, 0, 0, 0.62);
+        backdrop-filter: blur(14px);
+      }
+
+      .playground-onboarding-modal {
+        width: min(920px, 100%);
+        max-height: min(86vh, 860px);
+        display: flex;
+        flex-direction: column;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(180deg, rgba(36, 36, 36, 0.98) 0%, rgba(28, 28, 28, 0.98) 100%);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+        overflow: hidden;
+      }
+
+      .playground-onboarding-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 24px 24px 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-onboarding-header-copy {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-onboarding-title-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-onboarding-kicker {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      .playground-onboarding-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 1.12;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-onboarding-step-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-onboarding-progress {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-onboarding-progress-track {
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .playground-onboarding-progress-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(125, 176, 255, 0.95) 0%, rgba(255, 255, 255, 0.92) 100%);
+        transition: width 180ms ease;
+      }
+
+      .playground-onboarding-progress-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-onboarding-close {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .playground-onboarding-close:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-onboarding-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 24px;
+      }
+
+      .playground-onboarding-step {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+
+      .playground-onboarding-hero {
+        display: flex;
+        align-items: flex-start;
+        gap: 18px;
+      }
+
+      .playground-onboarding-hero-logo {
+        width: 52px;
+        height: 52px;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #111;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+
+      .playground-onboarding-hero-copy {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .playground-onboarding-hero-title {
+        margin: 0 0 8px;
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.12;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-onboarding-hero-text {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .playground-onboarding-feature-grid,
+      .playground-onboarding-grid,
+      .playground-onboarding-connector-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .playground-onboarding-feature-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .playground-onboarding-grid {
+        grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+        align-items: start;
+      }
+
+      .playground-onboarding-feature-card,
+      .playground-onboarding-panel,
+      .playground-onboarding-connector-card,
+      .playground-onboarding-sdk-card,
+      .playground-onboarding-auth-card {
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .playground-onboarding-feature-card {
+        padding: 16px;
+      }
+
+      .playground-onboarding-feature-icon {
+        width: 18px;
+        height: 18px;
+        margin-bottom: 14px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-onboarding-feature-title {
+        margin: 0 0 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-onboarding-feature-copy,
+      .playground-onboarding-panel-copy,
+      .playground-onboarding-sdk-note,
+      .playground-onboarding-auth-copy {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .playground-onboarding-panel {
+        padding: 14px;
+      }
+
+      .playground-onboarding-panel-title {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-onboarding-presets {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-onboarding-preset {
+        width: 100%;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.02);
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-onboarding-preset:hover {
+        border-color: rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-onboarding-preset.is-active {
+        border-color: rgba(125, 176, 255, 0.36);
+        background: rgba(125, 176, 255, 0.12);
+      }
+
+      .playground-onboarding-preset-title {
+        margin: 0 0 4px;
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-onboarding-preset-copy {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-onboarding-form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-onboarding-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-onboarding-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .playground-onboarding-input,
+      .playground-onboarding-select,
+      .playground-onboarding-textarea {
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: #212121;
+        color: rgba(255, 255, 255, 0.96);
+        outline: none;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .playground-onboarding-input,
+      .playground-onboarding-select {
+        min-height: 42px;
+        padding: 0 14px;
+      }
+
+      .playground-onboarding-textarea {
+        min-height: 168px;
+        padding: 12px 14px;
+        resize: vertical;
+      }
+
+      .playground-onboarding-helper {
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-onboarding-status {
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.64);
+      }
+
+      .playground-onboarding-status.is-success {
+        border-color: rgba(88, 211, 126, 0.22);
+        background: rgba(88, 211, 126, 0.12);
+        color: rgba(195, 255, 208, 0.92);
+      }
+
+      .playground-onboarding-status.is-error {
+        border-color: rgba(248, 113, 113, 0.22);
+        background: rgba(248, 113, 113, 0.12);
+        color: rgba(255, 205, 205, 0.92);
+      }
+
+      .playground-onboarding-connector-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .playground-onboarding-connector-card {
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-onboarding-connector-title-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-onboarding-connector-logo {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+
+      .playground-onboarding-connector-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-onboarding-connector-copy {
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-onboarding-connector-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-onboarding-connector-status {
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-onboarding-connector-status.is-connected {
+        color: rgba(195, 255, 208, 0.92);
+      }
+
+      .playground-onboarding-upload-zone {
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.02);
+        min-height: 164px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 160ms ease, background-color 160ms ease;
+      }
+
+      .playground-onboarding-upload-zone.is-dragging {
+        border-color: rgba(125, 176, 255, 0.34);
+        background: rgba(125, 176, 255, 0.08);
+      }
+
+      .playground-onboarding-upload-icon {
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-onboarding-upload-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-onboarding-upload-copy {
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-onboarding-upload-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-onboarding-upload-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-onboarding-upload-item-main {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-onboarding-upload-item-name {
+        min-width: 0;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.92);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-onboarding-upload-item-meta {
+        flex-shrink: 0;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-onboarding-sdk-card {
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-onboarding-sdk-title-row,
+      .playground-onboarding-key-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-onboarding-sdk-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-onboarding-key-value {
+        min-width: 0;
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: #212121;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.88);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-onboarding-key-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-onboarding-icon-button {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.82);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .playground-onboarding-icon-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-onboarding-code {
+        margin: 0;
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: #111;
+        color: rgba(255, 255, 255, 0.9);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.65;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .playground-onboarding-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-onboarding-footer-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-onboarding-button {
+        min-height: 40px;
+        padding: 0 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .playground-onboarding-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-onboarding-button.is-primary {
+        background: #fff;
+        color: #111;
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+
+      .playground-onboarding-button.is-primary:hover {
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-onboarding-button.is-ghost {
+        background: transparent;
+        border-color: transparent;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-onboarding-button:disabled,
+      .playground-onboarding-icon-button:disabled,
+      .playground-onboarding-preset:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .playground-onboarding-auth-card {
+        width: min(480px, 100%);
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-onboarding-auth-title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      @media (max-width: 920px) {
+        .playground-onboarding-modal {
+          width: min(720px, 100%);
+        }
+
+        .playground-onboarding-grid,
+        .playground-onboarding-feature-grid,
+        .playground-onboarding-connector-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
       .profile-editor-modal {
         width: min(460px, 100%);
         max-height: min(84vh, 760px);
@@ -12265,6 +12899,24 @@ const html = `<!doctype html>
         margin-top: 14px;
       }
 
+      .playground-tasks-project-modal-default-environment {
+        margin-top: 18px;
+      }
+
+      .playground-tasks-project-modal-attachments {
+        margin-top: 8px;
+        padding-top: 2px;
+      }
+
+      .playground-tasks-project-modal-attachments .tb-popup-dropzone,
+      .playground-tasks-project-modal-attachments .playground-tasks-attachments-empty-button {
+        min-height: 158px;
+      }
+
+      .playground-tasks-project-modal-preview {
+        margin-top: 12px;
+      }
+
       .playground-tasks-project-wallpaper-toggle-title {
         font-size: 13px;
         font-weight: 500;
@@ -15480,6 +16132,8 @@ const html = `<!doctype html>
       const PLAYGROUND_GOOGLE_DRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg";
       const PLAYGROUND_ONEDRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/5/59/Microsoft_Office_OneDrive_%282019%E2%80%932025%29.svg";
       const PLAYGROUND_NOTION_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg";
+      const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
+      const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
       const PLAYGROUND_FOLDER_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/folder.png")};
       const PLAYGROUND_TEXT_FILE_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/txtfile.png")};
       const FIREBASE_WEB_API_KEY = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC_aSR8bjU02Kb1ROYUA7Yki_2Fogvs6-o")};
@@ -15748,6 +16402,36 @@ const html = `<!doctype html>
         } catch {
           return "";
         }
+      }
+
+      function readPlaygroundOnboardingState() {
+        try {
+          const raw = sessionStorage.getItem(PLAYGROUND_ONBOARDING_STATE_KEY);
+          const parsed = raw ? JSON.parse(raw) : null;
+          return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function writePlaygroundOnboardingState(value) {
+        try {
+          sessionStorage.setItem(PLAYGROUND_ONBOARDING_STATE_KEY, JSON.stringify(value || {}));
+        } catch {}
+      }
+
+      function clearPlaygroundOnboardingState() {
+        try {
+          sessionStorage.removeItem(PLAYGROUND_ONBOARDING_STATE_KEY);
+        } catch {}
+      }
+
+      function removeCurrentSearchParam(name) {
+        try {
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.delete(name);
+          window.history.replaceState({}, "", nextUrl.toString());
+        } catch {}
       }
 
       function isUnauthorizedStatus(status) {
@@ -16635,6 +17319,36 @@ const html = `<!doctype html>
           speed: "Fast",
         },
       ];
+      const PLAYGROUND_ONBOARDING_AGENT_PRESETS = [
+        {
+          id: "research",
+          name: "Research Assistant",
+          model: "claude-haiku-4-5",
+          description: "Find, synthesize, and explain information with clear source-aware reasoning.",
+          instructions: "You are an expert research assistant. Investigate topics thoroughly, synthesize findings clearly, call out uncertainty, and prioritize factual accuracy over speed. Structure answers so the main takeaways and next actions are obvious.",
+        },
+        {
+          id: "code",
+          name: "Code Reviewer",
+          model: "claude-haiku-4-5",
+          description: "Review code, spot risks, and suggest concrete improvements.",
+          instructions: "You are an expert code reviewer. Identify bugs, regressions, security issues, performance risks, and maintainability problems. Prioritize critical findings first, explain why they matter, and give specific actionable fixes.",
+        },
+        {
+          id: "writing",
+          name: "Writing Partner",
+          model: "claude-haiku-4-5",
+          description: "Draft, edit, and refine writing while preserving the user's voice.",
+          instructions: "You are a skilled writing partner. Help draft, edit, and refine content for clarity, tone, structure, and accuracy. Improve the writing without flattening the author's intent or voice.",
+        },
+        {
+          id: "custom",
+          name: "Custom Agent",
+          model: "claude-haiku-4-5",
+          description: "Start from a clean slate and shape the agent around your own workflow.",
+          instructions: "",
+        },
+      ];
       const PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS = [
         { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview" },
         { id: "gemini-3-pro-preview", label: "Gemini 3 Pro Preview" },
@@ -17392,6 +18106,7 @@ const html = `<!doctype html>
           useCardBackgroundAsWallpaper: true,
           color: null,
           defaultEnvironmentId: null,
+          attachments: [],
           metadata: null,
           summary: buildEmptyPlaygroundProjectSummary(),
           createdAt: now,
@@ -18623,6 +19338,11 @@ const html = `<!doctype html>
           project.useCardBackgroundAsWallpaper,
           metadata?.useCardBackgroundAsWallpaper
         );
+        const directAttachments = normalizePlaygroundTaskAttachmentList(project.attachments);
+        const metadataAttachments = normalizePlaygroundTaskAttachmentList(metadata?.attachments);
+        const attachments = directAttachments.length > 0
+          ? directAttachments
+          : metadataAttachments;
 
         return {
           ...draft,
@@ -18636,7 +19356,10 @@ const html = `<!doctype html>
           color: typeof project.color === "string" && project.color.trim() ? project.color.trim() : null,
           defaultEnvironmentId: typeof project.defaultEnvironmentId === "string" && project.defaultEnvironmentId.trim()
             ? project.defaultEnvironmentId.trim()
+            : typeof metadata?.defaultEnvironmentId === "string" && metadata.defaultEnvironmentId.trim()
+              ? metadata.defaultEnvironmentId.trim()
             : null,
+          attachments,
           metadata,
           summary: {
             ...buildEmptyPlaygroundProjectSummary(),
@@ -31447,6 +32170,7 @@ const html = `<!doctype html>
         const scheduleDescriptionTextareaRef = useRef(null);
         const taskCommentTextareaRef = useRef(null);
         const taskAttachmentInputRef = useRef(null);
+        const projectAttachmentInputRef = useRef(null);
         const taskScheduleDialogTimerRef = useRef(null);
         const taskAttachmentObjectUrlsRef = useRef(new Set());
         const taskTitleSkipCommitRef = useRef(false);
@@ -31484,6 +32208,24 @@ const html = `<!doctype html>
         const [projectDraft, setProjectDraft] = useState(buildPlaygroundDefaultProjectDraft());
         const projectDescriptionTextareaRef = useRef(null);
         const [isProjectDescriptionEditing, setIsProjectDescriptionEditing] = useState(false);
+        const [projectComposerEnvironmentPopoverOpen, setProjectComposerEnvironmentPopoverOpen] = useState(false);
+        const projectComposerEnvironmentPopoverRef = useRef(null);
+        const [projectPreviewedAttachmentId, setProjectPreviewedAttachmentId] = useState("");
+        const [projectAttachmentTransferState, setProjectAttachmentTransferState] = useState({
+          uploadingIds: [],
+          error: "",
+          isProcessing: false,
+        });
+        const [isProjectAttachmentDragging, setIsProjectAttachmentDragging] = useState(false);
+        const [projectEnvironmentFilePickerOpen, setProjectEnvironmentFilePickerOpen] = useState(false);
+        const [projectEnvironmentFilePickerInventory, setProjectEnvironmentFilePickerInventory] = useState([]);
+        const [projectEnvironmentFilePickerState, setProjectEnvironmentFilePickerState] = useState({
+          status: "idle",
+          error: "",
+        });
+        const [projectEnvironmentFilePickerSearch, setProjectEnvironmentFilePickerSearch] = useState("");
+        const [projectEnvironmentFilePickerExpandedFolders, setProjectEnvironmentFilePickerExpandedFolders] = useState([]);
+        const [projectEnvironmentFilePickerSelectedPaths, setProjectEnvironmentFilePickerSelectedPaths] = useState([]);
         const [taskView, setTaskView] = useState("backlog");
         const [backlogToolbarPopover, setBacklogToolbarPopover] = useState("");
         const [backlogFilterMode, setBacklogFilterMode] = useState("open");
@@ -31802,6 +32544,18 @@ const html = `<!doctype html>
             ...(defaultEnvironmentId && environment.id === defaultEnvironmentId ? { isDefault: true } : {}),
           }));
         }, [environments, selectedProject?.defaultEnvironmentId, selectedProjectEnvironments]);
+        const projectComposerAvailableEnvironments = useMemo(() => {
+          const sourceItems = environments.length > 0
+            ? environments
+            : selectedProjectEnvironments;
+          const draftEnvironmentId = typeof projectDraft?.defaultEnvironmentId === "string"
+            ? projectDraft.defaultEnvironmentId.trim()
+            : "";
+          return sourceItems.map((environment) => ({
+            ...environment,
+            ...(draftEnvironmentId && environment.id === draftEnvironmentId ? { isDefault: true } : {}),
+          }));
+        }, [environments, projectDraft?.defaultEnvironmentId, selectedProjectEnvironments]);
 
         const environmentsById = useMemo(() => {
           const next = {};
@@ -31818,6 +32572,15 @@ const html = `<!doctype html>
             ...(backlogComposerEnvironmentId && environment.id === backlogComposerEnvironmentId ? { isDefault: true } : {}),
           }));
         }, [availableBacklogEnvironments, backlogComposerEnvironmentId]);
+        const activeProjectAttachmentEnvironmentId = typeof projectDraft?.defaultEnvironmentId === "string"
+          ? projectDraft.defaultEnvironmentId.trim()
+          : "";
+        const activeProjectAttachmentEnvironment = useMemo(() => {
+          if (!activeProjectAttachmentEnvironmentId) {
+            return null;
+          }
+          return projectComposerAvailableEnvironments.find((environment) => environment.id === activeProjectAttachmentEnvironmentId) || null;
+        }, [activeProjectAttachmentEnvironmentId, projectComposerAvailableEnvironments]);
 
         const isCalendarScheduleDetailMode = Boolean(!draftTask && taskView === "calendar" && scheduleViewMode === "setup");
 
@@ -31950,6 +32713,38 @@ const html = `<!doctype html>
           taskEnvironmentFilePickerInventory,
           taskEnvironmentFilePickerSearch,
           taskEnvironmentFilePickerTree,
+        ]);
+
+        const projectEnvironmentFilePickerExpandedSet = useMemo(() => {
+          return new Set(projectEnvironmentFilePickerExpandedFolders);
+        }, [projectEnvironmentFilePickerExpandedFolders]);
+
+        const projectEnvironmentFilePickerTree = useMemo(() => {
+          return buildPlaygroundEnvironmentTree(projectEnvironmentFilePickerInventory);
+        }, [projectEnvironmentFilePickerInventory]);
+
+        const projectEnvironmentFilePickerRows = useMemo(() => {
+          const searchValue = projectEnvironmentFilePickerSearch.trim().toLowerCase();
+          if (searchValue) {
+            return sortPlaygroundEnvironmentEntries(
+              projectEnvironmentFilePickerInventory.filter((entry) =>
+                !entry.isFolder && (
+                  String(entry.name || "").toLowerCase().includes(searchValue)
+                  || String(entry.path || "").toLowerCase().includes(searchValue)
+                )
+              )
+            ).map((entry) => ({ entry, level: 0, searchMatch: true }));
+          }
+          return buildPlaygroundEnvironmentVisibleRows(
+            projectEnvironmentFilePickerTree,
+            "",
+            projectEnvironmentFilePickerExpandedSet
+          ).map((row) => ({ ...row, searchMatch: false }));
+        }, [
+          projectEnvironmentFilePickerExpandedSet,
+          projectEnvironmentFilePickerInventory,
+          projectEnvironmentFilePickerSearch,
+          projectEnvironmentFilePickerTree,
         ]);
 
         const backlogComposerAgents = useMemo(() => {
@@ -32486,6 +33281,14 @@ const html = `<!doctype html>
           const matchedAttachment = activeDetailAttachments.find((attachment) => attachment.id === previewedTaskAttachmentId) || null;
           return buildResolvedTaskAttachmentRecord(matchedAttachment);
         }, [activeDetailAttachments, backendUrl, previewedTaskAttachmentId]);
+        const previewedProjectAttachment = useMemo(() => {
+          const projectAttachments = normalizePlaygroundTaskAttachmentList(projectDraft?.attachments);
+          if (!projectAttachments.length || !projectPreviewedAttachmentId) {
+            return null;
+          }
+          const matchedAttachment = projectAttachments.find((attachment) => attachment.id === projectPreviewedAttachmentId) || null;
+          return buildResolvedTaskAttachmentRecord(matchedAttachment);
+        }, [backendUrl, projectDraft?.attachments, projectPreviewedAttachmentId]);
 
         const schedulesById = useMemo(() => {
           const next = {};
@@ -32757,7 +33560,55 @@ const html = `<!doctype html>
           }));
         }
 
-        function buildPlaygroundTaskRunPrompt(taskRecord) {
+        function mergePlaygroundAttachmentLists(...lists) {
+          const mergedByKey = new Map();
+          lists.forEach((list) => {
+            normalizePlaygroundTaskAttachmentList(list).forEach((attachment) => {
+              const normalizedAttachment = normalizePlaygroundTaskAttachmentRecord(attachment);
+              const attachmentKey = [
+                normalizedAttachment.id,
+                normalizeHistoryPath(normalizedAttachment.workspacePath),
+                normalizeHistoryPath(normalizedAttachment.sourcePath),
+                normalizedAttachment.filename,
+              ].find((value) => typeof value === "string" && value.trim()) || generateId("attachment");
+              if (!mergedByKey.has(attachmentKey)) {
+                mergedByKey.set(attachmentKey, normalizedAttachment);
+              }
+            });
+          });
+          return Array.from(mergedByKey.values());
+        }
+
+        function getPlaygroundAttachmentPromptPath(attachment) {
+          const workspacePath = normalizeHistoryPath(attachment?.workspacePath);
+          if (workspacePath) {
+            return workspacePath;
+          }
+          const sourcePath = normalizeHistoryPath(attachment?.sourcePath);
+          if (sourcePath) {
+            return sourcePath;
+          }
+          return String(attachment?.filename || attachment?.name || "attachment").trim() || "attachment";
+        }
+
+        function buildPlaygroundAttachmentPromptSection(title, attachments, options = {}) {
+          const newline = String.fromCharCode(10);
+          const normalizedAttachments = normalizePlaygroundTaskAttachmentList(attachments);
+          if (normalizedAttachments.length === 0) {
+            return "";
+          }
+          const lines = normalizedAttachments.map((attachment) => {
+            const attachmentLabel = String(attachment?.filename || attachment?.name || "file").trim() || "file";
+            return "- " + attachmentLabel + ": " + getPlaygroundAttachmentPromptPath(attachment);
+          });
+          return [
+            title,
+            typeof options.copy === "string" && options.copy.trim() ? options.copy.trim() : "",
+            ...lines,
+          ].filter(Boolean).join(newline);
+        }
+
+        function buildPlaygroundTaskRunPrompt(taskRecord, options = {}) {
           const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
           const ticketNumber = taskTicketNumbersById[normalizedTask.id] || normalizedTask.ticketNumber || "000";
           const newline = String.fromCharCode(10);
@@ -32780,6 +33631,16 @@ const html = `<!doctype html>
           const skillNames = normalizePlaygroundEnabledSkillIds(normalizedTask.enabledSkills)
             .map((skillId) => resolveTaskSkillItem(skillId)?.name || skillId)
             .filter(Boolean);
+          const taskAttachmentsSection = buildPlaygroundAttachmentPromptSection("Task attachments:", normalizedTask.attachments, {
+            copy: "These files are attached specifically to this task.",
+          });
+          const projectAttachmentsSection = buildPlaygroundAttachmentPromptSection(
+            "Project attachments:",
+            options?.projectAttachments,
+            {
+              copy: "These files belong to the whole project and should be treated as shared project context for this task.",
+            }
+          );
           return [
             "Run this backlog ticket as configured.",
             "Ticket: " + ticketNumber,
@@ -32794,6 +33655,8 @@ const html = `<!doctype html>
               ? "Description:" + newline + normalizedTask.description
               : "Description:" + newline + "None provided.",
             commentLines.length > 0 ? "Comments:" + newline + commentLines.join(newline) : "",
+            taskAttachmentsSection,
+            projectAttachmentsSection,
           ].filter(Boolean).join(paragraphBreak);
         }
 
@@ -33942,6 +34805,385 @@ const html = `<!doctype html>
           applyProjectDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
+        function appendUploadedProjectAttachments(attachments) {
+          const normalizedAttachments = normalizePlaygroundTaskAttachmentList(attachments);
+          if (!normalizedAttachments.length) {
+            return false;
+          }
+          setProjectDraft((current) => ({
+            ...current,
+            attachments: mergePlaygroundAttachmentLists(current.attachments, normalizedAttachments),
+          }));
+          return true;
+        }
+
+        async function appendProjectAttachmentFiles(files, options = {}) {
+          const normalizedFiles = (Array.isArray(files) ? files : []).filter((file) =>
+            file
+            && typeof file === "object"
+            && typeof file.name === "string"
+            && typeof file.size === "number"
+            && typeof file.arrayBuffer === "function"
+          );
+          if (normalizedFiles.length === 0) {
+            return false;
+          }
+
+          const targetEnvironmentId = String(options.environmentId || activeProjectAttachmentEnvironmentId || "").trim();
+          if (!targetEnvironmentId) {
+            setProjectAttachmentTransferState((current) => ({
+              ...current,
+              error: "Select a default environment before attaching project files.",
+              error: "Select an environment before attaching project files.",
+            }));
+            return false;
+          }
+
+          setProjectAttachmentTransferState((current) => ({
+            ...current,
+            error: "",
+            isProcessing: true,
+          }));
+
+          try {
+            const uploadedAttachments = [];
+            for (let index = 0; index < normalizedFiles.length; index += 1) {
+              uploadedAttachments.push(await uploadTaskAttachment(normalizedFiles[index], {
+                environmentId: targetEnvironmentId,
+                sourcePath: Array.isArray(options.sourcePaths) ? options.sourcePaths[index] : "",
+              }));
+            }
+            appendUploadedProjectAttachments(uploadedAttachments);
+            setProjectAttachmentTransferState((current) => ({
+              ...current,
+              error: "",
+              isProcessing: false,
+            }));
+            return true;
+          } catch (error) {
+            setProjectAttachmentTransferState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to upload project attachment.",
+              isProcessing: false,
+            }));
+            return false;
+          }
+        }
+
+        function openProjectAttachmentPicker() {
+          if (projectAttachmentTransferState.isProcessing) {
+            return;
+          }
+          if (!activeProjectAttachmentEnvironmentId) {
+            setProjectAttachmentTransferState((current) => ({
+              ...current,
+              error: "Select an environment before attaching project files.",
+            }));
+            return;
+          }
+          setProjectComposerEnvironmentPopoverOpen(false);
+          setIsProjectAttachmentDragging(false);
+          projectAttachmentInputRef.current?.click?.();
+        }
+
+        function openProjectEnvironmentFilePicker() {
+          if (projectAttachmentTransferState.isProcessing) {
+            return;
+          }
+          if (!activeProjectAttachmentEnvironmentId) {
+            setProjectAttachmentTransferState((current) => ({
+              ...current,
+              error: "Select an environment before browsing project files.",
+            }));
+            return;
+          }
+          setProjectAttachmentTransferState((current) => ({
+            ...current,
+            error: "",
+          }));
+          setProjectComposerEnvironmentPopoverOpen(false);
+          setProjectEnvironmentFilePickerSearch("");
+          setProjectEnvironmentFilePickerSelectedPaths([]);
+          setProjectEnvironmentFilePickerOpen(true);
+        }
+
+        async function handleProjectAttachmentInputChange(event) {
+          const fileList = Array.from(event?.target?.files || []);
+          if (event?.target) {
+            event.target.value = "";
+          }
+          if (fileList.length === 0) {
+            return;
+          }
+          await appendProjectAttachmentFiles(fileList, {
+            environmentId: activeProjectAttachmentEnvironmentId,
+          });
+        }
+
+        async function handleProjectAttachmentDrop(event) {
+          event.preventDefault();
+          setIsProjectAttachmentDragging(false);
+          const fileList = Array.from(event?.dataTransfer?.files || []);
+          if (fileList.length === 0) {
+            return;
+          }
+          await appendProjectAttachmentFiles(fileList, {
+            environmentId: activeProjectAttachmentEnvironmentId,
+          });
+        }
+
+        function toggleProjectEnvironmentFileSelection(path) {
+          const normalizedPath = normalizeHistoryPath(path);
+          if (!normalizedPath) return;
+          setProjectEnvironmentFilePickerSelectedPaths((current) =>
+            current.includes(normalizedPath)
+              ? current.filter((value) => value !== normalizedPath)
+              : current.concat(normalizedPath)
+          );
+        }
+
+        function toggleProjectEnvironmentFileFolder(path) {
+          const normalizedPath = normalizeHistoryPath(path);
+          if (!normalizedPath) return;
+          setProjectEnvironmentFilePickerExpandedFolders((current) =>
+            current.includes(normalizedPath)
+              ? current.filter((value) => value !== normalizedPath)
+              : current.concat(normalizedPath)
+          );
+        }
+
+        async function handleAttachProjectEnvironmentFiles() {
+          if (!projectEnvironmentFilePickerOpen || !activeProjectAttachmentEnvironmentId) {
+            return;
+          }
+          const selectedEntries = projectEnvironmentFilePickerInventory.filter((entry) =>
+            !entry.isFolder && projectEnvironmentFilePickerSelectedPaths.includes(normalizeHistoryPath(entry.path))
+          );
+          if (!selectedEntries.length) {
+            return;
+          }
+
+          setProjectEnvironmentFilePickerState((current) => ({
+            ...current,
+            error: "",
+          }));
+          setProjectAttachmentTransferState((current) => ({
+            ...current,
+            error: "",
+            isProcessing: true,
+          }));
+
+          try {
+            const files = [];
+            const sourcePaths = [];
+
+            for (const entry of selectedEntries) {
+              const downloadUrl = buildPlaygroundEnvironmentDownloadUrl(backendUrl, activeProjectAttachmentEnvironmentId, entry.path);
+              const response = await fetch(downloadUrl, {
+                method: "GET",
+                headers: requestHeaders,
+              });
+              if (!response.ok) {
+                throw new Error("Failed to load " + (entry.name || "file") + " (" + response.status + ")");
+              }
+              const blob = await response.blob();
+              files.push(new globalThis.File([blob], entry.name || "file", {
+                type: entry.mimeType || blob.type || "application/octet-stream",
+              }));
+              sourcePaths.push(entry.path);
+            }
+
+            const attached = await appendProjectAttachmentFiles(files, {
+              environmentId: activeProjectAttachmentEnvironmentId,
+              sourcePaths,
+            });
+            if (attached) {
+              setProjectEnvironmentFilePickerOpen(false);
+              setProjectEnvironmentFilePickerSelectedPaths([]);
+              setProjectEnvironmentFilePickerSearch("");
+            } else {
+              setProjectAttachmentTransferState((current) => ({
+                ...current,
+                isProcessing: false,
+              }));
+            }
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to attach project environment files.";
+            setProjectAttachmentTransferState((current) => ({
+              ...current,
+              error: errorMessage,
+              isProcessing: false,
+            }));
+            setProjectEnvironmentFilePickerState((current) => ({
+              ...current,
+              error: errorMessage,
+            }));
+          }
+        }
+
+        function handleProjectAttachmentPreviewToggle(attachment) {
+          if (!attachment?.id) return;
+          setProjectPreviewedAttachmentId((current) => current === attachment.id ? "" : attachment.id);
+        }
+
+        function handleRemoveProjectAttachment(attachmentId) {
+          const targetAttachment = normalizePlaygroundTaskAttachmentList(projectDraft.attachments).find((attachment) => attachment.id === attachmentId) || null;
+          if (!targetAttachment) return;
+          revokeTaskAttachmentObjectUrl(targetAttachment.previewUrl);
+          revokeTaskAttachmentObjectUrl(targetAttachment.url);
+          if (projectPreviewedAttachmentId === attachmentId) {
+            setProjectPreviewedAttachmentId("");
+          }
+          setProjectDraft((current) => ({
+            ...current,
+            attachments: normalizePlaygroundTaskAttachmentList(current.attachments).filter((attachment) => attachment.id !== attachmentId),
+          }));
+        }
+
+        function renderProjectEnvironmentFilePickerRow(row) {
+          const entry = row.entry;
+          const normalizedPath = normalizeHistoryPath(entry.path);
+          const isSelected = projectEnvironmentFilePickerSelectedPaths.includes(normalizedPath);
+          const isExpanded = projectEnvironmentFilePickerExpandedFolders.includes(normalizedPath);
+          const metaValue = row.searchMatch
+            ? getPlaygroundEntryParentPath(normalizedPath) || "Root"
+            : formatPlaygroundFileDate(entry.modifiedTime || entry.createdTime);
+
+          return React.createElement("div", { key: normalizedPath || entry.id },
+            React.createElement("div", {
+              className: "tb-file-browser-item" + (isSelected ? " selected" : ""),
+              role: "button",
+              tabIndex: 0,
+              onClick: () => {
+                if (entry.isFolder && !row.searchMatch) {
+                  toggleProjectEnvironmentFileFolder(normalizedPath);
+                  return;
+                }
+                toggleProjectEnvironmentFileSelection(normalizedPath);
+              },
+              onKeyDown: (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  if (entry.isFolder && !row.searchMatch) {
+                    toggleProjectEnvironmentFileFolder(normalizedPath);
+                    return;
+                  }
+                  toggleProjectEnvironmentFileSelection(normalizedPath);
+                }
+              },
+              style: row.searchMatch ? undefined : { paddingLeft: String(12 + row.level * 20) + "px" },
+            },
+              entry.isFolder && !row.searchMatch
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "tb-file-browser-item-leading",
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      toggleProjectEnvironmentFileFolder(normalizedPath);
+                    },
+                  },
+                    isExpanded
+                      ? React.createElement(ChevronDown, { className: "tb-file-browser-folder-chevron", strokeWidth: 1.75 })
+                      : React.createElement(ChevronRight, { className: "tb-file-browser-folder-chevron", strokeWidth: 1.75 })
+                  )
+                : React.createElement("div", {
+                    className: "tb-file-browser-check" + (isSelected ? " selected" : ""),
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      toggleProjectEnvironmentFileSelection(normalizedPath);
+                    },
+                  },
+                    isSelected ? React.createElement(Check, { className: "tb-file-browser-check-icon", strokeWidth: 2.2 }) : null
+                  ),
+              renderTaskEnvironmentFilePickerIcon(entry),
+              React.createElement("span", { className: "tb-file-browser-item-name", title: entry.name }, entry.name),
+              React.createElement("span", { className: "tb-file-browser-item-meta", title: metaValue }, metaValue || "-"),
+              React.createElement("span", { className: "tb-file-browser-item-size" }, entry.isFolder ? "" : formatPlaygroundFileSize(entry.size))
+            )
+          );
+        }
+
+        function renderProjectEnvironmentFilePicker() {
+          if (!projectEnvironmentFilePickerOpen) {
+            return null;
+          }
+
+          const selectedFilesCount = projectEnvironmentFilePickerInventory.filter((entry) =>
+            !entry.isFolder && projectEnvironmentFilePickerSelectedPaths.includes(normalizeHistoryPath(entry.path))
+          ).length;
+
+          return React.createElement("div", { className: "tb-runner-chat" },
+            React.createElement("div", {
+              className: "tb-file-browser-scrim",
+              onClick: () => setProjectEnvironmentFilePickerOpen(false),
+            },
+              React.createElement("div", {
+                className: "tb-file-browser-modal",
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", { className: "tb-file-browser-body" },
+                  renderTaskDetailFileBrowserSidebar("workspace", projectEnvironmentFilePickerSearch, setProjectEnvironmentFilePickerSearch),
+                  React.createElement("div", { className: "tb-file-browser-main" },
+                    React.createElement("div", { className: "tb-file-browser-header" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "tb-file-browser-nav-button",
+                        onClick: () => setProjectEnvironmentFilePickerOpen(false),
+                        "aria-label": "Close environment files",
+                      }, React.createElement(X, { className: "tb-file-browser-nav-icon", strokeWidth: 1.9 })),
+                      React.createElement("div", { className: "tb-file-browser-header-icon" },
+                        React.createElement(Cloud, { className: "tb-file-browser-source-icon", strokeWidth: 1.75 })
+                      ),
+                      React.createElement("div", { className: "tb-file-browser-breadcrumbs" },
+                        React.createElement("span", { className: "tb-file-browser-breadcrumb-chip" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-file-browser-breadcrumb active",
+                          }, activeProjectAttachmentEnvironment?.name || "Environment")
+                        )
+                      ),
+                      React.createElement("div", { className: "tb-file-browser-count" }, selectedFilesCount + (selectedFilesCount === 1 ? " file selected" : " files selected"))
+                    ),
+                    React.createElement("div", { className: "tb-file-browser-list" },
+                      projectEnvironmentFilePickerState.status === "loading"
+                        ? React.createElement("div", { className: "tb-file-browser-empty" }, "Loading environment files...")
+                        : projectEnvironmentFilePickerState.error
+                          ? React.createElement("div", { className: "tb-file-browser-empty" }, projectEnvironmentFilePickerState.error)
+                          : projectEnvironmentFilePickerRows.length === 0
+                            ? React.createElement("div", { className: "tb-file-browser-empty" }, projectEnvironmentFilePickerSearch.trim() ? "No matching files found." : "No files found in this environment.")
+                            : React.createElement("div", { className: "tb-file-browser-list-inner" },
+                                projectEnvironmentFilePickerRows.map((row) => renderProjectEnvironmentFilePickerRow(row))
+                              )
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "tb-file-browser-footer" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "tb-file-browser-footer-button tb-file-browser-footer-button-secondary",
+                    onClick: () => setProjectEnvironmentFilePickerOpen(false),
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "tb-file-browser-footer-button tb-file-browser-footer-button-primary",
+                    onClick: () => void handleAttachProjectEnvironmentFiles(),
+                    disabled: selectedFilesCount === 0 || projectAttachmentTransferState.isProcessing,
+                  },
+                    React.createElement("span", { className: "tb-file-browser-footer-button-content" },
+                      projectAttachmentTransferState.isProcessing
+                        ? React.createElement("span", { className: "runner-spinner tb-file-browser-footer-button-spinner" })
+                        : null,
+                      React.createElement("span", { className: "tb-file-browser-footer-button-label" },
+                        projectAttachmentTransferState.isProcessing ? "Attaching Files..." : "Attach Files"
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          );
+        }
+
         function buildProjectScheduleDraft(projectRecord = selectedProject) {
           const base = buildPlaygroundDefaultScheduleDraft();
           const defaultEnvironment = availableBacklogEnvironments.find((environment) => environment.isDefault) || availableBacklogEnvironments[0] || null;
@@ -34102,9 +35344,32 @@ const html = `<!doctype html>
         }
 
         function openProjectComposer() {
+          const defaultProjectEnvironmentId = projectComposerAvailableEnvironments.find((environment) => environment.isDefault)?.id
+            || projectComposerAvailableEnvironments[0]?.id
+            || null;
           setProjectComposerMode("create");
-          setProjectDraft(buildPlaygroundDefaultProjectDraft());
+          setProjectDraft({
+            ...buildPlaygroundDefaultProjectDraft(),
+            defaultEnvironmentId: defaultProjectEnvironmentId,
+          });
           setIsProjectDescriptionEditing(false);
+          setProjectComposerEnvironmentPopoverOpen(false);
+          setProjectPreviewedAttachmentId("");
+          setProjectAttachmentTransferState({
+            uploadingIds: [],
+            error: "",
+            isProcessing: false,
+          });
+          setIsProjectAttachmentDragging(false);
+          setProjectEnvironmentFilePickerOpen(false);
+          setProjectEnvironmentFilePickerInventory([]);
+          setProjectEnvironmentFilePickerState({
+            status: "idle",
+            error: "",
+          });
+          setProjectEnvironmentFilePickerSearch("");
+          setProjectEnvironmentFilePickerExpandedFolders([]);
+          setProjectEnvironmentFilePickerSelectedPaths([]);
           setProjectSaveState({
             isSaving: false,
             error: "",
@@ -34124,6 +35389,23 @@ const html = `<!doctype html>
             wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, wallpaperConfig.id),
           });
           setIsProjectDescriptionEditing(false);
+          setProjectComposerEnvironmentPopoverOpen(false);
+          setProjectPreviewedAttachmentId("");
+          setProjectAttachmentTransferState({
+            uploadingIds: [],
+            error: "",
+            isProcessing: false,
+          });
+          setIsProjectAttachmentDragging(false);
+          setProjectEnvironmentFilePickerOpen(false);
+          setProjectEnvironmentFilePickerInventory([]);
+          setProjectEnvironmentFilePickerState({
+            status: "idle",
+            error: "",
+          });
+          setProjectEnvironmentFilePickerSearch("");
+          setProjectEnvironmentFilePickerExpandedFolders([]);
+          setProjectEnvironmentFilePickerSelectedPaths([]);
           setProjectSaveState({
             isSaving: false,
             error: "",
@@ -34137,8 +35419,25 @@ const html = `<!doctype html>
           setProjectComposerOpen(false);
           setProjectComposerMode("create");
           setProjectIconPickerOpen(false);
+          setProjectComposerEnvironmentPopoverOpen(false);
           setProjectDraft(buildPlaygroundDefaultProjectDraft());
           setIsProjectDescriptionEditing(false);
+          setProjectPreviewedAttachmentId("");
+          setProjectAttachmentTransferState({
+            uploadingIds: [],
+            error: "",
+            isProcessing: false,
+          });
+          setIsProjectAttachmentDragging(false);
+          setProjectEnvironmentFilePickerOpen(false);
+          setProjectEnvironmentFilePickerInventory([]);
+          setProjectEnvironmentFilePickerState({
+            status: "idle",
+            error: "",
+          });
+          setProjectEnvironmentFilePickerSearch("");
+          setProjectEnvironmentFilePickerExpandedFolders([]);
+          setProjectEnvironmentFilePickerSelectedPaths([]);
           setProjectSaveState({
             isSaving: false,
             error: "",
@@ -34806,6 +36105,14 @@ const html = `<!doctype html>
 
           function handleProjectComposerEscape(event) {
             if (event.key !== "Escape") return;
+            if (projectEnvironmentFilePickerOpen) {
+              setProjectEnvironmentFilePickerOpen(false);
+              return;
+            }
+            if (projectComposerEnvironmentPopoverOpen) {
+              setProjectComposerEnvironmentPopoverOpen(false);
+              return;
+            }
             if (projectIconPickerOpen) {
               setProjectIconPickerOpen(false);
               return;
@@ -34815,7 +36122,7 @@ const html = `<!doctype html>
 
           window.addEventListener("keydown", handleProjectComposerEscape);
           return () => window.removeEventListener("keydown", handleProjectComposerEscape);
-        }, [projectComposerOpen, projectIconPickerOpen]);
+        }, [projectComposerEnvironmentPopoverOpen, projectComposerOpen, projectEnvironmentFilePickerOpen, projectIconPickerOpen]);
 
         useEffect(() => {
           if (!releaseComposerOpen) return undefined;
@@ -34850,6 +36157,23 @@ const html = `<!doctype html>
         }, [projectComposerOpen, projectDraft.description]);
 
         useEffect(() => {
+          if (!projectComposerOpen || projectComposerMode !== "create" || projectDraft?.defaultEnvironmentId || projectComposerAvailableEnvironments.length === 0) {
+            return;
+          }
+          setProjectDraft((current) => {
+            if (current?.defaultEnvironmentId) {
+              return current;
+            }
+            return {
+              ...current,
+              defaultEnvironmentId: projectComposerAvailableEnvironments.find((environment) => environment.isDefault)?.id
+                || projectComposerAvailableEnvironments[0]?.id
+                || null,
+            };
+          });
+        }, [projectComposerAvailableEnvironments, projectComposerMode, projectComposerOpen, projectDraft?.defaultEnvironmentId]);
+
+        useEffect(() => {
           if (scheduleViewMode !== "setup") {
             return undefined;
           }
@@ -34874,6 +36198,23 @@ const html = `<!doctype html>
           document.addEventListener("mousedown", handleProjectSidebarPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handleProjectSidebarPopoverPointerDown);
         }, [projectSidebarPopover]);
+
+        useEffect(() => {
+          if (!projectComposerEnvironmentPopoverOpen) {
+            return undefined;
+          }
+
+          function handleProjectComposerEnvironmentPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !projectComposerEnvironmentPopoverRef.current || projectComposerEnvironmentPopoverRef.current.contains(target)) {
+              return;
+            }
+            setProjectComposerEnvironmentPopoverOpen(false);
+          }
+
+          document.addEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
+        }, [projectComposerEnvironmentPopoverOpen]);
 
         useEffect(() => {
           if (!projectCardMenuProjectId) return undefined;
@@ -35452,6 +36793,64 @@ const html = `<!doctype html>
         }, [activeTaskEnvironmentId, backendUrl, requestHeaders, taskEnvironmentFilePickerOpen]);
 
         useEffect(() => {
+          if (!projectEnvironmentFilePickerOpen) {
+            return undefined;
+          }
+
+          if (!activeProjectAttachmentEnvironmentId) {
+            setProjectEnvironmentFilePickerInventory([]);
+            setProjectEnvironmentFilePickerState({
+              status: "error",
+              error: "Select a default environment before browsing files.",
+            });
+            return undefined;
+          }
+
+          const controller = new AbortController();
+          setProjectEnvironmentFilePickerState({
+            status: "loading",
+            error: "",
+          });
+          setProjectEnvironmentFilePickerSelectedPaths([]);
+          setProjectEnvironmentFilePickerExpandedFolders([]);
+
+          void fetch(
+            buildPlaygroundEnvironmentFilesListUrl(backendUrl, activeProjectAttachmentEnvironmentId, "", -1),
+            {
+              method: "GET",
+              headers: requestHeaders,
+              signal: controller.signal,
+            }
+          )
+            .then(async (response) => {
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load environment files.");
+              }
+              if (controller.signal.aborted) {
+                return;
+              }
+              setProjectEnvironmentFilePickerInventory(normalizePlaygroundEnvironmentInventory(data?.files || data?.items || data));
+              setProjectEnvironmentFilePickerState({
+                status: "ready",
+                error: "",
+              });
+            })
+            .catch((error) => {
+              if (controller.signal.aborted) {
+                return;
+              }
+              setProjectEnvironmentFilePickerInventory([]);
+              setProjectEnvironmentFilePickerState({
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load environment files.",
+              });
+            });
+
+          return () => controller.abort();
+        }, [activeProjectAttachmentEnvironmentId, backendUrl, projectEnvironmentFilePickerOpen, requestHeaders]);
+
+        useEffect(() => {
           if (!taskConnectorBrowserOpen) {
             return undefined;
           }
@@ -35637,12 +37036,15 @@ const html = `<!doctype html>
         ]);
 
         useEffect(() => {
-          if (!taskEnvironmentFilePickerOpen && !taskEnvironmentChangeDialog && !taskScheduleDialogState && !taskConnectorBrowserOpen && !taskParentPickerState && !boardBlockedPickerState) {
+          if (!projectEnvironmentFilePickerOpen && !taskEnvironmentFilePickerOpen && !taskEnvironmentChangeDialog && !taskScheduleDialogState && !taskConnectorBrowserOpen && !taskParentPickerState && !boardBlockedPickerState) {
             return undefined;
           }
 
           function handleTaskOverlayEscape(event) {
             if (event.key !== "Escape") return;
+            if (projectEnvironmentFilePickerOpen) {
+              setProjectEnvironmentFilePickerOpen(false);
+            }
             if (taskEnvironmentChangeDialog?.isSubmitting) {
               return;
             }
@@ -35671,7 +37073,7 @@ const html = `<!doctype html>
 
           window.addEventListener("keydown", handleTaskOverlayEscape);
           return () => window.removeEventListener("keydown", handleTaskOverlayEscape);
-        }, [boardBlockedPickerState, taskConnectorBrowserOpen, taskEnvironmentChangeDialog, taskEnvironmentFilePickerOpen, taskParentPickerState, taskScheduleDialogState]);
+        }, [boardBlockedPickerState, projectEnvironmentFilePickerOpen, taskConnectorBrowserOpen, taskEnvironmentChangeDialog, taskEnvironmentFilePickerOpen, taskParentPickerState, taskScheduleDialogState]);
 
         useEffect(() => {
           if (!taskScheduleDialogState) {
@@ -35758,6 +37160,14 @@ const html = `<!doctype html>
           }
           setPreviewedTaskAttachmentId("");
         }, [activeDetailAttachments, previewedTaskAttachmentId]);
+
+        useEffect(() => {
+          if (!projectPreviewedAttachmentId) return;
+          if (normalizePlaygroundTaskAttachmentList(projectDraft?.attachments).some((attachment) => attachment.id === projectPreviewedAttachmentId)) {
+            return;
+          }
+          setProjectPreviewedAttachmentId("");
+        }, [projectDraft?.attachments, projectPreviewedAttachmentId]);
 
         useEffect(() => () => {
           taskAttachmentObjectUrlsRef.current.forEach((url) => {
@@ -37211,6 +38621,7 @@ const html = `<!doctype html>
           });
 
           try {
+            const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(projectDraft.attachments);
             const response = await fetch(backendUrl + "/projects", {
               method: "POST",
               headers: {
@@ -37221,11 +38632,15 @@ const html = `<!doctype html>
                 name: nextName,
                 description: projectDraft.description,
                 color: projectDraft.color || getPlaygroundProjectAccent(projectDraft, projects.length),
+                defaultEnvironmentId: projectDraft.defaultEnvironmentId || undefined,
+                attachments: normalizedProjectAttachments,
                 metadata: {
                   ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
                   icon: getPlaygroundProjectIconId(projectDraft.icon),
                   wallpaperId: getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
                   useCardBackgroundAsWallpaper: projectDraft.useCardBackgroundAsWallpaper !== false,
+                  defaultEnvironmentId: projectDraft.defaultEnvironmentId || null,
+                  attachments: normalizedProjectAttachments,
                 },
               }),
             });
@@ -37271,6 +38686,7 @@ const html = `<!doctype html>
           });
 
           try {
+            const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(projectDraft.attachments);
             const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(projectDraft.id), {
               method: "PATCH",
               headers: {
@@ -37281,11 +38697,15 @@ const html = `<!doctype html>
                 name: nextName,
                 description: projectDraft.description,
                 color: projectDraft.color || getPlaygroundProjectAccent(projectDraft, projects.length),
+                defaultEnvironmentId: projectDraft.defaultEnvironmentId || undefined,
+                attachments: normalizedProjectAttachments,
                 metadata: {
                   ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
                   icon: getPlaygroundProjectIconId(projectDraft.icon),
                   wallpaperId: getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
                   useCardBackgroundAsWallpaper: projectDraft.useCardBackgroundAsWallpaper !== false,
+                  defaultEnvironmentId: projectDraft.defaultEnvironmentId || null,
+                  attachments: normalizedProjectAttachments,
                 },
               }),
             });
@@ -38003,8 +39423,11 @@ const html = `<!doctype html>
             const githubRepo = buildPlaygroundTaskGithubRepoReference(taskToLaunch);
             const launchEnvironmentId = taskToLaunch.environmentId || backlogComposerEnvironmentId || initialEnvironmentId || "";
             const launchAgentId = taskToLaunch.assigneeAgentId || backlogComposerAgentId || initialAgentId || "";
-            const launchPrompt = buildPlaygroundTaskRunPrompt(taskToLaunch);
-            const launchAttachments = normalizePlaygroundTaskAttachmentList(taskToLaunch.attachments);
+            const projectLaunchAttachments = normalizePlaygroundTaskAttachmentList(selectedProject?.attachments);
+            const launchPrompt = buildPlaygroundTaskRunPrompt(taskToLaunch, {
+              projectAttachments: projectLaunchAttachments,
+            });
+            const launchAttachments = mergePlaygroundAttachmentLists(taskToLaunch.attachments, projectLaunchAttachments);
             const response = await fetch(backendUrl + "/tasks/" + encodeURIComponent(task.id) + "/start-thread", {
               method: "POST",
               headers: {
@@ -38823,7 +40246,10 @@ const html = `<!doctype html>
           const resolvedAttachment = buildResolvedTaskAttachmentRecord(attachment) || attachment;
           const previewUrl = resolveTaskAttachmentPreviewUrl(resolvedAttachment);
           const isImage = resolvedAttachment.type === "image" || String(resolvedAttachment.mimeType || "").toLowerCase().startsWith("image/");
-          const isActive = previewedTaskAttachmentId === resolvedAttachment.id;
+          const activeAttachmentId = typeof options.activeAttachmentId === "string"
+            ? options.activeAttachmentId
+            : previewedTaskAttachmentId;
+          const isActive = activeAttachmentId === resolvedAttachment.id;
           const isRemovable = options.removable !== false;
           const handlePreview = typeof options.onPreview === "function"
             ? options.onPreview
@@ -39983,11 +41409,47 @@ const html = `<!doctype html>
 
           const selectedProjectIcon = getPlaygroundProjectIconConfig(projectDraft.icon);
           const SelectedProjectIcon = selectedProjectIcon.icon;
+          const selectedProjectEnvironmentOption = activeProjectAttachmentEnvironment;
+          const projectAttachments = normalizePlaygroundTaskAttachmentList(projectDraft.attachments);
+          const hasProjectAttachments = projectAttachments.length > 0;
+          const projectDefaultEnvironmentLabel = selectedProjectEnvironmentOption
+            ? (selectedProjectEnvironmentOption.name + (selectedProjectEnvironmentOption.isDefault ? " (Default)" : ""))
+            : (projectComposerAvailableEnvironments.length > 0 ? "Select environment" : "No environments");
 
-          return React.createElement("div", {
-              className: "playground-tasks-project-modal-backdrop",
-              onClick: () => closeProjectComposer(),
-            },
+          function renderProjectComposerEnvironmentOptionRow(environment) {
+            return React.createElement("button", {
+                key: environment.id,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select" + (projectDraft.defaultEnvironmentId === environment.id ? " selected" : ""),
+                onClick: () => {
+                  setProjectDraft((current) => ({
+                    ...current,
+                    defaultEnvironmentId: environment.id,
+                  }));
+                  setProjectComposerEnvironmentPopoverOpen(false);
+                  setProjectAttachmentTransferState((current) => ({
+                    ...current,
+                    error: "",
+                  }));
+                },
+              },
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                projectDraft.defaultEnvironmentId === environment.id
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, environment.name + (environment.isDefault ? " (Default)" : "")),
+                React.createElement("span", null, environment.description || "Use this environment for project-wide files.")
+              )
+            );
+          }
+
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop",
+                onClick: () => closeProjectComposer(),
+              },
               React.createElement("form", {
                   className: "playground-tasks-project-modal",
                   onClick: (event) => event.stopPropagation(),
@@ -40043,9 +41505,6 @@ const html = `<!doctype html>
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
                 React.createElement("div", { className: "playground-tasks-project-wallpaper-field" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Card Background")
-                  ),
                   React.createElement("div", { className: "playground-tasks-project-wallpaper-grid" },
                     PLAYGROUND_PROJECT_WALLPAPER_OPTIONS.map((wallpaper) => {
                       const isSelected = getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id) === wallpaper.id;
@@ -40087,6 +41546,133 @@ const html = `<!doctype html>
                     },
                       React.createElement("span", { className: "playground-environments-toggle-thumb" })
                     )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-modal-default-environment" },
+                    React.createElement("div", { className: "playground-tasks-detail-fact" },
+                      React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Environment"),
+                      React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                        React.createElement("div", {
+                          className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (projectComposerEnvironmentPopoverOpen ? " is-open" : ""),
+                          ref: projectComposerEnvironmentPopoverRef,
+                        },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (selectedProjectEnvironmentOption ? "" : " is-empty") + (projectComposerEnvironmentPopoverOpen ? " is-active" : ""),
+                            onClick: () => {
+                              setProjectIconPickerOpen(false);
+                              setProjectComposerEnvironmentPopoverOpen((current) => !current);
+                            },
+                            title: projectDefaultEnvironmentLabel,
+                            "aria-expanded": projectComposerEnvironmentPopoverOpen ? "true" : "false",
+                            disabled: projectComposerAvailableEnvironments.length === 0,
+                          },
+                            React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, projectDefaultEnvironmentLabel),
+                            React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                          ),
+                          projectComposerEnvironmentPopoverOpen
+                            ? React.createElement("div", {
+                                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-toolbar-popup-menu-environment",
+                              },
+                                projectComposerAvailableEnvironments.length > 0
+                                  ? projectComposerAvailableEnvironments.map((environment) => renderProjectComposerEnvironmentOptionRow(environment))
+                                  : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available.")
+                              )
+                            : null
+                        )
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-attachments playground-tasks-project-modal-attachments" },
+                    React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
+                      React.createElement("div", { className: "playground-tasks-attachments-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                          onClick: openProjectEnvironmentFilePicker,
+                          disabled: projectAttachmentTransferState.isProcessing || !activeProjectAttachmentEnvironmentId,
+                          title: activeProjectAttachmentEnvironmentId
+                            ? "Add files from " + (activeProjectAttachmentEnvironment?.name || "the selected environment")
+                            : "Select an environment first",
+                        }, "From Environment")
+                      )
+                    ),
+                    React.createElement("input", {
+                      ref: projectAttachmentInputRef,
+                      type: "file",
+                      multiple: true,
+                      hidden: true,
+                      onChange: (event) => void handleProjectAttachmentInputChange(event),
+                    }),
+                    React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+                      React.createElement("div", {
+                        className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isProjectAttachmentDragging ? " dragging" : "") + (hasProjectAttachments ? " is-filled" : ""),
+                        onDragOver: (event) => {
+                          event.preventDefault();
+                          if (!activeProjectAttachmentEnvironmentId) {
+                            return;
+                          }
+                          setIsProjectAttachmentDragging(true);
+                        },
+                        onDragLeave: (event) => {
+                          if (event.currentTarget.contains(event.relatedTarget)) {
+                            return;
+                          }
+                          setIsProjectAttachmentDragging(false);
+                        },
+                        onDrop: (event) => void handleProjectAttachmentDrop(event),
+                      },
+                        hasProjectAttachments
+                          ? React.createElement(React.Fragment, null,
+                              React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                                React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                                React.createElement("span", null, isProjectAttachmentDragging ? "Drop files here" : "Drop files to attach, or"),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-tasks-attachments-browse",
+                                  onClick: openProjectAttachmentPicker,
+                                }, "browse.")
+                              ),
+                              React.createElement("div", { className: "runner-attachments" },
+                                projectAttachments.map((attachment) =>
+                                  renderTaskAttachmentChip(attachment, {
+                                    removable: true,
+                                    activeAttachmentId: projectPreviewedAttachmentId,
+                                    onPreview: handleProjectAttachmentPreviewToggle,
+                                    onRemove: handleRemoveProjectAttachment,
+                                  })
+                                )
+                              )
+                            )
+                          : React.createElement("button", {
+                              type: "button",
+                              className: "playground-tasks-attachments-empty-button",
+                              onClick: openProjectAttachmentPicker,
+                            },
+                              React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                              React.createElement("span", { className: "tb-popup-dropzone-title" }, isProjectAttachmentDragging ? "Drop files here" : "Drag & drop files here"),
+                              React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
+                            )
+                      )
+                    ),
+                    previewedProjectAttachment
+                      ? React.createElement("div", { className: "tb-runner-document-preview-host tb-runner-document-preview-host-inline playground-tasks-detail-preview-host playground-tasks-project-modal-preview" },
+                          React.createElement(RunnerDocumentPreviewDrawer, {
+                            attachment: previewedProjectAttachment,
+                            backendUrl,
+                            requestHeaders,
+                            inline: true,
+                            onClose: () => setProjectPreviewedAttachmentId(""),
+                            showResizeHandle: false,
+                          })
+                        )
+                      : null,
+                    projectAttachmentTransferState.isProcessing
+                      ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
+                      : null,
+                    projectAttachmentTransferState.error
+                      ? React.createElement("div", { className: "playground-environments-error" }, projectAttachmentTransferState.error)
+                      : null
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
@@ -40159,7 +41745,9 @@ const html = `<!doctype html>
                     : (projectComposerMode === "edit" ? "Save" : "Next"))
                 )
               )
-            );
+            ),
+            renderProjectEnvironmentFilePicker()
+          );
         }
 
         function renderReleaseComposerDialog() {
@@ -43882,12 +45470,830 @@ const html = `<!doctype html>
         );
       }
 
+      function PlaygroundOnboardingModal({
+        open,
+        sessionStatus,
+        hasRealAccess,
+        accountName,
+        existingAgentCount,
+        defaultEnvironmentName,
+        canUploadFiles,
+        existingApiKey,
+        upstreamUrl,
+        speechToTextUrl,
+        githubStatus,
+        notionStatus,
+        googleDriveStatus,
+        oneDriveStatus,
+        onClose,
+        onSignIn,
+        onCreateAgent,
+        onUploadFiles,
+        onCreateApiKey,
+        onConnectGithub,
+        onConnectNotion,
+        onConnectGoogleDrive,
+        onConnectOneDrive,
+      }) {
+        const savedState = useMemo(() => readPlaygroundOnboardingState(), []);
+        const defaultPreset = PLAYGROUND_ONBOARDING_AGENT_PRESETS[0];
+        const initialPresetId = typeof savedState?.selectedPresetId === "string"
+          && PLAYGROUND_ONBOARDING_AGENT_PRESETS.some((preset) => preset.id === savedState.selectedPresetId)
+            ? savedState.selectedPresetId
+            : defaultPreset.id;
+        const initialPreset = PLAYGROUND_ONBOARDING_AGENT_PRESETS.find((preset) => preset.id === initialPresetId) || defaultPreset;
+        const initialStepIndex = Number.isFinite(savedState?.stepIndex)
+          ? Math.max(0, Math.min(3, Math.round(savedState.stepIndex)))
+          : 0;
+        const [stepIndex, setStepIndex] = useState(initialStepIndex);
+        const [selectedPresetId, setSelectedPresetId] = useState(initialPresetId);
+        const [agentName, setAgentName] = useState(
+          typeof savedState?.agentName === "string" ? savedState.agentName : initialPreset.name
+        );
+        const [agentModel, setAgentModel] = useState(
+          typeof savedState?.agentModel === "string" ? savedState.agentModel : initialPreset.model
+        );
+        const [agentInstructions, setAgentInstructions] = useState(
+          typeof savedState?.agentInstructions === "string" ? savedState.agentInstructions : initialPreset.instructions
+        );
+        const [createdAgent, setCreatedAgent] = useState(
+          savedState?.createdAgent && typeof savedState.createdAgent === "object" && !Array.isArray(savedState.createdAgent)
+            ? savedState.createdAgent
+            : null
+        );
+        const [uploadedFiles, setUploadedFiles] = useState(
+          Array.isArray(savedState?.uploadedFiles)
+            ? savedState.uploadedFiles
+              .filter((item) => item && typeof item === "object")
+              .map((item) => ({
+                name: typeof item.name === "string" ? item.name : "Uploaded file",
+                size: Number.isFinite(item.size) ? item.size : 0,
+              }))
+            : []
+        );
+        const [isDraggingFiles, setIsDraggingFiles] = useState(false);
+        const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+        const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+        const [agentError, setAgentError] = useState("");
+        const [dataError, setDataError] = useState("");
+        const [sdkError, setSdkError] = useState("");
+        const [sdkKey, setSdkKey] = useState(
+          typeof savedState?.sdkKey === "string" && savedState.sdkKey.trim()
+            ? savedState.sdkKey.trim()
+            : String(existingApiKey || "").trim()
+        );
+        const [showSdkKey, setShowSdkKey] = useState(false);
+        const [apiKeyCopied, setApiKeyCopied] = useState(false);
+        const [snippetCopied, setSnippetCopied] = useState(false);
+        const [isCreatingSdkKey, setIsCreatingSdkKey] = useState(false);
+        const uploadInputRef = useRef(null);
+        const totalSteps = 4;
+        const connectedServiceCount = [
+          githubStatus?.connected,
+          notionStatus?.connected,
+          googleDriveStatus?.connected,
+          oneDriveStatus?.connected,
+        ].filter(Boolean).length;
+        const resolvedSdkKey = String(sdkKey || existingApiKey || "").trim();
+        const maskedSdkKey = resolvedSdkKey
+          ? (showSdkKey ? resolvedSdkKey : (PLAYGROUND_MASKED_SECRET_VALUE + PLAYGROUND_MASKED_SECRET_VALUE))
+          : "";
+        const welcomeName = String(accountName || "").trim() || "there";
+        const stepLabels = ["Welcome", "Agent", "Files & Sources", "SDK"];
+        const quickstartSnippet = useMemo(() => {
+          const nextApiKey = resolvedSdkKey || "YOUR_REAL_API_KEY";
+          const nextBackendUrl = String(upstreamUrl || "https://api.computer-agents.com").trim() || "https://api.computer-agents.com";
+          const nextSpeechUrl = String(speechToTextUrl || "").trim() || "wss://api.computer-agents.com/ws/speech-to-text";
+          return [
+            "npm install @computer-agents/runner-web-sdk",
+            "",
+            'import { RunnerChat } from "@computer-agents/runner-web-sdk/react";',
+            "",
+            "export function MyAgentPanel() {",
+            "  return (",
+            '    <div style={{ height: 680 }}>',
+            "      <RunnerChat",
+            '        backendUrl="' + nextBackendUrl + '"',
+            '        apiKey="' + nextApiKey + '"',
+            '        speechToTextUrl="' + nextSpeechUrl + '"',
+            '        appId="my-webapp"',
+            '        inputMode="computer-agents"',
+            "      />",
+            "    </div>",
+            "  );",
+            "}",
+          ].join("\\n");
+        }, [resolvedSdkKey, speechToTextUrl, upstreamUrl]);
+        const connectorItems = [
+          {
+            id: "github",
+            title: "GitHub",
+            description: "Attach repositories and branch context to runner threads.",
+            logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
+            connected: Boolean(githubStatus?.connected),
+            onConnect: onConnectGithub,
+          },
+          {
+            id: "notion",
+            title: "Notion",
+            description: "Bring workspace pages and databases into your runner context.",
+            logoUrl: PLAYGROUND_NOTION_LOGO_URL,
+            connected: Boolean(notionStatus?.connected),
+            onConnect: onConnectNotion,
+          },
+          {
+            id: "google-drive",
+            title: "Google Drive",
+            description: "Use shared docs and folders directly from Drive.",
+            logoUrl: PLAYGROUND_GOOGLE_DRIVE_LOGO_URL,
+            connected: Boolean(googleDriveStatus?.connected),
+            onConnect: onConnectGoogleDrive,
+          },
+          {
+            id: "one-drive",
+            title: "OneDrive",
+            description: "Pull in Microsoft files and shared workspace content.",
+            logoUrl: PLAYGROUND_ONEDRIVE_LOGO_URL,
+            connected: Boolean(oneDriveStatus?.connected),
+            onConnect: onConnectOneDrive,
+          },
+        ];
+
+        const buildSnapshot = useCallback((nextStepIndex = stepIndex) => ({
+          stepIndex: nextStepIndex,
+          selectedPresetId,
+          agentName,
+          agentModel,
+          agentInstructions,
+          createdAgent,
+          uploadedFiles,
+          sdkKey: resolvedSdkKey,
+        }), [
+          agentInstructions,
+          agentModel,
+          agentName,
+          createdAgent,
+          resolvedSdkKey,
+          selectedPresetId,
+          stepIndex,
+          uploadedFiles,
+        ]);
+
+        useEffect(() => {
+          if (!resolvedSdkKey && existingApiKey) {
+            setSdkKey(String(existingApiKey || "").trim());
+          }
+        }, [existingApiKey, resolvedSdkKey]);
+
+        useEffect(() => {
+          if (!open) {
+            return;
+          }
+          writePlaygroundOnboardingState(buildSnapshot());
+        }, [buildSnapshot, open]);
+
+        useEffect(() => {
+          if (!open) {
+            return;
+          }
+          function handleKeyDown(event) {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              handleClose();
+            }
+          }
+          window.addEventListener("keydown", handleKeyDown);
+          return () => window.removeEventListener("keydown", handleKeyDown);
+        }, [open]);
+
+        useEffect(() => {
+          if (!apiKeyCopied) {
+            return;
+          }
+          const timer = window.setTimeout(() => setApiKeyCopied(false), 1800);
+          return () => window.clearTimeout(timer);
+        }, [apiKeyCopied]);
+
+        useEffect(() => {
+          if (!snippetCopied) {
+            return;
+          }
+          const timer = window.setTimeout(() => setSnippetCopied(false), 1800);
+          return () => window.clearTimeout(timer);
+        }, [snippetCopied]);
+
+        const handleClose = useCallback(() => {
+          clearPlaygroundOnboardingState();
+          if (typeof onClose === "function") {
+            onClose();
+          }
+        }, [onClose]);
+
+        const persistAndConnect = useCallback((onConnect) => {
+          writePlaygroundOnboardingState(buildSnapshot(2));
+          if (typeof onConnect === "function") {
+            void Promise.resolve(onConnect());
+          }
+        }, [buildSnapshot]);
+
+        function handlePresetSelect(presetId) {
+          const nextPreset = PLAYGROUND_ONBOARDING_AGENT_PRESETS.find((preset) => preset.id === presetId);
+          if (!nextPreset) {
+            return;
+          }
+          setSelectedPresetId(nextPreset.id);
+          setAgentError("");
+          setAgentName(nextPreset.id === "custom" ? "" : nextPreset.name);
+          setAgentModel(nextPreset.model);
+          setAgentInstructions(nextPreset.instructions);
+        }
+
+        async function handleCreateAgentClick() {
+          if (createdAgent?.id) {
+            setStepIndex(2);
+            return;
+          }
+
+          const normalizedName = String(agentName || "").trim();
+          if (!normalizedName) {
+            setAgentError("Agent name cannot be empty.");
+            return;
+          }
+
+          setIsCreatingAgent(true);
+          setAgentError("");
+          try {
+            const createdRecord = await Promise.resolve(onCreateAgent({
+              name: normalizedName,
+              model: agentModel,
+              instructions: String(agentInstructions || "").trim(),
+              description: "Created during runner playground onboarding.",
+            }));
+            setCreatedAgent(createdRecord || { id: "", name: normalizedName });
+          } catch (error) {
+            setAgentError(error instanceof Error ? error.message : "Failed to create agent.");
+          } finally {
+            setIsCreatingAgent(false);
+          }
+        }
+
+        async function handleUploadFiles(nextFiles) {
+          const files = Array.from(nextFiles || []).filter(Boolean);
+          if (files.length === 0) {
+            return;
+          }
+
+          setIsUploadingFiles(true);
+          setIsDraggingFiles(false);
+          setDataError("");
+          try {
+            const uploaded = await Promise.resolve(onUploadFiles(files));
+            const normalizedUploaded = Array.isArray(uploaded) && uploaded.length > 0
+              ? uploaded.map((item, index) => ({
+                  name: typeof item?.name === "string" ? item.name : files[index]?.name || "Uploaded file",
+                  size: Number.isFinite(item?.size) ? item.size : Number(files[index]?.size || 0),
+                }))
+              : files.map((file) => ({
+                  name: file.name,
+                  size: Number(file.size || 0),
+                }));
+            setUploadedFiles((current) => current.concat(normalizedUploaded));
+          } catch (error) {
+            setDataError(error instanceof Error ? error.message : "Failed to upload files.");
+          } finally {
+            setIsUploadingFiles(false);
+          }
+        }
+
+        async function handleGenerateApiKey() {
+          if (resolvedSdkKey) {
+            return;
+          }
+          setIsCreatingSdkKey(true);
+          setSdkError("");
+          try {
+            const nextKey = await Promise.resolve(onCreateApiKey());
+            if (!nextKey) {
+              throw new Error("Failed to create API key.");
+            }
+            setSdkKey(nextKey);
+          } catch (error) {
+            setSdkError(error instanceof Error ? error.message : "Failed to create API key.");
+          } finally {
+            setIsCreatingSdkKey(false);
+          }
+        }
+
+        async function handleCopyKey() {
+          if (!resolvedSdkKey) {
+            return;
+          }
+          const copied = await copyTextToClipboard(resolvedSdkKey);
+          if (copied) {
+            setApiKeyCopied(true);
+          }
+        }
+
+        async function handleCopySnippet() {
+          const copied = await copyTextToClipboard(quickstartSnippet);
+          if (copied) {
+            setSnippetCopied(true);
+          }
+        }
+
+        function renderFooter(primaryButton) {
+          return React.createElement("div", { className: "playground-onboarding-footer" },
+            React.createElement("div", { className: "playground-onboarding-progress-label" },
+              "Step " + (stepIndex + 1) + " of " + totalSteps + " • " + stepLabels[stepIndex]
+            ),
+            React.createElement("div", { className: "playground-onboarding-footer-actions" },
+              stepIndex > 0
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-button",
+                    onClick: () => setStepIndex((current) => Math.max(0, current - 1)),
+                  }, "Back")
+                : React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-button is-ghost",
+                    onClick: handleClose,
+                  }, "Dismiss"),
+              primaryButton
+            )
+          );
+        }
+
+        if (!open) {
+          return null;
+        }
+
+        if (sessionStatus !== "authenticated" || !hasRealAccess) {
+          const isLoading = sessionStatus === "loading";
+          return React.createElement("div", {
+              className: "playground-onboarding-scrim",
+              onClick: handleClose,
+            },
+              React.createElement("div", {
+                className: "playground-onboarding-auth-card",
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", { className: "playground-onboarding-title-wrap" },
+                  React.createElement("div", { className: "playground-onboarding-kicker" }, "Runner Playground"),
+                  React.createElement("h2", { className: "playground-onboarding-auth-title" },
+                    isLoading ? "Preparing your onboarding flow" : "Sign in to continue setup"
+                  )
+                ),
+                React.createElement("p", { className: "playground-onboarding-auth-copy" },
+                  isLoading
+                    ? "Loading your Computer Agents session so the playground can create an agent, connect data, and generate an SDK key."
+                    : "The runner onboarding uses your real Computer Agents account, environments, connectors, and API keys. Sign in first, then reopen the playground with showOnboarding=true to test the full flow."
+                ),
+                React.createElement("div", { className: "playground-onboarding-footer" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-button",
+                    onClick: handleClose,
+                  }, "Close"),
+                  isLoading
+                    ? React.createElement("div", { className: "playground-onboarding-button" },
+                        React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.9, className: "spin" }),
+                        React.createElement("span", null, "Loading")
+                      )
+                    : React.createElement("button", {
+                        type: "button",
+                        className: "playground-onboarding-button is-primary",
+                        onClick: () => {
+                          if (typeof onSignIn === "function") {
+                            onSignIn();
+                          }
+                        },
+                      }, "Sign in")
+                )
+              )
+            );
+        }
+
+        return React.createElement("div", {
+            className: "playground-onboarding-scrim",
+            onClick: handleClose,
+          },
+            React.createElement("div", {
+              className: "playground-onboarding-modal",
+              onClick: (event) => event.stopPropagation(),
+            },
+              React.createElement("div", { className: "playground-onboarding-header" },
+                React.createElement("div", { className: "playground-onboarding-header-copy" },
+                  React.createElement("div", { className: "playground-onboarding-title-wrap" },
+                    React.createElement("div", { className: "playground-onboarding-kicker" }, "Runner Playground"),
+                    React.createElement("h2", { className: "playground-onboarding-title" }, "Set up your runner workspace")
+                  ),
+                  React.createElement("div", { className: "playground-onboarding-step-meta" },
+                    React.createElement("div", { className: "playground-onboarding-progress" },
+                      React.createElement("div", { className: "playground-onboarding-progress-track" },
+                        React.createElement("div", {
+                          className: "playground-onboarding-progress-fill",
+                          style: { width: (((stepIndex + 1) / totalSteps) * 100) + "%" },
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-onboarding-progress-label" },
+                        stepLabels.map((label, index) => index === stepIndex ? label : null).filter(Boolean).join("")
+                      )
+                    )
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-onboarding-close",
+                  onClick: handleClose,
+                  "aria-label": "Close onboarding",
+                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.9 }))
+              ),
+              React.createElement("div", { className: "playground-onboarding-body" },
+                stepIndex === 0
+                  ? React.createElement("div", { className: "playground-onboarding-step" },
+                      React.createElement("div", { className: "playground-onboarding-hero" },
+                        React.createElement("img", {
+                          className: "playground-onboarding-hero-logo",
+                          src: RUNNER_TRANSPARENT_LOGO_URL,
+                          alt: "Runner",
+                        }),
+                        React.createElement("div", { className: "playground-onboarding-hero-copy" },
+                          React.createElement("h3", { className: "playground-onboarding-hero-title" }, "Welcome, " + welcomeName + "."),
+                          React.createElement("p", { className: "playground-onboarding-hero-text" },
+                            "This adapts the aiOS onboarding for the runner playground: less ornamental, more practical. You’ll create a real agent, connect live sources, upload starter files into your default environment, and leave with a working SDK key."
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-onboarding-feature-grid" },
+                        React.createElement("div", { className: "playground-onboarding-feature-card" },
+                          React.createElement(Bot, { className: "playground-onboarding-feature-icon", strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-onboarding-feature-title" }, "Create an agent"),
+                          React.createElement("p", { className: "playground-onboarding-feature-copy" }, "Start with a useful preset, then keep the created agent as your active default for the playground.")
+                        ),
+                        React.createElement("div", { className: "playground-onboarding-feature-card" },
+                          React.createElement(FolderOpen, { className: "playground-onboarding-feature-icon", strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-onboarding-feature-title" }, "Connect files and sources"),
+                          React.createElement("p", { className: "playground-onboarding-feature-copy" }, "Attach repos, docs, and cloud storage in the same places the playground already uses for real work.")
+                        ),
+                        React.createElement("div", { className: "playground-onboarding-feature-card" },
+                          React.createElement(Key, { className: "playground-onboarding-feature-icon", strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-onboarding-feature-title" }, "Generate an SDK key"),
+                          React.createElement("p", { className: "playground-onboarding-feature-copy" }, "Finish with a clean RunnerChat quickstart so you can embed the same runner UI in your own app.")
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-onboarding-grid" },
+                        React.createElement("div", { className: "playground-onboarding-panel" },
+                          React.createElement("div", { className: "playground-onboarding-panel-title" }, "What this keeps from aiOS"),
+                          React.createElement("p", { className: "playground-onboarding-panel-copy" }, "Preset-based agent setup, file-base configuration, connector setup, and SDK key handoff.")
+                        ),
+                        React.createElement("div", { className: "playground-onboarding-panel" },
+                          React.createElement("div", { className: "playground-onboarding-panel-title" }, "What changes for the playground"),
+                          React.createElement("p", { className: "playground-onboarding-panel-copy" }, "No wallpaper stage, no heavyweight full-screen treatment, and no upsell detour. The flow stays anchored in the real runner playground primitives.")
+                        )
+                      ),
+                      renderFooter(
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-onboarding-button is-primary",
+                          onClick: () => setStepIndex(1),
+                        }, "Continue")
+                      )
+                    )
+                  : null,
+                stepIndex === 1
+                  ? React.createElement("div", { className: "playground-onboarding-step" },
+                      React.createElement("div", { className: "playground-onboarding-grid" },
+                        React.createElement("div", { className: "playground-onboarding-presets" },
+                          PLAYGROUND_ONBOARDING_AGENT_PRESETS.map((preset) =>
+                            React.createElement("button", {
+                              key: preset.id,
+                              type: "button",
+                              className: "playground-onboarding-preset" + (selectedPresetId === preset.id ? " is-active" : ""),
+                              onClick: () => handlePresetSelect(preset.id),
+                            },
+                              React.createElement("div", { className: "playground-onboarding-preset-title" }, preset.name),
+                              React.createElement("p", { className: "playground-onboarding-preset-copy" }, preset.description)
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-onboarding-panel" },
+                            React.createElement("div", { className: "playground-onboarding-panel-title" }, existingAgentCount > 0 ? "You already have agents" : "Start with one agent"),
+                            React.createElement("p", { className: "playground-onboarding-panel-copy" },
+                              existingAgentCount > 0
+                                ? "The playground already sees " + existingAgentCount + " agent" + (existingAgentCount === 1 ? "" : "s") + ". You can create another one here or skip this step."
+                                : "This agent will be created in your real account and selected as the active playground agent."
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-onboarding-form" },
+                          React.createElement("div", { className: "playground-onboarding-field" },
+                            React.createElement("label", { className: "playground-onboarding-label" }, "Agent name"),
+                            React.createElement("input", {
+                              type: "text",
+                              className: "playground-onboarding-input",
+                              value: agentName,
+                              onChange: (event) => {
+                                setAgentName(event.target.value);
+                                setAgentError("");
+                              },
+                              placeholder: "e.g. Research Assistant",
+                            })
+                          ),
+                          React.createElement("div", { className: "playground-onboarding-field" },
+                            React.createElement("label", { className: "playground-onboarding-label" }, "Model"),
+                            React.createElement("select", {
+                              className: "playground-onboarding-select",
+                              value: agentModel,
+                              onChange: (event) => setAgentModel(event.target.value),
+                            },
+                              PLAYGROUND_AGENT_MODEL_OPTIONS.map((option) =>
+                                React.createElement("option", { key: option.id, value: option.id }, option.label)
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-onboarding-field" },
+                            React.createElement("label", { className: "playground-onboarding-label" }, "Instructions"),
+                            React.createElement("textarea", {
+                              className: "playground-onboarding-textarea",
+                              value: agentInstructions,
+                              onChange: (event) => {
+                                setAgentInstructions(event.target.value);
+                                setAgentError("");
+                              },
+                              placeholder: "Describe how this agent should behave.",
+                            })
+                          ),
+                          createdAgent?.id || createdAgent?.name
+                            ? React.createElement("div", { className: "playground-onboarding-status is-success" },
+                                "Created “" + (createdAgent.name || agentName || "Agent") + "”. It is now available in the playground agent selector."
+                              )
+                            : null,
+                          agentError
+                            ? React.createElement("div", { className: "playground-onboarding-status is-error" }, agentError)
+                            : null
+                        )
+                      ),
+                      renderFooter(
+                        React.createElement(React.Fragment, null,
+                          createdAgent?.id || createdAgent?.name
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "playground-onboarding-button is-primary",
+                                onClick: () => setStepIndex(2),
+                              }, "Continue")
+                            : React.createElement(React.Fragment, null,
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-onboarding-button",
+                                  onClick: () => setStepIndex(2),
+                                }, "Skip for now"),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-onboarding-button is-primary",
+                                  onClick: () => {
+                                    void handleCreateAgentClick();
+                                  },
+                                  disabled: isCreatingAgent,
+                                },
+                                  isCreatingAgent
+                                    ? React.createElement(React.Fragment, null,
+                                        React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.9, className: "spin" }),
+                                        React.createElement("span", null, "Creating")
+                                      )
+                                    : "Create agent"
+                                )
+                              )
+                        )
+                      )
+                    )
+                  : null,
+                stepIndex === 2
+                  ? React.createElement("div", { className: "playground-onboarding-step" },
+                      React.createElement("div", { className: "playground-onboarding-grid" },
+                        React.createElement("div", { className: "playground-onboarding-panel" },
+                          React.createElement("div", { className: "playground-onboarding-panel-title" }, "Connect live sources"),
+                          React.createElement("p", { className: "playground-onboarding-panel-copy" }, "These use the same OAuth flows the playground already relies on. The URL parameter stays in place across redirects so you can continue testing the onboarding flow after each connection.")
+                        ),
+                        React.createElement("div", { className: "playground-onboarding-panel" },
+                          React.createElement("div", { className: "playground-onboarding-panel-title" }, "Upload starter files"),
+                          React.createElement("p", { className: "playground-onboarding-panel-copy" },
+                            canUploadFiles
+                              ? "Files upload into " + defaultEnvironmentName + " so they’re immediately available in the runner playground."
+                              : "Uploads become available once your default environment finishes loading."
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-onboarding-connector-grid" },
+                        connectorItems.map((item) =>
+                          React.createElement("div", { key: item.id, className: "playground-onboarding-connector-card" },
+                            React.createElement("div", { className: "playground-onboarding-connector-title-row" },
+                              React.createElement("img", {
+                                className: "playground-onboarding-connector-logo",
+                                src: item.logoUrl,
+                                alt: item.title,
+                              }),
+                              React.createElement("div", { className: "playground-onboarding-connector-title" }, item.title)
+                            ),
+                            React.createElement("div", { className: "playground-onboarding-connector-copy" }, item.description),
+                            React.createElement("div", { className: "playground-onboarding-connector-footer" },
+                              React.createElement("div", {
+                                className: "playground-onboarding-connector-status" + (item.connected ? " is-connected" : ""),
+                              }, item.connected ? "Connected" : "Not connected"),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-onboarding-button",
+                                onClick: () => persistAndConnect(item.onConnect),
+                                disabled: item.connected,
+                              }, item.connected ? "Ready" : "Connect")
+                            )
+                          )
+                        )
+                      ),
+                      React.createElement("input", {
+                        ref: uploadInputRef,
+                        type: "file",
+                        multiple: true,
+                        hidden: true,
+                        onChange: (event) => {
+                          void handleUploadFiles(event.target.files || []);
+                          event.target.value = "";
+                        },
+                      }),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-onboarding-upload-zone" + (isDraggingFiles ? " is-dragging" : ""),
+                        disabled: !canUploadFiles || isUploadingFiles,
+                        onClick: () => canUploadFiles && uploadInputRef.current && uploadInputRef.current.click(),
+                        onDragOver: (event) => {
+                          event.preventDefault();
+                          if (!canUploadFiles || isUploadingFiles) {
+                            return;
+                          }
+                          setIsDraggingFiles(true);
+                        },
+                        onDragLeave: (event) => {
+                          if (event.currentTarget.contains(event.relatedTarget)) {
+                            return;
+                          }
+                          setIsDraggingFiles(false);
+                        },
+                        onDrop: (event) => {
+                          event.preventDefault();
+                          if (!canUploadFiles || isUploadingFiles) {
+                            return;
+                          }
+                          void handleUploadFiles(event.dataTransfer?.files || []);
+                        },
+                      },
+                        React.createElement(ArrowUpFromLine, { className: "playground-onboarding-upload-icon", strokeWidth: 1.8 }),
+                        React.createElement("div", { className: "playground-onboarding-upload-title" },
+                          isUploadingFiles ? "Uploading files..." : "Drop files here or click to browse"
+                        ),
+                        React.createElement("div", { className: "playground-onboarding-upload-copy" },
+                          canUploadFiles
+                            ? "Upload starter docs, datasets, or prompts into " + defaultEnvironmentName + "."
+                            : "Waiting for a default environment."
+                        )
+                      ),
+                      uploadedFiles.length > 0
+                        ? React.createElement("div", { className: "playground-onboarding-upload-list" },
+                            uploadedFiles.map((file, index) =>
+                              React.createElement("div", {
+                                key: file.name + "-" + index,
+                                className: "playground-onboarding-upload-item",
+                              },
+                                React.createElement("div", { className: "playground-onboarding-upload-item-main" },
+                                  React.createElement(FileText, { width: 16, height: 16, strokeWidth: 1.8 }),
+                                  React.createElement("div", { className: "playground-onboarding-upload-item-name" }, file.name)
+                                ),
+                                React.createElement("div", { className: "playground-onboarding-upload-item-meta" }, formatPlaygroundFileSize(file.size))
+                              )
+                            )
+                          )
+                        : null,
+                      dataError
+                        ? React.createElement("div", { className: "playground-onboarding-status is-error" }, dataError)
+                        : null,
+                      connectedServiceCount > 0 || uploadedFiles.length > 0
+                        ? React.createElement("div", { className: "playground-onboarding-status is-success" },
+                            connectedServiceCount + " connected source" + (connectedServiceCount === 1 ? "" : "s")
+                            + " • "
+                            + uploadedFiles.length + " uploaded file" + (uploadedFiles.length === 1 ? "" : "s")
+                          )
+                        : null,
+                      renderFooter(
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-onboarding-button is-primary",
+                          onClick: () => setStepIndex(3),
+                        }, "Continue")
+                      )
+                    )
+                  : null,
+                stepIndex === 3
+                  ? React.createElement("div", { className: "playground-onboarding-step" },
+                      React.createElement("div", { className: "playground-onboarding-grid" },
+                        React.createElement("div", { className: "playground-onboarding-sdk-card" },
+                          React.createElement("div", { className: "playground-onboarding-sdk-title-row" },
+                            React.createElement("div", { className: "playground-onboarding-sdk-title" }, "SDK key"),
+                            resolvedSdkKey
+                              ? React.createElement("div", { className: "playground-onboarding-progress-label" }, "Ready")
+                              : null
+                          ),
+                          React.createElement("p", { className: "playground-onboarding-sdk-note" },
+                            resolvedSdkKey
+                              ? "This uses the active playground SDK key. You can copy it directly into your local test app."
+                              : "Generate a key now so the same account can call the runner backend from your own app."
+                          ),
+                          resolvedSdkKey
+                            ? React.createElement("div", { className: "playground-onboarding-key-row" },
+                                React.createElement("div", { className: "playground-onboarding-key-value", title: resolvedSdkKey }, maskedSdkKey),
+                                React.createElement("div", { className: "playground-onboarding-key-actions" },
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-onboarding-icon-button",
+                                    onClick: () => setShowSdkKey((current) => !current),
+                                    title: showSdkKey ? "Hide API key" : "Show API key",
+                                  },
+                                    showSdkKey
+                                      ? React.createElement(EyeOff, { width: 15, height: 15, strokeWidth: 1.8 })
+                                      : React.createElement(Eye, { width: 15, height: 15, strokeWidth: 1.8 })
+                                  ),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-onboarding-icon-button",
+                                    onClick: () => {
+                                      void handleCopyKey();
+                                    },
+                                    title: "Copy API key",
+                                  },
+                                    apiKeyCopied
+                                      ? React.createElement(Check, { width: 15, height: 15, strokeWidth: 2 })
+                                      : React.createElement(Copy, { width: 15, height: 15, strokeWidth: 1.8 })
+                                  )
+                                )
+                              )
+                            : React.createElement("button", {
+                                type: "button",
+                                className: "playground-onboarding-button is-primary",
+                                onClick: () => {
+                                  void handleGenerateApiKey();
+                                },
+                                disabled: isCreatingSdkKey,
+                              },
+                                isCreatingSdkKey
+                                  ? React.createElement(React.Fragment, null,
+                                      React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.9, className: "spin" }),
+                                      React.createElement("span", null, "Generating")
+                                    )
+                                  : "Generate SDK key"
+                              ),
+                          sdkError
+                            ? React.createElement("div", { className: "playground-onboarding-status is-error" }, sdkError)
+                            : null
+                        ),
+                        React.createElement("div", { className: "playground-onboarding-sdk-card" },
+                          React.createElement("div", { className: "playground-onboarding-sdk-title-row" },
+                            React.createElement("div", { className: "playground-onboarding-sdk-title" }, "RunnerChat quickstart"),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-onboarding-icon-button",
+                              onClick: () => {
+                                void handleCopySnippet();
+                              },
+                              title: "Copy quickstart",
+                            },
+                              snippetCopied
+                                ? React.createElement(Check, { width: 15, height: 15, strokeWidth: 2 })
+                                : React.createElement(Copy, { width: 15, height: 15, strokeWidth: 1.8 })
+                            )
+                          ),
+                          React.createElement("pre", { className: "playground-onboarding-code" }, quickstartSnippet),
+                          React.createElement("p", { className: "playground-onboarding-sdk-note" },
+                            "This is intentionally runner-specific, not the aiOS onboarding Python handoff. It leaves you with the exact package and component that power the playground."
+                          )
+                        )
+                      ),
+                      renderFooter(
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-onboarding-button is-primary",
+                          onClick: handleClose,
+                        }, resolvedSdkKey ? "Enter playground" : "Finish")
+                      )
+                    )
+                  : null
+              )
+            )
+          );
+      }
+
       function DemoApp() {
         const [sidebarOpen, setSidebarOpen] = useState(true);
         const [activePage, setActivePage] = useState("thread");
         const [accountMenuOpen, setAccountMenuOpen] = useState(false);
         const [renderedAccountMenu, setRenderedAccountMenu] = useState(false);
         const [accountMenuPhase, setAccountMenuPhase] = useState("idle");
+        const [showPlaygroundOnboarding, setShowPlaygroundOnboarding] = useState(() => readCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM) === "true");
         const [threadSearchOpen, setThreadSearchOpen] = useState(false);
         const [threadSearchQuery, setThreadSearchQuery] = useState("");
         const [profileEditorOpen, setProfileEditorOpen] = useState(false);
@@ -43962,6 +46368,7 @@ const html = `<!doctype html>
         const [currentThreadId, setCurrentThreadId] = useState("");
         const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
         const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
+        const [threadProjectRecordsById, setThreadProjectRecordsById] = useState({});
         const [taskOpenRequest, setTaskOpenRequest] = useState(null);
         const [latestInteractedProjectId, setLatestInteractedProjectId] = useState(() => {
           try {
@@ -44306,6 +46713,12 @@ const html = `<!doctype html>
           window.location.href = buildAiosLogoutUrl();
         }
 
+        function closePlaygroundOnboarding() {
+          clearPlaygroundOnboardingState();
+          removeCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM);
+          setShowPlaygroundOnboarding(false);
+        }
+
         function openThreadSearch() {
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
@@ -44380,6 +46793,26 @@ const html = `<!doctype html>
           setCurrentThreadId("");
           window.location.replace(buildAiosLoginUrl());
         }, [sessionState.status]);
+
+        useEffect(() => {
+          function syncPlaygroundOnboardingFromUrl() {
+            setShowPlaygroundOnboarding(readCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM) === "true");
+          }
+
+          window.addEventListener("popstate", syncPlaygroundOnboardingFromUrl);
+          return () => window.removeEventListener("popstate", syncPlaygroundOnboardingFromUrl);
+        }, []);
+
+        useEffect(() => {
+          if (!showPlaygroundOnboarding) {
+            return;
+          }
+          setAccountMenuOpen(false);
+          setThreadSearchOpen(false);
+          setProfileEditorOpen(false);
+          setThreadActionMenuState(null);
+          setThreadNavMenuOpen(false);
+        }, [showPlaygroundOnboarding]);
 
         useEffect(() => {
           if (!threadSearchOpen) {
@@ -44695,11 +47128,21 @@ const html = `<!doctype html>
           };
         }
 
-        function buildWelcomeWidgetTaskRunPrompt(taskRecord) {
+        function buildWelcomeWidgetTaskRunPrompt(taskRecord, options = {}) {
           const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
           const ticketNumber = welcomeWidgetTicketNumbersById[normalizedTask.id] || normalizedTask.ticketNumber || "000";
           const newline = String.fromCharCode(10);
           const paragraphBreak = newline + newline;
+          const taskAttachmentsSection = buildPlaygroundAttachmentPromptSection("Task attachments:", normalizedTask.attachments, {
+            copy: "These files are attached specifically to this task.",
+          });
+          const projectAttachmentsSection = buildPlaygroundAttachmentPromptSection(
+            "Project attachments:",
+            options?.projectAttachments,
+            {
+              copy: "These files belong to the whole project and should be treated as shared project context for this task.",
+            }
+          );
           return [
             "Run this backlog ticket as configured.",
             "Ticket: " + ticketNumber,
@@ -44711,6 +47154,8 @@ const html = `<!doctype html>
             normalizedTask.description
               ? "Description:" + newline + normalizedTask.description
               : "Description:" + newline + "None provided.",
+            taskAttachmentsSection,
+            projectAttachmentsSection,
           ].filter(Boolean).join(paragraphBreak);
         }
 
@@ -44761,8 +47206,11 @@ const html = `<!doctype html>
           try {
             const enabledSkillsPayload = await buildWelcomeWidgetEnabledSkillsPayload(normalizedTask);
             const githubRepo = buildWelcomeWidgetGithubRepoReference(normalizedTask);
-            const launchPrompt = buildWelcomeWidgetTaskRunPrompt(normalizedTask);
-            const launchAttachments = normalizePlaygroundTaskAttachmentList(normalizedTask.attachments);
+            const projectLaunchAttachments = normalizePlaygroundTaskAttachmentList(welcomeWidgetProject?.attachments);
+            const launchPrompt = buildWelcomeWidgetTaskRunPrompt(normalizedTask, {
+              projectAttachments: projectLaunchAttachments,
+            });
+            const launchAttachments = mergePlaygroundAttachmentLists(normalizedTask.attachments, projectLaunchAttachments);
             const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/start-thread", {
               method: "POST",
               headers: {
@@ -48218,6 +50666,134 @@ const html = `<!doctype html>
           }
         }, [authRequestHeaders, hasRealAccess, proxyBackendBase]);
 
+        const handlePlaygroundOnboardingCreateAgent = useCallback(async function handlePlaygroundOnboardingCreateAgent(draft) {
+          if (!hasRealAccess) {
+            handleSignInWithComputerAgents();
+            throw new Error("Sign in to create an agent.");
+          }
+
+          const normalizedName = String(draft?.name || "").trim();
+          if (!normalizedName) {
+            throw new Error("Agent name cannot be empty.");
+          }
+
+          const response = await fetch(proxyBackendBase + "/agents", {
+            method: "POST",
+            headers: {
+              ...authRequestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: normalizedName,
+              description: String(draft?.description || "").trim() || "Created during runner playground onboarding.",
+              model: getPlaygroundAgentModelMeta(String(draft?.model || "").trim()).id,
+              binary: "Claude Code CLI",
+              reasoningEffort: "medium",
+              instructions: String(draft?.instructions || "").trim()
+                || ("You are " + normalizedName + ", a helpful AI assistant. Help users accomplish their tasks efficiently and professionally."),
+            }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to create agent.");
+          }
+
+          const savedAgent = getPlaygroundAgentResponseRecord(data);
+          if (!savedAgent?.id) {
+            throw new Error("Agent creation failed.");
+          }
+
+          setPreferredAgentId(savedAgent.id);
+          setRealAgents((current) => {
+            const remaining = current.filter((agent) => agent?.id !== savedAgent.id);
+            return [savedAgent].concat(remaining);
+          });
+          await refreshAgents();
+          return savedAgent;
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, refreshAgents]);
+
+        const handlePlaygroundOnboardingUploadFiles = useCallback(async function handlePlaygroundOnboardingUploadFiles(files) {
+          if (!hasRealAccess) {
+            handleSignInWithComputerAgents();
+            throw new Error("Sign in to upload files.");
+          }
+
+          const normalizedEnvironmentId = String(resolvedEnvironmentId || "").trim();
+          if (!normalizedEnvironmentId) {
+            throw new Error("No default environment is available yet.");
+          }
+
+          const uploads = Array.from(files || []).filter(Boolean);
+          if (uploads.length === 0) {
+            return [];
+          }
+
+          const uploadedItems = [];
+          for (const file of uploads) {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("path", "");
+
+            const response = await fetch(
+              proxyBackendBase + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/files/upload",
+              {
+                method: "POST",
+                headers: authRequestHeaders,
+                body: formData,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || ("Failed to upload " + file.name + "."));
+            }
+
+            uploadedItems.push({
+              name: file.name,
+              size: Number(file.size || 0),
+            });
+          }
+
+          return uploadedItems;
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, resolvedEnvironmentId]);
+
+        const handlePlaygroundOnboardingCreateApiKey = useCallback(async function handlePlaygroundOnboardingCreateApiKey() {
+          if (!hasSessionAuth) {
+            handleSignInWithComputerAgents();
+            throw new Error("Sign in to create an API key.");
+          }
+
+          const existingKey = String(apiKey || "").trim();
+          if (existingKey) {
+            return existingKey;
+          }
+
+          const response = await fetch("/api/aios/user/api-keys", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: "Runner SDK Key",
+              description: "Created during runner playground onboarding.",
+              permissions: ["*"],
+            }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to create API key.");
+          }
+
+          const nextKey = typeof data?.key === "string" ? data.key.trim() : "";
+          if (!nextKey) {
+            throw new Error("Failed to create API key.");
+          }
+
+          setApiKey(nextKey);
+          await loadSettingsApiKeys();
+          return nextKey;
+        }, [apiKey, hasSessionAuth, loadSettingsApiKeys]);
+
         function handleNewThread() {
           setActivePage("thread");
           setCurrentThreadId("");
@@ -51454,10 +54030,100 @@ const html = `<!doctype html>
         const selectedThreadTaskPreviewTaskId = typeof selectedThreadTaskPreview?.taskId === "string"
           ? selectedThreadTaskPreview.taskId.trim()
           : "";
+        const selectedThreadProjectId = typeof selectedThreadTaskPreview?.projectId === "string"
+          ? selectedThreadTaskPreview.projectId.trim()
+          : "";
+        const cachedSelectedThreadProjectRecord = selectedThreadProjectId
+          ? (threadProjectRecordsById[selectedThreadProjectId] || null)
+          : null;
+        const selectedThreadProjectRecord = useMemo(() => {
+          if (!selectedThreadProjectId) {
+            return null;
+          }
+          if (cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
+            return cachedSelectedThreadProjectRecord;
+          }
+          if (welcomeWidgetProject?.id === selectedThreadProjectId) {
+            return welcomeWidgetProject;
+          }
+          return null;
+        }, [cachedSelectedThreadProjectRecord, selectedThreadProjectId, welcomeWidgetProject]);
+        const selectedThreadShellBackground = useMemo(() => {
+          if (!selectedThreadProjectRecord) {
+            return "";
+          }
+          if (!getPlaygroundProjectUseCardBackgroundAsWallpaper(
+            selectedThreadProjectRecord.useCardBackgroundAsWallpaper,
+            selectedThreadProjectRecord.metadata?.useCardBackgroundAsWallpaper
+          )) {
+            return "";
+          }
+          const projectWallpaper = getPlaygroundProjectWallpaperConfig(selectedThreadProjectRecord, 0);
+          return "linear-gradient(180deg, rgba(10, 10, 14, 0.52), rgba(10, 10, 14, 0.82)), url(" + projectWallpaper.url + ")";
+        }, [selectedThreadProjectRecord]);
         const selectedThreadNeedsTaskPreviewPolling = useMemo(() => {
           const normalizedStatus = String(selectedKnownThread?.status || "").trim().toLowerCase();
           return ["running", "queued", "pending", "scheduled", "starting"].includes(normalizedStatus);
         }, [selectedKnownThread]);
+        const isProjectShellContext = activePage === "tasks" || (activePage === "thread" && Boolean(selectedThreadProjectId));
+
+        useEffect(() => {
+          if (activePage !== "thread" || !hasRealAccess || !selectedThreadProjectId || cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
+            return undefined;
+          }
+
+          const controller = new AbortController();
+
+          void (async () => {
+            try {
+              const response = await fetch(proxyBackendBase + "/projects/" + encodeURIComponent(selectedThreadProjectId), {
+                method: "GET",
+                headers: authRequestHeaders,
+                signal: controller.signal,
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                return;
+              }
+              const fallbackProject = welcomeWidgetProject?.id === selectedThreadProjectId
+                ? welcomeWidgetProject
+                : null;
+              const nextProjectRecord = getPlaygroundProjectResponseRecord(data, fallbackProject);
+              if (!nextProjectRecord?.id || controller.signal.aborted) {
+                return;
+              }
+              setThreadProjectRecordsById((current) => ({
+                ...current,
+                [selectedThreadProjectId]: nextProjectRecord,
+              }));
+            } catch {}
+          })();
+
+          return () => controller.abort();
+        }, [
+          activePage,
+          authRequestHeaders,
+          cachedSelectedThreadProjectRecord,
+          hasRealAccess,
+          proxyBackendBase,
+          selectedThreadProjectId,
+          welcomeWidgetProject,
+        ]);
+
+        useEffect(() => {
+          if (typeof document === "undefined" || activePage === "tasks") {
+            return undefined;
+          }
+          const rootStyle = document.documentElement.style;
+          const fallbackBackground = "linear-gradient(to top, #000000 0%, #111111 100%)";
+          rootStyle.setProperty(
+            "--playground-app-bg",
+            activePage === "thread" ? (selectedThreadShellBackground || fallbackBackground) : fallbackBackground
+          );
+          return () => {
+            rootStyle.setProperty("--playground-app-bg", fallbackBackground);
+          };
+        }, [activePage, selectedThreadShellBackground]);
 
         useEffect(() => {
           if (
@@ -52396,8 +55062,39 @@ const html = `<!doctype html>
           );
         }
 
+        const renderedPlaygroundOnboarding = showPlaygroundOnboarding
+          ? React.createElement(PlaygroundOnboardingModal, {
+              open: showPlaygroundOnboarding,
+              sessionStatus: sessionState.status,
+              hasRealAccess,
+              accountName,
+              existingAgentCount: realAgents.length,
+              defaultEnvironmentName: resolvedEnvironmentName,
+              canUploadFiles: Boolean(resolvedEnvironmentId),
+              existingApiKey: apiKey,
+              upstreamUrl: resolvedUpstreamUrl,
+              speechToTextUrl,
+              githubStatus,
+              notionStatus,
+              googleDriveStatus,
+              oneDriveStatus,
+              onClose: closePlaygroundOnboarding,
+              onSignIn: handleSignInWithComputerAgents,
+              onCreateAgent: handlePlaygroundOnboardingCreateAgent,
+              onUploadFiles: handlePlaygroundOnboardingUploadFiles,
+              onCreateApiKey: handlePlaygroundOnboardingCreateApiKey,
+              onConnectGithub: handleGithubAuthConnect,
+              onConnectNotion: handleNotionAuthConnect,
+              onConnectGoogleDrive: handleGoogleDriveAuthConnect,
+              onConnectOneDrive: handleOneDriveAuthConnect,
+            })
+          : null;
+
         if (sessionState.status === "loading" || sessionState.status === "unauthenticated" || sessionState.status === "error") {
-          return renderAuthGate();
+          return React.createElement(React.Fragment, null,
+            renderAuthGate(),
+            renderedPlaygroundOnboarding
+          );
         }
 
         const accountMenuAnimationClass = accountMenuPhase === "enter"
@@ -52408,6 +55105,7 @@ const html = `<!doctype html>
 
         return (
           React.createElement(React.Fragment, null,
+            renderedPlaygroundOnboarding,
             renderThreadSearchPalette(),
             renderThreadActionMenu(),
             renderThreadRenameModal(),
@@ -52574,7 +55272,7 @@ const html = `<!doctype html>
                   )
                 )
               : null,
-            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (activePage === "tasks" ? " is-projects-page" : "") },
+            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") },
               React.createElement("aside", { className: "playground-sidebar" + (sidebarOpen ? "" : " is-collapsed") },
                 React.createElement("div", {
                   className: "playground-sidebar-panel",
@@ -53642,7 +56340,6 @@ async function proxyTaskStartThread(req, res, taskId) {
     const requestedAgentId = String(body?.agentId || taskRecord.assigneeAgentId || taskMetadata.assigneeActorId || "").trim();
     const agentId = isPlaygroundHumanAssigneeId(requestedAgentId) ? "" : requestedAgentId;
     const enabledSkills = body?.enabledSkills && typeof body.enabledSkills === "object" ? body.enabledSkills : null;
-    const attachments = Array.isArray(body?.attachments) ? body.attachments : [];
     const githubRepo = body?.githubRepo && typeof body.githubRepo === "object" ? body.githubRepo : null;
     const taskPreview = body?.taskPreview && typeof body.taskPreview === "object" ? body.taskPreview : null;
     const threadTitle = String(body?.title || (taskPreview?.ticketNumber ? `${taskPreview.ticketNumber} ${taskPreview.title || taskRecord.title || "Task"}` : taskRecord.title || "Task")).trim();
@@ -53659,6 +56356,12 @@ async function proxyTaskStartThread(req, res, taskId) {
         ...(agentId ? { agentId } : {}),
         ...(enabledSkills ? { enabledSkills } : {}),
       });
+      if (githubRepo?.repoFullName && githubRepo?.branch) {
+        await fetchCloudApi(`/environments/${encodeURIComponent(environmentId)}/github/prepare`, "POST", {
+          repoFullName: githubRepo.repoFullName,
+          branch: githubRepo.branch,
+        });
+      }
     }
 
     const createdThreadPayload = await fetchCloudApi("/threads", "POST", {

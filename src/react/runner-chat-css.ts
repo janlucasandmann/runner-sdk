@@ -2093,6 +2093,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   color: inherit;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .tb-runner-chat .tb-log-card-panel > * {
@@ -2262,6 +2264,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   width: fit-content;
   max-width: 85%;
   margin: 0 0 20px auto;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .tb-runner-chat .tb-subagent-log-prompt-markdown {
@@ -2293,6 +2297,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 14px 16px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .tb-runner-chat .tb-subagent-log-summary.is-error {
