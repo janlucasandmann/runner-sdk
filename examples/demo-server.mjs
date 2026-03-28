@@ -12670,8 +12670,8 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-project-navbar {
-        padding-left: 0;
-        padding-right: 0;
+        padding-left: 18px;
+        padding-right: 18px;
       }
 
       .playground-tasks-project-navbar-title .playground-content-title {
@@ -12718,6 +12718,11 @@ const html = `<!doctype html>
       .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll {
         padding: 0 18px 0;
         gap: 14px;
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar {
+        padding: 0;
+        gap: 0;
       }
 
       .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar {
@@ -13842,6 +13847,10 @@ const html = `<!doctype html>
         padding-bottom: 4px;
       }
 
+      .playground-tasks-calendar-toolbar {
+        padding: 0 12px;
+      }
+
       .playground-tasks-board-toolbar-main {
         display: inline-flex;
         align-items: center;
@@ -14667,19 +14676,19 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-scheduler .rbc-month-view {
+        box-sizing: border-box;
         border: none !important;
         border-left: none !important;
         border-right: none !important;
         margin-top: 10px;
-        backdrop-filter: blur(50px);
-        -webkit-backdrop-filter: blur(50px);
+        padding: 0 12px;
       }
 
       .playground-tasks-scheduler .rbc-time-view,
       .playground-tasks-scheduler .rbc-agenda-view {
+        box-sizing: border-box;
         margin-top: 10px;
-        backdrop-filter: blur(50px);
-        -webkit-backdrop-filter: blur(50px);
+        padding: 0 12px;
       }
 
       .playground-tasks-scheduler .rbc-month-header {
@@ -14741,6 +14750,8 @@ const html = `<!doctype html>
         border-radius: 8px !important;
         background: var(--playground-calendar-event-surface, rgba(1, 107, 203, 0.1)) !important;
         border: none !important;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
       }
 
       .playground-tasks-scheduler .rbc-event-content {
@@ -14755,6 +14766,9 @@ const html = `<!doctype html>
 
       .playground-tasks-scheduler .rbc-time-view .rbc-event {
         margin: 0 !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        margin-top: 3px !important;
         width: calc(100% - 4px) !important;
         border-radius: 5px !important;
       }
@@ -14767,7 +14781,68 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-scheduler .rbc-time-view .rbc-event-content {
-        padding: 4px 4px 2px !important;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        padding: 0 4px !important;
+      }
+
+      .playground-tasks-calendar-event-inner {
+        width: 100%;
+        min-width: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .playground-tasks-calendar-event-type-icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        color: white;
+      }
+
+      .playground-tasks-calendar-event-type-icon svg {
+        width: 9px;
+        height: 9px;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.24));
+      }
+
+      .playground-tasks-calendar-event-type-icon.is-task {
+        background: linear-gradient(180deg, #39b877 0%, #2b8b59 100%);
+      }
+
+      .playground-tasks-calendar-event-type-icon.is-subtask {
+        background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
+      }
+
+      .playground-tasks-calendar-event-priority {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 14px;
+        gap: 0;
+      }
+
+      .playground-tasks-calendar-event-priority .playground-tasks-priority-value-icon {
+        width: 14px;
+        height: 14px;
+      }
+
+      .playground-tasks-calendar-event-title {
+        min-width: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.1;
       }
 
       .playground-tasks-scheduler .rbc-label {
@@ -19494,28 +19569,34 @@ const html = `<!doctype html>
           return [];
         }
 
-        const scheduleConfig = getPlaygroundTaskScheduleConfig(task);
-        const taskTitle = (ticketNumber ? ticketNumber + " " : "") + (task.title || "Untitled Task");
+        const normalizedTask = normalizePlaygroundTaskRecord(task);
+        const scheduleConfig = getPlaygroundTaskScheduleConfig(normalizedTask);
+        const taskTitle = (ticketNumber ? ticketNumber + " " : "") + (normalizedTask.title || "Untitled Task");
+        const taskType = normalizePlaygroundTaskType(normalizedTask.taskType);
+        const taskPriority = normalizedTask.priority || "medium";
+        const taskColor = getPlaygroundTaskColorId(normalizedTask.taskColor);
 
         if (scheduleConfig.scheduleType === "recurring" && scheduleConfig.cronExpression) {
           return buildPlaygroundScheduleCalendarEvents({
-            id: task.id,
+            id: normalizedTask.id,
             name: taskTitle,
-            task: task.description || task.title || "Untitled Task",
+            task: normalizedTask.description || normalizedTask.title || "Untitled Task",
             scheduleType: "recurring",
-            scheduledTime: scheduleConfig.scheduledStartAt || task.createdAt || null,
+            scheduledTime: scheduleConfig.scheduledStartAt || normalizedTask.createdAt || null,
             cronExpression: scheduleConfig.cronExpression,
             timezone: scheduleConfig.timezone,
             enabled: scheduleConfig.enabled,
-            createdAt: task.createdAt || null,
+            createdAt: normalizedTask.createdAt || null,
           }, visibleRange).map((event) => ({
             ...event,
-            id: "task-calendar:" + task.id + ":" + event.start.toISOString(),
+            id: "task-calendar:" + normalizedTask.id + ":" + event.start.toISOString(),
             title: taskTitle,
             resource: {
               kind: "task",
-              taskId: task.id,
-              taskColor: getPlaygroundTaskColorId(task.taskColor),
+              taskId: normalizedTask.id,
+              taskColor: taskColor,
+              taskType,
+              priority: taskPriority,
             },
           }));
         }
@@ -19542,14 +19623,16 @@ const html = `<!doctype html>
         }
 
         return [{
-          id: "task-calendar:" + task.id,
+          id: "task-calendar:" + normalizedTask.id,
           title: taskTitle,
           start,
           end,
           resource: {
             kind: "task",
-            taskId: task.id,
-            taskColor: getPlaygroundTaskColorId(task.taskColor),
+            taskId: normalizedTask.id,
+            taskColor: taskColor,
+            taskType,
+            priority: taskPriority,
           },
         }];
       }
@@ -42351,8 +42434,27 @@ const html = `<!doctype html>
           };
         }
 
+        function renderProjectCalendarEvent({ event, title }) {
+          const resource = event?.resource && typeof event.resource === "object" ? event.resource : {};
+          const eventTaskType = normalizePlaygroundTaskType(resource.taskType || resource.metadata?.taskType);
+          const EventTaskTypeIcon = eventTaskType === "subtask" ? Check : Bookmark;
+          const eventPriority = resource.priority || resource.metadata?.priority || "medium";
+          const eventTitle = String(title || event?.title || "").trim() || "Untitled Task";
+
+          return React.createElement("div", { className: "playground-tasks-calendar-event-inner" },
+            React.createElement("span", {
+                className: "playground-tasks-calendar-event-type-icon " + (eventTaskType === "subtask" ? "is-subtask" : "is-task"),
+                "aria-hidden": "true",
+              },
+              React.createElement(EventTaskTypeIcon, { strokeWidth: 1.8 })
+            ),
+            renderPlaygroundTaskPriorityIcon(eventPriority, "playground-tasks-calendar-event-priority"),
+            React.createElement("span", { className: "playground-tasks-calendar-event-title" }, eventTitle)
+          );
+        }
+
         function renderCalendarView() {
-          return React.createElement("div", { className: "playground-tasks-scheduler" },
+          return React.createElement("div", { className: "playground-tasks-scheduler" + (activeScheduleCalendarView === "day" ? " is-day-view" : "") },
             React.createElement("div", { className: "playground-tasks-scheduler-main" },
               React.createElement("div", { className: "playground-tasks-scheduler-surface playground-tasks-scheduler-calendar-surface" },
                 scheduleLoadState.status === "error"
@@ -42373,6 +42475,7 @@ const html = `<!doctype html>
                   style: { height: "100%" },
                   components: {
                     toolbar: renderScheduleCalendarToolbar,
+                    event: renderProjectCalendarEvent,
                   },
                   views: allowedScheduleCalendarViews,
                   view: activeScheduleCalendarView,
