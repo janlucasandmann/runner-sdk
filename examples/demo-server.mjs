@@ -525,8 +525,8 @@ const html = `<!doctype html>
 
       .sidebar-rail-logo-button,
       .sidebar-rail-button {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         padding: 0;
         border: 0;
         border-radius: 10px;
@@ -602,8 +602,8 @@ const html = `<!doctype html>
       }
 
       .sidebar-rail-account {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         margin-top: auto;
         margin-bottom: 10px;
         padding: 0;
@@ -12495,6 +12495,27 @@ const html = `<!doctype html>
         background: transparent;
       }
 
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler-main,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler-calendar-surface,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler .rbc-time-content,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler .rbc-time-view,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler .rbc-agenda-view {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler::-webkit-scrollbar,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler-main::-webkit-scrollbar,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler-calendar-surface::-webkit-scrollbar,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler .rbc-time-content::-webkit-scrollbar,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler .rbc-time-view::-webkit-scrollbar,
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler .rbc-agenda-view::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+      }
+
       .playground-tasks-project-menu-item.is-danger,
       .playground-tasks-project-menu-item.is-danger .playground-files-toolbar-menu-item-copy span:first-child {
         color: #ffb0b0;
@@ -13570,6 +13591,11 @@ const html = `<!doctype html>
         flex: 1 1 auto;
       }
 
+      .playground-tasks-calendar-toolbar-main {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
       .playground-tasks-board-heading {
         font-size: 15px;
         font-weight: 500;
@@ -13582,6 +13608,69 @@ const html = `<!doctype html>
         justify-content: flex-end;
         gap: 8px;
         flex-wrap: wrap;
+      }
+
+      .playground-tasks-calendar-toolbar-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .playground-tasks-calendar-view-switch {
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-calendar-toolbar-plus {
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-calendar-nav-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-tasks-calendar-nav-button,
+      .playground-tasks-calendar-today-button {
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.76);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-tasks-calendar-nav-button {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 999px;
+      }
+
+      .playground-tasks-calendar-today-button {
+        min-height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .playground-tasks-calendar-nav-button:hover,
+      .playground-tasks-calendar-today-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tasks-calendar-today-button.is-active {
+        background: rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.98);
       }
 
       .playground-tasks-board-sections {
@@ -13991,6 +14080,7 @@ const html = `<!doctype html>
 
       .playground-tasks-schedule-side-scroll {
         gap: 16px;
+        background: transparent;
       }
 
       .playground-tasks-schedule-side-scroll .playground-tasks-scheduler-form-card {
@@ -14120,6 +14210,24 @@ const html = `<!doctype html>
 
       .playground-tasks-scheduler-switch {
         width: fit-content;
+      }
+
+      .playground-tasks-schedule-detail-shell .playground-tasks-detail-main,
+      .playground-tasks-schedule-detail-shell .playground-tasks-detail-body {
+        background: transparent;
+      }
+
+      .playground-tasks-schedule-detail-facts {
+        margin-top: 2px;
+      }
+
+      .playground-tasks-schedule-detail-control {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .playground-tasks-schedule-detail-input {
+        width: min(100%, 290px);
       }
 
       .playground-tasks-scheduler-detail-actions {
@@ -14294,6 +14402,12 @@ const html = `<!doctype html>
         border: none !important;
         border-left: none !important;
         border-right: none !important;
+        margin-top: 10px;
+      }
+
+      .playground-tasks-scheduler .rbc-time-view,
+      .playground-tasks-scheduler .rbc-agenda-view {
+        margin-top: 10px;
       }
 
       .playground-tasks-scheduler .rbc-month-header {
@@ -14317,11 +14431,13 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-scheduler .rbc-toolbar {
-        padding: 10px !important;
+        padding: 0 12px 12px !important;
+        margin-bottom: 22px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar .playground-tasks-scheduler .rbc-toolbar {
-        padding: 0 12px !important;
+        padding: 0 12px 12px !important;
       }
 
       .playground-tasks-scheduler .rbc-off-range .rbc-button-link {
@@ -14360,64 +14476,6 @@ const html = `<!doctype html>
         padding-left: 0.25rem !important;
         padding-right: 0.25rem !important;
         color: #016bdf !important;
-      }
-
-      .playground-tasks-scheduler .rbc-btn-group {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: none !important;
-        border-radius: 20px !important;
-        overflow: hidden !important;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.1);
-        padding: 0.25rem !important;
-        line-height: 1rem;
-        position: relative;
-        z-index: 1;
-      }
-
-      .playground-tasks-scheduler .rbc-btn-group::before,
-      .playground-tasks-scheduler .rbc-toolbar button.rbc-active::before,
-      .playground-tasks-scheduler .rbc-toolbar button:focus::before {
-        width: calc(100% - 0px);
-        height: calc(100% - 0px);
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: 20px;
-        padding: 1px;
-        background: linear-gradient(-10deg, rgba(200, 200, 200, 0.3), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.6));
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
-      }
-
-      .playground-tasks-scheduler .rbc-btn-group button {
-        border: none !important;
-        font-size: 0.75rem !important;
-        border-radius: 14px !important;
-        padding-top: 0.25rem !important;
-        padding-bottom: 0.25rem !important;
-        margin-top: 0 !important;
-        color: white !important;
-        position: relative;
-        transition: 0.2s all;
-      }
-
-      .playground-tasks-scheduler .rbc-toolbar button:focus {
-        background: rgba(255, 255, 255, 0.2) !important;
-        color: white !important;
-        font-weight: 600 !important;
-      }
-
-      .playground-tasks-scheduler .rbc-btn-group button:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-      }
-
-      .playground-tasks-scheduler .rbc-toolbar button.rbc-active {
-        background: rgba(255, 255, 255, 0.2) !important;
-        color: #fff !important;
-        box-shadow: none !important;
-        font-weight: 600 !important;
       }
 
       .playground-tasks-scheduler .rbc-label {
@@ -17978,9 +18036,40 @@ const html = `<!doctype html>
         }
 
         const draft = buildPlaygroundDefaultScheduleDraft();
-        const createdAt = typeof schedule.createdAt === "string" && schedule.createdAt ? schedule.createdAt : draft.createdAt;
-        const updatedAt = typeof schedule.updatedAt === "string" && schedule.updatedAt ? schedule.updatedAt : createdAt;
-        const scheduleType = schedule.scheduleType === "recurring" ? "recurring" : "one-time";
+        const rawCreatedAt = typeof schedule.createdAt === "string" && schedule.createdAt
+          ? schedule.createdAt
+          : (typeof schedule.created_at === "string" && schedule.created_at ? schedule.created_at : "");
+        const rawUpdatedAt = typeof schedule.updatedAt === "string" && schedule.updatedAt
+          ? schedule.updatedAt
+          : (typeof schedule.updated_at === "string" && schedule.updated_at ? schedule.updated_at : "");
+        const rawCronExpression = typeof schedule.cronExpression === "string" && schedule.cronExpression.trim()
+          ? schedule.cronExpression.trim()
+          : (typeof schedule.cron_expression === "string" && schedule.cron_expression.trim()
+            ? schedule.cron_expression.trim()
+            : "");
+        const rawScheduledTime = typeof schedule.scheduledTime === "string" && schedule.scheduledTime
+          ? schedule.scheduledTime
+          : (typeof schedule.scheduled_time === "string" && schedule.scheduled_time ? schedule.scheduled_time : "");
+        const rawNextRunAt = typeof schedule.nextRunAt === "string" && schedule.nextRunAt
+          ? schedule.nextRunAt
+          : (typeof schedule.next_run_at === "string" && schedule.next_run_at ? schedule.next_run_at : "");
+        const rawLastRunAt = typeof schedule.lastRunAt === "string" && schedule.lastRunAt
+          ? schedule.lastRunAt
+          : (typeof schedule.last_run_at === "string" && schedule.last_run_at ? schedule.last_run_at : "");
+        const isPersistedSchedule = typeof schedule.id === "string" && schedule.id.trim().length > 0;
+        const createdAt = rawCreatedAt || (isPersistedSchedule ? "" : draft.createdAt);
+        const updatedAt = rawUpdatedAt || (createdAt || (isPersistedSchedule ? "" : draft.updatedAt));
+        const rawScheduleType = typeof schedule.scheduleType === "string" && schedule.scheduleType.trim()
+          ? schedule.scheduleType.trim().toLowerCase()
+          : (typeof schedule.schedule_type === "string" && schedule.schedule_type.trim()
+            ? schedule.schedule_type.trim().toLowerCase()
+            : (typeof schedule.type === "string" && schedule.type.trim() ? schedule.type.trim().toLowerCase() : ""));
+        const hasCronExpression = rawCronExpression.length > 0;
+        const scheduleType = rawScheduleType === "recurring"
+          ? "recurring"
+          : rawScheduleType === "one-time"
+            ? "one-time"
+            : (hasCronExpression ? "recurring" : "one-time");
 
         return {
           ...draft,
@@ -17995,18 +18084,40 @@ const html = `<!doctype html>
           environmentId: typeof schedule.environmentId === "string" ? schedule.environmentId : draft.environmentId,
           environmentName: typeof schedule.environmentName === "string" && schedule.environmentName.trim() ? schedule.environmentName.trim() : null,
           appId: typeof schedule.appId === "string" && schedule.appId.trim() ? schedule.appId.trim() : null,
-          contextId: typeof schedule.contextId === "string" && schedule.contextId.trim() ? schedule.contextId.trim() : null,
-          contextName: typeof schedule.contextName === "string" && schedule.contextName.trim() ? schedule.contextName.trim() : null,
+          contextId: typeof schedule.contextId === "string" && schedule.contextId.trim()
+            ? schedule.contextId.trim()
+            : (typeof schedule.context_id === "string" && schedule.context_id.trim() ? schedule.context_id.trim() : null),
+          contextName: typeof schedule.contextName === "string" && schedule.contextName.trim()
+            ? schedule.contextName.trim()
+            : (typeof schedule.context_name === "string" && schedule.context_name.trim() ? schedule.context_name.trim() : null),
           scheduleType,
-          cronExpression: typeof schedule.cronExpression === "string" && schedule.cronExpression.trim() ? schedule.cronExpression.trim() : null,
-          scheduledTime: typeof schedule.scheduledTime === "string" && schedule.scheduledTime ? schedule.scheduledTime : null,
-          timezone: typeof schedule.timezone === "string" && schedule.timezone.trim() ? schedule.timezone.trim() : draft.timezone,
+          cronExpression: rawCronExpression || null,
+          scheduledTime: rawScheduledTime || null,
+          timezone: typeof schedule.timezone === "string" && schedule.timezone.trim()
+            ? schedule.timezone.trim()
+            : (typeof schedule.time_zone === "string" && schedule.time_zone.trim() ? schedule.time_zone.trim() : draft.timezone),
           enabled: schedule.enabled !== false,
-          lastRunAt: typeof schedule.lastRunAt === "string" && schedule.lastRunAt ? schedule.lastRunAt : null,
-          nextRunAt: typeof schedule.nextRunAt === "string" && schedule.nextRunAt ? schedule.nextRunAt : null,
-          runCount: Number.isFinite(schedule.runCount) ? Number(schedule.runCount) : 0,
-          successCount: Number.isFinite(schedule.successCount) ? Number(schedule.successCount) : 0,
-          failureCount: Number.isFinite(schedule.failureCount) ? Number(schedule.failureCount) : 0,
+          lastRunAt: rawLastRunAt || null,
+          nextRunAt: rawNextRunAt || null,
+          runCount: Number.isFinite(schedule.runCount) ? Number(schedule.runCount) : (Number.isFinite(schedule.run_count) ? Number(schedule.run_count) : 0),
+          successCount: Number.isFinite(schedule.successCount) ? Number(schedule.successCount) : (Number.isFinite(schedule.success_count) ? Number(schedule.success_count) : 0),
+          failureCount: Number.isFinite(schedule.failureCount) ? Number(schedule.failureCount) : (Number.isFinite(schedule.failure_count) ? Number(schedule.failure_count) : 0),
+          occurrences: Array.isArray(schedule.occurrences)
+            ? schedule.occurrences
+              .map((occurrence) => {
+                const normalizedOccurrence = typeof occurrence === "string"
+                  ? occurrence
+                  : (typeof occurrence?.start === "string"
+                    ? occurrence.start
+                    : (typeof occurrence?.scheduledTime === "string"
+                      ? occurrence.scheduledTime
+                      : (occurrence instanceof Date ? occurrence.toISOString() : "")));
+                return normalizedOccurrence && !Number.isNaN(new Date(normalizedOccurrence).getTime())
+                  ? normalizedOccurrence
+                  : "";
+              })
+              .filter(Boolean)
+            : [],
           metadata: schedule.metadata && typeof schedule.metadata === "object" && !Array.isArray(schedule.metadata) ? schedule.metadata : null,
           createdAt,
           updatedAt,
@@ -18302,6 +18413,129 @@ const html = `<!doctype html>
         return { start, end };
       }
 
+      const PLAYGROUND_CRON_MONTH_ALIASES = {
+        JAN: 1,
+        FEB: 2,
+        MAR: 3,
+        APR: 4,
+        MAY: 5,
+        JUN: 6,
+        JUL: 7,
+        AUG: 8,
+        SEP: 9,
+        OCT: 10,
+        NOV: 11,
+        DEC: 12,
+      };
+
+      const PLAYGROUND_CRON_WEEKDAY_ALIASES = {
+        SUN: 0,
+        MON: 1,
+        TUE: 2,
+        WED: 3,
+        THU: 4,
+        FRI: 5,
+        SAT: 6,
+      };
+
+      function parsePlaygroundCronTokenValue(rawValue, aliasMap) {
+        const normalized = String(rawValue || "").trim().toUpperCase();
+        if (!normalized) {
+          return Number.NaN;
+        }
+        if (aliasMap && Object.prototype.hasOwnProperty.call(aliasMap, normalized)) {
+          return aliasMap[normalized];
+        }
+        const numericValue = Number.parseInt(normalized, 10);
+        return Number.isFinite(numericValue) ? numericValue : Number.NaN;
+      }
+
+      function normalizePlaygroundRecurringExpression(expression) {
+        const normalized = String(expression || "").trim();
+        if (!normalized) {
+          return "";
+        }
+        const cronWrapperMatch = normalized.match(/^cron\((.+)\)$/i);
+        if (cronWrapperMatch) {
+          return String(cronWrapperMatch[1] || "").trim();
+        }
+        const timezonePrefixMatch = normalized.match(/^(?:CRON_TZ|TZ)=\S+\s+(.+)$/i);
+        if (timezonePrefixMatch) {
+          return String(timezonePrefixMatch[1] || "").trim();
+        }
+        return normalized;
+      }
+
+      function parsePlaygroundRecurringRateExpression(expression) {
+        const normalized = normalizePlaygroundRecurringExpression(expression);
+        const alias = normalized.toLowerCase();
+        if (alias === "@hourly") {
+          return { step: 1, unit: "hour" };
+        }
+        if (alias === "@daily" || alias === "@midnight") {
+          return { step: 1, unit: "day" };
+        }
+        if (alias === "@weekly") {
+          return { step: 1, unit: "week" };
+        }
+        if (alias === "@monthly") {
+          return { step: 1, unit: "month" };
+        }
+        if (alias === "@yearly" || alias === "@annually") {
+          return { step: 1, unit: "year" };
+        }
+
+        const rateMatch = normalized.match(/^rate\(\s*(\d+)\s+(minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\s*\)$/i);
+        if (!rateMatch) {
+          return null;
+        }
+
+        const step = Number.parseInt(rateMatch[1], 10);
+        const unit = String(rateMatch[2] || "").toLowerCase().replace(/s$/, "");
+        if (!Number.isFinite(step) || step <= 0 || !unit) {
+          return null;
+        }
+
+        return { step, unit };
+      }
+
+      function addPlaygroundRecurringInterval(value, step, unit) {
+        const date = value instanceof Date ? new Date(value) : new Date(value || Date.now());
+        if (Number.isNaN(date.getTime())) {
+          return null;
+        }
+        const amount = Number(step || 0);
+        if (!Number.isFinite(amount) || amount === 0) {
+          return date;
+        }
+
+        if (unit === "minute") {
+          date.setMinutes(date.getMinutes() + amount);
+          return date;
+        }
+        if (unit === "hour") {
+          date.setHours(date.getHours() + amount);
+          return date;
+        }
+        if (unit === "day") {
+          date.setDate(date.getDate() + amount);
+          return date;
+        }
+        if (unit === "week") {
+          date.setDate(date.getDate() + amount * 7);
+          return date;
+        }
+        if (unit === "month") {
+          date.setMonth(date.getMonth() + amount);
+          return date;
+        }
+        if (unit === "year") {
+          date.setFullYear(date.getFullYear() + amount);
+          return date;
+        }
+        return null;
+      }
+
       function expandPlaygroundCronFieldValues(field, min, max, options = {}) {
         const normalized = String(field || "").trim();
         if (!normalized) {
@@ -18312,7 +18546,8 @@ const html = `<!doctype html>
           };
         }
 
-        if (normalized === "*") {
+        const wildcardValues = options.allowQuestionMarkWildcard ? new Set(["*", "?"]) : new Set(["*"]);
+        if (wildcardValues.has(normalized)) {
           return {
             isValid: true,
             isWildcard: true,
@@ -18323,6 +18558,12 @@ const html = `<!doctype html>
         const normalizeValue = typeof options.normalizeValue === "function"
           ? options.normalizeValue
           : (value) => value;
+        const parseValue = typeof options.parseValue === "function"
+          ? options.parseValue
+          : (value) => {
+              const numericValue = Number.parseInt(String(value || "").trim(), 10);
+              return Number.isFinite(numericValue) ? numericValue : Number.NaN;
+            };
         const values = new Set();
         const segments = normalized.split(",");
 
@@ -18351,10 +18592,10 @@ const html = `<!doctype html>
           if (baseSegment && baseSegment !== "*") {
             if (baseSegment.includes("-")) {
               const [rawStart, rawEnd] = baseSegment.split("-");
-              rangeStart = Number.parseInt(rawStart, 10);
-              rangeEnd = Number.parseInt(rawEnd, 10);
+              rangeStart = parseValue(rawStart);
+              rangeEnd = parseValue(rawEnd);
             } else {
-              rangeStart = Number.parseInt(baseSegment, 10);
+              rangeStart = parseValue(baseSegment);
               rangeEnd = rangeStart;
             }
           }
@@ -18388,17 +18629,29 @@ const html = `<!doctype html>
       }
 
       function parsePlaygroundCalendarCronExpression(expression) {
-        const parts = String(expression || "").trim().split(/\s+/).filter(Boolean);
-        const normalizedParts = parts.length === 6 ? parts.slice(1) : parts;
+        const normalizedExpression = normalizePlaygroundRecurringExpression(expression);
+        const parts = normalizedExpression.split(/\s+/).filter(Boolean);
+        let normalizedParts = parts;
+        if (parts.length === 6) {
+          normalizedParts = parts.slice(1);
+        } else if (parts.length === 7) {
+          normalizedParts = parts.slice(1, 6);
+        }
         if (normalizedParts.length !== 5) {
           return null;
         }
 
         const minuteField = expandPlaygroundCronFieldValues(normalizedParts[0], 0, 59);
         const hourField = expandPlaygroundCronFieldValues(normalizedParts[1], 0, 23);
-        const dayOfMonthField = expandPlaygroundCronFieldValues(normalizedParts[2], 1, 31);
-        const monthField = expandPlaygroundCronFieldValues(normalizedParts[3], 1, 12);
-        const dayOfWeekField = expandPlaygroundCronFieldValues(normalizedParts[4], 0, 6, {
+        const dayOfMonthField = expandPlaygroundCronFieldValues(normalizedParts[2], 1, 31, {
+          allowQuestionMarkWildcard: true,
+        });
+        const monthField = expandPlaygroundCronFieldValues(normalizedParts[3], 1, 12, {
+          parseValue: (value) => parsePlaygroundCronTokenValue(value, PLAYGROUND_CRON_MONTH_ALIASES),
+        });
+        const dayOfWeekField = expandPlaygroundCronFieldValues(normalizedParts[4], 0, 7, {
+          allowQuestionMarkWildcard: true,
+          parseValue: (value) => parsePlaygroundCronTokenValue(value, PLAYGROUND_CRON_WEEKDAY_ALIASES),
           normalizeValue: (value) => value === 7 ? 0 : value,
         });
 
@@ -18454,19 +18707,87 @@ const html = `<!doctype html>
           return [];
         }
 
-        if (schedule.scheduleType === "recurring") {
-          if (!schedule.enabled) {
-            return [];
+        const isRecurringSchedule = schedule.scheduleType === "recurring"
+          || (typeof schedule.cronExpression === "string" && schedule.cronExpression.trim().length > 0);
+
+        if (isRecurringSchedule && !schedule.enabled) {
+          return [];
+        }
+
+        const eventByStartIso = new Map();
+        function appendScheduleEvent(startValue) {
+          const start = startValue instanceof Date ? new Date(startValue) : new Date(startValue || "");
+          if (Number.isNaN(start.getTime()) || start < rangeStart || start > rangeEnd) {
+            return;
+          }
+          const key = start.toISOString();
+          if (eventByStartIso.has(key)) {
+            return;
+          }
+          eventByStartIso.set(key, {
+            id: schedule.id + ":" + key,
+            title,
+            start,
+            end: new Date(start.getTime() + durationMs),
+            resource: schedule,
+          });
+        }
+
+        const explicitOccurrences = Array.isArray(schedule.occurrences)
+          ? schedule.occurrences
+            .map((occurrence) => new Date(occurrence))
+            .filter((occurrence) => occurrence instanceof Date && !Number.isNaN(occurrence.getTime()))
+          : [];
+        explicitOccurrences.forEach((occurrence) => appendScheduleEvent(occurrence));
+
+        if (isRecurringSchedule) {
+          const recurringRate = parsePlaygroundRecurringRateExpression(schedule.cronExpression);
+          if (recurringRate) {
+            const anchorValue = schedule.scheduledTime || schedule.createdAt || schedule.nextRunAt || "";
+            const anchor = new Date(anchorValue);
+            if (!Number.isNaN(anchor.getTime())) {
+              let occurrence = new Date(anchor);
+              let guard = 0;
+
+              while (occurrence > rangeStart && guard < 2000) {
+                const previousOccurrence = addPlaygroundRecurringInterval(occurrence, -recurringRate.step, recurringRate.unit);
+                if (!(previousOccurrence instanceof Date) || Number.isNaN(previousOccurrence.getTime()) || previousOccurrence.getTime() === occurrence.getTime()) {
+                  break;
+                }
+                occurrence = previousOccurrence;
+                guard += 1;
+              }
+
+              while (occurrence < rangeStart && guard < 4000) {
+                const nextOccurrence = addPlaygroundRecurringInterval(occurrence, recurringRate.step, recurringRate.unit);
+                if (!(nextOccurrence instanceof Date) || Number.isNaN(nextOccurrence.getTime()) || nextOccurrence.getTime() === occurrence.getTime()) {
+                  break;
+                }
+                occurrence = nextOccurrence;
+                guard += 1;
+              }
+
+              while (occurrence <= rangeEnd && guard < 6000) {
+                appendScheduleEvent(occurrence);
+                const nextOccurrence = addPlaygroundRecurringInterval(occurrence, recurringRate.step, recurringRate.unit);
+                if (!(nextOccurrence instanceof Date) || Number.isNaN(nextOccurrence.getTime()) || nextOccurrence.getTime() === occurrence.getTime()) {
+                  break;
+                }
+                occurrence = nextOccurrence;
+                guard += 1;
+              }
+
+              return Array.from(eventByStartIso.values()).sort((left, right) => left.start.getTime() - right.start.getTime());
+            }
           }
 
           const cronPattern = parsePlaygroundCalendarCronExpression(schedule.cronExpression);
           if (cronPattern) {
-            const anchorValue = schedule.createdAt || schedule.scheduledTime || schedule.nextRunAt || "";
+            const anchorValue = schedule.scheduledTime || schedule.createdAt || "";
             const anchorDate = new Date(anchorValue || Date.now());
-            const anchor = Number.isNaN(anchorDate.getTime()) ? null : anchorDate;
+            const anchor = anchorValue && !Number.isNaN(anchorDate.getTime()) ? anchorDate : null;
             const dayCursorStart = startOfPlaygroundDay(rangeStart);
             const dayCursorEnd = startOfPlaygroundDay(rangeEnd);
-            const events = [];
 
             for (let dayCursor = dayCursorStart; dayCursor && dayCursorEnd && dayCursor <= dayCursorEnd; dayCursor = addPlaygroundDays(dayCursor, 1)) {
               if (!matchesPlaygroundCalendarCronDate(dayCursor, cronPattern)) {
@@ -18487,41 +18808,23 @@ const html = `<!doctype html>
                   if ((anchor && start < anchor) || start < rangeStart || start > rangeEnd) {
                     continue;
                   }
-                  events.push({
-                    id: schedule.id + ":" + start.toISOString(),
-                    title,
-                    start,
-                    end: new Date(start.getTime() + durationMs),
-                    resource: schedule,
-                  });
+                  appendScheduleEvent(start);
                 }
               }
             }
 
-            if (events.length > 0) {
-              return events;
-            }
+            return Array.from(eventByStartIso.values()).sort((left, right) => left.start.getTime() - right.start.getTime());
           }
         }
 
-        const anchorValue = schedule.scheduleType === "one-time"
-          ? schedule.scheduledTime || schedule.nextRunAt || ""
-          : schedule.nextRunAt || schedule.scheduledTime || "";
-        const start = new Date(anchorValue);
-        if (Number.isNaN(start.getTime())) {
-          return [];
-        }
-        if (start < rangeStart || start > rangeEnd) {
-          return [];
+        if (eventByStartIso.size === 0) {
+          const anchorValue = !isRecurringSchedule
+            ? schedule.scheduledTime || schedule.nextRunAt || ""
+            : schedule.nextRunAt || schedule.scheduledTime || "";
+          appendScheduleEvent(anchorValue);
         }
 
-        return [{
-          id: schedule.id,
-          title,
-          start,
-          end: new Date(start.getTime() + durationMs),
-          resource: schedule,
-        }];
+        return Array.from(eventByStartIso.values()).sort((left, right) => left.start.getTime() - right.start.getTime());
       }
 
       const PLAYGROUND_TASK_CALENDAR_BLOCK_MS = 30 * 60 * 1000;
@@ -30356,6 +30659,7 @@ const html = `<!doctype html>
         const taskSkillsActionsRef = useRef(null);
         const taskDetailMainRef = useRef(null);
         const taskDescriptionTextareaRef = useRef(null);
+        const scheduleTaskTextareaRef = useRef(null);
         const taskCommentTextareaRef = useRef(null);
         const taskAttachmentInputRef = useRef(null);
         const taskScheduleDialogTimerRef = useRef(null);
@@ -30429,10 +30733,12 @@ const html = `<!doctype html>
           isSaving: false,
           error: "",
         });
-        const [scheduleCalendarView, setScheduleCalendarView] = useState("month");
+        const [isScheduleTaskEditing, setIsScheduleTaskEditing] = useState(false);
+        const [scheduleDetailsCollapsed, setScheduleDetailsCollapsed] = useState(false);
+        const [scheduleCalendarView, setScheduleCalendarView] = useState("week");
         const [scheduleCalendarDate, setScheduleCalendarDate] = useState(() => new Date());
         const allowedScheduleCalendarViews = ["month", "week", "day"];
-        const activeScheduleCalendarView = allowedScheduleCalendarViews.includes(scheduleCalendarView) ? scheduleCalendarView : "month";
+        const activeScheduleCalendarView = allowedScheduleCalendarViews.includes(scheduleCalendarView) ? scheduleCalendarView : "week";
         const [selectedReleaseId, setSelectedReleaseId] = useState("");
         const [releaseComposerOpen, setReleaseComposerOpen] = useState(false);
         const [releaseComposerMode, setReleaseComposerMode] = useState("create");
@@ -32173,11 +32479,10 @@ const html = `<!doctype html>
         }, [schedulesById, selectedScheduleId]);
 
         const selectedProjectSchedules = useMemo(() => {
+          if (!selectedProjectId) {
+            return [];
+          }
           return [...schedules]
-            .filter((schedule) => {
-              if (!selectedProjectId) return false;
-              return getPlaygroundScheduleProjectId(schedule) === selectedProjectId;
-            })
             .filter((schedule) => {
               if (!normalizedSearchQuery) return true;
               const haystack = [
@@ -32589,6 +32894,52 @@ const html = `<!doctype html>
           applyTaskDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
+        function applyScheduleTaskSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setScheduleDraft((current) => ({
+            ...(current || buildProjectScheduleDraft(selectedProject)),
+            task: nextValue,
+          }));
+          window.requestAnimationFrame(() => {
+            const textarea = scheduleTaskTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleScheduleTaskFormat(formatType) {
+          const textarea = scheduleTaskTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(scheduleDraft?.task || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyScheduleTaskSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
         function applyReleaseDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
           setReleaseDraft((current) => ({
             ...current,
@@ -32955,7 +33306,7 @@ const html = `<!doctype html>
           });
         }
 
-        async function loadProjectSchedules(projectId) {
+        async function loadProjectSchedules(projectId, visibleRange = visibleScheduleCalendarRange) {
           if (!projectId) {
             setSchedules([]);
             setScheduleLoadState({
@@ -32971,7 +33322,14 @@ const html = `<!doctype html>
           }));
 
           try {
-            const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(projectId) + "/schedules", {
+            const requestTarget = new URL(backendUrl + "/projects/" + encodeURIComponent(projectId) + "/schedules", window.location.origin);
+            if (visibleRange?.start instanceof Date && !Number.isNaN(visibleRange.start.getTime())) {
+              requestTarget.searchParams.set("rangeStart", visibleRange.start.toISOString());
+            }
+            if (visibleRange?.end instanceof Date && !Number.isNaN(visibleRange.end.getTime())) {
+              requestTarget.searchParams.set("rangeEnd", visibleRange.end.toISOString());
+            }
+            const response = await fetch(requestTarget.toString(), {
               method: "GET",
               headers: requestHeaders,
             });
@@ -33469,6 +33827,16 @@ const html = `<!doctype html>
         }, [projectComposerOpen, projectDraft.description]);
 
         useEffect(() => {
+          if (scheduleViewMode !== "setup") {
+            return undefined;
+          }
+          const frame = window.requestAnimationFrame(() => {
+            resizeTaskDescriptionTextarea(scheduleTaskTextareaRef.current);
+          });
+          return () => window.cancelAnimationFrame(frame);
+        }, [scheduleDraft.task, scheduleViewMode]);
+
+        useEffect(() => {
           if (!projectSidebarPopover) return undefined;
 
           function handleProjectSidebarPopoverPointerDown(event) {
@@ -33656,8 +34024,8 @@ const html = `<!doctype html>
             });
             return;
           }
-          void loadProjectSchedules(selectedProjectId);
-        }, [backendUrl, requestHeaders, selectedProjectId]);
+          void loadProjectSchedules(selectedProjectId, visibleScheduleCalendarRange);
+        }, [backendUrl, requestHeaders, selectedProjectId, visibleScheduleCalendarRange]);
 
         useEffect(() => {
           if (!selectedProjectId || boardSprintId === PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID) return;
@@ -33830,6 +34198,11 @@ const html = `<!doctype html>
           setScheduleViewMode("calendar");
           setScheduleEditorMode("create");
         }, [schedulesById, selectedScheduleId]);
+
+        useEffect(() => {
+          setIsScheduleTaskEditing(false);
+          setScheduleDetailsCollapsed(false);
+        }, [scheduleViewMode, selectedScheduleId]);
 
         useEffect(() => {
           if (!selectedReleaseId) return;
@@ -39675,17 +40048,24 @@ const html = `<!doctype html>
           const totalRuns = Number(scheduleStats?.successCount || 0) + Number(scheduleStats?.failureCount || 0);
           const successRatio = totalRuns > 0 ? (Number(scheduleStats?.successCount || 0) / totalRuns) * 100 : 0;
           const failureRatio = totalRuns > 0 ? (Number(scheduleStats?.failureCount || 0) / totalRuns) * 100 : 0;
-          const panelTitle = scheduleDraft?.name || scheduleDraft?.task || (isEditing ? "Scheduled Task" : "New Scheduled Task");
+          const panelTitle = scheduleDraft?.name || (isEditing ? "Scheduled Task" : "New Scheduled Task");
 
-          return React.createElement("div", { className: "playground-tasks-detail-shell" },
+          return React.createElement("div", { className: "playground-tasks-detail-shell playground-tasks-schedule-detail-shell" },
             React.createElement("div", { className: "playground-tasks-detail-main" },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
                 React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
                   React.createElement("span", { className: "playground-tasks-detail-navbar-ticket" }, isEditing ? "Schedule" : "New"),
-                  React.createElement("div", {
-                    className: "playground-content-title",
-                    title: panelTitle,
-                  }, panelTitle)
+                  React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-content-title playground-tasks-detail-navbar-title-input",
+                      value: scheduleDraft?.name || "",
+                      placeholder: panelTitle,
+                      "aria-label": "Schedule title",
+                      title: scheduleDraft?.name || panelTitle,
+                      onChange: (event) => updateScheduleDraftField("name", event.target.value),
+                    })
+                  )
                 ),
                 React.createElement("div", { className: "playground-content-nav-center" }),
                 React.createElement("div", { className: "playground-content-nav-right playground-tasks-detail-navbar-actions" },
@@ -39725,157 +40105,206 @@ const html = `<!doctype html>
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 )
               ),
-              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-tasks-schedule-side-scroll" },
-                scheduleSaveState.error
-                  ? React.createElement("div", { className: "playground-environments-error" }, scheduleSaveState.error)
-                  : scheduleSaveState.isSaving
-                    ? React.createElement("div", { className: "playground-environments-muted" }, "Saving scheduled task...")
+              React.createElement("div", { className: "playground-tasks-detail-body" },
+                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-tasks-schedule-side-scroll" },
+                  scheduleSaveState.error
+                    ? React.createElement("div", { className: "playground-environments-error" }, scheduleSaveState.error)
                     : null,
-                React.createElement("div", { className: "playground-tasks-scheduler-form-card" },
-                  React.createElement("div", { className: "playground-tasks-scheduler-form-heading" }, isEditing ? "Scheduled task" : "New scheduled task"),
-                  React.createElement("div", { className: "playground-tasks-scheduler-form-copy" },
-                    "Configure the ticket, execution target, and timing here.",
-                    " ",
-                    React.createElement("span", { className: "playground-tasks-schedule-status " + statusMeta.className }, statusMeta.label)
-                  ),
-                  React.createElement("div", { className: "playground-tasks-scheduler-form-grid" },
-                    React.createElement("label", { className: "playground-tasks-scheduler-field" },
-                      React.createElement("span", { className: "playground-tasks-scheduler-label" }, "Task Name"),
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-tasks-scheduler-input",
-                        value: scheduleDraft?.name || "",
-                        placeholder: "Auto-generated from task",
-                        onChange: (event) => updateScheduleDraftField("name", event.target.value),
-                      })
+                  React.createElement("div", { className: "playground-tasks-detail-description" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Task"),
+                      React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                        [
+                          { id: "bold", label: "Bold", icon: Bold },
+                          { id: "italic", label: "Italic", icon: Italic },
+                          { id: "underline", label: "Underline", icon: Underline },
+                          { id: "list", label: "List", icon: List },
+                        ].map((action) =>
+                          React.createElement("button", {
+                            key: action.id,
+                            type: "button",
+                            className: "playground-tasks-detail-format-button",
+                            onClick: () => handleScheduleTaskFormat(action.id),
+                            title: action.label,
+                            "aria-label": action.label,
+                          }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                        )
+                      )
                     ),
-                    React.createElement("label", { className: "playground-tasks-scheduler-field" },
-                      React.createElement("span", { className: "playground-tasks-scheduler-label" }, "Description"),
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-tasks-scheduler-input",
-                        value: scheduleDraft?.description || "",
-                        placeholder: "Optional description",
-                        onChange: (event) => updateScheduleDraftField("description", event.target.value),
-                      })
-                    ),
-                    React.createElement("label", { className: "playground-tasks-scheduler-field is-full" },
-                      React.createElement("span", { className: "playground-tasks-scheduler-label" }, "Task"),
+                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isScheduleTaskEditing ? " is-editing" : " is-preview") },
+                      !isScheduleTaskEditing
+                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                            String(scheduleDraft?.task || "").trim()
+                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                  content: scheduleDraft.task,
+                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                })
+                              : React.createElement("div", {
+                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                }, "Describe what the scheduled run should do.")
+                          )
+                        : null,
                       React.createElement("textarea", {
-                        className: "playground-tasks-scheduler-textarea",
+                        ref: scheduleTaskTextareaRef,
+                        className: "playground-tasks-detail-description-input " + (isScheduleTaskEditing ? "is-editing" : "is-preview"),
                         value: scheduleDraft?.task || "",
-                        rows: 5,
-                        placeholder: "Describe what the scheduled run should do.",
-                        onChange: (event) => updateScheduleDraftField("task", event.target.value),
-                      })
-                    ),
-                    React.createElement("label", { className: "playground-tasks-scheduler-field" },
-                      React.createElement("span", { className: "playground-tasks-scheduler-label" }, "Agent"),
-                      React.createElement("select", {
-                        className: "playground-tasks-scheduler-select",
-                        value: scheduleDraft?.agentId || "",
+                        rows: 1,
+                        placeholder: isScheduleTaskEditing ? "Describe what the scheduled run should do." : "",
+                        onFocus: () => setIsScheduleTaskEditing(true),
                         onChange: (event) => {
-                          const nextAgent = agentsById[event.target.value] || null;
-                          setScheduleDraft((current) => ({
-                            ...(current || buildProjectScheduleDraft(selectedProject)),
-                            agentId: nextAgent?.id || null,
-                            agentName: nextAgent?.name || null,
-                          }));
-                          resetScheduleSaveState("");
+                          updateScheduleDraftField("task", event.target.value);
+                          resizeTaskDescriptionTextarea(event.currentTarget);
                         },
-                      },
-                        sortedAgents.map((agent) =>
-                          React.createElement("option", { key: agent.id, value: agent.id }, agent.name || "Agent")
-                        )
-                      )
-                    ),
-                    React.createElement("label", { className: "playground-tasks-scheduler-field" },
-                      React.createElement("span", { className: "playground-tasks-scheduler-label" }, "Environment"),
-                      React.createElement("select", {
-                        className: "playground-tasks-scheduler-select",
-                        value: scheduleDraft?.environmentId || "",
-                        onChange: (event) => {
-                          const nextEnvironment = availableBacklogEnvironments.find((environment) => environment.id === event.target.value) || null;
-                          setScheduleDraft((current) => ({
-                            ...(current || buildProjectScheduleDraft(selectedProject)),
-                            environmentId: nextEnvironment?.id || "",
-                            environmentName: nextEnvironment?.name || null,
-                          }));
-                          resetScheduleSaveState("");
-                        },
-                      },
-                        availableBacklogEnvironments.map((environment) =>
-                          React.createElement("option", { key: environment.id, value: environment.id }, environment.name || "Environment")
-                        )
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-tasks-scheduler-field is-full" },
-                      React.createElement("span", { className: "playground-tasks-scheduler-label" }, "Schedule Type"),
-                      React.createElement("div", { className: "content-mode-switch playground-tasks-scheduler-switch" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "content-mode-button" + (!isRecurring ? " is-active" : ""),
-                          onClick: () => {
-                            setScheduleDraft((current) => ({
-                              ...(current || buildProjectScheduleDraft(selectedProject)),
-                              scheduleType: "one-time",
-                            }));
-                            resetScheduleSaveState("");
-                          },
-                        }, "One-time"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "content-mode-button" + (isRecurring ? " is-active" : ""),
-                          onClick: () => {
-                            setScheduleDraft((current) => ({
-                              ...(current || buildProjectScheduleDraft(selectedProject)),
-                              scheduleType: "recurring",
-                            }));
-                            resetScheduleSaveState("");
-                          },
-                        }, "Recurring")
-                      )
-                    ),
-                    isRecurring
-                      ? React.createElement("label", { className: "playground-tasks-scheduler-field is-full" },
-                          React.createElement("span", { className: "playground-tasks-scheduler-label" }, "Cron Expression"),
-                          React.createElement("input", {
-                            type: "text",
-                            className: "playground-tasks-scheduler-input",
-                            value: scheduleDraft?.cronExpression || "",
-                            placeholder: "0 9 * * *",
-                            onChange: (event) => updateScheduleDraftField("cronExpression", event.target.value),
-                          })
-                        )
-                      : React.createElement("label", { className: "playground-tasks-scheduler-field is-full" },
-                          React.createElement("span", { className: "playground-tasks-scheduler-label" }, "Date & Time"),
-                          React.createElement("input", {
-                            type: "datetime-local",
-                            className: "playground-tasks-scheduler-input",
-                            value: toPlaygroundDatetimeLocalValue(scheduleDraft?.scheduledTime),
-                            onChange: (event) => {
-                              const nextScheduledTime = fromPlaygroundDatetimeLocalValue(event.target.value);
-                              setScheduleDraft((current) => ({
-                                ...(current || buildProjectScheduleDraft(selectedProject)),
-                                scheduledTime: nextScheduledTime,
-                                nextRunAt: nextScheduledTime,
-                                cronExpression: buildPlaygroundDailyCronExpression(nextScheduledTime),
-                              }));
-                              resetScheduleSaveState("");
-                            },
-                          })
-                        ),
-                    React.createElement("label", { className: "playground-tasks-scheduler-field is-full" },
-                      React.createElement("span", { className: "playground-tasks-scheduler-label" }, "Timezone"),
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-tasks-scheduler-input",
-                        value: scheduleDraft?.timezone || "",
-                        onChange: (event) => updateScheduleDraftField("timezone", event.target.value),
+                        onBlur: () => setIsScheduleTaskEditing(false),
                       })
                     )
-                  )
-                ),
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-facts playground-tasks-schedule-detail-facts" },
+                    React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-tasks-detail-facts-toggle" + (scheduleDetailsCollapsed ? " is-collapsed" : ""),
+                        onClick: () => setScheduleDetailsCollapsed((current) => !current),
+                        "aria-label": scheduleDetailsCollapsed ? "Expand details" : "Collapse details",
+                        title: scheduleDetailsCollapsed ? "Expand details" : "Collapse details",
+                      }, React.createElement(ChevronDown, { strokeWidth: 1.8 }))
+                    ),
+                    !scheduleDetailsCollapsed
+                      ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Status"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("span", { className: "playground-tasks-schedule-status " + statusMeta.className }, statusMeta.label)
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Description"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
+                              React.createElement("input", {
+                                type: "text",
+                                className: "playground-tasks-scheduler-input playground-tasks-schedule-detail-input",
+                                value: scheduleDraft?.description || "",
+                                placeholder: "Optional description",
+                                onChange: (event) => updateScheduleDraftField("description", event.target.value),
+                              })
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Agent"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
+                              React.createElement("select", {
+                                className: "playground-tasks-scheduler-select playground-tasks-schedule-detail-input",
+                                value: scheduleDraft?.agentId || "",
+                                onChange: (event) => {
+                                  const nextAgent = agentsById[event.target.value] || null;
+                                  setScheduleDraft((current) => ({
+                                    ...(current || buildProjectScheduleDraft(selectedProject)),
+                                    agentId: nextAgent?.id || null,
+                                    agentName: nextAgent?.name || null,
+                                  }));
+                                  resetScheduleSaveState("");
+                                },
+                              },
+                                sortedAgents.map((agent) =>
+                                  React.createElement("option", { key: agent.id, value: agent.id }, agent.name || "Agent")
+                                )
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Environment"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
+                              React.createElement("select", {
+                                className: "playground-tasks-scheduler-select playground-tasks-schedule-detail-input",
+                                value: scheduleDraft?.environmentId || "",
+                                onChange: (event) => {
+                                  const nextEnvironment = availableBacklogEnvironments.find((environment) => environment.id === event.target.value) || null;
+                                  setScheduleDraft((current) => ({
+                                    ...(current || buildProjectScheduleDraft(selectedProject)),
+                                    environmentId: nextEnvironment?.id || "",
+                                    environmentName: nextEnvironment?.name || null,
+                                  }));
+                                  resetScheduleSaveState("");
+                                },
+                              },
+                                availableBacklogEnvironments.map((environment) =>
+                                  React.createElement("option", { key: environment.id, value: environment.id }, environment.name || "Environment")
+                                )
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Schedule Type"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
+                              React.createElement("div", { className: "content-mode-switch playground-tasks-scheduler-switch" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "content-mode-button" + (!isRecurring ? " is-active" : ""),
+                                  onClick: () => {
+                                    setScheduleDraft((current) => ({
+                                      ...(current || buildProjectScheduleDraft(selectedProject)),
+                                      scheduleType: "one-time",
+                                    }));
+                                    resetScheduleSaveState("");
+                                  },
+                                }, "One-time"),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "content-mode-button" + (isRecurring ? " is-active" : ""),
+                                  onClick: () => {
+                                    setScheduleDraft((current) => ({
+                                      ...(current || buildProjectScheduleDraft(selectedProject)),
+                                      scheduleType: "recurring",
+                                    }));
+                                    resetScheduleSaveState("");
+                                  },
+                                }, "Recurring")
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, isRecurring ? "Cron Expression" : "Date & Time"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
+                              isRecurring
+                                ? React.createElement("input", {
+                                    type: "text",
+                                    className: "playground-tasks-scheduler-input playground-tasks-schedule-detail-input",
+                                    value: scheduleDraft?.cronExpression || "",
+                                    placeholder: "0 9 * * *",
+                                    onChange: (event) => updateScheduleDraftField("cronExpression", event.target.value),
+                                  })
+                                : React.createElement("input", {
+                                    type: "datetime-local",
+                                    className: "playground-tasks-scheduler-input playground-tasks-schedule-detail-input",
+                                    value: toPlaygroundDatetimeLocalValue(scheduleDraft?.scheduledTime),
+                                    onChange: (event) => {
+                                      const nextScheduledTime = fromPlaygroundDatetimeLocalValue(event.target.value);
+                                      setScheduleDraft((current) => ({
+                                        ...(current || buildProjectScheduleDraft(selectedProject)),
+                                        scheduledTime: nextScheduledTime,
+                                        nextRunAt: nextScheduledTime,
+                                        cronExpression: buildPlaygroundDailyCronExpression(nextScheduledTime),
+                                      }));
+                                      resetScheduleSaveState("");
+                                    },
+                                  })
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Timezone"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control playground-tasks-schedule-detail-control" },
+                              React.createElement("input", {
+                                type: "text",
+                                className: "playground-tasks-scheduler-input playground-tasks-schedule-detail-input",
+                                value: scheduleDraft?.timezone || "",
+                                onChange: (event) => updateScheduleDraftField("timezone", event.target.value),
+                              })
+                            )
+                          )
+                        )
+                      : null
+                  ),
                 isEditing
                   ? React.createElement("div", { className: "playground-tasks-scheduler-card" },
                       React.createElement("div", { className: "playground-tasks-scheduler-card-stats" },
@@ -39932,6 +40361,88 @@ const html = `<!doctype html>
                       )
                     )
                   : null
+                )
+              )
+            )
+          );
+        }
+
+        function isSamePlaygroundCalendarDay(left, right) {
+          return left.getFullYear() === right.getFullYear()
+            && left.getMonth() === right.getMonth()
+            && left.getDate() === right.getDate();
+        }
+
+        function getPlaygroundCalendarWeekStart(date) {
+          const nextDate = new Date(date);
+          nextDate.setHours(0, 0, 0, 0);
+          const weekday = nextDate.getDay();
+          const offset = weekday === 0 ? -6 : 1 - weekday;
+          nextDate.setDate(nextDate.getDate() + offset);
+          return nextDate;
+        }
+
+        function isScheduleCalendarDateVisible(date, view) {
+          const calendarDate = date instanceof Date ? date : new Date(date);
+          if (!(calendarDate instanceof Date) || Number.isNaN(calendarDate.getTime())) {
+            return false;
+          }
+          const today = new Date();
+          if (view === "day") {
+            return isSamePlaygroundCalendarDay(calendarDate, today);
+          }
+          if (view === "week") {
+            return isSamePlaygroundCalendarDay(getPlaygroundCalendarWeekStart(calendarDate), getPlaygroundCalendarWeekStart(today));
+          }
+          return calendarDate.getFullYear() === today.getFullYear() && calendarDate.getMonth() === today.getMonth();
+        }
+
+        function renderScheduleCalendarToolbar(toolbarProps) {
+          const currentView = allowedScheduleCalendarViews.includes(toolbarProps?.view) ? toolbarProps.view : "week";
+          const isTodayActive = isScheduleCalendarDateVisible(toolbarProps?.date, currentView);
+
+          return React.createElement("div", { className: "playground-tasks-calendar-toolbar" },
+            React.createElement("div", { className: "playground-tasks-calendar-toolbar-main" },
+              React.createElement("div", { className: "playground-tasks-board-heading" }, toolbarProps?.label || "Calendar")
+            ),
+            React.createElement("div", { className: "playground-tasks-calendar-toolbar-actions" },
+              React.createElement("div", { className: "playground-tasks-calendar-nav-group" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-tasks-calendar-nav-button",
+                  onClick: () => toolbarProps?.onNavigate?.("PREV"),
+                  title: "Previous",
+                  "aria-label": "Previous",
+                }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-tasks-calendar-today-button" + (isTodayActive ? " is-active" : ""),
+                  onClick: () => toolbarProps?.onNavigate?.("TODAY"),
+                }, "Today"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-tasks-calendar-nav-button",
+                  onClick: () => toolbarProps?.onNavigate?.("NEXT"),
+                  title: "Next",
+                  "aria-label": "Next",
+                }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-header-icon-button is-plain playground-tasks-calendar-toolbar-plus",
+                onClick: () => openScheduleComposer(),
+                title: "New scheduled task",
+                "aria-label": "New scheduled task",
+              }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
+              React.createElement("div", { className: "content-mode-switch playground-tasks-nav playground-tasks-calendar-view-switch" },
+                allowedScheduleCalendarViews.map((viewId) =>
+                  React.createElement("button", {
+                    key: viewId,
+                    type: "button",
+                    className: "content-mode-button" + (currentView === viewId ? " is-active" : ""),
+                    onClick: () => toolbarProps?.onView?.(viewId),
+                  }, viewId.charAt(0).toUpperCase() + viewId.slice(1))
+                )
               )
             )
           );
@@ -39957,9 +40468,12 @@ const html = `<!doctype html>
                   startAccessor: "start",
                   endAccessor: "end",
                   style: { height: "100%" },
+                  components: {
+                    toolbar: renderScheduleCalendarToolbar,
+                  },
                   views: allowedScheduleCalendarViews,
                   view: activeScheduleCalendarView,
-                  onView: (nextView) => setScheduleCalendarView(allowedScheduleCalendarViews.includes(nextView) ? nextView : "month"),
+                  onView: (nextView) => setScheduleCalendarView(allowedScheduleCalendarViews.includes(nextView) ? nextView : "week"),
                   date: scheduleCalendarDate,
                   onNavigate: setScheduleCalendarDate,
                   selectable: true,
@@ -52750,7 +53264,12 @@ const server = http.createServer((req, res) => {
 
   const projectSchedulesMatch = url.pathname.match(/^\/api\/real\/projects\/([^/]+)\/schedules$/);
   if (req.method === "GET" && projectSchedulesMatch) {
-    void proxyUpstreamJsonRequest(req, res, "/schedules", "GET");
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/projects/${encodeURIComponent(decodeURIComponent(projectSchedulesMatch[1]))}/schedules`,
+      "GET",
+    );
     return;
   }
 

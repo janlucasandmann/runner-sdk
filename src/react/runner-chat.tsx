@@ -75,6 +75,10 @@ const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.ur
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
 const RUNNER_THINKING_STATUS_FADE_DURATION_MS = 120;
 const RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS = 500;
+const RUNNER_THREAD_HISTORY_PREVIEW_LENGTH = 50;
+const RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH = 18;
+const RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH = 12;
+const RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH = 5;
 
 export interface RunnerAttachment {
   id: string;
@@ -145,6 +149,16 @@ interface RunnerTurn {
   presentation?: "default" | "context-action-notice" | "btw";
   quotedSelection?: RunnerQuotedSelection | null;
   attachments?: RunnerTurnAttachment[] | null;
+}
+
+type RunnerThreadHistoryRole = "user" | "assistant";
+
+interface RunnerThreadHistoryItem {
+  id: string;
+  turnId: string;
+  role: RunnerThreadHistoryRole;
+  label: string;
+  preview: string;
 }
 
 interface PendingRunnerMessage {
@@ -289,6 +303,33 @@ function getAttachmentDisplayName(attachment: LocalAttachment | RunnerTurnAttach
 
 function getAttachmentPreviewUrl(attachment: LocalAttachment | RunnerTurnAttachment): string | undefined {
   return isLocalAttachmentRecord(attachment) ? attachment.previewUrl : attachment.previewUrl || attachment.url;
+}
+
+function buildRunnerThreadHistoryItemId(turnId: string, role: RunnerThreadHistoryRole): string {
+  return `${turnId}:${role}`;
+}
+
+function buildRunnerThreadHistoryPreviewText(content: string): string {
+  const normalized = stripSystemTags(String(content || "")).replace(/\s+/g, " ").trim();
+  if (!normalized) {
+    return "";
+  }
+  if (normalized.length <= RUNNER_THREAD_HISTORY_PREVIEW_LENGTH) {
+    return normalized;
+  }
+  return `${normalized.slice(0, RUNNER_THREAD_HISTORY_PREVIEW_LENGTH).trimEnd()}…`;
+}
+
+function getRunnerThreadHistoryLineWidth(index: number, activeIndex: number): number {
+  if (index === activeIndex) {
+    return RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH;
+  }
+  if (activeIndex < 0) {
+    return index % 2 === 0 ? RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH : RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH;
+  }
+  return Math.abs(index - activeIndex) % 2 === 1
+    ? RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH
+    : RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH;
 }
 
 function encodeGithubBrowserSegment(value: string | null | undefined): string {
@@ -4698,6 +4739,8 @@ export function RunnerChat({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const logsRef = useRef<HTMLDivElement | null>(null);
+  const threadHistoryAnchorElementsRef = useRef<Record<string, HTMLDivElement | null>>({});
+  const threadHistoryMeasureFrameRef = useRef<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const editingTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const popupAreaRef = useRef<HTMLDivElement | null>(null);
@@ -4738,6 +4781,9 @@ export function RunnerChat({
   const rawTimelineItemCountsRef = useRef<Record<string, number>>({});
   const thinkingStatusEligibilityRef = useRef<Record<string, boolean>>({});
   const [isStoppingRun, setIsStoppingRun] = useState(false);
+  const [activeThreadHistoryItemId, setActiveThreadHistoryItemId] = useState<string | null>(null);
+  const [hoveredThreadHistoryItemId, setHoveredThreadHistoryItemId] = useState<string | null>(null);
+  const [isThreadHistoryRailHovered, setIsThreadHistoryRailHovered] = useState(false);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -6574,6 +6620,9 @@ export function RunnerChat({
 
   useEffect(() => {
     return () => {
+      if (threadHistoryMeasureFrameRef.current !== null) {
+        window.cancelAnimationFrame(threadHistoryMeasureFrameRef.current);
+      }
       if (mainPopupAnimationTimerRef.current !== null) {
         window.clearTimeout(mainPopupAnimationTimerRef.current);
       }
@@ -9758,6 +9807,220 @@ export function RunnerChat({
     availableEnvironments[0];
   const displayedAgentLabel = hasApiKey ? selectedAgent?.name || "Agent" : "Default Agent";
   const displayedEnvironmentLabel = hasApiKey ? selectedEnvironment?.name || "Default" : "Default";
+  const threadHistoryItems = useMemo<RunnerThreadHistoryItem[]>(() => {
+    return turns.flatMap((turn, turnIndex) => {
+      const items: RunnerThreadHistoryItem[] = [];
+      const normalizedPrompt = turn.prompt.trim();
+      const isBtwTurn = turn.presentation === "btw" || normalizedPrompt.toLowerCase().startsWith("/btw");
+      const taskPreviewForTurn =
+        threadTaskPreview &&
+        !isBtwTurn &&
+        turn.presentation !== "context-action-notice" &&
+        (turn.isInitialTurn || turnIndex === 0)
+          ? threadTaskPreview
+          : null;
+      const promptPreview = buildRunnerThreadHistoryPreviewText(
+        normalizedPrompt || (taskPreviewForTurn ? `${taskPreviewForTurn.ticketNumber} ${taskPreviewForTurn.title}` : "")
+      );
+      const turnAgentLabel = turn.agentName || displayedAgentLabel || "Agent";
+
+      if (promptPreview) {
+        items.push({
+          id: buildRunnerThreadHistoryItemId(turn.id, "user"),
+          turnId: turn.id,
+          role: "user",
+          label: "Me",
+          preview: promptPreview,
+        });
+      }
+
+      if (turn.presentation === "context-action-notice") {
+        const actionSummaryLog =
+          turn.logs.find((log) => log.eventType === "action_summary" && typeof log.message === "string" && log.message.trim()) || null;
+        if (actionSummaryLog?.message) {
+          items.push({
+            id: buildRunnerThreadHistoryItemId(turn.id, "assistant"),
+            turnId: turn.id,
+            role: "assistant",
+            label: turnAgentLabel,
+            preview: buildRunnerThreadHistoryPreviewText(actionSummaryLog.message),
+          });
+        }
+        return items;
+      }
+
+      const agentMessage = [...turn.logs]
+        .reverse()
+        .find((log) => (log.eventType === "agent_message" || log.eventType === "llm_response") && typeof log.message === "string" && log.message.trim());
+
+      if (agentMessage?.message) {
+        items.push({
+          id: buildRunnerThreadHistoryItemId(turn.id, "assistant"),
+          turnId: turn.id,
+          role: "assistant",
+          label: turnAgentLabel,
+          preview: buildRunnerThreadHistoryPreviewText(agentMessage.message),
+        });
+      }
+
+      return items;
+    });
+  }, [displayedAgentLabel, threadTaskPreview, turns]);
+  const threadHistoryUserMessageCount = useMemo(
+    () => threadHistoryItems.reduce((count, item) => count + (item.role === "user" ? 1 : 0), 0),
+    [threadHistoryItems]
+  );
+  const shouldRenderThreadHistoryRail = threadHistoryUserMessageCount > 1 && threadHistoryItems.length > 0;
+  const activeThreadHistoryIndex = threadHistoryItems.findIndex((item) => item.id === activeThreadHistoryItemId);
+  const hoveredThreadHistoryIndex = threadHistoryItems.findIndex((item) => item.id === hoveredThreadHistoryItemId);
+  const previousThreadHistoryItem =
+    activeThreadHistoryIndex > 0 ? threadHistoryItems[activeThreadHistoryIndex - 1] : null;
+  const nextThreadHistoryItem =
+    activeThreadHistoryIndex >= 0 && activeThreadHistoryIndex < threadHistoryItems.length - 1
+      ? threadHistoryItems[activeThreadHistoryIndex + 1]
+      : null;
+  const areThreadHistoryControlsVisible = isThreadHistoryRailHovered || hoveredThreadHistoryIndex >= 0;
+
+  function setThreadHistoryAnchorElement(itemId: string, element: HTMLDivElement | null) {
+    if (element) {
+      threadHistoryAnchorElementsRef.current[itemId] = element;
+      return;
+    }
+    delete threadHistoryAnchorElementsRef.current[itemId];
+  }
+
+  function updateActiveThreadHistoryItem() {
+    if (!shouldRenderThreadHistoryRail) {
+      setActiveThreadHistoryItemId(null);
+      return;
+    }
+
+    const scrollElement = logsRef.current;
+    if (!scrollElement) {
+      return;
+    }
+
+    const scrollRect = scrollElement.getBoundingClientRect();
+    const viewportCenter = scrollRect.top + scrollRect.height / 2;
+    let nextActiveId: string | null = null;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    for (const item of threadHistoryItems) {
+      const anchor = threadHistoryAnchorElementsRef.current[item.id];
+      if (!anchor) {
+        continue;
+      }
+      const anchorRect = anchor.getBoundingClientRect();
+      const anchorCenter = anchorRect.top + anchorRect.height / 2;
+      const distance = Math.abs(anchorCenter - viewportCenter);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nextActiveId = item.id;
+      }
+    }
+
+    if (!nextActiveId && threadHistoryItems[threadHistoryItems.length - 1]) {
+      nextActiveId = threadHistoryItems[threadHistoryItems.length - 1].id;
+    }
+
+    setActiveThreadHistoryItemId((current) => current === nextActiveId ? current : nextActiveId);
+  }
+
+  function scheduleThreadHistoryMeasurement() {
+    if (threadHistoryMeasureFrameRef.current !== null) {
+      window.cancelAnimationFrame(threadHistoryMeasureFrameRef.current);
+    }
+    threadHistoryMeasureFrameRef.current = window.requestAnimationFrame(() => {
+      threadHistoryMeasureFrameRef.current = null;
+      updateActiveThreadHistoryItem();
+    });
+  }
+
+  function scrollThreadHistoryItemIntoView(itemId: string) {
+    const scrollElement = logsRef.current;
+    const anchor = threadHistoryAnchorElementsRef.current[itemId];
+    if (!scrollElement || !anchor) {
+      return;
+    }
+
+    const scrollRect = scrollElement.getBoundingClientRect();
+    const anchorRect = anchor.getBoundingClientRect();
+    const targetCenter = anchorRect.top - scrollRect.top + scrollElement.scrollTop + anchorRect.height / 2;
+    const nextScrollTop = Math.max(
+      0,
+      Math.min(targetCenter - scrollElement.clientHeight / 2, scrollElement.scrollHeight - scrollElement.clientHeight)
+    );
+    const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    scrollElement.scrollTo({
+      top: nextScrollTop,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+    setActiveThreadHistoryItemId(itemId);
+  }
+
+  function navigateThreadHistory(direction: -1 | 1) {
+    if (activeThreadHistoryIndex < 0) {
+      return;
+    }
+    const targetItem = threadHistoryItems[activeThreadHistoryIndex + direction];
+    if (!targetItem) {
+      return;
+    }
+    setHoveredThreadHistoryItemId(null);
+    scrollThreadHistoryItemIntoView(targetItem.id);
+  }
+
+  useLayoutEffect(() => {
+    if (!shouldRenderThreadHistoryRail) {
+      return;
+    }
+    scheduleThreadHistoryMeasurement();
+  }, [expandedTurns, logs, shouldRenderThreadHistoryRail, threadHistoryItems, turns]);
+
+  useEffect(() => {
+    if (!shouldRenderThreadHistoryRail) {
+      setHoveredThreadHistoryItemId(null);
+      setIsThreadHistoryRailHovered(false);
+      setActiveThreadHistoryItemId(null);
+      return;
+    }
+
+    const scrollElement = logsRef.current;
+    if (!scrollElement) {
+      return;
+    }
+
+    function handleThreadHistoryViewportChange() {
+      scheduleThreadHistoryMeasurement();
+    }
+
+    scrollElement.addEventListener("scroll", handleThreadHistoryViewportChange, { passive: true });
+    const resizeObserver = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => {
+          scheduleThreadHistoryMeasurement();
+        })
+      : null;
+    resizeObserver?.observe(scrollElement);
+    window.addEventListener("resize", handleThreadHistoryViewportChange);
+    scheduleThreadHistoryMeasurement();
+
+    return () => {
+      scrollElement.removeEventListener("scroll", handleThreadHistoryViewportChange);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", handleThreadHistoryViewportChange);
+    };
+  }, [shouldRenderThreadHistoryRail, threadHistoryItems]);
+
+  useEffect(() => {
+    if (activeThreadHistoryItemId && !threadHistoryItems.some((item) => item.id === activeThreadHistoryItemId)) {
+      setActiveThreadHistoryItemId(null);
+    }
+    if (hoveredThreadHistoryItemId && !threadHistoryItems.some((item) => item.id === hoveredThreadHistoryItemId)) {
+      setHoveredThreadHistoryItemId(null);
+    }
+  }, [activeThreadHistoryItemId, hoveredThreadHistoryItemId, threadHistoryItems]);
+
   const selectedSubagentDetailPresentation = useMemo(() => {
     if (!selectedSubagentDetail) {
       return null;
@@ -10913,6 +11176,8 @@ export function RunnerChat({
                   ? "Working..."
                   : `Worked for ${turnSeconds}s`;
               const shouldRenderWorkSection = isTurnRunning || displayedTimelineItems.length > 0 || isWorkLogsLoading;
+              const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
+              const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
 
               if (actionSummaryLog) {
                 const actionType = actionSummaryLog.metadata?.actionType;
@@ -10956,7 +11221,11 @@ export function RunnerChat({
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-context-action-notice">
                     {turn.prompt.trim() ? (
-                      <div className="task-prompt-in-session-context" style={promptStyle}>
+                      <div
+                        ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
+                        className="task-prompt-in-session-context tb-thread-history-anchor"
+                        style={promptStyle}
+                      >
                         <RunnerMarkdown
                           content={stripSystemTags(turn.prompt)}
                           className="tb-message-markdown tb-message-markdown-user"
@@ -10966,6 +11235,7 @@ export function RunnerChat({
                       </div>
                     ) : null}
                     <div
+                      ref={(node) => setThreadHistoryAnchorElement(assistantThreadHistoryItemId, node)}
                       className={`tb-context-action-notice ${actionType ? `tb-context-action-notice-${actionType}` : ""} ${isPendingActionSummary ? "tb-context-action-notice-pending" : ""}`.trim()}
                       style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 40) : undefined}
                     >
@@ -10981,7 +11251,10 @@ export function RunnerChat({
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-btw">
                     <div className="tb-btw-turn-card" style={promptStyle}>
-                      <div className="tb-btw-turn-prompt">
+                      <div
+                        ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
+                        className="tb-btw-turn-prompt tb-thread-history-anchor"
+                      >
                         <RunnerMarkdown
                           content={stripSystemTags(turn.prompt)}
                           className="tb-message-markdown tb-message-markdown-user"
@@ -10996,7 +11269,11 @@ export function RunnerChat({
                         </div>
                       ) : null}
                       {agentMessage?.message ? (
-                        <div className="tb-btw-turn-response" style={responseStyle}>
+                        <div
+                          ref={(node) => setThreadHistoryAnchorElement(assistantThreadHistoryItemId, node)}
+                          className="tb-btw-turn-response tb-thread-history-anchor"
+                          style={responseStyle}
+                        >
                           <RunnerMarkdown
                             content={stripSystemTags(agentMessage.message)}
                             className="tb-message-markdown tb-message-markdown-summary"
@@ -11012,7 +11289,11 @@ export function RunnerChat({
               if (taskPreviewForTurn && !isEditingTurn) {
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-user tb-turn-user-task-preview">
-                    <div className="tb-task-preview-turn-shell" style={promptStyle}>
+                    <div
+                      ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
+                      className="tb-task-preview-turn-shell tb-thread-history-anchor"
+                      style={promptStyle}
+                    >
                       {renderRunnerTaskPreviewCard(taskPreviewForTurn, { onClick: onTaskPreviewClick })}
                     </div>
 
@@ -11075,7 +11356,11 @@ export function RunnerChat({
                     ) : null}
 
                     {agentMessage?.message ? (
-                      <div className="tb-turn-summary" style={responseStyle}>
+                      <div
+                        ref={(node) => setThreadHistoryAnchorElement(assistantThreadHistoryItemId, node)}
+                        className="tb-turn-summary tb-thread-history-anchor"
+                        style={responseStyle}
+                      >
                         {summaryPreviewAttachments.length > 0 ? (
                           <div className="runner-attachments runner-attachments-summary" role="list" aria-label="Changed files">
                             {summaryPreviewAttachments.map((attachment) => (
@@ -11097,6 +11382,7 @@ export function RunnerChat({
               return (
                 <div key={turn.id} className="tb-turn tb-turn-user">
                   <div
+                    ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
                     className={`tb-user-turn-shell ${showTurnActions ? "tb-user-turn-shell-has-actions" : ""} ${isEditablePromptTurn ? "tb-user-turn-shell-editable" : ""} ${isEditingTurn ? "tb-user-turn-shell-editing" : ""} ${isForkingTurn ? "tb-user-turn-shell-forking" : ""}`.trim()}
                     style={promptStyle}
                   >
@@ -11236,7 +11522,11 @@ export function RunnerChat({
                   ) : null}
 
                   {agentMessage?.message ? (
-                    <div className="tb-turn-summary" style={responseStyle}>
+                    <div
+                      ref={(node) => setThreadHistoryAnchorElement(assistantThreadHistoryItemId, node)}
+                      className="tb-turn-summary tb-thread-history-anchor"
+                      style={responseStyle}
+                    >
                       {summaryPreviewAttachments.length > 0 ? (
                         <div className="runner-attachments runner-attachments-summary" role="list" aria-label="Changed files">
                           {summaryPreviewAttachments.map((attachment) => (
@@ -11256,6 +11546,71 @@ export function RunnerChat({
             })}
           </div>
         </div>
+        {shouldRenderThreadHistoryRail ? (
+          <div
+            className={`tb-thread-history-rail ${areThreadHistoryControlsVisible ? "is-controls-visible" : ""}`.trim()}
+            onMouseEnter={() => setIsThreadHistoryRailHovered(true)}
+            onMouseLeave={() => {
+              setIsThreadHistoryRailHovered(false);
+              setHoveredThreadHistoryItemId(null);
+            }}
+          >
+            <button
+              type="button"
+              className="tb-thread-history-chevron tb-thread-history-chevron-up"
+              onClick={() => navigateThreadHistory(-1)}
+              disabled={!previousThreadHistoryItem}
+              aria-label="Scroll to previous message"
+            >
+              <LucideChevronUp className="tb-thread-history-chevron-icon" strokeWidth={1.8} />
+            </button>
+
+            <div className="tb-thread-history-lines" role="navigation" aria-label="Thread history">
+              {threadHistoryItems.map((item, index) => {
+                const isActive = item.id === activeThreadHistoryItemId;
+                const isHovered = item.id === hoveredThreadHistoryItemId;
+                const lineWidth = isHovered
+                  ? RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH
+                  : getRunnerThreadHistoryLineWidth(index, activeThreadHistoryIndex);
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`tb-thread-history-line-button ${isActive ? "is-active" : ""} ${isHovered ? "is-hovered" : ""}`.trim()}
+                    onMouseEnter={() => setHoveredThreadHistoryItemId(item.id)}
+                    onMouseLeave={() => setHoveredThreadHistoryItemId((current) => current === item.id ? null : current)}
+                    onFocus={() => setHoveredThreadHistoryItemId(item.id)}
+                    onBlur={() => setHoveredThreadHistoryItemId((current) => current === item.id ? null : current)}
+                    onClick={() => scrollThreadHistoryItemIntoView(item.id)}
+                    aria-label={`Scroll to ${item.label}: ${item.preview}`}
+                  >
+                    {isHovered ? (
+                      <div className="tb-thread-history-preview-bubble" aria-hidden="true">
+                        <div className="tb-thread-history-preview-label">{item.label}</div>
+                        <div className="tb-thread-history-preview-copy">{item.preview}</div>
+                      </div>
+                    ) : null}
+                    <span
+                      className="tb-thread-history-line"
+                      style={{ width: `${lineWidth}px` }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="tb-thread-history-chevron tb-thread-history-chevron-down"
+              onClick={() => navigateThreadHistory(1)}
+              disabled={!nextThreadHistoryItem}
+              aria-label="Scroll to next message"
+            >
+              <LucideChevronDown className="tb-thread-history-chevron-icon" strokeWidth={1.8} />
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="tb-input-shell">
