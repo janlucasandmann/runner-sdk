@@ -57735,7 +57735,7 @@ const html = `<!doctype html>
                               requestHeaders,
                               environments: realEnvironments,
                               projectId: settingsProjectRoutingId,
-                              apiKey,
+                              apiKey: effectiveApiKey,
                               upstreamUrl: resolvedUpstreamUrl,
                             })
                           : renderAuthGate()
