@@ -1494,7 +1494,7 @@ const html = `<!doctype html>
         width: 100%;
         height: 100%;
         border-left: 0;
-        background: #101010;
+        background: transparent;
         box-shadow: none;
         transform: none;
         opacity: 1;
@@ -1509,8 +1509,10 @@ const html = `<!doctype html>
       }
 
       .playground-thread-preview-drawer .tb-attachment-preview-drawer-body,
+      .playground-thread-preview-drawer .tb-attachment-preview-pdf,
       .playground-thread-preview-drawer .tb-attachment-preview-markdown-shell,
-      .playground-thread-preview-drawer .tb-attachment-preview-text {
+      .playground-thread-preview-drawer .tb-attachment-preview-text,
+      .playground-thread-preview-drawer .tb-attachment-preview-docx-shell {
         background: transparent;
       }
 
