@@ -77,6 +77,7 @@ interface RunnerWorkLogEntryProps {
   backendUrl?: string;
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
+  activeTaskPreviewId?: string | null;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
   onTaskPreviewClick?: (preview: {
     taskId: string;
@@ -948,6 +949,8 @@ type RunnerTaskManagementCreatedTaskPreview = {
 };
 
 const RUNNER_PLAYGROUND_HUMAN_ME_ID = "__runner_playground_human_me__";
+const runnerTaskManagementPreviewCache = new Map<string, RunnerTaskManagementCreatedTaskPreview>();
+const runnerTaskManagementProjectTicketMapCache = new Map<string, Record<string, string>>();
 
 function asOptionalTrimmedString(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
@@ -1084,17 +1087,133 @@ function splitTaskManagementTitleAndTicket(rawTitle: string): { title: string; t
 }
 
 function dedupeTaskManagementCreatePreviews(previews: RunnerTaskManagementCreatedTaskPreview[]): RunnerTaskManagementCreatedTaskPreview[] {
-  const seen = new Set<string>();
+  function mergePreview(base: RunnerTaskManagementCreatedTaskPreview, incoming: RunnerTaskManagementCreatedTaskPreview): RunnerTaskManagementCreatedTaskPreview {
+    const incomingStatus = normalizeTaskManagementPreviewStatus(incoming.status);
+    const baseStatus = normalizeTaskManagementPreviewStatus(base.status);
+    const incomingPriority = normalizeTaskManagementPreviewPriority(incoming.priority);
+    const basePriority = normalizeTaskManagementPreviewPriority(base.priority);
+    const incomingTaskType = normalizeTaskManagementPreviewType(incoming.taskType);
+    const baseTaskType = normalizeTaskManagementPreviewType(base.taskType);
+    const normalizedIncomingTicketNumber = normalizeTaskManagementPreviewTicketNumber(incoming.ticketNumber);
+    const normalizedBaseTicketNumber = normalizeTaskManagementPreviewTicketNumber(base.ticketNumber);
+    const incomingId = String(incoming.id || "").trim();
+    const baseId = String(base.id || "").trim();
+    const resolvedId =
+      incomingId.startsWith("task_")
+        ? incomingId
+        : baseId.startsWith("task_")
+          ? baseId
+          : incomingId || baseId;
+
+    return {
+      ...base,
+      ...incoming,
+      id: resolvedId || base.id || incoming.id,
+      title: String(incoming.title || "").trim() || base.title,
+      projectId: incoming.projectId || base.projectId || null,
+      projectName: incoming.projectName || base.projectName || null,
+      ticketNumber: normalizedIncomingTicketNumber || normalizedBaseTicketNumber || null,
+      status:
+        incomingStatus !== "todo" || !base.status
+          ? incomingStatus
+          : baseStatus,
+      priority:
+        incomingPriority !== "medium" || !base.priority
+          ? incomingPriority
+          : basePriority,
+      taskType:
+        incomingTaskType === "subtask" || !base.taskType
+          ? incomingTaskType
+          : baseTaskType,
+      assigneeAgentId: incoming.assigneeAgentId || base.assigneeAgentId || null,
+      assigneeName: incoming.assigneeName || base.assigneeName || null,
+      taskColor: incoming.taskColor || base.taskColor || null,
+    };
+  }
+
   const deduped: RunnerTaskManagementCreatedTaskPreview[] = [];
   for (const preview of previews) {
-    const key = (preview.id || `${preview.ticketNumber || ""}:${preview.title}`).trim().toLowerCase();
-    if (!key || seen.has(key)) {
+    const normalizedTitle = String(preview.title || "").trim().toLowerCase();
+    if (!normalizedTitle && !String(preview.id || "").trim()) {
       continue;
     }
-    seen.add(key);
-    deduped.push(preview);
+    const existingIndex = deduped.findIndex((candidate) => {
+      const candidateId = String(candidate.id || "").trim();
+      const previewId = String(preview.id || "").trim();
+      const candidateTitle = String(candidate.title || "").trim().toLowerCase();
+      return (
+        (candidateId && previewId && candidateId === previewId)
+        || (normalizedTitle && candidateTitle === normalizedTitle)
+      );
+    });
+    if (existingIndex === -1) {
+      deduped.push(preview);
+      continue;
+    }
+    deduped[existingIndex] = mergePreview(deduped[existingIndex], preview);
   }
   return deduped;
+}
+
+function compareTaskManagementPreviewTicketOrder(left: Record<string, unknown>, right: Record<string, unknown>): number {
+  const leftCreatedAt = Date.parse(String(left?.createdAt || "")) || 0;
+  const rightCreatedAt = Date.parse(String(right?.createdAt || "")) || 0;
+  if (leftCreatedAt !== rightCreatedAt) {
+    return leftCreatedAt - rightCreatedAt;
+  }
+  const leftSortOrder = Number.isFinite(left?.sortOrder) ? Number(left.sortOrder) : (Number.isFinite(Number(left?.sortOrder)) ? Number(left?.sortOrder) : 0);
+  const rightSortOrder = Number.isFinite(right?.sortOrder) ? Number(right.sortOrder) : (Number.isFinite(Number(right?.sortOrder)) ? Number(right?.sortOrder) : 0);
+  if (leftSortOrder !== rightSortOrder) {
+    return leftSortOrder - rightSortOrder;
+  }
+  return String(left?.id || "").localeCompare(String(right?.id || ""));
+}
+
+function buildTaskManagementTicketMapFromTaskListPayload(data: unknown): Record<string, string> {
+  const payload = asObjectRecord(data);
+  const items = Array.isArray(payload?.data)
+    ? payload.data
+    : Array.isArray(payload?.tasks)
+      ? payload.tasks
+      : Array.isArray(payload?.items)
+        ? payload.items
+        : [];
+  const orderedTasks = items
+    .map((item) => asObjectRecord(item))
+    .filter((item): item is Record<string, unknown> => Boolean(item?.id))
+    .slice()
+    .sort(compareTaskManagementPreviewTicketOrder);
+  const next: Record<string, string> = {};
+  let explicitCount = 0;
+  let highestTicketNumber = 0;
+
+  orderedTasks.forEach((task) => {
+    const metadata = asObjectRecord(task.metadata);
+    const runnerPlayground = asObjectRecord(metadata?.runnerPlayground);
+    const ticketNumber = normalizeTaskManagementPreviewTicketNumber(
+      asOptionalTrimmedString(task.ticketNumber)
+      || asOptionalTrimmedString(runnerPlayground?.ticketNumber)
+      || null
+    );
+    if (!ticketNumber) {
+      return;
+    }
+    next[String(task.id)] = ticketNumber;
+    explicitCount += 1;
+    highestTicketNumber = Math.max(highestTicketNumber, Number.parseInt(ticketNumber, 10));
+  });
+
+  let nextTicketNumber = explicitCount === 0 ? 0 : highestTicketNumber;
+  orderedTasks.forEach((task) => {
+    const taskId = String(task.id || "").trim();
+    if (!taskId || next[taskId]) {
+      return;
+    }
+    nextTicketNumber += 1;
+    next[taskId] = String(nextTicketNumber).padStart(3, "0");
+  });
+
+  return next;
 }
 
 function normalizeTaskManagementCreatePreview(value: unknown): RunnerTaskManagementCreatedTaskPreview | null {
@@ -1230,6 +1349,38 @@ function normalizeTaskManagementCreatePreview(value: unknown): RunnerTaskManagem
     assigneeName,
     taskColor,
   };
+}
+
+function buildTaskManagementCreatePreviewFromTaskPayload(value: unknown): RunnerTaskManagementCreatedTaskPreview | null {
+  const payload = asObjectRecord(value);
+  if (!payload) {
+    return null;
+  }
+
+  const taskRecord = asObjectRecord(payload.task);
+  if (!taskRecord) {
+    return null;
+  }
+
+  const details = asObjectRecord(payload.details);
+  const project = asObjectRecord(details?.project);
+  const assignee = asObjectRecord(details?.assignee);
+
+  return normalizeTaskManagementCreatePreview({
+    ...taskRecord,
+    ...(project && !Object.prototype.hasOwnProperty.call(taskRecord, "projectName")
+      ? { projectName: asOptionalTrimmedString(project.name) || asOptionalTrimmedString(project.title) || null }
+      : {}),
+    ...(project && !Object.prototype.hasOwnProperty.call(taskRecord, "projectId")
+      ? { projectId: asOptionalTrimmedString(project.id) || null }
+      : {}),
+    ...(assignee && !Object.prototype.hasOwnProperty.call(taskRecord, "assigneeAgentId")
+      ? { assigneeAgentId: asOptionalTrimmedString(assignee.id) || null }
+      : {}),
+    ...(assignee && !Object.prototype.hasOwnProperty.call(taskRecord, "assigneeName")
+      ? { assigneeName: asOptionalTrimmedString(assignee.name) || asOptionalTrimmedString(assignee.displayName) || null }
+      : {}),
+  });
 }
 
 function extractTaskManagementCreatePreviewsFromValue(value: unknown): RunnerTaskManagementCreatedTaskPreview[] {
@@ -1377,21 +1528,206 @@ function shouldRenderTaskManagementCreateLog(log: RunnerLog): boolean {
 function TaskManagementCreateLogBox({
   log,
   timeLabel,
+  backendUrl,
+  requestHeaders,
+  activeTaskPreviewId,
   onTaskPreviewClick,
 }: {
   log: RunnerLog;
   timeLabel?: string;
+  backendUrl?: string;
+  requestHeaders?: HeadersInit;
+  activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: RunnerWorkLogEntryProps["onTaskPreviewClick"];
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [enrichedTasksById, setEnrichedTasksById] = useState<Record<string, RunnerTaskManagementCreatedTaskPreview>>({});
+  const [ticketNumbersByTaskId, setTicketNumbersByTaskId] = useState<Record<string, string>>({});
   const createdTasks = useMemo(() => collectTaskManagementCreatedTasks(log), [log]);
+
+  useEffect(() => {
+    const nextEnrichedTasksById: Record<string, RunnerTaskManagementCreatedTaskPreview> = {};
+    const nextTicketNumbersByTaskId: Record<string, string> = {};
+
+    createdTasks.forEach((task) => {
+      const normalizedTaskId = String(task.id || "").trim();
+      if (normalizedTaskId && runnerTaskManagementPreviewCache.has(normalizedTaskId)) {
+        nextEnrichedTasksById[normalizedTaskId] = runnerTaskManagementPreviewCache.get(normalizedTaskId)!;
+      }
+      const normalizedProjectId = String(task.projectId || "").trim();
+      if (normalizedTaskId && normalizedProjectId && runnerTaskManagementProjectTicketMapCache.has(normalizedProjectId)) {
+        const ticketMap = runnerTaskManagementProjectTicketMapCache.get(normalizedProjectId)!;
+        if (ticketMap[normalizedTaskId]) {
+          nextTicketNumbersByTaskId[normalizedTaskId] = ticketMap[normalizedTaskId];
+        }
+      }
+    });
+
+    setEnrichedTasksById(nextEnrichedTasksById);
+    setTicketNumbersByTaskId(nextTicketNumbersByTaskId);
+  }, [createdTasks]);
+
+  const displayTasks = useMemo(
+    () =>
+      createdTasks.map((task) => {
+        const enriched = task.id ? enrichedTasksById[task.id] : undefined;
+        const normalizedTaskId = String(task.id || "").trim();
+        const ticketNumberFromMap = normalizedTaskId ? ticketNumbersByTaskId[normalizedTaskId] : "";
+        const mergedTask = !enriched
+          ? task
+          : {
+              ...task,
+              ...enriched,
+              projectId: enriched.projectId || task.projectId || null,
+              projectName: enriched.projectName || task.projectName || null,
+            };
+        return {
+          ...mergedTask,
+          ticketNumber: mergedTask.ticketNumber || ticketNumberFromMap || null,
+        };
+      }),
+    [createdTasks, enrichedTasksById, ticketNumbersByTaskId]
+  );
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
-  const createdCount = createdTasks.length;
+  const createdCount = displayTasks.length;
   const title = createdCount === 1
     ? "1 task created"
     : createdCount > 1
       ? `${createdCount} tasks created`
       : "Create tasks";
+
+  useEffect(() => {
+    let cancelled = false;
+    const normalizedBackendUrl = String(backendUrl || "").trim().replace(/\/$/, "");
+    const taskIds = Array.from(
+      new Set(
+        createdTasks
+          .map((task) => String(task.id || "").trim())
+          .filter((taskId) => taskId.startsWith("task_"))
+      )
+    );
+
+    if (!normalizedBackendUrl || taskIds.length === 0) {
+      setEnrichedTasksById({});
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void Promise.allSettled(
+      taskIds.map(async (taskId) => {
+        const response = await fetch(`${normalizedBackendUrl}/tasks/${encodeURIComponent(taskId)}`, {
+          method: "GET",
+          headers: requestHeaders,
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to load task ${taskId}`);
+        }
+        const body = await response.json();
+        return {
+          taskId,
+          preview: buildTaskManagementCreatePreviewFromTaskPayload(body),
+        };
+      })
+    ).then((results) => {
+      if (cancelled) {
+        return;
+      }
+      const nextEnrichedTasksById: Record<string, RunnerTaskManagementCreatedTaskPreview> = {};
+      for (const result of results) {
+        if (result.status !== "fulfilled" || !result.value.preview) {
+          continue;
+        }
+        nextEnrichedTasksById[result.value.taskId] = result.value.preview;
+        runnerTaskManagementPreviewCache.set(result.value.taskId, result.value.preview);
+      }
+      setEnrichedTasksById(nextEnrichedTasksById);
+    }).catch(() => {
+      if (!cancelled) {
+        setEnrichedTasksById({});
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [backendUrl, createdTasks, requestHeaders]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const normalizedBackendUrl = String(backendUrl || "").trim().replace(/\/$/, "");
+    const projectIds = Array.from(
+      new Set(
+        displayTasks
+          .filter((task) => !task.ticketNumber)
+          .map((task) => String(task.projectId || "").trim())
+          .filter(Boolean)
+      )
+    );
+
+    if (!normalizedBackendUrl || projectIds.length === 0) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const cachedTicketNumbers: Record<string, string> = {};
+    projectIds.forEach((projectId) => {
+      const cachedMap = runnerTaskManagementProjectTicketMapCache.get(projectId);
+      if (!cachedMap) {
+        return;
+      }
+      Object.assign(cachedTicketNumbers, cachedMap);
+    });
+    if (Object.keys(cachedTicketNumbers).length > 0) {
+      setTicketNumbersByTaskId((current) => ({ ...current, ...cachedTicketNumbers }));
+    }
+
+    const projectIdsToFetch = projectIds.filter((projectId) => !runnerTaskManagementProjectTicketMapCache.has(projectId));
+    if (projectIdsToFetch.length === 0) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void Promise.allSettled(
+      projectIdsToFetch.map(async (projectId) => {
+        const response = await fetch(`${normalizedBackendUrl}/tasks?projectId=${encodeURIComponent(projectId)}&limit=1000`, {
+          method: "GET",
+          headers: requestHeaders,
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to load tasks for project ${projectId}`);
+        }
+        const body = await response.json();
+        return {
+          projectId,
+          ticketMap: buildTaskManagementTicketMapFromTaskListPayload(body),
+        };
+      })
+    ).then((results) => {
+      if (cancelled) {
+        return;
+      }
+      const nextTicketNumbersByTaskId: Record<string, string> = {};
+      for (const result of results) {
+        if (result.status !== "fulfilled") {
+          continue;
+        }
+        runnerTaskManagementProjectTicketMapCache.set(result.value.projectId, result.value.ticketMap);
+        Object.assign(nextTicketNumbersByTaskId, result.value.ticketMap);
+      }
+      if (Object.keys(nextTicketNumbersByTaskId).length > 0) {
+        setTicketNumbersByTaskId((current) => ({ ...current, ...nextTicketNumbersByTaskId }));
+      }
+    }).catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [backendUrl, displayTasks, requestHeaders]);
 
   return (
     <div className="tb-log-card">
@@ -1413,10 +1749,11 @@ function TaskManagementCreateLogBox({
       <LogPanel collapsed={collapsed}>
         {createdCount > 0 ? (
           <div className="tb-log-task-create-list">
-            {createdTasks.map((task) => {
+            {displayTasks.map((task) => {
               const normalizedStatus = normalizeTaskManagementPreviewStatus(task.status);
               const normalizedTaskType = normalizeTaskManagementPreviewType(task.taskType);
               const isClickable = Boolean(onTaskPreviewClick && task.id);
+              const isActive = String(activeTaskPreviewId || "").trim() !== "" && String(task.id || "").trim() === String(activeTaskPreviewId || "").trim();
               const content = (
                 <>
                   <div className="tb-log-task-create-item-content">
@@ -1451,7 +1788,7 @@ function TaskManagementCreateLogBox({
                 <button
                   key={task.id}
                   type="button"
-                  className="tb-log-task-create-item tb-log-task-create-item-button"
+                  className={`tb-log-task-create-item tb-log-task-create-item-button ${isActive ? "is-active" : ""}`.trim()}
                   style={getTaskManagementPreviewColorStyle(task.taskColor)}
                   onClick={() =>
                     onTaskPreviewClick?.({
@@ -1474,7 +1811,7 @@ function TaskManagementCreateLogBox({
               ) : (
                 <div
                   key={task.id}
-                  className="tb-log-task-create-item"
+                  className={`tb-log-task-create-item ${isActive ? "is-active" : ""}`.trim()}
                   style={getTaskManagementPreviewColorStyle(task.taskColor)}
                 >
                   {content}
@@ -4084,7 +4421,7 @@ export function InlineStatusLogBox({
   );
 }
 
-export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, requestHeaders, onPreviewDocument, onTaskPreviewClick }: RunnerWorkLogEntryProps) {
+export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, requestHeaders, activeTaskPreviewId, onPreviewDocument, onTaskPreviewClick }: RunnerWorkLogEntryProps) {
   const normalizedMessage = stripRunnerSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
 
   if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") {
@@ -4116,7 +4453,7 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
       return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;
-    if (shouldRenderTaskManagementCreateLog(log)) return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} onTaskPreviewClick={onTaskPreviewClick} />;
+    if (shouldRenderTaskManagementCreateLog(log)) return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     if (isReadFileCommand(command)) {
       return (
         <ReadFileLogBox
@@ -4151,7 +4488,7 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
 
   if (log.eventType === "mcp_tool_call") {
     if (shouldRenderTaskManagementCreateLog(log)) {
-      return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} onTaskPreviewClick={onTaskPreviewClick} />;
+      return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     }
     if (isLikelyImageGenerationLog(log)) {
       return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
@@ -4165,7 +4502,7 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
 
   if (log.eventType === "file_change") {
     if (shouldRenderTaskManagementCreateLog(log)) {
-      return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} onTaskPreviewClick={onTaskPreviewClick} />;
+      return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     }
     if (isImageFileChangeLog(log)) {
       return null;

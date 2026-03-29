@@ -1028,10 +1028,19 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   z-index: 20;
   display: flex;
   justify-content: center;
-  padding: 10px 12px 12px;
+  padding: 10px 12px 10px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.96) 68%, rgba(0, 0, 0, 0));
   pointer-events: none;
   transition: right 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tb-runner-chat.playground-thread-runner.is-project-wallpaper-active .tb-input-shell {
+  padding: 10px 0 10px;
+}
+
+.tb-runner-chat.playground-thread-runner.is-project-wallpaper-active .tb-input-width {
+  width: min(100%, 56rem);
+  max-width: 56rem;
 }
 
 .tb-runner-chat .tb-turn {
@@ -2682,6 +2691,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   color: rgba(255, 255, 255, 0.96);
 }
 
+.tb-runner-chat .tb-log-task-create-item.is-active {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .tb-runner-chat .tb-log-task-create-item-button:focus,
 .tb-runner-chat .tb-log-task-create-item-button:focus-visible {
   outline: none;
@@ -2825,8 +2839,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-log-task-create-status.is-blocked {
-  color: rgba(255, 174, 72, 1);
-  background: rgba(255, 174, 72, 0.18);
+  color: rgba(255, 120, 120, 1);
+  background: rgba(255, 120, 120, 0.16);
 }
 
 .tb-runner-chat .tb-log-task-create-status.is-done {

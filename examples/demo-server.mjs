@@ -173,6 +173,12 @@ const html = `<!doctype html>
         width: min(320px, calc(100vw - 28px));
       }
 
+      .playground-shell.is-projects-page .playground-shell-status-indicators,
+      .playground-shell.is-project-thread-page .playground-shell-status-indicators {
+        left: 14px;
+        width: min(320px, calc(100vw - 28px));
+      }
+
       .status-indicator {
         display: flex;
         align-items: center;
@@ -1243,7 +1249,11 @@ const html = `<!doctype html>
       }
 
       .playground-shell.is-project-thread-page .playground-main {
-        padding: 6px;
+        padding: 6px 0 0;
+      }
+
+      .playground-shell.is-initial-thread-page .playground-main {
+        padding-bottom: 0;
       }
 
       .playground-content-shell {
@@ -1850,6 +1860,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 10px;
+        flex: 1 1 auto;
       }
 
       .playground-thread-widget-tasks-item {
@@ -2098,6 +2109,35 @@ const html = `<!doctype html>
         font-weight: 400;
         line-height: 1.5;
         text-align: left;
+      }
+
+      .playground-thread-widget-tasks-footer {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-thread-widget-tasks-action {
+        margin-top: auto;
+        padding-top: 15px;
+        margin-bottom: 2px;
+        align-self: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.2;
+        cursor: pointer;
+        transition: opacity 160ms ease, color 160ms ease;
+      }
+
+      .playground-thread-widget-tasks-action:hover {
+        opacity: 0.86;
+        color: rgba(255, 255, 255, 0.8);
       }
 
       @media (max-width: 940px) {
@@ -7969,6 +8009,24 @@ const html = `<!doctype html>
         color: #fff;
       }
 
+      .playground-files-control-button.is-bare {
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-files-control-button.is-bare:hover,
+      .playground-files-control-button.is-bare.is-active {
+        background: transparent;
+        border-color: transparent;
+      }
+
+      .playground-files-control-button.is-backlog-filter {
+        padding-right: 0;
+      }
+
       .playground-files-control-spacer {
         flex: 1;
         min-width: 0;
@@ -8420,6 +8478,19 @@ const html = `<!doctype html>
         font-size: 13px;
         line-height: 1.5;
         text-align: center;
+      }
+
+      .playground-files-empty-state-card-wrap {
+        min-height: 0;
+        width: 100%;
+        justify-content: flex-start;
+        align-items: stretch;
+        padding: 24px 0;
+      }
+
+      .playground-files-empty-state-card {
+        width: 100%;
+        max-width: none;
       }
 
       .playground-files-state.is-error {
@@ -13512,8 +13583,18 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-project-home-navbar {
+        min-height: var(--playground-content-nav-height, 50px);
+        padding: 0;
         margin-bottom: 17px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-tasks-project-home-navbar .playground-tasks-project-navbar-title,
+      .playground-tasks-project-home-navbar .playground-content-nav-right,
+      .playground-tasks-project-home-navbar .playground-content-nav-center {
+        min-height: var(--playground-content-nav-height, 50px);
+        height: 100%;
+        align-items: center;
       }
 
       .playground-tasks-project-workspace .playground-environments-detail-scroll {
@@ -15070,6 +15151,39 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.5);
       }
 
+      .playground-tasks-empty-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 2px;
+      }
+
+      .playground-tasks-empty-primary-button {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-tasks-empty-primary-button:hover {
+        opacity: 0.92;
+      }
+
+      .playground-tasks-empty-primary-button:active {
+        transform: translateY(1px);
+      }
+
       .playground-tasks-loading-state {
         min-height: 120px;
         display: flex;
@@ -15086,6 +15200,14 @@ const html = `<!doctype html>
         font-size: 12px;
         line-height: 1.45;
         color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-tasks-mission-control-empty-state {
+        min-height: 100%;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .playground-tasks-scheduler {
@@ -16333,7 +16455,7 @@ const html = `<!doctype html>
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -16966,6 +17088,11 @@ const html = `<!doctype html>
           return trustedDisplayName;
         }
 
+        const emailDerivedDisplayName = formatEmailPrefixDisplayName(email);
+        if (emailDerivedDisplayName) {
+          return emailDerivedDisplayName;
+        }
+
         const normalizedFallback = String(fallbackValue || "").trim();
         if (normalizedFallback) {
           return normalizedFallback;
@@ -17245,6 +17372,207 @@ const html = `<!doctype html>
         return "https://identitytoolkit.googleapis.com/v1/" + pathname + "?key=" + encodeURIComponent(FIREBASE_WEB_API_KEY);
       }
 
+      function normalizeSessionIdentityValue(value) {
+        return String(value || "").replace(/\\s+/g, " ").trim();
+      }
+
+      function getSessionIdentityObject(value) {
+        return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+      }
+
+      function pickFirstSessionIdentityValue(...values) {
+        for (const value of values) {
+          const normalizedValue = normalizeSessionIdentityValue(value);
+          if (normalizedValue) {
+            return normalizedValue;
+          }
+        }
+        return "";
+      }
+
+      function normalizeSessionPhotoUrl(value) {
+        const normalizedValue = normalizeSessionIdentityValue(value);
+        if (!normalizedValue) {
+          return "";
+        }
+        if (normalizedValue.startsWith("//")) {
+          return "https:" + normalizedValue;
+        }
+        return normalizedValue;
+      }
+
+      function getPreferredSessionProviderProfile(...sources) {
+        const providerEntries = [];
+        sources.forEach((source) => {
+          const providerUserInfo = Array.isArray(source?.providerUserInfo) ? source.providerUserInfo : [];
+          providerUserInfo.forEach((entry) => {
+            const normalizedEntry = getSessionIdentityObject(entry);
+            if (normalizedEntry) {
+              providerEntries.push(normalizedEntry);
+            }
+          });
+        });
+
+        if (!providerEntries.length) {
+          return null;
+        }
+
+        return (
+          providerEntries.find((entry) => normalizeSessionIdentityValue(entry.providerId).toLowerCase() === "google.com")
+          || providerEntries.find((entry) => (
+            pickFirstSessionIdentityValue(
+              entry.displayName,
+              entry.name,
+              entry.email,
+              entry.photoUrl,
+              entry.photoURL,
+              entry.avatarUrl,
+              entry.picture
+            )
+          ))
+          || null
+        );
+      }
+
+      function extractSessionIdentityFromPayload(payload) {
+        const root = getSessionIdentityObject(payload);
+        const profile = getSessionIdentityObject(root?.profile);
+        const user = getSessionIdentityObject(root?.user);
+        const authProfile = getSessionIdentityObject(root?.authProfile);
+        const preferredProvider = getPreferredSessionProviderProfile(root, profile, user, authProfile);
+
+        const email = pickFirstSessionIdentityValue(
+          root?.email,
+          profile?.email,
+          user?.email,
+          authProfile?.email,
+          preferredProvider?.email
+        );
+        const displayName = getTrustedDisplayName(
+          pickFirstSessionIdentityValue(
+            profile?.displayName,
+            profile?.display_name,
+            profile?.name,
+            root?.displayName,
+            root?.display_name,
+            root?.name,
+            user?.displayName,
+            user?.display_name,
+            user?.name,
+            authProfile?.displayName,
+            authProfile?.display_name,
+            authProfile?.name,
+            preferredProvider?.displayName,
+            preferredProvider?.name
+          ),
+          email
+        ) || formatEmailPrefixDisplayName(email);
+        const photoURL = normalizeSessionPhotoUrl(
+          pickFirstSessionIdentityValue(
+            profile?.photoURL,
+            profile?.photoUrl,
+            profile?.photo_url,
+            profile?.avatarUrl,
+            profile?.avatarURL,
+            profile?.avatar,
+            profile?.picture,
+            root?.photoURL,
+            root?.photoUrl,
+            root?.photo_url,
+            root?.avatarUrl,
+            root?.avatar,
+            root?.picture,
+            user?.photoURL,
+            user?.photoUrl,
+            user?.photo_url,
+            user?.avatarUrl,
+            user?.avatar,
+            user?.picture,
+            authProfile?.photoURL,
+            authProfile?.photoUrl,
+            authProfile?.photo_url,
+            authProfile?.avatarUrl,
+            authProfile?.avatar,
+            authProfile?.picture,
+            preferredProvider?.photoURL,
+            preferredProvider?.photoUrl,
+            preferredProvider?.photo_url,
+            preferredProvider?.avatarUrl,
+            preferredProvider?.avatar,
+            preferredProvider?.picture
+          )
+        );
+        const emailVerified = typeof root?.emailVerified === "boolean"
+          ? root.emailVerified
+          : (typeof authProfile?.emailVerified === "boolean" ? authProfile.emailVerified : undefined);
+
+        return {
+          email,
+          displayName,
+          photoURL: canRenderAvatarImage(photoURL) ? photoURL : "",
+          emailVerified,
+        };
+      }
+
+      function readNamedCookie(name) {
+        if (typeof document === "undefined") {
+          return "";
+        }
+        const normalizedName = String(name || "").trim();
+        if (!normalizedName) {
+          return "";
+        }
+        const escapedName = normalizedName.replace(/[.*+?^{}$()|[\\]\\\\]/g, "\\\\$&");
+        const match = document.cookie.match(new RegExp("(?:^|; )" + escapedName + "=([^;]*)"));
+        if (!match || typeof match[1] !== "string") {
+          return "";
+        }
+        try {
+          return decodeURIComponent(match[1]);
+        } catch {
+          return match[1];
+        }
+      }
+
+      async function lookupFirebaseSessionIdentity() {
+        const sessionToken = readNamedCookie("__session");
+        if (!sessionToken) {
+          return null;
+        }
+
+        const response = await fetch(buildFirebaseRestUrl("accounts:lookup"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            idToken: sessionToken,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          return null;
+        }
+
+        const user = Array.isArray(data?.users) ? getSessionIdentityObject(data.users[0]) : null;
+        if (!user) {
+          return null;
+        }
+
+        return extractSessionIdentityFromPayload({
+          email: user.email,
+          emailVerified: user.emailVerified,
+          user: {
+            email: user.email,
+            displayName: user.displayName,
+            name: user.displayName,
+            photoURL: user.photoURL || user.photoUrl,
+            photoUrl: user.photoUrl || user.photoURL,
+            providerUserInfo: Array.isArray(user.providerUserInfo) ? user.providerUserInfo : [],
+          },
+        });
+      }
+
       async function copyTextToClipboard(value) {
         try {
           await navigator.clipboard.writeText(String(value || ""));
@@ -17255,8 +17583,30 @@ const html = `<!doctype html>
       }
 
       function canRenderAvatarImage(value) {
-        const normalized = String(value || "").trim();
+        const normalized = normalizeSessionPhotoUrl(value);
         return normalized.startsWith("data:image/") || /^https?:\/\//i.test(normalized);
+      }
+
+      function AccountAvatar({ className, imageClassName, fallbackLabel, photoUrl }) {
+        const [imageFailed, setImageFailed] = useState(false);
+        const normalizedPhotoUrl = normalizeSessionPhotoUrl(photoUrl);
+        const normalizedFallbackLabel = normalizeSessionIdentityValue(fallbackLabel) || "CA";
+
+        useEffect(() => {
+          setImageFailed(false);
+        }, [normalizedPhotoUrl]);
+
+        return React.createElement("div", { className },
+          !imageFailed && canRenderAvatarImage(normalizedPhotoUrl)
+            ? React.createElement("img", {
+                className: imageClassName,
+                src: normalizedPhotoUrl,
+                alt: normalizedFallbackLabel,
+                referrerPolicy: "no-referrer",
+                onError: () => setImageFailed(true),
+              })
+            : normalizedFallbackLabel
+        );
       }
 
       function readFileAsDataUrl(file) {
@@ -19650,10 +20000,15 @@ const html = `<!doctype html>
         const startLabel = startDate && !Number.isNaN(startDate.getTime()) ? format(startDate, "MMM d, yyyy") : "";
         const endLabel = endDate && !Number.isNaN(endDate.getTime()) ? format(endDate, "MMM d, yyyy") : "";
         if (startLabel && endLabel) {
-          if (startLabel === endLabel) {
-            return startLabel;
+          const startMs = startDate ? startDate.getTime() : NaN;
+          const endMs = endDate ? endDate.getTime() : NaN;
+          const orderedLabels = Number.isFinite(startMs) && Number.isFinite(endMs) && startMs > endMs
+            ? [endLabel, startLabel]
+            : [startLabel, endLabel];
+          if (orderedLabels[0] === orderedLabels[1]) {
+            return orderedLabels[0];
           }
-          return startLabel + " - " + endLabel;
+          return orderedLabels[0] + " - " + orderedLabels[1];
         }
         if (startLabel) {
           return "Starts " + startLabel;
@@ -21064,7 +21419,7 @@ const html = `<!doctype html>
           timeLabel: primaryEvent ? formatPlaygroundWelcomeTimeLabel(primaryDate) : "Free today",
           weekdayLabel: formatPlaygroundWelcomeWeekdayLabel(now),
           monthDayLabel: formatPlaygroundWelcomeMonthDayLabel(now),
-          actionLabel: "Open calendar",
+          actionLabel: "Open Calendar",
         };
       }
 
@@ -24549,6 +24904,11 @@ const html = `<!doctype html>
         const canGoBack = pathHistoryIndex > 0;
         const canGoForward = pathHistoryIndex < pathHistory.length - 1;
         const visibleEntryCount = viewMode === "list" ? visibleRows.length : filteredCurrentEntries.length;
+        const isEmptyEnvironmentRoot = Boolean(
+          selectedEnvironmentId
+          && !normalizedCurrentPath
+          && currentEntries.length === 0
+        );
 
         const selectedEntries = useMemo(() => {
           const ordered = [];
@@ -26398,7 +26758,26 @@ const html = `<!doctype html>
                     : !selectedEnvironmentId
                       ? React.createElement("div", { className: "playground-files-state" }, "Select an environment to browse files.")
                       : !hasVisibleEntries
-                        ? React.createElement("div", { className: "playground-files-state" }, currentEntries.length === 0 ? "This folder is empty" : "No items match the current filter")
+                        ? isEmptyEnvironmentRoot
+                          ? React.createElement("div", { className: "playground-files-state playground-files-empty-state-card-wrap" },
+                              React.createElement("div", { className: "playground-tasks-empty playground-files-empty-state-card" },
+                                React.createElement(FolderOpen, { width: 28, height: 28, strokeWidth: 1.9 }),
+                                React.createElement("div", { className: "playground-tasks-empty-title" }, "Upload your first files"),
+                                React.createElement("div", { className: "playground-tasks-empty-copy" }, "Add reference docs, specs, or assets to this environment so they are ready to use in threads and tasks."),
+                                React.createElement("div", { className: "playground-tasks-empty-actions" },
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-tasks-empty-primary-button",
+                                    onClick: () => openUploadPicker(currentPath),
+                                    disabled: !selectedEnvironmentId || isUploadingFiles,
+                                  },
+                                    React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
+                                    React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files")
+                                  )
+                                )
+                              )
+                            )
+                          : React.createElement("div", { className: "playground-files-state" }, currentEntries.length === 0 ? "This folder is empty" : "No items match the current filter")
                         : viewMode === "list"
                           ? React.createElement("div", { className: "playground-files-entry-list" }, visibleRows.map(renderEntryRow))
                           : React.createElement("div", { className: "playground-files-grid" }, filteredCurrentEntries.map(renderGridItem))
@@ -32813,6 +33192,8 @@ const html = `<!doctype html>
         const [backlogComposerSubtaskCommandRequest, setBacklogComposerSubtaskCommandRequest] = useState(null);
         const [backlogComposerMissionControlCommandRequest, setBacklogComposerMissionControlCommandRequest] = useState(null);
         const [missionControlStrategyOpen, setMissionControlStrategyOpen] = useState(false);
+        const [pendingNavigationMissionControlRequest, setPendingNavigationMissionControlRequest] = useState(null);
+        const [pendingNavigationProjectComposerRequest, setPendingNavigationProjectComposerRequest] = useState(null);
         const [missionControlRunState, setMissionControlRunState] = useState({
           threadId: "",
           projectId: "",
@@ -33041,7 +33422,7 @@ const html = `<!doctype html>
           && (missionControlRunState.status === "running" || missionControlRunState.status === "syncing");
 
         useEffect(() => {
-          if (typeof document === "undefined") {
+          if (typeof document === "undefined" || isDetailOnlyMode) {
             return undefined;
           }
           const rootStyle = document.documentElement.style;
@@ -33050,7 +33431,7 @@ const html = `<!doctype html>
           return () => {
             rootStyle.setProperty("--playground-app-bg", fallbackBackground);
           };
-        }, [selectedProjectShellBackground]);
+        }, [isDetailOnlyMode, selectedProjectShellBackground]);
 
         const selectedProjectEnvironments = useMemo(() => {
           return selectedProjectDetail?.project?.id === selectedProjectId
@@ -38160,6 +38541,8 @@ const html = `<!doctype html>
 
           const requestedProjectId = String(navigationRequest?.projectId || "").trim();
           const requestedView = navigationRequest?.view === "calendar" ? "calendar" : "backlog";
+          const requestedMissionControlAction = navigationRequest?.missionControlAction === "run" ? "run" : "";
+          const requestedProjectComposerAction = navigationRequest?.projectComposerAction === "create" ? "create" : "";
 
           if (requestedProjectId) {
             handleSelectProject(requestedProjectId);
@@ -38176,10 +38559,49 @@ const html = `<!doctype html>
             resetScheduleSaveState("");
           }
 
+          setPendingNavigationMissionControlRequest(
+            requestedMissionControlAction === "run" && requestedProjectId
+              ? {
+                  token: requestToken,
+                  projectId: requestedProjectId,
+                }
+              : null
+          );
+          setPendingNavigationProjectComposerRequest(
+            requestedProjectComposerAction === "create"
+              ? { token: requestToken }
+              : null
+          );
+
           if (typeof onNavigationRequestHandled === "function") {
             onNavigationRequestHandled(requestToken);
           }
         }, [navigationRequest, onNavigationRequestHandled]);
+
+        useEffect(() => {
+          const pendingRequestToken = String(pendingNavigationMissionControlRequest?.token || "").trim();
+          const pendingProjectId = String(pendingNavigationMissionControlRequest?.projectId || "").trim();
+          if (!pendingRequestToken || !pendingProjectId) {
+            return;
+          }
+          if (selectedProjectId !== pendingProjectId || taskView !== "backlog") {
+            return;
+          }
+          openMissionControlComposer({ keepStrategyOpen: true });
+          setPendingNavigationMissionControlRequest(null);
+        }, [pendingNavigationMissionControlRequest, selectedProjectId, taskView]);
+
+        useEffect(() => {
+          const pendingRequestToken = String(pendingNavigationProjectComposerRequest?.token || "").trim();
+          if (!pendingRequestToken) {
+            return;
+          }
+          if (selectedProjectId) {
+            return;
+          }
+          openProjectComposer();
+          setPendingNavigationProjectComposerRequest(null);
+        }, [pendingNavigationProjectComposerRequest, selectedProjectId]);
 
         useEffect(() => {
           if (!selectedScheduleId) return;
@@ -40701,7 +41123,26 @@ const html = `<!doctype html>
           return updatedProject;
         }
 
-        function openMissionControlComposer() {
+        function openMissionControlStrategySidebar() {
+          if (!selectedProjectId) {
+            return;
+          }
+          if (!isDetailOnlyMode && typeof onRequestSidebarCollapse === "function") {
+            onRequestSidebarCollapse();
+          }
+          setTaskDetailPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setTaskParentPickerState(null);
+          setTaskDeleteDialogState(null);
+          setTaskScheduleDialogState(null);
+          setBacklogToolbarPopover("");
+          setBoardToolbarPopover("");
+          setSelectedTaskId("");
+          setDraftTask(null);
+          setMissionControlStrategyOpen(true);
+        }
+
+        function openMissionControlComposer(options = {}) {
           if (!selectedProjectId) {
             return;
           }
@@ -40711,7 +41152,7 @@ const html = `<!doctype html>
           setTaskParentPickerState(null);
           setTaskDeleteDialogState(null);
           setTaskScheduleDialogState(null);
-          setMissionControlStrategyOpen(false);
+          setMissionControlStrategyOpen(Boolean(options?.keepStrategyOpen));
           setSelectedTaskId("");
           setDraftTask(null);
           setBacklogComposerMissionControlCommandRequest({
@@ -43959,14 +44400,19 @@ const html = `<!doctype html>
                   filteredProjects.map((project, index) => renderProjectCard(project, index))
                 )
               : React.createElement("div", { className: "playground-tasks-empty" },
-                  React.createElement(LayoutGrid, { width: 28, height: 28, strokeWidth: 1.75 }),
+                  React.createElement(Rocket, { width: 28, height: 28, strokeWidth: 1.9 }),
                   React.createElement("div", { className: "playground-tasks-empty-title" }, "Create your first project"),
                   React.createElement("div", { className: "playground-tasks-empty-copy" }, "Projects keep environments, runnable threads, and the task board together. Start with one project, then build backlog, board, and calendar inside it."),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button is-primary",
-                    onClick: () => openProjectComposer(),
-                  }, "New Project")
+                  React.createElement("div", { className: "playground-tasks-empty-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-empty-primary-button",
+                      onClick: () => openProjectComposer(),
+                    },
+                      React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
+                      React.createElement("span", null, "New Project")
+                    )
+                  )
                 )
           );
         }
@@ -44052,6 +44498,7 @@ const html = `<!doctype html>
           childrenByParentId,
           emptyTitle,
           emptyCopy,
+          emptyAction = null,
           showComposer = false,
           composer = null,
           listFooter = null,
@@ -44476,7 +44923,7 @@ const html = `<!doctype html>
                     React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                       React.createElement("button", {
                         type: "button",
-                        className: "playground-files-control-button" + (toolbarPopover === "filter" || filterMode !== "open" && filterMode !== "all" ? " is-active" : ""),
+                        className: "playground-files-control-button is-bare is-backlog-filter" + (toolbarPopover === "filter" || filterMode !== "open" && filterMode !== "all" ? " is-active" : ""),
                         onClick: () => setToolbarPopover((current) => current === "filter" ? "" : "filter"),
                       },
                         React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
@@ -44511,7 +44958,7 @@ const html = `<!doctype html>
                     React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                       React.createElement("button", {
                         type: "button",
-                        className: "playground-files-control-button" + (toolbarPopover === "sort" || sortMode !== "default" ? " is-active" : ""),
+                        className: "playground-files-control-button is-bare" + (toolbarPopover === "sort" || sortMode !== "default" ? " is-active" : ""),
                         onClick: () => setToolbarPopover((current) => current === "sort" ? "" : "sort"),
                       },
                         React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
@@ -44551,7 +44998,8 @@ const html = `<!doctype html>
                   ? renderBacklogTaskTree(taskRoots, null, 0)
                   : React.createElement("div", { className: "playground-tasks-empty playground-tasks-backlog-empty" },
                       React.createElement("div", { className: "playground-tasks-empty-title" }, emptyTitle),
-                      React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy)
+                      React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy),
+                      emptyAction
                     ),
                 listFooter
               ),
@@ -44572,6 +45020,10 @@ const html = `<!doctype html>
           const activeTaskRoots = isReleaseBacklogView ? releaseTaskRoots : backlogTaskRoots;
           const activeVisibleTaskIds = isReleaseBacklogView ? releaseVisibleTaskIds : backlogVisibleTaskIds;
           const activeChildrenByParentId = isReleaseBacklogView ? releaseTaskChildrenByParentId : taskChildrenByParentId;
+          const shouldShowMissionControlEmptyAction = !normalizedSearchQuery
+            && activeBacklogFilterValue === "open"
+            && activeTaskRoots.length === 0
+            && (!isReleaseBacklogView || Boolean(selectedRelease));
           const backlogEmptyTitle = normalizedSearchQuery
             ? (isReleaseBacklogView ? "No matching release tasks" : "No matching backlog tasks")
             : activeBacklogFilterValue === "tasks"
@@ -44602,15 +45054,13 @@ const html = `<!doctype html>
                         ? "Completed work for this release will appear here."
                         : "Completed work from this project will appear here.")
                     : isReleaseBacklogView
-                      ? "Assign tickets to this release from the ticket details panel and they will appear here."
-                      : "Add a new task below to start building this project's backlog.";
+                      ? "Run Mission Control to generate the first strategy and create the initial structured backlog for this project."
+                      : shouldShowMissionControlEmptyAction
+                        ? "Run Mission Control to generate the first strategy and create the initial structured backlog for this project."
+                        : "Add a new task below to start building this project's backlog.";
           const backlogComposerBackendUrl = window.location.origin
             + "/api/task-backlog/" + encodeURIComponent(selectedProjectId)
             + (selectedReleaseId ? ("/releases/" + encodeURIComponent(selectedReleaseId)) : "");
-          const shouldShowMissionControlSection = !isReleaseBacklogView
-            && !normalizedSearchQuery
-            && activeBacklogFilterValue === "open";
-
           return renderBacklogTaskListView({
             headerContent: isReleaseBacklogView
               ? React.createElement("div", { className: "playground-tasks-release-backlog-header-main" },
@@ -44643,10 +45093,22 @@ const html = `<!doctype html>
             childrenByParentId: activeChildrenByParentId,
             emptyTitle: backlogEmptyTitle,
             emptyCopy: backlogEmptyCopy,
+            emptyAction: shouldShowMissionControlEmptyAction
+              ? React.createElement("div", { className: "playground-tasks-empty-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-empty-primary-button",
+                    onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
+                  },
+                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 2 }),
+                    React.createElement("span", null, "Run Mission Control")
+                  )
+                )
+              : null,
             allowManualDrag: !isReleaseBacklogView,
             groupRootTasksByRelease: !isReleaseBacklogView,
             showComposer: true,
-            listFooter: shouldShowMissionControlSection ? renderMissionControlBacklogCard() : null,
+            listFooter: null,
             composer: React.createElement("div", {
                 className: "playground-tasks-backlog-composer-shell" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""),
               },
@@ -44681,72 +45143,84 @@ const html = `<!doctype html>
                   onEnvironmentChange: (nextEnvironmentId) => setBacklogComposerEnvironmentId(nextEnvironmentId),
                 })
               ),
-            extraToolbarContent: React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-control-button" + (backlogToolbarPopover === "release" || selectedRelease ? " is-active" : ""),
-                onClick: () => setBacklogToolbarPopover((current) => current === "release" ? "" : "release"),
-              },
-                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Releases")
-              ),
-              backlogToolbarPopover === "release"
-                ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-release-picker-menu" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "tb-popup-row tb-popup-row-select" + (!selectedReleaseId ? " selected" : ""),
-                      onClick: () => {
-                        handleSelectRelease("");
-                        setBacklogToolbarPopover("");
-                      },
-                    },
-                      React.createElement("span", { className: "tb-popup-check-slot" },
-                        !selectedReleaseId
-                          ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                          : null
-                      ),
-                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                        React.createElement("span", null, "All Tickets"),
-                        React.createElement("span", null, "Show the full project backlog.")
-                      )
-                    ),
-                    sortedReleaseOptions.map((release) =>
+            extraToolbarContent: React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button" + (backlogToolbarPopover === "release" || selectedRelease ? " is-active" : ""),
+                  onClick: () => setBacklogToolbarPopover((current) => current === "release" ? "" : "release"),
+                },
+                  React.createElement(History, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Releases")
+                ),
+                backlogToolbarPopover === "release"
+                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-release-picker-menu" },
                       React.createElement("button", {
-                        key: release.id,
                         type: "button",
-                        className: "tb-popup-row tb-popup-row-select" + (selectedReleaseId === release.id ? " selected" : ""),
+                        className: "tb-popup-row tb-popup-row-select" + (!selectedReleaseId ? " selected" : ""),
                         onClick: () => {
-                          handleSelectRelease(release.id);
+                          handleSelectRelease("");
                           setBacklogToolbarPopover("");
                         },
                       },
                         React.createElement("span", { className: "tb-popup-check-slot" },
-                          selectedReleaseId === release.id
+                          !selectedReleaseId
                             ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
                             : null
                         ),
                         React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, release.name || "Untitled Release"),
-                          React.createElement("span", null, release.description || formatPlaygroundTaskReleaseDateRange(release))
+                          React.createElement("span", null, "All Tickets"),
+                          React.createElement("span", null, "Show the full project backlog.")
+                        )
+                      ),
+                      sortedReleaseOptions.map((release) =>
+                        React.createElement("button", {
+                          key: release.id,
+                          type: "button",
+                          className: "tb-popup-row tb-popup-row-select" + (selectedReleaseId === release.id ? " selected" : ""),
+                          onClick: () => {
+                            handleSelectRelease(release.id);
+                            setBacklogToolbarPopover("");
+                          },
+                        },
+                          React.createElement("span", { className: "tb-popup-check-slot" },
+                            selectedReleaseId === release.id
+                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                              : null
+                          ),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, release.name || "Untitled Release"),
+                            React.createElement("span", null, release.description || formatPlaygroundTaskReleaseDateRange(release))
+                          )
+                        )
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row",
+                        onClick: () => {
+                          setBacklogToolbarPopover("");
+                          openReleaseComposer();
+                        },
+                      },
+                        React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, "Add Release"),
+                          React.createElement("span", null, "Create a new milestone release.")
                         )
                       )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "tb-popup-row",
-                      onClick: () => {
-                        setBacklogToolbarPopover("");
-                        openReleaseComposer();
-                      },
-                    },
-                      React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                        React.createElement("span", null, "Add Release"),
-                        React.createElement("span", null, "Create a new milestone release.")
-                      )
                     )
-                  )
-                : null
+                  : null
+              ),
+              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button" + (missionControlStrategyOpen ? " is-active" : ""),
+                  onClick: openMissionControlStrategySidebar,
+                },
+                  React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Mission Control")
+                )
+              )
             ),
           });
         }
@@ -44778,7 +45252,7 @@ const html = `<!doctype html>
                 React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-files-control-button" + (boardToolbarPopover === "filter" || boardFilterMode !== "all" ? " is-active" : ""),
+                    className: "playground-files-control-button is-bare" + (boardToolbarPopover === "filter" || boardFilterMode !== "all" ? " is-active" : ""),
                     onClick: () => setBoardToolbarPopover((current) => current === "filter" ? "" : "filter"),
                   },
                     React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
@@ -44816,7 +45290,7 @@ const html = `<!doctype html>
                     className: "playground-files-control-button" + (boardToolbarPopover === "release" || selectedRelease ? " is-active" : ""),
                     onClick: () => setBoardToolbarPopover((current) => current === "release" ? "" : "release"),
                   },
-                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement(History, { width: 14, height: 14, strokeWidth: 1.8 }),
                     React.createElement("span", null, "Releases")
                   ),
                   boardToolbarPopover === "release"
@@ -44876,6 +45350,16 @@ const html = `<!doctype html>
                         )
                       )
                     : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button" + (missionControlStrategyOpen ? " is-active" : ""),
+                    onClick: openMissionControlStrategySidebar,
+                  },
+                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Mission Control")
+                  )
                 )
               )
             );
@@ -45031,12 +45515,18 @@ const html = `<!doctype html>
           }
 
           const shouldRenderBoardSections = hasSelectedReleaseSection || boardReleaseSections.length > 0;
+          const shouldShowMissionControlEmptyAction = !selectedRelease
+            && !normalizedSearchQuery
+            && boardFilterMode === "all"
+            && !shouldRenderBoardSections;
           const emptyTitle = selectedRelease
             ? "No tasks in this release"
             : "No tasks on the board";
           const emptyCopy = selectedRelease
             ? "Assign tasks to this release or adjust the filter and they will appear in the appropriate lane."
-            : "Adjust the filter or add tasks to the project and they will appear in the appropriate board lane.";
+            : shouldShowMissionControlEmptyAction
+              ? "Run Mission Control to generate the first strategy and create the initial structured backlog for this project."
+              : "Adjust the filter or add tasks to the project and they will appear in the appropriate board lane.";
 
           return React.createElement("div", { className: "playground-tasks-view-section" },
             renderBoardToolbar(),
@@ -45048,7 +45538,19 @@ const html = `<!doctype html>
                 )
               : React.createElement("div", { className: "playground-tasks-empty" },
                   React.createElement("div", { className: "playground-tasks-empty-title" }, emptyTitle),
-                  React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy)
+                  React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy),
+                  shouldShowMissionControlEmptyAction
+                    ? React.createElement("div", { className: "playground-tasks-empty-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-tasks-empty-primary-button",
+                          onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
+                        },
+                          React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 2 }),
+                          React.createElement("span", null, "Run Mission Control")
+                        )
+                      )
+                    : null
                 )
           );
         }
@@ -46357,6 +46859,19 @@ const html = `<!doctype html>
                   React.createElement("div", { className: "playground-content-nav-right playground-tasks-detail-navbar-actions" },
                     React.createElement("button", {
                       type: "button",
+                      className: "playground-environments-action-button",
+                      disabled: isSelectedProjectMissionControlRunning,
+                      onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
+                    },
+                      isSelectedProjectMissionControlRunning
+                        ? React.createElement(React.Fragment, null,
+                            React.createElement(Loader2, { className: "playground-tasks-mission-control-button-spinner", strokeWidth: 1.8 }),
+                            React.createElement("span", null, "Running...")
+                          )
+                        : "Run Mission Control"
+                    ),
+                    React.createElement("button", {
+                      type: "button",
                       className: "playground-files-header-icon-button is-plain",
                       onClick: () => setMissionControlStrategyOpen(false),
                       title: "Close strategy",
@@ -46365,27 +46880,30 @@ const html = `<!doctype html>
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-body" },
-                  React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
-                    React.createElement("div", { className: "playground-tasks-detail-description" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy")
-                      ),
-                      React.createElement("div", { className: "playground-tasks-detail-description-editor is-preview" },
-                        React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                          String(selectedProjectMissionControl.document || "").trim()
-                            ? React.createElement(ReactMarkdown, {
+                  String(selectedProjectMissionControl.document || "").trim()
+                    ? React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
+                        React.createElement("div", { className: "playground-tasks-detail-description" },
+                          React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                            React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy")
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-description-editor is-preview" },
+                            React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                              React.createElement(ReactMarkdown, {
                                 remarkPlugins: [remarkGfm],
                                 rehypePlugins: [rehypeRaw],
                                 components: playgroundMarkdownComponents,
                                 className: "playground-tasks-detail-description-preview tb-message-markdown",
                               }, selectedProjectMissionControl.document)
-                            : React.createElement("div", {
-                                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                              }, "Run Mission Control to generate the first project strategy.")
+                            )
+                          )
                         )
                       )
-                    )
-                  )
+                    : React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-tasks-mission-control-empty-state" },
+                        React.createElement("div", { className: "playground-tasks-loading-state" },
+                          React.createElement("div", { className: "playground-tasks-empty-title" }, "No strategy yet"),
+                          React.createElement("div", { className: "playground-tasks-empty-copy" }, "Run Mission Control first to generate the project strategy and backlog plan.")
+                        )
+                      )
                 )
               ),
               React.createElement("div", { className: "playground-tasks-detail-preview-pane" })
@@ -48003,6 +48521,7 @@ const html = `<!doctype html>
         const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
         const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
         const [threadProjectRecordsById, setThreadProjectRecordsById] = useState({});
+        const [threadProjectContextById, setThreadProjectContextById] = useState({});
         const [taskOpenRequest, setTaskOpenRequest] = useState(null);
         const [latestInteractedProjectId, setLatestInteractedProjectId] = useState(() => {
           try {
@@ -48503,7 +49022,7 @@ const html = `<!doctype html>
           window.open(${JSON.stringify(aiosOrigin + "/support")}, "_blank", "noopener,noreferrer");
         }
 
-        function handleWelcomeWidgetOpen(view) {
+        function handleWelcomeWidgetOpen(view, options = {}) {
           const resolvedProjectId = String(welcomeWidgetsState.projectId || latestInteractedProjectId || "").trim();
           if (resolvedProjectId) {
             try {
@@ -48511,12 +49030,30 @@ const html = `<!doctype html>
             } catch {}
             setLatestInteractedProjectId(resolvedProjectId);
           }
+          const normalizedMissionControlAction = options?.missionControlAction === "run" ? "run" : "";
+          const normalizedProjectComposerAction = options?.projectComposerAction === "create" ? "create" : "";
           setTasksPageNavigationRequest({
             token: Date.now().toString(36) + Math.random().toString(36).slice(2),
             projectId: resolvedProjectId,
             view: view === "calendar" ? "calendar" : "backlog",
+            missionControlAction: normalizedMissionControlAction,
+            projectComposerAction: normalizedProjectComposerAction,
           });
           setActivePage("tasks");
+        }
+
+        function handleWelcomeWidgetRunMissionControl(event) {
+          if (event?.stopPropagation) {
+            event.stopPropagation();
+          }
+          handleWelcomeWidgetOpen("backlog", { missionControlAction: "run" });
+        }
+
+        function handleWelcomeWidgetCreateProject(event) {
+          if (event?.stopPropagation) {
+            event.stopPropagation();
+          }
+          handleWelcomeWidgetOpen("backlog", { projectComposerAction: "create" });
         }
 
         async function loadWelcomeWidgetProjectCustomSkills(projectId) {
@@ -49054,12 +49591,9 @@ const html = `<!doctype html>
               throw new Error(data.message || data.error || "Failed to save profile.");
             }
 
-            const nextDisplayName = typeof data.profile?.displayName === "string"
-              ? data.profile.displayName
-              : profileDraft.displayName;
-            const nextPhotoURL = typeof data.profile?.photoURL === "string"
-              ? data.profile.photoURL
-              : profileDraft.photoURL;
+            const payloadIdentity = extractSessionIdentityFromPayload(data);
+            const nextDisplayName = payloadIdentity.displayName || profileDraft.displayName;
+            const nextPhotoURL = payloadIdentity.photoURL || profileDraft.photoURL;
 
             setSessionState((current) => ({
               ...current,
@@ -49212,18 +49746,25 @@ const html = `<!doctype html>
               return;
             }
 
+            const payloadIdentity = extractSessionIdentityFromPayload(data);
+            let firebaseIdentity = null;
+            try {
+              firebaseIdentity = await lookupFirebaseSessionIdentity();
+            } catch {
+              firebaseIdentity = null;
+            }
+
             setSessionState({
               status: "authenticated",
               userId: typeof data.userId === "string" ? data.userId : "",
-              email: typeof data.email === "string" && data.email.trim()
-                ? data.email.trim()
-                : typeof data.profile?.email === "string"
-                  ? data.profile.email
-                  : "",
+              email: firebaseIdentity?.email || payloadIdentity.email || "",
               projectId: typeof data.profile?.projectId === "string" ? data.profile.projectId : "",
-              displayName: typeof data.profile?.displayName === "string" ? data.profile.displayName : "",
-              photoURL: typeof data.profile?.photoURL === "string" ? data.profile.photoURL : "",
-              emailVerified: !!data.emailVerified,
+              displayName: firebaseIdentity?.displayName || payloadIdentity.displayName || "",
+              photoURL: firebaseIdentity?.photoURL || payloadIdentity.photoURL || "",
+              emailVerified:
+                typeof firebaseIdentity?.emailVerified === "boolean"
+                  ? firebaseIdentity.emailVerified
+                  : (typeof payloadIdentity.emailVerified === "boolean" ? payloadIdentity.emailVerified : !!data.emailVerified),
               subscriptionTier: typeof data.subscription?.tier === "string" ? data.subscription.tier : "free",
               subscriptionStatus: typeof data.subscription?.status === "string" ? data.subscription.status : "",
               error: "",
@@ -51548,6 +52089,35 @@ const html = `<!doctype html>
             isDeleted: false,
           };
         }, [runtimeAgents, runtimeEnvironments]);
+        const mergeThreadTaskPreviewRecord = useCallback(function mergeThreadTaskPreviewRecord(basePreview, incomingPreview, threadId = "") {
+          const base = basePreview && typeof basePreview === "object" ? basePreview : {};
+          const incoming = incomingPreview && typeof incomingPreview === "object" ? incomingPreview : {};
+          const normalizedThreadId = String(threadId || incoming.threadId || base.threadId || "").trim();
+          const normalizedIncomingTicketNumber = normalizePlaygroundTaskTicketNumber(incoming.ticketNumber || "");
+          const normalizedBaseTicketNumber = normalizePlaygroundTaskTicketNumber(base.ticketNumber || "");
+          return {
+            ...base,
+            ...incoming,
+            taskId: String(incoming.taskId || base.taskId || "").trim(),
+            projectId: String(incoming.projectId || base.projectId || "").trim(),
+            projectName: String(incoming.projectName || base.projectName || "").trim(),
+            threadId: normalizedThreadId,
+            ticketNumber: normalizedIncomingTicketNumber || normalizedBaseTicketNumber || "",
+            title: String(incoming.title || base.title || "").trim(),
+            description: typeof incoming.description === "string"
+              ? incoming.description
+              : (typeof base.description === "string" ? base.description : ""),
+            taskColor: getPlaygroundTaskColorId(incoming.taskColor || base.taskColor),
+            status: String(incoming.status || base.status || "todo").trim() || "todo",
+            priority: String(incoming.priority || base.priority || "medium").trim() || "medium",
+            taskType: normalizePlaygroundTaskType(incoming.taskType || base.taskType),
+            assigneeAgentId: String(incoming.assigneeAgentId || base.assigneeAgentId || "").trim(),
+            assigneeName: String(incoming.assigneeName || base.assigneeName || "").trim(),
+            environmentId: String(incoming.environmentId || base.environmentId || "").trim(),
+            environmentName: String(incoming.environmentName || base.environmentName || "").trim(),
+            isDeleted: Boolean(incoming.isDeleted || base.isDeleted),
+          };
+        }, []);
         const resolvedUpstreamHost = useMemo(() => {
           try {
             return new URL(resolvedUpstreamUrl).host;
@@ -52622,15 +53192,12 @@ const html = `<!doctype html>
         }
 
         function renderAccountAvatar(className, imageClassName, fallbackLabel, photoUrl) {
-          return React.createElement("div", { className },
-            photoUrl
-              ? React.createElement("img", {
-                  className: imageClassName,
-                  src: photoUrl,
-                  alt: fallbackLabel,
-                })
-              : fallbackLabel
-          );
+          return React.createElement(AccountAvatar, {
+            className,
+            imageClassName,
+            fallbackLabel,
+            photoUrl,
+          });
         }
 
         function renderSettingsDetailHeader(title, subtitle, actions) {
@@ -55547,9 +56114,14 @@ const html = `<!doctype html>
         const selectedThreadTaskPreviewTaskId = typeof selectedThreadTaskPreview?.taskId === "string"
           ? selectedThreadTaskPreview.taskId.trim()
           : "";
+        const selectedThreadCachedProjectContext = currentThreadId
+          ? (threadProjectContextById[currentThreadId] || null)
+          : null;
         const selectedThreadProjectId = typeof selectedThreadTaskPreview?.projectId === "string" && selectedThreadTaskPreview.projectId.trim()
           ? selectedThreadTaskPreview.projectId.trim()
-          : (typeof selectedKnownThread?.projectId === "string" ? selectedKnownThread.projectId.trim() : "");
+          : (typeof selectedKnownThread?.projectId === "string" && selectedKnownThread.projectId.trim()
+            ? selectedKnownThread.projectId.trim()
+            : (typeof selectedThreadCachedProjectContext?.projectId === "string" ? selectedThreadCachedProjectContext.projectId.trim() : ""));
         const cachedSelectedThreadProjectRecord = selectedThreadProjectId
           ? (threadProjectRecordsById[selectedThreadProjectId] || null)
           : null;
@@ -55578,6 +56150,64 @@ const html = `<!doctype html>
           const projectWallpaper = getPlaygroundProjectWallpaperConfig(selectedThreadProjectRecord, 0);
           return "linear-gradient(180deg, rgba(10, 10, 14, 0.52), rgba(10, 10, 14, 0.82)), url(" + projectWallpaper.url + ")";
         }, [selectedThreadProjectRecord]);
+        useEffect(() => {
+          const normalizedThreadId = String(currentThreadId || "").trim();
+          if (!normalizedThreadId || !rawSelectedThreadTaskPreview?.taskId) {
+            return;
+          }
+          setThreadTaskPreviewOverrides((current) => {
+            const existingPreview = current[normalizedThreadId];
+            const nextPreview = mergeThreadTaskPreviewRecord(existingPreview, rawSelectedThreadTaskPreview, normalizedThreadId);
+            if (JSON.stringify(existingPreview || null) === JSON.stringify(nextPreview)) {
+              return current;
+            }
+            return {
+              ...current,
+              [normalizedThreadId]: nextPreview,
+            };
+          });
+        }, [currentThreadId, mergeThreadTaskPreviewRecord, rawSelectedThreadTaskPreview]);
+        useEffect(() => {
+          const normalizedThreadId = String(currentThreadId || "").trim();
+          const normalizedProjectId = String(
+            selectedThreadTaskPreview?.projectId
+            || rawSelectedThreadTaskPreview?.projectId
+            || selectedKnownThread?.projectId
+            || ""
+          ).trim();
+          if (!normalizedThreadId || !normalizedProjectId) {
+            return;
+          }
+          const nextProjectName = String(
+            selectedThreadProjectRecord?.name
+            || selectedThreadTaskPreview?.projectName
+            || rawSelectedThreadTaskPreview?.projectName
+            || ""
+          ).trim();
+          setThreadProjectContextById((current) => {
+            const existingContext = current[normalizedThreadId];
+            if (
+              existingContext
+              && existingContext.projectId === normalizedProjectId
+              && String(existingContext.projectName || "").trim() === nextProjectName
+            ) {
+              return current;
+            }
+            return {
+              ...current,
+              [normalizedThreadId]: {
+                projectId: normalizedProjectId,
+                projectName: nextProjectName,
+              },
+            };
+          });
+        }, [
+          currentThreadId,
+          rawSelectedThreadTaskPreview,
+          selectedKnownThread,
+          selectedThreadProjectRecord,
+          selectedThreadTaskPreview,
+        ]);
         const selectedThreadNeedsTaskPreviewPolling = useMemo(() => {
           const normalizedStatus = String(selectedKnownThread?.status || "").trim().toLowerCase();
           return ["running", "queued", "pending", "scheduled", "starting"].includes(normalizedStatus);
@@ -55877,7 +56507,218 @@ const html = `<!doctype html>
           const currentWelcomeProject = welcomeWidgetProject || null;
           const welcomeProjectName = currentWelcomeProject?.name || "Latest Project";
           const welcomeProjectWallpaper = getPlaygroundProjectWallpaperConfig(currentWelcomeProject, 0);
-          const welcomeWidgetHeadline = welcomeProjectName + " • " + welcomeWidgetOpenTaskCount + " task" + (welcomeWidgetOpenTaskCount === 1 ? "" : "s");
+          const welcomeWidgetHeadline = currentWelcomeProject
+            ? (welcomeProjectName + " • " + welcomeWidgetOpenTaskCount + " task" + (welcomeWidgetOpenTaskCount === 1 ? "" : "s"))
+            : "No Projects yet";
+          const shouldShowWelcomeMissionControlAction =
+            welcomeWidgetsState.status !== "loading"
+            && welcomeWidgetsState.status !== "error"
+            && welcomeWidgetTaskRows.length === 0
+            && Boolean(welcomeWidgetProject);
+          const shouldShowWelcomeCreateProjectAction =
+            welcomeWidgetsState.status !== "loading"
+            && welcomeWidgetsState.status !== "error"
+            && welcomeWidgetTaskRows.length === 0
+            && !welcomeWidgetProject;
+
+          let welcomeWidgetTaskListContent = null;
+          if (welcomeWidgetsState.status === "loading" && welcomeWidgetTaskRows.length === 0) {
+            welcomeWidgetTaskListContent = React.createElement("div", { className: "playground-thread-widget-empty" }, "Loading project tasks...");
+          } else if (welcomeWidgetsState.status === "error") {
+            welcomeWidgetTaskListContent = React.createElement("div", { className: "playground-thread-widget-empty" }, welcomeWidgetsState.error || "Failed to load project tasks.");
+          } else if (welcomeWidgetTaskRows.length === 0) {
+            welcomeWidgetTaskListContent = React.createElement("div", { className: "playground-thread-widget-empty" },
+              welcomeWidgetProject
+                ? "Run Mission Control to create the first strategy and backlog for this project."
+                : "Create a project to organize tasks, planning, and mission control in one workspace."
+            );
+          } else {
+            welcomeWidgetTaskListContent = welcomeWidgetTaskRows.map((item) => {
+              const taskRecord = item.task;
+              const isHumanTask = isPlaygroundHumanAssigneeId(taskRecord?.assigneeAgentId);
+              const isTaskBusy = welcomeWidgetBusyTaskIds.includes(item.id);
+              return React.createElement("div", {
+                key: item.id,
+                className: "playground-thread-widget-tasks-item",
+              },
+                React.createElement("div", {
+                    className: "playground-thread-widget-tasks-item-main",
+                    role: "button",
+                    tabIndex: 0,
+                    onClick: (event) => handleOpenWelcomeWidgetTaskDetail(taskRecord, event),
+                    onKeyDown: (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleOpenWelcomeWidgetTaskDetail(taskRecord, event);
+                      }
+                    },
+                  },
+                  renderPlaygroundTaskPriorityIcon(item.priority, "playground-thread-widget-tasks-item-priority"),
+                  React.createElement("span", {
+                    className: "playground-thread-widget-tasks-item-label",
+                  }, item.label)
+                ),
+                React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-backlog-run-button" + (isHumanTask ? " is-human-unchecked" : ""),
+                    "aria-label": isHumanTask ? "Complete task" : "Run task",
+                    title: isHumanTask ? "Complete task" : "Run task",
+                    disabled: isTaskBusy || (!isHumanTask && isWelcomeWidgetTaskLaunchLocked(taskRecord)),
+                    onClick: (event) => {
+                      if (isHumanTask) {
+                        void handleWelcomeWidgetToggleTaskDone(taskRecord, event);
+                        return;
+                      }
+                      void handleWelcomeWidgetStartTaskThread(taskRecord, event);
+                    },
+                  },
+                  isHumanTask
+                    ? null
+                    : React.createElement(Play, {
+                        width: 13,
+                        height: 13,
+                        strokeWidth: 1.9,
+                        fill: "currentColor",
+                        "aria-hidden": "true",
+                      })
+                )
+              );
+            });
+          }
+
+          const welcomeTasksSurfaceChildren = [
+            React.createElement("div", { className: "playground-thread-widget-tasks-header", key: "header" },
+              React.createElement("p", { className: "playground-thread-widget-tasks-title" }, welcomeProjectName),
+              null
+            ),
+            React.createElement("div", { className: "playground-thread-widget-tasks-list", key: "list" }, welcomeWidgetTaskListContent),
+          ];
+
+          if (shouldShowWelcomeMissionControlAction) {
+            welcomeTasksSurfaceChildren.push(
+              React.createElement("div", { className: "playground-thread-widget-tasks-footer", key: "footer" },
+                React.createElement("div", { className: "playground-thread-widget-today-divider" }),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-thread-widget-tasks-action",
+                  onClick: handleWelcomeWidgetRunMissionControl,
+                },
+                  React.createElement(Rocket, {
+                    width: 12,
+                    height: 12,
+                    strokeWidth: 2,
+                    "aria-hidden": "true",
+                  }),
+                  React.createElement("span", null, "Run Mission Control")
+                )
+              )
+            );
+          }
+          if (shouldShowWelcomeCreateProjectAction) {
+            welcomeTasksSurfaceChildren.push(
+              React.createElement("div", { className: "playground-thread-widget-tasks-footer", key: "footer-create-project" },
+                React.createElement("div", { className: "playground-thread-widget-today-divider" }),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-thread-widget-tasks-action",
+                  onClick: handleWelcomeWidgetCreateProject,
+                },
+                  React.createElement(Plus, {
+                    width: 12,
+                    height: 12,
+                    strokeWidth: 2,
+                    "aria-hidden": "true",
+                  }),
+                  React.createElement("span", null, "Create Project")
+                )
+              )
+            );
+          }
+
+          const welcomeTasksWidget = React.createElement("div", {
+              className: "playground-thread-widget playground-thread-widget-tasks is-clickable",
+              role: "button",
+              tabIndex: 0,
+              onClick: () => handleWelcomeWidgetOpen("backlog"),
+              onKeyDown: (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleWelcomeWidgetOpen("backlog");
+                }
+              },
+            },
+            React.createElement("div", {
+                className: "playground-thread-widget-tasks-media",
+                style: {
+                  backgroundImage: 'url("' + welcomeProjectWallpaper.url + '")',
+                },
+              },
+              React.createElement("div", { className: "playground-thread-widget-tasks-pill" },
+                React.createElement("span", { className: "playground-thread-widget-tasks-pill-text" }, welcomeWidgetHeadline)
+              )
+            ),
+            React.createElement("div", { className: "playground-thread-widget-tasks-surface" }, ...welcomeTasksSurfaceChildren)
+          );
+
+          const welcomeTodayEvents = (Array.isArray(welcomeWidgetTodayState.items) ? welcomeWidgetTodayState.items : []).map((item) =>
+            React.createElement("button", {
+              key: item.id,
+              type: "button",
+              className: "playground-thread-widget-today-event",
+              onClick: (event) => {
+                if (item.kind === "briefing") {
+                  handleOpenWelcomeDailyBriefingPreview(event);
+                  return;
+                }
+                event.stopPropagation();
+                handleWelcomeWidgetOpen("calendar");
+              },
+            },
+              React.createElement("p", { className: "playground-thread-widget-today-event-title" }, item.title),
+              React.createElement("div", { className: "playground-thread-widget-today-event-meta" },
+                React.createElement("div", { className: "playground-thread-widget-today-event-meta-item" },
+                  React.createElement(HardDrive, { className: "playground-thread-widget-today-event-meta-icon", strokeWidth: 1.8 }),
+                  React.createElement("span", null, item.locationLabel)
+                ),
+                React.createElement("div", { className: "playground-thread-widget-today-event-meta-item is-time" },
+                  React.createElement(Clock, { className: "playground-thread-widget-today-event-meta-icon", strokeWidth: 1.8 }),
+                  React.createElement("span", null, item.timeLabel)
+                )
+              )
+            )
+          );
+
+          const welcomeTodayWidget = React.createElement("div", {
+              className: "playground-thread-widget playground-thread-widget-today is-clickable",
+              role: "button",
+              tabIndex: 0,
+              onClick: () => handleWelcomeWidgetOpen("calendar"),
+              onKeyDown: (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleWelcomeWidgetOpen("calendar");
+                }
+              },
+            },
+            React.createElement("div", { className: "playground-thread-widget-today-header" },
+              React.createElement("div", { className: "playground-thread-widget-today-date" },
+                React.createElement("span", { className: "playground-thread-widget-today-date-weekday" }, welcomeWidgetTodayState.weekdayLabel || formatPlaygroundWelcomeWeekdayLabel(new Date())),
+                React.createElement("span", { className: "playground-thread-widget-today-date-value" }, welcomeWidgetTodayState.monthDayLabel || formatPlaygroundWelcomeMonthDayLabel(new Date()))
+              )
+            ),
+            React.createElement("div", { className: "playground-thread-widget-today-body" },
+              React.createElement("div", { className: "playground-thread-widget-today-events" }, ...welcomeTodayEvents),
+              React.createElement("div", { className: "playground-thread-widget-today-divider" }),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-thread-widget-today-action",
+                onClick: (event) => {
+                  event.stopPropagation();
+                  handleWelcomeWidgetOpen("calendar");
+                },
+              }, welcomeWidgetTodayState.actionLabel)
+            )
+          );
 
           return React.createElement("div", { className: "playground-thread-welcome" },
             React.createElement("div", { className: "playground-thread-welcome-copy" },
@@ -55887,159 +56728,8 @@ const html = `<!doctype html>
               React.createElement("h1", { className: "playground-thread-welcome-title" }, initialThreadGreeting)
             ),
             React.createElement("div", { className: "playground-thread-welcome-widgets" },
-              React.createElement("div", {
-                  className: "playground-thread-widget playground-thread-widget-tasks is-clickable",
-                  role: "button",
-                  tabIndex: 0,
-                  onClick: () => handleWelcomeWidgetOpen("backlog"),
-                  onKeyDown: (event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      handleWelcomeWidgetOpen("backlog");
-                    }
-                  },
-                },
-                React.createElement("div", {
-                    className: "playground-thread-widget-tasks-media",
-                    style: {
-                      backgroundImage: 'url("' + welcomeProjectWallpaper.url + '")',
-                    },
-                  },
-                  React.createElement("div", { className: "playground-thread-widget-tasks-pill" },
-                    React.createElement("span", { className: "playground-thread-widget-tasks-pill-text" }, welcomeWidgetHeadline)
-                  )
-                ),
-                React.createElement("div", { className: "playground-thread-widget-tasks-surface" },
-                  React.createElement("div", { className: "playground-thread-widget-tasks-header" },
-                    React.createElement("p", { className: "playground-thread-widget-tasks-title" }, welcomeProjectName),
-                    null
-                  ),
-                  React.createElement("div", { className: "playground-thread-widget-tasks-list" },
-                    welcomeWidgetsState.status === "loading" && welcomeWidgetTaskRows.length === 0
-                      ? React.createElement("div", { className: "playground-thread-widget-empty" }, "Loading project tasks...")
-                      : welcomeWidgetsState.status === "error"
-                        ? React.createElement("div", { className: "playground-thread-widget-empty" }, welcomeWidgetsState.error || "Failed to load project tasks.")
-                        : welcomeWidgetTaskRows.length === 0
-                          ? React.createElement("div", { className: "playground-thread-widget-empty" },
-                              welcomeWidgetProject
-                                ? "No open tasks in this project."
-                                : "Open Projects to pick a project workspace."
-                            )
-                          : welcomeWidgetTaskRows.map((item) =>
-                              (() => {
-                                const taskRecord = item.task;
-                                const isHumanTask = isPlaygroundHumanAssigneeId(taskRecord?.assigneeAgentId);
-                                const isTaskBusy = welcomeWidgetBusyTaskIds.includes(item.id);
-                                return React.createElement("div", {
-                                  key: item.id,
-                                  className: "playground-thread-widget-tasks-item",
-                                },
-                                  React.createElement("div", {
-                                      className: "playground-thread-widget-tasks-item-main",
-                                      role: "button",
-                                      tabIndex: 0,
-                                      onClick: (event) => handleOpenWelcomeWidgetTaskDetail(taskRecord, event),
-                                      onKeyDown: (event) => {
-                                        if (event.key === "Enter" || event.key === " ") {
-                                          event.preventDefault();
-                                          handleOpenWelcomeWidgetTaskDetail(taskRecord, event);
-                                        }
-                                      },
-                                    },
-                                    renderPlaygroundTaskPriorityIcon(item.priority, "playground-thread-widget-tasks-item-priority"),
-                                    React.createElement("span", {
-                                      className: "playground-thread-widget-tasks-item-label",
-                                    }, item.label)
-                                  ),
-                                  React.createElement("button", {
-                                      type: "button",
-                                      className: "playground-tasks-backlog-run-button" + (isHumanTask ? " is-human-unchecked" : ""),
-                                      "aria-label": isHumanTask ? "Complete task" : "Run task",
-                                      title: isHumanTask ? "Complete task" : "Run task",
-                                      disabled: isTaskBusy || (!isHumanTask && isWelcomeWidgetTaskLaunchLocked(taskRecord)),
-                                      onClick: (event) => {
-                                        if (isHumanTask) {
-                                          void handleWelcomeWidgetToggleTaskDone(taskRecord, event);
-                                          return;
-                                        }
-                                        void handleWelcomeWidgetStartTaskThread(taskRecord, event);
-                                      },
-                                    },
-                                    isHumanTask
-                                      ? null
-                                      : React.createElement(Play, {
-                                          width: 13,
-                                          height: 13,
-                                          strokeWidth: 1.9,
-                                          fill: "currentColor",
-                                          "aria-hidden": "true",
-                                        })
-                                  )
-                                );
-                              })()
-                            )
-                  )
-                )
-              ),
-              React.createElement("div", {
-                  className: "playground-thread-widget playground-thread-widget-today is-clickable",
-                  role: "button",
-                  tabIndex: 0,
-                  onClick: () => handleWelcomeWidgetOpen("calendar"),
-                  onKeyDown: (event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      handleWelcomeWidgetOpen("calendar");
-                    }
-                  },
-                },
-                React.createElement("div", { className: "playground-thread-widget-today-header" },
-                  React.createElement("div", { className: "playground-thread-widget-today-date" },
-                    React.createElement("span", { className: "playground-thread-widget-today-date-weekday" }, welcomeWidgetTodayState.weekdayLabel || formatPlaygroundWelcomeWeekdayLabel(new Date())),
-                    React.createElement("span", { className: "playground-thread-widget-today-date-value" }, welcomeWidgetTodayState.monthDayLabel || formatPlaygroundWelcomeMonthDayLabel(new Date()))
-                  )
-                ),
-                React.createElement("div", { className: "playground-thread-widget-today-body" },
-                  React.createElement("div", { className: "playground-thread-widget-today-events" },
-                    (Array.isArray(welcomeWidgetTodayState.items) ? welcomeWidgetTodayState.items : []).map((item) =>
-                      React.createElement("button", {
-                        key: item.id,
-                        type: "button",
-                        className: "playground-thread-widget-today-event",
-                        onClick: (event) => {
-                          if (item.kind === "briefing") {
-                            handleOpenWelcomeDailyBriefingPreview(event);
-                            return;
-                          }
-                          event.stopPropagation();
-                          handleWelcomeWidgetOpen("calendar");
-                        },
-                      },
-                        React.createElement("p", { className: "playground-thread-widget-today-event-title" }, item.title),
-                        React.createElement("div", { className: "playground-thread-widget-today-event-meta" },
-                          React.createElement("div", { className: "playground-thread-widget-today-event-meta-item" },
-                            React.createElement(HardDrive, { className: "playground-thread-widget-today-event-meta-icon", strokeWidth: 1.8 }),
-                            React.createElement("span", null, item.locationLabel)
-                          ),
-                          React.createElement("div", { className: "playground-thread-widget-today-event-meta-item is-time" },
-                            React.createElement(Clock, { className: "playground-thread-widget-today-event-meta-icon", strokeWidth: 1.8 }),
-                            React.createElement("span", null, item.timeLabel)
-                          )
-                        )
-                      )
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-thread-widget-today-divider" }),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-thread-widget-today-action",
-                    onClick: (event) => {
-                      event.stopPropagation();
-                      handleWelcomeWidgetOpen("calendar");
-                    },
-                  }, welcomeWidgetTodayState.actionLabel)
-                )
-              )
+              welcomeTasksWidget,
+              welcomeTodayWidget
             )
           );
         }
@@ -56383,6 +57073,7 @@ const html = `<!doctype html>
         }
 
         function renderExpandedSidebarContent() {
+          const shouldShowSidebarThreadSection = isThreadsLoading || baseThreadItems.length > 0;
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-sidebar-top" },
               React.createElement("div", { className: "playground-sidebar-brand" },
@@ -56465,27 +57156,29 @@ const html = `<!doctype html>
                   pinnedThreadItems.map((thread) => renderSidebarThreadRow(thread, { pinned: true }))
                 )
               : null,
-            React.createElement("div", { className: "sidebar-thread-section" },
-              React.createElement("div", { className: "sidebar-thread-section-header" },
-                React.createElement("div", { className: "sidebar-thread-section-title" }, "Threads")
-              ),
-              React.createElement("div", { className: "sidebar-thread-scroll" },
-                displayedThreadItems.length === 0
-                  ? baseThreadItems.length === 0
-                    ? React.createElement("div", { className: "sidebar-empty-state" }, sidebarEmptyStateCopy)
-                    : null
-                  : React.createElement("div", { className: "sidebar-thread-list" },
-                      displayedThreadItems.map((thread) => renderSidebarThreadRow(thread)),
-                      hasMoreThreadItems
-                        ? React.createElement("button", {
-                            type: "button",
-                            className: "sidebar-show-more",
-                            onClick: () => void handleShowMoreThreads()
-                          }, "Show more threads")
+            shouldShowSidebarThreadSection
+              ? React.createElement("div", { className: "sidebar-thread-section" },
+                  React.createElement("div", { className: "sidebar-thread-section-header" },
+                    React.createElement("div", { className: "sidebar-thread-section-title" }, "Threads")
+                  ),
+                  React.createElement("div", { className: "sidebar-thread-scroll" },
+                    displayedThreadItems.length === 0
+                      ? baseThreadItems.length === 0
+                        ? React.createElement("div", { className: "sidebar-empty-state" }, sidebarEmptyStateCopy)
                         : null
-                    )
-              )
-            ),
+                      : React.createElement("div", { className: "sidebar-thread-list" },
+                          displayedThreadItems.map((thread) => renderSidebarThreadRow(thread)),
+                          hasMoreThreadItems
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "sidebar-show-more",
+                                onClick: () => void handleShowMoreThreads()
+                              }, "Show more threads")
+                            : null
+                        )
+                  )
+                )
+              : null,
             React.createElement("div", { className: "sidebar-footer" },
               React.createElement("button", {
                 type: "button",
@@ -56780,7 +57473,7 @@ const html = `<!doctype html>
                   )
                 )
               : null,
-            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") + (isProjectThreadPage ? " is-project-thread-page" : "") },
+            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") + (isProjectThreadPage ? " is-project-thread-page" : "") + (showInitialThreadWelcome ? " is-initial-thread-page" : "") },
               React.createElement("aside", { className: "playground-sidebar" + (sidebarOpen ? "" : " is-collapsed") },
                 React.createElement("div", {
                   className: "playground-sidebar-panel",
@@ -57032,6 +57725,7 @@ const html = `<!doctype html>
                                     placeholder: "What would you like me to do?",
                                     emptyState: showInitialThreadWelcome ? renderInitialThreadWelcome() : undefined,
                                     threadTaskPreview: selectedThreadTaskPreview || undefined,
+                                    activeTaskPreviewId: threadTaskOpenRequest?.taskId || null,
                                     externalRunRequest: pendingThreadRunRequest && pendingThreadRunRequest.threadId === activeRunnerThreadId
                                       ? pendingThreadRunRequest
                                       : null,
@@ -57044,6 +57738,18 @@ const html = `<!doctype html>
                                       const resolvedProjectId = String(taskPreview?.projectId || selectedThreadProjectId || "").trim();
                                       if (!taskPreview?.taskId || !resolvedProjectId) {
                                         return;
+                                      }
+                                      if (activeRunnerThreadId || currentThreadId) {
+                                        const normalizedThreadId = String(activeRunnerThreadId || currentThreadId || "").trim();
+                                        if (normalizedThreadId) {
+                                          setThreadProjectContextById((current) => ({
+                                            ...current,
+                                            [normalizedThreadId]: {
+                                              projectId: resolvedProjectId,
+                                              projectName: String(taskPreview?.projectName || current[normalizedThreadId]?.projectName || "").trim(),
+                                            },
+                                          }));
+                                        }
                                       }
                                       setSidebarOpen(false);
                                       setThreadTaskOpenRequest({
@@ -57229,6 +57935,13 @@ const html = `<!doctype html>
                               detailOnly: true,
                               onCloseDetailOnly: () => {
                                 setThreadTaskOpenRequest(null);
+                                if (typeof document !== "undefined") {
+                                  const fallbackBackground = "linear-gradient(to top, #000000 0%, #111111 100%)";
+                                  document.documentElement.style.setProperty(
+                                    "--playground-app-bg",
+                                    activePage === "thread" ? (selectedThreadShellBackground || fallbackBackground) : fallbackBackground
+                                  );
+                                }
                               },
                             })
                           : null

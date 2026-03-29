@@ -710,6 +710,7 @@ export interface RunnerChatProps {
   onActionSummaryClick?: (summary: RunnerChatActionSummaryClickPayload) => void;
   onSubagentDetailOpenChange?: (isOpen: boolean) => void;
   threadTaskPreview?: RunnerTaskPreview | null;
+  activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
   subagentDetailPortalTarget?: Element | null;
   disableSubagentDetailDrawer?: boolean;
@@ -4865,6 +4866,7 @@ export function RunnerChat({
   onActionSummaryClick,
   onSubagentDetailOpenChange,
   threadTaskPreview = null,
+  activeTaskPreviewId = null,
   onTaskPreviewClick,
   subagentDetailPortalTarget = null,
   disableSubagentDetailDrawer = false,
@@ -10028,6 +10030,7 @@ export function RunnerChat({
         backendUrl={normalizedBackendUrl}
         environmentId={runnerEnvironmentId}
         requestHeaders={runnerHeaders}
+        activeTaskPreviewId={activeTaskPreviewId}
         onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
         onTaskPreviewClick={onTaskPreviewClick}
       />
