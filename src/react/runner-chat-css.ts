@@ -4623,8 +4623,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  height: 56px;
   min-height: 56px;
-  padding: 2px 12px 12px;
+  padding: 0 12px;
   box-sizing: border-box;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }

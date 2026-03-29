@@ -1502,8 +1502,9 @@ const html = `<!doctype html>
       }
 
       .playground-thread-preview-drawer .tb-attachment-preview-drawer-header {
+        height: 56px;
         min-height: 56px;
-        padding: 2px 12px 12px;
+        padding: 0 12px;
         box-sizing: border-box;
       }
 
