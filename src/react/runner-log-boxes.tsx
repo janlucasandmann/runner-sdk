@@ -3455,6 +3455,108 @@ function buildDeepResearchFromStreamingLogs(logs: RunnerLog[]) {
   return result;
 }
 
+function isDeepResearchCommandStatusActive(status: unknown): boolean {
+  const normalizedStatus = typeof status === "string" ? status.trim().toLowerCase() : "";
+  return normalizedStatus === "running" || normalizedStatus === "started" || normalizedStatus === "output";
+}
+
+type RunnerDeepResearchDerivedState = {
+  streamingLogs: RunnerLog[];
+  hasStreamingLogs: boolean;
+  effectiveCommandLog?: RunnerLog;
+  parsed: ReturnType<typeof buildDeepResearchFromStreamingLogs>;
+  topic: string | null;
+  isError: boolean;
+  isComplete: boolean;
+  isLoading: boolean;
+  statusLabel: string;
+};
+
+export function getDeepResearchLogState({
+  log,
+  logs,
+  runningCommandLog,
+}: {
+  log?: RunnerLog;
+  logs?: RunnerLog[];
+  runningCommandLog?: RunnerLog;
+}): RunnerDeepResearchDerivedState {
+  const streamingLogs = Array.isArray(logs) ? logs : [];
+  const hasStreamingLogs = streamingLogs.length > 0;
+  const effectiveCommandLog = runningCommandLog || log;
+  const command = effectiveCommandLog?.metadata?.command || "";
+  const commandStatus = effectiveCommandLog?.metadata?.status;
+  const commandExitCode = effectiveCommandLog?.metadata?.exitCode;
+  const commandOutput = typeof effectiveCommandLog?.metadata?.output === "string" ? effectiveCommandLog.metadata.output : "";
+
+  const parsed = hasStreamingLogs ? buildDeepResearchFromStreamingLogs(streamingLogs) : parseDeepResearchOutput(commandOutput);
+
+  const topicFromStreamingLogs =
+    streamingLogs.find((entry) => entry.metadata?.deepResearch?.topic)?.metadata?.deepResearch?.topic || null;
+  const topic = topicFromStreamingLogs || parsed.topic || extractResearchTopic(command);
+
+  const hasStreamingError = hasStreamingLogs &&
+    streamingLogs.some(
+      (entry) =>
+        entry.metadata?.deepResearch?.event === "error" ||
+        entry.metadata?.deepResearch?.event === "timeout" ||
+        entry.metadata?.deepResearch?.event === "connection_timeout"
+    );
+  const hasCommandError = typeof commandExitCode === "number" && commandExitCode !== 0;
+  const isError = hasStreamingError || hasCommandError || parsed.status === "error";
+  const isStreamingComplete = hasStreamingLogs &&
+    (streamingLogs.some(
+      (entry) =>
+        entry.metadata?.deepResearch?.event === "research_complete" ||
+        entry.metadata?.deepResearch?.event === "complete"
+    ) ||
+      streamingLogs.some((entry) => Boolean(entry.metadata?.deepResearch?.reportFile)) ||
+      Boolean(parsed.reportFile));
+  const isCommandComplete = commandStatus === "completed" && !hasCommandError;
+  const isParsedComplete = parsed.status === "complete" || Boolean(parsed.reportFile);
+  const isComplete = !isError && (isStreamingComplete || isCommandComplete || isParsedComplete);
+  const isCommandRunning = isDeepResearchCommandStatusActive(commandStatus);
+  const isLoading = !isError && !isComplete && (hasStreamingLogs || isCommandRunning);
+  const statusLabel = isError
+    ? "error"
+    : isComplete
+      ? "complete"
+      : parsed.status === "researching"
+        ? "researching"
+        : isLoading
+          ? "starting"
+          : parsed.status;
+
+  return {
+    streamingLogs,
+    hasStreamingLogs,
+    effectiveCommandLog,
+    parsed,
+    topic,
+    isError,
+    isComplete,
+    isLoading,
+    statusLabel,
+  };
+}
+
+export function hasActiveDeepResearchLogGroup(logs: RunnerLog[]): boolean {
+  if (!Array.isArray(logs) || logs.length === 0) {
+    return false;
+  }
+  const streamingLogs = logs.filter((entry) => entry.eventType === "deep_research");
+  const commandLog = logs.find(
+    (entry) => entry.eventType === "command_execution" && isDeepResearchCommand(entry.metadata?.command || entry.message || "")
+  );
+  if (!commandLog && streamingLogs.length === 0) {
+    return false;
+  }
+  return getDeepResearchLogState({
+    logs: streamingLogs,
+    runningCommandLog: commandLog,
+  }).isLoading;
+}
+
 function DeepResearchEventLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   const [collapsed, setCollapsed] = useState(false);
   const data = log.metadata?.deepResearch;
@@ -3571,54 +3673,20 @@ export function DeepResearchLogBox({
   timeLabel?: string;
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const streamingLogs = Array.isArray(logs) ? logs : [];
-  const hasStreamingLogs = streamingLogs.length > 0;
-  const effectiveCommandLog = runningCommandLog || log;
-  const command = effectiveCommandLog?.metadata?.command || "";
-  const commandStatus = effectiveCommandLog?.metadata?.status;
-  const commandExitCode = effectiveCommandLog?.metadata?.exitCode;
-  const commandOutput = typeof effectiveCommandLog?.metadata?.output === "string" ? effectiveCommandLog.metadata.output : "";
-
-  const parsed = useMemo(
-    () => (hasStreamingLogs ? buildDeepResearchFromStreamingLogs(streamingLogs) : parseDeepResearchOutput(commandOutput)),
-    [commandOutput, hasStreamingLogs, streamingLogs]
+  const {
+    streamingLogs,
+    hasStreamingLogs,
+    effectiveCommandLog,
+    parsed,
+    topic,
+    isError,
+    isComplete,
+    isLoading,
+    statusLabel,
+  } = useMemo(
+    () => getDeepResearchLogState({ log, logs, runningCommandLog }),
+    [log, logs, runningCommandLog]
   );
-
-  const topicFromStreamingLogs =
-    streamingLogs.find((entry) => entry.metadata?.deepResearch?.topic)?.metadata?.deepResearch?.topic || null;
-  const topic = topicFromStreamingLogs || parsed.topic || extractResearchTopic(command);
-
-  const hasStreamingError = hasStreamingLogs &&
-    streamingLogs.some(
-      (entry) =>
-        entry.metadata?.deepResearch?.event === "error" ||
-        entry.metadata?.deepResearch?.event === "timeout" ||
-        entry.metadata?.deepResearch?.event === "connection_timeout"
-    );
-  const hasCommandError = typeof commandExitCode === "number" && commandExitCode !== 0;
-  const isError = hasStreamingError || hasCommandError || parsed.status === "error";
-  const isStreamingComplete = hasStreamingLogs &&
-    (streamingLogs.some(
-      (entry) =>
-        entry.metadata?.deepResearch?.event === "research_complete" ||
-        entry.metadata?.deepResearch?.event === "complete"
-    ) ||
-      streamingLogs.some((entry) => Boolean(entry.metadata?.deepResearch?.reportFile)) ||
-      Boolean(parsed.reportFile));
-  const isCommandComplete = commandStatus === "completed" && !hasCommandError;
-  const isParsedComplete = parsed.status === "complete" || Boolean(parsed.reportFile);
-  const isComplete = !isError && (isStreamingComplete || isCommandComplete || isParsedComplete);
-  const isCommandRunning = commandStatus === "running" || commandStatus === "started" || commandStatus === "output";
-  const isLoading = !isError && !isComplete && (hasStreamingLogs || isCommandRunning);
-  const statusLabel = isError
-    ? "error"
-    : isComplete
-      ? "complete"
-      : parsed.status === "researching"
-        ? "researching"
-        : isLoading
-          ? "starting"
-          : parsed.status;
 
   return (
     <div className="tb-log-card">

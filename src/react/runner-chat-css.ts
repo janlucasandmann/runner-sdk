@@ -1035,7 +1035,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat.playground-thread-runner.is-project-wallpaper-active .tb-input-shell {
-  padding: 10px 0 10px;
+  padding: 10px 12px 10px;
 }
 
 .tb-runner-chat.playground-thread-runner.is-project-wallpaper-active .tb-input-width {

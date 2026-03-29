@@ -67,7 +67,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isDeepResearchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -3691,23 +3691,36 @@ function applyHydratedRunningThreadState(
     completedAtMs?: number | null;
   }
 ): RunnerTurn[] {
-  if (!hydratedThreadStatusIsRunning(meta) || turns.length === 0) {
+  if (turns.length === 0) {
     return turns;
   }
 
-  const lastIndex = turns.length - 1;
-  const lastTurn = turns[lastIndex];
-  if (!lastTurn || lastTurn.status === "failed" || lastTurn.status === "cancelled") {
+  let activeDeepResearchTurnIndex = -1;
+  for (let index = turns.length - 1; index >= 0; index -= 1) {
+    if (hasActiveDeepResearchLogGroup(turns[index]!.logs)) {
+      activeDeepResearchTurnIndex = index;
+      break;
+    }
+  }
+  const shouldForceRunningState = hydratedThreadStatusIsRunning(meta) || activeDeepResearchTurnIndex !== -1;
+
+  if (!shouldForceRunningState) {
     return turns;
   }
 
-  if (lastTurn.status === "running" && lastTurn.completedAtMs == null) {
+  const targetIndex = activeDeepResearchTurnIndex !== -1 ? activeDeepResearchTurnIndex : turns.length - 1;
+  const targetTurn = turns[targetIndex];
+  if (!targetTurn || targetTurn.status === "failed" || targetTurn.status === "cancelled") {
+    return turns;
+  }
+
+  if (targetTurn.status === "running" && targetTurn.completedAtMs == null) {
     return turns;
   }
 
   const nextTurns = turns.slice();
-  nextTurns[lastIndex] = {
-    ...lastTurn,
+  nextTurns[targetIndex] = {
+    ...targetTurn,
     status: "running",
     completedAtMs: undefined,
   };
@@ -5114,6 +5127,10 @@ export function RunnerChat({
       (turn) => turn.status === "running" && turn.presentation !== "btw" && turn.presentation !== "context-action-notice"
     ) || null;
   const hasRunningTurn = Boolean(activeRunningTurn);
+  const hasHydratedReattachActivity = useMemo(
+    () => turns.some((turn) => turn.status === "running" || hasActiveDeepResearchLogGroup(turn.logs)),
+    [turns]
+  );
   const hasRunningTurnLogs = Boolean(activeRunningTurn && activeRunningTurn.logs.length > 0);
   const showRunPreparationIndicator = isPreparingRun || (hasRunningTurn && !hasRunningTurnLogs);
   const showActiveRunStopButton = !showRunPreparationIndicator && (hasRunningTurn || isRunning || isStoppingRun);
@@ -11064,10 +11081,12 @@ export function RunnerChat({
         }
 
         const localHasRunningTurn = turnsRef.current.some((turn) => turn.status === "running");
+        const localHasActiveDeepResearch = turnsRef.current.some((turn) => hasActiveDeepResearchLogGroup(turn.logs));
         const remoteThreadIsRunning = isRunningThreadLifecycleStatus(statusSnapshot.status);
-        const shouldHydrateThread = remoteThreadIsRunning || localHasRunningTurn;
+        const shouldHydrateThread = remoteThreadIsRunning || localHasRunningTurn || localHasActiveDeepResearch;
 
         let nextHasRunningTurn = localHasRunningTurn;
+        let nextHasActiveDeepResearch = localHasActiveDeepResearch;
 
         if (shouldHydrateThread) {
           const payload = await fetchThreadHydrationPayload({
@@ -11094,13 +11113,14 @@ export function RunnerChat({
 
           const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
           nextHasRunningTurn = mergedTurns.some((turn) => turn.status === "running");
+          nextHasActiveDeepResearch = mergedTurns.some((turn) => hasActiveDeepResearchLogGroup(turn.logs));
           setTurns(mergedTurns);
           setExpandedTurns((previousExpandedTurns) =>
             mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, { defaultLatestExpanded: true })
           );
         }
 
-        if (remoteThreadIsRunning || nextHasRunningTurn) {
+        if (remoteThreadIsRunning || nextHasRunningTurn || nextHasActiveDeepResearch) {
           trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
           scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
           return;
@@ -11134,6 +11154,7 @@ export function RunnerChat({
     displayedAgentLabel,
     displayedEnvironmentLabel,
     hasApiKey,
+    hasHydratedReattachActivity,
     isRunning,
     normalizedBackendUrl,
     requestHeaders,
