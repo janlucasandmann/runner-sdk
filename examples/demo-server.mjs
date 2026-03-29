@@ -1546,6 +1546,13 @@ const html = `<!doctype html>
         padding-top: 0;
       }
 
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-card-panel,
+      .playground-thread-runner.is-project-wallpaper-active .tb-subagent-log-prompt,
+      .playground-thread-runner.is-project-wallpaper-active .tb-subagent-log-summary {
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
       .playground-thread-welcome {
         width: min(100%, 780px);
         display: flex;
@@ -6161,11 +6168,15 @@ const html = `<!doctype html>
 
       .playground-settings-records-table-wrap {
         overflow-x: auto;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
       }
 
       .playground-settings-records-table {
         width: 100%;
         border-collapse: collapse;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
       }
 
       .playground-settings-records-table-head-row {
@@ -6233,11 +6244,28 @@ const html = `<!doctype html>
 
       .playground-settings-table-wrap {
         overflow-x: auto;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
       }
 
       .playground-settings-table {
         width: 100%;
         border-collapse: collapse;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+
+      .tb-message-markdown-table-wrap {
+        overflow-x: auto;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+
+      .tb-message-markdown-table {
+        width: 100%;
+        border-collapse: collapse;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
       }
 
       .playground-settings-table th,
@@ -13640,6 +13668,21 @@ const html = `<!doctype html>
         animation: playground-tasks-toolbar-popup-fade-down-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
       }
 
+      .playground-tasks-backlog-context-menu-shell {
+        position: fixed;
+        z-index: 96;
+        pointer-events: none;
+      }
+
+      .playground-tasks-backlog-context-menu-shell .playground-tasks-backlog-context-menu {
+        top: 0;
+        left: 0;
+        right: auto;
+        max-height: min(360px, calc(100vh - 24px));
+        transform-origin: top left;
+        pointer-events: auto;
+      }
+
       .playground-tasks-toolbar-popup-shell .tb-popup-menu-title {
         padding: 12px 16px;
         color: rgba(255, 255, 255, 0.65);
@@ -13757,7 +13800,7 @@ const html = `<!doctype html>
         width: 100%;
         min-width: 0;
         padding: 10px;
-        border: 0;
+        border: 1px solid transparent;
         border-radius: 10px;
         background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.05));
         backdrop-filter: blur(20px);
@@ -13765,7 +13808,13 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.72);
         text-align: left;
         cursor: pointer;
-        transition: color 160ms ease, background-color 160ms ease;
+        transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+      }
+
+      .playground-tasks-backlog-item:focus,
+      .playground-tasks-backlog-item:focus-visible {
+        outline: none;
+        box-shadow: none;
       }
 
       .playground-tasks-backlog-item::before,
@@ -14072,6 +14121,7 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-backlog-item.is-active {
+        border-color: rgba(255, 255, 255, 0.2);
         background: var(--playground-task-color-surface-active, rgba(255, 255, 255, 0.1));
         color: rgba(255, 255, 255, 0.98);
       }
@@ -14480,6 +14530,12 @@ const html = `<!doctype html>
         text-align: left;
         cursor: pointer;
         transition: background-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .playground-tasks-lane-card:focus,
+      .playground-tasks-lane-card:focus-visible {
+        outline: none;
+        box-shadow: none;
       }
 
       .playground-tasks-lane-card:hover {
@@ -14992,6 +15048,8 @@ const html = `<!doctype html>
         border: 1px dashed rgba(255, 255, 255, 0.12);
         border-radius: 18px;
         background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
         text-align: center;
       }
 
@@ -15785,6 +15843,8 @@ const html = `<!doctype html>
         border-left: none !important;
         border-right: none !important;
         border-top: none !important;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
       }
 
       .playground-tasks-scheduler .rbc-agenda-date-cell,
@@ -16778,6 +16838,63 @@ const html = `<!doctype html>
         return null;
       }
 
+      function buildMissionControlStatusIndicatorItem(runState) {
+        const normalizedProjectId = typeof runState?.projectId === "string" ? runState.projectId.trim() : "";
+        if (!normalizedProjectId) {
+          return null;
+        }
+
+        const projectName = typeof runState?.projectName === "string" && runState.projectName.trim()
+          ? runState.projectName.trim()
+          : "Project";
+        const missionLabel = projectName + " Mission Control";
+        const phase = typeof runState?.phase === "string" ? runState.phase.trim().toLowerCase() : "";
+
+        if (phase === "starting") {
+          return {
+            id: "mission-control:" + normalizedProjectId,
+            title: "Mission Control scheduled",
+            copy: missionLabel + " will begin shortly.",
+          };
+        }
+
+        if (phase === "running") {
+          return {
+            id: "mission-control:" + normalizedProjectId,
+            title: "Mission Control running",
+            copy: missionLabel,
+          };
+        }
+
+        if (phase === "finished") {
+          return {
+            id: "mission-control:" + normalizedProjectId,
+            title: "Mission Control finished",
+            copy: missionLabel,
+          };
+        }
+
+        if (phase === "failed") {
+          return {
+            id: "mission-control:" + normalizedProjectId,
+            title: "Mission Control failed to start",
+            copy: typeof runState?.error === "string" && runState.error.trim()
+              ? runState.error.trim()
+              : missionLabel,
+          };
+        }
+
+        if (phase === "cancelled") {
+          return {
+            id: "mission-control:" + normalizedProjectId,
+            title: "Mission Control cancelled",
+            copy: missionLabel,
+          };
+        }
+
+        return null;
+      }
+
       function getAccountInitials(value) {
         const normalized = String(value || "").trim();
         if (!normalized) {
@@ -17587,6 +17704,11 @@ const html = `<!doctype html>
           label: "Task Management",
           description: "Let the agent create, organize, and comment on planning tasks and projects.",
         },
+        {
+          id: "computer_agents",
+          label: "Computer Agents",
+          description: "Inspect and manage agents, environments, skills, and threads from inside the run.",
+        },
       ];
       const PLAYGROUND_RUNNER_SKILL_ID_ALIASES = {
         imageGeneration: "image_generation",
@@ -17603,6 +17725,8 @@ const html = `<!doctype html>
         memory: "memory",
         taskManagement: "task_management",
         task_management: "task_management",
+        computerAgents: "computer_agents",
+        computer_agents: "computer_agents",
       };
 
       function dedupePlaygroundAgentIds(ids) {
@@ -19348,15 +19472,23 @@ const html = `<!doctype html>
           : null;
         const normalizedAssigneeAgentId = directAssigneeAgentId
           || (isPlaygroundHumanAssigneeId(metadataAssigneeActorId) ? metadataAssigneeActorId : null);
+        const normalizedDependencyIds = normalizePlaygroundIdList(
+          Array.isArray(task.dependencyIds)
+            ? task.dependencyIds
+            : (Array.isArray(runnerPlaygroundMetadata?.dependencyIds) ? runnerPlaygroundMetadata.dependencyIds : [])
+        );
         const rawStatus = task.status === "backlog"
           ? "todo"
           : (PLAYGROUND_TASK_STATUS_OPTIONS.some((option) => option.id === task.status) ? task.status : draft.status);
-        const status = rawStatus === "in_progress"
+        const baseStatus = rawStatus === "in_progress"
           && !isPlaygroundHumanAssigneeId(normalizedAssigneeAgentId)
           && !normalizedLastStartedThreadId
           && normalizedLinkedThreadIds.length === 0
           ? "todo"
           : rawStatus;
+        const status = normalizedDependencyIds.length > 0 && baseStatus !== "done"
+          ? "blocked"
+          : baseStatus;
         const priority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === task.priority) ? task.priority : draft.priority;
         const createdAt = typeof task.createdAt === "string" && task.createdAt ? task.createdAt : draft.createdAt;
         const updatedAt = typeof task.updatedAt === "string" && task.updatedAt ? task.updatedAt : createdAt;
@@ -19441,7 +19573,7 @@ const html = `<!doctype html>
           enabledSkills,
           connectors,
           comments,
-          dependencyIds: normalizePlaygroundIdList(task.dependencyIds),
+          dependencyIds: normalizedDependencyIds,
           linkedThreadIds: normalizedLinkedThreadIds,
           lastStartedThreadId: normalizedLastStartedThreadId,
           scheduledStartAt: typeof task.scheduledStartAt === "string" && task.scheduledStartAt ? task.scheduledStartAt : null,
@@ -30476,6 +30608,11 @@ const html = `<!doctype html>
             description: "Let the agent create, organize, and comment on planning tasks and projects.",
             icon: "list",
           },
+          computer_agents: {
+            name: "Computer Agents",
+            description: "Inspect and manage agents, environments, skills, and threads from inside the run.",
+            icon: "runner",
+          },
         }), []);
 
         function parsePlaygroundSkillMarkdownSections(markdown) {
@@ -30560,7 +30697,8 @@ const html = `<!doctype html>
         }
 
         const normalizeSkillRecord = useCallback((skill) => {
-          const skillId = typeof skill?.id === "string" ? skill.id.trim() : "";
+          const rawSkillId = typeof skill?.id === "string" ? skill.id.trim() : "";
+          const skillId = rawSkillId ? (PLAYGROUND_RUNNER_SKILL_ID_ALIASES[rawSkillId] || rawSkillId) : "";
           if (!skillId) {
             return null;
           }
@@ -30654,9 +30792,25 @@ const html = `<!doctype html>
         }, [loadedSkills]);
 
         const systemSkills = useMemo(() => {
-          const fetchedSystemSkills = normalizedLoadedSkills.filter((skill) => !skill.isCustom);
-          return fetchedSystemSkills.length > 0 ? fetchedSystemSkills : fallbackSystemSkills;
-        }, [fallbackSystemSkills, normalizedLoadedSkills]);
+          const next = [];
+          const seen = new Set();
+
+          const appendSkill = (skill) => {
+            const normalized = normalizeSkillRecord({ ...skill, isSystem: true, isDefault: true });
+            if (!normalized || normalized.isCustom || seen.has(normalized.id)) {
+              return;
+            }
+            seen.add(normalized.id);
+            next.push(normalized);
+          };
+
+          fallbackSystemSkills.forEach((skill) => appendSkill(skill));
+          normalizedLoadedSkills
+            .filter((skill) => !skill.isCustom)
+            .forEach((skill) => appendSkill(skill));
+
+          return next;
+        }, [fallbackSystemSkills, normalizeSkillRecord, normalizedLoadedSkills]);
 
         const normalizedCustomSkills = useMemo(() => {
           return normalizedLoadedSkills.filter((skill) => skill.isCustom);
@@ -31021,10 +31175,21 @@ const html = `<!doctype html>
           if (skill?.id === "pptx") return Layers;
           if (skill?.id === "memory") return Brain;
           if (skill?.id === "task_management") return ListTodo;
+          if (skill?.id === "computer_agents") return Cpu;
           return Layers;
         }
 
         function renderSkillIcon(skill, className) {
+          if (skill?.id === "computer_agents") {
+            return React.createElement("img", {
+              src: RUNNER_TRANSPARENT_LOGO_URL,
+              alt: "",
+              "aria-hidden": "true",
+              draggable: false,
+              className,
+              style: { objectFit: "contain" },
+            });
+          }
           const Icon = getPlaygroundSkillIconComponent(skill);
           return React.createElement(Icon, { className, strokeWidth: 1.8 });
         }
@@ -32385,6 +32550,7 @@ const html = `<!doctype html>
         taskRunStates,
         onThreadStarted,
         onTaskRunStateChange,
+        onStatusIndicatorItemChange,
         onTaskDeleted,
         openTaskRequest,
         navigationRequest,
@@ -32410,6 +32576,7 @@ const html = `<!doctype html>
         const boardToolbarActionsRef = useRef(null);
         const releaseToolbarActionsRef = useRef(null);
         const releaseBacklogToolbarActionsRef = useRef(null);
+        const backlogTaskContextMenuRef = useRef(null);
         const taskDetailActionsRef = useRef(null);
         const taskDetailSelectPopoverRef = useRef(null);
         const taskSkillsActionsRef = useRef(null);
@@ -32426,6 +32593,7 @@ const html = `<!doctype html>
         const backlogTitleSkipCommitRef = useRef("");
         const taskRunPendingIdsRef = useRef(new Set());
         const missionControlSyncThreadIdRef = useRef("");
+        const missionControlRecoveryThreadIdRef = useRef("");
         const handledOpenTaskRequestTokenRef = useRef("");
         const [projects, setProjects] = useState([]);
         const [selectedProjectId, setSelectedProjectId] = useState(() => {
@@ -32484,6 +32652,7 @@ const html = `<!doctype html>
         const [boardToolbarPopover, setBoardToolbarPopover] = useState("");
         const [releaseToolbarPopover, setReleaseToolbarPopover] = useState("");
         const [releaseBacklogToolbarPopover, setReleaseBacklogToolbarPopover] = useState("");
+        const [backlogTaskContextMenu, setBacklogTaskContextMenu] = useState(null);
         const [taskDetailPopover, setTaskDetailPopover] = useState("");
         const [taskDetailSelectPopover, setTaskDetailSelectPopover] = useState("");
         const [taskDetailAssigneePopupMode, setTaskDetailAssigneePopupMode] = useState("agents");
@@ -33022,6 +33191,62 @@ const html = `<!doctype html>
             ? selectedProjectDetail.recentThreads
             : [];
         }, [selectedProjectDetail, selectedProjectId]);
+        const latestSelectedProjectMissionControlThreadId = useMemo(() => {
+          const normalizedSelectedProjectId = String(selectedProjectId || "").trim();
+          if (!normalizedSelectedProjectId) {
+            return "";
+          }
+          const matchingThread = selectedProjectRecentThreads.find((threadItem) => {
+            const normalizedThread = normalizeThreadItem(threadItem);
+            const runnerPlaygroundMetadata = normalizedThread?.metadata?.runnerPlayground
+              && typeof normalizedThread.metadata.runnerPlayground === "object"
+              && !Array.isArray(normalizedThread.metadata.runnerPlayground)
+              ? normalizedThread.metadata.runnerPlayground
+              : null;
+            const missionControlMetadata = runnerPlaygroundMetadata?.missionControl
+              && typeof runnerPlaygroundMetadata.missionControl === "object"
+              && !Array.isArray(runnerPlaygroundMetadata.missionControl)
+              ? runnerPlaygroundMetadata.missionControl
+              : null;
+            const normalizedMissionControlProjectId = String(
+              missionControlMetadata?.projectId
+              || normalizedThread.projectId
+              || ""
+            ).trim();
+            return normalizedThread.id
+              && missionControlMetadata?.source === "project_backlog_mission_control"
+              && normalizedMissionControlProjectId === normalizedSelectedProjectId;
+          });
+          return matchingThread?.id || "";
+        }, [selectedProjectId, selectedProjectRecentThreads]);
+
+        useEffect(() => {
+          const normalizedSelectedProjectId = String(selectedProjectId || "").trim();
+          const normalizedRecoveryThreadId = String(latestSelectedProjectMissionControlThreadId || "").trim();
+          const hasStrategyDocument = Boolean(String(selectedProjectMissionControl.document || "").trim());
+          if (
+            !normalizedSelectedProjectId
+            || !normalizedRecoveryThreadId
+            || hasStrategyDocument
+            || isSelectedProjectMissionControlRunning
+            || missionControlRecoveryThreadIdRef.current === normalizedRecoveryThreadId
+          ) {
+            return;
+          }
+
+          missionControlRecoveryThreadIdRef.current = normalizedRecoveryThreadId;
+          void syncMissionControlThreadResult(normalizedRecoveryThreadId, normalizedSelectedProjectId)
+            .finally(() => {
+              if (missionControlRecoveryThreadIdRef.current === normalizedRecoveryThreadId) {
+                missionControlRecoveryThreadIdRef.current = "";
+              }
+            });
+        }, [
+          isSelectedProjectMissionControlRunning,
+          latestSelectedProjectMissionControlThreadId,
+          selectedProjectId,
+          selectedProjectMissionControl.document,
+        ]);
 
         const fetchProjectCustomSkills = useCallback(async function fetchProjectCustomSkills() {
           const normalizeSkills = (items) => (items || [])
@@ -33301,9 +33526,34 @@ const html = `<!doctype html>
           };
         }
 
+        function getPlaygroundAgentEnabledSkillIds(agentId) {
+          const normalizedAgentId = typeof agentId === "string" ? agentId.trim() : "";
+          if (!normalizedAgentId) {
+            return [];
+          }
+          const matchingAgent = agentsById[normalizedAgentId];
+          return normalizePlaygroundEnabledSkillIds(matchingAgent?.enabledSkills);
+        }
+
+        function getEffectivePlaygroundTaskEnabledSkillIds(taskLike) {
+          const explicitSkillIds = normalizePlaygroundEnabledSkillIds(taskLike?.enabledSkills);
+          if (explicitSkillIds.length > 0) {
+            return explicitSkillIds;
+          }
+          const assigneeAgentId = typeof taskLike?.assigneeAgentId === "string" && taskLike.assigneeAgentId.trim()
+            ? taskLike.assigneeAgentId.trim()
+            : typeof taskLike?.agentId === "string" && taskLike.agentId.trim()
+              ? taskLike.agentId.trim()
+              : "";
+          return getPlaygroundAgentEnabledSkillIds(assigneeAgentId);
+        }
+
         const taskSystemSkillItems = useMemo(() => {
           const next = [];
           const seen = new Set();
+          const activeEnabledSkillIds = Array.from(new Set(
+            getEffectivePlaygroundTaskEnabledSkillIds(draftTask).concat(getEffectivePlaygroundTaskEnabledSkillIds(scheduleDraft))
+          ));
 
           function appendSkill(skillId) {
             const item = resolveTaskSkillItem(skillId);
@@ -33315,10 +33565,10 @@ const html = `<!doctype html>
           }
 
           (Array.isArray(skills) ? skills : []).forEach((skill) => appendSkill(skill?.id));
-          normalizePlaygroundEnabledSkillIds(draftTask?.enabledSkills).forEach((skillId) => appendSkill(skillId));
+          activeEnabledSkillIds.forEach((skillId) => appendSkill(skillId));
 
           return next;
-        }, [draftTask?.enabledSkills, skills, taskSkillOptionsById]);
+        }, [draftTask, scheduleDraft, skills, taskSkillOptionsById]);
 
         const taskSystemSkillIdSet = useMemo(() => {
           return new Set(taskSystemSkillItems.map((skill) => skill.id));
@@ -33327,6 +33577,9 @@ const html = `<!doctype html>
         const taskCustomSkillItems = useMemo(() => {
           const next = [];
           const seen = new Set();
+          const activeEnabledSkillIds = Array.from(new Set(
+            getEffectivePlaygroundTaskEnabledSkillIds(draftTask).concat(getEffectivePlaygroundTaskEnabledSkillIds(scheduleDraft))
+          ));
 
           function appendSkill(skillId) {
             const item = resolveTaskSkillItem(skillId);
@@ -33344,14 +33597,14 @@ const html = `<!doctype html>
           }
 
           projectCustomSkills.forEach((skill) => appendSkill(skill?.id));
-          normalizePlaygroundEnabledSkillIds(draftTask?.enabledSkills).forEach((skillId) => {
+          activeEnabledSkillIds.forEach((skillId) => {
             if (!taskSystemSkillIdSet.has(skillId)) {
               appendSkill(skillId);
             }
           });
 
           return next;
-        }, [draftTask?.enabledSkills, projectCustomSkills, taskSystemSkillIdSet, taskSkillOptionsById]);
+        }, [draftTask, scheduleDraft, projectCustomSkills, taskSystemSkillIdSet, taskSkillOptionsById]);
 
         function getTaskSkillIconComponent(skill) {
           const normalizedCustomIcon = String(skill?.icon || "default").trim().toLowerCase();
@@ -33389,10 +33642,21 @@ const html = `<!doctype html>
           if (skill?.id === "pptx") return Layers;
           if (skill?.id === "memory") return Brain;
           if (skill?.id === "task_management") return ListTodo;
+          if (skill?.id === "computer_agents") return Cpu;
           return Layers;
         }
 
         function renderTaskSkillIcon(skill, className) {
+          if (skill?.id === "computer_agents") {
+            return React.createElement("img", {
+              src: RUNNER_TRANSPARENT_LOGO_URL,
+              alt: "",
+              "aria-hidden": "true",
+              draggable: false,
+              className,
+              style: { objectFit: "contain" },
+            });
+          }
           const Icon = getTaskSkillIconComponent(skill);
           return React.createElement(Icon, { className, strokeWidth: 1.75 });
         }
@@ -33661,7 +33925,8 @@ const html = `<!doctype html>
         }
 
         function buildPlaygroundTaskRunEnabledSkillsPayload(taskRecord) {
-          const enabledSkillIds = normalizePlaygroundEnabledSkillIds(taskRecord?.enabledSkills);
+          const normalizedTaskRecord = normalizePlaygroundTaskRecord(taskRecord);
+          const enabledSkillIds = getEffectivePlaygroundTaskEnabledSkillIds(normalizedTaskRecord);
           const defaultSkillMap = {
             image_generation: "imageGeneration",
             web_search: "webSearch",
@@ -33676,6 +33941,9 @@ const html = `<!doctype html>
           Object.entries(defaultSkillMap).forEach(([skillId, payloadKey]) => {
             payload[payloadKey] = enabledSkillIds.includes(skillId);
           });
+          if (enabledSkillIds.includes("computer_agents")) {
+            payload.computerAgents = true;
+          }
           const customSkillIds = enabledSkillIds.filter((skillId) => !defaultSkillMap[skillId]);
           if (customSkillIds.length > 0) {
             payload.customSkills = customSkillIds
@@ -33744,9 +34012,9 @@ const html = `<!doctype html>
           const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
           const ticketNumber = taskTicketNumbersById[normalizedTask.id] || normalizedTask.ticketNumber || "000";
           const assigneeName = getTaskAssigneeName(normalizedTask.assigneeAgentId, "");
-          const environmentName = normalizedTask.environmentId
-            ? availableBacklogEnvironments.find((environment) => environment.id === normalizedTask.environmentId)?.name || ""
-            : "";
+          const environmentDisplay = resolvePlaygroundTaskEnvironmentDisplay(normalizedTask, {
+            projectRecord: selectedProject,
+          });
           return {
             taskId: normalizedTask.id,
             projectId: normalizedTask.projectId || selectedProjectId || "",
@@ -33761,8 +34029,66 @@ const html = `<!doctype html>
             taskType: normalizePlaygroundTaskType(normalizedTask.taskType),
             assigneeAgentId: normalizedTask.assigneeAgentId || "",
             assigneeName,
-            environmentId: normalizedTask.environmentId || "",
-            environmentName,
+            environmentId: environmentDisplay.environmentId,
+            environmentName: environmentDisplay.description || environmentDisplay.label,
+          };
+        }
+
+        function getPlaygroundProjectDefaultEnvironmentId(projectRecord = selectedProject) {
+          const explicitProjectDefaultEnvironmentId = typeof projectRecord?.defaultEnvironmentId === "string" && projectRecord.defaultEnvironmentId.trim()
+            ? projectRecord.defaultEnvironmentId.trim()
+            : "";
+          if (explicitProjectDefaultEnvironmentId) {
+            return explicitProjectDefaultEnvironmentId;
+          }
+          const accountDefaultEnvironment = availableBacklogEnvironments.find((environment) => environment.isDefault) || null;
+          if (accountDefaultEnvironment?.id) {
+            return accountDefaultEnvironment.id;
+          }
+          return availableBacklogEnvironments[0]?.id || "";
+        }
+
+        function resolvePlaygroundTaskEnvironmentDisplay(taskRecord, options = {}) {
+          const projectRecord = options?.projectRecord || selectedProject;
+          const explicitEnvironmentId = typeof taskRecord?.environmentId === "string" && taskRecord.environmentId.trim()
+            ? taskRecord.environmentId.trim()
+            : "";
+          const projectDefaultEnvironmentId = getPlaygroundProjectDefaultEnvironmentId(projectRecord);
+          const resolvedEnvironmentId = explicitEnvironmentId || projectDefaultEnvironmentId;
+          const resolvedEnvironment = resolvedEnvironmentId
+            ? availableBacklogEnvironments.find((environment) => environment.id === resolvedEnvironmentId) || null
+            : null;
+
+          if (!explicitEnvironmentId && projectDefaultEnvironmentId) {
+            return {
+              environmentId: projectDefaultEnvironmentId,
+              label: "Project Default",
+              description: resolvedEnvironment?.name || "Uses the project's default environment",
+            };
+          }
+
+          if (resolvedEnvironment) {
+            return {
+              environmentId: resolvedEnvironment.id,
+              label: resolvedEnvironment.name || "Environment",
+              description: resolvedEnvironment.isDefault ? "Default environment" : "",
+            };
+          }
+
+          if (resolvedEnvironmentId) {
+            return {
+              environmentId: resolvedEnvironmentId,
+              label: resolvedEnvironmentId,
+              description: "",
+            };
+          }
+
+          return {
+            environmentId: "",
+            label: projectRecord ? "Project Default" : "Default",
+            description: projectRecord
+              ? "Uses the project's default environment"
+              : "Uses your default environment",
           };
         }
 
@@ -33877,9 +34203,12 @@ const html = `<!doctype html>
           const newline = String.fromCharCode(10);
           const paragraphBreak = newline + newline;
           const assigneeName = getTaskAssigneeName(normalizedTask.assigneeAgentId, "None") || "None";
-          const environmentName = normalizedTask.environmentId
-            ? availableBacklogEnvironments.find((environment) => environment.id === normalizedTask.environmentId)?.name || "None"
-            : "None";
+          const environmentDisplay = resolvePlaygroundTaskEnvironmentDisplay(normalizedTask, {
+            projectRecord: selectedProject,
+          });
+          const environmentName = environmentDisplay.label === "Project Default" && environmentDisplay.description
+            ? "Project Default (" + environmentDisplay.description + ")"
+            : environmentDisplay.label;
           const connectorLines = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => {
             const selection = getDraftTaskConnectorSelection(option.source, normalizedTask);
             if (!selection?.valueLabel) {
@@ -33891,7 +34220,7 @@ const html = `<!doctype html>
             .slice()
             .sort((left, right) => String(left.createdAt || "").localeCompare(String(right.createdAt || "")))
             .map((comment) => "- " + (comment.authorName || "Computer Agents") + ": " + comment.text);
-          const skillNames = normalizePlaygroundEnabledSkillIds(normalizedTask.enabledSkills)
+          const skillNames = getEffectivePlaygroundTaskEnabledSkillIds(normalizedTask)
             .map((skillId) => resolveTaskSkillItem(skillId)?.name || skillId)
             .filter(Boolean);
           const taskAttachmentsSection = buildPlaygroundAttachmentPromptSection("Task attachments:", normalizedTask.attachments, {
@@ -33947,15 +34276,121 @@ const html = `<!doctype html>
               const ticketNumber = taskTicketNumbersById[taskRecord.id] || taskRecord.ticketNumber || "000";
               const releaseName = taskRecord.releaseId ? (releasesById[taskRecord.releaseId]?.name || "Release") : "All other";
               const descriptionPreview = String(taskRecord.description || "").replace(/\\s+/g, " ").trim();
+              const blockedByTaskId = Array.isArray(taskRecord.dependencyIds) ? String(taskRecord.dependencyIds[0] || "").trim() : "";
+              const blockedByTicketNumber = blockedByTaskId ? (taskTicketNumbersById[blockedByTaskId] || blockedByTaskId) : "";
+              const skillNames = getEffectivePlaygroundTaskEnabledSkillIds(taskRecord)
+                .map((skillId) => resolveTaskSkillItem(skillId)?.name || skillId)
+                .filter(Boolean);
+              const environmentLabel = resolvePlaygroundTaskEnvironmentDisplay(taskRecord, {
+                projectRecord: selectedProject,
+              }).label;
               return [
                 "- " + ticketNumber + " · " + (taskRecord.title || "Untitled Task"),
                 "  status=" + getPlaygroundTaskStatusLabel(taskRecord.status),
                 "priority=" + getPlaygroundTaskPriorityLabel(taskRecord.priority),
                 "type=" + getPlaygroundTaskTypeLabel(taskRecord.taskType),
                 "release=" + releaseName,
+                "assignee=" + (getTaskAssigneeName(taskRecord.assigneeAgentId, "Unassigned") || "Unassigned"),
+                "environment=" + environmentLabel,
+                blockedByTicketNumber ? ("blocked_by=" + blockedByTicketNumber) : null,
+                skillNames.length > 0 ? ("skills=" + skillNames.join(", ")) : null,
                 descriptionPreview ? ("desc=" + descriptionPreview) : null,
               ].filter(Boolean).join(" | ");
             }),
+          ].join("\\n");
+        }
+
+        function buildPlaygroundMissionControlAgentSnapshot(agentRecords, preferredAgentId = "") {
+          const normalizedPreferredAgentId = String(preferredAgentId || "").trim();
+          const sortedAgentRecords = (Array.isArray(agentRecords) ? agentRecords : [])
+            .filter((agentRecord) => agentRecord?.id)
+            .slice()
+            .sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
+
+          if (sortedAgentRecords.length === 0) {
+            return "Available agents:\\n- No agents are configured yet.";
+          }
+
+          return [
+            "Available agents:",
+            ...sortedAgentRecords.map((agentRecord) => {
+              const descriptionPreview = String(agentRecord.description || "").replace(/\\s+/g, " ").trim();
+              return [
+                "- " + (agentRecord.name || agentRecord.id),
+                "id=" + agentRecord.id,
+                normalizedPreferredAgentId && agentRecord.id === normalizedPreferredAgentId ? "selected_for_this_run=true" : null,
+                agentRecord.isDefault ? "default=true" : null,
+                agentRecord.model ? ("model=" + agentRecord.model) : null,
+                descriptionPreview ? ("desc=" + descriptionPreview) : null,
+              ].filter(Boolean).join(" | ");
+            }),
+          ].join("\\n");
+        }
+
+        function buildPlaygroundMissionControlReleaseSnapshot(releaseRecords) {
+          const sortedReleaseRecords = (Array.isArray(releaseRecords) ? releaseRecords : [])
+            .filter((releaseRecord) => releaseRecord?.id)
+            .slice()
+            .sort(compareTaskReleaseOrder);
+
+          if (sortedReleaseRecords.length === 0) {
+            return "Existing releases:\\n- No releases exist yet.";
+          }
+
+          return [
+            "Existing releases:",
+            ...sortedReleaseRecords.map((releaseRecord) => {
+              const releaseDeadlineLabel = formatPlaygroundTaskReleaseDateRange(releaseRecord);
+              return [
+                "- " + (releaseRecord.name || "Untitled Release"),
+                releaseRecord.description ? ("desc=" + String(releaseRecord.description).replace(/\\s+/g, " ").trim()) : null,
+                "deadline=" + (releaseDeadlineLabel === "No dates" ? "No deadlines" : releaseDeadlineLabel),
+                "open_tasks=" + String(Number.isFinite(releaseRecord.openTaskCount) ? releaseRecord.openTaskCount : 0),
+              ].filter(Boolean).join(" | ");
+            }),
+          ].join("\\n");
+        }
+
+        function buildPlaygroundMissionControlSkillSnapshot(systemSkillRecords, customSkillRecords) {
+          const normalizedSystemSkillRecords = (Array.isArray(systemSkillRecords) ? systemSkillRecords : [])
+            .filter((skillRecord) => skillRecord?.id)
+            .slice()
+            .sort((left, right) => String(left?.name || left?.id || "").localeCompare(String(right?.name || right?.id || "")));
+          const normalizedCustomSkillRecords = (Array.isArray(customSkillRecords) ? customSkillRecords : [])
+            .filter((skillRecord) => skillRecord?.id)
+            .slice()
+            .sort((left, right) => String(left?.name || left?.id || "").localeCompare(String(right?.name || right?.id || "")));
+
+          return [
+            "Available skills:",
+            normalizedSystemSkillRecords.length > 0
+              ? ("- System skills: " + normalizedSystemSkillRecords.map((skillRecord) => (skillRecord.name || skillRecord.id) + " (" + skillRecord.id + ")").join(", "))
+              : "- System skills: None listed.",
+            normalizedCustomSkillRecords.length > 0
+              ? ("- Custom skills: " + normalizedCustomSkillRecords.map((skillRecord) => (skillRecord.name || skillRecord.id) + " (" + skillRecord.id + ")").join(", "))
+              : "- Custom skills: None yet.",
+          ].join("\\n");
+        }
+
+        function buildPlaygroundMissionControlEnvironmentSnapshot(environmentRecords, defaultEnvironmentId = "") {
+          const normalizedDefaultEnvironmentId = String(defaultEnvironmentId || "").trim();
+          const normalizedEnvironmentRecords = (Array.isArray(environmentRecords) ? environmentRecords : [])
+            .filter((environmentRecord) => environmentRecord?.id)
+            .slice()
+            .sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
+
+          if (normalizedEnvironmentRecords.length === 0) {
+            return "Available environments:\\n- No environments are configured yet.";
+          }
+
+          return [
+            "Available environments:",
+            ...normalizedEnvironmentRecords.map((environmentRecord) => [
+              "- " + (environmentRecord.name || environmentRecord.id),
+              "id=" + environmentRecord.id,
+              environmentRecord.id === normalizedDefaultEnvironmentId ? "project_default=true" : null,
+              environmentRecord.isDefault ? "account_default=true" : null,
+            ].filter(Boolean).join(" | ")),
           ].join("\\n");
         }
 
@@ -34060,10 +34495,181 @@ const html = `<!doctype html>
           return "";
         }
 
+        function getPlaygroundThreadMessageAttachments(message) {
+          const directAttachments = normalizePlaygroundTaskAttachmentList(message?.attachments);
+          if (directAttachments.length > 0) {
+            return directAttachments;
+          }
+          const logMetadata = message?.logMetadata && typeof message.logMetadata === "object" && !Array.isArray(message.logMetadata)
+            ? message.logMetadata
+            : null;
+          return normalizePlaygroundTaskAttachmentList(logMetadata?.attachments);
+        }
+
+        function getPlaygroundMissionControlContentScore(content) {
+          const rawContent = String(content || "").trim();
+          if (!rawContent) {
+            return 0;
+          }
+
+          let score = 0;
+          if (/\\x60\\x60\\x60mission_control_json/i.test(rawContent)) {
+            score += 240;
+          }
+          if (/strategy summary/i.test(rawContent)) {
+            score += 80;
+          }
+          if (/strategic breakdown/i.test(rawContent)) {
+            score += 60;
+          }
+          if (/risks?\s*(?:&|and)\s*opportunit/i.test(rawContent)) {
+            score += 60;
+          }
+          if (/recommended next moves/i.test(rawContent)) {
+            score += 50;
+          }
+          if (/mission control/i.test(rawContent)) {
+            score += 20;
+          }
+          if (rawContent.length >= 400) {
+            score += 20;
+          }
+          return score;
+        }
+
+        function isPlaygroundMissionControlReadableAttachment(attachment) {
+          const normalizedAttachment = normalizePlaygroundTaskAttachmentRecord(attachment);
+          if (!normalizedAttachment || normalizedAttachment.type === "image") {
+            return false;
+          }
+          const normalizedFilename = String(normalizedAttachment.filename || "").trim().toLowerCase();
+          const normalizedMimeType = String(normalizedAttachment.mimeType || "").trim().toLowerCase();
+          const extension = normalizedFilename.split(".").pop() || "";
+          if (normalizedMimeType.startsWith("text/") || normalizedMimeType.includes("json") || normalizedMimeType.includes("markdown")) {
+            return true;
+          }
+          return ["md", "markdown", "mdx", "txt", "text", "json", "yml", "yaml"].includes(extension);
+        }
+
+        function getPlaygroundMissionControlAttachmentScore(attachment) {
+          const normalizedAttachment = normalizePlaygroundTaskAttachmentRecord(attachment);
+          if (!normalizedAttachment) {
+            return 0;
+          }
+          const normalizedFilename = String(normalizedAttachment.filename || "").trim().toLowerCase();
+          const extension = normalizedFilename.split(".").pop() || "";
+          let score = 0;
+          if (normalizedFilename.includes("mission")) {
+            score += 60;
+          }
+          if (normalizedFilename.includes("strategy")) {
+            score += 50;
+          }
+          if (normalizedFilename.includes("summary")) {
+            score += 20;
+          }
+          if (normalizedFilename.includes("result") || normalizedFilename.includes("report")) {
+            score += 15;
+          }
+          if (extension === "md" || extension === "markdown" || extension === "mdx") {
+            score += 20;
+          } else if (extension === "json") {
+            score += 15;
+          } else if (extension === "txt" || extension === "text") {
+            score += 10;
+          }
+          return score;
+        }
+
+        async function fetchPlaygroundMissionControlAttachmentText(attachment) {
+          const normalizedAttachment = normalizePlaygroundTaskAttachmentRecord(attachment);
+          if (!normalizedAttachment || !isPlaygroundMissionControlReadableAttachment(normalizedAttachment)) {
+            return "";
+          }
+
+          const attachmentUrl = resolveTaskAttachmentPreviewUrl(normalizedAttachment)
+            || resolveTaskAttachmentApiUrl(normalizedAttachment.url, normalizedAttachment.id)
+            || getTaskAttachmentWorkspaceDownloadUrl(normalizedAttachment);
+          if (!attachmentUrl) {
+            return "";
+          }
+
+          try {
+            const response = await fetch(attachmentUrl, {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            if (!response.ok) {
+              return "";
+            }
+            return await response.text();
+          } catch {
+            return "";
+          }
+        }
+
+        async function resolvePlaygroundMissionControlRecordFromMessages(threadMessages) {
+          const assistantMessages = (Array.isArray(threadMessages) ? threadMessages : [])
+            .filter((message) => String(message?.role || "").trim().toLowerCase() === "assistant")
+            .slice()
+            .reverse();
+
+          let bestRecord = buildEmptyPlaygroundProjectMissionControl();
+          let bestScore = 0;
+
+          for (const message of assistantMessages) {
+            const inlineText = getPlaygroundThreadMessageText(message);
+            if (inlineText) {
+              const inlineRecord = parsePlaygroundMissionControlResponseContent(inlineText);
+              const inlineScore = getPlaygroundMissionControlContentScore(inlineText);
+              if (String(inlineRecord.document || "").trim() && (inlineScore > bestScore || !String(bestRecord.document || "").trim())) {
+                bestRecord = inlineRecord;
+                bestScore = inlineScore;
+                if (inlineScore >= 240) {
+                  return inlineRecord;
+                }
+              }
+            }
+
+            const attachmentCandidates = getPlaygroundThreadMessageAttachments(message)
+              .filter(isPlaygroundMissionControlReadableAttachment)
+              .sort((left, right) => getPlaygroundMissionControlAttachmentScore(right) - getPlaygroundMissionControlAttachmentScore(left))
+              .slice(0, 6);
+
+            for (const attachment of attachmentCandidates) {
+              const attachmentContent = await fetchPlaygroundMissionControlAttachmentText(attachment);
+              if (!String(attachmentContent || "").trim()) {
+                continue;
+              }
+              const parsedAttachmentRecord = parsePlaygroundMissionControlResponseContent(attachmentContent);
+              const attachmentScore = getPlaygroundMissionControlAttachmentScore(attachment) + getPlaygroundMissionControlContentScore(attachmentContent);
+              if (String(parsedAttachmentRecord.document || "").trim() && (attachmentScore > bestScore || !String(bestRecord.document || "").trim())) {
+                bestRecord = parsedAttachmentRecord;
+                bestScore = attachmentScore;
+                if (attachmentScore >= 240) {
+                  return parsedAttachmentRecord;
+                }
+              }
+            }
+          }
+
+          return bestRecord;
+        }
+
         function buildPlaygroundMissionControlPrompt(options = {}) {
           const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
           const newline = String.fromCharCode(10);
           const paragraphBreak = newline + newline;
+          const normalizedLaunchAgentId = String(options?.launchAgentId || "").trim();
+          const launchAgent = normalizedLaunchAgentId ? (agentsById[normalizedLaunchAgentId] || null) : null;
+          const projectDefaultEnvironmentId = getPlaygroundProjectDefaultEnvironmentId(normalizedProject);
+          const availableAgentsSection = buildPlaygroundMissionControlAgentSnapshot(sortedAgents, normalizedLaunchAgentId);
+          const availableReleasesSection = buildPlaygroundMissionControlReleaseSnapshot(releases);
+          const availableSkillsSection = buildPlaygroundMissionControlSkillSnapshot(taskSystemSkillItems, projectCustomSkills);
+          const availableEnvironmentsSection = buildPlaygroundMissionControlEnvironmentSnapshot(
+            availableBacklogEnvironments,
+            projectDefaultEnvironmentId
+          );
           const projectAttachmentsSection = buildPlaygroundAttachmentPromptSection(
             "Project attachments:",
             normalizedProject.attachments,
@@ -34083,30 +34689,56 @@ const html = `<!doctype html>
 
           return [
             "You are running Mission Control for this software project.",
-            "Your job is to analyze the available project context, define the right strategy, and update the backlog using the Task Management skill where it helps.",
-            "Always use the Task Management skill for creating, reorganizing, or updating backlog tasks instead of only describing them in prose.",
+            "Your job is to analyze the available project context, define the right strategy, and update the project structure using the Task Management and Computer Agents skills where appropriate.",
+            "Always use the Task Management skill for releases, tasks, subtasks, blockers, comments, and other planning mutations instead of only describing them in prose.",
+            "Always use the Computer Agents skill for live discovery of agents, environments, and skills instead of inventing IDs or writing raw curl requests.",
             "Project: " + (normalizedProject.name || "Untitled Project"),
             projectDescription
               ? ("Project instructions / description:" + newline + projectDescription)
               : "Project instructions / description: None provided.",
             projectAttachmentsSection,
             runAttachmentsSection,
+            availableReleasesSection,
             buildPlaygroundMissionControlTaskSnapshot(tasks),
+            availableAgentsSection,
+            availableEnvironmentsSection,
+            availableSkillsSection,
             operatorPrompt
-              ? ("Operator note:" + newline + operatorPrompt)
+              ? ("Operator directive for this Mission Control run:" + newline + operatorPrompt)
               : "",
             [
               "Required outputs:",
               "1. Analyze the project attachments, project description, and the existing backlog.",
-              "2. Form a strategy for the project and explain the direction clearly.",
-              "3. Create or update backlog tasks using the Task Management skill whenever the project needs clearer execution steps.",
-              "4. In your human-readable response, provide a strategy document in markdown with these sections:",
+              "2. Use the Computer Agents skill to inspect the live agent roster, environments, and available skills before assigning work.",
+              "3. Form a strategy for the project and explain the direction clearly.",
+              "4. Inspect the available agents and assign the backlog work intentionally.",
+              launchAgent
+                ? ("   - If no better fit is obvious, use " + launchAgent.name + " (" + launchAgent.id + ") as the default assignee.")
+                : "   - If no better fit is obvious, use the best default agent returned by the Computer Agents or Task Management skill.",
+              "5. Create or update the project structure using the Task Management skill whenever the project needs clearer execution steps.",
+              "   - If the project is empty or still loosely defined, create at least one release first and then place the new work under releases.",
+              "   - Prefer a clear hierarchy of parent tasks and subtasks instead of keeping every item flat.",
+              "   - Add blocked-by dependencies so the execution order is explicit and immediately understandable.",
+              "   - Do not leave Mission Control-generated tasks unassigned if at least one agent is available.",
+              "   - Pass assigneeAgentId whenever you create or update execution tasks.",
+              "   - Set releaseId on planned work whenever the task belongs to a specific milestone.",
+              "   - Attach enabled skill IDs to tasks after you inspect the live skill list.",
+              "   - Use the project's default environment for execution work unless a different environment is clearly more appropriate.",
+              "   - Add task comments whenever they preserve important rationale, sequencing, architectural decisions, or handoff context.",
+              "   - Use connectors when there is concrete connector context that materially helps the task.",
+              "   - Write every task description as a concise professional user story in markdown, ideally using a short 'As a / I want / so that' structure when it fits.",
+              "   - Each task description must include a short Acceptance Criteria section in markdown.",
+              "   - Keep ticket descriptions brief and execution-ready rather than writing long specs.",
+              "   - If a reusable project-specific workflow gap is obvious and worth reusing, create a custom skill before attaching it to tasks.",
+              "   - Aim for task records that are execution-ready: release, assignee, environment, skills, hierarchy/dependencies, and useful comments should all be populated when the context supports it.",
+              "   - When you create parent tasks, also create the subtasks and dependency chain needed to express the real order of work.",
+              "6. In your human-readable response, provide a strategy document in markdown with these sections:",
               "   - Strategy Summary",
               "   - Strategic Breakdown",
               "   - Risks & Opportunities",
               "   - Recommended Next Moves",
-              "5. End your final response with a fenced code block labeled mission_control_json.",
-              "6. That JSON must contain exactly these keys:",
+              "7. End your final response with a fenced code block labeled mission_control_json.",
+              "8. That JSON must contain exactly these keys:",
               '   - "summary": a 1-2 sentence summary for the Mission Control card',
               '   - "document": the full strategy document in markdown',
             ].join(newline),
@@ -34116,6 +34748,7 @@ const html = `<!doctype html>
         function buildPlaygroundMissionControlEnabledSkillsPayload(basePayload) {
           const payload = basePayload && typeof basePayload === "object" ? { ...basePayload } : {};
           payload.taskManagement = true;
+          payload.computerAgents = true;
           return payload;
         }
 
@@ -34524,6 +35157,188 @@ const html = `<!doctype html>
             .slice()
             .sort((left, right) => compareBacklogTaskOrderWithModes(left, right, releaseBacklogSortMode, releaseBacklogFilterMode));
         }, [projectReleaseTaskIds, projectReleaseTasks, releaseBacklogFilterMode, releaseBacklogSortMode, releaseVisibleTaskIds, taskTicketNumbersById]);
+
+        const boardVisibleTasks = useMemo(() => {
+          return sortedTasks
+            .filter((task) => !isPlaygroundSubtaskRecord(task) && matchesBoardFilter(task, boardFilterMode))
+            .filter((task) => !selectedReleaseId || task.releaseId === selectedReleaseId);
+        }, [boardFilterMode, selectedReleaseId, sortedTasks]);
+
+        const boardReleaseSections = useMemo(() => {
+          if (selectedReleaseId && selectedRelease) {
+            return [{
+              key: selectedRelease.id,
+              releaseId: selectedRelease.id,
+              title: selectedRelease.name || "Release",
+              copy: selectedRelease.description || "",
+              tasks: boardVisibleTasks,
+            }];
+          }
+
+          const sections = [];
+          const sectionIndexByKey = new Map();
+          boardVisibleTasks.forEach((task) => {
+            const normalizedReleaseId = typeof task?.releaseId === "string" && task.releaseId.trim()
+              ? task.releaseId.trim()
+              : "";
+            const sectionKey = normalizedReleaseId || "__no_release__";
+            const releaseRecord = normalizedReleaseId ? (releasesById[normalizedReleaseId] || null) : null;
+            if (!sectionIndexByKey.has(sectionKey)) {
+              sectionIndexByKey.set(sectionKey, sections.length);
+              sections.push({
+                key: sectionKey,
+                releaseId: normalizedReleaseId,
+                title: normalizedReleaseId ? (releaseRecord?.name || "Release unavailable") : "All other",
+                copy: normalizedReleaseId
+                  ? (releaseRecord?.description || "")
+                  : "All tasks, that are not assigned to any release",
+                tasks: [],
+              });
+            }
+            sections[sectionIndexByKey.get(sectionKey)].tasks.push(task);
+          });
+
+          return sections
+            .slice()
+            .sort((left, right) => {
+              const leftIsAllOther = left.key === "__no_release__";
+              const rightIsAllOther = right.key === "__no_release__";
+              if (leftIsAllOther !== rightIsAllOther) {
+                return leftIsAllOther ? 1 : -1;
+              }
+              if (leftIsAllOther && rightIsAllOther) {
+                return 0;
+              }
+              const leftRelease = releasesById[left.releaseId] || { id: left.releaseId, name: left.title };
+              const rightRelease = releasesById[right.releaseId] || { id: right.releaseId, name: right.title };
+              return compareTaskReleaseOrder(leftRelease, rightRelease);
+            });
+        }, [boardVisibleTasks, releasesById, selectedRelease, selectedReleaseId]);
+
+        const boardNavigationTaskIds = useMemo(() => {
+          const next = [];
+          const seenTaskIds = new Set();
+          boardReleaseSections.forEach((section) => {
+            PLAYGROUND_TASK_BOARD_LANES.forEach((lane) => {
+              section.tasks.forEach((task) => {
+                if (!task?.id || seenTaskIds.has(task.id)) {
+                  return;
+                }
+                if (!lane.statuses.includes(getTaskBoardStatus(task))) {
+                  return;
+                }
+                seenTaskIds.add(task.id);
+                next.push(task.id);
+              });
+            });
+          });
+          return next;
+        }, [boardReleaseSections, taskRunPendingIds, taskRunStates]);
+
+        function flattenVisibleBacklogTaskIds(taskItems, {
+          childrenByParentId: visibleChildrenByParentId = {},
+          visibleTaskIds = null,
+          groupRootTasksByRelease = false,
+          depth = 0,
+        } = {}) {
+          if (!Array.isArray(taskItems) || taskItems.length === 0) {
+            return [];
+          }
+
+          if (depth === 0 && groupRootTasksByRelease) {
+            const releaseSections = [];
+            const sectionIndexByKey = new Map();
+            taskItems.forEach((task) => {
+              const normalizedReleaseId = typeof task?.releaseId === "string" ? task.releaseId.trim() : "";
+              const sectionKey = normalizedReleaseId || "__no_release__";
+              const releaseRecord = normalizedReleaseId ? (releasesById[normalizedReleaseId] || null) : null;
+              const sectionTitle = normalizedReleaseId
+                ? (releaseRecord?.name || "Release unavailable")
+                : "All other";
+              const sectionCopy = normalizedReleaseId
+                ? (releaseRecord?.description || "")
+                : "All tasks, that are not assigned to any release";
+              let sectionIndex = sectionIndexByKey.get(sectionKey);
+              if (sectionIndex === undefined) {
+                sectionIndex = releaseSections.length;
+                sectionIndexByKey.set(sectionKey, sectionIndex);
+                releaseSections.push({
+                  key: sectionKey,
+                  releaseId: normalizedReleaseId,
+                  title: sectionTitle,
+                  copy: sectionCopy,
+                  tasks: [],
+                });
+              }
+              releaseSections[sectionIndex].tasks.push(task);
+            });
+
+            return releaseSections
+              .slice()
+              .sort((left, right) => {
+                const leftIsAllOther = left.key === "__no_release__";
+                const rightIsAllOther = right.key === "__no_release__";
+                if (leftIsAllOther !== rightIsAllOther) {
+                  return leftIsAllOther ? 1 : -1;
+                }
+                if (leftIsAllOther && rightIsAllOther) {
+                  return 0;
+                }
+                const leftRelease = releasesById[left.key] || { id: left.key, name: left.title };
+                const rightRelease = releasesById[right.key] || { id: right.key, name: right.title };
+                return compareTaskReleaseOrder(leftRelease, rightRelease);
+              })
+              .flatMap((section) => flattenVisibleBacklogTaskIds(section.tasks, {
+                childrenByParentId: visibleChildrenByParentId,
+                visibleTaskIds,
+                groupRootTasksByRelease: false,
+                depth: depth + 1,
+              }));
+          }
+
+          const next = [];
+          taskItems.forEach((task) => {
+            if (!task?.id) {
+              return;
+            }
+            next.push(task.id);
+            const visibleChildren = (visibleChildrenByParentId[task.id] || []).filter((childTask) =>
+              !visibleTaskIds || visibleTaskIds.has(childTask.id)
+            );
+            if (visibleChildren.length > 0) {
+              next.push(...flattenVisibleBacklogTaskIds(visibleChildren, {
+                childrenByParentId: visibleChildrenByParentId,
+                visibleTaskIds,
+                groupRootTasksByRelease: false,
+                depth: depth + 1,
+              }));
+            }
+          });
+          return next;
+        }
+
+        const backlogNavigationTaskIds = useMemo(() => {
+          if (selectedReleaseId) {
+            return flattenVisibleBacklogTaskIds(releaseTaskRoots, {
+              childrenByParentId: releaseTaskChildrenByParentId,
+              visibleTaskIds: releaseVisibleTaskIds,
+              groupRootTasksByRelease: false,
+            });
+          }
+          return flattenVisibleBacklogTaskIds(backlogTaskRoots, {
+            childrenByParentId: taskChildrenByParentId,
+            visibleTaskIds: backlogVisibleTaskIds,
+            groupRootTasksByRelease: true,
+          });
+        }, [
+          backlogTaskRoots,
+          backlogVisibleTaskIds,
+          releaseTaskChildrenByParentId,
+          releaseTaskRoots,
+          releaseVisibleTaskIds,
+          selectedReleaseId,
+          taskChildrenByParentId,
+        ]);
 
         const filteredReleases = useMemo(() => {
           return [...releases]
@@ -35645,7 +36460,15 @@ const html = `<!doctype html>
 
         function buildProjectScheduleDraft(projectRecord = selectedProject) {
           const base = buildPlaygroundDefaultScheduleDraft();
-          const defaultEnvironment = availableBacklogEnvironments.find((environment) => environment.isDefault) || availableBacklogEnvironments[0] || null;
+          const projectDefaultEnvironmentId = typeof projectRecord?.defaultEnvironmentId === "string" && projectRecord.defaultEnvironmentId.trim()
+            ? projectRecord.defaultEnvironmentId.trim()
+            : "";
+          const defaultEnvironment = (projectDefaultEnvironmentId
+            ? availableBacklogEnvironments.find((environment) => environment.id === projectDefaultEnvironmentId)
+            : null)
+            || availableBacklogEnvironments.find((environment) => environment.isDefault)
+            || availableBacklogEnvironments[0]
+            || null;
           const defaultAgent = sortedAgents.find((agent) => agent.id === backlogComposerAgentId)
             || sortedAgents.find((agent) => agent.isDefault)
             || sortedAgents[0]
@@ -36751,6 +37574,31 @@ const html = `<!doctype html>
         }, [releaseBacklogToolbarPopover]);
 
         useEffect(() => {
+          if (!backlogTaskContextMenu) return undefined;
+
+          function handleBacklogTaskContextMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !backlogTaskContextMenuRef.current || backlogTaskContextMenuRef.current.contains(target)) {
+              return;
+            }
+            setBacklogTaskContextMenu(null);
+          }
+
+          function handleBacklogTaskContextMenuEscape(event) {
+            if (event.key === "Escape") {
+              setBacklogTaskContextMenu(null);
+            }
+          }
+
+          document.addEventListener("mousedown", handleBacklogTaskContextMenuPointerDown);
+          window.addEventListener("keydown", handleBacklogTaskContextMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleBacklogTaskContextMenuPointerDown);
+            window.removeEventListener("keydown", handleBacklogTaskContextMenuEscape);
+          };
+        }, [backlogTaskContextMenu]);
+
+        useEffect(() => {
           if (!taskDetailPopover) return undefined;
 
           function handleTaskDetailPopoverPointerDown(event) {
@@ -36793,6 +37641,7 @@ const html = `<!doctype html>
         useEffect(() => {
           if (taskDetailPopover) {
             setTaskDetailSelectPopover("");
+            setBacklogTaskContextMenu(null);
           }
         }, [taskDetailPopover]);
 
@@ -36922,7 +37771,11 @@ const html = `<!doctype html>
         useEffect(() => {
           const normalizedThreadId = String(missionControlRunState.threadId || "").trim();
           const normalizedProjectId = String(missionControlRunState.projectId || "").trim();
-          if (!normalizedThreadId || !normalizedProjectId || missionControlRunState.status !== "running") {
+          if (
+            !normalizedThreadId
+            || !normalizedProjectId
+            || (missionControlRunState.status !== "starting" && missionControlRunState.status !== "running")
+          ) {
             return undefined;
           }
 
@@ -36951,12 +37804,37 @@ const html = `<!doctype html>
                     ? data.data.status.trim().toLowerCase()
                     : "";
 
+              if (nextStatus === "running" && missionControlRunState.status !== "running") {
+                setMissionControlRunState((current) => current.threadId === normalizedThreadId
+                  ? {
+                      ...current,
+                      status: "running",
+                      error: "",
+                    }
+                  : current
+                );
+                if (typeof onStatusIndicatorItemChange === "function") {
+                  onStatusIndicatorItemChange(buildMissionControlStatusIndicatorItem({
+                    projectId: normalizedProjectId,
+                    projectName: selectedProject?.name || "Project",
+                    phase: "running",
+                  }));
+                }
+              }
+
               if (!nextStatus || nextStatus === "running" || nextStatus === "queued" || nextStatus === "pending" || nextStatus === "starting") {
                 timeoutId = window.setTimeout(pollMissionControlStatus, 2200);
                 return;
               }
 
               if (nextStatus === "completed") {
+                if (typeof onStatusIndicatorItemChange === "function") {
+                  onStatusIndicatorItemChange(buildMissionControlStatusIndicatorItem({
+                    projectId: normalizedProjectId,
+                    projectName: selectedProject?.name || "Project",
+                    phase: "finished",
+                  }));
+                }
                 setMissionControlRunState((current) => current.threadId === normalizedThreadId
                   ? {
                       ...current,
@@ -36969,6 +37847,14 @@ const html = `<!doctype html>
                 return;
               }
 
+              if (typeof onStatusIndicatorItemChange === "function") {
+                onStatusIndicatorItemChange(buildMissionControlStatusIndicatorItem({
+                  projectId: normalizedProjectId,
+                  projectName: selectedProject?.name || "Project",
+                  phase: nextStatus === "cancelled" ? "cancelled" : "failed",
+                  error: nextStatus === "cancelled" ? "" : "Mission Control run did not complete successfully.",
+                }));
+              }
               setMissionControlRunState((current) => current.threadId === normalizedThreadId
                 ? {
                     ...current,
@@ -36993,7 +37879,15 @@ const html = `<!doctype html>
               window.clearTimeout(timeoutId);
             }
           };
-        }, [backendUrl, missionControlRunState.projectId, missionControlRunState.status, missionControlRunState.threadId, requestHeaders]);
+        }, [
+          backendUrl,
+          missionControlRunState.projectId,
+          missionControlRunState.status,
+          missionControlRunState.threadId,
+          onStatusIndicatorItemChange,
+          requestHeaders,
+          selectedProject?.name,
+        ]);
 
         useEffect(() => {
           if (taskView !== "board") {
@@ -37048,6 +37942,94 @@ const html = `<!doctype html>
         useEffect(() => {
           selectedTaskIdRef.current = selectedTaskId;
         }, [selectedTaskId]);
+
+        const isTaskKeyboardNavigationBlocked = Boolean(
+          boardToolbarPopover
+          || backlogToolbarPopover
+          || releaseBacklogToolbarPopover
+          || backlogTaskContextMenu
+          || taskDetailPopover
+          || taskDetailSelectPopover
+          || taskSkillsPopoverOpen
+          || taskParentPickerState
+          || boardBlockedPickerState
+          || taskDeleteDialogState
+          || taskScheduleDialogState
+          || taskEnvironmentFilePickerOpen
+          || taskEnvironmentChangeDialog
+          || taskConnectorBrowserOpen
+          || projectEnvironmentFilePickerOpen
+        );
+
+        useEffect(() => {
+          const activeTaskNavigationIds = taskView === "board"
+            ? boardNavigationTaskIds
+            : taskView === "backlog"
+              ? backlogNavigationTaskIds
+              : [];
+
+          if ((taskView !== "board" && taskView !== "backlog") || !selectedProjectId || !selectedTaskId || activeTaskNavigationIds.length < 2 || isTaskKeyboardNavigationBlocked) {
+            return undefined;
+          }
+
+          function handleTaskNavigationKeyDown(event) {
+            if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+              return;
+            }
+            if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
+              return;
+            }
+            if (isBoardTaskKeyboardNavigationBlockedTarget(event.target)) {
+              return;
+            }
+
+            const currentSelectedTaskId = selectedTaskIdRef.current || selectedTaskId;
+            const currentTaskIndex = activeTaskNavigationIds.indexOf(currentSelectedTaskId);
+            if (currentTaskIndex === -1) {
+              return;
+            }
+
+            const nextTaskIndex = event.key === "ArrowUp"
+              ? currentTaskIndex - 1
+              : currentTaskIndex + 1;
+            if (nextTaskIndex < 0 || nextTaskIndex >= activeTaskNavigationIds.length) {
+              return;
+            }
+
+            const nextTaskId = activeTaskNavigationIds[nextTaskIndex];
+            if (!nextTaskId || nextTaskId === currentSelectedTaskId) {
+              return;
+            }
+
+            event.preventDefault();
+            handleSelectTask(nextTaskId);
+          }
+
+          window.addEventListener("keydown", handleTaskNavigationKeyDown);
+          return () => window.removeEventListener("keydown", handleTaskNavigationKeyDown);
+        }, [
+          backlogNavigationTaskIds,
+          backlogTaskContextMenu,
+          backlogToolbarPopover,
+          boardBlockedPickerState,
+          boardNavigationTaskIds,
+          boardToolbarPopover,
+          isTaskKeyboardNavigationBlocked,
+          projectEnvironmentFilePickerOpen,
+          releaseBacklogToolbarPopover,
+          selectedProjectId,
+          selectedTaskId,
+          taskConnectorBrowserOpen,
+          taskDeleteDialogState,
+          taskDetailPopover,
+          taskDetailSelectPopover,
+          taskEnvironmentChangeDialog,
+          taskEnvironmentFilePickerOpen,
+          taskParentPickerState,
+          taskScheduleDialogState,
+          taskSkillsPopoverOpen,
+          taskView,
+        ]);
 
         useEffect(() => {
           scheduleDraftRef.current = scheduleDraft;
@@ -38554,7 +39536,7 @@ const html = `<!doctype html>
             return;
           }
           updateDraftTask((current) => {
-            const currentSkillIds = normalizePlaygroundEnabledSkillIds(current.enabledSkills);
+            const currentSkillIds = getEffectivePlaygroundTaskEnabledSkillIds(current);
             return {
               ...current,
               enabledSkills: currentSkillIds.includes(normalizedSkillId)
@@ -38574,7 +39556,7 @@ const html = `<!doctype html>
           }
           updateDraftTask((current) => ({
             ...current,
-            enabledSkills: normalizePlaygroundEnabledSkillIds(current.enabledSkills).filter((value) => value !== normalizedSkillId),
+            enabledSkills: getEffectivePlaygroundTaskEnabledSkillIds(current).filter((value) => value !== normalizedSkillId),
           }), { autosave: true });
         }
 
@@ -38584,7 +39566,7 @@ const html = `<!doctype html>
             return;
           }
           updateScheduleDraft((current) => {
-            const currentSkillIds = normalizePlaygroundEnabledSkillIds(current?.enabledSkills);
+            const currentSkillIds = getEffectivePlaygroundTaskEnabledSkillIds(current);
             return {
               ...(current || buildProjectScheduleDraft(selectedProject)),
               enabledSkills: currentSkillIds.includes(normalizedSkillId)
@@ -38601,7 +39583,7 @@ const html = `<!doctype html>
           }
           updateScheduleDraft((current) => ({
             ...(current || buildProjectScheduleDraft(selectedProject)),
-            enabledSkills: normalizePlaygroundEnabledSkillIds(current?.enabledSkills).filter((value) => value !== normalizedSkillId),
+            enabledSkills: getEffectivePlaygroundTaskEnabledSkillIds(current).filter((value) => value !== normalizedSkillId),
           }));
         }
 
@@ -38936,6 +39918,21 @@ const html = `<!doctype html>
 
           setSelectedTaskId("");
           setMissionControlStrategyOpen(false);
+        }
+
+        function isBoardTaskKeyboardNavigationBlockedTarget(target) {
+          if (!(target instanceof Element)) {
+            return false;
+          }
+          if (target.closest("input, textarea, select")) {
+            return true;
+          }
+          if (target.closest("[contenteditable='true'], [contenteditable='']") || target.isContentEditable) {
+            return true;
+          }
+          return Boolean(
+            target.closest(".monaco-editor, .playground-tasks-schedule-panel, .tb-popup-menu, .tb-selection-popup, .playground-tasks-confirm-scrim, .playground-tasks-parent-picker-scrim, .playground-tasks-connector-browser, .playground-files-context-menu")
+          );
         }
 
         function commitLocalTaskRecord(taskRecord, options = {}) {
@@ -39637,15 +40634,7 @@ const html = `<!doctype html>
           }
 
           const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
-          const missionControlPrompt = buildPlaygroundMissionControlPrompt({
-            userPrompt: payload?.prompt,
-            attachments: payload?.attachments,
-          });
-          const runAttachments = mergePlaygroundAttachmentLists(
-            normalizedProject.attachments,
-            Array.isArray(payload?.attachments) ? payload.attachments : []
-          );
-          const enabledSkillsPayload = buildPlaygroundMissionControlEnabledSkillsPayload(payload?.enabledSkills);
+          const normalizedOperatorPrompt = typeof payload?.prompt === "string" ? payload.prompt.trim() : "";
           const launchEnvironmentId = String(
             payload?.environmentId
             || normalizedProject.defaultEnvironmentId
@@ -39659,6 +40648,16 @@ const html = `<!doctype html>
             || initialAgentId
             || ""
           ).trim();
+          const missionControlPrompt = buildPlaygroundMissionControlPrompt({
+            userPrompt: normalizedOperatorPrompt,
+            attachments: payload?.attachments,
+            launchAgentId: launchAgentId,
+          });
+          const runAttachments = mergePlaygroundAttachmentLists(
+            normalizedProject.attachments,
+            Array.isArray(payload?.attachments) ? payload.attachments : []
+          );
+          const enabledSkillsPayload = buildPlaygroundMissionControlEnabledSkillsPayload(payload?.enabledSkills);
           const response = await fetch(backendUrl + "/threads", {
             method: "POST",
             headers: {
@@ -39679,7 +40678,7 @@ const html = `<!doctype html>
                       projectName: normalizedProject.name || "Project",
                       source: "project_backlog_mission_control",
                       requestedAt: new Date().toISOString(),
-                      userPrompt: typeof payload?.prompt === "string" ? payload.prompt : "",
+                      userPrompt: normalizedOperatorPrompt,
                     },
                   },
                 },
@@ -39717,7 +40716,7 @@ const html = `<!doctype html>
                   projectName: normalizedProject.name || "Project",
                   source: "project_backlog_mission_control",
                   requestedAt: new Date().toISOString(),
-                  userPrompt: typeof payload?.prompt === "string" ? payload.prompt : "",
+                  userPrompt: normalizedOperatorPrompt,
                 },
               },
             },
@@ -39729,15 +40728,23 @@ const html = `<!doctype html>
           setMissionControlRunState({
             threadId: launchedThreadRecord.id,
             projectId: selectedProjectId,
-            status: "running",
+            status: "starting",
             error: "",
           });
+          if (typeof onStatusIndicatorItemChange === "function") {
+            onStatusIndicatorItemChange(buildMissionControlStatusIndicatorItem({
+              projectId: selectedProjectId,
+              projectName: normalizedProject.name || "Project",
+              phase: "starting",
+            }));
+          }
           if (onThreadStarted) {
             onThreadStarted(launchedThreadRecord.id, {
               threadRecord: launchedThreadRecord,
               taskRunRequest: {
                 token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                 prompt: missionControlPrompt,
+                userPrompt: normalizedOperatorPrompt,
                 attachments: runAttachments,
                 githubRepo: payload?.githubRepo || null,
                 enabledSkills: enabledSkillsPayload,
@@ -39760,14 +40767,7 @@ const html = `<!doctype html>
           missionControlSyncThreadIdRef.current = normalizedThreadId;
           try {
             const threadMessages = await fetchPlaygroundThreadMessages(normalizedThreadId);
-            const assistantMessages = threadMessages.filter((message) => String(message?.role || "").trim().toLowerCase() === "assistant");
-            const lastAssistantMessage = assistantMessages
-              .slice()
-              .reverse()
-              .find((message) => getPlaygroundThreadMessageText(message)) || null;
-            const parsedMissionControl = parsePlaygroundMissionControlResponseContent(
-              getPlaygroundThreadMessageText(lastAssistantMessage)
-            );
+            const parsedMissionControl = await resolvePlaygroundMissionControlRecordFromMessages(threadMessages);
             await persistProjectMissionControlRecord(normalizedProjectId, {
               ...parsedMissionControl,
               lastThreadId: normalizedThreadId,
@@ -39850,6 +40850,7 @@ const html = `<!doctype html>
         }
 
         function handleCloseTaskDetail() {
+          setBacklogTaskContextMenu(null);
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
           setTaskParentPickerState(null);
@@ -39872,6 +40873,7 @@ const html = `<!doctype html>
           if (!threadId || typeof onThreadStarted !== "function") {
             return;
           }
+          setBacklogTaskContextMenu(null);
           setTaskDetailPopover("");
           onThreadStarted(threadId, { contentMode: "changes" });
         }
@@ -39881,8 +40883,102 @@ const html = `<!doctype html>
           if (!threadId || typeof onThreadStarted !== "function") {
             return;
           }
+          setBacklogTaskContextMenu(null);
           setTaskDetailPopover("");
           onThreadStarted(threadId, { contentMode: "chat" });
+        }
+
+        function openBacklogTaskContextMenu(task, event) {
+          if (!task?.id || !event) {
+            return;
+          }
+          const viewportPadding = 12;
+          const estimatedMenuWidth = 296;
+          const estimatedMenuHeight = getTaskStartedThreadId(task) ? 180 : 128;
+          const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 0;
+          const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 0;
+          const nextX = viewportWidth > 0
+            ? Math.max(viewportPadding, Math.min(event.clientX, viewportWidth - estimatedMenuWidth - viewportPadding))
+            : event.clientX;
+          const nextY = viewportHeight > 0
+            ? Math.max(viewportPadding, Math.min(event.clientY, viewportHeight - estimatedMenuHeight - viewportPadding))
+            : event.clientY;
+          setTaskDetailPopover("");
+          setTaskDetailSelectPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setBacklogTaskContextMenu({
+            taskId: task.id,
+            x: nextX,
+            y: nextY,
+          });
+        }
+
+        function renderTaskActionsMenu(task, { closeMenu } = {}) {
+          if (!task?.id) {
+            return null;
+          }
+          const dismissMenu = typeof closeMenu === "function" ? closeMenu : function noop() {};
+          const canRunHumanTask = isHumanAssignedTask(task);
+          const startedThreadId = getTaskStartedThreadId(task);
+          const canShowRevertTaskChanges = Boolean(startedThreadId);
+
+          return React.createElement(React.Fragment, null,
+            React.createElement("button", {
+              type: "button",
+              className: "tb-popup-row",
+              onClick: () => {
+                dismissMenu();
+                if (canRunHumanTask) {
+                  void handleToggleTaskDone(task);
+                  return;
+                }
+                void handleStartTaskThread(task);
+              },
+              disabled: canRunHumanTask
+                ? saveState.isSaving
+                : saveState.isSaving || isTaskThreadLaunchLocked(task),
+            },
+              canRunHumanTask
+                ? React.createElement(Check, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 })
+                : React.createElement(Play, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, canRunHumanTask ? (task?.status === "done" ? "Reopen task" : "Mark complete") : "Run thread"),
+                React.createElement("span", null, canRunHumanTask ? "Move this human task into Finished." : "Start a fresh agent thread from this task.")
+              )
+            ),
+            canShowRevertTaskChanges
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  onClick: () => {
+                    dismissMenu();
+                    handleOpenTaskThreadChanges(task);
+                  },
+                  disabled: saveState.isSaving,
+                },
+                  React.createElement(RotateCcw, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, "Revert Changes"),
+                    React.createElement("span", null, "Open the last started thread in Changes view.")
+                  )
+                )
+              : null,
+            React.createElement("button", {
+              type: "button",
+              className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+              onClick: () => {
+                dismissMenu();
+                void handleDeleteTask(task.id);
+              },
+              disabled: saveState.isSaving,
+            },
+              React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, "Delete"),
+                React.createElement("span", null, "Remove this task from the project.")
+              )
+            )
+          );
         }
 
         function getTaskLinkedRunPresentation(threadRecord) {
@@ -43082,6 +44178,12 @@ const html = `<!doctype html>
                   style: getPlaygroundTaskColorStyle(task.taskColor),
                   draggable: isDraggable,
                   onClick: () => handleSelectTask(task.id),
+                  onContextMenu: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleSelectTask(task.id);
+                    openBacklogTaskContextMenu(task, event);
+                  },
                   onKeyDown: (event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
@@ -43246,97 +44348,124 @@ const html = `<!doctype html>
             );
           }
 
-          return React.createElement("div", { className: "playground-tasks-backlog-view" },
-            React.createElement("div", { className: "playground-tasks-backlog-header" },
-              headerContent,
-              React.createElement("div", {
-                  className: "playground-files-control-row playground-tasks-backlog-control-row",
-                  ref: toolbarRef,
+          function renderBacklogTaskContextMenu() {
+            if (!backlogTaskContextMenu?.taskId) {
+              return null;
+            }
+            const contextTask = tasksById[backlogTaskContextMenu.taskId] || null;
+            if (!contextTask) {
+              return null;
+            }
+            return React.createElement("div", {
+                ref: backlogTaskContextMenuRef,
+                className: "playground-tasks-toolbar-popup-shell playground-tasks-backlog-context-menu-shell",
+                style: {
+                  left: backlogTaskContextMenu.x + "px",
+                  top: backlogTaskContextMenu.y + "px",
                 },
-                React.createElement("div", { className: "playground-files-control-actions" },
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button" + (toolbarPopover === "filter" || filterMode !== "open" && filterMode !== "all" ? " is-active" : ""),
-                      onClick: () => setToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                    },
-                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Filter")
-                    ),
-                    toolbarPopover === "filter"
-                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          backlogFilterOptions.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + (filterMode === option.id ? " selected" : ""),
-                                onClick: () => {
-                                  setFilterMode(option.id);
-                                  setToolbarPopover("");
-                                },
-                              },
-                                React.createElement("span", { className: "tb-popup-check-slot" },
-                                  filterMode === option.id
-                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                    : null
-                                ),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                  React.createElement("span", null, option.label),
-                                  React.createElement("span", null, option.description)
-                                )
-                              )
-                          )
-                        )
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button" + (toolbarPopover === "sort" || sortMode !== "default" ? " is-active" : ""),
-                      onClick: () => setToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                    },
-                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Sort")
-                    ),
-                    toolbarPopover === "sort"
-                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          backlogSortOptions.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + (sortMode === option.id ? " selected" : ""),
-                                onClick: () => {
-                                  setSortMode(option.id);
-                                  setToolbarPopover("");
-                                },
-                              },
-                                React.createElement("span", { className: "tb-popup-check-slot" },
-                                  sortMode === option.id
-                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                    : null
-                                ),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                  React.createElement("span", null, option.label)
-                                )
-                              )
-                          )
-                        )
-                      : null
-                  ),
-                  extraToolbarContent
-                )
+              },
+              React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-backlog-context-menu" },
+                renderTaskActionsMenu(contextTask, {
+                  closeMenu: () => setBacklogTaskContextMenu(null),
+                })
               )
+            );
+          }
+
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-tasks-backlog-view" },
+              React.createElement("div", { className: "playground-tasks-backlog-header" },
+                headerContent,
+                React.createElement("div", {
+                    className: "playground-files-control-row playground-tasks-backlog-control-row",
+                    ref: toolbarRef,
+                  },
+                  React.createElement("div", { className: "playground-files-control-actions" },
+                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button" + (toolbarPopover === "filter" || filterMode !== "open" && filterMode !== "all" ? " is-active" : ""),
+                        onClick: () => setToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                      },
+                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Filter")
+                      ),
+                      toolbarPopover === "filter"
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            backlogFilterOptions.map((option) =>
+                              React.createElement("button", {
+                                  key: option.id,
+                                  type: "button",
+                                  className: "tb-popup-row tb-popup-row-select" + (filterMode === option.id ? " selected" : ""),
+                                  onClick: () => {
+                                    setFilterMode(option.id);
+                                    setToolbarPopover("");
+                                  },
+                                },
+                                  React.createElement("span", { className: "tb-popup-check-slot" },
+                                    filterMode === option.id
+                                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                      : null
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                    React.createElement("span", null, option.label),
+                                    React.createElement("span", null, option.description)
+                                  )
+                                )
+                            )
+                          )
+                        : null
+                    ),
+                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button" + (toolbarPopover === "sort" || sortMode !== "default" ? " is-active" : ""),
+                        onClick: () => setToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                      },
+                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Sort")
+                      ),
+                      toolbarPopover === "sort"
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            backlogSortOptions.map((option) =>
+                              React.createElement("button", {
+                                  key: option.id,
+                                  type: "button",
+                                  className: "tb-popup-row tb-popup-row-select" + (sortMode === option.id ? " selected" : ""),
+                                  onClick: () => {
+                                    setSortMode(option.id);
+                                    setToolbarPopover("");
+                                  },
+                                },
+                                  React.createElement("span", { className: "tb-popup-check-slot" },
+                                    sortMode === option.id
+                                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                      : null
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                    React.createElement("span", null, option.label)
+                                  )
+                                )
+                            )
+                          )
+                        : null
+                    ),
+                    extraToolbarContent
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-backlog-list" },
+                taskRoots.length > 0
+                  ? renderBacklogTaskTree(taskRoots, null, 0)
+                  : React.createElement("div", { className: "playground-tasks-empty playground-tasks-backlog-empty" },
+                      React.createElement("div", { className: "playground-tasks-empty-title" }, emptyTitle),
+                      React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy)
+                    ),
+                listFooter
+              ),
+              showComposer ? composer : null
             ),
-            React.createElement("div", { className: "playground-tasks-backlog-list" },
-              taskRoots.length > 0
-                ? renderBacklogTaskTree(taskRoots, null, 0)
-                : React.createElement("div", { className: "playground-tasks-empty playground-tasks-backlog-empty" },
-                    React.createElement("div", { className: "playground-tasks-empty-title" }, emptyTitle),
-                    React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy)
-                  ),
-              listFooter
-            ),
-            showComposer ? composer : null
+            renderBacklogTaskContextMenu()
           );
         }
 
@@ -43531,58 +44660,9 @@ const html = `<!doctype html>
         }
 
         function renderBoardView() {
-          const boardTasks = sortedTasks
-            .filter((task) => !isPlaygroundSubtaskRecord(task) && matchesBoardFilter(task, boardFilterMode))
-            .filter((task) => !selectedReleaseId || task.releaseId === selectedReleaseId);
+          const boardTasks = boardVisibleTasks;
           const draggingBoardTask = boardDraggingTaskId ? tasksById[boardDraggingTaskId] || null : null;
           const hasSelectedReleaseSection = Boolean(selectedReleaseId && selectedRelease);
-          const boardReleaseSections = hasSelectedReleaseSection
-            ? [{
-                key: selectedRelease.id,
-                releaseId: selectedRelease.id,
-                title: selectedRelease.name || "Release",
-                copy: selectedRelease.description || "",
-                tasks: boardTasks,
-              }]
-            : (() => {
-                const sections = [];
-                const sectionIndexByKey = new Map();
-                boardTasks.forEach((task) => {
-                  const normalizedReleaseId = typeof task?.releaseId === "string" && task.releaseId.trim()
-                    ? task.releaseId.trim()
-                    : "";
-                  const sectionKey = normalizedReleaseId || "__no_release__";
-                  const releaseRecord = normalizedReleaseId ? (releasesById[normalizedReleaseId] || null) : null;
-                  if (!sectionIndexByKey.has(sectionKey)) {
-                    sectionIndexByKey.set(sectionKey, sections.length);
-                    sections.push({
-                      key: sectionKey,
-                      releaseId: normalizedReleaseId,
-                      title: normalizedReleaseId ? (releaseRecord?.name || "Release unavailable") : "All other",
-                      copy: normalizedReleaseId
-                        ? (releaseRecord?.description || "")
-                        : "All tasks, that are not assigned to any release",
-                      tasks: [],
-                    });
-                  }
-                  sections[sectionIndexByKey.get(sectionKey)].tasks.push(task);
-                });
-                return sections
-                  .slice()
-                  .sort((left, right) => {
-                    const leftIsAllOther = left.key === "__no_release__";
-                    const rightIsAllOther = right.key === "__no_release__";
-                    if (leftIsAllOther !== rightIsAllOther) {
-                      return leftIsAllOther ? 1 : -1;
-                    }
-                    if (leftIsAllOther && rightIsAllOther) {
-                      return 0;
-                    }
-                    const leftRelease = releasesById[left.releaseId] || { id: left.releaseId, name: left.title };
-                    const rightRelease = releasesById[right.releaseId] || { id: right.releaseId, name: right.title };
-                    return compareTaskReleaseOrder(leftRelease, rightRelease);
-                  });
-              })();
 
           function isTaskInBoardReleaseSection(taskRecord, releaseId) {
             const taskReleaseId = typeof taskRecord?.releaseId === "string" && taskRecord.releaseId.trim()
@@ -43910,7 +44990,10 @@ const html = `<!doctype html>
           const activeScheduleColorPresentation = getPlaygroundTaskColorPresentation(scheduleDraft?.taskColor);
           const ActiveSchedulePriorityIcon = activeSchedulePriorityPresentation.Icon;
           const selectedScheduleAgent = agentsById[String(scheduleDraft?.agentId || "").trim()] || null;
-          const selectedScheduleEnvironment = availableBacklogEnvironments.find((environment) => environment.id === String(scheduleDraft?.environmentId || "").trim()) || null;
+          const activeScheduleEnvironmentDisplay = resolvePlaygroundTaskEnvironmentDisplay(scheduleDraft, { projectRecord: selectedProject });
+          const selectedScheduleEnvironment = activeScheduleEnvironmentDisplay.environmentId
+            ? availableBacklogEnvironments.find((environment) => environment.id === activeScheduleEnvironmentDisplay.environmentId) || null
+            : null;
           const activeScheduleReleaseId = String(scheduleDraft?.releaseId || "").trim();
           const activeScheduleReleaseLabel = activeScheduleReleaseId
             ? (releasesById[activeScheduleReleaseId]?.name || "Release")
@@ -43947,7 +45030,7 @@ const html = `<!doctype html>
           const scheduleComments = normalizePlaygroundTaskCommentList(scheduleDraft?.comments)
             .slice()
             .sort((left, right) => String(left.createdAt || "").localeCompare(String(right.createdAt || "")));
-          const scheduleSkillEntries = normalizePlaygroundEnabledSkillIds(scheduleDraft?.enabledSkills)
+          const scheduleSkillEntries = getEffectivePlaygroundTaskEnabledSkillIds(scheduleDraft)
             .map((skillId) => resolveTaskSkillItem(skillId))
             .filter(Boolean);
           const scheduleConnectorEntries = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => {
@@ -44414,14 +45497,15 @@ const html = `<!doctype html>
                             React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                               renderScheduleDetailSelectControl({
                                 popoverId: "schedule-environment",
-                                valueLabel: selectedScheduleEnvironment?.name || "None",
-                                isEmpty: !selectedScheduleEnvironment,
+                                valueLabel: activeScheduleEnvironmentDisplay.label,
+                                isEmpty: false,
                                 menuClassName: "playground-tasks-toolbar-popup-menu-environment",
                                 children: [
                                   renderScheduleDetailSelectOptionRow({
-                                    key: "__none__",
-                                    label: "None",
-                                    selected: !selectedScheduleEnvironment,
+                                    key: "__project_default__",
+                                    label: "Project Default",
+                                    description: selectedScheduleEnvironment?.name || "Uses the project's default environment",
+                                    selected: !String(scheduleDraft?.environmentId || "").trim(),
                                     onClick: () => {
                                       updateScheduleDraft((current) => ({
                                         ...(current || buildProjectScheduleDraft(selectedProject)),
@@ -44435,7 +45519,7 @@ const html = `<!doctype html>
                                     renderScheduleDetailSelectOptionRow({
                                       key: environment.id,
                                       label: environment.name + (environment.isDefault ? " (Default)" : ""),
-                                      selected: scheduleDraft?.environmentId === environment.id,
+                                      selected: String(scheduleDraft?.environmentId || "").trim() === environment.id,
                                       onClick: () => {
                                         updateScheduleDraft((current) => ({
                                           ...(current || buildProjectScheduleDraft(selectedProject)),
@@ -44629,7 +45713,7 @@ const html = `<!doctype html>
                               ),
                               React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced tb-popup-panel-section-skills-body" },
                                 (taskSkillsTab === "system" ? taskSystemSkillItems : taskCustomSkillItems).map((skill) => {
-                                  const isEnabled = normalizePlaygroundEnabledSkillIds(scheduleDraft?.enabledSkills).includes(skill.id);
+                                  const isEnabled = getEffectivePlaygroundTaskEnabledSkillIds(scheduleDraft).includes(skill.id);
                                   return React.createElement("button", {
                                       key: skill.id,
                                       type: "button",
@@ -45264,7 +46348,6 @@ const html = `<!doctype html>
               return String(left.title || "").localeCompare(String(right.title || ""));
             });
           const startedThreadId = getTaskStartedThreadId(draftTask);
-          const canRevertTaskChanges = Boolean(startedThreadId);
           const isTaskConfigLocked = Boolean(startedThreadId);
           const activeTicketNumber = taskTicketNumbersById[draftTask.id] || draftTask.ticketNumber || "001";
           const activeTaskType = normalizePlaygroundTaskType(draftTask.taskType);
@@ -45281,7 +46364,7 @@ const html = `<!doctype html>
           const taskComments = normalizePlaygroundTaskCommentList(draftTask.comments)
             .slice()
             .sort((left, right) => String(left.createdAt || "").localeCompare(String(right.createdAt || "")));
-          const taskSkillEntries = normalizePlaygroundEnabledSkillIds(draftTask.enabledSkills)
+          const taskSkillEntries = getEffectivePlaygroundTaskEnabledSkillIds(draftTask)
             .map((skillId) => resolveTaskSkillItem(skillId))
             .filter(Boolean);
           const taskConnectorEntries = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => {
@@ -45319,9 +46402,14 @@ const html = `<!doctype html>
           const activeAssigneeLabel = resolvedTaskAssigneeId
             ? getTaskAssigneeName(resolvedTaskAssigneeId, "Unassigned")
             : "Unassigned";
-          const activeEnvironmentLabel = draftTask.environmentId
-            ? (availableBacklogEnvironments.find((environment) => environment.id === draftTask.environmentId)?.name || "Environment")
-            : "None";
+          const activeEnvironmentDisplay = resolvePlaygroundTaskEnvironmentDisplay(draftTask, {
+            projectRecord: selectedProject,
+          });
+          const activeEnvironmentLabel = activeEnvironmentDisplay.label;
+          const projectDefaultEnvironmentId = getPlaygroundProjectDefaultEnvironmentId(selectedProject);
+          const projectDefaultEnvironment = projectDefaultEnvironmentId
+            ? availableBacklogEnvironments.find((environment) => environment.id === projectDefaultEnvironmentId) || null
+            : null;
           const activeBlockedByTask = blockedByTaskId ? (tasksById[blockedByTaskId] || null) : null;
           const activeBlockedByLabel = activeBlockedByTask
             ? ((taskTicketNumbersById[activeBlockedByTask.id] || activeBlockedByTask.ticketNumber || "000") + " - " + (activeBlockedByTask.title || "Untitled Task"))
@@ -45484,56 +46572,9 @@ const html = `<!doctype html>
                     }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
                     taskDetailPopover === "menu"
                       ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              setTaskDetailPopover("");
-                              if (isHumanAssignedTask(draftTask)) {
-                                void handleToggleTaskDone(draftTask);
-                                return;
-                              }
-                              void handleStartTaskThread(draftTask);
-                            },
-                            disabled: isHumanAssignedTask(draftTask)
-                              ? saveState.isSaving
-                              : saveState.isSaving || isTaskThreadLaunchLocked(draftTask),
-                          },
-                            isHumanAssignedTask(draftTask)
-                              ? React.createElement(Check, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 })
-                              : React.createElement(Play, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, isHumanAssignedTask(draftTask) ? (draftTask?.status === "done" ? "Reopen task" : "Mark complete") : "Run thread"),
-                              React.createElement("span", null, isHumanAssignedTask(draftTask) ? "Move this human task into Finished." : "Start a fresh agent thread from this task.")
-                            )
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => handleOpenTaskThreadChanges(draftTask),
-                            disabled: saveState.isSaving || !canRevertTaskChanges,
-                          },
-                            React.createElement(RotateCcw, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Revert Changes"),
-                              React.createElement("span", null, canRevertTaskChanges
-                                ? "Open the last started thread in Changes view."
-                                : "Available after this task has been run at least once."
-                              )
-                            )
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-                            onClick: () => void handleDeleteTask(draftTask.id),
-                            disabled: saveState.isSaving,
-                          },
-                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Delete"),
-                              React.createElement("span", null, "Remove this task from the project.")
-                            )
-                          )
+                          renderTaskActionsMenu(draftTask, {
+                            closeMenu: () => setTaskDetailPopover(""),
+                          })
                         )
                       : null
                   ),
@@ -45866,12 +46907,13 @@ const html = `<!doctype html>
                       popoverId: "environment",
                       valueLabel: activeEnvironmentLabel,
                       disabled: isTaskConfigLocked,
-                      isEmpty: !draftTask.environmentId,
+                      isEmpty: false,
                       menuClassName: "playground-tasks-toolbar-popup-menu-environment",
                       children: [
                         renderTaskDetailSelectOptionRow({
-                          key: "__none__",
-                          label: "None",
+                          key: "__project_default__",
+                          label: "Project Default",
+                          description: projectDefaultEnvironment?.name || "Uses the project's default environment",
                           selected: !draftTask.environmentId,
                           onClick: () => {
                             handleTaskEnvironmentSelectionChange("");
@@ -46086,7 +47128,7 @@ const html = `<!doctype html>
                             ),
                             React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced tb-popup-panel-section-skills-body" },
                               (taskSkillsTab === "system" ? taskSystemSkillItems : taskCustomSkillItems).map((skill) => {
-                                const isEnabled = normalizePlaygroundEnabledSkillIds(draftTask.enabledSkills).includes(skill.id);
+                                const isEnabled = getEffectivePlaygroundTaskEnabledSkillIds(draftTask).includes(skill.id);
                                 return React.createElement("button", {
                                     key: skill.id,
                                     type: "button",
@@ -47027,7 +48069,8 @@ const html = `<!doctype html>
           { id: "frontend_design", name: "Frontend Design", enabled: true },
           { id: "pptx", name: "PowerPoint/PPTX", enabled: true },
           { id: "memory", name: "Memory", enabled: true },
-          { id: "task_management", name: "Task Management", enabled: true }
+          { id: "task_management", name: "Task Management", enabled: true },
+          { id: "computer_agents", name: "Computer Agents", enabled: true }
         ];
         const hasSessionAuth = sessionState.status === "authenticated";
         const hasRealAccess = hasSessionAuth;
@@ -47543,7 +48586,8 @@ const html = `<!doctype html>
         }
 
         async function buildWelcomeWidgetEnabledSkillsPayload(taskRecord) {
-          const enabledSkillIds = normalizePlaygroundEnabledSkillIds(taskRecord?.enabledSkills);
+          const normalizedTaskRecord = normalizePlaygroundTaskRecord(taskRecord);
+          const enabledSkillIds = getEffectivePlaygroundTaskEnabledSkillIds(normalizedTaskRecord);
           const defaultSkillMap = {
             image_generation: "imageGeneration",
             web_search: "webSearch",
@@ -47558,6 +48602,9 @@ const html = `<!doctype html>
           Object.entries(defaultSkillMap).forEach(([skillId, payloadKey]) => {
             payload[payloadKey] = enabledSkillIds.includes(skillId);
           });
+          if (enabledSkillIds.includes("computer_agents")) {
+            payload.computerAgents = true;
+          }
           const customSkillIds = enabledSkillIds.filter((skillId) => !defaultSkillMap[skillId]);
           if (customSkillIds.length > 0) {
             const projectCustomSkills = await loadWelcomeWidgetProjectCustomSkills(taskRecord?.projectId || welcomeWidgetsState.projectId || "");
@@ -55816,6 +56863,7 @@ const html = `<!doctype html>
                             openTaskRequest: taskOpenRequest,
                             navigationRequest: tasksPageNavigationRequest,
                             onTaskRunStateChange: applyTaskRunState,
+                            onStatusIndicatorItemChange: upsertStatusIndicatorItem,
                             onNavigationRequestHandled: (token) => {
                               setTasksPageNavigationRequest((current) => (
                                 current && current.token === token ? null : current
@@ -55864,6 +56912,7 @@ const html = `<!doctype html>
                               hasRealAccess
                                 ? React.createElement(RunnerChat, {
                                     key: runnerRenderKey,
+                                    className: "playground-thread-runner" + (selectedThreadShellBackground ? " is-project-wallpaper-active" : ""),
                                     backendUrl: proxyBackendBase,
                                     apiKey: apiKey,
                                     fetchCustomSkills: computerAgentsMode ? handleFetchCustomSkills : undefined,
@@ -55899,12 +56948,13 @@ const html = `<!doctype html>
                                       ));
                                     },
                                     onTaskPreviewClick: (taskPreview) => {
-                                      if (!taskPreview?.taskId || !taskPreview?.projectId) {
+                                      const resolvedProjectId = String(taskPreview?.projectId || selectedThreadProjectId || "").trim();
+                                      if (!taskPreview?.taskId || !resolvedProjectId) {
                                         return;
                                       }
                                       setSidebarOpen(false);
                                       setThreadTaskOpenRequest({
-                                        projectId: taskPreview.projectId,
+                                        projectId: resolvedProjectId,
                                         taskId: taskPreview.taskId,
                                         threadId: activeRunnerThreadId || currentThreadId || "",
                                         token: Date.now().toString(36) + Math.random().toString(36).slice(2),
@@ -56027,6 +57077,7 @@ const html = `<!doctype html>
                               openTaskRequest: threadTaskOpenRequest,
                               navigationRequest: null,
                               onTaskRunStateChange: applyTaskRunState,
+                              onStatusIndicatorItemChange: upsertStatusIndicatorItem,
                               onNavigationRequestHandled: () => {},
                               onProjectScopeChange: (nextProjectId) => {
                                 const normalizedProjectId = String(nextProjectId || "").trim();
@@ -56932,6 +57983,8 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId, 
           memory: "memory",
           taskManagement: "task_management",
           task_management: "task_management",
+          computerAgents: "computer_agents",
+          computer_agents: "computer_agents",
         };
 
         const appendSkillId = (value) => {

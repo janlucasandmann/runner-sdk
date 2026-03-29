@@ -73,6 +73,7 @@ import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runn
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
+const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
 const RUNNER_THINKING_STATUS_FADE_DURATION_MS = 120;
 const RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS = 500;
 const RUNNER_THREAD_HISTORY_PREVIEW_LENGTH = 50;
@@ -429,6 +430,7 @@ const COMPOSER_QUOTED_SELECTION_ANIMATION_MS = 220;
 interface RunnerThreadHydrationPayload {
   threadId: string;
   threadStatus?: string | null;
+  threadUpdatedAt?: string | null;
   threadEnvironmentId?: string | null;
   threadEnvironmentName?: string | null;
   initialPrompt: string;
@@ -820,9 +822,10 @@ const DEFAULT_COMPUTER_AGENT_SKILLS: RunnerChatSkill[] = [
   { id: "pptx", name: "PowerPoint/PPTX", enabled: true },
   { id: "memory", name: "Memory", enabled: true },
   { id: "task_management", name: "Task Management", enabled: true },
+  { id: "computer_agents", name: "Computer Agents", enabled: true },
 ];
-const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "research", "browser", "memory", "task_management"] as const;
-const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v1";
+const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "research", "browser", "memory", "task_management", "computer_agents"] as const;
+const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v2";
 
 const DEFAULT_SCHEDULE_PRESETS: RunnerChatSchedulePreset[] = [
   { id: "daily", label: "Every day", cron: "0 9 * * *" },
@@ -2256,6 +2259,10 @@ function buildEnabledSkillsPayload(enabledSkillIds: string[], displayedSkills: R
     payload[key] = enabled.has(id);
   }
 
+  if (enabled.has("computer_agents")) {
+    payload.computerAgents = true;
+  }
+
   const customSkills = displayedSkills
     .filter((skill) => skill.isCustom)
     .map((skill) => skill.id)
@@ -2754,6 +2761,7 @@ async function fetchAllThreadMessages(params: {
       {
         method: "GET",
         headers,
+        cache: "no-store",
       }
     );
 
@@ -3257,18 +3265,22 @@ async function fetchThreadHydrationPayload(params: {
     fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}`, {
       method: "GET",
       headers,
+      cache: "no-store",
     }),
     fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/logs`, {
       method: "GET",
       headers,
+      cache: "no-store",
     }),
     fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/diffs`, {
       method: "GET",
       headers,
+      cache: "no-store",
     }).catch(() => null),
     fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/steps?limit=500`, {
       method: "GET",
       headers,
+      cache: "no-store",
     }).catch(() => null),
     messagesPromise,
   ]);
@@ -3297,6 +3309,8 @@ async function fetchThreadHydrationPayload(params: {
   } = {};
   let parsedLogs: {
     logs?: RunnerLog[];
+    status?: string | null;
+    updatedAt?: string | null;
     duration?: string | number | null;
     agentName?: string | null;
     environmentName?: string | null;
@@ -3373,8 +3387,14 @@ async function fetchThreadHydrationPayload(params: {
   return {
     threadId: typeof parsedThread.thread?.id === "string" && parsedThread.thread.id.trim() ? parsedThread.thread.id : params.threadId,
     threadStatus:
-      typeof parsedThread.thread?.status === "string" && parsedThread.thread.status.trim()
-        ? parsedThread.thread.status.trim()
+      typeof parsedLogs.status === "string" && parsedLogs.status.trim()
+        ? parsedLogs.status.trim()
+        : typeof parsedThread.thread?.status === "string" && parsedThread.thread.status.trim()
+          ? parsedThread.thread.status.trim()
+          : null,
+    threadUpdatedAt:
+      typeof parsedLogs.updatedAt === "string" && parsedLogs.updatedAt.trim()
+        ? parsedLogs.updatedAt
         : null,
     threadEnvironmentId:
       typeof parsedThread.thread?.environmentId === "string" && parsedThread.thread.environmentId.trim()
@@ -3391,6 +3411,66 @@ async function fetchThreadHydrationPayload(params: {
     agentName: parsedLogs.agentName ?? parsedThread.thread?.agentName ?? null,
     environmentName: parsedLogs.environmentName ?? parsedThread.thread?.environmentName ?? null,
   };
+}
+
+async function fetchThreadStatusSnapshot(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  requestHeaders?: HeadersInit;
+}): Promise<{
+  threadId: string;
+  status: string | null;
+  updatedAt: string | null;
+  completedAt: string | null;
+}> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/status`, {
+    method: "GET",
+    headers: buildRunnerHeaders(params.requestHeaders, params.apiKey),
+    cache: "no-store",
+  });
+
+  const bodyText = await response.text();
+  let parsed: {
+    threadId?: string;
+    id?: string;
+    status?: string | null;
+    updatedAt?: string | null;
+    completedAt?: string | null;
+    message?: string;
+    error?: string;
+  } = {};
+
+  try {
+    parsed = bodyText ? JSON.parse(bodyText) : {};
+  } catch {
+    parsed = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(parsed.message || parsed.error || `Failed to load thread status (${response.status})`);
+  }
+
+  return {
+    threadId:
+      typeof parsed.threadId === "string" && parsed.threadId.trim()
+        ? parsed.threadId
+        : typeof parsed.id === "string" && parsed.id.trim()
+          ? parsed.id
+          : params.threadId,
+    status: typeof parsed.status === "string" && parsed.status.trim() ? parsed.status.trim() : null,
+    updatedAt: typeof parsed.updatedAt === "string" && parsed.updatedAt.trim() ? parsed.updatedAt : null,
+    completedAt: typeof parsed.completedAt === "string" && parsed.completedAt.trim() ? parsed.completedAt : null,
+  };
+}
+
+function normalizeThreadLifecycleStatus(status: string | null | undefined): string {
+  return typeof status === "string" ? status.trim().toLowerCase() : "";
+}
+
+function isRunningThreadLifecycleStatus(status: string | null | undefined): boolean {
+  return normalizeThreadLifecycleStatus(status) === "running";
 }
 
 function buildHydratedTurnsFromMessages(
@@ -4056,6 +4136,67 @@ function turnsLikelyMatch(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): bool
   return false;
 }
 
+function isTerminalTurnStatus(status: RunnerTurnStatus): boolean {
+  return status === "completed" || status === "failed" || status === "cancelled";
+}
+
+function getTurnLatestProgressTimestampMs(turn: RunnerTurn): number {
+  let latestTimestampMs = turn.completedAtMs ?? turn.startedAtMs;
+
+  for (const log of turn.logs) {
+    const createdAtMs = parseIsoTimestampMs(log.createdAt);
+    if (createdAtMs !== null) {
+      latestTimestampMs = Math.max(latestTimestampMs, createdAtMs);
+      continue;
+    }
+
+    const absoluteTimestampMs = parseIsoTimestampMs(log.time);
+    if (absoluteTimestampMs !== null) {
+      latestTimestampMs = Math.max(latestTimestampMs, absoluteTimestampMs);
+      continue;
+    }
+
+    const relativeSeconds = log.time ? parseSecondsFromClock(log.time) : null;
+    if (relativeSeconds !== null) {
+      latestTimestampMs = Math.max(latestTimestampMs, turn.startedAtMs + relativeSeconds * 1000);
+    }
+  }
+
+  return latestTimestampMs;
+}
+
+function shouldPreserveLocalTurnProgress(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): boolean {
+  const localIsTerminal = isTerminalTurnStatus(localTurn.status);
+  const hydratedIsTerminal = isTerminalTurnStatus(hydratedTurn.status);
+  if (localIsTerminal !== hydratedIsTerminal) {
+    return localIsTerminal;
+  }
+
+  if (localTurn.logs.length !== hydratedTurn.logs.length) {
+    return localTurn.logs.length > hydratedTurn.logs.length;
+  }
+
+  const localAssistantTextLength = getTurnAssistantMessageText(localTurn).length;
+  const hydratedAssistantTextLength = getTurnAssistantMessageText(hydratedTurn).length;
+  if (localAssistantTextLength !== hydratedAssistantTextLength) {
+    return localAssistantTextLength > hydratedAssistantTextLength;
+  }
+
+  const localLastLogMessageLength = String(localTurn.logs[localTurn.logs.length - 1]?.message || "").length;
+  const hydratedLastLogMessageLength = String(hydratedTurn.logs[hydratedTurn.logs.length - 1]?.message || "").length;
+  if (localLastLogMessageLength !== hydratedLastLogMessageLength) {
+    return localLastLogMessageLength > hydratedLastLogMessageLength;
+  }
+
+  const localLatestProgressTimestampMs = getTurnLatestProgressTimestampMs(localTurn);
+  const hydratedLatestProgressTimestampMs = getTurnLatestProgressTimestampMs(hydratedTurn);
+  if (localLatestProgressTimestampMs !== hydratedLatestProgressTimestampMs) {
+    return localLatestProgressTimestampMs > hydratedLatestProgressTimestampMs;
+  }
+
+  return false;
+}
+
 function isTurnResponseLog(log: RunnerLog): boolean {
   return log.eventType === "agent_message" || log.eventType === "llm_response";
 }
@@ -4185,12 +4326,7 @@ function mergeHydratedTurns(existingTurns: RunnerTurn[], hydratedTurns: RunnerTu
     }
 
     const hydratedTurn = mergedTurns[hydratedIndex];
-    const localAssistantText = getTurnAssistantMessageText(localTurn);
-    const hydratedAssistantText = getTurnAssistantMessageText(hydratedTurn);
-    const preferLocalTurn =
-      localTurn.status === "queued" ||
-      localTurn.status === "running" ||
-      (localPresentation === "btw" && localAssistantText.length > hydratedAssistantText.length);
+    const preferLocalTurn = shouldPreserveLocalTurnProgress(localTurn, hydratedTurn);
 
     if (preferLocalTurn) {
       mergedTurns[hydratedIndex] = {
@@ -4642,6 +4778,15 @@ function defaultAttachmentFromFile(file: File): RunnerAttachment {
   };
 }
 
+const LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 24;
+const REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS = 1500;
+const REATTACH_THREAD_RETRY_DELAY_MS = 3000;
+const REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT = 2;
+
+function isLogViewportPinnedToBottom(element: HTMLDivElement): boolean {
+  return element.scrollHeight - element.scrollTop - element.clientHeight <= LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX;
+}
+
 export function RunnerChat({
   backendUrl,
   apiKey,
@@ -4884,6 +5029,7 @@ export function RunnerChat({
   const [hoveredThreadHistoryItemId, setHoveredThreadHistoryItemId] = useState<string | null>(null);
   const [isThreadHistoryRailHovered, setIsThreadHistoryRailHovered] = useState(false);
   const [isThreadHistoryAtMaxWidth, setIsThreadHistoryAtMaxWidth] = useState(true);
+  const shouldAutoScrollLogsRef = useRef(true);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -7300,7 +7446,31 @@ export function RunnerChat({
   }, [schedulePresets]);
 
   useLayoutEffect(() => {
+    shouldAutoScrollLogsRef.current = true;
+  }, [currentThreadId]);
+
+  useEffect(() => {
+    const scrollElement = logsRef.current;
+    if (!scrollElement) {
+      return;
+    }
+    const resolvedScrollElement = scrollElement;
+
+    function handleLogViewportScroll() {
+      shouldAutoScrollLogsRef.current = isLogViewportPinnedToBottom(resolvedScrollElement);
+    }
+
+    handleLogViewportScroll();
+    resolvedScrollElement.addEventListener("scroll", handleLogViewportScroll, { passive: true });
+
+    return () => {
+      resolvedScrollElement.removeEventListener("scroll", handleLogViewportScroll);
+    };
+  }, [currentThreadId]);
+
+  useLayoutEffect(() => {
     if (!logsRef.current) return;
+    if (!shouldAutoScrollLogsRef.current) return;
     logsRef.current.scrollTop = logsRef.current.scrollHeight;
   }, [logs, turns]);
 
@@ -9820,6 +9990,7 @@ export function RunnerChat({
         environmentId={runnerEnvironmentId}
         requestHeaders={runnerHeaders}
         onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
+        onTaskPreviewClick={onTaskPreviewClick}
       />
     );
   }
@@ -9838,6 +10009,9 @@ export function RunnerChat({
     if (skill.id === "pptx") return <LucideLayers className={className} strokeWidth={1.75} />;
     if (skill.id === "memory") return <LucideBrain className={className} strokeWidth={1.75} />;
     if (skill.id === "task_management") return <LucideListTodo className={className} strokeWidth={1.75} />;
+    if (skill.id === "computer_agents") {
+      return <img src={RUNNER_TRANSPARENT_LOGO_URL} alt="" aria-hidden="true" draggable={false} className={className} style={{ objectFit: "contain" }} />;
+    }
     return <LucideLayers className={className} strokeWidth={1.75} />;
   }
 
@@ -10595,16 +10769,32 @@ export function RunnerChat({
       return;
     }
 
-    const hasHydratedRunningTurn = turns.some((turn) => turn.status === "running");
-    if (!hasHydratedRunningTurn) {
-      return;
-    }
-
     let cancelled = false;
+    let pollInFlight = false;
+    let timeoutId: number | null = null;
+    let trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
+
+    const scheduleNextPoll = (delayMs: number) => {
+      if (cancelled) {
+        return;
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+      timeoutId = window.setTimeout(() => {
+        void pollRunningThread();
+      }, delayMs);
+    };
 
     const pollRunningThread = async () => {
+      if (cancelled || pollInFlight) {
+        return;
+      }
+
+      pollInFlight = true;
+
       try {
-        const payload = await fetchThreadHydrationPayload({
+        const statusSnapshot = await fetchThreadStatusSnapshot({
           backendUrl: normalizedBackendUrl,
           apiKey: apiKey.trim(),
           threadId: currentThreadId,
@@ -10615,37 +10805,70 @@ export function RunnerChat({
           return;
         }
 
-        applyHydratedThreadEnvironment(payload);
-        const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
-          agentName: displayedAgentLabel,
-          environmentName: payload.threadEnvironmentName ?? payload.environmentName ?? displayedEnvironmentLabel,
-          backendUrl: normalizedBackendUrl,
-        });
+        const localHasRunningTurn = turnsRef.current.some((turn) => turn.status === "running");
+        const remoteThreadIsRunning = isRunningThreadLifecycleStatus(statusSnapshot.status);
+        const shouldHydrateThread = remoteThreadIsRunning || localHasRunningTurn;
 
-        if (cancelled) {
+        let nextHasRunningTurn = localHasRunningTurn;
+
+        if (shouldHydrateThread) {
+          const payload = await fetchThreadHydrationPayload({
+            backendUrl: normalizedBackendUrl,
+            apiKey: apiKey.trim(),
+            threadId: currentThreadId,
+            requestHeaders,
+          });
+
+          if (cancelled) {
+            return;
+          }
+
+          applyHydratedThreadEnvironment(payload);
+          const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
+            agentName: displayedAgentLabel,
+            environmentName: payload.threadEnvironmentName ?? payload.environmentName ?? displayedEnvironmentLabel,
+            backendUrl: normalizedBackendUrl,
+          });
+
+          if (cancelled) {
+            return;
+          }
+
+          const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
+          nextHasRunningTurn = mergedTurns.some((turn) => turn.status === "running");
+          setTurns(mergedTurns);
+          setExpandedTurns((previousExpandedTurns) =>
+            mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, { defaultLatestExpanded: true })
+          );
+        }
+
+        if (remoteThreadIsRunning || nextHasRunningTurn) {
+          trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
+          scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
           return;
         }
 
-        const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
-        setTurns(mergedTurns);
-        setExpandedTurns((previousExpandedTurns) =>
-          mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, { defaultLatestExpanded: true })
-        );
+        if (shouldHydrateThread && trailingTerminalPollsRemaining > 0) {
+          trailingTerminalPollsRemaining -= 1;
+          scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
+        }
       } catch (error) {
         if (!cancelled) {
           console.warn("[RunnerChat] Failed to refresh hydrated running thread:", error);
+          scheduleNextPoll(REATTACH_THREAD_RETRY_DELAY_MS);
         }
+      } finally {
+        pollInFlight = false;
       }
     };
 
     void pollRunningThread();
-    const interval = window.setInterval(() => {
-      void pollRunningThread();
-    }, 2000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(interval);
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
     };
   }, [
     apiKey,
@@ -10656,7 +10879,6 @@ export function RunnerChat({
     isRunning,
     normalizedBackendUrl,
     requestHeaders,
-    turns,
   ]);
 
   function renderThreadContextPopup() {

@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   AlertCircle,
+  Bookmark,
   Bot,
   Brain,
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronsUp,
   Cloud,
   Copy,
+  Equal,
   Eye,
   FileImage,
   FilePlus,
@@ -73,6 +78,24 @@ interface RunnerWorkLogEntryProps {
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
+  onTaskPreviewClick?: (preview: {
+    taskId: string;
+    projectId: string;
+    projectName?: string;
+    threadId?: string;
+    ticketNumber: string;
+    title: string;
+    description?: string;
+    taskColor?: string;
+    status?: string;
+    priority?: string;
+    taskType?: string;
+    assigneeAgentId?: string;
+    assigneeName?: string;
+    environmentId?: string;
+    environmentName?: string;
+    isDeleted?: boolean;
+  }) => void;
 }
 
 function isRunnerLogImageFilePath(filePath?: string | null): boolean {
@@ -908,6 +931,490 @@ function resolveWriteDiffPreview(log: RunnerLog, filePath: string | undefined, o
     deletions: typeof diffMetadata?.deletions === "number" ? diffMetadata.deletions : fallbackStats?.deletions ?? null,
     hasKnownCounts,
   };
+}
+
+type RunnerTaskManagementCreatedTaskPreview = {
+  id: string;
+  title: string;
+  projectId?: string | null;
+  projectName?: string | null;
+  ticketNumber?: string | null;
+  status?: string | null;
+  priority?: string | null;
+  taskType?: string | null;
+  assigneeName?: string | null;
+  taskColor?: string | null;
+};
+
+function asOptionalTrimmedString(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function asObjectRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+function normalizeTaskManagementPreviewStatus(value: string | null | undefined): "todo" | "in_progress" | "blocked" | "done" {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "in_progress" || normalized === "blocked" || normalized === "done") {
+    return normalized;
+  }
+  if (normalized === "backlog" || normalized === "todo") {
+    return "todo";
+  }
+  return "todo";
+}
+
+function normalizeTaskManagementPreviewPriority(value: string | null | undefined): "low" | "medium" | "high" | "critical" {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "low" || normalized === "medium" || normalized === "high" || normalized === "critical") {
+    return normalized;
+  }
+  return "medium";
+}
+
+function normalizeTaskManagementPreviewType(value: string | null | undefined): "task" | "subtask" {
+  return String(value || "").trim().toLowerCase() === "subtask" ? "subtask" : "task";
+}
+
+function normalizeTaskManagementPreviewColor(value: string | null | undefined): "gray" | "blue" | "green" | "amber" | "rose" {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "gray" || normalized === "green" || normalized === "amber" || normalized === "rose") {
+    return normalized;
+  }
+  return normalized === "blue" ? "blue" : "gray";
+}
+
+function getTaskManagementPreviewColorStyle(value: string | null | undefined): CSSProperties {
+  const normalized = normalizeTaskManagementPreviewColor(value);
+  const presentation = normalized === "gray"
+    ? {
+        accent: "rgba(255, 255, 255, 0.92)",
+        surface: "rgba(255, 255, 255, 0.05)",
+        surfaceHover: "rgba(255, 255, 255, 0.07)",
+        border: "rgba(255, 255, 255, 0.08)",
+      }
+    : normalized === "green"
+      ? {
+          accent: "#2ca36b",
+          surface: "rgba(44, 163, 107, 0.12)",
+          surfaceHover: "rgba(44, 163, 107, 0.16)",
+          border: "rgba(44, 163, 107, 0.2)",
+        }
+      : normalized === "amber"
+        ? {
+            accent: "#c98a1f",
+            surface: "rgba(201, 138, 31, 0.12)",
+            surfaceHover: "rgba(201, 138, 31, 0.16)",
+            border: "rgba(201, 138, 31, 0.2)",
+          }
+        : normalized === "rose"
+          ? {
+              accent: "#c45b87",
+              surface: "rgba(196, 91, 135, 0.12)",
+              surfaceHover: "rgba(196, 91, 135, 0.16)",
+              border: "rgba(196, 91, 135, 0.2)",
+            }
+          : {
+              accent: "#016bcb",
+              surface: "rgba(1, 107, 203, 0.12)",
+              surfaceHover: "rgba(1, 107, 203, 0.16)",
+              border: "rgba(1, 107, 203, 0.2)",
+            };
+  return {
+    "--tb-log-task-preview-accent": presentation.accent,
+    "--tb-log-task-preview-surface": presentation.surface,
+    "--tb-log-task-preview-surface-hover": presentation.surfaceHover,
+    "--tb-log-task-preview-border": presentation.border,
+  } as CSSProperties;
+}
+
+function getTaskManagementPreviewStatusLabel(value: string | null | undefined): string {
+  const normalized = normalizeTaskManagementPreviewStatus(value);
+  if (normalized === "in_progress") return "In doing";
+  if (normalized === "blocked") return "Blocked";
+  if (normalized === "done") return "Done";
+  return "To do";
+}
+
+function renderTaskManagementPreviewPriorityIcon(priority: string | null | undefined, className: string) {
+  const normalized = normalizeTaskManagementPreviewPriority(priority);
+  if (normalized === "low") {
+    return <ChevronDown className={`${className} is-low`} strokeWidth={2} />;
+  }
+  if (normalized === "high") {
+    return <ChevronUp className={`${className} is-high`} strokeWidth={2} />;
+  }
+  if (normalized === "critical") {
+    return <ChevronsUp className={`${className} is-critical`} strokeWidth={2} />;
+  }
+  return <Equal className={`${className} is-medium`} strokeWidth={2} />;
+}
+
+function splitTaskManagementTitleAndTicket(rawTitle: string): { title: string; ticketNumber?: string } {
+  const trimmedTitle = rawTitle.trim();
+  const prefixedTicketMatch = trimmedTitle.match(/^((?:[A-Z]+-\d+)|(?:\d{2,4}))(?:(?:\s*[·\-:]\s*)|\s+)(.+)$/);
+  if (prefixedTicketMatch?.[1] && prefixedTicketMatch[2]) {
+    return {
+      ticketNumber: prefixedTicketMatch[1].trim(),
+      title: prefixedTicketMatch[2].trim() || trimmedTitle,
+    };
+  }
+  return { title: trimmedTitle };
+}
+
+function dedupeTaskManagementCreatePreviews(previews: RunnerTaskManagementCreatedTaskPreview[]): RunnerTaskManagementCreatedTaskPreview[] {
+  const seen = new Set<string>();
+  const deduped: RunnerTaskManagementCreatedTaskPreview[] = [];
+  for (const preview of previews) {
+    const key = (preview.id || `${preview.ticketNumber || ""}:${preview.title}`).trim().toLowerCase();
+    if (!key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(preview);
+  }
+  return deduped;
+}
+
+function normalizeTaskManagementCreatePreview(value: unknown): RunnerTaskManagementCreatedTaskPreview | null {
+  const record = asObjectRecord(value);
+  if (!record) return null;
+
+  const metadata = asObjectRecord(record.metadata);
+  const runnerPlayground = asObjectRecord(metadata?.runnerPlayground);
+  const assigneeRecord = asObjectRecord(record.assignee) || asObjectRecord(record.assigneeAgent);
+
+  const id =
+    asOptionalTrimmedString(record.id)
+    || asOptionalTrimmedString(record.taskId)
+    || asOptionalTrimmedString(record.task_id)
+    || "";
+  const rawTitle =
+    asOptionalTrimmedString(record.title)
+    || asOptionalTrimmedString(record.name)
+    || asOptionalTrimmedString(record.taskTitle)
+    || "";
+  const titleParts = rawTitle ? splitTaskManagementTitleAndTicket(rawTitle) : { title: rawTitle };
+  const ticketNumber =
+    asOptionalTrimmedString(record.ticketNumber)
+    || asOptionalTrimmedString(record.ticket_number)
+    || asOptionalTrimmedString(record.ticket)
+    || asOptionalTrimmedString(runnerPlayground?.ticketNumber)
+    || titleParts.ticketNumber
+    || null;
+  const taskType =
+    asOptionalTrimmedString(record.taskType)
+    || asOptionalTrimmedString(record.task_type)
+    || asOptionalTrimmedString(runnerPlayground?.taskType)
+    || null;
+  const assigneeName =
+    asOptionalTrimmedString(record.assigneeName)
+    || asOptionalTrimmedString(record.assignee_name)
+    || asOptionalTrimmedString(record.assigneeAgentName)
+    || asOptionalTrimmedString(assigneeRecord?.name)
+    || asOptionalTrimmedString(assigneeRecord?.displayName)
+    || null;
+  const taskColor =
+    asOptionalTrimmedString(record.taskColor)
+    || asOptionalTrimmedString(record.task_color)
+    || asOptionalTrimmedString(record.color)
+    || asOptionalTrimmedString(runnerPlayground?.taskColor)
+    || null;
+  const projectId =
+    asOptionalTrimmedString(record.projectId)
+    || asOptionalTrimmedString(record.project_id)
+    || null;
+  const projectName =
+    asOptionalTrimmedString(record.projectName)
+    || asOptionalTrimmedString(record.project_name)
+    || null;
+  const normalizedTitle = titleParts.title || id;
+  const looksLikeTaskRecord =
+    Boolean(normalizedTitle)
+    && (
+      id.startsWith("task_")
+      || ticketNumber !== null
+      || asOptionalTrimmedString(record.status) !== undefined
+      || asOptionalTrimmedString(record.priority) !== undefined
+      || runnerPlayground !== null
+      || Object.prototype.hasOwnProperty.call(record, "assigneeAgentId")
+      || Object.prototype.hasOwnProperty.call(record, "linkedThreadIds")
+      || Object.prototype.hasOwnProperty.call(record, "dependencyIds")
+    );
+
+  if (!looksLikeTaskRecord) {
+    return null;
+  }
+
+  return {
+    id: id || `task:${normalizedTitle}`,
+    title: normalizedTitle,
+    projectId,
+    projectName,
+    ticketNumber,
+    status: asOptionalTrimmedString(record.status) || null,
+    priority: asOptionalTrimmedString(record.priority) || null,
+    taskType,
+    assigneeName,
+    taskColor,
+  };
+}
+
+function extractTaskManagementCreatePreviewsFromValue(value: unknown): RunnerTaskManagementCreatedTaskPreview[] {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return dedupeTaskManagementCreatePreviews(value.flatMap((entry) => extractTaskManagementCreatePreviewsFromValue(entry)));
+  }
+
+  const record = asObjectRecord(value);
+  if (!record) {
+    return [];
+  }
+
+  const previews: RunnerTaskManagementCreatedTaskPreview[] = [];
+  const directPreview = normalizeTaskManagementCreatePreview(record);
+  if (directPreview) {
+    previews.push(directPreview);
+  }
+
+  for (const key of ["task", "tasks", "createdTask", "createdTasks", "item", "items", "data", "results"]) {
+    if (!Object.prototype.hasOwnProperty.call(record, key)) {
+      continue;
+    }
+    previews.push(...extractTaskManagementCreatePreviewsFromValue(record[key]));
+  }
+
+  return dedupeTaskManagementCreatePreviews(previews);
+}
+
+function extractTaskManagementCreatePreviewsFromText(text: string): RunnerTaskManagementCreatedTaskPreview[] {
+  const previews: RunnerTaskManagementCreatedTaskPreview[] = [];
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return previews;
+  }
+
+  try {
+    const parsedJson = JSON.parse(trimmed) as unknown;
+    const structuredPreviews = extractTaskManagementCreatePreviewsFromValue(parsedJson);
+    if (structuredPreviews.length > 0) {
+      return structuredPreviews;
+    }
+  } catch {}
+
+  const lines = trimmed.split(/\r?\n/);
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const createdMatch = line.match(/^(?:[+*-]\s*)?(?:✓\s*)?Created:\s*(.+?)(?:\s+\((task_[^)]+)\))?\s*$/i);
+    if (!createdMatch?.[1]) {
+      continue;
+    }
+    const titleParts = splitTaskManagementTitleAndTicket(createdMatch[1]);
+    previews.push({
+      id: createdMatch[2]?.trim() || `task:${titleParts.title}`,
+      title: titleParts.title,
+      projectId: null,
+      projectName: null,
+      ticketNumber: titleParts.ticketNumber || null,
+      status: "todo",
+      priority: "medium",
+      taskType: "task",
+      assigneeName: null,
+      taskColor: null,
+    });
+  }
+
+  return dedupeTaskManagementCreatePreviews(previews);
+}
+
+function collectTaskManagementCreatedTasks(log: RunnerLog): RunnerTaskManagementCreatedTaskPreview[] {
+  const previews = [
+    ...extractTaskManagementCreatePreviewsFromValue(log.metadata?.result),
+    ...extractTaskManagementCreatePreviewsFromValue(log.metadata?.args),
+    ...Object.values((log.metadata?.fileContents as Record<string, string> | undefined) || {}).flatMap((value) =>
+      extractTaskManagementCreatePreviewsFromText(String(value || ""))
+    ),
+    ...(typeof log.metadata?.result === "string" ? extractTaskManagementCreatePreviewsFromText(log.metadata.result) : []),
+    ...(typeof log.metadata?.output === "string" ? extractTaskManagementCreatePreviewsFromText(log.metadata.output) : []),
+    ...extractTaskManagementCreatePreviewsFromText(log.message || ""),
+  ];
+
+  const command = String(log.metadata?.command || "");
+  const commandProjectId = extractQuotedArgument(command, "--project-id");
+  if (previews.length > 0) {
+    return dedupeTaskManagementCreatePreviews(previews).map((preview) => ({
+      ...preview,
+      projectId: preview.projectId || commandProjectId || null,
+    }));
+  }
+
+  if (isTaskManagementCreateCommand(command)) {
+    const title = extractQuotedArgument(command, "--title");
+    if (title) {
+      const titleParts = splitTaskManagementTitleAndTicket(title);
+      return [{
+        id: `task:${titleParts.title}`,
+        title: titleParts.title,
+        projectId: commandProjectId || null,
+        projectName: null,
+        ticketNumber: titleParts.ticketNumber || null,
+        status: "todo",
+        priority: "medium",
+        taskType: "task",
+        assigneeName: null,
+        taskColor: null,
+      }];
+    }
+  }
+
+  return [];
+}
+
+function isTaskManagementCreateCommand(command?: string): boolean {
+  if (!command) return false;
+  return /manage-tasks\.py[\s\S]*\btasks\s+create\b/i.test(command);
+}
+
+function isTaskManagementCreateToolInvocation(log: RunnerLog): boolean {
+  const serverName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const toolName = String(log.metadata?.toolName || "").trim().toLowerCase();
+  return (
+    /task/.test(serverName || toolName)
+    && (
+      /(?:^|[._/-])create(?:[._/-])?tasks?(?:$|[._/-])/.test(toolName)
+      || /(?:^|[._/-])tasks?(?:[._/-])create(?:$|[._/-])/.test(toolName)
+      || (toolName.includes("create") && toolName.includes("task"))
+    )
+  );
+}
+
+function shouldRenderTaskManagementCreateLog(log: RunnerLog): boolean {
+  return (
+    isTaskManagementCreateCommand(log.metadata?.command || "")
+    || isTaskManagementCreateToolInvocation(log)
+    || collectTaskManagementCreatedTasks(log).length > 0
+  );
+}
+
+function TaskManagementCreateLogBox({
+  log,
+  timeLabel,
+  onTaskPreviewClick,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  onTaskPreviewClick?: RunnerWorkLogEntryProps["onTaskPreviewClick"];
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const createdTasks = useMemo(() => collectTaskManagementCreatedTasks(log), [log]);
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
+  const createdCount = createdTasks.length;
+  const title = createdCount === 1
+    ? "1 task created"
+    : createdCount > 1
+      ? `${createdCount} tasks created`
+      : "Create tasks";
+
+  return (
+    <div className="tb-log-card">
+      <LogHeader
+        icon={<ListTodo className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Task Management"
+        title={title}
+        timeLabel={timeLabel}
+        meta={
+          createdCount > 0
+            ? <span className="tb-log-card-pill">{createdCount} created</span>
+            : isLoading
+              ? <span className="tb-log-card-status">creating...</span>
+              : null
+        }
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        {createdCount > 0 ? (
+          <div className="tb-log-task-create-list">
+            {createdTasks.map((task) => {
+              const normalizedStatus = normalizeTaskManagementPreviewStatus(task.status);
+              const normalizedTaskType = normalizeTaskManagementPreviewType(task.taskType);
+              const isClickable = Boolean(onTaskPreviewClick && task.id && (task.projectId || "").trim());
+              const content = (
+                <>
+                  <div className="tb-log-task-create-item-content">
+                    <div className="tb-log-task-create-leading">
+                      <div className={`tb-log-task-create-type ${normalizedTaskType === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
+                        {normalizedTaskType === "subtask"
+                          ? <Check className="tb-log-task-create-type-icon" strokeWidth={1.9} />
+                          : <Bookmark className="tb-log-task-create-type-icon" strokeWidth={1.9} />}
+                      </div>
+                      <div className="tb-log-task-create-main">
+                        {renderTaskManagementPreviewPriorityIcon(task.priority, "tb-log-task-create-priority")}
+                        <span className={`tb-log-task-create-ticket ${task.ticketNumber ? "" : "is-placeholder"}`.trim()}>
+                          {task.ticketNumber || "NEW"}
+                        </span>
+                        <span className="tb-log-task-create-title" title={task.title}>
+                          {task.title}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="tb-log-task-create-meta">
+                      <span className={`tb-log-task-create-assignee ${task.assigneeName ? "" : "is-unassigned"}`.trim()} title={task.assigneeName || "Unassigned"}>
+                        {task.assigneeName || "Unassigned"}
+                      </span>
+                      <span className={`tb-log-task-create-status is-${normalizedStatus.replace(/_/g, "-")}`.trim()}>
+                        {getTaskManagementPreviewStatusLabel(task.status)}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              );
+              return isClickable ? (
+                <button
+                  key={task.id}
+                  type="button"
+                  className="tb-log-task-create-item tb-log-task-create-item-button"
+                  style={getTaskManagementPreviewColorStyle(task.taskColor)}
+                  onClick={() =>
+                    onTaskPreviewClick?.({
+                      taskId: task.id,
+                      projectId: task.projectId || "",
+                      ...(task.projectName ? { projectName: task.projectName } : {}),
+                      ticketNumber: task.ticketNumber || "NEW",
+                      title: task.title,
+                      ...(task.taskColor ? { taskColor: task.taskColor } : {}),
+                      ...(task.status ? { status: task.status } : {}),
+                      ...(task.priority ? { priority: task.priority } : {}),
+                      ...(task.taskType ? { taskType: task.taskType } : {}),
+                      ...(task.assigneeName ? { assigneeName: task.assigneeName } : {}),
+                    })
+                  }
+                >
+                  {content}
+                </button>
+              ) : (
+                <div
+                  key={task.id}
+                  className="tb-log-task-create-item"
+                  style={getTaskManagementPreviewColorStyle(task.taskColor)}
+                >
+                  {content}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="tb-log-card-empty">
+            {isLoading ? "Creating tasks..." : "No created tasks were parsed."}
+          </div>
+        )}
+      </LogPanel>
+    </div>
+  );
 }
 
 function ReasoningLogBox({ log }: { log: RunnerLog }) {
@@ -3502,7 +4009,7 @@ export function InlineStatusLogBox({
   );
 }
 
-export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, requestHeaders, onPreviewDocument }: RunnerWorkLogEntryProps) {
+export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, requestHeaders, onPreviewDocument, onTaskPreviewClick }: RunnerWorkLogEntryProps) {
   const normalizedMessage = stripRunnerSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
 
   if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") {
@@ -3534,6 +4041,7 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
       return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;
+    if (shouldRenderTaskManagementCreateLog(log)) return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} onTaskPreviewClick={onTaskPreviewClick} />;
     if (isReadFileCommand(command)) {
       return (
         <ReadFileLogBox
@@ -3567,6 +4075,9 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
   }
 
   if (log.eventType === "mcp_tool_call") {
+    if (shouldRenderTaskManagementCreateLog(log)) {
+      return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} onTaskPreviewClick={onTaskPreviewClick} />;
+    }
     if (isLikelyImageGenerationLog(log)) {
       return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
@@ -3578,6 +4089,9 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
   }
 
   if (log.eventType === "file_change") {
+    if (shouldRenderTaskManagementCreateLog(log)) {
+      return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} onTaskPreviewClick={onTaskPreviewClick} />;
+    }
     if (isImageFileChangeLog(log)) {
       return null;
     }
