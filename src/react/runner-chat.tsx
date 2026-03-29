@@ -1,4 +1,4 @@
-import { CSSProperties, ChangeEvent, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, ChangeEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Bookmark as LucideBookmark,
@@ -67,7 +67,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, isBrowserSkillCommand, isBrowserSkillLaunchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -709,6 +709,7 @@ export interface RunnerChatProps {
   onContextIndicatorClick?: (context: RunnerChatThreadContext | null) => void;
   onActionSummaryClick?: (summary: RunnerChatActionSummaryClickPayload) => void;
   onSubagentDetailOpenChange?: (isOpen: boolean) => void;
+  onDocumentPreviewOpenChange?: (isOpen: boolean) => void;
   threadTaskPreview?: RunnerTaskPreview | null;
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
@@ -4865,6 +4866,7 @@ export function RunnerChat({
   onContextIndicatorClick,
   onActionSummaryClick,
   onSubagentDetailOpenChange,
+  onDocumentPreviewOpenChange,
   threadTaskPreview = null,
   activeTaskPreviewId = null,
   onTaskPreviewClick,
@@ -9556,6 +9558,7 @@ export function RunnerChat({
   };
   type RunnerTimelineItem =
     | { kind: "log"; log: RunnerLog }
+    | { kind: "deep_research_group"; logs: RunnerLog[]; runningCommandLog?: RunnerLog }
     | { kind: "browser_group"; logs: RunnerLog[] }
     | { kind: "subagent_group"; invocationLog: RunnerLog; logs: RunnerLog[]; completionLog?: RunnerLog };
   type RunnerTurnTimelineState = {
@@ -9678,10 +9681,40 @@ export function RunnerChat({
     return browserLogs;
   }
 
+  function isDeepResearchTimelineCommand(log: RunnerLog): boolean {
+    return log.eventType === "command_execution" && isDeepResearchCommand(log.metadata?.command || log.message || "");
+  }
+
+  function collectDeepResearchTimelineLogs(logs: RunnerLog[], subagentGroups: Map<string, RunnerSubagentGroup>): RunnerLog[] {
+    const deepResearchLogs: RunnerLog[] = [];
+
+    for (const currentLog of logs) {
+      const invocationId = getSubagentInvocationId(currentLog);
+      if (invocationId && subagentGroups.has(invocationId)) {
+        continue;
+      }
+      if (currentLog.eventType === "deep_research") {
+        deepResearchLogs.push(currentLog);
+      }
+    }
+
+    return deepResearchLogs;
+  }
+
   function buildTimelineItems(logs: RunnerLog[]): RunnerTimelineItem[] {
     const subagentGroups = buildSubagentTimelineGroups(logs);
+    const deepResearchLogs = collectDeepResearchTimelineLogs(logs, subagentGroups);
+    const deepResearchCommandLog = logs.find((currentLog) => {
+      const invocationId = getSubagentInvocationId(currentLog);
+      if (invocationId && subagentGroups.has(invocationId)) {
+        return false;
+      }
+      return isDeepResearchTimelineCommand(currentLog);
+    });
     const browserLogs = collectBrowserTimelineLogs(logs, subagentGroups);
     const items: RunnerTimelineItem[] = [];
+    const shouldShowDeepResearchGroup = deepResearchLogs.length > 0 || Boolean(deepResearchCommandLog);
+    let deepResearchGroupInserted = false;
     let browserGroupInserted = false;
     const insertedSubagentInvocations = new Set<string>();
 
@@ -9701,6 +9734,20 @@ export function RunnerChat({
         }
         continue;
       }
+      if (log.eventType === "deep_research") {
+        if (!deepResearchGroupInserted && shouldShowDeepResearchGroup) {
+          items.push({ kind: "deep_research_group", logs: deepResearchLogs, runningCommandLog: deepResearchCommandLog });
+          deepResearchGroupInserted = true;
+        }
+        continue;
+      }
+      if (isDeepResearchTimelineCommand(log)) {
+        if (!deepResearchGroupInserted && shouldShowDeepResearchGroup) {
+          items.push({ kind: "deep_research_group", logs: deepResearchLogs, runningCommandLog: deepResearchCommandLog || log });
+          deepResearchGroupInserted = true;
+        }
+        continue;
+      }
       if (isBrowserTimelineLog(log)) {
         if (!browserGroupInserted) {
           items.push({ kind: "browser_group", logs: browserLogs });
@@ -9709,6 +9756,10 @@ export function RunnerChat({
         continue;
       }
       items.push({ kind: "log", log });
+    }
+
+    if (!deepResearchGroupInserted && shouldShowDeepResearchGroup) {
+      items.push({ kind: "deep_research_group", logs: deepResearchLogs, runningCommandLog: deepResearchCommandLog });
     }
 
     if (!browserGroupInserted && browserLogs.length > 0) {
@@ -9766,6 +9817,10 @@ export function RunnerChat({
   }
 
   function timelineItemKey(turnId: string, index: number, item: RunnerTimelineItem): string {
+    if (item.kind === "deep_research_group") {
+      const anchorLog = item.logs[0] || item.runningCommandLog;
+      return anchorLog ? `${turnId}-deep-research-${stepRowKey(turnId, index, anchorLog)}` : `${turnId}-deep-research-${index}`;
+    }
     if (item.kind === "browser_group") {
       const anchorLog = item.logs[0] || item.logs[item.logs.length - 1];
       return anchorLog ? `${turnId}-browser-${stepRowKey(turnId, index, anchorLog)}` : `${turnId}-browser-${index}`;
@@ -9999,6 +10054,18 @@ export function RunnerChat({
           backendUrl={normalizedBackendUrl}
           environmentId={runnerEnvironmentId}
           requestHeaders={runnerHeaders}
+        />
+      );
+    }
+
+    if (item.kind === "deep_research_group") {
+      const firstLog = item.logs[0] || item.runningCommandLog;
+      return (
+        <DeepResearchLogBox
+          log={item.runningCommandLog}
+          logs={item.logs}
+          runningCommandLog={item.runningCommandLog}
+          timeLabel={firstLog ? toDurationLabel(firstLog) : undefined}
         />
       );
     }
@@ -10780,6 +10847,145 @@ export function RunnerChat({
         : "Start speech to text"
       : "Speech-to-text is not supported in this browser";
 
+  function renderAgentSelectorControl() {
+    if (agents.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="tb-selector-anchor">
+        <button
+          type="button"
+          className={`tb-inline-selector tb-inline-selector-agent ${showAgentPopup ? "active" : ""}`.trim()}
+          onClick={() => togglePopup("agent")}
+        >
+          <span>{displayedAgentLabel}</span>
+          <IconChevronDown className="tb-inline-selector-chevron" />
+        </button>
+
+        {showAgentPopup ? (
+          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent ${mainPopupAnimationClass}`.trim()}>
+            {!hasApiKey ? (
+              <div className="tb-popup-note">
+                <div className="tb-popup-note-title">API key required</div>
+                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select an agent.</div>
+              </div>
+            ) : (
+              <>
+                <div className="tb-popup-menu-title">Agent</div>
+                <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
+                  <div className="tb-popup-nav">
+                    {availableAgentPopupModes.includes("agents") ? (
+                      <button
+                        type="button"
+                        className={`tb-popup-nav-button ${agentPopupMode === "agents" ? "active" : ""}`}
+                        onClick={() => setAgentPopupMode("agents")}
+                      >
+                        Agents
+                      </button>
+                    ) : null}
+                    {availableAgentPopupModes.includes("teams") ? (
+                      <button
+                        type="button"
+                        className={`tb-popup-nav-button ${agentPopupMode === "teams" ? "active" : ""}`}
+                        onClick={() => setAgentPopupMode("teams")}
+                      >
+                        Teams
+                      </button>
+                    ) : null}
+                    {availableAgentPopupModes.includes("humans") ? (
+                      <button
+                        type="button"
+                        className={`tb-popup-nav-button ${agentPopupMode === "humans" ? "active" : ""}`}
+                        onClick={() => setAgentPopupMode("humans")}
+                      >
+                        Humans
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent">
+                  {filteredOrderedAgents.length > 0 ? (
+                    filteredOrderedAgents.map((agent) => {
+                      const isTeamAgent = getRunnerAgentSelectorMode(agent) === "teams";
+                      return (
+                        <button
+                          key={agent.id}
+                          type="button"
+                          className={`tb-popup-row tb-popup-row-select tb-popup-row-agent ${selectedAgentId === agent.id ? "selected" : ""}`}
+                          onClick={() => selectAgent(agent.id)}
+                        >
+                          {isTeamAgent ? <IconLayers className="tb-popup-icon" /> : <IconUser className="tb-popup-icon" />}
+                          <span className="tb-popup-label">{agent.name}</span>
+                          <span className="tb-popup-check-slot">
+                            {selectedAgentId === agent.id ? <IconCheck className="tb-popup-check" /> : null}
+                          </span>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="tb-popup-menu-inline-empty">
+                      <div className="tb-popup-empty-state">{agentPopupEmptyLabel}</div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderEnvironmentSelectorControl() {
+    if (availableEnvironments.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="tb-selector-anchor">
+        <button
+          type="button"
+          className={`tb-inline-selector ${showEnvironmentPopup ? "active" : ""}`.trim()}
+          onClick={() => togglePopup("environment")}
+        >
+          <span>{displayedEnvironmentLabel}</span>
+          <IconChevronDown className="tb-inline-selector-chevron" />
+        </button>
+
+        {showEnvironmentPopup ? (
+          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-right ${mainPopupAnimationClass}`.trim()}>
+            {!hasApiKey ? (
+              <div className="tb-popup-note">
+                <div className="tb-popup-note-title">API key required</div>
+                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select an environment.</div>
+              </div>
+            ) : (
+              <>
+                <div className="tb-popup-menu-title">Environment</div>
+                <div className="tb-popup-menu-inline-body">
+                  {orderedEnvironments.map((environment) => (
+                    <button
+                      key={environment.id}
+                      type="button"
+                      className={`tb-popup-row tb-popup-row-select ${selectedEnvironmentId === environment.id ? "selected" : ""}`}
+                      onClick={() => selectEnvironment(environment.id)}
+                    >
+                      <span className="tb-popup-check-slot">
+                        {selectedEnvironmentId === environment.id ? <IconCheck className="tb-popup-check" /> : null}
+                      </span>
+                      <span className="tb-popup-label">{environment.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   useEffect(() => {
     if (selectedSubagentDetail && !selectedSubagentDetailPresentation) {
       setSelectedSubagentDetail(null);
@@ -10805,6 +11011,16 @@ export function RunnerChat({
       onSubagentDetailOpenChange?.(false);
     };
   }, [onSubagentDetailOpenChange]);
+
+  useEffect(() => {
+    onDocumentPreviewOpenChange?.(Boolean(previewedDocumentAttachment));
+  }, [onDocumentPreviewOpenChange, previewedDocumentAttachment]);
+
+  useEffect(() => {
+    return () => {
+      onDocumentPreviewOpenChange?.(false);
+    };
+  }, [onDocumentPreviewOpenChange]);
 
   useEffect(() => {
     if (!currentThreadId || !hasApiKey || !normalizedBackendUrl || isRunning) {
@@ -11853,11 +12069,11 @@ export function RunnerChat({
                         style={responseStyle}
                       >
                         {summaryPreviewAttachments.length > 0 ? (
-                          <div className="runner-attachments runner-attachments-summary" role="list" aria-label="Changed files">
+                          <div className="runner-attachments-summary-strip" aria-label="Changed files">
                             {summaryPreviewAttachments.map((attachment) => (
-                              <div key={`${turn.id}:${attachment.id}`} role="listitem">
+                              <Fragment key={`${turn.id}:${attachment.id}`}>
                                 {renderAttachmentPreviewChip(attachment)}
-                              </div>
+                              </Fragment>
                             ))}
                           </div>
                         ) : null}
@@ -12019,11 +12235,11 @@ export function RunnerChat({
                       style={responseStyle}
                     >
                       {summaryPreviewAttachments.length > 0 ? (
-                        <div className="runner-attachments runner-attachments-summary" role="list" aria-label="Changed files">
+                        <div className="runner-attachments-summary-strip" aria-label="Changed files">
                           {summaryPreviewAttachments.map((attachment) => (
-                            <div key={`${turn.id}:${attachment.id}`} role="listitem">
+                            <Fragment key={`${turn.id}:${attachment.id}`}>
                               {renderAttachmentPreviewChip(attachment)}
-                            </div>
+                            </Fragment>
                           ))}
                         </div>
                       ) : null}
@@ -12658,87 +12874,7 @@ export function RunnerChat({
                     </div>
                     {renderContextIndicatorControl()}
 
-                    {agents.length > 0 ? (
-                      <div className="tb-selector-anchor">
-                        <button
-                          type="button"
-                          className={`tb-inline-selector tb-inline-selector-agent ${showAgentPopup ? "active" : ""}`.trim()}
-                          onClick={() => togglePopup("agent")}
-                        >
-                          <span>{displayedAgentLabel}</span>
-                          <IconChevronDown className="tb-inline-selector-chevron" />
-                        </button>
-
-                        {showAgentPopup ? (
-                          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent ${mainPopupAnimationClass}`.trim()}>
-                            {!hasApiKey ? (
-                              <div className="tb-popup-note">
-                                <div className="tb-popup-note-title">API key required</div>
-                                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select an agent.</div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="tb-popup-menu-title">Agent</div>
-                                <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                                  <div className="tb-popup-nav">
-                                    {availableAgentPopupModes.includes("agents") ? (
-                                      <button
-                                        type="button"
-                                        className={`tb-popup-nav-button ${agentPopupMode === "agents" ? "active" : ""}`}
-                                        onClick={() => setAgentPopupMode("agents")}
-                                      >
-                                        Agents
-                                      </button>
-                                    ) : null}
-                                    {availableAgentPopupModes.includes("teams") ? (
-                                      <button
-                                        type="button"
-                                        className={`tb-popup-nav-button ${agentPopupMode === "teams" ? "active" : ""}`}
-                                        onClick={() => setAgentPopupMode("teams")}
-                                      >
-                                        Teams
-                                      </button>
-                                    ) : null}
-                                    {availableAgentPopupModes.includes("humans") ? (
-                                      <button
-                                        type="button"
-                                        className={`tb-popup-nav-button ${agentPopupMode === "humans" ? "active" : ""}`}
-                                        onClick={() => setAgentPopupMode("humans")}
-                                      >
-                                        Humans
-                                      </button>
-                                    ) : null}
-                                  </div>
-                                </div>
-                                <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent">
-                                  {filteredOrderedAgents.length > 0 ? filteredOrderedAgents.map((agent) => {
-                                    const isTeamAgent = getRunnerAgentSelectorMode(agent) === "teams";
-                                    return (
-                                      <button
-                                        key={agent.id}
-                                        type="button"
-                                        className={`tb-popup-row tb-popup-row-select tb-popup-row-agent ${selectedAgentId === agent.id ? "selected" : ""}`}
-                                        onClick={() => selectAgent(agent.id)}
-                                      >
-                                        {isTeamAgent ? <IconLayers className="tb-popup-icon" /> : <IconUser className="tb-popup-icon" />}
-                                        <span className="tb-popup-label">{agent.name}</span>
-                                        <span className="tb-popup-check-slot">
-                                          {selectedAgentId === agent.id ? <IconCheck className="tb-popup-check" /> : null}
-                                        </span>
-                                      </button>
-                                    );
-                                  }) : (
-                                    <div className="tb-popup-menu-inline-empty">
-                                      <div className="tb-popup-empty-state">{agentPopupEmptyLabel}</div>
-                                    </div>
-                                  )}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
+                    {renderAgentSelectorControl()}
 
                     {scheduledTask ? (
                       <div className="tb-schedule-chip">
@@ -12752,48 +12888,7 @@ export function RunnerChat({
 
                     <div className="task-input-spacer" />
 
-                    {availableEnvironments.length > 0 ? (
-                      <div className="tb-selector-anchor">
-                        <button
-                          type="button"
-                          className={`tb-inline-selector ${showEnvironmentPopup ? "active" : ""}`.trim()}
-                          onClick={() => togglePopup("environment")}
-                        >
-                          <span>{displayedEnvironmentLabel}</span>
-                          <IconChevronDown className="tb-inline-selector-chevron" />
-                        </button>
-
-                        {showEnvironmentPopup ? (
-                          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-right ${mainPopupAnimationClass}`.trim()}>
-                            {!hasApiKey ? (
-                              <div className="tb-popup-note">
-                                <div className="tb-popup-note-title">API key required</div>
-                                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select an environment.</div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="tb-popup-menu-title">Environment</div>
-                                <div className="tb-popup-menu-inline-body">
-                                  {orderedEnvironments.map((environment) => (
-                                    <button
-                                      key={environment.id}
-                                      type="button"
-                                      className={`tb-popup-row tb-popup-row-select ${selectedEnvironmentId === environment.id ? "selected" : ""}`}
-                                      onClick={() => selectEnvironment(environment.id)}
-                                    >
-                                      <span className="tb-popup-check-slot">
-                                        {selectedEnvironmentId === environment.id ? <IconCheck className="tb-popup-check" /> : null}
-                                      </span>
-                                      <span className="tb-popup-label">{environment.name}</span>
-                                    </button>
-                                  ))}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
+                    {renderEnvironmentSelectorControl()}
 
                     {showRunPreparationIndicator ? (
                       <button type="button" className="task-run-button task-run-button-full" disabled>

@@ -1503,7 +1503,7 @@ const html = `<!doctype html>
 
       .playground-thread-preview-drawer .tb-attachment-preview-drawer-header {
         min-height: 56px;
-        padding: 2px 18px 12px;
+        padding: 2px 12px 12px;
         box-sizing: border-box;
       }
 
@@ -7339,7 +7339,7 @@ const html = `<!doctype html>
       .playground-files-page {
         --playground-files-nav-top-offset: 7px;
         --playground-files-nav-row-height: 32px;
-        --playground-files-preview-nav-height: 46px;
+        --playground-files-preview-nav-height: 56px;
         height: 100%;
         min-height: 0;
         padding: 0;
@@ -7761,7 +7761,6 @@ const html = `<!doctype html>
       }
 
       .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-header {
-        height: var(--playground-files-preview-nav-height);
         min-height: var(--playground-files-preview-nav-height);
       }
 
@@ -25069,6 +25068,15 @@ const html = `<!doctype html>
         }, [hasPreviewPanel, hasSingleFilePreview]);
 
         useEffect(() => {
+          if (!hasPreviewPanel) {
+            return;
+          }
+          if (typeof onRequestSidebarCollapse === "function") {
+            onRequestSidebarCollapse();
+          }
+        }, [hasPreviewPanel, onRequestSidebarCollapse]);
+
+        useEffect(() => {
           if (browserPaneMode === "auto" && !hasPreviewPanel) {
             setBrowserPaneMode("expanded");
           }
@@ -26129,6 +26137,11 @@ const html = `<!doctype html>
                   onRunFinish: () => {
                     if (typeof onFileChatThreadMutated === "function") {
                       onFileChatThreadMutated();
+                    }
+                  },
+                  onDocumentPreviewOpenChange: (isOpen) => {
+                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
+                      onRequestSidebarCollapse();
                     }
                   },
                 })
@@ -31043,6 +31056,50 @@ const html = `<!doctype html>
             name: "Browser",
             description: "Open websites visually, navigate pages, and inspect browser state from the agent.",
             icon: "globe",
+            markdown: [
+              "# Browser Skill",
+              "",
+              "This skill gives the agent a lightweight visual browser that can navigate pages, click elements, type into fields, scroll, wait for UI state, and capture screenshots.",
+              "",
+              "## Usage",
+              "",
+              "Use this skill when the user needs browser interaction such as:",
+              "- Opening websites and reading live page state",
+              "- Clicking buttons, links, tabs, and menus",
+              "- Filling forms and submitting them",
+              "- Checking what a page looks like after code or content changes",
+              "- Collecting screenshots of browser state during a task",
+              "",
+              "## Process",
+              "",
+              "1. Run a \`navigate\` or \`snapshot\` command.",
+              "2. Inspect the returned screenshot, URL, title, visible text excerpt, and interactive elements.",
+              "3. Choose the next \`click\`, \`type\`, \`press\`, \`scroll\`, or \`wait-for\` action.",
+              "4. Repeat until the task is complete.",
+              "",
+              "## Output Format",
+              "",
+              "Each command prints one structured result line prefixed with \`BROWSER_SKILL_RESULT::\` and includes the current URL, title, screenshot path, and relevant interaction metadata.",
+              "",
+              "## Configuration",
+              "",
+              "- **Runtime**: \`/workspace/.claude/skills/browser/scripts/browser.mjs\`",
+              "- **Approach**: Chrome/Chromium via CDP without Playwright or Puppeteer",
+              "- **Guidance**: Prefer \`snapshot\` before interacting with unfamiliar pages and inspect the screenshot after each action",
+              "",
+              "## Example Prompts",
+              "",
+              "- Open the staging site and verify the signup flow visually",
+              "- Navigate to the dashboard and capture a screenshot of the final state",
+            ].join("\\n"),
+            codeFiles: [
+              {
+                id: "browser-runtime",
+                name: "scripts/browser.mjs",
+                content: "// Browser runtime is managed by the platform.",
+                language: "javascript",
+              },
+            ],
           },
           image_generation: {
             name: "Image Generation",
@@ -31093,6 +31150,50 @@ const html = `<!doctype html>
             name: "Computer Agents",
             description: "Inspect and manage agents, environments, skills, and threads from inside the run.",
             icon: "runner",
+            markdown: [
+              "# Computer Agents Skill",
+              "",
+              "This skill enables live account-level operations across agents, environments, skills, and threads.",
+              "",
+              "## Usage",
+              "",
+              "Invoke this skill when the user needs to:",
+              "- Inspect the live list of agents before assigning work",
+              "- Review available environments before selecting execution context",
+              "- List system and custom skills before attaching them to tasks",
+              "- Create new agents, clone environments, or create custom skills",
+              "- List recent threads or create a new thread programmatically",
+              "",
+              "## Process",
+              "",
+              "1. Start by listing the relevant resource family.",
+              "2. Decide whether you need discovery only or a create/clone action.",
+              "3. Use the built-in \`computer-agents.py\` helper instead of handwritten curl requests.",
+              "4. Verify returned IDs and metadata before using them later.",
+              "",
+              "## Output Format",
+              "",
+              "The skill outputs structured JSON from the Computer Agents API, including resource lists and creation responses for agents, environments, skills, and threads.",
+              "",
+              "## Configuration",
+              "",
+              "- **CLI path**: \`/workspace/.claude/skills/computer-agents/scripts/computer-agents.py\`",
+              "- **Authentication**: \`COMPUTER_AGENTS_API_KEY\` must be available in the runtime",
+              "- **Primary command groups**: \`skills\`, \`agents\`, \`environments\`, and \`threads\`",
+              "",
+              "## Example Prompts",
+              "",
+              "- List the available agents and suggest who should own these tickets",
+              "- Create a custom skill for release planning",
+            ].join("\\n"),
+            codeFiles: [
+              {
+                id: "computer-agents-main",
+                name: "computer-agents.py",
+                content: "# Computer Agents runtime is managed by the platform.",
+                language: "python",
+              },
+            ],
           },
         }), []);
 
@@ -31117,6 +31218,7 @@ const html = `<!doctype html>
           if (normalizedLower.startsWith("skill-pptx-")) return "pptx";
           if (normalizedLower.startsWith("skill-memory-")) return "memory";
           if (normalizedLower.startsWith("skill-task-management-")) return "task_management";
+          if (normalizedLower.startsWith("skill-computer-agents-")) return "computer_agents";
 
           return normalizedLower;
         }
@@ -31134,24 +31236,41 @@ const html = `<!doctype html>
             return sections;
           }
 
-          const sectionRegex = new RegExp("##\\\\s+(Usage|Process|Output Format|Configuration|Example Prompts)\\\\s*\\\\n([\\\\s\\\\S]*?)(?=##\\\\s+|$)", "gi");
+          const sectionRegex = new RegExp("##\\\\s+(Usage|When To Use|Process|Workflow|Output Format|Output|Configuration|Commands|Guidance|Example Prompts)\\\\s*\\\\n([\\\\s\\\\S]*?)(?=##\\\\s+|$)", "gi");
           let match;
           while ((match = sectionRegex.exec(markdown)) !== null) {
             const sectionName = String(match[1] || "").toLowerCase();
             const content = String(match[2] || "").trim();
-            if (sectionName === "usage") {
-              sections.usage = content;
-            } else if (sectionName === "process") {
-              sections.process = content;
-            } else if (sectionName === "output format") {
-              sections.outputFormat = content;
-            } else if (sectionName === "configuration") {
-              sections.configuration = content;
+            let targetKey = "";
+            if (sectionName === "usage" || sectionName === "when to use") {
+              targetKey = "usage";
+            } else if (sectionName === "process" || sectionName === "workflow") {
+              targetKey = "process";
+            } else if (sectionName === "output format" || sectionName === "output") {
+              targetKey = "outputFormat";
+            } else if (sectionName === "configuration" || sectionName === "commands" || sectionName === "guidance") {
+              targetKey = "configuration";
             } else if (sectionName === "example prompts") {
-              sections.examplePrompts = content;
+              targetKey = "examplePrompts";
+            }
+
+            if (targetKey) {
+              sections[targetKey] = sections[targetKey]
+                ? sections[targetKey] + "\\n\\n" + content
+                : content;
             }
           }
           return sections;
+        }
+
+        function hasPlaygroundSkillMarkdownSections(sections) {
+          return Boolean(
+            String(sections?.usage || "").trim()
+            || String(sections?.process || "").trim()
+            || String(sections?.outputFormat || "").trim()
+            || String(sections?.configuration || "").trim()
+            || String(sections?.examplePrompts || "").trim()
+          );
         }
 
         function computePlaygroundSkillMarkdownFromSections(skillName, sections) {
@@ -31214,6 +31333,15 @@ const html = `<!doctype html>
           const isSystemSkill = skill?.isSystem === true || skill?.isDefault === true;
           const isCustomSkill = !isSystemSkill;
 
+          const rawMarkdown = typeof skill?.markdown === "string" ? skill.markdown : "";
+          const parsedRawMarkdownSections = parsePlaygroundSkillMarkdownSections(rawMarkdown);
+          const fallbackMarkdown = typeof meta.markdown === "string" ? meta.markdown : "";
+          const effectiveMarkdown = String(rawMarkdown || "").trim() && hasPlaygroundSkillMarkdownSections(parsedRawMarkdownSections)
+            ? rawMarkdown
+            : fallbackMarkdown || rawMarkdown;
+          const normalizedCodeFiles = normalizeSkillCodeFiles(skill?.codeFiles);
+          const fallbackCodeFiles = normalizeSkillCodeFiles(meta.codeFiles);
+
           return {
             id: skillId,
             systemFamilyId: skillFamilyId || skillId,
@@ -31230,8 +31358,8 @@ const html = `<!doctype html>
               : typeof meta.description === "string"
                 ? meta.description
                 : "",
-            markdown: typeof skill?.markdown === "string" ? skill.markdown : "",
-            codeFiles: normalizeSkillCodeFiles(skill?.codeFiles),
+            markdown: effectiveMarkdown,
+            codeFiles: normalizedCodeFiles.length > 0 ? normalizedCodeFiles : fallbackCodeFiles,
             icon: typeof skill?.icon === "string" && skill.icon.trim()
               ? skill.icon.trim()
               : typeof meta.icon === "string"
@@ -33109,6 +33237,7 @@ const html = `<!doctype html>
         detailOnly,
         onCloseDetailOnly,
       }) {
+        const effectiveApiKey = useMemo(() => String(apiKey || "").trim(), [apiKey]);
         const isDetailOnlyMode = Boolean(detailOnly);
         const editorDirtyRef = useRef(false);
         const taskAutosaveInFlightRef = useRef(false);
@@ -33130,6 +33259,7 @@ const html = `<!doctype html>
         const taskSkillsActionsRef = useRef(null);
         const taskDetailMainRef = useRef(null);
         const taskDescriptionTextareaRef = useRef(null);
+        const missionControlDocumentTextareaRef = useRef(null);
         const scheduleTaskTextareaRef = useRef(null);
         const scheduleDescriptionTextareaRef = useRef(null);
         const taskCommentTextareaRef = useRef(null);
@@ -33140,8 +33270,11 @@ const html = `<!doctype html>
         const taskTitleSkipCommitRef = useRef(false);
         const backlogTitleSkipCommitRef = useRef("");
         const taskRunPendingIdsRef = useRef(new Set());
+        const taskCompletionReconciliationInFlightRef = useRef(new Set());
         const missionControlSyncThreadIdRef = useRef("");
         const missionControlRecoveryThreadIdRef = useRef("");
+        const missionControlAutosaveInFlightRef = useRef(false);
+        const missionControlAutosaveQueuedRef = useRef(null);
         const handledOpenTaskRequestTokenRef = useRef("");
         const [projects, setProjects] = useState([]);
         const [selectedProjectId, setSelectedProjectId] = useState(() => {
@@ -33269,6 +33402,8 @@ const html = `<!doctype html>
         const [backlogComposerSubtaskCommandRequest, setBacklogComposerSubtaskCommandRequest] = useState(null);
         const [backlogComposerMissionControlCommandRequest, setBacklogComposerMissionControlCommandRequest] = useState(null);
         const [missionControlStrategyOpen, setMissionControlStrategyOpen] = useState(false);
+        const [missionControlDocumentDraft, setMissionControlDocumentDraft] = useState("");
+        const [isMissionControlDocumentEditing, setIsMissionControlDocumentEditing] = useState(false);
         const [pendingNavigationMissionControlRequest, setPendingNavigationMissionControlRequest] = useState(null);
         const [pendingNavigationProjectComposerRequest, setPendingNavigationProjectComposerRequest] = useState(null);
         const [missionControlRunState, setMissionControlRunState] = useState({
@@ -34948,6 +35083,24 @@ const html = `<!doctype html>
           return String(markdown || "").replace(/\\x60\\x60\\x60mission_control_json[\\s\\S]*?\\x60\\x60\\x60/gi, "").trim();
         }
 
+        function sanitizePlaygroundMissionControlDocument(markdown) {
+          const rawDocument = stripPlaygroundMissionControlCodeBlock(markdown);
+          if (!rawDocument) {
+            return "";
+          }
+
+          const normalizedDocument = String(rawDocument).trim();
+          const strategyStartMatch = normalizedDocument.match(
+            /(?:^|\\n)\\s*(#{1,6}\\s*)?(Strategy Summary|Strategic Breakdown|Risks?\\s*(?:&|and)\\s*Opportunities|Recommended Next Moves)\\b/i
+          );
+          if (!strategyStartMatch || typeof strategyStartMatch.index !== "number") {
+            return normalizedDocument;
+          }
+
+          const strategyStartIndex = Math.max(0, strategyStartMatch.index + (strategyStartMatch[0].startsWith("\\n") ? 1 : 0));
+          return normalizedDocument.slice(strategyStartIndex).trim();
+        }
+
         function extractPlaygroundMissionControlSummary(document) {
           const plainText = String(document || "")
             .replace(/\\x60\\x60\\x60[\\s\\S]*?\\x60\\x60\\x60/g, " ")
@@ -34977,7 +35130,9 @@ const html = `<!doctype html>
             } catch {}
           }
 
-          const document = String(parsedBlock?.document || "").trim() || stripPlaygroundMissionControlCodeBlock(rawContent) || rawContent;
+          const document = sanitizePlaygroundMissionControlDocument(parsedBlock?.document || "")
+            || sanitizePlaygroundMissionControlDocument(rawContent)
+            || rawContent;
           const summary = String(parsedBlock?.summary || "").trim() || extractPlaygroundMissionControlSummary(document);
           return normalizePlaygroundProjectMissionControlRecord({
             summary,
@@ -35282,15 +35437,19 @@ const html = `<!doctype html>
               "   - If a reusable project-specific workflow gap is obvious and worth reusing, create a custom skill before attaching it to tasks.",
               "   - Aim for task records that are execution-ready: release, assignee, environment, skills, hierarchy/dependencies, and useful comments should all be populated when the context supports it.",
               "   - When you create parent tasks, also create the subtasks and dependency chain needed to express the real order of work.",
-              "6. In your human-readable response, provide a strategy document in markdown with these sections:",
-              "   - Strategy Summary",
-              "   - Strategic Breakdown",
-              "   - Risks & Opportunities",
-              "   - Recommended Next Moves",
+              "6. In your human-readable response, output only the strategy document markdown itself.",
+              "   - Do not add any conversational intro, acknowledgement, explanation, or outro before or after the document.",
+              "   - Start directly with the first strategy heading.",
+              "   - Use these sections in order:",
+              "     - Strategy Summary",
+              "     - Strategic Breakdown",
+              "     - Risks & Opportunities",
+              "     - Recommended Next Moves",
               "7. End your final response with a fenced code block labeled mission_control_json.",
+              "   - The markdown before that code block must exactly match the strategy document text stored in the JSON document field.",
               "8. That JSON must contain exactly these keys:",
               '   - "summary": a 1-2 sentence summary for the Mission Control card',
-              '   - "document": the full strategy document in markdown',
+              '   - "document": the full strategy document in markdown only, with no conversational preface or trailing commentary',
             ].join(newline),
           ].filter(Boolean).join(paragraphBreak);
         }
@@ -36627,6 +36786,49 @@ const html = `<!doctype html>
           }
 
           applyProjectDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        function applyMissionControlDocumentSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setMissionControlDocumentDraft(nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = missionControlDocumentTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleMissionControlDocumentFormat(formatType) {
+          const textarea = missionControlDocumentTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(missionControlDocumentDraft || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyMissionControlDocumentSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         function appendUploadedProjectAttachments(attachments) {
@@ -39267,6 +39469,81 @@ const html = `<!doctype html>
         }, [draftTask?.id, previewedTaskAttachmentId]);
 
         useEffect(() => {
+          setIsMissionControlDocumentEditing(false);
+        }, [selectedProjectId]);
+
+        useEffect(() => {
+          if (isMissionControlDocumentEditing) {
+            return;
+          }
+          setMissionControlDocumentDraft(String(selectedProjectMissionControl.document || ""));
+        }, [
+          isMissionControlDocumentEditing,
+          selectedProjectId,
+          selectedProjectMissionControl.document,
+          selectedProjectMissionControl.updatedAt,
+        ]);
+
+        useLayoutEffect(() => {
+          if (!missionControlStrategyOpen) {
+            return;
+          }
+          resizeTaskDescriptionTextarea(missionControlDocumentTextareaRef.current);
+        }, [missionControlDocumentDraft, missionControlStrategyOpen, selectedProjectId]);
+
+        useEffect(() => {
+          if (!missionControlStrategyOpen) {
+            return undefined;
+          }
+
+          const textarea = missionControlDocumentTextareaRef.current;
+          const detailMain = taskDetailMainRef.current;
+          if (!textarea || !detailMain) {
+            return undefined;
+          }
+
+          let frameId = 0;
+          const timeoutIds = [];
+          const scheduleResize = () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            frameId = window.requestAnimationFrame(() => {
+              resizeTaskDescriptionTextarea(missionControlDocumentTextareaRef.current);
+            });
+          };
+
+          scheduleResize();
+          [120, 240, 360].forEach((delay) => {
+            timeoutIds.push(window.setTimeout(scheduleResize, delay));
+          });
+
+          if (typeof ResizeObserver === "undefined") {
+            window.addEventListener("resize", scheduleResize);
+            return () => {
+              if (frameId) {
+                window.cancelAnimationFrame(frameId);
+              }
+              timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+              window.removeEventListener("resize", scheduleResize);
+            };
+          }
+
+          const observer = new ResizeObserver(() => {
+            scheduleResize();
+          });
+          observer.observe(detailMain);
+
+          return () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+            observer.disconnect();
+          };
+        }, [missionControlDocumentDraft, missionControlStrategyOpen, selectedProjectId]);
+
+        useEffect(() => {
           if (!previewedTaskAttachmentId) return;
           if (activeDetailAttachments.some((attachment) => attachment.id === previewedTaskAttachmentId)) {
             return;
@@ -40678,6 +40955,85 @@ const html = `<!doctype html>
           return savedTask;
         }
 
+        useEffect(() => {
+          if (!selectedProjectId || taskLoadState.status !== "ready" || tasks.length === 0) {
+            return;
+          }
+
+          const candidateTasks = tasks.filter((task) => {
+            const normalizedThreadId = typeof task?.lastStartedThreadId === "string" ? task.lastStartedThreadId.trim() : "";
+            return normalizedThreadId && (task?.status === "in_progress" || task?.status === "blocked");
+          });
+
+          if (candidateTasks.length === 0) {
+            return;
+          }
+
+          let cancelled = false;
+
+          void (async () => {
+            for (const task of candidateTasks) {
+              const normalizedTaskId = String(task?.id || "").trim();
+              const normalizedThreadId = String(task?.lastStartedThreadId || "").trim();
+              const reconciliationKey = normalizedTaskId + ":" + normalizedThreadId;
+              if (!normalizedTaskId || !normalizedThreadId) {
+                continue;
+              }
+              if (taskCompletionReconciliationInFlightRef.current.has(reconciliationKey)) {
+                continue;
+              }
+
+              taskCompletionReconciliationInFlightRef.current.add(reconciliationKey);
+              try {
+                const response = await fetch(backendUrl + "/threads/" + encodeURIComponent(normalizedThreadId) + "/status", {
+                  method: "GET",
+                  headers: requestHeaders,
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || cancelled) {
+                  continue;
+                }
+
+                const normalizedStatus = typeof data?.status === "string" && data.status.trim()
+                  ? data.status.trim().toLowerCase()
+                  : typeof data?.thread?.status === "string" && data.thread.status.trim()
+                    ? data.thread.status.trim().toLowerCase()
+                    : typeof data?.data?.status === "string" && data.data.status.trim()
+                      ? data.data.status.trim().toLowerCase()
+                      : "";
+
+                if (normalizedStatus !== "completed") {
+                  continue;
+                }
+
+                const completedTask = await patchTaskRecord(task, {
+                  status: "done",
+                  completedAt: task.completedAt || new Date().toISOString(),
+                  lastStartedThreadId: normalizedThreadId,
+                });
+
+                if (!cancelled) {
+                  commitLocalTaskRecord(completedTask, {
+                    selectTask: selectedTaskId === normalizedTaskId,
+                  });
+                }
+              } catch (error) {
+                console.warn("Failed to reconcile completed task thread", {
+                  taskId: normalizedTaskId,
+                  threadId: normalizedThreadId,
+                  error,
+                });
+              } finally {
+                taskCompletionReconciliationInFlightRef.current.delete(reconciliationKey);
+              }
+            }
+          })();
+
+          return () => {
+            cancelled = true;
+          };
+        }, [backendUrl, requestHeaders, selectedProjectId, selectedTaskId, taskLoadState.status, tasks]);
+
         async function flushQueuedTaskAutosave() {
           if (taskAutosaveInFlightRef.current) {
             return;
@@ -41198,6 +41554,56 @@ const html = `<!doctype html>
             });
           }
           return updatedProject;
+        }
+
+        async function flushQueuedMissionControlAutosave() {
+          if (missionControlAutosaveInFlightRef.current) {
+            return;
+          }
+
+          missionControlAutosaveInFlightRef.current = true;
+          try {
+            while (missionControlAutosaveQueuedRef.current) {
+              const nextQueuedSave = missionControlAutosaveQueuedRef.current;
+              missionControlAutosaveQueuedRef.current = null;
+              try {
+                await persistProjectMissionControlRecord(nextQueuedSave.projectId, nextQueuedSave.record);
+              } catch (error) {
+                console.warn("Failed to save Mission Control document", error);
+                break;
+              }
+            }
+          } finally {
+            missionControlAutosaveInFlightRef.current = false;
+          }
+        }
+
+        function queueMissionControlAutosave(nextDocument) {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          if (!normalizedProjectId) {
+            return;
+          }
+
+          missionControlAutosaveQueuedRef.current = {
+            projectId: normalizedProjectId,
+            record: normalizePlaygroundProjectMissionControlRecord({
+              ...selectedProjectMissionControl,
+              document: String(nextDocument || ""),
+              updatedAt: new Date().toISOString(),
+            }),
+          };
+          void flushQueuedMissionControlAutosave();
+        }
+
+        function commitMissionControlDocumentIfDirty() {
+          const nextDocument = String(missionControlDocumentDraft || "");
+          if (!String(selectedProjectId || "").trim()) {
+            return;
+          }
+          if (nextDocument === String(selectedProjectMissionControl.document || "")) {
+            return;
+          }
+          queueMissionControlAutosave(nextDocument);
         }
 
         function openMissionControlStrategySidebar() {
@@ -42055,6 +42461,7 @@ const html = `<!doctype html>
                   githubRepo: githubRepo || null,
                   enabledSkills: enabledSkillsPayload || null,
                   environmentId: launchEnvironmentId || "",
+                  executionStarted: true,
                 },
               });
             }
@@ -45218,6 +45625,11 @@ const html = `<!doctype html>
                   onBacklogMissionControlSubmit: handleBacklogMissionControlSubmit,
                   onAgentChange: (nextAgentId) => setBacklogComposerAgentId(nextAgentId),
                   onEnvironmentChange: (nextEnvironmentId) => setBacklogComposerEnvironmentId(nextEnvironmentId),
+                  onDocumentPreviewOpenChange: (isOpen) => {
+                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
+                      onRequestSidebarCollapse();
+                    }
+                  },
                 })
               ),
             extraToolbarContent: React.createElement(React.Fragment, null,
@@ -46957,21 +47369,77 @@ const html = `<!doctype html>
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-body" },
-                  String(selectedProjectMissionControl.document || "").trim()
+                  String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim()
                     ? React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
                         React.createElement("div", { className: "playground-tasks-detail-description" },
                           React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                            React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy")
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-description-editor is-preview" },
-                            React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                              React.createElement(ReactMarkdown, {
-                                remarkPlugins: [remarkGfm],
-                                rehypePlugins: [rehypeRaw],
-                                components: playgroundMarkdownComponents,
-                                className: "playground-tasks-detail-description-preview tb-message-markdown",
-                              }, selectedProjectMissionControl.document)
+                            React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy"),
+                            React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                              [
+                                {
+                                  id: "bold",
+                                  label: "Bold",
+                                  icon: Bold,
+                                },
+                                {
+                                  id: "italic",
+                                  label: "Italic",
+                                  icon: Italic,
+                                },
+                                {
+                                  id: "underline",
+                                  label: "Underline",
+                                  icon: Underline,
+                                },
+                                {
+                                  id: "list",
+                                  label: "List",
+                                  icon: List,
+                                },
+                              ].map((action) =>
+                                React.createElement("button", {
+                                  key: action.id,
+                                  type: "button",
+                                  className: "playground-tasks-detail-format-button",
+                                  title: action.label,
+                                  "aria-label": action.label,
+                                  onMouseDown: (event) => event.preventDefault(),
+                                  onClick: () => handleMissionControlDocumentFormat(action.id),
+                                }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                              )
                             )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isMissionControlDocumentEditing ? " is-editing" : " is-preview") },
+                            !isMissionControlDocumentEditing
+                              ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                                  String(missionControlDocumentDraft || "").trim()
+                                    ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                        content: missionControlDocumentDraft,
+                                        className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                      })
+                                    : React.createElement("div", {
+                                        className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                      }, "Add Strategy here")
+                                )
+                              : null,
+                            React.createElement("textarea", {
+                              ref: missionControlDocumentTextareaRef,
+                              className: "playground-tasks-detail-description-input " + (isMissionControlDocumentEditing ? "is-editing" : "is-preview"),
+                              rows: 1,
+                              placeholder: isMissionControlDocumentEditing ? "Add Strategy here" : "",
+                              value: missionControlDocumentDraft,
+                              onFocus: () => {
+                                setIsMissionControlDocumentEditing(true);
+                              },
+                              onChange: (event) => {
+                                setMissionControlDocumentDraft(event.target.value);
+                                resizeTaskDescriptionTextarea(event.currentTarget);
+                              },
+                              onBlur: () => {
+                                setIsMissionControlDocumentEditing(false);
+                                commitMissionControlDocumentIfDirty();
+                              },
+                            })
                           )
                         )
                       )
@@ -48632,13 +49100,7 @@ const html = `<!doctype html>
         const [settingsSection, setSettingsSection] = useState("costs-plans");
         const [contentMode, setContentMode] = useState("chat");
         const [changesNavigationTarget, setChangesNavigationTarget] = useState(null);
-        const [computerAgentsMode, setComputerAgentsMode] = useState(() => {
-          try {
-            return localStorage.getItem("runner_demo_computer_agents_mode") === "true";
-          } catch {
-            return false;
-          }
-        });
+        const computerAgentsMode = true;
         const [realThreads, setRealThreads] = useState([]);
         const [isThreadsLoading, setIsThreadsLoading] = useState(false);
         const [realThreadsHasMore, setRealThreadsHasMore] = useState(false);
@@ -48832,7 +49294,7 @@ const html = `<!doctype html>
           const controller = new AbortController();
           const welcomeRequestHeaders = {
             ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
-            "X-Runner-Upstream-Url": String(upstreamUrl || "").trim() || ${JSON.stringify(defaultUpstreamOrigin)},
+            "X-Runner-Upstream-Url": String(upstreamUrl || "").trim() || defaultUpstreamOrigin,
           };
 
           setWelcomeWidgetsState((current) => ({
@@ -49531,14 +49993,7 @@ const html = `<!doctype html>
               phase: "running",
             });
             void refreshThreads();
-            void startThreadRunInBackground(threadRecord.id, {
-              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-              prompt: launchPrompt,
-              attachments: launchAttachments,
-              githubRepo: githubRepo || null,
-              enabledSkills: enabledSkillsPayload || null,
-              environmentId: typeof updatedTask.environmentId === "string" ? updatedTask.environmentId : "",
-            }, buildWelcomeWidgetTaskPreview(updatedTask, threadRecord.id));
+            void loadThreadGroundTruthStatus(threadRecord.id);
           } catch (error) {
             applyTaskRunState({
               taskId: normalizedTaskId,
@@ -52913,6 +53368,21 @@ const html = `<!doctype html>
           taskCompletionSyncInFlightRef.current.add(normalizedTaskId);
 
           try {
+            const currentTaskResponse = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId), {
+              method: "GET",
+              headers: authRequestHeaders,
+            });
+            const currentTaskData = await currentTaskResponse.json().catch(() => ({}));
+            if (!currentTaskResponse.ok) {
+              throw new Error(currentTaskData?.message || currentTaskData?.error || "Failed to load task before marking it as finished.");
+            }
+
+            const currentTaskRecord = normalizePlaygroundTaskRecord(getPlaygroundTaskResponseRecord(currentTaskData));
+            if (!currentTaskRecord?.id) {
+              throw new Error("Task details were unavailable when finishing the task.");
+            }
+
+            const completedAt = new Date().toISOString();
             const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId), {
               method: "PATCH",
               headers: {
@@ -52920,9 +53390,44 @@ const html = `<!doctype html>
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
+                projectId: currentTaskRecord.projectId || taskRunState.projectId || "",
+                releaseId: currentTaskRecord.releaseId,
+                ticketNumber: currentTaskRecord.ticketNumber,
+                type: currentTaskRecord.taskType,
+                parentTaskId: currentTaskRecord.taskType === "subtask" ? currentTaskRecord.parentTaskId : null,
+                title: currentTaskRecord.title,
+                description: currentTaskRecord.description,
                 status: "done",
-                completedAt: new Date().toISOString(),
+                priority: currentTaskRecord.priority,
+                sprintId: currentTaskRecord.sprintId,
+                assigneeAgentId: isPlaygroundHumanAssigneeId(currentTaskRecord.assigneeAgentId)
+                  ? null
+                  : currentTaskRecord.assigneeAgentId,
+                environmentId: currentTaskRecord.environmentId,
+                dependencyIds: currentTaskRecord.dependencyIds,
+                linkedThreadIds: currentTaskRecord.linkedThreadIds,
                 lastStartedThreadId: normalizedThreadId,
+                scheduledStartAt: currentTaskRecord.scheduledStartAt,
+                scheduledEndAt: currentTaskRecord.scheduledEndAt,
+                dueAt: currentTaskRecord.dueAt,
+                completedAt,
+                sortOrder: Number.isFinite(currentTaskRecord.sortOrder) ? currentTaskRecord.sortOrder : Date.now(),
+                metadata: buildPlaygroundTaskMetadata(currentTaskRecord, {
+                  ticketNumber: currentTaskRecord.ticketNumber,
+                  taskType: currentTaskRecord.taskType,
+                  parentTaskId: currentTaskRecord.parentTaskId,
+                  assigneeAgentId: currentTaskRecord.assigneeAgentId,
+                  environmentId: currentTaskRecord.environmentId,
+                  taskColor: currentTaskRecord.taskColor,
+                  scheduleType: currentTaskRecord.scheduleType,
+                  cronExpression: currentTaskRecord.cronExpression,
+                  scheduleTimezone: currentTaskRecord.scheduleTimezone,
+                  scheduleEnabled: currentTaskRecord.scheduleEnabled,
+                  attachments: currentTaskRecord.attachments,
+                  enabledSkills: currentTaskRecord.enabledSkills,
+                  connectors: currentTaskRecord.connectors,
+                  comments: currentTaskRecord.comments,
+                }),
               }),
             });
             const data = await response.json().catch(() => ({}));
@@ -55549,23 +56054,21 @@ const html = `<!doctype html>
                 ),
                 React.createElement("div", { className: "playground-environments-summary-grid" },
                   renderSettingsSummaryCard("Runner Surface", [
-                    { label: "Input Mode", value: computerAgentsMode ? "Computer Agents" : "Minimal" },
+                    { label: "Input Mode", value: "Computer Agents" },
                     { label: "Sidebar", value: sidebarOpen ? "Expanded" : "Collapsed" },
                     { label: "Content Mode", value: contentMode === "changes" ? "Changes" : "Chat" },
                     { label: "Welcome State", value: showInitialThreadWelcome ? "Visible" : "Hidden" },
                   ]),
                   React.createElement("div", { className: "playground-environments-summary-card" },
-                    React.createElement("div", { className: "playground-environments-summary-title" }, "Mode Toggle"),
+                    React.createElement("div", { className: "playground-environments-summary-title" }, "Composer Mode"),
                     React.createElement("div", { className: "playground-environments-toggle-row" },
                       React.createElement("div", { className: "playground-environments-toggle-copy" },
                         React.createElement("div", { className: "playground-environments-subtitle" }, "Computer Agents Mode"),
-                        React.createElement("div", { className: "playground-environments-muted" }, "Show the full cloud-style task input bar.")
+                        React.createElement("div", { className: "playground-environments-muted" }, "The playground always uses the full cloud-style task input bar with agent and environment selectors.")
                       ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-toggle" + (computerAgentsMode ? " is-active" : ""),
-                        onClick: () => setComputerAgentsMode((current) => !current),
-                        "aria-pressed": computerAgentsMode ? "true" : "false",
+                      React.createElement("div", {
+                        className: "playground-environments-toggle is-active",
+                        "aria-hidden": "true",
                       }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
                     )
                   )
@@ -57826,7 +58329,12 @@ const html = `<!doctype html>
                               setThreadAgentSelectionOverride(null);
                               if (options?.taskRunRequest?.prompt) {
                                 setPendingThreadRunRequest(null);
-                                void startThreadRunInBackground(threadId, options.taskRunRequest, options.taskPreview || null);
+                                if (!options.taskRunRequest.executionStarted) {
+                                  void startThreadRunInBackground(threadId, options.taskRunRequest, options.taskPreview || null);
+                                } else {
+                                  void loadThreadGroundTruthStatus(threadId);
+                                  void refreshThreads();
+                                }
                                 return;
                               }
                               setPendingThreadRunRequest(null);
@@ -57949,6 +58457,11 @@ const html = `<!doctype html>
                                       void loadThreadGroundTruthStatus(threadId);
                                       void refreshThreads();
                                     },
+                                    onDocumentPreviewOpenChange: (isOpen) => {
+                                      if (isOpen) {
+                                        setSidebarOpen(false);
+                                      }
+                                    },
                                     onSubagentDetailOpenChange: (isOpen) => {
                                       setThreadSubagentDetailOpen(isOpen);
                                     },
@@ -58042,24 +58555,29 @@ const html = `<!doctype html>
                                     taskPreview: options?.taskPreview || null,
                                     status: options?.taskRunRequest?.prompt ? "running" : "",
                                   });
-                                }
-                                if (options?.taskPreview?.environmentId) {
-                                  setEnvironmentId(options.taskPreview.environmentId);
-                                }
-                                setThreadAgentSelectionOverride(null);
-                                if (options?.taskRunRequest?.prompt) {
-                                  setPendingThreadRunRequest({
-                                    token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
-                                    threadId,
-                                    prompt: options.taskRunRequest.prompt,
-                                    attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
-                                    githubRepo: options.taskRunRequest.githubRepo || null,
-                                    enabledSkills: options.taskRunRequest.enabledSkills || null,
-                                    environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
-                                  });
-                                } else {
+                              }
+                              if (options?.taskPreview?.environmentId) {
+                                setEnvironmentId(options.taskPreview.environmentId);
+                              }
+                              setThreadAgentSelectionOverride(null);
+                              if (options?.taskRunRequest?.prompt) {
+                                if (options.taskRunRequest.executionStarted) {
                                   setPendingThreadRunRequest(null);
+                                  void loadThreadGroundTruthStatus(threadId);
+                                } else {
+                                  setPendingThreadRunRequest({
+                                      token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                                      threadId,
+                                      prompt: options.taskRunRequest.prompt,
+                                      attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                                      githubRepo: options.taskRunRequest.githubRepo || null,
+                                      enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                      environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                    });
                                 }
+                              } else {
+                                setPendingThreadRunRequest(null);
+                              }
                                 setThreadTaskOpenRequest(null);
                                 setActivePage("thread");
                                 setCurrentThreadId(threadId);
@@ -58729,6 +59247,12 @@ async function proxyTaskStartThread(req, res, taskId) {
     const githubRepo = body?.githubRepo && typeof body.githubRepo === "object" ? body.githubRepo : null;
     const taskPreview = body?.taskPreview && typeof body.taskPreview === "object" ? body.taskPreview : null;
     const threadTitle = String(body?.title || (taskPreview?.ticketNumber ? `${taskPreview.ticketNumber} ${taskPreview.title || taskRecord.title || "Task"}` : taskRecord.title || "Task")).trim();
+    const threadExecutionPayload = {
+      content: launchPrompt,
+      ...(Array.isArray(body?.attachments) ? { attachments: body.attachments } : {}),
+      ...(githubRepo ? { githubRepo } : {}),
+      ...(enabledSkills ? { enabledSkills } : {}),
+    };
 
     if (isPlaygroundHumanAssigneeId(requestedAgentId)) {
       return sendJson(res, 400, {
@@ -58780,6 +59304,87 @@ async function proxyTaskStartThread(req, res, taskId) {
       },
     });
     const patchedThreadRecord = extractServerThreadRecord(patchedThreadPayload) || createdThreadRecord;
+
+    const startThreadExecution = async () => {
+      let upstream;
+
+      if (apiKey) {
+        upstream = await fetch(`${upstreamUrl}/threads/${encodeURIComponent(createdThreadRecord.id)}/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": apiKey,
+          },
+          body: JSON.stringify(threadExecutionPayload),
+        });
+      } else {
+        upstream = await fetchAiosApi(req, `/api/threads/${encodeURIComponent(createdThreadRecord.id)}/messages`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            ...threadExecutionPayload,
+            task: threadExecutionPayload.content,
+          }),
+        });
+      }
+
+      if (!upstream.ok) {
+        const text = await upstream.text().catch(() => "");
+        let parsed = {};
+        try {
+          parsed = text ? JSON.parse(text) : {};
+        } catch {
+          parsed = { message: text };
+        }
+        throw new Error(parsed?.message || parsed?.error || "Failed to start task thread execution.");
+      }
+
+      const drainResponse = async () => {
+        const reader = upstream.body?.getReader ? upstream.body.getReader() : null;
+        if (reader) {
+          try {
+            while (true) {
+              const { done } = await reader.read();
+              if (done) {
+                break;
+              }
+            }
+          } finally {
+            reader.releaseLock();
+          }
+          return;
+        }
+        await upstream.arrayBuffer().catch(() => undefined);
+      };
+
+      void drainResponse().catch((error) => {
+        console.error("Task thread execution stream failed", error);
+      });
+    };
+
+    try {
+      await startThreadExecution();
+    } catch (error) {
+      try {
+        if (apiKey) {
+          await fetch(`${upstreamUrl}/threads/${encodeURIComponent(createdThreadRecord.id)}`, {
+            method: "DELETE",
+            headers: {
+              "X-API-Key": apiKey,
+            },
+          });
+        } else {
+          await fetchAiosCloud(req, `/threads/${encodeURIComponent(createdThreadRecord.id)}`, {
+            method: "DELETE",
+          });
+        }
+      } catch (cleanupError) {
+        console.warn("Failed to clean up task thread after launch error", cleanupError);
+      }
+      throw error;
+    }
 
     const nextLinkedThreadIds = Array.from(new Set(existingLinkedThreadIds.concat(createdThreadRecord.id)));
     const currentStatus = typeof taskRecord.status === "string" ? taskRecord.status.trim() : "";

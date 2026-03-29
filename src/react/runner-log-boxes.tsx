@@ -3303,7 +3303,7 @@ function PdfReaderLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: strin
   );
 }
 
-function isDeepResearchCommand(command?: string): boolean {
+export function isDeepResearchCommand(command?: string): boolean {
   if (!command) return false;
   return command.includes("/workspace/.scripts/deep-research.py") || command.includes("deep-research.py") || command.includes(".claude/skills/deep-research/");
 }
@@ -3320,9 +3320,11 @@ function parseDeepResearchOutput(output?: string) {
   const result = {
     status: "starting" as "starting" | "thinking" | "researching" | "complete" | "error",
     topic: null as string | null,
+    interactionId: null as string | null,
     thinkingSummaries: [] as string[],
     reportFile: null as string | null,
     sourcesCount: 0,
+    sources: [] as string[],
     elapsedSeconds: 0,
     errorMessage: null as string | null,
   };
@@ -3333,6 +3335,10 @@ function parseDeepResearchOutput(output?: string) {
     try {
       const event = JSON.parse(trimmed) as Record<string, unknown>;
       if (event.event === "start") result.topic = typeof event.topic === "string" ? event.topic : result.topic;
+      if (event.event === "interaction_started" && typeof event.interaction_id === "string") {
+        result.interactionId = event.interaction_id;
+        result.status = "thinking";
+      }
       if (event.event === "thinking" && typeof event.summary === "string") {
         result.thinkingSummaries.push(event.summary);
         result.status = "thinking";
@@ -3345,6 +3351,9 @@ function parseDeepResearchOutput(output?: string) {
       if ((event.event === "research_complete" || event.event === "complete") && typeof event.sources_count === "number") {
         result.sourcesCount = event.sources_count;
       }
+      if ((event.event === "research_complete" || event.event === "complete") && Array.isArray(event.sources)) {
+        result.sources = event.sources.filter((source): source is string => typeof source === "string");
+      }
       if (typeof event.elapsed_seconds === "number") result.elapsedSeconds = event.elapsed_seconds;
       if (event.event === "error" && typeof event.message === "string") {
         result.status = "error";
@@ -3352,6 +3361,97 @@ function parseDeepResearchOutput(output?: string) {
       }
     } catch {}
   }
+  return result;
+}
+
+function buildDeepResearchFromStreamingLogs(logs: RunnerLog[]) {
+  const result = {
+    status: "starting" as "starting" | "thinking" | "researching" | "complete" | "error",
+    topic: null as string | null,
+    interactionId: null as string | null,
+    thinkingSummaries: [] as string[],
+    reportFile: null as string | null,
+    sourcesCount: 0,
+    sources: [] as string[],
+    elapsedSeconds: 0,
+    errorMessage: null as string | null,
+  };
+  const seenSummaries = new Set<string>();
+
+  for (const log of logs) {
+    const deepResearch = log.metadata?.deepResearch;
+    if (!deepResearch) continue;
+
+    switch (deepResearch.event) {
+      case "start":
+        result.topic = deepResearch.topic || result.topic;
+        result.status = "starting";
+        break;
+      case "interaction_started":
+        result.interactionId = deepResearch.interactionId || result.interactionId;
+        result.status = "thinking";
+        break;
+      case "thinking": {
+        const summary = String(deepResearch.thinkingSummary || "").trim();
+        if (summary) {
+          const signature = summary.slice(0, 100);
+          if (!seenSummaries.has(signature)) {
+            seenSummaries.add(signature);
+            result.thinkingSummaries.push(summary);
+          }
+        }
+        result.status = "thinking";
+        break;
+      }
+      case "status":
+        if (typeof deepResearch.elapsedSeconds === "number" && deepResearch.elapsedSeconds > 0) {
+          result.elapsedSeconds = deepResearch.elapsedSeconds;
+        }
+        break;
+      case "research_complete":
+      case "complete":
+        result.status = "complete";
+        result.reportFile = deepResearch.reportFile || result.reportFile;
+        if (typeof deepResearch.sourcesCount === "number") {
+          result.sourcesCount = deepResearch.sourcesCount;
+        }
+        if (Array.isArray(deepResearch.sources)) {
+          result.sources = deepResearch.sources.filter((source): source is string => typeof source === "string");
+        }
+        if (typeof deepResearch.elapsedSeconds === "number" && deepResearch.elapsedSeconds > 0) {
+          result.elapsedSeconds = deepResearch.elapsedSeconds;
+        }
+        break;
+      case "error":
+      case "timeout":
+      case "connection_timeout":
+      case "resume_timeout":
+      case "resume_error":
+        result.status = "error";
+        result.errorMessage = deepResearch.errorMessage || deepResearch.thinkingSummary || "Unknown error occurred";
+        if (typeof deepResearch.elapsedSeconds === "number" && deepResearch.elapsedSeconds > 0) {
+          result.elapsedSeconds = deepResearch.elapsedSeconds;
+        }
+        break;
+      case "resuming_stream":
+        result.status = "thinking";
+        if (typeof deepResearch.elapsedSeconds === "number" && deepResearch.elapsedSeconds > 0) {
+          result.elapsedSeconds = deepResearch.elapsedSeconds;
+        }
+        break;
+      case "stream_ended":
+        if (typeof deepResearch.reportLength === "number" && deepResearch.reportLength > 0) {
+          result.status = "complete";
+        }
+        if (typeof deepResearch.elapsedSeconds === "number" && deepResearch.elapsedSeconds > 0) {
+          result.elapsedSeconds = deepResearch.elapsedSeconds;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   return result;
 }
 
@@ -3452,6 +3552,123 @@ function DeepResearchCommandLogBox({ log, timeLabel }: { log: RunnerLog; timeLab
               </div>
             ) : null}
             {!parsed.reportFile && parsed.thinkingSummaries.length === 0 && parsed.sourcesCount === 0 ? <div className="tb-log-card-empty">Research started.</div> : null}
+          </>
+        )}
+      </LogPanel>
+    </div>
+  );
+}
+
+export function DeepResearchLogBox({
+  log,
+  logs,
+  runningCommandLog,
+  timeLabel,
+}: {
+  log?: RunnerLog;
+  logs?: RunnerLog[];
+  runningCommandLog?: RunnerLog;
+  timeLabel?: string;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const streamingLogs = Array.isArray(logs) ? logs : [];
+  const hasStreamingLogs = streamingLogs.length > 0;
+  const effectiveCommandLog = runningCommandLog || log;
+  const command = effectiveCommandLog?.metadata?.command || "";
+  const commandStatus = effectiveCommandLog?.metadata?.status;
+  const commandExitCode = effectiveCommandLog?.metadata?.exitCode;
+  const commandOutput = typeof effectiveCommandLog?.metadata?.output === "string" ? effectiveCommandLog.metadata.output : "";
+
+  const parsed = useMemo(
+    () => (hasStreamingLogs ? buildDeepResearchFromStreamingLogs(streamingLogs) : parseDeepResearchOutput(commandOutput)),
+    [commandOutput, hasStreamingLogs, streamingLogs]
+  );
+
+  const topicFromStreamingLogs =
+    streamingLogs.find((entry) => entry.metadata?.deepResearch?.topic)?.metadata?.deepResearch?.topic || null;
+  const topic = topicFromStreamingLogs || parsed.topic || extractResearchTopic(command);
+
+  const hasStreamingError = hasStreamingLogs &&
+    streamingLogs.some(
+      (entry) =>
+        entry.metadata?.deepResearch?.event === "error" ||
+        entry.metadata?.deepResearch?.event === "timeout" ||
+        entry.metadata?.deepResearch?.event === "connection_timeout"
+    );
+  const hasCommandError = typeof commandExitCode === "number" && commandExitCode !== 0;
+  const isError = hasStreamingError || hasCommandError || parsed.status === "error";
+  const isStreamingComplete = hasStreamingLogs &&
+    (streamingLogs.some(
+      (entry) =>
+        entry.metadata?.deepResearch?.event === "research_complete" ||
+        entry.metadata?.deepResearch?.event === "complete"
+    ) ||
+      streamingLogs.some((entry) => Boolean(entry.metadata?.deepResearch?.reportFile)) ||
+      Boolean(parsed.reportFile));
+  const isCommandComplete = commandStatus === "completed" && !hasCommandError;
+  const isParsedComplete = parsed.status === "complete" || Boolean(parsed.reportFile);
+  const isComplete = !isError && (isStreamingComplete || isCommandComplete || isParsedComplete);
+  const isCommandRunning = commandStatus === "running" || commandStatus === "started" || commandStatus === "output";
+  const isLoading = !isError && !isComplete && (hasStreamingLogs || isCommandRunning);
+  const statusLabel = isError
+    ? "error"
+    : isComplete
+      ? "complete"
+      : parsed.status === "researching"
+        ? "researching"
+        : isLoading
+          ? "starting"
+          : parsed.status;
+
+  return (
+    <div className="tb-log-card">
+      <LogHeader
+        icon={<Telescope className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Deep Research"
+        title={topic || undefined}
+        timeLabel={timeLabel}
+        meta={<span className={`tb-log-card-pill ${isError ? "is-error" : ""}`.trim()}>{statusLabel}</span>}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        {isError ? (
+          <div className="tb-log-card-state tb-log-card-state-error">{parsed.errorMessage || "Deep research failed."}</div>
+        ) : (
+          <>
+            {parsed.thinkingSummaries.length > 0 ? (
+              <div className="tb-log-list">
+                {parsed.thinkingSummaries.map((summary, index) => (
+                  <div key={`${summary.slice(0, 64)}-${index}`} className="tb-log-list-item tb-log-list-item-column">
+                    <RunnerMarkdown content={summary} className="tb-message-markdown" />
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {parsed.reportFile ? (
+              <div className="tb-log-meta-row">
+                <span className="tb-log-meta-label">Report</span>
+                <span className="tb-log-meta-value">{parsed.reportFile}</span>
+              </div>
+            ) : null}
+            {parsed.sourcesCount > 0 ? (
+              <div className="tb-log-meta-row">
+                <span className="tb-log-meta-label">Sources</span>
+                <span className="tb-log-meta-value">{parsed.sourcesCount}</span>
+              </div>
+            ) : null}
+            {parsed.elapsedSeconds > 0 ? (
+              <div className="tb-log-meta-row">
+                <span className="tb-log-meta-label">Elapsed</span>
+                <span className="tb-log-meta-value">{parsed.elapsedSeconds}s</span>
+              </div>
+            ) : null}
+            {isLoading && parsed.thinkingSummaries.length === 0 && !parsed.reportFile && parsed.sourcesCount === 0 ? (
+              <div className="tb-log-card-empty">Research started.</div>
+            ) : null}
+            {!isLoading && !isComplete && parsed.thinkingSummaries.length === 0 && !parsed.reportFile && parsed.sourcesCount === 0 ? (
+              <div className="tb-log-card-empty">No research output available.</div>
+            ) : null}
           </>
         )}
       </LogPanel>

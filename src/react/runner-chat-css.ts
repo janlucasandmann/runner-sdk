@@ -1186,9 +1186,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   flex-direction: column;
   gap: 0;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 0;
   background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   box-shadow: inset 0 0 0 1px var(--tb-task-preview-border, rgba(255, 255, 255, 0.08)), 0px 2px 5px rgba(0, 0, 0, 0.15);
   color: rgba(255, 255, 255, 0.92);
   text-align: left;
@@ -1942,6 +1944,19 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .runner-attachments-summary > [role="listitem"] {
   display: flex;
+}
+
+.tb-runner-chat .runner-attachments-summary-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 16px;
+  padding: 0;
+  align-self: flex-start;
+  justify-content: flex-start;
+  align-content: flex-start;
 }
 
 .tb-runner-chat .tb-log-group-stack {
@@ -3985,7 +4000,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-message-markdown-paragraph {
   margin: 0 0 8px;
-  color: inherit;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -4295,6 +4310,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .runner-attachment-file {
+  width: auto;
+  flex: 0 0 auto;
   min-width: 0;
   max-width: min(220px, 100%);
   padding: 0 10px;
@@ -4426,7 +4443,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .runner-attachment-file-button {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  flex: 0 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -4604,8 +4623,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  height: 50px;
-  padding: 0 18px;
+  min-height: 56px;
+  padding: 2px 12px 12px;
+  box-sizing: border-box;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
