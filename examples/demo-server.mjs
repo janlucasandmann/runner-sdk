@@ -1242,6 +1242,10 @@ const html = `<!doctype html>
         padding: 0;
       }
 
+      .playground-shell.is-project-thread-page .playground-main {
+        padding: 6px;
+      }
+
       .playground-content-shell {
         --playground-content-nav-height: 50px;
         --playground-thread-task-detail-width: min(42vw, 520px);
@@ -22071,14 +22075,17 @@ const html = `<!doctype html>
             if (!createdAt || createdAt > windowEnd || (windowStart && createdAt <= windowStart)) {
               continue;
             }
-            const imageEntries = extractGeneratedImageEntriesFromHistoryLog(log);
-            if (imageEntries.length === 0) {
+            const supplementalEntries = [
+              ...extractGeneratedImageEntriesFromHistoryLog(log),
+              ...extractLoggedFileChangeEntriesFromHistoryLog(log),
+            ];
+            if (supplementalEntries.length === 0) {
               continue;
             }
             const targetStep = explicitChangedSteps.find((candidate) => String(candidate.createdAt || "") >= createdAt)
               || explicitChangedSteps[explicitChangedSteps.length - 1]
               || step;
-            appendEntries(targetStep.id, imageEntries);
+            appendEntries(targetStep.id, supplementalEntries);
           }
         }
 
@@ -22107,6 +22114,91 @@ const html = `<!doctype html>
           }
         }
         return null;
+      }
+
+      function inferHistoryChangeKindFromDiffText(diffText) {
+        const normalizedDiff = typeof diffText === "string" ? diffText.trim() : "";
+        if (!normalizedDiff) return null;
+        if (/^new file mode\b/m.test(normalizedDiff)) return "created";
+        if (/^deleted file mode\b/m.test(normalizedDiff)) return "deleted";
+        return "modified";
+      }
+
+      function extractLoggedFileChangeEntriesFromHistoryLog(log) {
+        if (!log || log.eventType !== "file_change") {
+          return [];
+        }
+
+        const metadata = log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        const filePaths = Array.isArray(metadata.filePaths) ? metadata.filePaths : [];
+        const changeKinds = Array.isArray(metadata.changeKinds) ? metadata.changeKinds : [];
+        const diffs = metadata.diffs && typeof metadata.diffs === "object" ? metadata.diffs : {};
+        const entries = new Map();
+
+        function upsertEntry(rawPath, extra) {
+          const normalizedPath = normalizeHistoryPath(rawPath);
+          if (!normalizedPath) return;
+          const existing = entries.get(normalizedPath) || {
+            path: normalizedPath,
+            name: getHistoryPathName(normalizedPath),
+            type: "file",
+            size: null,
+            changeKind: null,
+            additions: null,
+            deletions: null,
+            diffText: "",
+            isChanged: true,
+          };
+          entries.set(normalizedPath, {
+            ...existing,
+            ...(extra || {}),
+            path: normalizedPath,
+            name: getHistoryPathName(normalizedPath),
+            type: "file",
+            size: null,
+            isChanged: true,
+          });
+        }
+
+        for (let index = 0; index < filePaths.length; index += 1) {
+          const filePath = filePaths[index];
+          const diffEntry = resolveHistoryDiffEntry(diffs, filePath);
+          const diffText =
+            typeof diffEntry?.diff === "string" && diffEntry.diff.trim()
+              ? diffEntry.diff
+              : typeof diffEntry?.changes === "string" && diffEntry.changes.trim()
+                ? diffEntry.changes
+                : "";
+          const derivedStats = diffText ? summarizeUnifiedDiffStats(diffText) : null;
+          const changeKind =
+            normalizeHistoryChangeKind(changeKinds[index])
+            || inferHistoryChangeKindFromDiffText(diffText);
+          upsertEntry(filePath, {
+            changeKind,
+            additions: Number.isFinite(diffEntry?.additions) && diffEntry.additions > 0 ? diffEntry.additions : derivedStats?.additions ?? null,
+            deletions: Number.isFinite(diffEntry?.deletions) && diffEntry.deletions > 0 ? diffEntry.deletions : derivedStats?.deletions ?? null,
+            diffText,
+          });
+        }
+
+        for (const [diffPath, rawDiffEntry] of Object.entries(diffs)) {
+          const diffEntry = rawDiffEntry && typeof rawDiffEntry === "object" ? rawDiffEntry : {};
+          const diffText =
+            typeof diffEntry?.diff === "string" && diffEntry.diff.trim()
+              ? diffEntry.diff
+              : typeof diffEntry?.changes === "string" && diffEntry.changes.trim()
+                ? diffEntry.changes
+                : "";
+          const derivedStats = diffText ? summarizeUnifiedDiffStats(diffText) : null;
+          upsertEntry(diffPath, {
+            changeKind: inferHistoryChangeKindFromDiffText(diffText),
+            additions: Number.isFinite(diffEntry?.additions) && diffEntry.additions > 0 ? diffEntry.additions : derivedStats?.additions ?? null,
+            deletions: Number.isFinite(diffEntry?.deletions) && diffEntry.deletions > 0 ? diffEntry.deletions : derivedStats?.deletions ?? null,
+            diffText,
+          });
+        }
+
+        return Array.from(entries.values());
       }
 
       function extractStepChangedFileEntries(step) {
@@ -55490,7 +55582,8 @@ const html = `<!doctype html>
           const normalizedStatus = String(selectedKnownThread?.status || "").trim().toLowerCase();
           return ["running", "queued", "pending", "scheduled", "starting"].includes(normalizedStatus);
         }, [selectedKnownThread]);
-        const isProjectShellContext = activePage === "tasks" || (activePage === "thread" && Boolean(selectedThreadProjectId));
+        const isProjectThreadPage = activePage === "thread" && Boolean(selectedThreadProjectId);
+        const isProjectShellContext = activePage === "tasks" || isProjectThreadPage;
 
         useEffect(() => {
           if (activePage !== "thread" || !hasRealAccess || !selectedThreadProjectId || cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
@@ -56687,7 +56780,7 @@ const html = `<!doctype html>
                   )
                 )
               : null,
-            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") },
+            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") + (isProjectThreadPage ? " is-project-thread-page" : "") },
               React.createElement("aside", { className: "playground-sidebar" + (sidebarOpen ? "" : " is-collapsed") },
                 React.createElement("div", {
                   className: "playground-sidebar-panel",

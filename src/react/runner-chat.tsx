@@ -1529,11 +1529,14 @@ function buildTurnSummaryPreviewAttachment(
   file: RunnerTurnFilePreview,
   options: { backendUrl?: string; environmentId?: string | null }
 ): RunnerTurnAttachment {
-  return buildRunnerPreviewAttachmentFromPath(file.path, {
-    backendUrl: options.backendUrl,
-    environmentId: options.environmentId,
-    idPrefix: "summary-preview",
-  });
+  return {
+    ...buildRunnerPreviewAttachmentFromPath(file.path, {
+      backendUrl: options.backendUrl,
+      environmentId: options.environmentId,
+      idPrefix: "summary-preview",
+    }),
+    workspacePath: file.path,
+  };
 }
 
 function collectTurnSummaryPreviewAttachments(
@@ -1541,6 +1544,41 @@ function collectTurnSummaryPreviewAttachments(
   options: { backendUrl?: string; environmentId?: string | null }
 ): RunnerTurnAttachment[] {
   return collectTurnFilePreviews(logs).map((file) => buildTurnSummaryPreviewAttachment(file, options));
+}
+
+function collectThreadRetainedSummaryPreviewPaths(turns: RunnerTurn[]): Set<string> {
+  const retainedPaths = new Set<string>();
+
+  for (const turn of turns) {
+    for (const log of turn.logs) {
+      if (log.eventType !== "file_change") continue;
+
+      const filePaths = Array.isArray(log.metadata?.filePaths)
+        ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+        : [];
+      if (filePaths.length === 0) continue;
+
+      const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
+
+      for (let index = 0; index < filePaths.length; index += 1) {
+        const normalizedPath = normalizeRunnerPreviewPath(filePaths[index]);
+        if (!normalizedPath || isInternalTurnPreviewPath(normalizedPath)) continue;
+
+        const rawKind = typeof changeKinds[index] === "string" ? changeKinds[index].trim().toLowerCase() : "modified";
+        const changeKind: "created" | "modified" | "deleted" =
+          rawKind === "created" ? "created" : rawKind === "deleted" ? "deleted" : "modified";
+
+        if (changeKind === "deleted") {
+          retainedPaths.delete(normalizedPath);
+          continue;
+        }
+
+        retainedPaths.add(normalizedPath);
+      }
+    }
+  }
+
+  return retainedPaths;
 }
 
 function collectTurnChangedFiles(logs: RunnerLog[]): Array<{
@@ -5107,6 +5145,7 @@ export function RunnerChat({
     [apiKey, requestHeaders]
   );
   const summaryPreviewEnvironmentId = activeThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
+  const retainedSummaryPreviewPaths = useMemo(() => collectThreadRetainedSummaryPreviewPaths(turns), [turns]);
   const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
   const availableEnvironments = useMemo(
     () =>
@@ -11587,6 +11626,9 @@ export function RunnerChat({
               const summaryPreviewAttachments = collectTurnSummaryPreviewAttachments(turn.logs, {
                 backendUrl: normalizedBackendUrl,
                 environmentId: summaryPreviewEnvironmentId,
+              }).filter((attachment) => {
+                const normalizedPath = normalizeRunnerPreviewPath(attachment.workspacePath || "");
+                return !normalizedPath || retainedSummaryPreviewPaths.has(normalizedPath);
               });
               const visibleTimelineItemCount = visibleTimelineItemCountsByTurn[turn.id];
               const displayedTimelineItems =

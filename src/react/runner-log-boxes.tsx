@@ -942,9 +942,12 @@ type RunnerTaskManagementCreatedTaskPreview = {
   status?: string | null;
   priority?: string | null;
   taskType?: string | null;
+  assigneeAgentId?: string | null;
   assigneeName?: string | null;
   taskColor?: string | null;
 };
+
+const RUNNER_PLAYGROUND_HUMAN_ME_ID = "__runner_playground_human_me__";
 
 function asOptionalTrimmedString(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
@@ -977,6 +980,21 @@ function normalizeTaskManagementPreviewPriority(value: string | null | undefined
 
 function normalizeTaskManagementPreviewType(value: string | null | undefined): "task" | "subtask" {
   return String(value || "").trim().toLowerCase() === "subtask" ? "subtask" : "task";
+}
+
+function normalizeTaskManagementPreviewTicketNumber(value: string | null | undefined): string | null {
+  const normalized = String(value || "").trim();
+  if (!normalized) return null;
+  const digits = Array.from(normalized).filter((character) => character >= "0" && character <= "9").join("");
+  const parsed = Number.parseInt(digits || normalized, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return String(parsed).padStart(3, "0");
+}
+
+function isTaskManagementHumanAssigneeId(value: string | null | undefined): boolean {
+  return String(value || "").trim() === RUNNER_PLAYGROUND_HUMAN_ME_ID;
 }
 
 function normalizeTaskManagementPreviewColor(value: string | null | undefined): "gray" | "blue" | "green" | "amber" | "rose" {
@@ -1098,24 +1116,37 @@ function normalizeTaskManagementCreatePreview(value: unknown): RunnerTaskManagem
     || asOptionalTrimmedString(record.taskTitle)
     || "";
   const titleParts = rawTitle ? splitTaskManagementTitleAndTicket(rawTitle) : { title: rawTitle };
-  const ticketNumber =
+  const ticketNumber = normalizeTaskManagementPreviewTicketNumber(
     asOptionalTrimmedString(record.ticketNumber)
     || asOptionalTrimmedString(record.ticket_number)
     || asOptionalTrimmedString(record.ticket)
     || asOptionalTrimmedString(runnerPlayground?.ticketNumber)
     || titleParts.ticketNumber
-    || null;
+    || null
+  );
   const taskType =
     asOptionalTrimmedString(record.taskType)
     || asOptionalTrimmedString(record.task_type)
+    || (asOptionalTrimmedString(record.type) && ["task", "subtask"].includes(String(record.type).trim().toLowerCase()) ? asOptionalTrimmedString(record.type) : undefined)
     || asOptionalTrimmedString(runnerPlayground?.taskType)
+    || null;
+  const assigneeAgentId =
+    asOptionalTrimmedString(record.assigneeAgentId)
+    || asOptionalTrimmedString(record.assignee_agent_id)
+    || asOptionalTrimmedString(record.assigneeId)
+    || asOptionalTrimmedString(record.assignee_id)
+    || asOptionalTrimmedString(runnerPlayground?.assigneeActorId)
+    || asOptionalTrimmedString(assigneeRecord?.id)
     || null;
   const assigneeName =
     asOptionalTrimmedString(record.assigneeName)
     || asOptionalTrimmedString(record.assignee_name)
     || asOptionalTrimmedString(record.assigneeAgentName)
+    || asOptionalTrimmedString(record.assigneeActorName)
+    || asOptionalTrimmedString(record.assignedToName)
     || asOptionalTrimmedString(assigneeRecord?.name)
     || asOptionalTrimmedString(assigneeRecord?.displayName)
+    || (isTaskManagementHumanAssigneeId(assigneeAgentId) ? "Me" : null)
     || null;
   const taskColor =
     asOptionalTrimmedString(record.taskColor)
@@ -1126,23 +1157,60 @@ function normalizeTaskManagementCreatePreview(value: unknown): RunnerTaskManagem
   const projectId =
     asOptionalTrimmedString(record.projectId)
     || asOptionalTrimmedString(record.project_id)
+    || asOptionalTrimmedString(metadata?.projectId)
+    || asOptionalTrimmedString(metadata?.project_id)
     || null;
   const projectName =
     asOptionalTrimmedString(record.projectName)
     || asOptionalTrimmedString(record.project_name)
     || null;
   const normalizedTitle = titleParts.title || id;
+  const normalizedTaskType = normalizeTaskManagementPreviewType(taskType);
+  const normalizedDependencyIds =
+    Array.isArray(record.dependencyIds)
+      ? record.dependencyIds
+      : Array.isArray(runnerPlayground?.dependencyIds)
+        ? runnerPlayground.dependencyIds
+        : [];
+  const rawStatus =
+    asOptionalTrimmedString(record.status)
+    || asOptionalTrimmedString(runnerPlayground?.status)
+    || null;
+  const normalizedStatus =
+    normalizedDependencyIds.length > 0 && normalizeTaskManagementPreviewStatus(rawStatus) !== "done"
+      ? "blocked"
+      : normalizeTaskManagementPreviewStatus(rawStatus);
+  const normalizedPriority = normalizeTaskManagementPreviewPriority(
+    asOptionalTrimmedString(record.priority)
+    || asOptionalTrimmedString(runnerPlayground?.priority)
+    || null
+  );
+  const hasExplicitTaskIdentifier =
+    id.startsWith("task_")
+    || Object.prototype.hasOwnProperty.call(record, "taskId")
+    || Object.prototype.hasOwnProperty.call(record, "task_id");
+  const runnerPlaygroundHasTaskSignals =
+    runnerPlayground !== null
+    && (
+      Boolean(asOptionalTrimmedString(runnerPlayground.ticketNumber))
+      || Boolean(asOptionalTrimmedString(runnerPlayground.taskType))
+      || Boolean(asOptionalTrimmedString(runnerPlayground.taskColor))
+      || Boolean(asOptionalTrimmedString(runnerPlayground.assigneeActorId))
+      || Array.isArray(runnerPlayground.dependencyIds)
+      || Array.isArray(runnerPlayground.linkedThreadIds)
+    );
   const looksLikeTaskRecord =
     Boolean(normalizedTitle)
     && (
-      id.startsWith("task_")
+      hasExplicitTaskIdentifier
       || ticketNumber !== null
-      || asOptionalTrimmedString(record.status) !== undefined
-      || asOptionalTrimmedString(record.priority) !== undefined
-      || runnerPlayground !== null
+      || normalizedTaskType === "task"
+      || normalizedTaskType === "subtask"
       || Object.prototype.hasOwnProperty.call(record, "assigneeAgentId")
+      || Object.prototype.hasOwnProperty.call(record, "parentTaskId")
       || Object.prototype.hasOwnProperty.call(record, "linkedThreadIds")
       || Object.prototype.hasOwnProperty.call(record, "dependencyIds")
+      || runnerPlaygroundHasTaskSignals
     );
 
   if (!looksLikeTaskRecord) {
@@ -1155,38 +1223,45 @@ function normalizeTaskManagementCreatePreview(value: unknown): RunnerTaskManagem
     projectId,
     projectName,
     ticketNumber,
-    status: asOptionalTrimmedString(record.status) || null,
-    priority: asOptionalTrimmedString(record.priority) || null,
-    taskType,
+    status: normalizedStatus,
+    priority: normalizedPriority,
+    taskType: normalizedTaskType,
+    assigneeAgentId,
     assigneeName,
     taskColor,
   };
 }
 
 function extractTaskManagementCreatePreviewsFromValue(value: unknown): RunnerTaskManagementCreatedTaskPreview[] {
-  if (!value) return [];
-  if (Array.isArray(value)) {
-    return dedupeTaskManagementCreatePreviews(value.flatMap((entry) => extractTaskManagementCreatePreviewsFromValue(entry)));
-  }
-
-  const record = asObjectRecord(value);
-  if (!record) {
-    return [];
-  }
-
   const previews: RunnerTaskManagementCreatedTaskPreview[] = [];
-  const directPreview = normalizeTaskManagementCreatePreview(record);
-  if (directPreview) {
-    previews.push(directPreview);
-  }
+  const visited = new WeakSet<object>();
 
-  for (const key of ["task", "tasks", "createdTask", "createdTasks", "item", "items", "data", "results"]) {
-    if (!Object.prototype.hasOwnProperty.call(record, key)) {
-      continue;
+  function visit(current: unknown, depth: number) {
+    if (!current || depth > 6) return;
+    if (Array.isArray(current)) {
+      current.forEach((entry) => visit(entry, depth + 1));
+      return;
     }
-    previews.push(...extractTaskManagementCreatePreviewsFromValue(record[key]));
+    const record = asObjectRecord(current);
+    if (!record) {
+      return;
+    }
+    if (visited.has(record)) {
+      return;
+    }
+    visited.add(record);
+
+    const directPreview = normalizeTaskManagementCreatePreview(record);
+    if (directPreview) {
+      previews.push(directPreview);
+    }
+
+    for (const nestedValue of Object.values(record)) {
+      visit(nestedValue, depth + 1);
+    }
   }
 
+  visit(value, 0);
   return dedupeTaskManagementCreatePreviews(previews);
 }
 
@@ -1287,7 +1362,6 @@ function isTaskManagementCreateToolInvocation(log: RunnerLog): boolean {
     && (
       /(?:^|[._/-])create(?:[._/-])?tasks?(?:$|[._/-])/.test(toolName)
       || /(?:^|[._/-])tasks?(?:[._/-])create(?:$|[._/-])/.test(toolName)
-      || (toolName.includes("create") && toolName.includes("task"))
     )
   );
 }
@@ -1342,7 +1416,7 @@ function TaskManagementCreateLogBox({
             {createdTasks.map((task) => {
               const normalizedStatus = normalizeTaskManagementPreviewStatus(task.status);
               const normalizedTaskType = normalizeTaskManagementPreviewType(task.taskType);
-              const isClickable = Boolean(onTaskPreviewClick && task.id && (task.projectId || "").trim());
+              const isClickable = Boolean(onTaskPreviewClick && task.id);
               const content = (
                 <>
                   <div className="tb-log-task-create-item-content">
@@ -1390,6 +1464,7 @@ function TaskManagementCreateLogBox({
                       ...(task.status ? { status: task.status } : {}),
                       ...(task.priority ? { priority: task.priority } : {}),
                       ...(task.taskType ? { taskType: task.taskType } : {}),
+                      ...(task.assigneeAgentId ? { assigneeAgentId: task.assigneeAgentId } : {}),
                       ...(task.assigneeName ? { assigneeName: task.assigneeName } : {}),
                     })
                   }
