@@ -18067,20 +18067,30 @@ const html = `<!doctype html>
       const PLAYGROUND_RUNNER_SKILL_ID_ALIASES = {
         imageGeneration: "image_generation",
         image_generation: "image_generation",
+        "image-generation": "image_generation",
         webSearch: "web_search",
         web_search: "web_search",
+        "web-search": "web_search",
         frontendDesign: "frontend_design",
         frontend_design: "frontend_design",
+        "frontend-design": "frontend_design",
         deepResearch: "deep_research",
         deep_research: "deep_research",
+        "deep-research": "deep_research",
         research: "research",
         pdf: "pdf",
+        pdf_processing: "pdf",
+        "pdf-processing": "pdf",
         pptx: "pptx",
+        powerpoint: "pptx",
+        "powerpoint-pptx": "pptx",
         memory: "memory",
         taskManagement: "task_management",
         task_management: "task_management",
+        "task-management": "task_management",
         computerAgents: "computer_agents",
         computer_agents: "computer_agents",
+        "computer-agents": "computer_agents",
       };
 
       function dedupePlaygroundAgentIds(ids) {
@@ -31086,6 +31096,31 @@ const html = `<!doctype html>
           },
         }), []);
 
+        function getPlaygroundSkillFamilyId(value) {
+          const rawSkillId = String(value || "").trim();
+          if (!rawSkillId) {
+            return "";
+          }
+
+          const normalizedLower = rawSkillId.toLowerCase();
+          const aliasedId = PLAYGROUND_RUNNER_SKILL_ID_ALIASES[rawSkillId] || PLAYGROUND_RUNNER_SKILL_ID_ALIASES[normalizedLower];
+          if (aliasedId) {
+            return aliasedId;
+          }
+
+          if (normalizedLower.startsWith("skill-image-generation-")) return "image_generation";
+          if (normalizedLower.startsWith("skill-web-search-")) return "web_search";
+          if (normalizedLower.startsWith("skill-deep-research-")) return "deep_research";
+          if (normalizedLower.startsWith("skill-browser-")) return "browser";
+          if (normalizedLower.startsWith("skill-pdf-processing-")) return "pdf";
+          if (normalizedLower.startsWith("skill-frontend-design-")) return "frontend_design";
+          if (normalizedLower.startsWith("skill-pptx-")) return "pptx";
+          if (normalizedLower.startsWith("skill-memory-")) return "memory";
+          if (normalizedLower.startsWith("skill-task-management-")) return "task_management";
+
+          return normalizedLower;
+        }
+
         function parsePlaygroundSkillMarkdownSections(markdown) {
           const sections = {
             usage: "",
@@ -31174,12 +31209,14 @@ const html = `<!doctype html>
             return null;
           }
 
-          const meta = skillCatalogMetaById[skillId] || {};
+          const skillFamilyId = getPlaygroundSkillFamilyId(rawSkillId || skillId);
+          const meta = skillCatalogMetaById[skillFamilyId] || skillCatalogMetaById[skillId] || {};
           const isSystemSkill = skill?.isSystem === true || skill?.isDefault === true;
           const isCustomSkill = !isSystemSkill;
 
           return {
             id: skillId,
+            systemFamilyId: skillFamilyId || skillId,
             projectId: typeof skill?.projectId === "string" && skill.projectId.trim()
               ? skill.projectId.trim()
               : String(projectId || "__runner_playground__").trim() || "__runner_playground__",
@@ -31209,6 +31246,37 @@ const html = `<!doctype html>
             updatedAt: typeof skill?.updatedAt === "string" ? skill.updatedAt : "",
           };
         }, [projectId, skillCatalogMetaById]);
+
+        const mergeSkillRecords = useCallback((baseSkill, nextSkill) => {
+          const normalizedBase = normalizeSkillRecord(baseSkill);
+          const normalizedNext = normalizeSkillRecord(nextSkill);
+          if (!normalizedBase) {
+            return normalizedNext;
+          }
+          if (!normalizedNext) {
+            return normalizedBase;
+          }
+
+          return {
+            ...normalizedBase,
+            ...normalizedNext,
+            id: normalizedNext.id || normalizedBase.id,
+            systemFamilyId: normalizedNext.systemFamilyId || normalizedBase.systemFamilyId,
+            projectId: normalizedNext.projectId || normalizedBase.projectId,
+            name: String(normalizedNext.name || "").trim() || normalizedBase.name,
+            description: String(normalizedNext.description || "").trim() || normalizedBase.description,
+            markdown: String(normalizedNext.markdown || "").trim() || normalizedBase.markdown,
+            icon: String(normalizedNext.icon || "").trim() || normalizedBase.icon,
+            category: String(normalizedNext.category || "").trim() || normalizedBase.category,
+            codeFiles: normalizedNext.codeFiles.length > 0 ? normalizedNext.codeFiles : normalizedBase.codeFiles,
+            isCustom: normalizedBase.isCustom && normalizedNext.isCustom,
+            isSystem: normalizedBase.isSystem || normalizedNext.isSystem,
+            statusLabel: normalizedBase.isCustom && normalizedNext.isCustom ? "Custom" : "System",
+            isActive: normalizedNext.isActive !== false,
+            createdAt: normalizedNext.createdAt || normalizedBase.createdAt,
+            updatedAt: normalizedNext.updatedAt || normalizedBase.updatedAt,
+          };
+        }, [normalizeSkillRecord]);
 
         const availableSkillEnvironments = useMemo(() => {
           return (Array.isArray(environments) ? environments : [])
@@ -31264,24 +31332,33 @@ const html = `<!doctype html>
 
         const systemSkills = useMemo(() => {
           const next = [];
-          const seen = new Set();
+          const indexByFamilyId = new Map();
 
-          const appendSkill = (skill) => {
+          const appendSkill = (skill, { preferExisting = false } = {}) => {
             const normalized = normalizeSkillRecord({ ...skill, isSystem: true, isDefault: true });
-            if (!normalized || normalized.isCustom || seen.has(normalized.id)) {
+            if (!normalized || normalized.isCustom) {
               return;
             }
-            seen.add(normalized.id);
+            const familyId = normalized.systemFamilyId || normalized.id;
+            if (indexByFamilyId.has(familyId)) {
+              if (preferExisting) {
+                return;
+              }
+              const existingIndex = indexByFamilyId.get(familyId);
+              next[existingIndex] = mergeSkillRecords(next[existingIndex], normalized);
+              return;
+            }
+            indexByFamilyId.set(familyId, next.length);
             next.push(normalized);
           };
 
-          fallbackSystemSkills.forEach((skill) => appendSkill(skill));
+          fallbackSystemSkills.forEach((skill) => appendSkill(skill, { preferExisting: true }));
           normalizedLoadedSkills
             .filter((skill) => !skill.isCustom)
             .forEach((skill) => appendSkill(skill));
 
           return next;
-        }, [fallbackSystemSkills, normalizeSkillRecord, normalizedLoadedSkills]);
+        }, [fallbackSystemSkills, mergeSkillRecords, normalizeSkillRecord, normalizedLoadedSkills]);
 
         const normalizedCustomSkills = useMemo(() => {
           return normalizedLoadedSkills.filter((skill) => skill.isCustom);
@@ -31600,7 +31677,7 @@ const html = `<!doctype html>
 
         function handleSkillSelect(skillId) {
           setToolbarPopover("");
-          setSelectedSkillId(skillId);
+          setSelectedSkillId(PLAYGROUND_RUNNER_SKILL_ID_ALIASES[String(skillId || "").trim()] || String(skillId || "").trim());
         }
 
         function handleSkillListModeChange(nextMode) {
@@ -33755,7 +33832,7 @@ const html = `<!doctype html>
             method: "GET",
             credentials: "include",
             headers: {
-              ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
+              ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
               "X-Runner-Upstream-Url": upstreamUrl,
             },
           });
@@ -33766,7 +33843,7 @@ const html = `<!doctype html>
           }
 
           return normalizeSkills(data?.data || data?.skills || []);
-        }, [apiKey, selectedProjectId, upstreamUrl]);
+        }, [effectiveApiKey, selectedProjectId, upstreamUrl]);
 
         const loadTaskConnectorFolder = useCallback(async function loadTaskConnectorFolder(source, folderId, options = {}) {
           const connectorKey = getPlaygroundTaskConnectorKey(source);
@@ -48471,6 +48548,12 @@ const html = `<!doctype html>
           }
         });
         const [apiKey, setApiKey] = useState(() => localStorage.getItem("runner_demo_api_key") || "");
+        const [sessionStreamingConfig, setSessionStreamingConfig] = useState({
+          status: "idle",
+          apiKey: "",
+          backendUrl: "",
+          error: "",
+        });
         const [projectId, setProjectId] = useState(() => {
           try {
             return localStorage.getItem("runner_demo_project_id") || "";
@@ -48683,7 +48766,13 @@ const html = `<!doctype html>
           { id: "task_management", name: "Task Management", enabled: true },
           { id: "computer_agents", name: "Computer Agents", enabled: true }
         ];
+        const SESSION_API_KEY_SENTINEL = "__runner_playground_session__";
         const hasSessionAuth = sessionState.status === "authenticated";
+        const resolvedSessionApiKey = typeof sessionStreamingConfig.apiKey === "string" ? sessionStreamingConfig.apiKey.trim() : "";
+        const effectiveApiKey = useMemo(() => {
+          const manualApiKey = String(apiKey || "").trim();
+          return manualApiKey || resolvedSessionApiKey || (hasSessionAuth ? SESSION_API_KEY_SENTINEL : "");
+        }, [apiKey, hasSessionAuth, resolvedSessionApiKey]);
         const hasRealAccess = hasSessionAuth;
         const activeProjectId = projectId.trim() || sessionState.projectId || "";
         const settingsProjectRoutingId = activeProjectId || "__runner_playground__";
@@ -48742,7 +48831,7 @@ const html = `<!doctype html>
 
           const controller = new AbortController();
           const welcomeRequestHeaders = {
-            ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
+            ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
             "X-Runner-Upstream-Url": String(upstreamUrl || "").trim() || ${JSON.stringify(defaultUpstreamOrigin)},
           };
 
@@ -48845,7 +48934,7 @@ const html = `<!doctype html>
           })();
 
           return () => controller.abort();
-        }, [apiKey, hasRealAccess, latestInteractedProjectId, proxyBackendBase, showInitialThreadWelcome, upstreamUrl]);
+        }, [effectiveApiKey, hasRealAccess, latestInteractedProjectId, proxyBackendBase, showInitialThreadWelcome, upstreamUrl]);
 
         function buildAiosLoginUrl() {
           const loginUrl = new URL("/login", ${JSON.stringify(aiosOrigin)});
@@ -49069,7 +49158,7 @@ const html = `<!doctype html>
             method: "GET",
             credentials: "include",
             headers: {
-              ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
+              ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
               "X-Runner-Upstream-Url": upstreamUrl,
             },
           });
@@ -49705,6 +49794,11 @@ const html = `<!doctype html>
             status: "loading",
             error: "",
           }));
+          setSessionStreamingConfig((current) => ({
+            ...current,
+            status: "loading",
+            error: "",
+          }));
 
           try {
             const response = await fetch("/api/aios/user/profile", {
@@ -49715,6 +49809,12 @@ const html = `<!doctype html>
             const data = await response.json().catch(() => ({}));
 
             if (response.status === 401 || response.status === 403) {
+              setSessionStreamingConfig({
+                status: "idle",
+                apiKey: "",
+                backendUrl: "",
+                error: "",
+              });
               setSessionState({
                 status: "unauthenticated",
                 userId: "",
@@ -49731,6 +49831,12 @@ const html = `<!doctype html>
             }
 
             if (!response.ok) {
+              setSessionStreamingConfig({
+                status: "error",
+                apiKey: "",
+                backendUrl: "",
+                error: data.message || data.error || "Failed to load runner access.",
+              });
               setSessionState({
                 status: "error",
                 userId: "",
@@ -49754,6 +49860,47 @@ const html = `<!doctype html>
               firebaseIdentity = null;
             }
 
+            let nextStreamingConfig = {
+              status: "error",
+              apiKey: "",
+              backendUrl: "",
+              error: "Failed to load runner access.",
+            };
+            try {
+              const streamingResponse = await fetch("/api/aios/user/streaming-key", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+              });
+              const streamingData = await streamingResponse.json().catch(() => ({}));
+
+              if (!streamingResponse.ok) {
+                throw new Error(streamingData?.message || streamingData?.error || "Failed to load runner access.");
+              }
+
+              const nextApiKey = typeof streamingData?.apiKey === "string" ? streamingData.apiKey.trim() : "";
+              const nextBackendUrl = typeof streamingData?.backendUrl === "string" ? streamingData.backendUrl.trim() : "";
+              if (!nextApiKey) {
+                throw new Error("Failed to load runner access.");
+              }
+
+              nextStreamingConfig = {
+                status: "ready",
+                apiKey: nextApiKey,
+                backendUrl: nextBackendUrl,
+                error: "",
+              };
+            } catch (streamingError) {
+              nextStreamingConfig = {
+                status: "error",
+                apiKey: "",
+                backendUrl: "",
+                error: streamingError instanceof Error ? streamingError.message : "Failed to load runner access.",
+              };
+            }
+
+            setSessionStreamingConfig(nextStreamingConfig);
+
             setSessionState({
               status: "authenticated",
               userId: typeof data.userId === "string" ? data.userId : "",
@@ -49770,6 +49917,12 @@ const html = `<!doctype html>
               error: "",
             });
           } catch (error) {
+            setSessionStreamingConfig({
+              status: "error",
+              apiKey: "",
+              backendUrl: "",
+              error: error instanceof Error ? error.message : "Failed to load runner access.",
+            });
             setSessionState({
               status: "error",
               userId: "",
@@ -51652,7 +51805,7 @@ const html = `<!doctype html>
             method: "GET",
             credentials: "include",
             headers: {
-              ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
+              ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
               "X-Runner-Upstream-Url": resolvedUpstreamUrl,
             },
           });
@@ -51663,7 +51816,7 @@ const html = `<!doctype html>
           }
 
           return normalizeSkills(data.data || data.skills || []);
-        }, [activeProjectId, apiKey, resolvedUpstreamUrl]);
+        }, [activeProjectId, effectiveApiKey, resolvedUpstreamUrl]);
 
         const handleFetchSkills = useCallback(async function handleFetchSkills() {
           const requestUrl = new URL("/api/playground/skills", window.location.origin);
@@ -51675,7 +51828,7 @@ const html = `<!doctype html>
             method: "GET",
             credentials: "include",
             headers: {
-              ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
+              ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
               "X-Runner-Upstream-Url": resolvedUpstreamUrl,
             },
           });
@@ -51690,7 +51843,7 @@ const html = `<!doctype html>
             : Array.isArray(data?.data)
               ? data.data
               : [];
-        }, [activeProjectId, apiKey, resolvedUpstreamUrl]);
+        }, [activeProjectId, effectiveApiKey, resolvedUpstreamUrl]);
 
         useEffect(() => {
           void refreshSessionState();
@@ -52013,14 +52166,12 @@ const html = `<!doctype html>
         }), [githubStatus.connected, googleDriveStatus.connected, notionDatabases, notionStatus.connected, oneDriveStatus.connected]);
 
         const authRequestHeaders = useMemo(() => ({
-          ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
+          ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
           "X-Runner-Upstream-Url": resolvedUpstreamUrl,
-        }), [apiKey, resolvedUpstreamUrl]);
+        }), [effectiveApiKey, resolvedUpstreamUrl]);
         const requestHeaders = useMemo(() => {
-          return {
-            "X-Runner-Upstream-Url": resolvedUpstreamUrl,
-          };
-        }, [resolvedUpstreamUrl]);
+          return authRequestHeaders;
+        }, [authRequestHeaders]);
         const runtimeEnvironments = useMemo(() => {
           if (hasRealAccess) {
             return realEnvironments;
@@ -57595,7 +57746,7 @@ const html = `<!doctype html>
                               requestHeaders,
                               environments: realEnvironments,
                               initialEnvironmentId: resolvedEnvironmentId || "",
-                              apiKey,
+                              apiKey: effectiveApiKey,
                               agentId: resolvedPreferredAgentId || "",
                               onFileChatThreadMutated: () => {
                                 void refreshThreads();
@@ -57637,7 +57788,7 @@ const html = `<!doctype html>
                             environments: runtimeEnvironments,
                             initialEnvironmentId: resolvedEnvironmentId || "",
                             initialAgentId: resolvedPreferredAgentId || "",
-                            apiKey: apiKey,
+                            apiKey: effectiveApiKey,
                             upstreamUrl: resolvedUpstreamUrl,
                             speechToTextUrl: speechToTextUrl || "",
                             computerAgents: demoComputerAgents,
@@ -57700,7 +57851,7 @@ const html = `<!doctype html>
                                     key: runnerRenderKey,
                                     className: "playground-thread-runner" + (selectedThreadShellBackground ? " is-project-wallpaper-active" : ""),
                                     backendUrl: proxyBackendBase,
-                                    apiKey: apiKey,
+                                    apiKey: effectiveApiKey,
                                     fetchCustomSkills: computerAgentsMode ? handleFetchCustomSkills : undefined,
                                     speechToTextUrl: speechToTextUrl || undefined,
                                     requestHeaders,
@@ -57839,7 +57990,7 @@ const html = `<!doctype html>
                                     threadId: activeRunnerThreadId,
                                     threadTitle: selectedThreadTitle,
                                     backendUrl: proxyBackendBase,
-                                    apiKey: apiKey,
+                                    apiKey: effectiveApiKey,
                                     upstreamUrl: resolvedUpstreamUrl,
                                     hasRealAccess,
                                     onThreadMutated: () => refreshThreads(),
@@ -57864,7 +58015,7 @@ const html = `<!doctype html>
                               environments: runtimeEnvironments,
                               initialEnvironmentId: resolvedEnvironmentId || "",
                               initialAgentId: resolvedPreferredAgentId || "",
-                              apiKey: apiKey,
+                              apiKey: effectiveApiKey,
                               upstreamUrl: resolvedUpstreamUrl,
                               speechToTextUrl: speechToTextUrl || "",
                               computerAgents: demoComputerAgents,
@@ -57969,7 +58120,7 @@ const html = `<!doctype html>
                           ? React.createElement(RunnerDocumentPreviewDrawer, {
                               attachment: welcomeWidgetPreviewAttachment,
                               requestHeaders,
-                              apiKey: apiKey,
+                              apiKey: effectiveApiKey,
                               inline: true,
                               showResizeHandle: false,
                               onClose: () => setWelcomeWidgetPreviewAttachment(null),
@@ -58016,6 +58167,16 @@ function normalizeBackendUrl(url) {
   const trimmed = String(url || "").trim();
   if (!trimmed) throw new Error("Upstream backend URL is required");
   return trimmed.replace(/\/+$/, "");
+}
+
+const PLAYGROUND_SESSION_API_KEY_SENTINEL = "__runner_playground_session__";
+
+function normalizePlaygroundApiKey(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized || normalized === PLAYGROUND_SESSION_API_KEY_SENTINEL) {
+    return "";
+  }
+  return normalized;
 }
 
 function readHeader(req, name) {
@@ -58074,8 +58235,8 @@ function parseUpstreamUrl(req, body) {
 }
 
 function readOptionalApiKey(req, body) {
-  const headerApiKey = readHeader(req, "X-API-Key");
-  const bodyApiKey = body && typeof body.apiKey === "string" ? body.apiKey.trim() : "";
+  const headerApiKey = normalizePlaygroundApiKey(readHeader(req, "X-API-Key"));
+  const bodyApiKey = body && typeof body.apiKey === "string" ? normalizePlaygroundApiKey(body.apiKey) : "";
   return (headerApiKey || bodyApiKey || "").trim();
 }
 
@@ -59083,7 +59244,7 @@ async function proxyUpstreamRawRequest(req, res, upstreamPath, method) {
   try {
     const upstreamUrl = normalizeBackendUrl(readHeader(req, "X-Runner-Upstream-Url") || defaultUpstreamOrigin);
     const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
-    const apiKey = readHeader(req, "X-API-Key");
+    const apiKey = normalizePlaygroundApiKey(readHeader(req, "X-API-Key"));
     const rawBody = method === "GET" || method === "HEAD" ? undefined : await readRawRequestBuffer(req);
     const contentType = req.headers["content-type"] || "application/octet-stream";
     let upstream;
@@ -59365,7 +59526,7 @@ async function proxyPlaygroundCustomSkills(req, res) {
     let projectId = requestUrl.searchParams.get("projectId")?.trim() || "";
     const cookie = req.headers.cookie || "";
     const authorization = req.headers.authorization || "";
-    const apiKey = readHeader(req, "x-api-key");
+    const apiKey = normalizePlaygroundApiKey(readHeader(req, "x-api-key"));
 
     if (!projectId && (cookie || authorization)) {
       const profileResponse = await fetch(`${aiosOrigin}/api/user/profile`, {
@@ -59687,6 +59848,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/aios/user/profile") {
     void proxyAiosJsonRequest(req, res, "/api/user/profile", "GET");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/aios/user/streaming-key") {
+    void proxyAiosJsonRequest(req, res, "/api/user/streaming-key", "GET");
     return;
   }
 
