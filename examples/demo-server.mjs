@@ -712,7 +712,7 @@ const html = `<!doctype html>
         width: 30px;
         height: 30px;
         margin-top: auto;
-        margin-bottom: 6px;
+        margin-bottom: 10px;
         margin-left: 4px;
         padding: 0;
         border: 0;
@@ -6336,8 +6336,8 @@ const html = `<!doctype html>
 
       .playground-settings-records-table-wrap {
         overflow-x: auto;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
       }
 
       .playground-settings-records-table {
@@ -14084,8 +14084,13 @@ const html = `<!doctype html>
         padding-left: 0;
       }
 
+      .playground-tasks-backlog-secondary-actions .playground-files-control-button.is-board-filter {
+        padding-left: 0;
+      }
+
       .playground-tasks-backlog-sort-shell .playground-tasks-toolbar-popup-menu,
-      .playground-tasks-backlog-filter-shell .playground-tasks-toolbar-popup-menu {
+      .playground-tasks-backlog-filter-shell .playground-tasks-toolbar-popup-menu,
+      .playground-tasks-board-filter-shell .playground-tasks-toolbar-popup-menu {
         left: 0;
         right: auto;
         transform-origin: top left;
@@ -14344,7 +14349,6 @@ const html = `<!doctype html>
         margin-top: 8px;
         margin-left: 11px;
         padding-left: 20px;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .playground-tasks-backlog-item-content {
@@ -45800,17 +45804,6 @@ const html = `<!doctype html>
             const assigneeName = getTaskAssigneeName(task.assigneeAgentId, "Unassigned") || "Unassigned";
             const isHumanTask = isHumanAssignedTask(task);
             const assigneeClassName = "playground-tasks-backlog-assignee" + (task.assigneeAgentId ? "" : " is-unassigned");
-            const statusLabel = getPlaygroundTaskStatusLabel(task.status);
-            const statusClassName = "playground-tasks-backlog-status"
-              + (task.status === "todo"
-                ? " is-todo"
-                : task.status === "in_progress"
-                  ? " is-in-progress"
-                  : task.status === "blocked"
-                    ? " is-blocked"
-                    : task.status === "done"
-                      ? " is-done"
-                      : "");
             const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
             const visibleChildTasks = (childrenByParentId[task.id] || []).filter((childTask) => visibleTaskIds.has(childTask.id));
             const isSubtask = isPlaygroundSubtaskRecord(task);
@@ -45991,8 +45984,7 @@ const html = `<!doctype html>
                       )
                     ),
                     React.createElement("div", { className: "playground-tasks-backlog-meta" },
-                      React.createElement("span", { className: assigneeClassName, title: assigneeName }, assigneeName),
-                      React.createElement("span", { className: statusClassName, title: statusLabel }, statusLabel)
+                      React.createElement("span", { className: assigneeClassName, title: assigneeName }, assigneeName)
                     ),
                     React.createElement("button", {
                       type: "button",
@@ -46069,8 +46061,7 @@ const html = `<!doctype html>
               React.createElement("div", { className: "playground-tasks-backlog-header" },
                 React.createElement("div", { className: "playground-tasks-backlog-header-row" },
                   React.createElement("div", { className: "playground-tasks-backlog-header-main" },
-                    React.createElement("div", { className: "playground-tasks-backlog-heading" }, headerTitle),
-                    React.createElement("span", { className: "playground-tasks-board-release-box-count playground-tasks-backlog-heading-count playground-tasks-backlog-open-count" }, String(openTaskCount))
+                    React.createElement("div", { className: "playground-tasks-backlog-heading" }, headerTitle)
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-backlog-header-row is-secondary" },
@@ -46392,6 +46383,14 @@ const html = `<!doctype html>
 
         function renderBoardView() {
           const boardTasks = boardVisibleTasks;
+          const scopedBoardTasks = (selectedRelease ? projectReleaseTasks : tasks)
+            .filter((task) => !isPlaygroundSubtaskRecord(task));
+          const openScopedBoardTaskCount = scopedBoardTasks.filter((task) => getTaskBoardStatus(task) !== "done").length;
+          const boardHeaderDescription = String(
+            selectedRelease
+              ? (selectedRelease.description || formatPlaygroundTaskReleaseDateRange(selectedRelease) || "No release description yet.")
+              : (selectedProject.description || selectedProject.instructions || "No project instructions yet.")
+          ).trim();
           const draggingBoardTask = boardDraggingTaskId ? tasksById[boardDraggingTaskId] || null : null;
           const hasSelectedReleaseSection = Boolean(selectedReleaseId && selectedRelease);
 
@@ -46407,116 +46406,124 @@ const html = `<!doctype html>
 
           function renderBoardToolbar() {
             return React.createElement("div", {
-                className: "playground-tasks-board-toolbar",
+                className: "playground-tasks-backlog-header",
                 ref: boardToolbarActionsRef,
               },
-              React.createElement("div", { className: "playground-tasks-board-toolbar-main" },
-                React.createElement("div", { className: "playground-tasks-board-heading" }, "Board")
+              React.createElement("div", { className: "playground-tasks-backlog-header-row" },
+                React.createElement("div", { className: "playground-tasks-backlog-header-main" },
+                  React.createElement("div", { className: "playground-tasks-backlog-heading" }, "Board"),
+                  React.createElement("span", { className: "playground-tasks-board-release-box-count playground-tasks-backlog-heading-count playground-tasks-backlog-open-count" }, String(openScopedBoardTaskCount))
+                )
               ),
-              React.createElement("div", { className: "playground-tasks-board-toolbar-actions" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare" + (boardToolbarPopover === "filter" || boardFilterMode !== "all" ? " is-active" : ""),
-                    onClick: () => setBoardToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                  },
-                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Filter")
-                  ),
-                  boardToolbarPopover === "filter"
-                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        boardFilterOptions.map((option) =>
-                          React.createElement("button", {
-                              key: option.id,
-                              type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (boardFilterMode === option.id ? " selected" : ""),
-                              onClick: () => {
-                                setBoardFilterMode(option.id);
-                                setBoardToolbarPopover("");
+              React.createElement("div", { className: "playground-tasks-backlog-header-row is-secondary" },
+                React.createElement("div", { className: "playground-tasks-backlog-description" }, boardHeaderDescription)
+              ),
+              React.createElement("div", { className: "playground-tasks-backlog-header-row is-tertiary" },
+                React.createElement("div", { className: "playground-tasks-backlog-secondary-actions" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-board-filter-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button is-bare is-backlog-filter is-board-filter" + (boardToolbarPopover === "filter" || boardFilterMode !== "all" ? " is-active" : ""),
+                      onClick: () => setBoardToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                    },
+                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Filter")
+                    ),
+                    boardToolbarPopover === "filter"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          boardFilterOptions.map((option) =>
+                            React.createElement("button", {
+                                key: option.id,
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select" + (boardFilterMode === option.id ? " selected" : ""),
+                                onClick: () => {
+                                  setBoardFilterMode(option.id);
+                                  setBoardToolbarPopover("");
+                                },
                               },
-                            },
-                              React.createElement("span", { className: "tb-popup-check-slot" },
-                                boardFilterMode === option.id
-                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                  : null
-                              ),
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, option.label),
-                                React.createElement("span", null, option.description)
+                                React.createElement("span", { className: "tb-popup-check-slot" },
+                                  boardFilterMode === option.id
+                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                    : null
+                                ),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                  React.createElement("span", null, option.label),
+                                  React.createElement("span", null, option.description)
+                                )
                               )
-                            )
-                        )
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button" + (boardToolbarPopover === "release" || selectedRelease ? " is-active" : ""),
-                    onClick: () => setBoardToolbarPopover((current) => current === "release" ? "" : "release"),
-                  },
-                    React.createElement(History, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Releases")
-                  ),
-                  boardToolbarPopover === "release"
-                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-release-picker-menu" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row tb-popup-row-select" + (!selectedReleaseId ? " selected" : ""),
-                          onClick: () => {
-                            handleSelectRelease("");
-                            setBoardToolbarPopover("");
-                          },
-                        },
-                          React.createElement("span", { className: "tb-popup-check-slot" },
-                            !selectedReleaseId
-                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                              : null
-                          ),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "All Releases"),
-                            React.createElement("span", null, "Show every release on the board.")
                           )
-                        ),
-                        sortedReleaseOptions.map((release) =>
+                        )
+                      : null
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-backlog-tertiary-actions" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button" + (boardToolbarPopover === "release" || selectedRelease ? " is-active" : ""),
+                      onClick: () => setBoardToolbarPopover((current) => current === "release" ? "" : "release"),
+                    },
+                      React.createElement(History, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Releases")
+                    ),
+                    boardToolbarPopover === "release"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-release-picker-menu" },
                           React.createElement("button", {
-                            key: release.id,
                             type: "button",
-                            className: "tb-popup-row tb-popup-row-select" + (selectedReleaseId === release.id ? " selected" : ""),
+                            className: "tb-popup-row tb-popup-row-select" + (!selectedReleaseId ? " selected" : ""),
                             onClick: () => {
-                              handleSelectRelease(release.id);
+                              handleSelectRelease("");
                               setBoardToolbarPopover("");
                             },
                           },
                             React.createElement("span", { className: "tb-popup-check-slot" },
-                              selectedReleaseId === release.id
+                              !selectedReleaseId
                                 ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
                                 : null
                             ),
                             React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, release.name || "Untitled Release"),
-                              React.createElement("span", null, release.description || formatPlaygroundTaskReleaseDateRange(release))
+                              React.createElement("span", null, "All Releases"),
+                              React.createElement("span", null, "Show every release on the board.")
+                            )
+                          ),
+                          sortedReleaseOptions.map((release) =>
+                            React.createElement("button", {
+                              key: release.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (selectedReleaseId === release.id ? " selected" : ""),
+                              onClick: () => {
+                                handleSelectRelease(release.id);
+                                setBoardToolbarPopover("");
+                              },
+                            },
+                              React.createElement("span", { className: "tb-popup-check-slot" },
+                                selectedReleaseId === release.id
+                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                  : null
+                              ),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, release.name || "Untitled Release"),
+                                React.createElement("span", null, release.description || formatPlaygroundTaskReleaseDateRange(release))
+                              )
+                            )
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setBoardToolbarPopover("");
+                              openReleaseComposer();
+                            },
+                          },
+                            React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "Add Release"),
+                              React.createElement("span", null, "Create a new milestone release.")
                             )
                           )
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          onClick: () => {
-                            setBoardToolbarPopover("");
-                            openReleaseComposer();
-                          },
-                        },
-                          React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Add Release"),
-                            React.createElement("span", null, "Create a new milestone release.")
-                          )
                         )
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                      : null
+                  ),
                   React.createElement("button", {
                     type: "button",
                     className: "playground-files-control-button" + (missionControlStrategyOpen ? " is-active" : ""),
@@ -46666,10 +46673,7 @@ const html = `<!doctype html>
               },
               React.createElement("div", { className: "playground-tasks-board-release-section-header" },
                 React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
-                  React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
-                  section.copy
-                    ? React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, section.copy)
-                    : null
+                  React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title)
                 ),
                 renderReleaseHeaderMeta(sectionRelease)
               ),
@@ -48158,40 +48162,42 @@ const html = `<!doctype html>
                       ),
                       !missionControlDetailsCollapsed
                         ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                            React.createElement("div", { className: "playground-mission-control-status-overview" },
-                              React.createElement("div", { className: "playground-mission-control-status-metrics" },
-                                missionControlStatusMetrics.map((metric) =>
+                            missionControlTaskCount > 0
+                              ? React.createElement("div", { className: "playground-mission-control-status-overview" },
+                                  React.createElement("div", { className: "playground-mission-control-status-metrics" },
+                                    missionControlStatusMetrics.map((metric) =>
+                                      React.createElement("div", {
+                                        key: metric.key,
+                                        className: "playground-mission-control-status-metric",
+                                      },
+                                        React.createElement("div", { className: "playground-mission-control-status-value" }, String(metric.count)),
+                                        metric.label
+                                          ? React.createElement("div", { className: "playground-mission-control-status-label " + metric.toneClassName },
+                                              React.createElement("span", null, metric.label),
+                                              React.createElement(metric.Icon, { strokeWidth: 1.8 })
+                                            )
+                                          : null
+                                      )
+                                    )
+                                  ),
                                   React.createElement("div", {
-                                    key: metric.key,
-                                    className: "playground-mission-control-status-metric",
+                                    className: "playground-mission-control-status-bar" + (missionControlStatusSegments.length === 0 ? " is-empty" : ""),
+                                    "aria-label": "Project task progress overview",
                                   },
-                                    React.createElement("div", { className: "playground-mission-control-status-value" }, String(metric.count)),
-                                    metric.label
-                                      ? React.createElement("div", { className: "playground-mission-control-status-label " + metric.toneClassName },
-                                          React.createElement("span", null, metric.label),
-                                          React.createElement(metric.Icon, { strokeWidth: 1.8 })
-                                        )
-                                      : null
+                                    missionControlStatusSegments.map((segment) =>
+                                      React.createElement("div", {
+                                        key: segment.key,
+                                        className: "playground-mission-control-status-segment " + segment.className,
+                                        style: {
+                                          width: segment.percentage + "%",
+                                          flex: "0 0 " + segment.percentage + "%",
+                                        },
+                                        title: Math.round(segment.percentage) + "% " + segment.key.replace("-", " "),
+                                      })
+                                    )
                                   )
                                 )
-                              ),
-                              React.createElement("div", {
-                                className: "playground-mission-control-status-bar" + (missionControlStatusSegments.length === 0 ? " is-empty" : ""),
-                                "aria-label": "Project task progress overview",
-                              },
-                                missionControlStatusSegments.map((segment) =>
-                                  React.createElement("div", {
-                                    key: segment.key,
-                                    className: "playground-mission-control-status-segment " + segment.className,
-                                    style: {
-                                      width: segment.percentage + "%",
-                                      flex: "0 0 " + segment.percentage + "%",
-                                    },
-                                    title: Math.round(segment.percentage) + "% " + segment.key.replace("-", " "),
-                                  })
-                                )
-                              )
-                            ),
+                              : null,
                             React.createElement("div", { className: "playground-tasks-detail-fact" },
                               React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Number of tasks"),
                               React.createElement("div", { className: "playground-tasks-detail-fact-control" },
