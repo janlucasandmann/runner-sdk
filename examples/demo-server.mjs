@@ -512,37 +512,38 @@ const html = `<!doctype html>
 
       .playground-sidebar-brand {
         position: relative;
-        width: 30px;
-        height: 30px;
-        margin-left: 4px;
-        padding: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0 0 0 4px;
         border: 0;
         background: transparent;
         color: rgba(255, 255, 255, 0.76);
         border-radius: 10px;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         cursor: pointer;
         overflow: hidden;
+        box-sizing: border-box;
         transition: background-color 160ms ease, color 160ms ease;
       }
 
       .playground-sidebar-brand:hover,
       .playground-sidebar-brand:focus-visible {
-        background: rgba(255, 255, 255, 0.08);
+        background: transparent;
         color: #fff;
       }
 
       .playground-sidebar-brand-logo {
         position: absolute;
-        inset: 0;
-        margin: auto;
+        left: 12px;
+        top: 50%;
+        margin: 0;
         display: block;
         width: auto;
         height: 14px;
         object-fit: contain;
-        transform: scale(1);
+        transform: translateY(-50%) scale(1);
         transform-origin: center;
         opacity: 1;
         transition: opacity 160ms ease, transform 160ms ease;
@@ -550,11 +551,12 @@ const html = `<!doctype html>
 
       .playground-sidebar-brand-close-icon {
         position: absolute;
-        inset: 0;
-        margin: auto;
+        left: 12px;
+        top: 50%;
+        margin: 0;
         width: 14px;
         height: 14px;
-        transform: scale(0.9);
+        transform: translateY(-50%) scale(0.9);
         transform-origin: center;
         opacity: 0;
         transition: opacity 160ms ease, transform 160ms ease;
@@ -563,21 +565,21 @@ const html = `<!doctype html>
       .playground-sidebar-brand:hover .playground-sidebar-brand-logo,
       .playground-sidebar-brand:focus-visible .playground-sidebar-brand-logo {
         opacity: 0;
-        transform: scale(0.9);
+        transform: translateY(-50%) scale(0.9);
       }
 
       .playground-sidebar-brand:hover .playground-sidebar-brand-close-icon,
       .playground-sidebar-brand:focus-visible .playground-sidebar-brand-close-icon {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(-50%) scale(1);
       }
 
       .playground-sidebar-rail {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
         gap: 0;
-        padding: 0 8px 0;
+        padding: 0 10px 0;
         opacity: 0;
         transform: translateX(-12px);
         visibility: hidden;
@@ -589,12 +591,13 @@ const html = `<!doctype html>
       }
 
       .sidebar-rail-top {
+        width: 100%;
         min-height: 56px;
         padding: 2px 0 6px;
         box-sizing: border-box;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
       }
 
       .playground-sidebar.is-collapsed .playground-sidebar-panel {
@@ -617,6 +620,7 @@ const html = `<!doctype html>
       .sidebar-rail-button {
         width: 30px;
         height: 30px;
+        margin-left: 4px;
         padding: 0;
         border: 0;
         border-radius: 10px;
@@ -626,7 +630,13 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        box-sizing: border-box;
         transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .sidebar-rail-logo-button {
+        width: 30px;
+        height: 30px;
       }
 
       .sidebar-rail-logo-button {
@@ -634,7 +644,11 @@ const html = `<!doctype html>
         overflow: hidden;
       }
 
-      .sidebar-rail-logo-button:hover,
+      .sidebar-rail-logo-button:hover {
+        background: transparent;
+        color: #fff;
+      }
+
       .sidebar-rail-button:hover {
         background: rgba(255, 255, 255, 0.08);
         color: #fff;
@@ -642,13 +656,14 @@ const html = `<!doctype html>
 
       .sidebar-rail-logo {
         position: absolute;
-        inset: 0;
-        margin: auto;
+        left: 12px;
+        top: 50%;
+        margin: 0;
         display: block;
         width: auto;
         height: 14px;
         object-fit: contain;
-        transform: scale(1);
+        transform: translateY(-50%) scale(1);
         transform-origin: center;
         opacity: 1;
         transition: opacity 160ms ease, transform 160ms ease;
@@ -656,11 +671,12 @@ const html = `<!doctype html>
 
       .sidebar-rail-logo-open-icon {
         position: absolute;
-        inset: 0;
-        margin: auto;
+        left: 12px;
+        top: 50%;
+        margin: 0;
         width: 14px;
         height: 14px;
-        transform: scale(0.9);
+        transform: translateY(-50%) scale(0.9);
         transform-origin: center;
         opacity: 0;
         transition: opacity 160ms ease, transform 160ms ease;
@@ -669,19 +685,19 @@ const html = `<!doctype html>
       .sidebar-rail-logo-button:hover .sidebar-rail-logo,
       .sidebar-rail-logo-button:focus-visible .sidebar-rail-logo {
         opacity: 0;
-        transform: scale(0.9);
+        transform: translateY(-50%) scale(0.9);
       }
 
       .sidebar-rail-logo-button:hover .sidebar-rail-logo-open-icon,
       .sidebar-rail-logo-button:focus-visible .sidebar-rail-logo-open-icon {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(-50%) scale(1);
       }
 
       .sidebar-rail-actions {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
         gap: 4px;
       }
 
@@ -696,6 +712,7 @@ const html = `<!doctype html>
         height: 30px;
         margin-top: auto;
         margin-bottom: 6px;
+        margin-left: 4px;
         padding: 0;
         border: 0;
         border-radius: 10px;
@@ -705,6 +722,7 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        box-sizing: border-box;
         transition: background-color 160ms ease, color 160ms ease;
       }
 
@@ -733,6 +751,7 @@ const html = `<!doctype html>
       .sidebar-action-button,
       .sidebar-settings-button {
         width: 100%;
+        min-height: 30px;
         display: flex;
         align-items: center;
         gap: 14px;
@@ -744,7 +763,9 @@ const html = `<!doctype html>
         cursor: pointer;
         text-align: left;
         font-size: 14px;
+        line-height: 14px;
         font-weight: 500;
+        box-sizing: border-box;
         transition: background-color 160ms ease, color 160ms ease;
       }
 
