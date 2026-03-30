@@ -423,6 +423,11 @@ const html = `<!doctype html>
           visibility 0s linear 0s;
       }
 
+      .playground-shell.is-projects-page .playground-sidebar-panel,
+      .playground-shell.is-project-thread-page .playground-sidebar-panel {
+        padding-top: 6px;
+      }
+
       .sidebar-hide-button {
         width: 30px;
         height: 30px;
@@ -462,6 +467,14 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: space-between;
         margin-bottom: 18px;
+      }
+
+      .playground-shell.is-projects-page .playground-sidebar-top,
+      .playground-shell.is-project-thread-page .playground-sidebar-top {
+        min-height: 56px;
+        padding: 2px 0 12px;
+        margin-bottom: 0;
+        box-sizing: border-box;
       }
 
       .sidebar-search-trigger {
@@ -537,6 +550,11 @@ const html = `<!doctype html>
           opacity 180ms ease,
           transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
           visibility 0s linear 180ms;
+      }
+
+      .playground-shell.is-projects-page .playground-sidebar-rail,
+      .playground-shell.is-project-thread-page .playground-sidebar-rail {
+        padding-top: 6px;
       }
 
       .playground-sidebar.is-collapsed .playground-sidebar-panel {
@@ -10982,8 +11000,9 @@ const html = `<!doctype html>
       }
 
       .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail .playground-tasks-detail-navbar {
-        padding-top: 6px;
-        padding-bottom: 12px;
+        min-height: 56px;
+        padding: 2px 12px 12px;
+        box-sizing: border-box;
       }
 
       .playground-tasks-detail-shell {
@@ -13609,8 +13628,9 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-project-navbar {
-        padding-left: 18px;
-        padding-right: 18px;
+        min-height: 56px;
+        padding: 2px 12px 12px;
+        box-sizing: border-box;
       }
 
       .playground-tasks-project-navbar-title .playground-content-title {
@@ -13626,17 +13646,18 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-project-home-navbar {
-        min-height: var(--playground-content-nav-height, 50px);
-        padding: 0;
-        margin-bottom: 17px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        min-height: 56px;
+        padding: 2px 12px 12px;
+        margin-bottom: 12px;
+        border-bottom: 0;
+        box-sizing: border-box;
       }
 
       .playground-tasks-project-home-navbar .playground-tasks-project-navbar-title,
       .playground-tasks-project-home-navbar .playground-content-nav-right,
       .playground-tasks-project-home-navbar .playground-content-nav-center {
-        min-height: var(--playground-content-nav-height, 50px);
-        height: 100%;
+        min-height: 0;
+        height: auto;
         align-items: center;
       }
 
