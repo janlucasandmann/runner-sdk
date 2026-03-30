@@ -2458,6 +2458,14 @@ const html = `<!doctype html>
         overflow: auto;
       }
 
+      .changes-timeline-panel .changes-panel-body {
+        scrollbar-width: none;
+      }
+
+      .changes-timeline-panel .changes-panel-body::-webkit-scrollbar {
+        display: none;
+      }
+
       .changes-timeline-panel {
         width: min(980px, 100%);
         min-width: 0;
@@ -2532,7 +2540,6 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: center;
         color: rgba(255, 255, 255, 0.88);
-        background: #0f1011;
       }
 
       .changes-step-card-commit svg {
@@ -2590,9 +2597,11 @@ const html = `<!doctype html>
         flex-direction: column;
         gap: 10px;
         padding: 10px 12px;
-        border: 0;
+        border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
         color: white;
         transition: background-color 160ms ease;
       }
@@ -2634,8 +2643,39 @@ const html = `<!doctype html>
         gap: 0;
       }
 
+      .changes-step-file-main.is-resource {
+        gap: 4px;
+      }
+
+      .changes-step-file-head-main {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .changes-step-file-icon {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .changes-step-file-icon svg {
+        width: 13px;
+        height: 13px;
+      }
+
       .changes-step-file-name {
         min-width: 0;
+        padding: 0 6px;
         font-size: 12px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.96);
@@ -2645,6 +2685,8 @@ const html = `<!doctype html>
       }
 
       .changes-step-file-path {
+        min-width: 0;
+        padding: 0 6px;
         font-size: 11px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.5);
@@ -3115,6 +3157,111 @@ const html = `<!doctype html>
       .changes-code-block.is-empty {
         font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
         color: rgba(255, 255, 255, 0.56);
+      }
+
+      .changes-resource-detail-card {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+      }
+
+      .changes-resource-detail-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .changes-resource-detail-icon {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .changes-resource-detail-icon svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .changes-resource-detail-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .changes-resource-detail-label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      .changes-resource-detail-name {
+        font-size: 18px;
+        line-height: 1.35;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .changes-resource-detail-id {
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .changes-resource-detail-description {
+        font-size: 12px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.74);
+        white-space: pre-wrap;
+      }
+
+      .changes-resource-detail-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px 16px;
+      }
+
+      .changes-resource-detail-meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .changes-resource-detail-meta-label {
+        font-size: 11px;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      .changes-resource-detail-meta-value {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.9);
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .changes-diff-editor-shell {
@@ -14136,6 +14283,64 @@ const html = `<!doctype html>
         min-width: 272px;
       }
 
+      .playground-tasks-toolbar-popup-shell .playground-tasks-project-search-menu {
+        width: 320px;
+        min-width: 320px;
+        max-height: min(420px, calc(100vh - 140px));
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .playground-tasks-project-search-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-tasks-project-search-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-tasks-project-search-close {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.48);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-tasks-project-search-close:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-tasks-project-search-body {
+        min-height: 0;
+        flex: 1;
+        padding: 14px 16px 16px;
+        overflow: auto;
+      }
+
+      .playground-tasks-project-search-hint {
+        padding: 18px 8px 4px;
+        text-align: center;
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
       .playground-tasks-toolbar-popup-shell.playground-tasks-backlog-sort-shell .playground-tasks-toolbar-popup-menu,
       .playground-tasks-toolbar-popup-shell.playground-tasks-backlog-filter-shell .playground-tasks-toolbar-popup-menu {
         left: 0;
@@ -14232,6 +14437,40 @@ const html = `<!doctype html>
 
       .playground-thread-nav-popup-static-row:hover {
         background: transparent;
+      }
+
+      .playground-thread-nav-popup-fact {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-thread-nav-popup-fact-label {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        line-height: 1.2;
+        flex: 0 0 auto;
+      }
+
+      .playground-thread-nav-popup-fact-value {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 12px;
+        line-height: 1.2;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-thread-nav-popup-divider {
+        height: 1px;
+        margin: 4px 16px;
+        background: rgba(255, 255, 255, 0.08);
+        pointer-events: none;
       }
 
       .playground-thread-nav-popup-thread-id {
@@ -22679,6 +22918,311 @@ const html = `<!doctype html>
         };
       }
 
+      function normalizeHistoryResourceType(value) {
+        const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+        if (!normalized) return "";
+        if (normalized === "agent" || normalized === "agents") return "agent";
+        if (normalized === "skill" || normalized === "skills") return "skill";
+        if (
+          normalized === "environment"
+          || normalized === "environments"
+          || normalized === "env"
+          || normalized === "envs"
+        ) {
+          return "environment";
+        }
+        return "";
+      }
+
+      function inferHistoryResourceTypeFromId(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (!normalized) return "";
+        if (normalized.startsWith("agent_")) return "agent";
+        if (normalized.startsWith("skill_")) return "skill";
+        if (normalized.startsWith("env_") || normalized.startsWith("environment_")) return "environment";
+        return "";
+      }
+
+      function getHistoryResourceTypeLabel(resourceType) {
+        if (resourceType === "agent") return "Agent";
+        if (resourceType === "skill") return "Skill";
+        if (resourceType === "environment") return "Environment";
+        return "Resource";
+      }
+
+      function getHistoryResourceSyntheticPath(resourceType, resourceId, name) {
+        const typeSegment = normalizeHistoryResourceType(resourceType) || "resource";
+        const rawIdentifier = String(resourceId || name || "").trim();
+        const normalizedIdentifier = rawIdentifier
+          ? rawIdentifier.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "")
+          : "";
+        return "__computer_agents__/" + typeSegment + "/" + (normalizedIdentifier || "created");
+      }
+
+      function extractHistoryCommandFlagValue(command, flagPattern) {
+        const flagRegex = new RegExp("(?:^|\\s)(?:" + flagPattern + ")\\s+", "i");
+        const match = String(command || "").match(flagRegex);
+        if (!match || match.index === undefined) return null;
+        const rest = String(command || "").slice(match.index + match[0].length);
+        const first = rest[0];
+        if (first === '"' || first === "'") {
+          let value = "";
+          for (let index = 1; index < rest.length; index += 1) {
+            const current = rest[index];
+            if (current === String.fromCharCode(92) && index + 1 < rest.length) {
+              value += rest[index + 1];
+              index += 1;
+              continue;
+            }
+            if (current === first) break;
+            value += current;
+          }
+          return value.trim();
+        }
+        const unquoted = rest.match(/^(\S+)/);
+        return unquoted ? unquoted[1].trim() : null;
+      }
+
+      function inferComputerAgentsResourceTypeFromCommand(command) {
+        const normalized = String(command || "").trim();
+        if (!normalized) return "";
+        if (/computer-agents\.py[\s\S]*\bagents\s+create\b/i.test(normalized)) return "agent";
+        if (/computer-agents\.py[\s\S]*\bskills\s+create\b/i.test(normalized)) return "skill";
+        if (/computer-agents\.py[\s\S]*\benvironments\s+create\b/i.test(normalized)) return "environment";
+        if (/computer-agents\.py[\s\S]*\benvironments\s+clone\b/i.test(normalized)) return "environment";
+        return "";
+      }
+
+      function inferComputerAgentsResourceTypeFromToolLog(log) {
+        const metadata = log && log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        const serverName = String(metadata.serverName || "").trim().toLowerCase();
+        const toolName = String(metadata.toolName || "").trim().toLowerCase();
+        const combined = [serverName, toolName].filter(Boolean).join(" ");
+        if (!combined) return "";
+        if (!/(computer[_ -]?agents?|agents?|skills?|environments?|envs?)/.test(combined)) {
+          return "";
+        }
+        if (/agents?/.test(combined) && /create|new/.test(combined)) return "agent";
+        if (/skills?/.test(combined) && /create|new/.test(combined)) return "skill";
+        if (/(?:environments?|envs?)/.test(combined) && /create|clone|new/.test(combined)) return "environment";
+        return "";
+      }
+
+      function isComputerAgentsCreateHistoryLog(log) {
+        if (!log || typeof log !== "object") return false;
+        const metadata = log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        return Boolean(
+          inferComputerAgentsResourceTypeFromCommand(metadata.command)
+          || inferComputerAgentsResourceTypeFromToolLog(log)
+        );
+      }
+
+      function createHistoryResourceEntry(resourceType, record) {
+        const resource = record && typeof record === "object" ? record : {};
+        const normalizedType =
+          normalizeHistoryResourceType(resourceType)
+          || normalizeHistoryResourceType(resource.resourceType)
+          || normalizeHistoryResourceType(resource.object)
+          || normalizeHistoryResourceType(resource.type)
+          || inferHistoryResourceTypeFromId(resource.id);
+        if (!normalizedType) {
+          return null;
+        }
+        const resourceId = String(resource.id || "").trim();
+        const resourceName = String(resource.name || resource.title || "").trim();
+        if (!resourceId && !resourceName) {
+          return null;
+        }
+        const description = normalizeHistoryPreviewText(
+          resource.description
+          || resource.instructions
+          || resource.markdown
+          || resource.documentation
+          || "",
+          220
+        );
+        return {
+          path: getHistoryResourceSyntheticPath(normalizedType, resourceId, resourceName),
+          name: resourceName || getHistoryResourceTypeLabel(normalizedType),
+          type: "resource",
+          resourceType: normalizedType,
+          resourceTypeLabel: getHistoryResourceTypeLabel(normalizedType),
+          resourceId: resourceId || "",
+          changeKind: "created",
+          additions: null,
+          deletions: null,
+          diffText: "",
+          isChanged: true,
+          description,
+          category: String(resource.category || "").trim(),
+          model: String(resource.model || "").trim(),
+          projectId: String(resource.projectId || "").trim(),
+          isDefault: Boolean(resource.isDefault),
+        };
+      }
+
+      function extractComputerAgentsResourceEntriesFromValue(value, fallbackType) {
+        const entries = new Map();
+
+        function push(resourceType, record) {
+          const entry = createHistoryResourceEntry(resourceType, record);
+          if (!entry) return;
+          const existing = entries.get(entry.path);
+          entries.set(entry.path, existing ? { ...existing, ...entry } : entry);
+        }
+
+        function visit(candidate, hintedType) {
+          if (!candidate) return;
+          if (typeof candidate === "string") {
+            const trimmed = candidate.trim();
+            if ((trimmed.startsWith("{") || trimmed.startsWith("[")) && trimmed.length > 1) {
+              try {
+                visit(JSON.parse(trimmed), hintedType);
+              } catch {}
+            }
+            return;
+          }
+          if (Array.isArray(candidate)) {
+            for (const item of candidate) visit(item, hintedType);
+            return;
+          }
+          if (typeof candidate !== "object") {
+            return;
+          }
+
+          const record = candidate;
+          if (record.agent && typeof record.agent === "object") push("agent", record.agent);
+          if (record.skill && typeof record.skill === "object") push("skill", record.skill);
+          if (record.environment && typeof record.environment === "object") push("environment", record.environment);
+
+          if (Array.isArray(record.agents)) {
+            for (const item of record.agents) push("agent", item);
+          }
+          if (Array.isArray(record.skills)) {
+            for (const item of record.skills) push("skill", item);
+          }
+          if (Array.isArray(record.environments)) {
+            for (const item of record.environments) push("environment", item);
+          }
+
+          const inferredType =
+            normalizeHistoryResourceType(hintedType)
+            || normalizeHistoryResourceType(record.resourceType)
+            || normalizeHistoryResourceType(record.object)
+            || normalizeHistoryResourceType(record.type)
+            || inferHistoryResourceTypeFromId(record.id);
+          if (inferredType && (record.id || record.name || record.title)) {
+            push(inferredType, record);
+          }
+
+          for (const nestedValue of Object.values(record)) {
+            if (nestedValue && typeof nestedValue === "object") {
+              visit(nestedValue, null);
+            } else if (typeof nestedValue === "string") {
+              visit(nestedValue, null);
+            }
+          }
+        }
+
+        visit(value, fallbackType);
+        return Array.from(entries.values());
+      }
+
+      function extractComputerAgentsResourceEntriesFromHistoryOutput(output, fallbackType) {
+        const entries = new Map();
+        const normalizedOutput = typeof output === "string" ? output : "";
+        if (!normalizedOutput.trim()) {
+          return [];
+        }
+
+        for (const entry of extractComputerAgentsResourceEntriesFromValue(normalizedOutput, fallbackType)) {
+          entries.set(entry.path, entry);
+        }
+
+        const fallbackTypeLabel = normalizeHistoryResourceType(fallbackType);
+        const creationPatterns = [
+          { type: "agent", pattern: /\bagent created\b[:\s-]*(.+?)\s*\((agent_[A-Za-z0-9_-]+)\)/ig },
+          { type: "skill", pattern: /\bskill created\b[:\s-]*(.+?)\s*\((skill_[A-Za-z0-9_-]+)\)/ig },
+          { type: "environment", pattern: /\benvironment created\b[:\s-]*(.+?)\s*\(((?:env|environment)_[A-Za-z0-9_-]+)\)/ig },
+        ];
+        for (const { type, pattern } of creationPatterns) {
+          for (const match of normalizedOutput.matchAll(pattern)) {
+            const entry = createHistoryResourceEntry(type, {
+              id: match[2],
+              name: String(match[1] || "").trim(),
+            });
+            if (entry) {
+              entries.set(entry.path, entry);
+            }
+          }
+        }
+
+        if (entries.size === 0 && fallbackTypeLabel) {
+          const idPattern =
+            fallbackTypeLabel === "agent"
+              ? /(agent_[A-Za-z0-9_-]+)/i
+              : fallbackTypeLabel === "skill"
+                ? /(skill_[A-Za-z0-9_-]+)/i
+                : /((?:env|environment)_[A-Za-z0-9_-]+)/i;
+          const idMatch = normalizedOutput.match(idPattern);
+          if (idMatch) {
+            const entry = createHistoryResourceEntry(fallbackTypeLabel, {
+              id: idMatch[1],
+            });
+            if (entry) {
+              entries.set(entry.path, entry);
+            }
+          }
+        }
+
+        return Array.from(entries.values());
+      }
+
+      function extractComputerAgentsResourceEntriesFromHistoryLog(log) {
+        const metadata = log && log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        const command = typeof metadata.command === "string" ? metadata.command : "";
+        const output = typeof metadata.output === "string" ? metadata.output : "";
+        const result = metadata.result;
+        const args = metadata.args;
+        const fallbackType =
+          inferComputerAgentsResourceTypeFromCommand(command)
+          || inferComputerAgentsResourceTypeFromToolLog(log);
+        const entries = new Map();
+
+        function append(list) {
+          for (const entry of Array.isArray(list) ? list : []) {
+            if (entry && typeof entry === "object" && entry.path) {
+              const existing = entries.get(entry.path);
+              entries.set(entry.path, existing ? { ...existing, ...entry } : entry);
+            }
+          }
+        }
+
+        append(extractComputerAgentsResourceEntriesFromValue(result, fallbackType));
+        append(extractComputerAgentsResourceEntriesFromValue(args, fallbackType));
+        append(extractComputerAgentsResourceEntriesFromHistoryOutput(output, fallbackType));
+        append(extractComputerAgentsResourceEntriesFromHistoryOutput(log?.message || "", fallbackType));
+
+        if (entries.size === 0 && (fallbackType || isComputerAgentsCreateHistoryLog(log))) {
+          const fallbackName = extractHistoryCommandFlagValue(command, "--name");
+          if (fallbackName) {
+            const fallbackEntry = createHistoryResourceEntry(fallbackType, {
+              id: extractHistoryCommandFlagValue(command, "--id") || "",
+              name: fallbackName,
+              description: extractHistoryCommandFlagValue(command, "--description") || "",
+              model: extractHistoryCommandFlagValue(command, "--model") || "",
+              category: extractHistoryCommandFlagValue(command, "--category") || "",
+              projectId: extractHistoryCommandFlagValue(command, "--project-id") || "",
+            });
+            if (fallbackEntry) {
+              entries.set(fallbackEntry.path, fallbackEntry);
+            }
+          }
+        }
+
+        return Array.from(entries.values());
+      }
+
       function extractGeneratedImagePathsFromHistoryOutput(output) {
         if (typeof output !== "string" || !output.trim()) {
           return [];
@@ -22795,7 +23339,7 @@ const html = `<!doctype html>
         return Array.from(entries.values());
       }
 
-      function buildGeneratedImageStepEntriesById(steps, logs) {
+      function buildSupplementalHistoryStepEntriesById(steps, logs) {
         const nextMap = new Map();
         const orderedSteps = Array.isArray(steps)
           ? [...steps].sort((left, right) => String(left?.createdAt || "").localeCompare(String(right?.createdAt || "")))
@@ -22854,6 +23398,7 @@ const html = `<!doctype html>
             const supplementalEntries = [
               ...extractGeneratedImageEntriesFromHistoryLog(log),
               ...extractLoggedFileChangeEntriesFromHistoryLog(log),
+              ...extractComputerAgentsResourceEntriesFromHistoryLog(log),
             ];
             if (supplementalEntries.length === 0) {
               continue;
@@ -23155,6 +23700,42 @@ const html = `<!doctype html>
         if (changeKind === "modified") return "Modified";
         if (changeKind === "deleted") return "Deleted";
         return "";
+      }
+
+      function renderHistoryResourceIcon(resourceType) {
+        if (resourceType === "agent") {
+          return React.createElement(Bot, { strokeWidth: 1.8 });
+        }
+        if (resourceType === "skill") {
+          return React.createElement(Cpu, { strokeWidth: 1.8 });
+        }
+        if (resourceType === "environment") {
+          return React.createElement(HardDrive, { strokeWidth: 1.8 });
+        }
+        return React.createElement(File, { strokeWidth: 1.8 });
+      }
+
+      function buildHistoryResourceMetaRows(entry) {
+        const rows = [];
+        if (!entry || entry.type !== "resource") {
+          return rows;
+        }
+        if (entry.resourceId) {
+          rows.push({ label: "ID", value: entry.resourceId });
+        }
+        if (entry.model) {
+          rows.push({ label: "Model", value: entry.model });
+        }
+        if (entry.category) {
+          rows.push({ label: "Category", value: entry.category });
+        }
+        if (entry.projectId) {
+          rows.push({ label: "Project", value: entry.projectId });
+        }
+        if (entry.isDefault) {
+          rows.push({ label: "Default", value: "Yes" });
+        }
+        return rows;
       }
 
       function readRevertedChangeStepId(step) {
@@ -23774,11 +24355,11 @@ const html = `<!doctype html>
         );
       }
 
-      function getPreferredFilePath(entries, changedPaths) {
+      function getPreferredHistoryEntryPath(entries, changedPaths) {
         const changedSet = new Set(uniqueHistoryPaths(changedPaths));
         const files = entries.filter((entry) => entry.type === "file");
         const changedMatch = files.find((entry) => changedSet.has(normalizeHistoryPath(entry.path)));
-        return changedMatch?.path || files[0]?.path || "";
+        return changedMatch?.path || files[0]?.path || entries[0]?.path || "";
       }
 
       async function fetchHistoryThreadMessages({ backendUrl, threadId, headers }) {
@@ -23863,7 +24444,7 @@ const html = `<!doctype html>
           }
         }
 
-        return normalizeHistoryPreviewText(step.title || "Changed files", 160);
+        return normalizeHistoryPreviewText(step.title || "Changes", 160);
       }
 
       function ThreadChangesView({ threadId, threadTitle, backendUrl, apiKey, upstreamUrl, hasRealAccess, onThreadMutated, navigationTarget, onNavigationTargetHandled }) {
@@ -23894,15 +24475,15 @@ const html = `<!doctype html>
         const [historyMutationError, setHistoryMutationError] = useState("");
         const [reloadNonce, setReloadNonce] = useState(0);
 
-        const generatedImageStepEntriesById = useMemo(() => {
-          return buildGeneratedImageStepEntriesById(steps, threadLogs);
+        const supplementalStepEntriesById = useMemo(() => {
+          return buildSupplementalHistoryStepEntriesById(steps, threadLogs);
         }, [steps, threadLogs]);
 
         const displaySteps = useMemo(() => {
           return steps.filter((step) => {
-            return shouldDisplayHistoryStep(step) || (generatedImageStepEntriesById.get(step.id) || []).length > 0;
+            return shouldDisplayHistoryStep(step) || (supplementalStepEntriesById.get(step.id) || []).length > 0;
           });
-        }, [generatedImageStepEntriesById, steps]);
+        }, [supplementalStepEntriesById, steps]);
 
         const sortedSteps = useMemo(() => {
           return [...displaySteps].sort((left, right) => right.sequence - left.sequence);
@@ -23972,18 +24553,18 @@ const html = `<!doctype html>
         const previewStepFilesById = useMemo(() => {
           const nextMap = new Map();
           for (const step of sortedSteps) {
-            nextMap.set(step.id, buildStepFileEntries(step, null, [], generatedImageStepEntriesById.get(step.id) || []));
+            nextMap.set(step.id, buildStepFileEntries(step, null, [], supplementalStepEntriesById.get(step.id) || []));
           }
           if (selectedStep?.id) {
             nextMap.set(
               selectedStep.id,
               stepFiles.length > 0
                 ? stepFiles
-                : buildStepFileEntries(selectedStep, stepDiffSummary, [], generatedImageStepEntriesById.get(selectedStep.id) || [])
+                : buildStepFileEntries(selectedStep, stepDiffSummary, [], supplementalStepEntriesById.get(selectedStep.id) || [])
             );
           }
           return nextMap;
-        }, [generatedImageStepEntriesById, selectedStep, sortedSteps, stepDiffSummary, stepFiles]);
+        }, [selectedStep, sortedSteps, stepDiffSummary, stepFiles, supplementalStepEntriesById]);
 
         const selectedStepFiles = selectedStep ? (previewStepFilesById.get(selectedStep.id) || []) : [];
 
@@ -24131,7 +24712,7 @@ const html = `<!doctype html>
             return;
           }
 
-          const fallbackPath = getPreferredFilePath(previewStepFilesById.get(targetStep.id) || [], extractStepChangedPaths(targetStep));
+          const fallbackPath = getPreferredHistoryEntryPath(previewStepFilesById.get(targetStep.id) || [], extractStepChangedPaths(targetStep));
           setSelectedStepId(targetStep.id);
           setSelectedFilePath(navigationTarget.filePath || fallbackPath);
           setChangesScreenMode(navigationTarget.openDetail ? "detail" : "timeline");
@@ -24176,11 +24757,11 @@ const html = `<!doctype html>
           }).then((nextDiffSummary) => {
             if (cancelled) return;
             setStepDiffSummary(nextDiffSummary);
-            setStepFiles(buildStepFileEntries(selectedStep, nextDiffSummary, [], generatedImageStepEntriesById.get(selectedStep.id) || []));
+            setStepFiles(buildStepFileEntries(selectedStep, nextDiffSummary, [], supplementalStepEntriesById.get(selectedStep.id) || []));
             setStepDataError("");
           }).catch((error) => {
             if (cancelled) return;
-            const fallbackFiles = buildStepFileEntries(selectedStep, null, [], generatedImageStepEntriesById.get(selectedStep.id) || []);
+            const fallbackFiles = buildStepFileEntries(selectedStep, null, [], supplementalStepEntriesById.get(selectedStep.id) || []);
             setStepFiles(fallbackFiles);
             setStepDiffSummary(null);
             if (fallbackFiles.length === 0) {
@@ -24197,14 +24778,14 @@ const html = `<!doctype html>
           return () => {
             cancelled = true;
           };
-        }, [backendUrl, client, generatedImageStepEntriesById, historyHeaders, selectedStep, threadId]);
+        }, [backendUrl, client, historyHeaders, selectedStep, supplementalStepEntriesById, threadId]);
 
         useEffect(() => {
-          const currentFileStillExists = selectedStepFiles.some((entry) => entry.type === "file" && historyPathsMatch(entry.path, selectedFilePath));
-          if (currentFileStillExists) {
+          const currentEntryStillExists = selectedStepFiles.some((entry) => historyPathsMatch(entry.path, selectedFilePath));
+          if (currentEntryStillExists) {
             return;
           }
-          setSelectedFilePath(getPreferredFilePath(selectedStepFiles, changedPaths));
+          setSelectedFilePath(getPreferredHistoryEntryPath(selectedStepFiles, changedPaths));
         }, [changedPaths, selectedFilePath, selectedStepFiles]);
 
         useEffect(() => {
@@ -24297,9 +24878,12 @@ const html = `<!doctype html>
         const changedPathSet = useMemo(() => new Set(uniqueHistoryPaths(changedPaths)), [changedPaths]);
         const selectedFileChanged = selectedFileEntry ? changedPathSet.has(normalizeHistoryPath(selectedFileEntry.path)) : false;
         const detailTitle = selectedFileEntry?.name || selectedStep?.title || "Changes";
+        const selectedResourceMetaRows = selectedFileEntry ? buildHistoryResourceMetaRows(selectedFileEntry) : [];
         const resolvedDiffText = selectedFileIsImage
           ? ""
-          : typeof selectedFileDiff?.diff === "string" && selectedFileDiff.diff.trim()
+          : selectedFileEntry?.type !== "file"
+            ? ""
+            : typeof selectedFileDiff?.diff === "string" && selectedFileDiff.diff.trim()
             ? selectedFileDiff.diff
             : typeof selectedFileEntry?.diffText === "string" && selectedFileEntry.diffText.trim()
               ? selectedFileEntry.diffText
@@ -24352,7 +24936,7 @@ const html = `<!doctype html>
 
         function handleStepSelection(step, files) {
           setSelectedStepId(step.id);
-          setSelectedFilePath(getPreferredFilePath(files, extractStepChangedPaths(step)));
+          setSelectedFilePath(getPreferredHistoryEntryPath(files, extractStepChangedPaths(step)));
         }
 
         function handleFileSelection(step, path) {
@@ -24476,6 +25060,32 @@ const html = `<!doctype html>
                   ? React.createElement("div", { className: "changes-loading-state" }, "Loading diff…")
                   : filePreviewError
                     ? React.createElement("div", { className: "changes-empty-state" }, filePreviewError)
+                    : selectedFileEntry && selectedFileEntry.type === "resource"
+                      ? React.createElement("div", { className: "changes-resource-detail-card" },
+                          React.createElement("div", { className: "changes-resource-detail-header" },
+                            React.createElement("div", { className: "changes-resource-detail-icon", "aria-hidden": "true" }, renderHistoryResourceIcon(selectedFileEntry.resourceType)),
+                            React.createElement("div", { className: "changes-resource-detail-copy" },
+                              React.createElement("div", { className: "changes-resource-detail-label" }, selectedFileEntry.resourceTypeLabel || "Resource"),
+                              React.createElement("div", { className: "changes-resource-detail-name" }, selectedFileEntry.name || "Created resource"),
+                              selectedFileEntry.resourceId
+                                ? React.createElement("div", { className: "changes-resource-detail-id" }, selectedFileEntry.resourceId)
+                                : null
+                            )
+                          ),
+                          selectedFileEntry.description
+                            ? React.createElement("div", { className: "changes-resource-detail-description" }, selectedFileEntry.description)
+                            : React.createElement("div", { className: "changes-empty-state" }, "This step created a " + String((selectedFileEntry.resourceTypeLabel || "resource")).toLowerCase() + "."),
+                          selectedResourceMetaRows.length > 0
+                            ? React.createElement("div", { className: "changes-resource-detail-meta" },
+                                selectedResourceMetaRows.map((row) =>
+                                  React.createElement("div", { key: row.label, className: "changes-resource-detail-meta-row" },
+                                    React.createElement("span", { className: "changes-resource-detail-meta-label" }, row.label),
+                                    React.createElement("span", { className: "changes-resource-detail-meta-value" }, row.value)
+                                  )
+                                )
+                              )
+                            : null
+                        )
                     : selectedFileEntry && selectedFileEntry.type === "file" && selectedFileIsImage && selectedFileImageUrl
                       ? React.createElement("div", { className: "changes-detail-image-preview" },
                           React.createElement(RunnerImagePreviewSurface, {
@@ -24520,7 +25130,7 @@ const html = `<!doctype html>
                             React.createElement("div", { className: "changes-timeline-track" },
                               group.steps.map(({ step, prompt, files }) => {
                                 const isActiveStep = selectedStepId === step.id;
-                                const fileCount = files.length;
+                                const changeCount = files.length;
                                 return React.createElement("article", {
                                   key: step.id,
                                   className: "changes-step-card" + (isActiveStep ? " is-active" : "")
@@ -24535,22 +25145,27 @@ const html = `<!doctype html>
                                       className: "changes-step-card-summary",
                                       onClick: () => handleStepSelection(step, files),
                                     },
-                                      React.createElement("div", { className: "changes-step-card-title" }, prompt || step.title || "Changed files"),
+                                      React.createElement("div", { className: "changes-step-card-title" }, prompt || step.title || "Changes"),
                                       React.createElement("div", { className: "changes-step-card-meta" },
                                         React.createElement("span", null, formatHistoryTimestamp(step.createdAt)),
-                                        React.createElement("span", null, fileCount + " " + (fileCount === 1 ? "file" : "files"))
+                                        React.createElement("span", null, changeCount + " " + (changeCount === 1 ? "change" : "changes"))
                                       )
                                     )
                                   ),
                                   React.createElement("div", { className: "changes-step-card-files" },
-                                    fileCount === 0
-                                      ? React.createElement("div", { className: "changes-step-card-empty" }, "No changed files were recorded for this step.")
+                                    changeCount === 0
+                                      ? React.createElement("div", { className: "changes-step-card-empty" }, "No changes were recorded for this step.")
                                       : files.map((entry) => {
                                           const isSelectedFile = isActiveStep && selectedFileEntry && historyPathsMatch(selectedFileEntry.path, entry.path);
                                           const changeKindLabel = getHistoryChangeKindLabel(entry.changeKind);
                                           const isRevertedStep = revertedChangeStepIds.has(step.id);
                                           const isImageFile = entry.type === "file" && isHistoryImagePath(entry.path);
                                           const imagePreviewUrl = isImageFile ? buildThreadStepFileDownloadUrl(threadId, step.id, entry.path) : "";
+                                          const isResourceEntry = entry.type === "resource";
+                                          const resourceLabel = isResourceEntry ? (entry.resourceTypeLabel || "Resource") : "";
+                                          const resourceSubtitle = isResourceEntry
+                                            ? (entry.resourceId || entry.description || "")
+                                            : "";
                                           return React.createElement("div", {
                                             key: step.id + ":" + entry.path,
                                             className: "changes-step-file-row" + (isSelectedFile ? " is-active" : ""),
@@ -24561,12 +25176,23 @@ const html = `<!doctype html>
                                               onClick: () => handleFileSelection(step, entry.path),
                                             },
                                               React.createElement("div", { className: "changes-step-file-row-head" },
-                                                React.createElement("div", { className: "changes-step-file-main" },
-                                                  React.createElement("div", { className: "changes-step-file-name" }, entry.name || entry.path)
+                                                React.createElement("div", { className: "changes-step-file-head-main" },
+                                                  isResourceEntry
+                                                    ? React.createElement("div", { className: "changes-step-file-icon", "aria-hidden": "true" }, renderHistoryResourceIcon(entry.resourceType))
+                                                    : null,
+                                                  React.createElement("div", { className: "changes-step-file-main" + (isResourceEntry ? " is-resource" : "") },
+                                                    React.createElement("div", { className: "changes-step-file-name" }, entry.name || entry.path),
+                                                    resourceSubtitle
+                                                      ? React.createElement("div", { className: "changes-step-file-path" }, resourceSubtitle)
+                                                      : null
+                                                  )
                                                 ),
                                                 React.createElement("div", { className: "changes-step-file-right" },
                                                   changeKindLabel
                                                     ? React.createElement("span", { className: "changes-step-file-kind is-" + entry.changeKind }, changeKindLabel)
+                                                    : null,
+                                                  isResourceEntry
+                                                    ? React.createElement("span", { className: "changes-step-file-kind" }, resourceLabel)
                                                     : null,
                                                   typeof entry.additions === "number" && entry.additions > 0
                                                     ? React.createElement("span", { className: "changes-step-file-stat is-added" }, "+" + entry.additions)
@@ -47877,7 +48503,7 @@ const html = `<!doctype html>
                   )
                 ),
                 React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions", ref: projectSidebarActionsRef },
-                  React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-project-search-shell" },
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-header-icon-button is-plain" + (projectSidebarPopover === "search" ? " is-active" : ""),
@@ -47885,16 +48511,16 @@ const html = `<!doctype html>
                       title: "Search project",
                     }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
                     projectSidebarPopover === "search"
-                      ? React.createElement("div", { className: "playground-files-search-popover" },
-                          React.createElement("div", { className: "playground-files-search-popover-header" },
-                            React.createElement("div", { className: "playground-files-search-popover-title" }, "Search Project"),
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          React.createElement("div", { className: "playground-tasks-project-search-header" },
+                            React.createElement("div", { className: "playground-tasks-project-search-title" }, "Search Project"),
                             React.createElement("button", {
                               type: "button",
-                              className: "playground-files-search-popover-close",
+                              className: "playground-tasks-project-search-close",
                               onClick: () => setProjectSidebarPopover(""),
                             }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
                           ),
-                          React.createElement("div", { className: "playground-files-search-popover-body" },
+                          React.createElement("div", { className: "playground-tasks-project-search-body" },
                             React.createElement("div", { className: "playground-files-search-field" },
                               React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
                               React.createElement("input", {
@@ -47905,7 +48531,7 @@ const html = `<!doctype html>
                                 onChange: (event) => setSearchQuery(event.target.value),
                               })
                             ),
-                            React.createElement("div", { className: "playground-files-search-empty" },
+                            React.createElement("div", { className: "playground-tasks-project-search-hint" },
                               taskView === "calendar"
                                 ? "Filter tasks and schedules by title, task, agent, or environment."
                                 : taskView === "backlog" && selectedReleaseId
@@ -49528,7 +50154,7 @@ const html = `<!doctype html>
                       ),
                       React.createElement("div", { className: "playground-content-nav-center" }),
                       React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions", ref: projectSidebarActionsRef },
-                        React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                        React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-project-search-shell" },
                           React.createElement("button", {
                             type: "button",
                             className: "playground-files-header-icon-button is-plain" + (projectSidebarPopover === "search" ? " is-active" : ""),
@@ -49536,16 +50162,16 @@ const html = `<!doctype html>
                             title: "Search projects",
                           }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
                           projectSidebarPopover === "search"
-                            ? React.createElement("div", { className: "playground-files-search-popover" },
-                                React.createElement("div", { className: "playground-files-search-popover-header" },
-                                  React.createElement("div", { className: "playground-files-search-popover-title" }, "Search Projects"),
+                            ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                React.createElement("div", { className: "playground-tasks-project-search-header" },
+                                  React.createElement("div", { className: "playground-tasks-project-search-title" }, "Search Projects"),
                                   React.createElement("button", {
                                     type: "button",
-                                    className: "playground-files-search-popover-close",
+                                    className: "playground-tasks-project-search-close",
                                     onClick: () => setProjectSidebarPopover(""),
                                   }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
                                 ),
-                                React.createElement("div", { className: "playground-files-search-popover-body" },
+                                React.createElement("div", { className: "playground-tasks-project-search-body" },
                                   React.createElement("div", { className: "playground-files-search-field" },
                                     React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
                                     React.createElement("input", {
@@ -49556,7 +50182,7 @@ const html = `<!doctype html>
                                       onChange: (event) => setSearchQuery(event.target.value),
                                     })
                                   ),
-                                  React.createElement("div", { className: "playground-files-search-empty" }, "Filter projects by name, description, open tasks, threads, or environments.")
+                                  React.createElement("div", { className: "playground-tasks-project-search-hint" }, "Filter projects by name, description, open tasks, threads, or environments.")
                                 )
                               )
                       : null
@@ -57728,6 +58354,16 @@ const html = `<!doctype html>
           }
           return selectedKnownThread?.title || "Current thread";
         }, [activePage, currentThreadId, hasRealAccess, selectedKnownThread]);
+        const selectedThreadStartedLabel = useMemo(() => {
+          const startedAt = typeof selectedKnownThread?.createdAt === "string" ? selectedKnownThread.createdAt.trim() : "";
+          return startedAt ? formatPlaygroundFileDate(startedAt) : "Unknown";
+        }, [selectedKnownThread]);
+        const selectedThreadUpdatedLabel = useMemo(() => {
+          const updatedAt = typeof selectedKnownThread?.updatedAt === "string" ? selectedKnownThread.updatedAt.trim() : "";
+          const fallbackStartedAt = typeof selectedKnownThread?.createdAt === "string" ? selectedKnownThread.createdAt.trim() : "";
+          const effectiveUpdatedAt = updatedAt || fallbackStartedAt;
+          return effectiveUpdatedAt ? formatPlaygroundFileDate(effectiveUpdatedAt) : "Unknown";
+        }, [selectedKnownThread]);
         const rawSelectedThreadTaskPreview = useMemo(() => {
           if (!selectedKnownThread) {
             return null;
@@ -58445,7 +59081,6 @@ const html = `<!doctype html>
             const threadProjectTitle = typeof taskPreview?.projectName === "string" && taskPreview.projectName.trim()
               ? taskPreview.projectName.trim()
               : "Project";
-            const threadTimeLabel = formatRelativeThreadTime(resolveThreadSortTimestamp(safeThread) || safeThread.nextRunAt);
             const threadMetaText = threadMetaLabel(safeThread);
 
             return React.createElement("div", {
@@ -58484,9 +59119,6 @@ const html = `<!doctype html>
                 React.createElement("span", { className: "sidebar-thread-meta" },
                   threadMetaText
                     ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadMetaText)
-                    : null,
-                  threadTimeLabel
-                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadTimeLabel)
                     : null
                 ),
                 React.createElement("button", {
@@ -58506,7 +59138,6 @@ const html = `<!doctype html>
           } catch (error) {
             const fallbackThread = normalizeThreadItem(thread);
             const fallbackSafeThreadId = typeof fallbackThread.id === "string" && fallbackThread.id.trim() ? fallbackThread.id.trim() : generateId("thread");
-            const fallbackTimeLabel = formatRelativeThreadTime(resolveThreadSortTimestamp(fallbackThread) || fallbackThread.nextRunAt);
             const fallbackMetaText = threadMetaLabel(fallbackThread);
             const {
               taskTicketNumber,
@@ -58543,9 +59174,6 @@ const html = `<!doctype html>
                 React.createElement("span", { className: "sidebar-thread-meta" },
                   fallbackMetaText
                     ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, fallbackMetaText)
-                    : null,
-                  fallbackTimeLabel
-                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, fallbackTimeLabel)
                     : null
                 ),
                 React.createElement("button", {
@@ -59231,6 +59859,27 @@ const html = `<!doctype html>
                                           }, selectedKnownThread.id)
                                         )
                                       ),
+                                      React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                                        React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                                        React.createElement("div", { className: "playground-thread-nav-popup-fact" },
+                                          React.createElement("span", { className: "playground-thread-nav-popup-fact-label" }, "Started"),
+                                          React.createElement("span", {
+                                            className: "playground-thread-nav-popup-fact-value",
+                                            title: selectedThreadStartedLabel,
+                                          }, selectedThreadStartedLabel)
+                                        )
+                                      ),
+                                      React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                                        React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                                        React.createElement("div", { className: "playground-thread-nav-popup-fact" },
+                                          React.createElement("span", { className: "playground-thread-nav-popup-fact-label" }, "Last updated"),
+                                          React.createElement("span", {
+                                            className: "playground-thread-nav-popup-fact-value",
+                                            title: selectedThreadUpdatedLabel,
+                                          }, selectedThreadUpdatedLabel)
+                                        )
+                                      ),
+                                      React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" }),
                                       React.createElement("button", {
                                         type: "button",
                                         className: "tb-popup-row",
@@ -59256,6 +59905,23 @@ const html = `<!doctype html>
                                         React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                                         React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                                           React.createElement("span", null, "Rename thread")
+                                        )
+                                      ),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                                        onClick: () => {
+                                          void handleThreadDelete(selectedKnownThread.id);
+                                        },
+                                        disabled: threadMutationState.action === "delete" && threadMutationState.threadId === selectedKnownThread.id,
+                                      },
+                                        React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                          React.createElement("span", null,
+                                            threadMutationState.action === "delete" && threadMutationState.threadId === selectedKnownThread.id
+                                              ? "Deleting thread..."
+                                              : "Delete Thread"
+                                          )
                                         )
                                       )
                                     )

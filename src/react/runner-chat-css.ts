@@ -3039,9 +3039,15 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-diff-surface {
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 15px;
   overflow: hidden;
-  background: #171717;
+  background: transparent;
+  scrollbar-width: none;
+}
+
+.tb-runner-diff-surface::-webkit-scrollbar {
+  display: none;
 }
 
 .tb-runner-diff-surface.is-bleed {
@@ -3056,7 +3062,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   gap: 12px;
   padding: 6px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: #252525;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .tb-runner-diff-surface-meta {
@@ -3209,6 +3215,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-diff-surface-body {
   background: #171717;
   overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tb-runner-diff-surface-body::-webkit-scrollbar {
+  display: none;
 }
 
 .tb-runner-diff-surface-body.is-expanded {
@@ -3223,7 +3234,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-diff-surface-body .diff-tailwindcss-wrapper {
-  background: #171717;
+  background: transparent;
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
 }
 
 .tb-runner-diff-surface-body .diff-tailwindcss-wrapper[data-theme="dark"] .diff-style-root {
