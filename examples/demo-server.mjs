@@ -637,6 +637,7 @@ const html = `<!doctype html>
       .sidebar-rail-logo-button {
         width: 30px;
         height: 30px;
+        margin-left: 0;
       }
 
       .sidebar-rail-logo-button {
