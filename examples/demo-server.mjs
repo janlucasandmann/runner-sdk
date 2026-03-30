@@ -33281,6 +33281,7 @@ const html = `<!doctype html>
         navigationRequest,
         onNavigationRequestHandled,
         onProjectScopeChange,
+        onProjectRecordCommitted,
         onRequireAuth,
         onRequestSidebarCollapse,
         detailOnly,
@@ -37543,15 +37544,9 @@ const html = `<!doctype html>
             return current.map((project) => project.id === normalized.id ? normalized : project);
           });
 
-          setThreadProjectRecordsById((current) => {
-            if (!normalized?.id) {
-              return current;
-            }
-            return {
-              ...current,
-              [normalized.id]: normalized,
-            };
-          });
+          if (typeof onProjectRecordCommitted === "function") {
+            onProjectRecordCommitted(normalized);
+          }
 
           if (selectedProjectId === normalized.id || extra.selectImmediately) {
             setSelectedProjectDetail((current) => ({
@@ -49162,6 +49157,15 @@ const html = `<!doctype html>
         const [threadSubagentDetailOpen, setThreadSubagentDetailOpen] = useState(false);
         const [threadDeepResearchDetailOpen, setThreadDeepResearchDetailOpen] = useState(false);
         const [threadSubagentDetailHost, setThreadSubagentDetailHost] = useState(null);
+        const handleThreadProjectRecordCommitted = useCallback((projectRecord) => {
+          if (!projectRecord?.id) {
+            return;
+          }
+          setThreadProjectRecordsById((current) => ({
+            ...current,
+            [projectRecord.id]: projectRecord,
+          }));
+        }, []);
         const [settingsSection, setSettingsSection] = useState("costs-plans");
         const [contentMode, setContentMode] = useState("chat");
         const [changesNavigationTarget, setChangesNavigationTarget] = useState(null);
@@ -56841,18 +56845,12 @@ const html = `<!doctype html>
           : (typeof selectedKnownThread?.projectId === "string" && selectedKnownThread.projectId.trim()
             ? selectedKnownThread.projectId.trim()
             : (typeof selectedThreadCachedProjectContext?.projectId === "string" ? selectedThreadCachedProjectContext.projectId.trim() : ""));
-        const listedSelectedThreadProjectRecord = selectedThreadProjectId
-          ? (projectsById[selectedThreadProjectId] || null)
-          : null;
         const cachedSelectedThreadProjectRecord = selectedThreadProjectId
           ? (threadProjectRecordsById[selectedThreadProjectId] || null)
           : null;
         const selectedThreadProjectRecord = useMemo(() => {
           if (!selectedThreadProjectId) {
             return null;
-          }
-          if (listedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
-            return listedSelectedThreadProjectRecord;
           }
           if (cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
             return cachedSelectedThreadProjectRecord;
@@ -56861,7 +56859,7 @@ const html = `<!doctype html>
             return welcomeWidgetProject;
           }
           return null;
-        }, [cachedSelectedThreadProjectRecord, listedSelectedThreadProjectRecord, selectedThreadProjectId, welcomeWidgetProject]);
+        }, [cachedSelectedThreadProjectRecord, selectedThreadProjectId, welcomeWidgetProject]);
         const selectedThreadShellBackground = useMemo(() => {
           if (!selectedThreadProjectRecord) {
             return "";
@@ -58401,6 +58399,7 @@ const html = `<!doctype html>
                               }
                               setLatestInteractedProjectId(normalizedProjectId);
                             },
+                            onProjectRecordCommitted: handleThreadProjectRecordCommitted,
                             onThreadStarted: (threadId, options = {}) => {
                               if (options?.threadRecord?.id) {
                                 upsertRealThreadRecord(options.threadRecord, {
@@ -58640,6 +58639,7 @@ const html = `<!doctype html>
                                 }
                                 setLatestInteractedProjectId(normalizedProjectId);
                               },
+                              onProjectRecordCommitted: handleThreadProjectRecordCommitted,
                               onThreadStarted: (threadId, options = {}) => {
                                 if (options?.threadRecord?.id) {
                                   upsertRealThreadRecord(options.threadRecord, {
