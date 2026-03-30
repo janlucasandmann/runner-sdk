@@ -14029,7 +14029,7 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-backlog-heading {
-        font-size: 18px;
+        font-size: 24px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.94);
         line-height: 1.2;
@@ -14050,7 +14050,7 @@ const html = `<!doctype html>
         min-width: 0;
         flex: 1 1 auto;
         max-width: none;
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1.45;
         color: rgba(255, 255, 255, 0.7);
         white-space: normal;
@@ -14680,7 +14680,7 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-backlog-assignee {
-        font-weight: 500;
+        font-weight: 400;
       }
 
       .playground-tasks-backlog-status.is-todo {
@@ -45772,10 +45772,7 @@ const html = `<!doctype html>
                     },
                     React.createElement("div", { className: "playground-tasks-backlog-section-header" },
                       React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
-                        React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title),
-                        section.copy
-                          ? React.createElement("div", { className: "playground-tasks-backlog-section-copy" }, section.copy)
-                          : null
+                        React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title)
                       ),
                       renderReleaseHeaderMeta(section.releaseId ? (releasesById[section.releaseId] || null) : null)
                     ),
