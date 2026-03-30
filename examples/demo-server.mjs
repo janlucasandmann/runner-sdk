@@ -13991,25 +13991,104 @@ const html = `<!doctype html>
 
       .playground-tasks-backlog-header {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin-top: 14px;
         padding: 4px 0 10px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
 
+      .playground-tasks-backlog-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-tasks-backlog-header-row.is-secondary {
+        align-items: flex-start;
+      }
+
+      .playground-tasks-backlog-header-row.is-tertiary {
+        align-items: center;
+      }
+
+      .playground-tasks-backlog-header-main {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-tasks-backlog-header-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
       .playground-tasks-backlog-heading {
-        font-size: 15px;
+        font-size: 18px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.94);
         line-height: 1.2;
       }
 
-      .playground-tasks-backlog-control-row {
-        width: auto;
-        margin-left: auto;
+      .playground-tasks-backlog-open-count {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-backlog-heading-count {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+
+      .playground-tasks-backlog-description {
+        min-width: 0;
+        flex: 1 1 auto;
+        max-width: none;
+        font-size: 13px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.7);
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+
+      .playground-tasks-backlog-primary-actions,
+      .playground-tasks-backlog-secondary-actions,
+      .playground-tasks-backlog-tertiary-actions {
+        display: inline-flex;
+        align-items: center;
         justify-content: flex-end;
+        gap: 8px;
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-backlog-primary-actions {
+        margin-left: auto;
+      }
+
+      .playground-tasks-backlog-secondary-actions {
+        align-self: flex-start;
+      }
+
+      .playground-tasks-backlog-tertiary-actions {
+        margin-left: auto;
+      }
+
+      .playground-tasks-backlog-secondary-actions .playground-files-control-button.is-backlog-sort {
+        padding-left: 0;
+      }
+
+      .playground-tasks-backlog-sort-shell .playground-tasks-toolbar-popup-menu,
+      .playground-tasks-backlog-filter-shell .playground-tasks-toolbar-popup-menu {
+        left: 0;
+        right: auto;
+        transform-origin: top left;
       }
 
       .playground-tasks-release-control-row {
@@ -14050,6 +14129,13 @@ const html = `<!doctype html>
       .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu-wide {
         width: 272px;
         min-width: 272px;
+      }
+
+      .playground-tasks-toolbar-popup-shell.playground-tasks-backlog-sort-shell .playground-tasks-toolbar-popup-menu,
+      .playground-tasks-toolbar-popup-shell.playground-tasks-backlog-filter-shell .playground-tasks-toolbar-popup-menu {
+        left: 0;
+        right: auto;
+        transform-origin: top left;
       }
 
       .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu-animate-down-in {
@@ -45551,7 +45637,10 @@ const html = `<!doctype html>
         }
 
         function renderBacklogTaskListView({
-          headerContent,
+          headerTitle,
+          openTaskCount,
+          headerDescription,
+          primaryActions,
           toolbarRef,
           toolbarPopover,
           setToolbarPopover,
@@ -45571,7 +45660,6 @@ const html = `<!doctype html>
           composer = null,
           listFooter = null,
           allowManualDrag = true,
-          extraToolbarContent = null,
           groupRootTasksByRelease = false,
         }) {
           const isBacklogManualSort = allowManualDrag && sortMode === "default";
@@ -45982,13 +46070,55 @@ const html = `<!doctype html>
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-tasks-backlog-view" },
               React.createElement("div", { className: "playground-tasks-backlog-header" },
-                headerContent,
+                React.createElement("div", { className: "playground-tasks-backlog-header-row" },
+                  React.createElement("div", { className: "playground-tasks-backlog-header-main" },
+                    React.createElement("div", { className: "playground-tasks-backlog-heading" }, headerTitle),
+                    React.createElement("span", { className: "playground-tasks-board-release-box-count playground-tasks-backlog-heading-count playground-tasks-backlog-open-count" }, String(openTaskCount))
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-backlog-header-row is-secondary" },
+                  React.createElement("div", { className: "playground-tasks-backlog-description" }, headerDescription)
+                ),
                 React.createElement("div", {
-                    className: "playground-files-control-row playground-tasks-backlog-control-row",
-                    ref: toolbarRef,
-                  },
-                  React.createElement("div", { className: "playground-files-control-actions" },
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                  className: "playground-tasks-backlog-header-row is-tertiary",
+                  ref: toolbarRef,
+                },
+                  React.createElement("div", { className: "playground-tasks-backlog-secondary-actions" },
+                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-backlog-sort-shell" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button is-bare is-backlog-sort" + (toolbarPopover === "sort" || sortMode !== "default" ? " is-active" : ""),
+                        onClick: () => setToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                      },
+                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Sort")
+                      ),
+                      toolbarPopover === "sort"
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            backlogSortOptions.map((option) =>
+                              React.createElement("button", {
+                                  key: option.id,
+                                  type: "button",
+                                  className: "tb-popup-row tb-popup-row-select" + (sortMode === option.id ? " selected" : ""),
+                                  onClick: () => {
+                                    setSortMode(option.id);
+                                    setToolbarPopover("");
+                                  },
+                                },
+                                  React.createElement("span", { className: "tb-popup-check-slot" },
+                                    sortMode === option.id
+                                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                      : null
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                    React.createElement("span", null, option.label)
+                                  )
+                                )
+                            )
+                          )
+                        : null
+                    ),
+                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-backlog-filter-shell" },
                       React.createElement("button", {
                         type: "button",
                         className: "playground-files-control-button is-bare is-backlog-filter" + (toolbarPopover === "filter" || filterMode !== "open" && filterMode !== "all" ? " is-active" : ""),
@@ -46022,43 +46152,9 @@ const html = `<!doctype html>
                             )
                           )
                         : null
-                    ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button is-bare" + (toolbarPopover === "sort" || sortMode !== "default" ? " is-active" : ""),
-                        onClick: () => setToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                      },
-                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Sort")
-                      ),
-                      toolbarPopover === "sort"
-                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            backlogSortOptions.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "tb-popup-row tb-popup-row-select" + (sortMode === option.id ? " selected" : ""),
-                                  onClick: () => {
-                                    setSortMode(option.id);
-                                    setToolbarPopover("");
-                                  },
-                                },
-                                  React.createElement("span", { className: "tb-popup-check-slot" },
-                                    sortMode === option.id
-                                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                      : null
-                                  ),
-                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                    React.createElement("span", null, option.label)
-                                  )
-                                )
-                            )
-                          )
-                        : null
-                    ),
-                    extraToolbarContent
-                  )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-backlog-tertiary-actions" }, primaryActions)
                 )
               ),
               React.createElement("div", { className: "playground-tasks-backlog-list" },
@@ -46129,99 +46225,19 @@ const html = `<!doctype html>
           const backlogComposerBackendUrl = window.location.origin
             + "/api/task-backlog/" + encodeURIComponent(selectedProjectId)
             + (selectedReleaseId ? ("/releases/" + encodeURIComponent(selectedReleaseId)) : "");
+          const backlogHeaderTitle = isReleaseBacklogView
+            ? (selectedRelease.name || "Release")
+            : "Backlog";
+          const backlogHeaderDescription = String(
+            isReleaseBacklogView
+              ? (selectedRelease.description || formatPlaygroundTaskReleaseDateRange(selectedRelease) || "No release description yet.")
+              : (selectedProject.description || selectedProject.instructions || "No project instructions yet.")
+          ).trim();
           return renderBacklogTaskListView({
-            headerContent: isReleaseBacklogView
-              ? React.createElement("div", { className: "playground-tasks-release-backlog-header-main" },
-                  React.createElement("div", { className: "playground-tasks-release-backlog-title-row" },
-                    React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
-                      React.createElement("div", { className: "playground-tasks-backlog-heading" }, selectedRelease.name || "Release"),
-                      React.createElement("span", { className: "playground-tasks-board-release-box-count playground-tasks-backlog-heading-count" }, String(openScopedBacklogTaskCount)),
-                      renderReleaseHeaderMeta(selectedRelease, {
-                        className: "playground-tasks-release-header-meta is-inline",
-                        dateClassName: "playground-tasks-release-header-date",
-                      })
-                    )
-                  )
-                )
-              : React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
-                  React.createElement("div", { className: "playground-tasks-backlog-heading" }, "Backlog"),
-                  React.createElement("span", { className: "playground-tasks-board-release-box-count playground-tasks-backlog-heading-count" }, String(openScopedBacklogTaskCount))
-                ),
-            toolbarRef: backlogToolbarActionsRef,
-            toolbarPopover: backlogToolbarPopover,
-            setToolbarPopover: setBacklogToolbarPopover,
-            filterMode: activeBacklogFilterValue,
-            setFilterMode: isReleaseBacklogView ? setReleaseBacklogFilterMode : setBacklogFilterMode,
-            activeFilterOption: activeBacklogFilterOptionValue,
-            sortMode: activeBacklogSortValue,
-            setSortMode: isReleaseBacklogView ? setReleaseBacklogSortMode : setBacklogSortMode,
-            activeSortOption: activeBacklogSortOptionValue,
-            taskRoots: activeTaskRoots,
-            visibleTaskIds: activeVisibleTaskIds,
-            childrenByParentId: activeChildrenByParentId,
-            emptyTitle: backlogEmptyTitle,
-            emptyCopy: backlogEmptyCopy,
-            emptyAction: shouldShowMissionControlEmptyAction
-              ? React.createElement("div", { className: "playground-tasks-empty-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-tasks-empty-primary-button",
-                    onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
-                  },
-                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 2 }),
-                    React.createElement("span", null, "Run Mission Control")
-                  )
-                )
-              : null,
-            allowManualDrag: !isReleaseBacklogView,
-            groupRootTasksByRelease: !isReleaseBacklogView,
-            showComposer: true,
-            listFooter: null,
-            composer: React.createElement("div", {
-                className: "playground-tasks-backlog-composer-shell" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""),
-              },
-                React.createElement(RunnerChat, {
-                  key: selectedProjectId + ":" + (selectedReleaseId || "__all__") + ":" + backlogComposerKey,
-                  className: "playground-tasks-backlog-runner",
-                  backendUrl: backlogComposerBackendUrl,
-                  apiKey: apiKey,
-                  fetchCustomSkills: fetchProjectCustomSkills,
-                  speechToTextUrl: speechToTextUrl || undefined,
-                  requestHeaders,
-                  appId: "runner-web-sdk-demo",
-                  inputMode: "computer-agents",
-                  computerAgents: computerAgents,
-                  environments: backlogComposerEnvironments,
-                  agents: backlogComposerAgents,
-                  skills: skills,
-                  environmentId: backlogComposerEnvironmentId || undefined,
-                  agentId: backlogComposerAgentId || undefined,
-                  autoFocusComposer: true,
-                  keepFocusOnSubmit: true,
-                  enableBacklogSubtaskCommand: true,
-                  backlogSubtaskCommand: backlogComposerSubtaskCommandRequest,
-                  enableBacklogMissionControlCommand: true,
-                  backlogMissionControlCommand: backlogComposerMissionControlCommandRequest,
-                  showUsageInStatus: false,
-                  placeholder: "Add a new task",
-                  onRunStart: handleBacklogComposerRunStart,
-                  onRunFinish: handleBacklogComposerRunFinish,
-                  onBacklogMissionControlSubmit: handleBacklogMissionControlSubmit,
-                  onAgentChange: (nextAgentId) => setBacklogComposerAgentId(nextAgentId),
-                  onEnvironmentChange: (nextEnvironmentId) => setBacklogComposerEnvironmentId(nextEnvironmentId),
-                  onDocumentPreviewOpenChange: (isOpen) => {
-                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
-                      onRequestSidebarCollapse();
-                    }
-                  },
-                  onDeepResearchDetailOpenChange: (isOpen) => {
-                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
-                      onRequestSidebarCollapse();
-                    }
-                  },
-                })
-              ),
-            extraToolbarContent: React.createElement(React.Fragment, null,
+            headerTitle: backlogHeaderTitle,
+            openTaskCount: openScopedBacklogTaskCount,
+            headerDescription: backlogHeaderDescription,
+            primaryActions: React.createElement(React.Fragment, null,
               React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                 React.createElement("button", {
                   type: "button",
@@ -46300,6 +46316,80 @@ const html = `<!doctype html>
                 )
               )
             ),
+            toolbarRef: backlogToolbarActionsRef,
+            toolbarPopover: backlogToolbarPopover,
+            setToolbarPopover: setBacklogToolbarPopover,
+            filterMode: activeBacklogFilterValue,
+            setFilterMode: isReleaseBacklogView ? setReleaseBacklogFilterMode : setBacklogFilterMode,
+            activeFilterOption: activeBacklogFilterOptionValue,
+            sortMode: activeBacklogSortValue,
+            setSortMode: isReleaseBacklogView ? setReleaseBacklogSortMode : setBacklogSortMode,
+            activeSortOption: activeBacklogSortOptionValue,
+            taskRoots: activeTaskRoots,
+            visibleTaskIds: activeVisibleTaskIds,
+            childrenByParentId: activeChildrenByParentId,
+            emptyTitle: backlogEmptyTitle,
+            emptyCopy: backlogEmptyCopy,
+            emptyAction: shouldShowMissionControlEmptyAction
+              ? React.createElement("div", { className: "playground-tasks-empty-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-empty-primary-button",
+                    onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
+                  },
+                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 2 }),
+                    React.createElement("span", null, "Run Mission Control")
+                  )
+                )
+              : null,
+            allowManualDrag: !isReleaseBacklogView,
+            groupRootTasksByRelease: !isReleaseBacklogView,
+            showComposer: true,
+            listFooter: null,
+            composer: React.createElement("div", {
+                className: "playground-tasks-backlog-composer-shell" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""),
+              },
+                React.createElement(RunnerChat, {
+                  key: selectedProjectId + ":" + (selectedReleaseId || "__all__") + ":" + backlogComposerKey,
+                  className: "playground-tasks-backlog-runner",
+                  backendUrl: backlogComposerBackendUrl,
+                  apiKey: apiKey,
+                  fetchCustomSkills: fetchProjectCustomSkills,
+                  speechToTextUrl: speechToTextUrl || undefined,
+                  requestHeaders,
+                  appId: "runner-web-sdk-demo",
+                  inputMode: "computer-agents",
+                  computerAgents: computerAgents,
+                  environments: backlogComposerEnvironments,
+                  agents: backlogComposerAgents,
+                  skills: skills,
+                  environmentId: backlogComposerEnvironmentId || undefined,
+                  agentId: backlogComposerAgentId || undefined,
+                  autoFocusComposer: true,
+                  keepFocusOnSubmit: true,
+                  enableBacklogSubtaskCommand: true,
+                  backlogSubtaskCommand: backlogComposerSubtaskCommandRequest,
+                  enableBacklogMissionControlCommand: true,
+                  backlogMissionControlCommand: backlogComposerMissionControlCommandRequest,
+                  showUsageInStatus: false,
+                  placeholder: "Add a new task",
+                  onRunStart: handleBacklogComposerRunStart,
+                  onRunFinish: handleBacklogComposerRunFinish,
+                  onBacklogMissionControlSubmit: handleBacklogMissionControlSubmit,
+                  onAgentChange: (nextAgentId) => setBacklogComposerAgentId(nextAgentId),
+                  onEnvironmentChange: (nextEnvironmentId) => setBacklogComposerEnvironmentId(nextEnvironmentId),
+                  onDocumentPreviewOpenChange: (isOpen) => {
+                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
+                      onRequestSidebarCollapse();
+                    }
+                  },
+                  onDeepResearchDetailOpenChange: (isOpen) => {
+                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
+                      onRequestSidebarCollapse();
+                    }
+                  },
+                })
+              ),
           });
         }
 
