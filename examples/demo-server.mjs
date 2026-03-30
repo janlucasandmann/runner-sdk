@@ -16575,7 +16575,12 @@ const html = `<!doctype html>
       }
 
       function prepareTaskDescriptionMarkdown(content) {
-        return escapePlaygroundMarkdownHtml(content)
+        return escapePlaygroundMarkdownHtml(
+          String(content || "")
+            .replace(/\\\\r\\\\n/g, String.fromCharCode(10))
+            .replace(/\\\\n/g, String.fromCharCode(10))
+            .replace(/\\\\r/g, String.fromCharCode(10))
+        )
           .replace(/&lt;u&gt;([\\s\\S]*?)&lt;\\/u&gt;/g, "<u>$1</u>")
           .replace(/\\+\\+([\\s\\S]*?)\\+\\+/g, "<u>$1</u>");
       }
@@ -18867,6 +18872,8 @@ const html = `<!doctype html>
         return {
           summary: "",
           document: "",
+          instructions: "",
+          comments: [],
           lastThreadId: "",
           updatedAt: "",
         };
@@ -18880,6 +18887,8 @@ const html = `<!doctype html>
           ...buildEmptyPlaygroundProjectMissionControl(),
           summary: typeof missionControl.summary === "string" ? missionControl.summary : "",
           document: typeof missionControl.document === "string" ? missionControl.document : "",
+          instructions: typeof missionControl.instructions === "string" ? missionControl.instructions : "",
+          comments: normalizePlaygroundTaskCommentList(missionControl.comments),
           lastThreadId: typeof missionControl.lastThreadId === "string" ? missionControl.lastThreadId : "",
           updatedAt: typeof missionControl.updatedAt === "string" ? missionControl.updatedAt : "",
         };
@@ -18890,6 +18899,15 @@ const html = `<!doctype html>
           ? project.metadata
           : null;
         return normalizePlaygroundProjectMissionControlRecord(project?.missionControl || metadata?.missionControl);
+      }
+
+      function getPlaygroundProjectMissionInstructions(project) {
+        const missionControlRecord = getPlaygroundProjectMissionControlRecord(project);
+        const explicitInstructions = String(missionControlRecord.instructions || "").trim();
+        if (explicitInstructions) {
+          return explicitInstructions;
+        }
+        return String(project?.description || "").trim();
       }
 
       function buildPlaygroundDefaultScheduleDraft() {
@@ -33452,8 +33470,18 @@ const html = `<!doctype html>
         const [backlogComposerSubtaskCommandRequest, setBacklogComposerSubtaskCommandRequest] = useState(null);
         const [backlogComposerMissionControlCommandRequest, setBacklogComposerMissionControlCommandRequest] = useState(null);
         const [missionControlStrategyOpen, setMissionControlStrategyOpen] = useState(false);
+        const missionControlInstructionsTextareaRef = useRef(null);
         const [missionControlDocumentDraft, setMissionControlDocumentDraft] = useState("");
+        const [missionControlInstructionsDraft, setMissionControlInstructionsDraft] = useState("");
         const [isMissionControlDocumentEditing, setIsMissionControlDocumentEditing] = useState(false);
+        const [isMissionControlInstructionsEditing, setIsMissionControlInstructionsEditing] = useState(false);
+        const [missionControlDetailsCollapsed, setMissionControlDetailsCollapsed] = useState(false);
+        const [missionControlCommentInputValue, setMissionControlCommentInputValue] = useState("");
+        const [missionControlSaveState, setMissionControlSaveState] = useState({
+          isSaving: false,
+          error: "",
+          message: "",
+        });
         const [pendingNavigationMissionControlRequest, setPendingNavigationMissionControlRequest] = useState(null);
         const [pendingNavigationProjectComposerRequest, setPendingNavigationProjectComposerRequest] = useState(null);
         const [missionControlRunState, setMissionControlRunState] = useState({
@@ -33680,6 +33708,12 @@ const html = `<!doctype html>
         const selectedProjectMissionControl = useMemo(() => {
           return getPlaygroundProjectMissionControlRecord(selectedProject);
         }, [selectedProject]);
+        const selectedProjectMissionInstructions = useMemo(() => {
+          return getPlaygroundProjectMissionInstructions(selectedProject);
+        }, [selectedProject]);
+        const selectedProjectMissionComments = useMemo(() => {
+          return normalizePlaygroundTaskCommentList(selectedProjectMissionControl.comments);
+        }, [selectedProjectMissionControl.comments]);
         const isSelectedProjectMissionControlRunning = missionControlRunState.projectId === selectedProjectId
           && (missionControlRunState.status === "running" || missionControlRunState.status === "syncing");
 
@@ -33739,8 +33773,11 @@ const html = `<!doctype html>
             ...(backlogComposerEnvironmentId && environment.id === backlogComposerEnvironmentId ? { isDefault: true } : {}),
           }));
         }, [availableBacklogEnvironments, backlogComposerEnvironmentId]);
-        const activeProjectAttachmentEnvironmentId = typeof projectDraft?.defaultEnvironmentId === "string"
-          ? projectDraft.defaultEnvironmentId.trim()
+        const projectAttachmentHostRecord = missionControlStrategyOpen
+          ? selectedProject
+          : projectDraft;
+        const activeProjectAttachmentEnvironmentId = typeof projectAttachmentHostRecord?.defaultEnvironmentId === "string"
+          ? projectAttachmentHostRecord.defaultEnvironmentId.trim()
           : "";
         const activeProjectAttachmentEnvironment = useMemo(() => {
           if (!activeProjectAttachmentEnvironmentId) {
@@ -34544,13 +34581,13 @@ const html = `<!doctype html>
           return buildResolvedTaskAttachmentRecord(matchedAttachment);
         }, [activeDetailAttachments, backendUrl, previewedTaskAttachmentId]);
         const previewedProjectAttachment = useMemo(() => {
-          const projectAttachments = normalizePlaygroundTaskAttachmentList(projectDraft?.attachments);
+          const projectAttachments = normalizePlaygroundTaskAttachmentList(projectAttachmentHostRecord?.attachments);
           if (!projectAttachments.length || !projectPreviewedAttachmentId) {
             return null;
           }
           const matchedAttachment = projectAttachments.find((attachment) => attachment.id === projectPreviewedAttachmentId) || null;
           return buildResolvedTaskAttachmentRecord(matchedAttachment);
-        }, [backendUrl, projectDraft?.attachments, projectPreviewedAttachmentId]);
+        }, [backendUrl, projectAttachmentHostRecord?.attachments, projectPreviewedAttachmentId]);
 
         const schedulesById = useMemo(() => {
           const next = {};
@@ -35441,6 +35478,7 @@ const html = `<!doctype html>
           );
           const operatorPrompt = String(options?.userPrompt || "").trim();
           const projectDescription = String(normalizedProject.description || "").trim();
+          const missionInstructions = getPlaygroundProjectMissionInstructions(normalizedProject);
 
           return [
             "You are running Mission Control for this software project.",
@@ -35448,9 +35486,12 @@ const html = `<!doctype html>
             "Always use the Task Management skill for releases, tasks, subtasks, blockers, comments, and other planning mutations instead of only describing them in prose.",
             "Always use the Computer Agents skill for live discovery of agents, environments, and skills instead of inventing IDs or writing raw curl requests.",
             "Project: " + (normalizedProject.name || "Untitled Project"),
-            projectDescription
+            missionInstructions
+              ? ("Mission instructions:" + newline + missionInstructions)
+              : "Mission instructions: None provided.",
+            missionInstructions && projectDescription && missionInstructions !== projectDescription
               ? ("Project instructions / description:" + newline + projectDescription)
-              : "Project instructions / description: None provided.",
+              : "",
             projectAttachmentsSection,
             runAttachmentsSection,
             availableReleasesSection,
@@ -36838,6 +36879,49 @@ const html = `<!doctype html>
           applyProjectDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
+        function applyMissionControlInstructionsSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setMissionControlInstructionsDraft(nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = missionControlInstructionsTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeTaskDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleMissionControlInstructionsFormat(formatType) {
+          const textarea = missionControlInstructionsTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(missionControlInstructionsDraft || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyMissionControlInstructionsSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
         function applyMissionControlDocumentSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
           setMissionControlDocumentDraft(nextValue);
           window.requestAnimationFrame(() => {
@@ -36881,10 +36965,20 @@ const html = `<!doctype html>
           applyMissionControlDocumentSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
-        function appendUploadedProjectAttachments(attachments) {
+        async function appendUploadedProjectAttachments(attachments) {
           const normalizedAttachments = normalizePlaygroundTaskAttachmentList(attachments);
           if (!normalizedAttachments.length) {
             return false;
+          }
+          if (missionControlStrategyOpen && selectedProjectId) {
+            const nextAttachments = mergePlaygroundAttachmentLists(selectedProject?.attachments, normalizedAttachments);
+            await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+              projectOverrides: {
+                attachments: nextAttachments,
+              },
+              successMessage: "",
+            });
+            return true;
           }
           setProjectDraft((current) => ({
             ...current,
@@ -36929,7 +37023,7 @@ const html = `<!doctype html>
                 sourcePath: Array.isArray(options.sourcePaths) ? options.sourcePaths[index] : "",
               }));
             }
-            appendUploadedProjectAttachments(uploadedAttachments);
+            await appendUploadedProjectAttachments(uploadedAttachments);
             setProjectAttachmentTransferState((current) => ({
               ...current,
               error: "",
@@ -37102,13 +37196,25 @@ const html = `<!doctype html>
           setProjectPreviewedAttachmentId((current) => current === attachment.id ? "" : attachment.id);
         }
 
-        function handleRemoveProjectAttachment(attachmentId) {
-          const targetAttachment = normalizePlaygroundTaskAttachmentList(projectDraft.attachments).find((attachment) => attachment.id === attachmentId) || null;
+        async function handleRemoveProjectAttachment(attachmentId) {
+          const currentProjectAttachments = normalizePlaygroundTaskAttachmentList(projectAttachmentHostRecord?.attachments);
+          const targetAttachment = currentProjectAttachments.find((attachment) => attachment.id === attachmentId) || null;
           if (!targetAttachment) return;
           revokeTaskAttachmentObjectUrl(targetAttachment.previewUrl);
           revokeTaskAttachmentObjectUrl(targetAttachment.url);
           if (projectPreviewedAttachmentId === attachmentId) {
             setProjectPreviewedAttachmentId("");
+          }
+          if (missionControlStrategyOpen && selectedProjectId) {
+            try {
+              await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+                projectOverrides: {
+                  attachments: currentProjectAttachments.filter((attachment) => attachment.id !== attachmentId),
+                },
+                successMessage: "",
+              });
+            } catch {}
+            return;
           }
           setProjectDraft((current) => ({
             ...current,
@@ -39527,6 +39633,16 @@ const html = `<!doctype html>
         }, [selectedProjectId]);
 
         useEffect(() => {
+          setIsMissionControlInstructionsEditing(false);
+          setMissionControlCommentInputValue("");
+          setMissionControlSaveState({
+            isSaving: false,
+            error: "",
+            message: "",
+          });
+        }, [selectedProjectId]);
+
+        useEffect(() => {
           if (isMissionControlDocumentEditing) {
             return;
           }
@@ -39538,12 +39654,26 @@ const html = `<!doctype html>
           selectedProjectMissionControl.updatedAt,
         ]);
 
+        useEffect(() => {
+          if (isMissionControlInstructionsEditing) {
+            return;
+          }
+          setMissionControlInstructionsDraft(String(selectedProjectMissionInstructions || ""));
+        }, [
+          isMissionControlInstructionsEditing,
+          selectedProjectId,
+          selectedProjectMissionInstructions,
+          selectedProjectMissionControl.instructions,
+          selectedProjectMissionControl.updatedAt,
+        ]);
+
         useLayoutEffect(() => {
           if (!missionControlStrategyOpen) {
             return;
           }
           resizeTaskDescriptionTextarea(missionControlDocumentTextareaRef.current);
-        }, [missionControlDocumentDraft, missionControlStrategyOpen, selectedProjectId]);
+          resizeTaskDescriptionTextarea(missionControlInstructionsTextareaRef.current);
+        }, [missionControlDocumentDraft, missionControlInstructionsDraft, missionControlStrategyOpen, selectedProjectId]);
 
         useEffect(() => {
           if (!missionControlStrategyOpen) {
@@ -39564,6 +39694,7 @@ const html = `<!doctype html>
             }
             frameId = window.requestAnimationFrame(() => {
               resizeTaskDescriptionTextarea(missionControlDocumentTextareaRef.current);
+              resizeTaskDescriptionTextarea(missionControlInstructionsTextareaRef.current);
             });
           };
 
@@ -39595,7 +39726,7 @@ const html = `<!doctype html>
             timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
             observer.disconnect();
           };
-        }, [missionControlDocumentDraft, missionControlStrategyOpen, selectedProjectId]);
+        }, [missionControlDocumentDraft, missionControlInstructionsDraft, missionControlStrategyOpen, selectedProjectId]);
 
         useEffect(() => {
           if (!previewedTaskAttachmentId) return;
@@ -39607,11 +39738,11 @@ const html = `<!doctype html>
 
         useEffect(() => {
           if (!projectPreviewedAttachmentId) return;
-          if (normalizePlaygroundTaskAttachmentList(projectDraft?.attachments).some((attachment) => attachment.id === projectPreviewedAttachmentId)) {
+          if (normalizePlaygroundTaskAttachmentList(projectAttachmentHostRecord?.attachments).some((attachment) => attachment.id === projectPreviewedAttachmentId)) {
             return;
           }
           setProjectPreviewedAttachmentId("");
-        }, [projectDraft?.attachments, projectPreviewedAttachmentId]);
+        }, [projectAttachmentHostRecord?.attachments, projectPreviewedAttachmentId]);
 
         useEffect(() => () => {
           taskAttachmentObjectUrlsRef.current.forEach((url) => {
@@ -41563,7 +41694,7 @@ const html = `<!doctype html>
           };
         }
 
-        async function persistProjectMissionControlRecord(projectId, missionControlRecord) {
+        async function persistProjectMissionControlRecord(projectId, missionControlRecord, options = {}) {
           const normalizedProjectId = String(projectId || "").trim();
           if (!normalizedProjectId) {
             return null;
@@ -41577,10 +41708,25 @@ const html = `<!doctype html>
               name: "Project",
             }
           );
-          const normalizedMissionControlRecord = normalizePlaygroundProjectMissionControlRecord(missionControlRecord);
-          const savePayload = buildPlaygroundProjectSavePayload(baseProject, {
+          const normalizedMissionControlRecord = normalizePlaygroundProjectMissionControlRecord({
+            ...getPlaygroundProjectMissionControlRecord(baseProject),
+            ...(missionControlRecord && typeof missionControlRecord === "object" ? missionControlRecord : {}),
+          });
+          const nextProjectRecord = normalizePlaygroundProjectRecord({
+            ...baseProject,
+            ...(options.projectOverrides && typeof options.projectOverrides === "object" ? options.projectOverrides : {}),
             missionControl: normalizedMissionControlRecord,
           });
+          const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, {
+            missionControl: normalizedMissionControlRecord,
+          });
+          if (!options.quiet) {
+            setMissionControlSaveState({
+              isSaving: true,
+              error: "",
+              message: "",
+            });
+          }
           const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
             method: "PATCH",
             headers: {
@@ -41591,11 +41737,18 @@ const html = `<!doctype html>
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok) {
+            if (!options.quiet) {
+              setMissionControlSaveState({
+                isSaving: false,
+                error: data?.message || data?.error || options.errorMessage || "Failed to update Mission Control.",
+                message: "",
+              });
+            }
             throw new Error(data?.message || data?.error || "Failed to update Mission Control.");
           }
 
           const updatedProject = getPlaygroundProjectResponseRecord(data, {
-            ...baseProject,
+            ...nextProjectRecord,
             missionControl: normalizedMissionControlRecord,
             metadata: savePayload.metadata,
           });
@@ -41605,6 +41758,20 @@ const html = `<!doctype html>
               environments: selectedProjectEnvironments,
               recentThreads: selectedProjectRecentThreads,
               selectImmediately: true,
+            });
+            setProjectDraft((current) => current?.id === updatedProject.id
+              ? normalizePlaygroundProjectRecord({
+                  ...current,
+                  ...updatedProject,
+                })
+              : current
+            );
+          }
+          if (!options.quiet) {
+            setMissionControlSaveState({
+              isSaving: false,
+              error: "",
+              message: options.successMessage || "",
             });
           }
           return updatedProject;
@@ -41621,7 +41788,9 @@ const html = `<!doctype html>
               const nextQueuedSave = missionControlAutosaveQueuedRef.current;
               missionControlAutosaveQueuedRef.current = null;
               try {
-                await persistProjectMissionControlRecord(nextQueuedSave.projectId, nextQueuedSave.record);
+                await persistProjectMissionControlRecord(nextQueuedSave.projectId, nextQueuedSave.record, {
+                  quiet: true,
+                });
               } catch (error) {
                 console.warn("Failed to save Mission Control document", error);
                 break;
@@ -41658,6 +41827,74 @@ const html = `<!doctype html>
             return;
           }
           queueMissionControlAutosave(nextDocument);
+        }
+
+        async function commitMissionControlInstructionsIfDirty() {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          if (!normalizedProjectId) {
+            return;
+          }
+          const nextInstructions = String(missionControlInstructionsDraft || "");
+          const currentInstructions = String(selectedProjectMissionInstructions || "");
+          if (nextInstructions === currentInstructions) {
+            return;
+          }
+          try {
+            await persistProjectMissionControlRecord(normalizedProjectId, {
+              ...selectedProjectMissionControl,
+              instructions: nextInstructions,
+              updatedAt: new Date().toISOString(),
+            }, {
+              successMessage: "",
+            });
+          } catch {}
+        }
+
+        async function handleMissionControlEnvironmentSelectionChange(nextEnvironmentId) {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          const normalizedEnvironmentId = String(nextEnvironmentId || "").trim();
+          if (!normalizedProjectId || !normalizedEnvironmentId || normalizedEnvironmentId === getPlaygroundProjectDefaultEnvironmentId(selectedProject)) {
+            setTaskDetailSelectPopover("");
+            return;
+          }
+          try {
+            await persistProjectMissionControlRecord(normalizedProjectId, selectedProjectMissionControl, {
+              projectOverrides: {
+                defaultEnvironmentId: normalizedEnvironmentId,
+              },
+              successMessage: "Mission updated",
+            });
+          } catch {} finally {
+            setTaskDetailSelectPopover("");
+          }
+        }
+
+        async function handleAddMissionControlComment() {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          const nextCommentBody = String(missionControlCommentInputValue || "").replaceAll(String.fromCharCode(13), "").trim();
+          if (!normalizedProjectId || !nextCommentBody) {
+            return;
+          }
+
+          const createdComment = createPlaygroundTaskCommentRecord(nextCommentBody, {
+            authorType: "user",
+            name: currentUserName || "Computer Agents",
+            avatarUrl: currentUserAvatarUrl || "",
+          });
+          if (!createdComment) {
+            return;
+          }
+
+          try {
+            await persistProjectMissionControlRecord(normalizedProjectId, {
+              ...selectedProjectMissionControl,
+              comments: normalizePlaygroundTaskCommentList(selectedProjectMissionComments.concat(createdComment)),
+              updatedAt: new Date().toISOString(),
+            }, {
+              successMessage: "Comment added",
+            });
+            setMissionControlCommentInputValue("");
+          } catch {}
         }
 
         function openMissionControlStrategySidebar() {
@@ -41839,9 +42076,12 @@ const html = `<!doctype html>
             const threadMessages = await fetchPlaygroundThreadMessages(normalizedThreadId);
             const parsedMissionControl = await resolvePlaygroundMissionControlRecordFromMessages(threadMessages);
             await persistProjectMissionControlRecord(normalizedProjectId, {
+              ...selectedProjectMissionControl,
               ...parsedMissionControl,
               lastThreadId: normalizedThreadId,
               updatedAt: new Date().toISOString(),
+            }, {
+              quiet: true,
             });
             if (selectedProjectId === normalizedProjectId) {
               await loadProjectWorkspace(normalizedProjectId);
@@ -47395,6 +47635,15 @@ const html = `<!doctype html>
 
         function renderTaskDetail() {
           if (missionControlStrategyOpen && selectedProject) {
+            const missionControlProjectAttachments = normalizePlaygroundTaskAttachmentList(selectedProject.attachments);
+            const hasMissionControlProjectAttachments = missionControlProjectAttachments.length > 0;
+            const missionControlDefaultEnvironmentId = getPlaygroundProjectDefaultEnvironmentId(selectedProject);
+            const missionControlDefaultEnvironment = missionControlDefaultEnvironmentId
+              ? availableBacklogEnvironments.find((environment) => environment.id === missionControlDefaultEnvironmentId) || null
+              : null;
+            const missionControlTaskCount = Number(selectedProjectSummary.tasksCount) || 0;
+            const missionControlOpenTaskCount = Number(selectedProjectSummary.openTasksCount) || 0;
+            const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
             return React.createElement("div", { className: "playground-tasks-detail-shell" },
               React.createElement("div", { className: "playground-tasks-detail-main" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
                 React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
@@ -47428,89 +47677,328 @@ const html = `<!doctype html>
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-body" },
-                  String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim()
-                    ? React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
-                        React.createElement("div", { className: "playground-tasks-detail-description" },
-                          React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                            React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy"),
-                            React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                              [
-                                {
-                                  id: "bold",
-                                  label: "Bold",
-                                  icon: Bold,
-                                },
-                                {
-                                  id: "italic",
-                                  label: "Italic",
-                                  icon: Italic,
-                                },
-                                {
-                                  id: "underline",
-                                  label: "Underline",
-                                  icon: Underline,
-                                },
-                                {
-                                  id: "list",
-                                  label: "List",
-                                  icon: List,
-                                },
-                              ].map((action) =>
-                                React.createElement("button", {
-                                  key: action.id,
-                                  type: "button",
-                                  className: "playground-tasks-detail-format-button",
-                                  title: action.label,
-                                  "aria-label": action.label,
-                                  onMouseDown: (event) => event.preventDefault(),
-                                  onClick: () => handleMissionControlDocumentFormat(action.id),
-                                }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isMissionControlDocumentEditing ? " is-editing" : " is-preview") },
-                            !isMissionControlDocumentEditing
-                              ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                                  String(missionControlDocumentDraft || "").trim()
-                                    ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                        content: missionControlDocumentDraft,
-                                        className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                      })
-                                    : React.createElement("div", {
-                                        className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                      }, "Add Strategy here")
-                                )
-                              : null,
-                            React.createElement("textarea", {
-                              ref: missionControlDocumentTextareaRef,
-                              className: "playground-tasks-detail-description-input " + (isMissionControlDocumentEditing ? "is-editing" : "is-preview"),
-                              rows: 1,
-                              placeholder: isMissionControlDocumentEditing ? "Add Strategy here" : "",
-                              value: missionControlDocumentDraft,
-                              onFocus: () => {
-                                setIsMissionControlDocumentEditing(true);
-                              },
-                              onChange: (event) => {
-                                setMissionControlDocumentDraft(event.target.value);
-                                resizeTaskDescriptionTextarea(event.currentTarget);
-                              },
-                              onBlur: () => {
-                                setIsMissionControlDocumentEditing(false);
-                                commitMissionControlDocumentIfDirty();
-                              },
-                            })
+                  React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
+                    React.createElement("div", { className: "playground-tasks-detail-description" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Mission Instructions"),
+                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                          [
+                            { id: "bold", label: "Bold", icon: Bold },
+                            { id: "italic", label: "Italic", icon: Italic },
+                            { id: "underline", label: "Underline", icon: Underline },
+                            { id: "list", label: "List", icon: List },
+                          ].map((action) =>
+                            React.createElement("button", {
+                              key: action.id,
+                              type: "button",
+                              className: "playground-tasks-detail-format-button",
+                              title: action.label,
+                              "aria-label": action.label,
+                              onMouseDown: (event) => event.preventDefault(),
+                              onClick: () => handleMissionControlInstructionsFormat(action.id),
+                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
                           )
                         )
+                      ),
+                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isMissionControlInstructionsEditing ? " is-editing" : " is-preview") },
+                        !isMissionControlInstructionsEditing
+                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                              String(missionControlInstructionsDraft || "").trim()
+                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                    content: missionControlInstructionsDraft,
+                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                  })
+                                : React.createElement("div", {
+                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                  }, "Add mission instructions here")
+                            )
+                          : null,
+                        React.createElement("textarea", {
+                          ref: missionControlInstructionsTextareaRef,
+                          className: "playground-tasks-detail-description-input " + (isMissionControlInstructionsEditing ? "is-editing" : "is-preview"),
+                          rows: 1,
+                          placeholder: isMissionControlInstructionsEditing ? "Add mission instructions here" : "",
+                          value: missionControlInstructionsDraft,
+                          onFocus: () => {
+                            setIsMissionControlInstructionsEditing(true);
+                          },
+                          onChange: (event) => {
+                            setMissionControlInstructionsDraft(event.target.value);
+                            resizeTaskDescriptionTextarea(event.currentTarget);
+                          },
+                          onBlur: async () => {
+                            setIsMissionControlInstructionsEditing(false);
+                            await commitMissionControlInstructionsIfDirty();
+                          },
+                        })
                       )
-                    : React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-tasks-mission-control-empty-state" },
-                        React.createElement("div", { className: "playground-tasks-loading-state" },
-                          React.createElement("div", { className: "playground-tasks-empty-title" }, "No strategy yet"),
-                          React.createElement("div", { className: "playground-tasks-empty-copy" }, "Run Mission Control first to generate the project strategy and backlog plan.")
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-facts" },
+                      React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-tasks-detail-facts-toggle" + (missionControlDetailsCollapsed ? " is-collapsed" : ""),
+                          onClick: () => setMissionControlDetailsCollapsed((current) => !current),
+                          title: missionControlDetailsCollapsed ? "Expand details" : "Collapse details",
+                          "aria-label": missionControlDetailsCollapsed ? "Expand details" : "Collapse details",
+                          "aria-expanded": missionControlDetailsCollapsed ? "false" : "true",
+                        }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
+                      ),
+                      !missionControlDetailsCollapsed
+                        ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Environment"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                renderTaskDetailSelectControl({
+                                  popoverId: "mission-control-environment",
+                                  valueLabel: missionControlDefaultEnvironment?.name || "No environment selected",
+                                  disabled: availableBacklogEnvironments.length === 0,
+                                  isEmpty: !missionControlDefaultEnvironmentId,
+                                  menuClassName: "playground-tasks-toolbar-popup-menu-environment",
+                                  children: availableBacklogEnvironments.length > 0
+                                    ? availableBacklogEnvironments.map((environment) =>
+                                        renderTaskDetailSelectOptionRow({
+                                          key: environment.id,
+                                          label: environment.name + (environment.isDefault ? " (Default)" : ""),
+                                          selected: missionControlDefaultEnvironmentId === environment.id,
+                                          onClick: () => {
+                                            void handleMissionControlEnvironmentSelectionChange(environment.id);
+                                          },
+                                        })
+                                      )
+                                    : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available."),
+                                })
+                              )
+                            ),
+                            React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Number of tasks"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                React.createElement("div", { className: "playground-tasks-detail-fact-button" }, String(missionControlTaskCount))
+                              )
+                            ),
+                            React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Open tasks"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                React.createElement("div", { className: "playground-tasks-detail-fact-button" }, String(missionControlOpenTaskCount))
+                              )
+                            )
+                          )
+                        : null
+                    ),
+                    React.createElement("div", { className: "playground-tasks-attachments playground-tasks-project-modal-attachments" },
+                      React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
+                        React.createElement("div", { className: "playground-tasks-attachments-actions" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                            onClick: openProjectEnvironmentFilePicker,
+                            disabled: projectAttachmentTransferState.isProcessing || !activeProjectAttachmentEnvironmentId,
+                            title: activeProjectAttachmentEnvironmentId
+                              ? "Add files from " + (activeProjectAttachmentEnvironment?.name || "the selected environment")
+                              : "Select an environment first",
+                          }, "From Environment")
+                        )
+                      ),
+                      React.createElement("input", {
+                        ref: projectAttachmentInputRef,
+                        type: "file",
+                        multiple: true,
+                        hidden: true,
+                        onChange: (event) => void handleProjectAttachmentInputChange(event),
+                      }),
+                      React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+                        React.createElement("div", {
+                          className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isProjectAttachmentDragging ? " dragging" : "") + (hasMissionControlProjectAttachments ? " is-filled" : ""),
+                          onDragOver: (event) => {
+                            event.preventDefault();
+                            if (!activeProjectAttachmentEnvironmentId) {
+                              return;
+                            }
+                            setIsProjectAttachmentDragging(true);
+                          },
+                          onDragLeave: (event) => {
+                            if (event.currentTarget.contains(event.relatedTarget)) {
+                              return;
+                            }
+                            setIsProjectAttachmentDragging(false);
+                          },
+                          onDrop: (event) => void handleProjectAttachmentDrop(event),
+                        },
+                          hasMissionControlProjectAttachments
+                            ? React.createElement(React.Fragment, null,
+                                React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                                  React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                                  React.createElement("span", null, isProjectAttachmentDragging ? "Drop files here" : "Drop files to attach, or"),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-tasks-attachments-browse",
+                                    onClick: openProjectAttachmentPicker,
+                                  }, "browse.")
+                                ),
+                                React.createElement("div", { className: "runner-attachments" },
+                                  missionControlProjectAttachments.map((attachment) =>
+                                    renderTaskAttachmentChip(attachment, {
+                                      removable: true,
+                                      activeAttachmentId: projectPreviewedAttachmentId,
+                                      onPreview: handleProjectAttachmentPreviewToggle,
+                                      onRemove: handleRemoveProjectAttachment,
+                                    })
+                                  )
+                                )
+                              )
+                            : React.createElement("button", {
+                                type: "button",
+                                className: "playground-tasks-attachments-empty-button",
+                                onClick: openProjectAttachmentPicker,
+                              },
+                                React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                                React.createElement("span", { className: "tb-popup-dropzone-title" }, isProjectAttachmentDragging ? "Drop files here" : "Drag & drop files here"),
+                                React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
+                              )
+                        )
+                      ),
+                      projectAttachmentTransferState.isProcessing
+                        ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
+                        : null,
+                      projectAttachmentTransferState.error
+                        ? React.createElement("div", { className: "playground-environments-error" }, projectAttachmentTransferState.error)
+                        : null
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-description" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy"),
+                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                          [
+                            { id: "bold", label: "Bold", icon: Bold },
+                            { id: "italic", label: "Italic", icon: Italic },
+                            { id: "underline", label: "Underline", icon: Underline },
+                            { id: "list", label: "List", icon: List },
+                          ].map((action) =>
+                            React.createElement("button", {
+                              key: action.id,
+                              type: "button",
+                              className: "playground-tasks-detail-format-button",
+                              title: action.label,
+                              "aria-label": action.label,
+                              onMouseDown: (event) => event.preventDefault(),
+                              onClick: () => handleMissionControlDocumentFormat(action.id),
+                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isMissionControlDocumentEditing ? " is-editing" : " is-preview") },
+                        !isMissionControlDocumentEditing
+                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                              hasStrategyDocument
+                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                    content: missionControlDocumentDraft,
+                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                  })
+                                : React.createElement("div", {
+                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                  }, "Run Mission Control first to generate the project strategy and backlog plan.")
+                            )
+                          : null,
+                        React.createElement("textarea", {
+                          ref: missionControlDocumentTextareaRef,
+                          className: "playground-tasks-detail-description-input " + (isMissionControlDocumentEditing ? "is-editing" : "is-preview"),
+                          rows: 1,
+                          placeholder: isMissionControlDocumentEditing ? "Add Strategy here" : "",
+                          value: missionControlDocumentDraft,
+                          onFocus: () => {
+                            setIsMissionControlDocumentEditing(true);
+                          },
+                          onChange: (event) => {
+                            setMissionControlDocumentDraft(event.target.value);
+                            resizeTaskDescriptionTextarea(event.currentTarget);
+                          },
+                          onBlur: () => {
+                            setIsMissionControlDocumentEditing(false);
+                            commitMissionControlDocumentIfDirty();
+                          },
+                        })
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-tasks-comments" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Comments"),
+                      selectedProjectMissionComments.length > 0
+                        ? React.createElement("div", { className: "playground-tasks-comments-list" },
+                            selectedProjectMissionComments.map((comment) =>
+                              React.createElement("div", {
+                                key: comment.id,
+                                className: "playground-tasks-comment",
+                              },
+                                renderTaskCommentAvatar(comment, "playground-tasks-comment-avatar"),
+                                React.createElement("div", { className: "playground-tasks-comment-body" },
+                                  React.createElement("div", { className: "playground-tasks-comment-meta" },
+                                    React.createElement("span", { className: "playground-tasks-comment-author" }, getTaskCommentDisplayName(comment)),
+                                    React.createElement("span", { className: "playground-tasks-comment-time" }, formatRelativeThreadTime(comment.createdAt) || formatPlaygroundFileDate(comment.createdAt))
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-comment-text" }, comment.text)
+                                )
+                              )
+                            )
+                          )
+                        : React.createElement("div", { className: "playground-tasks-secondary-copy playground-tasks-comment-empty" }, "No comments yet.")
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-comment-dock" },
+                    missionControlSaveState.error
+                      ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, missionControlSaveState.error)
+                      : missionControlSaveState.isSaving
+                        ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Saving changes...")
+                        : missionControlSaveState.message
+                          ? React.createElement("div", { className: "playground-environments-success playground-tasks-comment-feedback" }, missionControlSaveState.message)
+                          : null,
+                    React.createElement("div", { className: "playground-tasks-comment-runner" },
+                      React.createElement("div", { className: "playground-tasks-comment-bar" },
+                        React.createElement("textarea", {
+                          rows: 1,
+                          className: "playground-tasks-comment-input",
+                          placeholder: "Add a comment",
+                          value: missionControlCommentInputValue,
+                          onChange: (event) => {
+                            setMissionControlCommentInputValue(event.target.value);
+                            resizeTaskCommentTextarea(event.currentTarget);
+                          },
+                          onKeyDown: (event) => {
+                            if (event.key === "Enter" && !event.shiftKey) {
+                              event.preventDefault();
+                              void handleAddMissionControlComment();
+                            }
+                          },
+                        }),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-tasks-comment-send-button",
+                          onClick: () => void handleAddMissionControlComment(),
+                          disabled: missionControlSaveState.isSaving || !String(missionControlCommentInputValue || "").trim(),
+                          "aria-label": "Send comment",
+                          title: "Send comment",
+                        },
+                          React.createElement(ArrowUp, { className: "playground-tasks-comment-send-icon", strokeWidth: 1.9 })
                         )
                       )
+                    )
+                  )
                 )
               ),
-              React.createElement("div", { className: "playground-tasks-detail-preview-pane" })
+              React.createElement("div", { className: "playground-tasks-detail-preview-pane" },
+                previewedProjectAttachment
+                  ? React.createElement("div", { className: "tb-runner-document-preview-host tb-runner-document-preview-host-inline playground-tasks-detail-preview-host playground-tasks-project-modal-preview" },
+                      React.createElement(RunnerDocumentPreviewDrawer, {
+                        attachment: previewedProjectAttachment,
+                        backendUrl,
+                        requestHeaders,
+                        inline: true,
+                        onClose: () => setProjectPreviewedAttachmentId(""),
+                        showResizeHandle: false,
+                      })
+                    )
+                  : null
+              )
             );
           }
 
