@@ -2,6 +2,7 @@ import { CSSProperties, ChangeEvent, Fragment, KeyboardEvent, MouseEvent, Pointe
 import { createPortal } from "react-dom";
 import {
   Bookmark as LucideBookmark,
+  Bot as LucideBot,
   Brain as LucideBrain,
   Calendar as LucideCalendar,
   Check as LucideCheck,
@@ -67,7 +68,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isDeepResearchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -204,6 +205,18 @@ interface RunnerTaskPreview {
   environmentName?: string;
   isDeleted?: boolean;
 }
+
+type RunnerTurnSummaryPreviewItem =
+  | {
+      id: string;
+      kind: "attachment";
+      attachment: RunnerTurnAttachment;
+    }
+  | {
+      id: string;
+      kind: "resource";
+      resource: RunnerCreatedResourcePreview;
+    };
 
 interface PendingEditConfirmation {
   turnId: string;
@@ -718,6 +731,7 @@ export interface RunnerChatProps {
   threadTaskPreview?: RunnerTaskPreview | null;
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
+  onResourcePreviewClick?: (resource: RunnerCreatedResourcePreview) => void;
   subagentDetailPortalTarget?: Element | null;
   disableSubagentDetailDrawer?: boolean;
   externalRunRequest?: {
@@ -1289,6 +1303,96 @@ function renderRunnerTaskPreviewCard(
   );
 }
 
+function getRunnerSummaryResourceSubtitle(resource: RunnerCreatedResourcePreview): string {
+  if (resource.resourceType === "agent") {
+    return [resource.model, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
+  }
+  if (resource.resourceType === "skill") {
+    return [resource.category, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
+  }
+  if (resource.resourceType === "environment") {
+    return [resource.projectName, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
+  }
+  return [resource.status, resource.projectName].filter(Boolean).join(" · ");
+}
+
+function renderRunnerSummaryResourceIcon(resource: RunnerCreatedResourcePreview) {
+  if (resource.resourceType === "agent") {
+    return <LucideBot className="runner-summary-resource-icon" strokeWidth={1.8} />;
+  }
+  if (resource.resourceType === "skill") {
+    return <LucideCpu className="runner-summary-resource-icon" strokeWidth={1.8} />;
+  }
+  if (resource.resourceType === "environment") {
+    return <LucideCloud className="runner-summary-resource-icon" strokeWidth={1.8} />;
+  }
+  return <LucideCalendar className="runner-summary-resource-icon" strokeWidth={1.8} />;
+}
+
+function getRunnerSummaryResourceChipVerb(resource: RunnerCreatedResourcePreview): string {
+  return resource.mutationVerb === "updated" ? "Updated" : "Created";
+}
+
+function renderRunnerSummaryResourceChip(
+  resource: RunnerCreatedResourcePreview,
+  options: { onClick?: (resource: RunnerCreatedResourcePreview) => void } = {},
+) {
+  const typeLabel =
+    resource.resourceType === "agent"
+      ? "Agent"
+      : resource.resourceType === "skill"
+        ? "Skill"
+        : resource.resourceType === "environment"
+          ? "Environment"
+          : "Release";
+  const subtitle = getRunnerSummaryResourceSubtitle(resource);
+  const isAgent = resource.resourceType === "agent";
+  const className = `runner-summary-resource-chip is-${resource.resourceType} ${options.onClick ? "is-clickable" : ""}`.trim();
+  const title = isAgent
+    ? `${getRunnerSummaryResourceChipVerb(resource)} ${resource.name}`.trim()
+    : [typeLabel, resource.name, subtitle].filter(Boolean).join(" · ");
+  const content = isAgent ? (
+    <>
+      <span className={`runner-summary-resource-icon-slot is-${resource.resourceType}`.trim()} aria-hidden="true">
+        {renderRunnerSummaryResourceIcon(resource)}
+      </span>
+      <span className="runner-summary-resource-inline-text">
+        {getRunnerSummaryResourceChipVerb(resource)} {resource.name}
+      </span>
+    </>
+  ) : (
+    <>
+      <span className={`runner-summary-resource-icon-slot is-${resource.resourceType}`.trim()} aria-hidden="true">
+        {renderRunnerSummaryResourceIcon(resource)}
+      </span>
+      <span className="runner-summary-resource-copy">
+        <span className="runner-summary-resource-label">{typeLabel}</span>
+        <span className="runner-summary-resource-name">{resource.name}</span>
+        {subtitle ? <span className="runner-summary-resource-meta">{subtitle}</span> : null}
+      </span>
+    </>
+  );
+
+  if (options.onClick) {
+    return (
+      <button
+        type="button"
+        className={className}
+        title={title}
+        onClick={() => options.onClick?.(resource)}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className={className} title={title}>
+      {content}
+    </div>
+  );
+}
+
 function formatThreadContextCommandText(action: RunnerChatThreadContextAction, prompt?: string): string {
   const trimmedPrompt = prompt?.trim();
   if (trimmedPrompt && threadContextActionAllowsPrompt(action)) {
@@ -1551,6 +1655,43 @@ function collectTurnSummaryPreviewAttachments(
   options: { backendUrl?: string; environmentId?: string | null }
 ): RunnerTurnAttachment[] {
   return collectTurnFilePreviews(logs).map((file) => buildTurnSummaryPreviewAttachment(file, options));
+}
+
+function collectTurnSummaryPreviewResources(logs: RunnerLog[]): RunnerCreatedResourcePreview[] {
+  const resources = logs.flatMap((log) => {
+    const nextResources: RunnerCreatedResourcePreview[] = [];
+    if (isComputerAgentsMutationLog(log)) {
+      nextResources.push(
+        ...collectComputerAgentsCreatedResources(log).filter((resource) => resource.resourceType === "agent")
+      );
+    }
+    return nextResources;
+  });
+  const nextByKey = new Map<string, RunnerCreatedResourcePreview>();
+  for (const resource of resources) {
+    const key = `${resource.resourceType}:${String(resource.id || resource.name || "").trim().toLowerCase()}`;
+    if (!key || key.endsWith(":")) continue;
+    const existing = nextByKey.get(key);
+    nextByKey.set(key, existing ? { ...existing, ...resource } : resource);
+  }
+  return Array.from(nextByKey.values());
+}
+
+function collectTurnSummaryPreviewItems(
+  logs: RunnerLog[],
+  options: { backendUrl?: string; environmentId?: string | null }
+): RunnerTurnSummaryPreviewItem[] {
+  const resources = collectTurnSummaryPreviewResources(logs).map((resource) => ({
+    id: `resource:${resource.resourceType}:${resource.id}`,
+    kind: "resource" as const,
+    resource,
+  }));
+  const attachments = collectTurnSummaryPreviewAttachments(logs, options).map((attachment) => ({
+    id: `attachment:${attachment.id}`,
+    kind: "attachment" as const,
+    attachment,
+  }));
+  return [...resources, ...attachments];
 }
 
 function collectThreadRetainedSummaryPreviewPaths(turns: RunnerTurn[]): Set<string> {
@@ -4889,6 +5030,7 @@ export function RunnerChat({
   threadTaskPreview = null,
   activeTaskPreviewId = null,
   onTaskPreviewClick,
+  onResourcePreviewClick,
   subagentDetailPortalTarget = null,
   disableSubagentDetailDrawer = false,
   externalRunRequest = null,
@@ -11948,11 +12090,12 @@ export function RunnerChat({
                 turn.presentation === "context-action-notice"
                   ? turn.logs.find((log) => log.eventType === "action_summary") || null
                   : null;
-              const summaryPreviewAttachments = collectTurnSummaryPreviewAttachments(turn.logs, {
+              const summaryPreviewItems = collectTurnSummaryPreviewItems(turn.logs, {
                 backendUrl: normalizedBackendUrl,
                 environmentId: summaryPreviewEnvironmentId,
-              }).filter((attachment) => {
-                const normalizedPath = normalizeRunnerPreviewPath(attachment.workspacePath || "");
+              }).filter((item) => {
+                if (item.kind !== "attachment") return true;
+                const normalizedPath = normalizeRunnerPreviewPath(item.attachment.workspacePath || "");
                 return !normalizedPath || retainedSummaryPreviewPaths.has(normalizedPath);
               });
               const visibleTimelineItemCount = visibleTimelineItemCountsByTurn[turn.id];
@@ -12174,11 +12317,13 @@ export function RunnerChat({
                         className="tb-turn-summary tb-thread-history-anchor"
                         style={responseStyle}
                       >
-                        {summaryPreviewAttachments.length > 0 ? (
-                          <div className="runner-attachments-summary-strip" aria-label="Changed files">
-                            {summaryPreviewAttachments.map((attachment) => (
-                              <Fragment key={`${turn.id}:${attachment.id}`}>
-                                {renderAttachmentPreviewChip(attachment)}
+                        {summaryPreviewItems.length > 0 ? (
+                          <div className="runner-attachments-summary-strip" aria-label="Created resources and changed files">
+                            {summaryPreviewItems.map((item) => (
+                              <Fragment key={`${turn.id}:${item.id}`}>
+                                {item.kind === "attachment"
+                                  ? renderAttachmentPreviewChip(item.attachment)
+                                  : renderRunnerSummaryResourceChip(item.resource, { onClick: onResourcePreviewClick })}
                               </Fragment>
                             ))}
                           </div>
@@ -12340,11 +12485,13 @@ export function RunnerChat({
                       className="tb-turn-summary tb-thread-history-anchor"
                       style={responseStyle}
                     >
-                      {summaryPreviewAttachments.length > 0 ? (
-                        <div className="runner-attachments-summary-strip" aria-label="Changed files">
-                          {summaryPreviewAttachments.map((attachment) => (
-                            <Fragment key={`${turn.id}:${attachment.id}`}>
-                              {renderAttachmentPreviewChip(attachment)}
+                      {summaryPreviewItems.length > 0 ? (
+                        <div className="runner-attachments-summary-strip" aria-label="Created resources and changed files">
+                          {summaryPreviewItems.map((item) => (
+                            <Fragment key={`${turn.id}:${item.id}`}>
+                              {item.kind === "attachment"
+                                ? renderAttachmentPreviewChip(item.attachment)
+                                : renderRunnerSummaryResourceChip(item.resource, { onClick: onResourcePreviewClick })}
                             </Fragment>
                           ))}
                         </div>

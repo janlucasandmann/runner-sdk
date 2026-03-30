@@ -1960,6 +1960,127 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   align-content: flex-start;
 }
 
+.tb-runner-chat .runner-summary-resource-chip {
+  min-width: 0;
+  max-width: min(100%, 280px);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  appearance: none;
+  font: inherit;
+  text-align: left;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.tb-runner-chat .runner-summary-resource-chip.is-clickable {
+  cursor: pointer;
+}
+
+.tb-runner-chat .runner-summary-resource-chip.is-clickable:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tb-runner-chat .runner-summary-resource-chip.is-clickable:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.2);
+  outline-offset: 1px;
+}
+
+.tb-runner-chat .runner-summary-resource-icon-slot {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.tb-runner-chat .runner-summary-resource-icon-slot.is-agent {
+  background: rgba(95, 147, 255, 0.16);
+  color: rgba(167, 200, 255, 0.98);
+}
+
+.tb-runner-chat .runner-summary-resource-icon-slot.is-skill {
+  background: rgba(165, 126, 255, 0.16);
+  color: rgba(219, 204, 255, 0.98);
+}
+
+.tb-runner-chat .runner-summary-resource-icon-slot.is-environment {
+  background: rgba(74, 194, 138, 0.16);
+  color: rgba(173, 242, 208, 0.98);
+}
+
+.tb-runner-chat .runner-summary-resource-icon-slot.is-release {
+  background: rgba(255, 196, 107, 0.16);
+  color: rgba(255, 226, 177, 0.98);
+}
+
+.tb-runner-chat .runner-summary-resource-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.tb-runner-chat .runner-summary-resource-chip.is-agent .runner-summary-resource-icon-slot {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.98);
+}
+
+.tb-runner-chat .runner-summary-resource-chip.is-agent .runner-summary-resource-icon {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.98);
+}
+
+.tb-runner-chat .runner-summary-resource-inline-text {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.94);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-runner-chat .runner-summary-resource-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tb-runner-chat .runner-summary-resource-label,
+.tb-runner-chat .runner-summary-resource-meta {
+  font-size: 10px;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.54);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-runner-chat .runner-summary-resource-name {
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .tb-runner-chat .tb-log-group-stack {
   display: flex;
   flex-direction: column;
@@ -2021,6 +2142,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-log-card-small-icon-browser {
   transform: translateX(-1px);
+}
+
+.tb-runner-chat .tb-log-card-small-icon-runner {
+  width: auto;
+  height: 14px;
+  display: block;
+  object-fit: contain;
 }
 
 .tb-runner-chat .tb-log-card-small-icon-subagent {
@@ -2976,6 +3104,144 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-log-task-create-assignee.is-unassigned {
   color: rgba(255, 255, 255, 0.42);
+}
+
+.tb-runner-chat .tb-log-resource-create-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-log-resource-create-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.tb-runner-chat .tb-log-resource-create-leading {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.tb-runner-chat .tb-log-resource-create-icon-slot {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tb-runner-chat .tb-log-resource-create-icon-slot.is-agent {
+  background: rgba(95, 147, 255, 0.16);
+  color: rgba(167, 200, 255, 0.98);
+}
+
+.tb-runner-chat .tb-log-resource-create-icon-slot.is-skill {
+  background: rgba(165, 126, 255, 0.16);
+  color: rgba(219, 204, 255, 0.98);
+}
+
+.tb-runner-chat .tb-log-resource-create-icon-slot.is-environment {
+  background: rgba(74, 194, 138, 0.16);
+  color: rgba(173, 242, 208, 0.98);
+}
+
+.tb-runner-chat .tb-log-resource-create-icon-slot.is-release {
+  background: rgba(255, 196, 107, 0.16);
+  color: rgba(255, 226, 177, 0.98);
+}
+
+.tb-runner-chat .tb-log-resource-create-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.tb-runner-chat .tb-log-resource-create-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tb-runner-chat .tb-log-resource-create-title-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-log-resource-create-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.94);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-runner-chat .tb-log-resource-create-type-pill,
+.tb-runner-chat .tb-log-resource-create-status {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-log-resource-create-type-pill {
+  color: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.tb-runner-chat .tb-log-resource-create-description,
+.tb-runner-chat .tb-log-resource-create-meta {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.tb-runner-chat .tb-log-resource-create-description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.tb-runner-chat .tb-log-resource-create-status.is-planned {
+  color: rgba(102, 166, 255, 1);
+  background: rgba(102, 166, 255, 0.15);
+}
+
+.tb-runner-chat .tb-log-resource-create-status.is-active,
+.tb-runner-chat .tb-log-resource-create-status.is-in_progress {
+  color: rgba(57, 184, 119, 1);
+  background: rgba(57, 184, 119, 0.15);
+}
+
+.tb-runner-chat .tb-log-resource-create-status.is-completed,
+.tb-runner-chat .tb-log-resource-create-status.is-done {
+  color: rgba(170, 170, 170, 1);
+  background: rgba(170, 170, 170, 0.16);
 }
 
 .tb-runner-chat .tb-log-file-preview-meta {

@@ -5,6 +5,7 @@ import {
   Bookmark,
   Bot,
   Brain,
+  Calendar,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -14,6 +15,7 @@ import {
   ChevronsUp,
   Cloud,
   Copy,
+  Cpu,
   Equal,
   Eye,
   FileImage,
@@ -54,6 +56,7 @@ import { RunnerMarkdown, stripRunnerSystemTags } from "./runner-markdown.js";
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
+const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
 
 function sanitizeSubagentDisplayText(value: string | null | undefined): string {
   return stripRunnerSystemTags(String(value || ""))
@@ -948,6 +951,26 @@ type RunnerTaskManagementCreatedTaskPreview = {
   taskColor?: string | null;
 };
 
+export type RunnerCreatedResourceType = "agent" | "skill" | "environment" | "release";
+
+export type RunnerCreatedResourcePreview = {
+  id: string;
+  name: string;
+  resourceType: RunnerCreatedResourceType;
+  mutationVerb?: "created" | "updated" | null;
+  description?: string | null;
+  model?: string | null;
+  category?: string | null;
+  projectId?: string | null;
+  projectName?: string | null;
+  isDefault?: boolean;
+  startAt?: string | null;
+  endAt?: string | null;
+  status?: string | null;
+  taskCount?: number | null;
+  openTaskCount?: number | null;
+};
+
 const RUNNER_PLAYGROUND_HUMAN_ME_ID = "__runner_playground_human_me__";
 const runnerTaskManagementPreviewCache = new Map<string, RunnerTaskManagementCreatedTaskPreview>();
 const runnerTaskManagementProjectTicketMapCache = new Map<string, Record<string, string>>();
@@ -1243,7 +1266,7 @@ function normalizeTaskManagementCreatePreview(value: unknown): RunnerTaskManagem
     || titleParts.ticketNumber
     || null
   );
-  const taskType =
+  const explicitTaskType =
     asOptionalTrimmedString(record.taskType)
     || asOptionalTrimmedString(record.task_type)
     || (asOptionalTrimmedString(record.type) && ["task", "subtask"].includes(String(record.type).trim().toLowerCase()) ? asOptionalTrimmedString(record.type) : undefined)
@@ -1284,7 +1307,12 @@ function normalizeTaskManagementCreatePreview(value: unknown): RunnerTaskManagem
     || asOptionalTrimmedString(record.project_name)
     || null;
   const normalizedTitle = titleParts.title || id;
-  const normalizedTaskType = normalizeTaskManagementPreviewType(taskType);
+  const normalizedTaskType = explicitTaskType ? normalizeTaskManagementPreviewType(explicitTaskType) : null;
+  const normalizedParentTaskId =
+    asOptionalTrimmedString(record.parentTaskId)
+    || asOptionalTrimmedString(record.parent_task_id)
+    || asOptionalTrimmedString(runnerPlayground?.parentTaskId)
+    || null;
   const normalizedDependencyIds =
     Array.isArray(record.dependencyIds)
       ? record.dependencyIds
@@ -1344,7 +1372,7 @@ function normalizeTaskManagementCreatePreview(value: unknown): RunnerTaskManagem
     ticketNumber,
     status: normalizedStatus,
     priority: normalizedPriority,
-    taskType: normalizedTaskType,
+    taskType: normalizedTaskType || (normalizedParentTaskId ? "subtask" : "task"),
     assigneeAgentId,
     assigneeName,
     taskColor,
@@ -1498,6 +1526,561 @@ function collectTaskManagementCreatedTasks(log: RunnerLog): RunnerTaskManagement
   }
 
   return [];
+}
+
+function normalizeCreatedResourceType(value: unknown): RunnerCreatedResourceType | null {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === "agent" || normalized === "agents") return "agent";
+  if (normalized === "skill" || normalized === "skills") return "skill";
+  if (normalized === "environment" || normalized === "environments" || normalized === "env" || normalized === "envs") return "environment";
+  if (normalized === "release" || normalized === "releases") return "release";
+  return null;
+}
+
+function inferCreatedResourceTypeFromId(value: unknown): RunnerCreatedResourceType | null {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized.startsWith("agent_")) return "agent";
+  if (normalized.startsWith("skill_")) return "skill";
+  if (normalized.startsWith("env_") || normalized.startsWith("environment_")) return "environment";
+  if (normalized.startsWith("release_")) return "release";
+  return null;
+}
+
+function getCreatedResourceTypeLabel(resourceType: RunnerCreatedResourceType): string {
+  if (resourceType === "agent") return "Agent";
+  if (resourceType === "skill") return "Skill";
+  if (resourceType === "environment") return "Environment";
+  return "Release";
+}
+
+function renderCreatedResourceIcon(resourceType: RunnerCreatedResourceType, className: string) {
+  if (resourceType === "agent") return <Bot className={className} strokeWidth={1.8} />;
+  if (resourceType === "skill") return <Cpu className={className} strokeWidth={1.8} />;
+  if (resourceType === "environment") return <HardDrive className={className} strokeWidth={1.8} />;
+  return <Calendar className={className} strokeWidth={1.8} />;
+}
+
+function dedupeCreatedResourcePreviews(previews: RunnerCreatedResourcePreview[]): RunnerCreatedResourcePreview[] {
+  const next = new Map<string, RunnerCreatedResourcePreview>();
+  for (const preview of previews) {
+    const key = `${preview.resourceType}:${String(preview.id || preview.name || "").trim().toLowerCase()}`;
+    if (!key || key.endsWith(":")) continue;
+    const existing = next.get(key);
+    next.set(key, existing ? {
+      ...existing,
+      ...preview,
+      id: preview.id || existing.id,
+      name: preview.name || existing.name,
+      description: preview.description || existing.description || null,
+      model: preview.model || existing.model || null,
+      category: preview.category || existing.category || null,
+      projectId: preview.projectId || existing.projectId || null,
+      projectName: preview.projectName || existing.projectName || null,
+      startAt: preview.startAt || existing.startAt || null,
+      endAt: preview.endAt || existing.endAt || null,
+      status: preview.status || existing.status || null,
+      taskCount: typeof preview.taskCount === "number" ? preview.taskCount : existing.taskCount ?? null,
+      openTaskCount: typeof preview.openTaskCount === "number" ? preview.openTaskCount : existing.openTaskCount ?? null,
+      isDefault: preview.isDefault || existing.isDefault,
+    } : preview);
+  }
+  return Array.from(next.values());
+}
+
+function normalizeCreatedResourcePreview(
+  value: unknown,
+  fallbackType?: RunnerCreatedResourceType | null,
+): RunnerCreatedResourcePreview | null {
+  const record = asObjectRecord(value);
+  if (!record) return null;
+
+  const metadata = asObjectRecord(record.metadata);
+  const normalizedType =
+    normalizeCreatedResourceType(record.resourceType)
+    || normalizeCreatedResourceType(record.object)
+    || normalizeCreatedResourceType(record.type)
+    || fallbackType
+    || inferCreatedResourceTypeFromId(record.id);
+  if (!normalizedType) return null;
+
+  const id =
+    asOptionalTrimmedString(record.id)
+    || asOptionalTrimmedString(record.environmentId)
+    || asOptionalTrimmedString(record.environment_id)
+    || asOptionalTrimmedString(record.releaseId)
+    || asOptionalTrimmedString(record.release_id)
+    || "";
+  const name =
+    asOptionalTrimmedString(record.name)
+    || asOptionalTrimmedString(record.title)
+    || asOptionalTrimmedString(record.label)
+    || "";
+  if (!id && !name) {
+    return null;
+  }
+
+  return {
+    id: id || `${normalizedType}:${name}`,
+    name: name || getCreatedResourceTypeLabel(normalizedType),
+    resourceType: normalizedType,
+    description:
+      asOptionalTrimmedString(record.description)
+      || asOptionalTrimmedString(record.instructions)
+      || asOptionalTrimmedString(record.markdown)
+      || asOptionalTrimmedString(record.documentation)
+      || null,
+    model:
+      asOptionalTrimmedString(record.model)
+      || asOptionalTrimmedString(record.deepResearchModel)
+      || null,
+    category:
+      asOptionalTrimmedString(record.category)
+      || null,
+    projectId:
+      asOptionalTrimmedString(record.projectId)
+      || asOptionalTrimmedString(record.project_id)
+      || asOptionalTrimmedString(metadata?.projectId)
+      || asOptionalTrimmedString(metadata?.project_id)
+      || null,
+    projectName:
+      asOptionalTrimmedString(record.projectName)
+      || asOptionalTrimmedString(record.project_name)
+      || null,
+    isDefault: Boolean(record.isDefault),
+    startAt: asOptionalTrimmedString(record.startAt) || null,
+    endAt: asOptionalTrimmedString(record.endAt) || null,
+    status: asOptionalTrimmedString(record.status) || null,
+    taskCount: Number.isFinite(record.taskCount) ? Number(record.taskCount) : null,
+    openTaskCount: Number.isFinite(record.openTaskCount) ? Number(record.openTaskCount) : null,
+  };
+}
+
+function extractCreatedResourcePreviewsFromValue(
+  value: unknown,
+  fallbackType?: RunnerCreatedResourceType | null,
+): RunnerCreatedResourcePreview[] {
+  const previews: RunnerCreatedResourcePreview[] = [];
+  const visited = new WeakSet<object>();
+
+  function visit(current: unknown, hintedType?: RunnerCreatedResourceType | null, depth = 0) {
+    if (!current || depth > 6) return;
+    if (Array.isArray(current)) {
+      current.forEach((item) => visit(item, hintedType, depth + 1));
+      return;
+    }
+    if (typeof current === "string") {
+      const trimmed = current.trim();
+      if ((trimmed.startsWith("{") || trimmed.startsWith("[")) && trimmed.length > 1) {
+        try {
+          visit(JSON.parse(trimmed), hintedType, depth + 1);
+        } catch {}
+      }
+      return;
+    }
+    const record = asObjectRecord(current);
+    if (!record) return;
+    if (visited.has(record)) return;
+    visited.add(record);
+
+    if (record.agent && typeof record.agent === "object") visit(record.agent, "agent", depth + 1);
+    if (record.skill && typeof record.skill === "object") visit(record.skill, "skill", depth + 1);
+    if (record.environment && typeof record.environment === "object") visit(record.environment, "environment", depth + 1);
+    if (record.release && typeof record.release === "object") visit(record.release, "release", depth + 1);
+    if (Array.isArray(record.agents)) visit(record.agents, "agent", depth + 1);
+    if (Array.isArray(record.skills)) visit(record.skills, "skill", depth + 1);
+    if (Array.isArray(record.environments)) visit(record.environments, "environment", depth + 1);
+    if (Array.isArray(record.releases)) visit(record.releases, "release", depth + 1);
+
+    const directPreview = normalizeCreatedResourcePreview(record, hintedType || fallbackType || null);
+    if (directPreview) {
+      previews.push(directPreview);
+    }
+
+    for (const nestedValue of Object.values(record)) {
+      if (nestedValue && typeof nestedValue === "object") {
+        visit(nestedValue, null, depth + 1);
+      }
+    }
+  }
+
+  visit(value, fallbackType || null, 0);
+  return dedupeCreatedResourcePreviews(previews);
+}
+
+function extractCreatedResourcePreviewsFromText(
+  text: string,
+  fallbackType?: RunnerCreatedResourceType | null,
+): RunnerCreatedResourcePreview[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    const structured = extractCreatedResourcePreviewsFromValue(parsed, fallbackType);
+    if (structured.length > 0) {
+      return structured;
+    }
+  } catch {}
+
+  const previews: RunnerCreatedResourcePreview[] = [];
+  const patterns: Array<{ type: RunnerCreatedResourceType; pattern: RegExp }> = [
+    { type: "agent", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:agent created|created agent)\b[:\s-]*(.+?)(?:\s+\((agent_[^)]+)\))?\s*$/i },
+    { type: "skill", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:skill created|created skill)\b[:\s-]*(.+?)(?:\s+\((skill_[^)]+)\))?\s*$/i },
+    { type: "environment", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:environment created|created environment)\b[:\s-]*(.+?)(?:\s+\(((?:env|environment)_[^)]+)\))?\s*$/i },
+    { type: "release", pattern: /^(?:[+*-]\s*)?(?:✓\s*)?(?:release created|created release)\b[:\s-]*(.+?)(?:\s+\((release_[^)]+)\))?\s*$/i },
+  ];
+
+  for (const rawLine of trimmed.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    for (const { type, pattern } of patterns) {
+      const match = line.match(pattern);
+      if (!match?.[1]) continue;
+      previews.push({
+        id: String(match[2] || `${type}:${match[1]}`).trim(),
+        name: String(match[1] || "").trim(),
+        resourceType: type,
+        mutationVerb: null,
+        description: null,
+        model: null,
+        category: null,
+        projectId: null,
+        projectName: null,
+        isDefault: false,
+        startAt: null,
+        endAt: null,
+        status: null,
+        taskCount: null,
+        openTaskCount: null,
+      });
+      break;
+    }
+  }
+
+  return dedupeCreatedResourcePreviews(previews);
+}
+
+function isComputerAgentsCreateCommand(command?: string): boolean {
+  if (!command) return false;
+  return /computer-agents\.py[\s\S]*\b(agents|skills|environments)\s+(create|clone)\b/i.test(command);
+}
+
+function inferComputerAgentsResourceTypeFromCommand(command?: string): RunnerCreatedResourceType | null {
+  if (!command) return null;
+  if (/computer-agents\.py[\s\S]*\bagents\s+(create|update)\b/i.test(command)) return "agent";
+  if (/computer-agents\.py[\s\S]*\bskills\s+(create|update)\b/i.test(command)) return "skill";
+  if (/computer-agents\.py[\s\S]*\benvironments\s+(create|clone|update)\b/i.test(command)) return "environment";
+  return null;
+}
+
+function isComputerAgentsCreateToolInvocation(log: RunnerLog): boolean {
+  const serverName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const toolName = String(log.metadata?.toolName || "").trim().toLowerCase();
+  const combined = `${serverName} ${toolName}`;
+  return (
+    /(computer[_ -]?agents?|agents?|skills?|environments?|envs?)/.test(combined)
+    && /(create|clone|new)/.test(combined)
+  );
+}
+
+export function isComputerAgentsMutationLog(log: RunnerLog): boolean {
+  const command = String(log.metadata?.command || "");
+  if (/computer-agents\.py[\s\S]*\bagents\s+(create|update)\b/i.test(command)) return true;
+  if (/computer-agents\.py[\s\S]*\bskills\s+(create|update)\b/i.test(command)) return true;
+  if (/computer-agents\.py[\s\S]*\benvironments\s+(create|clone|update)\b/i.test(command)) return true;
+
+  const serverName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const toolName = String(log.metadata?.toolName || "").trim().toLowerCase();
+  const combined = `${serverName} ${toolName}`;
+  return (
+    /(computer[_ -]?agents?|agents?|skills?|environments?|envs?)/.test(combined)
+    && /(create|clone|new|update|edit)/.test(combined)
+  );
+}
+
+function getComputerAgentsMutationVerb(log: RunnerLog): "created" | "updated" {
+  const command = String(log.metadata?.command || "");
+  if (/computer-agents\.py[\s\S]*\b(agents|skills|environments)\s+update\b/i.test(command)) {
+    return "updated";
+  }
+  const serverName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const toolName = String(log.metadata?.toolName || "").trim().toLowerCase();
+  const combined = `${serverName} ${toolName}`;
+  if (/(update|edit)/.test(combined)) {
+    return "updated";
+  }
+  return "created";
+}
+
+export function collectComputerAgentsCreatedResources(log: RunnerLog): RunnerCreatedResourcePreview[] {
+  const command = String(log.metadata?.command || "");
+  const fallbackType =
+    inferComputerAgentsResourceTypeFromCommand(command)
+    || null;
+  const mutationVerb = getComputerAgentsMutationVerb(log);
+  const previews = [
+    ...extractCreatedResourcePreviewsFromValue(log.metadata?.result, fallbackType),
+    ...extractCreatedResourcePreviewsFromValue(log.metadata?.args, fallbackType),
+    ...Object.values((log.metadata?.fileContents as Record<string, string> | undefined) || {}).flatMap((value) =>
+      extractCreatedResourcePreviewsFromText(String(value || ""), fallbackType)
+    ),
+    ...(typeof log.metadata?.result === "string" ? extractCreatedResourcePreviewsFromText(log.metadata.result, fallbackType) : []),
+    ...(typeof log.metadata?.output === "string" ? extractCreatedResourcePreviewsFromText(log.metadata.output, fallbackType) : []),
+    ...extractCreatedResourcePreviewsFromText(log.message || "", fallbackType),
+  ].filter((preview) => preview.resourceType !== "release");
+
+  if (previews.length > 0) {
+    return dedupeCreatedResourcePreviews(previews).map((preview) => ({
+      ...preview,
+      mutationVerb,
+    }));
+  }
+
+  if (!isComputerAgentsCreateCommand(command) && !isComputerAgentsCreateToolInvocation(log)) {
+    return [];
+  }
+
+  const fallbackName = extractQuotedArgument(command, "--name");
+  if (!fallbackName || !fallbackType) {
+    return [];
+  }
+  return [{
+    id: extractQuotedArgument(command, "--id") || `${fallbackType}:${fallbackName}`,
+    name: fallbackName,
+    resourceType: fallbackType,
+    mutationVerb,
+    description: extractQuotedArgument(command, "--description"),
+    model: extractQuotedArgument(command, "--model"),
+    category: extractQuotedArgument(command, "--category"),
+    projectId: extractQuotedArgument(command, "--project-id"),
+    projectName: null,
+    isDefault: /\s--is-default(?:\s|$)/.test(command),
+    startAt: null,
+    endAt: null,
+    status: null,
+    taskCount: null,
+    openTaskCount: null,
+  }];
+}
+
+function isTaskManagementReleaseCreateCommand(command?: string): boolean {
+  if (!command) return false;
+  return /manage-tasks\.py[\s\S]*\breleases\s+create\b/i.test(command);
+}
+
+function isTaskManagementReleaseCreateToolInvocation(log: RunnerLog): boolean {
+  const serverName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const toolName = String(log.metadata?.toolName || "").trim().toLowerCase();
+  return (
+    /task/.test(serverName || toolName)
+    && (
+      /(?:^|[._/-])create(?:[._/-])?releases?(?:$|[._/-])/.test(toolName)
+      || /(?:^|[._/-])releases?(?:[._/-])create(?:$|[._/-])/.test(toolName)
+    )
+  );
+}
+
+function normalizeTaskManagementReleasePreview(value: unknown): RunnerCreatedResourcePreview | null {
+  const record = asObjectRecord(value);
+  if (!record) return null;
+  const metadata = asObjectRecord(record.metadata);
+  const normalizedType =
+    normalizeCreatedResourceType(record.resourceType)
+    || normalizeCreatedResourceType(record.object)
+    || normalizeCreatedResourceType(record.type)
+    || inferCreatedResourceTypeFromId(record.id);
+  const id =
+    asOptionalTrimmedString(record.id)
+    || asOptionalTrimmedString(record.releaseId)
+    || asOptionalTrimmedString(record.release_id)
+    || "";
+  const name =
+    asOptionalTrimmedString(record.name)
+    || asOptionalTrimmedString(record.title)
+    || asOptionalTrimmedString(record.releaseName)
+    || asOptionalTrimmedString(record.release_name)
+    || "";
+
+  const looksLikeReleaseRecord =
+    normalizedType === "release"
+    || id.startsWith("release_")
+    || Object.prototype.hasOwnProperty.call(record, "startAt")
+    || Object.prototype.hasOwnProperty.call(record, "endAt")
+    || Object.prototype.hasOwnProperty.call(record, "openTaskCount")
+    || Object.prototype.hasOwnProperty.call(record, "taskCount")
+    || Object.prototype.hasOwnProperty.call(record, "releaseId");
+  if (!looksLikeReleaseRecord || (!id && !name)) {
+    return null;
+  }
+
+  return {
+    id: id || `release:${name}`,
+    name: name || "Untitled Release",
+    resourceType: "release",
+    description: asOptionalTrimmedString(record.description) || null,
+    model: null,
+    category: null,
+    projectId:
+      asOptionalTrimmedString(record.projectId)
+      || asOptionalTrimmedString(record.project_id)
+      || asOptionalTrimmedString(metadata?.projectId)
+      || null,
+    projectName:
+      asOptionalTrimmedString(record.projectName)
+      || asOptionalTrimmedString(record.project_name)
+      || null,
+    isDefault: false,
+    startAt: asOptionalTrimmedString(record.startAt) || null,
+    endAt: asOptionalTrimmedString(record.endAt) || null,
+    status: asOptionalTrimmedString(record.status) || null,
+    taskCount: Number.isFinite(record.taskCount) ? Number(record.taskCount) : null,
+    openTaskCount: Number.isFinite(record.openTaskCount) ? Number(record.openTaskCount) : null,
+  };
+}
+
+function extractTaskManagementReleasePreviewsFromValue(value: unknown): RunnerCreatedResourcePreview[] {
+  const previews: RunnerCreatedResourcePreview[] = [];
+  const visited = new WeakSet<object>();
+
+  function visit(current: unknown, depth: number) {
+    if (!current || depth > 6) return;
+    if (Array.isArray(current)) {
+      current.forEach((entry) => visit(entry, depth + 1));
+      return;
+    }
+    if (typeof current === "string") {
+      const trimmed = current.trim();
+      if ((trimmed.startsWith("{") || trimmed.startsWith("[")) && trimmed.length > 1) {
+        try {
+          visit(JSON.parse(trimmed), depth + 1);
+        } catch {}
+      }
+      return;
+    }
+    const record = asObjectRecord(current);
+    if (!record || visited.has(record)) return;
+    visited.add(record);
+
+    if (record.release && typeof record.release === "object") {
+      visit(record.release, depth + 1);
+    }
+    if (Array.isArray(record.releases)) {
+      visit(record.releases, depth + 1);
+    }
+    const directPreview = normalizeTaskManagementReleasePreview(record);
+    if (directPreview) {
+      previews.push(directPreview);
+    }
+    for (const nestedValue of Object.values(record)) {
+      if (nestedValue && typeof nestedValue === "object") {
+        visit(nestedValue, depth + 1);
+      }
+    }
+  }
+
+  visit(value, 0);
+  return dedupeCreatedResourcePreviews(previews);
+}
+
+function extractTaskManagementReleasePreviewsFromText(text: string): RunnerCreatedResourcePreview[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    const structured = extractTaskManagementReleasePreviewsFromValue(parsed);
+    if (structured.length > 0) {
+      return structured;
+    }
+  } catch {}
+
+  const previews: RunnerCreatedResourcePreview[] = [];
+  for (const rawLine of trimmed.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const match = line.match(/^(?:[+*-]\s*)?(?:✓\s*)?(?:Release created|Created release):\s*(.+?)(?:\s+\((release_[^)]+)\))?\s*$/i);
+    if (!match?.[1]) continue;
+    previews.push({
+      id: String(match[2] || `release:${match[1]}`).trim(),
+      name: String(match[1] || "").trim(),
+      resourceType: "release",
+      description: null,
+      model: null,
+      category: null,
+      projectId: null,
+      projectName: null,
+      isDefault: false,
+      startAt: null,
+      endAt: null,
+      status: null,
+      taskCount: null,
+      openTaskCount: null,
+    });
+  }
+  return dedupeCreatedResourcePreviews(previews);
+}
+
+export function collectTaskManagementCreatedReleases(log: RunnerLog): RunnerCreatedResourcePreview[] {
+  const previews = [
+    ...extractTaskManagementReleasePreviewsFromValue(log.metadata?.result),
+    ...extractTaskManagementReleasePreviewsFromValue(log.metadata?.args),
+    ...Object.values((log.metadata?.fileContents as Record<string, string> | undefined) || {}).flatMap((value) =>
+      extractTaskManagementReleasePreviewsFromText(String(value || ""))
+    ),
+    ...(typeof log.metadata?.result === "string" ? extractTaskManagementReleasePreviewsFromText(log.metadata.result) : []),
+    ...(typeof log.metadata?.output === "string" ? extractTaskManagementReleasePreviewsFromText(log.metadata.output) : []),
+    ...extractTaskManagementReleasePreviewsFromText(log.message || ""),
+  ];
+
+  const command = String(log.metadata?.command || "");
+  const commandProjectId = extractQuotedArgument(command, "--project-id");
+  if (previews.length > 0) {
+    return dedupeCreatedResourcePreviews(previews).map((preview) => ({
+      ...preview,
+      projectId: preview.projectId || commandProjectId || null,
+    }));
+  }
+
+  if (!isTaskManagementReleaseCreateCommand(command) && !isTaskManagementReleaseCreateToolInvocation(log)) {
+    return [];
+  }
+
+  const releaseName = extractQuotedArgument(command, "--name");
+  if (!releaseName) {
+    return [];
+  }
+  return [{
+    id: `release:${releaseName}`,
+    name: releaseName,
+    resourceType: "release",
+    description: extractQuotedArgument(command, "--description"),
+    model: null,
+    category: null,
+    projectId: commandProjectId || null,
+    projectName: null,
+    isDefault: false,
+    startAt: extractQuotedArgument(command, "--start-at"),
+    endAt: extractQuotedArgument(command, "--end-at"),
+    status: "planned",
+    taskCount: null,
+    openTaskCount: null,
+  }];
+}
+
+export function shouldRenderComputerAgentsCreateLog(log: RunnerLog): boolean {
+  return (
+    isComputerAgentsMutationLog(log)
+    && collectComputerAgentsCreatedResources(log).length > 0
+  );
+}
+
+function shouldRenderTaskManagementReleaseCreateLog(log: RunnerLog): boolean {
+  return (
+    isTaskManagementReleaseCreateCommand(log.metadata?.command || "")
+    || isTaskManagementReleaseCreateToolInvocation(log)
+    || collectTaskManagementCreatedReleases(log).length > 0
+  );
 }
 
 function isTaskManagementCreateCommand(command?: string): boolean {
@@ -1824,6 +2407,182 @@ function TaskManagementCreateLogBox({
             {isLoading ? "Creating tasks..." : "No created tasks were parsed."}
           </div>
         )}
+      </LogPanel>
+    </div>
+  );
+}
+
+function formatCreatedResourceStatusLabel(resource: RunnerCreatedResourcePreview): string | null {
+  if (resource.resourceType !== "release") return null;
+  const normalized = String(resource.status || "").trim().toLowerCase();
+  if (normalized === "completed" || normalized === "done") return "Completed";
+  if (normalized === "active" || normalized === "in_progress") return "Active";
+  if (normalized === "planned") return "Planned";
+  return null;
+}
+
+function formatCreatedResourceMeta(resource: RunnerCreatedResourcePreview): string {
+  if (resource.resourceType === "agent") {
+    return [resource.model, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
+  }
+  if (resource.resourceType === "skill") {
+    return [resource.category, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
+  }
+  if (resource.resourceType === "environment") {
+    return [resource.projectName, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
+  }
+  const dateRange = [resource.startAt, resource.endAt].filter(Boolean).join(" - ");
+  const taskSummary =
+    typeof resource.taskCount === "number" && typeof resource.openTaskCount === "number"
+      ? `${resource.openTaskCount}/${resource.taskCount} open`
+      : typeof resource.taskCount === "number"
+        ? `${resource.taskCount} tasks`
+        : "";
+  return [dateRange, taskSummary].filter(Boolean).join(" · ");
+}
+
+function ResourceCreateLogList({
+  resources,
+  emptyLabel,
+}: {
+  resources: RunnerCreatedResourcePreview[];
+  emptyLabel: string;
+}) {
+  if (resources.length === 0) {
+    return <div className="tb-log-card-empty">{emptyLabel}</div>;
+  }
+
+  return (
+    <div className="tb-log-resource-create-list">
+      {resources.map((resource) => {
+        const meta = formatCreatedResourceMeta(resource);
+        const statusLabel = formatCreatedResourceStatusLabel(resource);
+        return (
+          <div
+            key={`${resource.resourceType}:${resource.id}`}
+            className={`tb-log-resource-create-item is-${resource.resourceType}`.trim()}
+          >
+            <div className="tb-log-resource-create-leading">
+              <div className={`tb-log-resource-create-icon-slot is-${resource.resourceType}`.trim()}>
+                {renderCreatedResourceIcon(resource.resourceType, "tb-log-resource-create-icon")}
+              </div>
+              <div className="tb-log-resource-create-copy">
+                <div className="tb-log-resource-create-title-row">
+                  <span className="tb-log-resource-create-title" title={resource.name}>
+                    {resource.name}
+                  </span>
+                  <span className="tb-log-resource-create-type-pill">
+                    {getCreatedResourceTypeLabel(resource.resourceType)}
+                  </span>
+                </div>
+                {resource.description ? (
+                  <div className="tb-log-resource-create-description" title={resource.description}>
+                    {resource.description}
+                  </div>
+                ) : null}
+                {meta ? (
+                  <div className="tb-log-resource-create-meta">{meta}</div>
+                ) : null}
+              </div>
+            </div>
+            {statusLabel ? (
+              <span className={`tb-log-resource-create-status is-${String(resource.status || "planned").trim().toLowerCase()}`.trim()}>
+                {statusLabel}
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ComputerAgentsCreateLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const resources = useMemo(() => collectComputerAgentsCreatedResources(log), [log]);
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
+  const mutationVerb = getComputerAgentsMutationVerb(log);
+  const title =
+    resources.length === 1
+      ? `1 resource ${mutationVerb}`
+      : resources.length > 1
+        ? `${resources.length} resources ${mutationVerb}`
+        : mutationVerb === "updated"
+          ? "Update resources"
+          : "Create resources";
+
+  return (
+    <div className="tb-log-card">
+      <LogHeader
+        icon={<img className="tb-log-card-small-icon tb-log-card-small-icon-runner" src={RUNNER_TRANSPARENT_LOGO_URL} alt="" aria-hidden="true" />}
+        label="Computer Agents"
+        title={title}
+        timeLabel={timeLabel}
+        meta={
+          resources.length > 0
+            ? <span className="tb-log-card-pill">{resources.length} {mutationVerb}</span>
+            : isLoading
+              ? <span className="tb-log-card-status">{mutationVerb === "updated" ? "updating..." : "creating..."}</span>
+              : null
+        }
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        <ResourceCreateLogList
+          resources={resources}
+          emptyLabel={isLoading ? "Creating resources..." : "No created resources were parsed."}
+        />
+      </LogPanel>
+    </div>
+  );
+}
+
+function TaskManagementReleaseCreateLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const releases = useMemo(() => collectTaskManagementCreatedReleases(log), [log]);
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
+  const title =
+    releases.length === 1
+      ? "1 release created"
+      : releases.length > 1
+        ? `${releases.length} releases created`
+        : "Create releases";
+
+  return (
+    <div className="tb-log-card">
+      <LogHeader
+        icon={<Calendar className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Task Management"
+        title={title}
+        timeLabel={timeLabel}
+        meta={
+          releases.length > 0
+            ? <span className="tb-log-card-pill">{releases.length} created</span>
+            : isLoading
+              ? <span className="tb-log-card-status">creating...</span>
+              : null
+        }
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        <ResourceCreateLogList
+          resources={releases}
+          emptyLabel={isLoading ? "Creating releases..." : "No created releases were parsed."}
+        />
       </LogPanel>
     </div>
   );
@@ -5075,6 +5834,8 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
       return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;
+    if (shouldRenderComputerAgentsCreateLog(log)) return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
+    if (shouldRenderTaskManagementReleaseCreateLog(log)) return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementCreateLog(log)) return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     if (isReadFileCommand(command)) {
       return (
@@ -5109,6 +5870,12 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
   }
 
   if (log.eventType === "mcp_tool_call") {
+    if (shouldRenderComputerAgentsCreateLog(log)) {
+      return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
+    }
+    if (shouldRenderTaskManagementReleaseCreateLog(log)) {
+      return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
+    }
     if (shouldRenderTaskManagementCreateLog(log)) {
       return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     }
@@ -5123,6 +5890,12 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
   }
 
   if (log.eventType === "file_change") {
+    if (shouldRenderComputerAgentsCreateLog(log)) {
+      return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
+    }
+    if (shouldRenderTaskManagementReleaseCreateLog(log)) {
+      return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
+    }
     if (shouldRenderTaskManagementCreateLog(log)) {
       return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     }

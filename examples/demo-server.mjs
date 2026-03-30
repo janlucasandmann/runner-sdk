@@ -22918,11 +22918,94 @@ const html = `<!doctype html>
         };
       }
 
+      function asHistoryObjectRecord(value) {
+        return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+      }
+
+      function asHistoryOptionalTrimmedString(value) {
+        return typeof value === "string" && value.trim() ? value.trim() : "";
+      }
+
+      function normalizeHistoryNumericValue(value) {
+        const parsed = typeof value === "number" ? value : Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function normalizeHistoryTaskTicketNumber(value) {
+        const normalized = String(value || "").trim();
+        if (!normalized) return "";
+        const digits = Array.from(normalized).filter((character) => character >= "0" && character <= "9").join("");
+        const parsed = Number.parseInt(digits || normalized, 10);
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+          return "";
+        }
+        return String(parsed).padStart(3, "0");
+      }
+
+      function normalizeHistoryTaskStatus(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (normalized === "todo" || normalized === "backlog") return "todo";
+        if (normalized === "in_progress" || normalized === "blocked" || normalized === "done") return normalized;
+        return "";
+      }
+
+      function normalizeHistoryTaskPriority(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (normalized === "low" || normalized === "medium" || normalized === "high" || normalized === "critical") {
+          return normalized;
+        }
+        return "";
+      }
+
+      function normalizeHistoryTaskType(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (normalized === "subtask") return "subtask";
+        if (normalized === "task") return "task";
+        return "";
+      }
+
+      function splitHistoryTaskTitleAndTicket(rawTitle) {
+        const trimmedTitle = String(rawTitle || "").trim();
+        const prefixedTicketMatch = trimmedTitle.match(/^((?:[A-Z]+-\\d+)|(?:\\d{2,4}))(?:(?:\\s*[·\\-:]\\s*)|\\s+)(.+)$/);
+        if (prefixedTicketMatch?.[1] && prefixedTicketMatch[2]) {
+          return {
+            ticketNumber: prefixedTicketMatch[1].trim(),
+            title: prefixedTicketMatch[2].trim() || trimmedTitle,
+          };
+        }
+        return { title: trimmedTitle, ticketNumber: "" };
+      }
+
+      function formatHistoryResourceStatusLabel(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (!normalized) return "";
+        if (normalized === "todo") return "To do";
+        if (normalized === "in_progress") return "In progress";
+        if (normalized === "done") return "Done";
+        return normalized
+          .split(/[_\\s-]+/)
+          .filter(Boolean)
+          .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+          .join(" ");
+      }
+
+      function formatHistoryTaskPriorityLabel(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (!normalized) return "";
+        return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+      }
+
+      function formatHistoryTaskTypeLabel(value) {
+        return String(value || "").trim().toLowerCase() === "subtask" ? "Subtask" : "Task";
+      }
+
       function normalizeHistoryResourceType(value) {
         const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
         if (!normalized) return "";
         if (normalized === "agent" || normalized === "agents") return "agent";
         if (normalized === "skill" || normalized === "skills") return "skill";
+        if (normalized === "task" || normalized === "tasks" || normalized === "subtask" || normalized === "subtasks") return "task";
+        if (normalized === "release" || normalized === "releases") return "release";
         if (
           normalized === "environment"
           || normalized === "environments"
@@ -22939,6 +23022,8 @@ const html = `<!doctype html>
         if (!normalized) return "";
         if (normalized.startsWith("agent_")) return "agent";
         if (normalized.startsWith("skill_")) return "skill";
+        if (normalized.startsWith("task_")) return "task";
+        if (normalized.startsWith("release_")) return "release";
         if (normalized.startsWith("env_") || normalized.startsWith("environment_")) return "environment";
         return "";
       }
@@ -22946,6 +23031,8 @@ const html = `<!doctype html>
       function getHistoryResourceTypeLabel(resourceType) {
         if (resourceType === "agent") return "Agent";
         if (resourceType === "skill") return "Skill";
+        if (resourceType === "task") return "Task";
+        if (resourceType === "release") return "Release";
         if (resourceType === "environment") return "Environment";
         return "Resource";
       }
@@ -23019,6 +23106,9 @@ const html = `<!doctype html>
 
       function createHistoryResourceEntry(resourceType, record) {
         const resource = record && typeof record === "object" ? record : {};
+        const metadata = asHistoryObjectRecord(resource.metadata);
+        const runnerPlayground = asHistoryObjectRecord(metadata?.runnerPlayground);
+        const assigneeRecord = asHistoryObjectRecord(resource.assignee) || asHistoryObjectRecord(resource.assigneeAgent);
         const normalizedType =
           normalizeHistoryResourceType(resourceType)
           || normalizeHistoryResourceType(resource.resourceType)
@@ -23028,8 +23118,22 @@ const html = `<!doctype html>
         if (!normalizedType) {
           return null;
         }
-        const resourceId = String(resource.id || "").trim();
-        const resourceName = String(resource.name || resource.title || "").trim();
+        const resourceId =
+          asHistoryOptionalTrimmedString(resource.id)
+          || asHistoryOptionalTrimmedString(resource.taskId)
+          || asHistoryOptionalTrimmedString(resource.task_id)
+          || asHistoryOptionalTrimmedString(resource.environmentId)
+          || asHistoryOptionalTrimmedString(resource.environment_id)
+          || asHistoryOptionalTrimmedString(resource.releaseId)
+          || asHistoryOptionalTrimmedString(resource.release_id);
+        const rawResourceName =
+          asHistoryOptionalTrimmedString(resource.name)
+          || asHistoryOptionalTrimmedString(resource.title)
+          || asHistoryOptionalTrimmedString(resource.label)
+          || asHistoryOptionalTrimmedString(resource.releaseName)
+          || asHistoryOptionalTrimmedString(resource.release_name);
+        const taskTitleParts = normalizedType === "task" ? splitHistoryTaskTitleAndTicket(rawResourceName) : null;
+        const resourceName = normalizedType === "task" ? (taskTitleParts?.title || rawResourceName) : rawResourceName;
         if (!resourceId && !resourceName) {
           return null;
         }
@@ -23041,6 +23145,50 @@ const html = `<!doctype html>
           || "",
           220
         );
+        const taskStatus = normalizeHistoryTaskStatus(
+          asHistoryOptionalTrimmedString(resource.status)
+          || asHistoryOptionalTrimmedString(runnerPlayground?.status)
+        );
+        const taskPriority = normalizeHistoryTaskPriority(
+          asHistoryOptionalTrimmedString(resource.priority)
+          || asHistoryOptionalTrimmedString(runnerPlayground?.priority)
+        );
+        const explicitTaskType =
+          normalizeHistoryTaskType(resource.taskType)
+          || normalizeHistoryTaskType(resource.task_type)
+          || normalizeHistoryTaskType(resource.type)
+          || normalizeHistoryTaskType(runnerPlayground?.taskType);
+        const parentTaskId =
+          asHistoryOptionalTrimmedString(resource.parentTaskId)
+          || asHistoryOptionalTrimmedString(resource.parent_task_id)
+          || asHistoryOptionalTrimmedString(runnerPlayground?.parentTaskId);
+        const ticketNumber = normalizeHistoryTaskTicketNumber(
+          asHistoryOptionalTrimmedString(resource.ticketNumber)
+          || asHistoryOptionalTrimmedString(resource.ticket_number)
+          || asHistoryOptionalTrimmedString(resource.ticket)
+          || asHistoryOptionalTrimmedString(runnerPlayground?.ticketNumber)
+          || (taskTitleParts ? taskTitleParts.ticketNumber : "")
+        );
+        const projectId =
+          asHistoryOptionalTrimmedString(resource.projectId)
+          || asHistoryOptionalTrimmedString(resource.project_id)
+          || asHistoryOptionalTrimmedString(metadata?.projectId)
+          || asHistoryOptionalTrimmedString(metadata?.project_id);
+        const projectName =
+          asHistoryOptionalTrimmedString(resource.projectName)
+          || asHistoryOptionalTrimmedString(resource.project_name);
+        const environmentId =
+          asHistoryOptionalTrimmedString(resource.environmentId)
+          || asHistoryOptionalTrimmedString(resource.environment_id)
+          || asHistoryOptionalTrimmedString(runnerPlayground?.environmentId);
+        const assigneeName =
+          asHistoryOptionalTrimmedString(resource.assigneeName)
+          || asHistoryOptionalTrimmedString(resource.assignee_name)
+          || asHistoryOptionalTrimmedString(resource.assigneeAgentName)
+          || asHistoryOptionalTrimmedString(resource.assigneeActorName)
+          || asHistoryOptionalTrimmedString(resource.assignedToName)
+          || asHistoryOptionalTrimmedString(assigneeRecord?.name)
+          || asHistoryOptionalTrimmedString(assigneeRecord?.displayName);
         return {
           path: getHistoryResourceSyntheticPath(normalizedType, resourceId, resourceName),
           name: resourceName || getHistoryResourceTypeLabel(normalizedType),
@@ -23054,10 +23202,23 @@ const html = `<!doctype html>
           diffText: "",
           isChanged: true,
           description,
-          category: String(resource.category || "").trim(),
-          model: String(resource.model || "").trim(),
-          projectId: String(resource.projectId || "").trim(),
+          category: asHistoryOptionalTrimmedString(resource.category),
+          model:
+            asHistoryOptionalTrimmedString(resource.model)
+            || asHistoryOptionalTrimmedString(resource.deepResearchModel),
+          projectId,
+          projectName,
+          environmentId,
           isDefault: Boolean(resource.isDefault),
+          ticketNumber,
+          status: normalizedType === "task" ? taskStatus : asHistoryOptionalTrimmedString(resource.status),
+          priority: normalizedType === "task" ? taskPriority : "",
+          taskType: normalizedType === "task" ? (explicitTaskType || (parentTaskId ? "subtask" : "task")) : "",
+          assigneeName,
+          startAt: asHistoryOptionalTrimmedString(resource.startAt),
+          endAt: asHistoryOptionalTrimmedString(resource.endAt),
+          taskCount: normalizeHistoryNumericValue(resource.taskCount),
+          openTaskCount: normalizeHistoryNumericValue(resource.openTaskCount),
         };
       }
 
@@ -23184,6 +23345,9 @@ const html = `<!doctype html>
         const output = typeof metadata.output === "string" ? metadata.output : "";
         const result = metadata.result;
         const args = metadata.args;
+        const fileContents = metadata.fileContents && typeof metadata.fileContents === "object"
+          ? Object.values(metadata.fileContents)
+          : [];
         const fallbackType =
           inferComputerAgentsResourceTypeFromCommand(command)
           || inferComputerAgentsResourceTypeFromToolLog(log);
@@ -23202,6 +23366,9 @@ const html = `<!doctype html>
         append(extractComputerAgentsResourceEntriesFromValue(args, fallbackType));
         append(extractComputerAgentsResourceEntriesFromHistoryOutput(output, fallbackType));
         append(extractComputerAgentsResourceEntriesFromHistoryOutput(log?.message || "", fallbackType));
+        for (const value of fileContents) {
+          append(extractComputerAgentsResourceEntriesFromHistoryOutput(typeof value === "string" ? value : "", fallbackType));
+        }
 
         if (entries.size === 0 && (fallbackType || isComputerAgentsCreateHistoryLog(log))) {
           const fallbackName = extractHistoryCommandFlagValue(command, "--name");
@@ -23213,6 +23380,437 @@ const html = `<!doctype html>
               model: extractHistoryCommandFlagValue(command, "--model") || "",
               category: extractHistoryCommandFlagValue(command, "--category") || "",
               projectId: extractHistoryCommandFlagValue(command, "--project-id") || "",
+            });
+            if (fallbackEntry) {
+              entries.set(fallbackEntry.path, fallbackEntry);
+            }
+          }
+        }
+
+        return Array.from(entries.values());
+      }
+
+      function isTaskManagementCreateCommand(command) {
+        return /manage-tasks\.py[\s\S]*\btasks\s+create\b/i.test(String(command || ""));
+      }
+
+      function isTaskManagementCreateToolInvocation(log) {
+        const metadata = log && log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        const serverName = String(metadata.serverName || "").trim().toLowerCase();
+        const toolName = String(metadata.toolName || "").trim().toLowerCase();
+        return (
+          /task/.test(serverName || toolName)
+          && (
+            /(?:^|[._/-])create(?:[._/-])?tasks?(?:$|[._/-])/.test(toolName)
+            || /(?:^|[._/-])tasks?(?:[._/-])create(?:$|[._/-])/.test(toolName)
+          )
+        );
+      }
+
+      function isTaskManagementCreateHistoryLog(log) {
+        const metadata = log && log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        return Boolean(isTaskManagementCreateCommand(metadata.command) || isTaskManagementCreateToolInvocation(log));
+      }
+
+      function buildHistoryTaskEntryFromTaskPayload(value) {
+        const payload = asHistoryObjectRecord(value);
+        if (!payload) return null;
+        const taskRecord = asHistoryObjectRecord(payload.task);
+        if (!taskRecord) return null;
+        const details = asHistoryObjectRecord(payload.details);
+        const project = asHistoryObjectRecord(details?.project);
+        const assignee = asHistoryObjectRecord(details?.assignee);
+        return createHistoryResourceEntry("task", {
+          ...taskRecord,
+          ...(project && !Object.prototype.hasOwnProperty.call(taskRecord, "projectName")
+            ? {
+                projectName:
+                  asHistoryOptionalTrimmedString(project.name)
+                  || asHistoryOptionalTrimmedString(project.title)
+                  || "",
+                projectId: asHistoryOptionalTrimmedString(project.id) || "",
+              }
+            : {}),
+          ...(assignee && !Object.prototype.hasOwnProperty.call(taskRecord, "assigneeName")
+            ? {
+                assigneeName:
+                  asHistoryOptionalTrimmedString(assignee.name)
+                  || asHistoryOptionalTrimmedString(assignee.displayName)
+                  || "",
+                assigneeAgentId: asHistoryOptionalTrimmedString(assignee.id) || "",
+              }
+            : {}),
+        });
+      }
+
+      function normalizeTaskManagementTaskEntry(value) {
+        const record = asHistoryObjectRecord(value);
+        if (!record) return null;
+        const metadata = asHistoryObjectRecord(record.metadata);
+        const runnerPlayground = asHistoryObjectRecord(metadata?.runnerPlayground);
+        const title = asHistoryOptionalTrimmedString(record.title)
+          || asHistoryOptionalTrimmedString(record.name)
+          || asHistoryOptionalTrimmedString(record.taskTitle);
+        const titleParts = splitHistoryTaskTitleAndTicket(title);
+        const ticketNumber = normalizeHistoryTaskTicketNumber(
+          asHistoryOptionalTrimmedString(record.ticketNumber)
+          || asHistoryOptionalTrimmedString(record.ticket_number)
+          || asHistoryOptionalTrimmedString(record.ticket)
+          || asHistoryOptionalTrimmedString(runnerPlayground?.ticketNumber)
+          || titleParts.ticketNumber
+        );
+        const explicitTaskType =
+          normalizeHistoryTaskType(record.taskType)
+          || normalizeHistoryTaskType(record.task_type)
+          || (["task", "subtask"].includes(String(record.type || "").trim().toLowerCase()) ? normalizeHistoryTaskType(record.type) : "")
+          || normalizeHistoryTaskType(runnerPlayground?.taskType);
+        const hasExplicitTaskIdentifier =
+          String(record.id || "").trim().startsWith("task_")
+          || Object.prototype.hasOwnProperty.call(record, "taskId")
+          || Object.prototype.hasOwnProperty.call(record, "task_id");
+        const runnerPlaygroundHasTaskSignals =
+          runnerPlayground !== null
+          && (
+            Boolean(asHistoryOptionalTrimmedString(runnerPlayground.ticketNumber))
+            || Boolean(normalizeHistoryTaskType(runnerPlayground.taskType))
+            || Boolean(asHistoryOptionalTrimmedString(runnerPlayground.taskColor))
+            || Boolean(asHistoryOptionalTrimmedString(runnerPlayground.assigneeActorId))
+            || Array.isArray(runnerPlayground.dependencyIds)
+            || Array.isArray(runnerPlayground.linkedThreadIds)
+          );
+        const looksLikeTaskRecord =
+          Boolean(titleParts.title)
+          && (
+            hasExplicitTaskIdentifier
+            || Boolean(ticketNumber)
+            || Boolean(explicitTaskType)
+            || Object.prototype.hasOwnProperty.call(record, "assigneeAgentId")
+            || Object.prototype.hasOwnProperty.call(record, "parentTaskId")
+            || Object.prototype.hasOwnProperty.call(record, "linkedThreadIds")
+            || Object.prototype.hasOwnProperty.call(record, "dependencyIds")
+            || runnerPlaygroundHasTaskSignals
+          );
+        if (!looksLikeTaskRecord) {
+          return null;
+        }
+        return createHistoryResourceEntry("task", {
+          ...record,
+          title: titleParts.title || title,
+          ticketNumber: ticketNumber || undefined,
+          taskType: explicitTaskType || undefined,
+        });
+      }
+
+      function extractTaskManagementTaskEntriesFromHistoryValue(value) {
+        const entries = new Map();
+        const visited = new WeakSet();
+
+        function append(entry) {
+          if (!entry || !entry.path) return;
+          const existing = entries.get(entry.path);
+          entries.set(entry.path, existing ? { ...existing, ...entry } : entry);
+        }
+
+        function visit(current, depth) {
+          if (!current || depth > 6) return;
+          if (Array.isArray(current)) {
+            current.forEach((item) => visit(item, depth + 1));
+            return;
+          }
+          if (typeof current === "string") {
+            const trimmed = current.trim();
+            if ((trimmed.startsWith("{") || trimmed.startsWith("[")) && trimmed.length > 1) {
+              try {
+                visit(JSON.parse(trimmed), depth + 1);
+              } catch {}
+            }
+            return;
+          }
+          const record = asHistoryObjectRecord(current);
+          if (!record || visited.has(record)) return;
+          visited.add(record);
+
+          append(buildHistoryTaskEntryFromTaskPayload(record));
+          append(normalizeTaskManagementTaskEntry(record));
+
+          for (const nestedValue of Object.values(record)) {
+            if (nestedValue && typeof nestedValue === "object") {
+              visit(nestedValue, depth + 1);
+            }
+          }
+        }
+
+        visit(value, 0);
+        return Array.from(entries.values());
+      }
+
+      function extractTaskManagementTaskEntriesFromHistoryText(text) {
+        const normalized = typeof text === "string" ? text.trim() : "";
+        if (!normalized) return [];
+        try {
+          const parsed = JSON.parse(normalized);
+          const structuredEntries = extractTaskManagementTaskEntriesFromHistoryValue(parsed);
+          if (structuredEntries.length > 0) {
+            return structuredEntries;
+          }
+        } catch {}
+
+        const entries = [];
+        const lines = normalized.split(/\\r?\\n/);
+        for (const rawLine of lines) {
+          const line = rawLine.trim();
+          if (!line) continue;
+          const createdMatch = line.match(/^(?:[+*-]\\s*)?(?:✓\\s*)?Created:\\s*(.+?)(?:\\s+\\((task_[^)]+)\\))?\\s*$/i);
+          if (!createdMatch?.[1]) {
+            continue;
+          }
+          const titleParts = splitHistoryTaskTitleAndTicket(createdMatch[1]);
+          const entry = createHistoryResourceEntry("task", {
+            id: createdMatch[2] || "",
+            title: titleParts.title,
+            ticketNumber: titleParts.ticketNumber || "",
+            status: "todo",
+            priority: "medium",
+            taskType: "task",
+          });
+          if (entry) {
+            entries.push(entry);
+          }
+        }
+        return entries;
+      }
+
+      function extractTaskManagementTaskEntriesFromHistoryLog(log) {
+        const metadata = log && log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        const command = typeof metadata.command === "string" ? metadata.command : "";
+        const output = typeof metadata.output === "string" ? metadata.output : "";
+        const result = metadata.result;
+        const args = metadata.args;
+        const fileContents = metadata.fileContents && typeof metadata.fileContents === "object"
+          ? Object.values(metadata.fileContents)
+          : [];
+        const entries = new Map();
+
+        function append(list) {
+          for (const entry of Array.isArray(list) ? list : []) {
+            if (entry && typeof entry === "object" && entry.path) {
+              const existing = entries.get(entry.path);
+              entries.set(entry.path, existing ? { ...existing, ...entry } : entry);
+            }
+          }
+        }
+
+        append(extractTaskManagementTaskEntriesFromHistoryValue(result));
+        append(extractTaskManagementTaskEntriesFromHistoryValue(args));
+        append(extractTaskManagementTaskEntriesFromHistoryText(output));
+        append(extractTaskManagementTaskEntriesFromHistoryText(log?.message || ""));
+        for (const value of fileContents) {
+          append(extractTaskManagementTaskEntriesFromHistoryText(typeof value === "string" ? value : ""));
+        }
+
+        if (entries.size === 0 && isTaskManagementCreateHistoryLog(log)) {
+          const fallbackTitle = extractHistoryCommandFlagValue(command, "--title");
+          if (fallbackTitle) {
+            const titleParts = splitHistoryTaskTitleAndTicket(fallbackTitle);
+            const fallbackEntry = createHistoryResourceEntry("task", {
+              id: extractHistoryCommandFlagValue(command, "--task-id") || extractHistoryCommandFlagValue(command, "--id") || "",
+              title: titleParts.title,
+              ticketNumber: titleParts.ticketNumber || "",
+              status: "todo",
+              priority: "medium",
+              taskType: extractHistoryCommandFlagValue(command, "--task-type") || "",
+              projectId: extractHistoryCommandFlagValue(command, "--project-id") || "",
+            });
+            if (fallbackEntry) {
+              entries.set(fallbackEntry.path, fallbackEntry);
+            }
+          }
+        }
+
+        return Array.from(entries.values());
+      }
+
+      function isTaskManagementReleaseCreateCommand(command) {
+        return /manage-tasks\.py[\s\S]*\breleases\s+create\b/i.test(String(command || ""));
+      }
+
+      function isTaskManagementReleaseCreateToolInvocation(log) {
+        const metadata = log && log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        const serverName = String(metadata.serverName || "").trim().toLowerCase();
+        const toolName = String(metadata.toolName || "").trim().toLowerCase();
+        return (
+          /task/.test(serverName || toolName)
+          && (
+            /(?:^|[._/-])create(?:[._/-])?releases?(?:$|[._/-])/.test(toolName)
+            || /(?:^|[._/-])releases?(?:[._/-])create(?:$|[._/-])/.test(toolName)
+          )
+        );
+      }
+
+      function isTaskManagementReleaseCreateHistoryLog(log) {
+        const metadata = log && log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        return Boolean(isTaskManagementReleaseCreateCommand(metadata.command) || isTaskManagementReleaseCreateToolInvocation(log));
+      }
+
+      function normalizeTaskManagementReleaseEntry(value) {
+        const record = asHistoryObjectRecord(value);
+        if (!record) return null;
+        const metadata = asHistoryObjectRecord(record.metadata);
+        const normalizedType =
+          normalizeHistoryResourceType(record.resourceType)
+          || normalizeHistoryResourceType(record.object)
+          || normalizeHistoryResourceType(record.type)
+          || inferHistoryResourceTypeFromId(record.id);
+        const id =
+          asHistoryOptionalTrimmedString(record.id)
+          || asHistoryOptionalTrimmedString(record.releaseId)
+          || asHistoryOptionalTrimmedString(record.release_id);
+        const name =
+          asHistoryOptionalTrimmedString(record.name)
+          || asHistoryOptionalTrimmedString(record.title)
+          || asHistoryOptionalTrimmedString(record.releaseName)
+          || asHistoryOptionalTrimmedString(record.release_name);
+        const looksLikeReleaseRecord =
+          normalizedType === "release"
+          || id.startsWith("release_")
+          || Object.prototype.hasOwnProperty.call(record, "startAt")
+          || Object.prototype.hasOwnProperty.call(record, "endAt")
+          || Object.prototype.hasOwnProperty.call(record, "openTaskCount")
+          || Object.prototype.hasOwnProperty.call(record, "taskCount")
+          || Object.prototype.hasOwnProperty.call(record, "releaseId");
+        if (!looksLikeReleaseRecord || (!id && !name)) {
+          return null;
+        }
+        return createHistoryResourceEntry("release", {
+          ...record,
+          id,
+          name: name || "Untitled Release",
+          projectId:
+            asHistoryOptionalTrimmedString(record.projectId)
+            || asHistoryOptionalTrimmedString(record.project_id)
+            || asHistoryOptionalTrimmedString(metadata?.projectId)
+            || "",
+        });
+      }
+
+      function extractTaskManagementReleaseEntriesFromHistoryValue(value) {
+        const entries = new Map();
+        const visited = new WeakSet();
+
+        function append(entry) {
+          if (!entry || !entry.path) return;
+          const existing = entries.get(entry.path);
+          entries.set(entry.path, existing ? { ...existing, ...entry } : entry);
+        }
+
+        function visit(current, depth) {
+          if (!current || depth > 6) return;
+          if (Array.isArray(current)) {
+            current.forEach((item) => visit(item, depth + 1));
+            return;
+          }
+          if (typeof current === "string") {
+            const trimmed = current.trim();
+            if ((trimmed.startsWith("{") || trimmed.startsWith("[")) && trimmed.length > 1) {
+              try {
+                visit(JSON.parse(trimmed), depth + 1);
+              } catch {}
+            }
+            return;
+          }
+          const record = asHistoryObjectRecord(current);
+          if (!record || visited.has(record)) return;
+          visited.add(record);
+
+          if (record.release && typeof record.release === "object") {
+            append(normalizeTaskManagementReleaseEntry(record.release));
+          }
+          if (Array.isArray(record.releases)) {
+            record.releases.forEach((item) => append(normalizeTaskManagementReleaseEntry(item)));
+          }
+          append(normalizeTaskManagementReleaseEntry(record));
+
+          for (const nestedValue of Object.values(record)) {
+            if (nestedValue && typeof nestedValue === "object") {
+              visit(nestedValue, depth + 1);
+            }
+          }
+        }
+
+        visit(value, 0);
+        return Array.from(entries.values());
+      }
+
+      function extractTaskManagementReleaseEntriesFromHistoryText(text) {
+        const normalized = typeof text === "string" ? text.trim() : "";
+        if (!normalized) return [];
+        try {
+          const parsed = JSON.parse(normalized);
+          const structuredEntries = extractTaskManagementReleaseEntriesFromHistoryValue(parsed);
+          if (structuredEntries.length > 0) {
+            return structuredEntries;
+          }
+        } catch {}
+
+        const entries = [];
+        const lines = normalized.split(/\\r?\\n/);
+        for (const rawLine of lines) {
+          const line = rawLine.trim();
+          if (!line) continue;
+          const match = line.match(/^(?:[+*-]\\s*)?(?:✓\\s*)?(?:Release created|Created release):\\s*(.+?)(?:\\s+\\((release_[^)]+)\\))?\\s*$/i);
+          if (!match?.[1]) {
+            continue;
+          }
+          const entry = createHistoryResourceEntry("release", {
+            id: match[2] || "",
+            name: match[1],
+          });
+          if (entry) {
+            entries.push(entry);
+          }
+        }
+        return entries;
+      }
+
+      function extractTaskManagementReleaseEntriesFromHistoryLog(log) {
+        const metadata = log && log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        const command = typeof metadata.command === "string" ? metadata.command : "";
+        const output = typeof metadata.output === "string" ? metadata.output : "";
+        const result = metadata.result;
+        const args = metadata.args;
+        const fileContents = metadata.fileContents && typeof metadata.fileContents === "object"
+          ? Object.values(metadata.fileContents)
+          : [];
+        const entries = new Map();
+
+        function append(list) {
+          for (const entry of Array.isArray(list) ? list : []) {
+            if (entry && typeof entry === "object" && entry.path) {
+              const existing = entries.get(entry.path);
+              entries.set(entry.path, existing ? { ...existing, ...entry } : entry);
+            }
+          }
+        }
+
+        append(extractTaskManagementReleaseEntriesFromHistoryValue(result));
+        append(extractTaskManagementReleaseEntriesFromHistoryValue(args));
+        append(extractTaskManagementReleaseEntriesFromHistoryText(output));
+        append(extractTaskManagementReleaseEntriesFromHistoryText(log?.message || ""));
+        for (const value of fileContents) {
+          append(extractTaskManagementReleaseEntriesFromHistoryText(typeof value === "string" ? value : ""));
+        }
+
+        if (entries.size === 0 && isTaskManagementReleaseCreateHistoryLog(log)) {
+          const fallbackName = extractHistoryCommandFlagValue(command, "--name");
+          if (fallbackName) {
+            const fallbackEntry = createHistoryResourceEntry("release", {
+              id: extractHistoryCommandFlagValue(command, "--id") || "",
+              name: fallbackName,
+              description: extractHistoryCommandFlagValue(command, "--description") || "",
+              projectId: extractHistoryCommandFlagValue(command, "--project-id") || "",
+              startAt: extractHistoryCommandFlagValue(command, "--start-at") || "",
+              endAt: extractHistoryCommandFlagValue(command, "--end-at") || "",
+              status: "planned",
             });
             if (fallbackEntry) {
               entries.set(fallbackEntry.path, fallbackEntry);
@@ -23399,6 +23997,8 @@ const html = `<!doctype html>
               ...extractGeneratedImageEntriesFromHistoryLog(log),
               ...extractLoggedFileChangeEntriesFromHistoryLog(log),
               ...extractComputerAgentsResourceEntriesFromHistoryLog(log),
+              ...extractTaskManagementTaskEntriesFromHistoryLog(log),
+              ...extractTaskManagementReleaseEntriesFromHistoryLog(log),
             ];
             if (supplementalEntries.length === 0) {
               continue;
@@ -23623,11 +24223,17 @@ const html = `<!doctype html>
             diffText: "",
             isChanged: false,
           };
+          const nextName =
+            extra && extra.type === "resource" && extra.name
+              ? extra.name
+              : existing.type === "resource" && existing.name
+                ? existing.name
+                : getHistoryPathName(normalizedPath);
           entries.set(normalizedPath, {
             ...existing,
             ...(extra || {}),
             path: normalizedPath,
-            name: getHistoryPathName(normalizedPath),
+            name: nextName,
           });
         }
 
@@ -23709,6 +24315,12 @@ const html = `<!doctype html>
         if (resourceType === "skill") {
           return React.createElement(Cpu, { strokeWidth: 1.8 });
         }
+        if (resourceType === "task") {
+          return React.createElement(ListTodo, { strokeWidth: 1.8 });
+        }
+        if (resourceType === "release") {
+          return React.createElement(CalendarIcon, { strokeWidth: 1.8 });
+        }
         if (resourceType === "environment") {
           return React.createElement(HardDrive, { strokeWidth: 1.8 });
         }
@@ -23720,8 +24332,23 @@ const html = `<!doctype html>
         if (!entry || entry.type !== "resource") {
           return rows;
         }
+        if (entry.ticketNumber) {
+          rows.push({ label: "Ticket", value: entry.ticketNumber });
+        }
         if (entry.resourceId) {
           rows.push({ label: "ID", value: entry.resourceId });
+        }
+        if (entry.taskType) {
+          rows.push({ label: "Type", value: formatHistoryTaskTypeLabel(entry.taskType) });
+        }
+        if (entry.status) {
+          rows.push({ label: "Status", value: formatHistoryResourceStatusLabel(entry.status) });
+        }
+        if (entry.priority) {
+          rows.push({ label: "Priority", value: formatHistoryTaskPriorityLabel(entry.priority) });
+        }
+        if (entry.assigneeName) {
+          rows.push({ label: "Assignee", value: entry.assigneeName });
         }
         if (entry.model) {
           rows.push({ label: "Model", value: entry.model });
@@ -23729,13 +24356,61 @@ const html = `<!doctype html>
         if (entry.category) {
           rows.push({ label: "Category", value: entry.category });
         }
+        if (entry.environmentId) {
+          rows.push({ label: "Environment", value: entry.environmentId });
+        }
         if (entry.projectId) {
           rows.push({ label: "Project", value: entry.projectId });
+        }
+        if (entry.startAt || entry.endAt) {
+          rows.push({
+            label: "Window",
+            value: [entry.startAt || "", entry.endAt || ""].filter(Boolean).join(" → "),
+          });
+        }
+        if (typeof entry.taskCount === "number") {
+          rows.push({ label: "Tasks", value: String(entry.taskCount) });
+        }
+        if (typeof entry.openTaskCount === "number") {
+          rows.push({ label: "Open tasks", value: String(entry.openTaskCount) });
         }
         if (entry.isDefault) {
           rows.push({ label: "Default", value: "Yes" });
         }
         return rows;
+      }
+
+      function buildHistoryResourceSubtitle(entry) {
+        if (!entry || entry.type !== "resource") {
+          return "";
+        }
+        if (entry.resourceType === "task") {
+          return [
+            entry.ticketNumber || "",
+            formatHistoryResourceStatusLabel(entry.status),
+            entry.assigneeName || "",
+          ].filter(Boolean).join(" · ");
+        }
+        if (entry.resourceType === "release") {
+          const dateWindow = [entry.startAt || "", entry.endAt || ""].filter(Boolean).join(" → ");
+          return [
+            formatHistoryResourceStatusLabel(entry.status),
+            dateWindow,
+            typeof entry.openTaskCount === "number" && typeof entry.taskCount === "number"
+              ? entry.openTaskCount + "/" + entry.taskCount + " open"
+              : "",
+          ].filter(Boolean).join(" · ");
+        }
+        if (entry.resourceType === "agent") {
+          return [entry.model || "", entry.resourceId || ""].filter(Boolean).join(" · ");
+        }
+        if (entry.resourceType === "skill") {
+          return [entry.category || "", entry.resourceId || ""].filter(Boolean).join(" · ");
+        }
+        if (entry.resourceType === "environment") {
+          return [entry.projectId || "", entry.isDefault ? "Default" : "", entry.resourceId || ""].filter(Boolean).join(" · ");
+        }
+        return entry.resourceId || entry.description || "";
       }
 
       function readRevertedChangeStepId(step) {
@@ -25164,7 +25839,7 @@ const html = `<!doctype html>
                                           const isResourceEntry = entry.type === "resource";
                                           const resourceLabel = isResourceEntry ? (entry.resourceTypeLabel || "Resource") : "";
                                           const resourceSubtitle = isResourceEntry
-                                            ? (entry.resourceId || entry.description || "")
+                                            ? buildHistoryResourceSubtitle(entry)
                                             : "";
                                           return React.createElement("div", {
                                             key: step.id + ":" + entry.path,
@@ -30272,7 +30947,15 @@ const html = `<!doctype html>
         );
       }
 
-      function PlaygroundAgentsPage({ backendUrl, requestHeaders, agents, initialAgentId, onAgentMutated }) {
+      function PlaygroundAgentsPage({
+        backendUrl,
+        requestHeaders,
+        agents,
+        initialAgentId,
+        focusedAgentId = "",
+        focusedAgentSelectionToken = "",
+        onAgentMutated,
+      }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
         const agentDetailMainRef = useRef(null);
@@ -30281,6 +30964,7 @@ const html = `<!doctype html>
         const agentActionsPopoverRef = useRef(null);
         const agentRenameInputRef = useRef(null);
         const agentModelPopoverRef = useRef(null);
+        const lastAppliedFocusedAgentSelectionTokenRef = useRef("");
         const [selectedAgentId, setSelectedAgentId] = useState(initialAgentId || "");
         const [agentDetailsById, setAgentDetailsById] = useState(() => {
           const next = {};
@@ -30431,6 +31115,12 @@ const html = `<!doctype html>
           && loadingAgentId === selectedAgentId
         );
         const isSystemAgent = Boolean(draftAgent?.isSystem);
+        const normalizedFocusedAgentSelectionToken = String(focusedAgentSelectionToken || "").trim();
+        const normalizedFocusedAgentId = String(focusedAgentId || "").trim();
+        const hasPendingFocusedAgentSelection = Boolean(
+          normalizedFocusedAgentSelectionToken
+          && lastAppliedFocusedAgentSelectionTokenRef.current !== normalizedFocusedAgentSelectionToken
+        );
 
         function resetEditorAuxiliaryState() {
           editorDirtyRef.current = false;
@@ -30753,6 +31443,42 @@ const html = `<!doctype html>
         }, [agents]);
 
         useEffect(() => {
+          if (!normalizedFocusedAgentSelectionToken || !normalizedFocusedAgentId) {
+            return;
+          }
+          if (lastAppliedFocusedAgentSelectionTokenRef.current === normalizedFocusedAgentSelectionToken) {
+            return;
+          }
+          lastAppliedFocusedAgentSelectionTokenRef.current = normalizedFocusedAgentSelectionToken;
+
+          const focusedAgent =
+            allKnownAgents.find((agent) => agent?.id === normalizedFocusedAgentId)
+            || agents.find((agent) => agent?.id === normalizedFocusedAgentId)
+            || null;
+
+          if (focusedAgent) {
+            setAgentListMode(getPlaygroundAgentListMode(focusedAgent));
+          }
+          setSelectedAgentId(normalizedFocusedAgentId);
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+          setAgentRenameState(null);
+          setAgentRenameValue("");
+          setAgentRenameError("");
+        }, [
+          agents,
+          allKnownAgents,
+          normalizedFocusedAgentId,
+          normalizedFocusedAgentSelectionToken,
+        ]);
+
+        useEffect(() => {
+          if (hasPendingFocusedAgentSelection) {
+            return;
+          }
+          if (normalizedFocusedAgentId && selectedAgentId === normalizedFocusedAgentId) {
+            return;
+          }
           if (selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID && selectedAgentListPreviewMode === agentListMode) {
             return;
           }
@@ -30764,7 +31490,7 @@ const html = `<!doctype html>
           }
           const fallbackAgent = filteredOrderedAgents.find((agent) => agent.isDefault) || filteredOrderedAgents[0] || null;
           setSelectedAgentId(fallbackAgent?.id || "");
-        }, [agentListMode, filteredOrderedAgents, selectedAgentId, selectedAgentListPreview, selectedAgentListPreviewMode]);
+        }, [agentListMode, filteredOrderedAgents, hasPendingFocusedAgentSelection, normalizedFocusedAgentId, selectedAgentId, selectedAgentListPreview, selectedAgentListPreviewMode]);
 
         useEffect(() => {
           if (!toolbarPopover) return;
@@ -50704,6 +51430,7 @@ const html = `<!doctype html>
             return "";
           }
         });
+        const [agentPageSelectionRequest, setAgentPageSelectionRequest] = useState(null);
         const [threadAgentSelectionOverride, setThreadAgentSelectionOverride] = useState(null);
         const [currentThreadId, setCurrentThreadId] = useState("");
         const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
@@ -59982,6 +60709,8 @@ const html = `<!doctype html>
                               requestHeaders,
                               agents: realAgents,
                               initialAgentId: resolvedPreferredAgentId || "",
+                              focusedAgentId: agentPageSelectionRequest?.agentId || "",
+                              focusedAgentSelectionToken: agentPageSelectionRequest?.token || "",
                               onAgentMutated: async () => {
                                 await refreshAgents();
                               },
@@ -60122,6 +60851,22 @@ const html = `<!doctype html>
                                         threadId: activeRunnerThreadId || currentThreadId || "",
                                         token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                                       });
+                                    },
+                                    onResourcePreviewClick: (resourcePreview) => {
+                                      if (!resourcePreview || resourcePreview.resourceType !== "agent") {
+                                        return;
+                                      }
+                                      const normalizedAgentId = String(resourcePreview.id || "").trim();
+                                      if (!normalizedAgentId) {
+                                        return;
+                                      }
+                                      void refreshAgents();
+                                      setSidebarOpen(false);
+                                      setAgentPageSelectionRequest({
+                                        agentId: normalizedAgentId,
+                                        token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                                      });
+                                      setActivePage("agents");
                                     },
                                     onThreadIdChange: (threadId) => {
                                       setActivePage("thread");
