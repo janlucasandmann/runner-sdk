@@ -1504,7 +1504,12 @@ const html = `<!doctype html>
       .playground-thread-preview-drawer .tb-attachment-preview-drawer-header {
         height: 56px;
         min-height: 56px;
-        padding: 0 12px;
+        padding: 0 22px;
+        box-sizing: border-box;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-drawer-body {
+        padding: 0 10px;
         box-sizing: border-box;
       }
 
@@ -1556,11 +1561,38 @@ const html = `<!doctype html>
 
       .playground-thread-subagent-drawer .tb-subagent-detail-drawer-header {
         min-height: 56px;
-        padding: 6px 18px 12px;
+        padding: 6px 28px 12px;
       }
 
       .playground-thread-subagent-drawer .tb-subagent-detail-drawer-body {
-        padding-top: 0;
+        padding: 0 26px 26px;
+      }
+
+      .playground-thread-task-drawer .playground-tasks-detail-scroll {
+        padding-left: 28px;
+        padding-right: 28px;
+      }
+
+      .playground-thread-task-drawer .playground-tasks-comment-dock {
+        padding-left: 28px;
+        padding-right: 28px;
+      }
+
+      .playground-thread-task-drawer .tb-runner-chat .tb-log-scroll,
+      .playground-thread-subagent-drawer .tb-runner-chat .tb-log-scroll {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .playground-thread-task-drawer .tb-runner-chat .tb-input-shell,
+      .playground-thread-subagent-drawer .tb-runner-chat .tb-input-shell {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .playground-thread-task-drawer .tb-runner-chat .tb-thread-history-rail,
+      .playground-thread-subagent-drawer .tb-runner-chat .tb-thread-history-rail {
+        right: 22px;
       }
 
       .playground-thread-runner.is-project-wallpaper-active .tb-log-card-panel,
