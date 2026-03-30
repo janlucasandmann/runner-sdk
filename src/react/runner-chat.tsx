@@ -67,7 +67,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isDeepResearchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -219,6 +219,10 @@ interface PendingEditConfirmation {
 interface RunnerSelectedSubagentDetail {
   turnId: string;
   invocationId: string;
+}
+
+interface RunnerSelectedDeepResearchDetail {
+  turnId: string;
 }
 
 type RunnerForkFileCopyMode = "all" | "thread_only" | "none";
@@ -710,6 +714,7 @@ export interface RunnerChatProps {
   onActionSummaryClick?: (summary: RunnerChatActionSummaryClickPayload) => void;
   onSubagentDetailOpenChange?: (isOpen: boolean) => void;
   onDocumentPreviewOpenChange?: (isOpen: boolean) => void;
+  onDeepResearchDetailOpenChange?: (isOpen: boolean) => void;
   threadTaskPreview?: RunnerTaskPreview | null;
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
@@ -4880,6 +4885,7 @@ export function RunnerChat({
   onActionSummaryClick,
   onSubagentDetailOpenChange,
   onDocumentPreviewOpenChange,
+  onDeepResearchDetailOpenChange,
   threadTaskPreview = null,
   activeTaskPreviewId = null,
   onTaskPreviewClick,
@@ -4903,6 +4909,7 @@ export function RunnerChat({
   const [attachments, setAttachments] = useState<LocalAttachment[]>([]);
   const [previewedDocumentAttachment, setPreviewedDocumentAttachment] = useState<RunnerTurnAttachment | null>(null);
   const [selectedSubagentDetail, setSelectedSubagentDetail] = useState<RunnerSelectedSubagentDetail | null>(null);
+  const [selectedDeepResearchDetail, setSelectedDeepResearchDetail] = useState<RunnerSelectedDeepResearchDetail | null>(null);
   const [documentPreviewDrawerWidth, setDocumentPreviewDrawerWidth] = useState<number | null>(null);
   const [isThreadHistoryLoading, setIsThreadHistoryLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -5602,6 +5609,10 @@ export function RunnerChat({
     setPreviewedDocumentAttachment(null);
   }
 
+  function closeDeepResearchDetailDrawer() {
+    setSelectedDeepResearchDetail(null);
+  }
+
   function closeSubagentDetailDrawer() {
     setSelectedSubagentDetail(null);
   }
@@ -5610,8 +5621,18 @@ export function RunnerChat({
     if (!turnId || !invocationId) {
       return;
     }
+    closeDeepResearchDetailDrawer();
     closeDocumentAttachmentPreview();
     setSelectedSubagentDetail({ turnId, invocationId });
+  }
+
+  function openDeepResearchDetailDrawer(turnId: string) {
+    if (!turnId) {
+      return;
+    }
+    closeSubagentDetailDrawer();
+    closeDocumentAttachmentPreview();
+    setSelectedDeepResearchDetail({ turnId });
   }
 
   function startDocumentPreviewResize(event: ReactPointerEvent<HTMLButtonElement>) {
@@ -5633,6 +5654,7 @@ export function RunnerChat({
     if (!isAttachmentDocumentPreviewable(attachment)) {
       return;
     }
+    closeDeepResearchDetailDrawer();
     closeSubagentDetailDrawer();
     setPreviewedDocumentAttachment((current) => (current?.id === attachment.id ? null : attachment));
   }
@@ -10083,6 +10105,8 @@ export function RunnerChat({
           logs={item.logs}
           runningCommandLog={item.runningCommandLog}
           timeLabel={firstLog ? toDurationLabel(firstLog) : undefined}
+          isDetailOpen={selectedDeepResearchDetail?.turnId === turn.id}
+          onOpenDetails={() => openDeepResearchDetailDrawer(turn.id)}
         />
       );
     }
@@ -10542,6 +10566,34 @@ export function RunnerChat({
     };
   }, [previewedDocumentAttachment, turns.length]);
 
+  const selectedDeepResearchDetailPresentation = useMemo(() => {
+    if (!selectedDeepResearchDetail) {
+      return null;
+    }
+
+    const selectedTurn = turns.find((turn) => turn.id === selectedDeepResearchDetail.turnId);
+    if (!selectedTurn) {
+      return null;
+    }
+
+    const timelineState = getTurnTimelineState(selectedTurn);
+    const deepResearchGroup = timelineState.displayedTimelineItems.find(
+      (item): item is Extract<RunnerTimelineItem, { kind: "deep_research_group" }> => item.kind === "deep_research_group"
+    );
+
+    if (!deepResearchGroup) {
+      return null;
+    }
+
+    const firstLog = deepResearchGroup.logs[0] || deepResearchGroup.runningCommandLog;
+    return {
+      turn: selectedTurn,
+      logs: deepResearchGroup.logs,
+      runningCommandLog: deepResearchGroup.runningCommandLog,
+      timeLabel: firstLog ? toDurationLabel(firstLog) : undefined,
+    };
+  }, [selectedDeepResearchDetail, turns]);
+
   const selectedSubagentDetailPresentation = useMemo(() => {
     if (!selectedSubagentDetail) {
       return null;
@@ -10773,6 +10825,19 @@ export function RunnerChat({
       showResizeHandle
     />
   ) : null;
+  const deepResearchDetailDrawerContent = selectedDeepResearchDetailPresentation ? (
+    <DeepResearchDetailDrawer
+      log={selectedDeepResearchDetailPresentation.runningCommandLog}
+      logs={selectedDeepResearchDetailPresentation.logs}
+      runningCommandLog={selectedDeepResearchDetailPresentation.runningCommandLog}
+      timeLabel={selectedDeepResearchDetailPresentation.timeLabel}
+      onClose={closeDeepResearchDetailDrawer}
+    />
+  ) : null;
+  const deepResearchDetailDrawer =
+    deepResearchDetailDrawerContent && subagentDetailPortalTarget && typeof document !== "undefined"
+      ? createPortal(deepResearchDetailDrawerContent, subagentDetailPortalTarget)
+      : deepResearchDetailDrawerContent;
   const subagentDetailDrawerContent = selectedSubagentDetailPresentation ? (
     <SubagentDetailDrawer
       title={selectedSubagentDetailPresentation.title}
@@ -11011,13 +11076,23 @@ export function RunnerChat({
 
   useEffect(() => {
     setSelectedSubagentDetail(null);
+    setSelectedDeepResearchDetail(null);
   }, [localThreadId]);
 
   useEffect(() => {
     if (disableSubagentDetailDrawer && selectedSubagentDetail) {
       setSelectedSubagentDetail(null);
     }
-  }, [disableSubagentDetailDrawer, selectedSubagentDetail]);
+    if (disableSubagentDetailDrawer && selectedDeepResearchDetail) {
+      setSelectedDeepResearchDetail(null);
+    }
+  }, [disableSubagentDetailDrawer, selectedDeepResearchDetail, selectedSubagentDetail]);
+
+  useEffect(() => {
+    if (selectedDeepResearchDetail && !selectedDeepResearchDetailPresentation) {
+      setSelectedDeepResearchDetail(null);
+    }
+  }, [selectedDeepResearchDetail, selectedDeepResearchDetailPresentation]);
 
   useEffect(() => {
     onSubagentDetailOpenChange?.(Boolean(selectedSubagentDetailPresentation));
@@ -11038,6 +11113,16 @@ export function RunnerChat({
       onDocumentPreviewOpenChange?.(false);
     };
   }, [onDocumentPreviewOpenChange]);
+
+  useEffect(() => {
+    onDeepResearchDetailOpenChange?.(Boolean(selectedDeepResearchDetailPresentation));
+  }, [onDeepResearchDetailOpenChange, selectedDeepResearchDetailPresentation]);
+
+  useEffect(() => {
+    return () => {
+      onDeepResearchDetailOpenChange?.(false);
+    };
+  }, [onDeepResearchDetailOpenChange]);
 
   useEffect(() => {
     if (!currentThreadId || !hasApiKey || !normalizedBackendUrl || isRunning) {
@@ -11790,7 +11875,7 @@ export function RunnerChat({
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${selectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
       style={
         {
           "--tb-document-preview-width": previewedDocumentAttachment
@@ -13350,6 +13435,7 @@ export function RunnerChat({
         </div>
       ) : null}
 
+      {deepResearchDetailDrawer}
       {subagentDetailDrawer}
       {documentAttachmentPreviewDrawer}
 

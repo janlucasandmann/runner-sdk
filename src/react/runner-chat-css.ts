@@ -846,12 +846,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   width: 100%;
   flex: 1 1 auto;
   height: 100%;
+  max-height: calc(100vh - 100px);
   min-height: 0;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   overflow-y: auto;
-  padding: 12px 12px 180px;
+  padding: 12px 20px 180px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -1029,13 +1030,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   display: flex;
   justify-content: center;
   padding: 10px 12px 10px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.96) 68%, rgba(0, 0, 0, 0));
+  background: transparent;
   pointer-events: none;
   transition: right 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tb-runner-chat.playground-thread-runner.is-project-wallpaper-active .tb-input-shell {
-  padding: 10px 12px 10px;
+  padding: 10px 20px 10px;
 }
 
 .tb-runner-chat.playground-thread-runner.is-project-wallpaper-active .tb-input-width {
@@ -2144,6 +2145,12 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.tb-runner-chat .tb-log-card.tb-log-card-deep-research.is-detail-open .tb-log-card-panel {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .tb-runner-chat .tb-log-card.tb-log-card-browser {
   width: min(100%, 800px);
   max-width: 100%;
@@ -2208,6 +2215,85 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.tb-runner-chat .tb-deep-research-log-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tb-runner-chat .tb-deep-research-log-task,
+.tb-runner-chat .tb-deep-research-log-task-surface {
+  padding-bottom: 14px;
+}
+
+.tb-runner-chat .tb-deep-research-log-task-markdown {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.tb-runner-chat .tb-deep-research-log-task-markdown > *:first-child,
+.tb-runner-chat .tb-deep-research-log-event-markdown > *:first-child {
+  margin-top: 0;
+}
+
+.tb-runner-chat .tb-deep-research-log-task-markdown > *:last-child,
+.tb-runner-chat .tb-deep-research-log-event-markdown > *:last-child {
+  margin-bottom: 0;
+}
+
+.tb-runner-chat .tb-deep-research-log-events {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-deep-research-log-events-drawer {
+  gap: 10px;
+}
+
+.tb-runner-chat .tb-deep-research-log-event {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.tb-runner-chat .tb-deep-research-log-event.is-success {
+  background: transparent;
+}
+
+.tb-runner-chat .tb-deep-research-log-event.is-error {
+  background: transparent;
+}
+
+.tb-runner-chat .tb-deep-research-log-event-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tb-runner-chat .tb-deep-research-log-event-label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.tb-runner-chat .tb-deep-research-log-event-time {
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.tb-runner-chat .tb-deep-research-log-event-markdown {
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .tb-runner-chat .tb-subagent-log-preview-copy {
@@ -2355,6 +2441,12 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   pointer-events: auto;
 }
 
+.tb-runner-chat.tb-runner-chat-deep-research-detail-open .tb-deep-research-detail-drawer {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .tb-runner-chat .tb-subagent-detail-drawer-header {
   display: flex;
   align-items: center;
@@ -2424,6 +2516,21 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-subagent-detail-drawer .tb-subagent-log-summary.is-error {
   background: transparent;
+}
+
+.tb-runner-chat .tb-deep-research-log-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.tb-runner-chat .tb-deep-research-log-summary.is-error {
+  background: rgba(255, 95, 87, 0.08);
 }
 
 .tb-runner-chat .tb-browser-carousel-path {

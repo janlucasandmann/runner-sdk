@@ -3540,6 +3540,196 @@ export function getDeepResearchLogState({
   };
 }
 
+type RunnerDeepResearchDisplayLog = {
+  key: string;
+  label?: string | null;
+  message: string;
+  timeLabel?: string;
+  tone?: "default" | "success" | "error";
+};
+
+function formatDeepResearchDisplayLog(log: RunnerLog, index: number): RunnerDeepResearchDisplayLog | null {
+  const deepResearch = log.metadata?.deepResearch;
+  if (!deepResearch) {
+    return null;
+  }
+
+  const timeLabel = typeof log.time === "string" && log.time.trim() ? log.time.trim() : undefined;
+  const event = String(deepResearch.event || "").trim();
+  const eventLabel = event.replace(/_/g, " ").trim();
+  const key = `${event || "event"}-${index}-${timeLabel || ""}`;
+
+  switch (event) {
+    case "start":
+      return {
+        key,
+        label: "Started",
+        message: deepResearch.topic || "Starting deep research task.",
+        timeLabel,
+      };
+    case "interaction_started":
+      return {
+        key,
+        label: "Researching",
+        message: "Connected the research session and started gathering material.",
+        timeLabel,
+      };
+    case "thinking":
+      return {
+        key,
+        label: null,
+        message: deepResearch.thinkingSummary || "Analyzing the current research direction.",
+        timeLabel,
+      };
+    case "status":
+      return {
+        key,
+        label: "Status",
+        message:
+          typeof deepResearch.elapsedSeconds === "number" && deepResearch.elapsedSeconds > 0
+            ? `Research in progress. ${deepResearch.elapsedSeconds}s elapsed.`
+            : "Research in progress.",
+        timeLabel,
+      };
+    case "content":
+      return {
+        key,
+        label: "Finding",
+        message: sanitizeSubagentDisplayText(log.message) || "Captured additional source material.",
+        timeLabel,
+      };
+    case "research_complete":
+    case "complete":
+      return {
+        key,
+        label: "Complete",
+        message:
+          deepResearch.reportFile
+            ? `Finished the report in ${deepResearch.reportFile}${typeof deepResearch.sourcesCount === "number" && deepResearch.sourcesCount > 0 ? ` using ${deepResearch.sourcesCount} sources.` : "."}`
+            : typeof deepResearch.sourcesCount === "number" && deepResearch.sourcesCount > 0
+              ? `Finished the research using ${deepResearch.sourcesCount} sources.`
+              : "Finished the research run.",
+        timeLabel,
+        tone: "success",
+      };
+    case "error":
+    case "timeout":
+    case "connection_timeout":
+    case "resume_timeout":
+    case "resume_error":
+      return {
+        key,
+        label: "Error",
+        message: deepResearch.errorMessage || deepResearch.thinkingSummary || "Deep research failed.",
+        timeLabel,
+        tone: "error",
+      };
+    case "resuming_stream":
+      return {
+        key,
+        label: "Resuming",
+        message: "Resuming the deep research stream.",
+        timeLabel,
+      };
+    case "stream_ended":
+      return {
+        key,
+        label: "Stream ended",
+        message:
+          typeof deepResearch.reportLength === "number" && deepResearch.reportLength > 0
+            ? `Research stream ended with ${deepResearch.reportLength} characters of report output.`
+            : "Research stream ended.",
+        timeLabel,
+      };
+    default:
+      return {
+        key,
+        label: eventLabel ? eventLabel.charAt(0).toUpperCase() + eventLabel.slice(1) : "Update",
+        message: sanitizeSubagentDisplayText(log.message) || "Deep research updated.",
+        timeLabel,
+      };
+  }
+}
+
+function buildDeepResearchDisplayLogs({
+  streamingLogs,
+  parsed,
+  topic,
+  isError,
+  isComplete,
+  isLoading,
+}: {
+  streamingLogs: RunnerLog[];
+  parsed: ReturnType<typeof getDeepResearchLogState>["parsed"];
+  topic: string | null;
+  isError: boolean;
+  isComplete: boolean;
+  isLoading: boolean;
+}): RunnerDeepResearchDisplayLog[] {
+  const formattedStreamingLogs = streamingLogs
+    .map((log, index) => formatDeepResearchDisplayLog(log, index))
+    .filter((entry): entry is RunnerDeepResearchDisplayLog => Boolean(entry));
+
+  if (formattedStreamingLogs.length > 0) {
+    return formattedStreamingLogs;
+  }
+
+  const synthesized: RunnerDeepResearchDisplayLog[] = [];
+
+  if (topic) {
+    synthesized.push({
+      key: "synthetic-task",
+      label: "Started",
+      message: topic,
+    });
+  }
+
+  parsed.thinkingSummaries.forEach((summary, index) => {
+    synthesized.push({
+      key: `synthetic-thinking-${index}`,
+      label: null,
+      message: summary,
+    });
+  });
+
+  if (isError) {
+    synthesized.push({
+      key: "synthetic-error",
+      label: "Error",
+      message: parsed.errorMessage || "Deep research failed.",
+      tone: "error",
+    });
+  } else if (isComplete) {
+    synthesized.push({
+      key: "synthetic-complete",
+      label: "Complete",
+      message:
+        parsed.reportFile
+          ? `Finished the report in ${parsed.reportFile}${parsed.sourcesCount > 0 ? ` using ${parsed.sourcesCount} sources.` : "."}`
+          : parsed.sourcesCount > 0
+            ? `Finished the research using ${parsed.sourcesCount} sources.`
+            : "Finished the research run.",
+      tone: "success",
+    });
+  } else if (isLoading) {
+    synthesized.push({
+      key: "synthetic-loading",
+      label: "Status",
+      message: "Research started.",
+    });
+  }
+
+  if (synthesized.length === 0) {
+    synthesized.push({
+      key: "synthetic-empty",
+      label: "Status",
+      message: "No research output available.",
+    });
+  }
+
+  return synthesized;
+}
+
 export function hasActiveDeepResearchLogGroup(logs: RunnerLog[]): boolean {
   if (!Array.isArray(logs) || logs.length === 0) {
     return false;
@@ -3666,11 +3856,15 @@ export function DeepResearchLogBox({
   logs,
   runningCommandLog,
   timeLabel,
+  onOpenDetails,
+  isDetailOpen = false,
 }: {
   log?: RunnerLog;
   logs?: RunnerLog[];
   runningCommandLog?: RunnerLog;
   timeLabel?: string;
+  onOpenDetails?: () => void;
+  isDetailOpen?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const {
@@ -3687,9 +3881,24 @@ export function DeepResearchLogBox({
     () => getDeepResearchLogState({ log, logs, runningCommandLog }),
     [log, logs, runningCommandLog]
   );
+  const taskCopy = truncateSubagentPreviewText(topic || parsed.topic || "Deep research task", 280);
+  const previewLogs = useMemo(
+    () =>
+      buildDeepResearchDisplayLogs({
+        streamingLogs,
+        parsed,
+        topic,
+        isError,
+        isComplete,
+        isLoading,
+      })
+        .filter((entry) => !(taskCopy && entry.label === "Started" && entry.message.trim() === taskCopy.trim()))
+        .slice(-2),
+    [isComplete, isError, isLoading, parsed, streamingLogs, taskCopy, topic]
+  );
 
   return (
-    <div className="tb-log-card">
+    <div className={`tb-log-card tb-log-card-deep-research ${isDetailOpen ? "is-detail-open" : ""}`.trim()}>
       <LogHeader
         icon={<Telescope className="tb-log-card-small-icon" strokeWidth={1.5} />}
         label="Deep Research"
@@ -3700,47 +3909,175 @@ export function DeepResearchLogBox({
         onToggle={() => setCollapsed((value) => !value)}
       />
       <LogPanel collapsed={collapsed}>
-        {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{parsed.errorMessage || "Deep research failed."}</div>
-        ) : (
-          <>
-            {parsed.thinkingSummaries.length > 0 ? (
-              <div className="tb-log-list">
-                {parsed.thinkingSummaries.map((summary, index) => (
-                  <div key={`${summary.slice(0, 64)}-${index}`} className="tb-log-list-item tb-log-list-item-column">
-                    <RunnerMarkdown content={summary} className="tb-message-markdown" />
-                  </div>
-                ))}
-              </div>
+        <div className="tb-subagent-log-preview tb-deep-research-log-preview">
+          <div className={`tb-subagent-log-preview-copy tb-deep-research-log-preview-copy ${isLoading ? "is-running" : ""}`.trim()}>
+            {taskCopy ? (
+              <>
+                <div className="tb-subagent-log-preview-prompt tb-deep-research-log-task">
+                  <RunnerMarkdown
+                    content={taskCopy}
+                    className="tb-message-markdown tb-message-markdown-summary tb-deep-research-log-task-markdown"
+                    softBreaks
+                    disallowHeadings
+                  />
+                </div>
+                <div className="tb-subagent-log-preview-divider" aria-hidden="true" />
+              </>
             ) : null}
-            {parsed.reportFile ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">Report</span>
-                <span className="tb-log-meta-value">{parsed.reportFile}</span>
-              </div>
-            ) : null}
-            {parsed.sourcesCount > 0 ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">Sources</span>
-                <span className="tb-log-meta-value">{parsed.sourcesCount}</span>
-              </div>
-            ) : null}
-            {parsed.elapsedSeconds > 0 ? (
-              <div className="tb-log-meta-row">
-                <span className="tb-log-meta-label">Elapsed</span>
-                <span className="tb-log-meta-value">{parsed.elapsedSeconds}s</span>
-              </div>
-            ) : null}
-            {isLoading && parsed.thinkingSummaries.length === 0 && !parsed.reportFile && parsed.sourcesCount === 0 ? (
-              <div className="tb-log-card-empty">Research started.</div>
-            ) : null}
-            {!isLoading && !isComplete && parsed.thinkingSummaries.length === 0 && !parsed.reportFile && parsed.sourcesCount === 0 ? (
-              <div className="tb-log-card-empty">No research output available.</div>
-            ) : null}
-          </>
-        )}
+            <div className="tb-deep-research-log-events">
+              {previewLogs.map((entry) => (
+                <div key={entry.key} className={`tb-deep-research-log-event ${entry.tone === "error" ? "is-error" : entry.tone === "success" ? "is-success" : ""}`.trim()}>
+                  {entry.label || entry.timeLabel ? (
+                    <div className="tb-deep-research-log-event-header">
+                      {entry.label ? <span className="tb-deep-research-log-event-label">{entry.label}</span> : <span />}
+                      {entry.timeLabel ? <span className="tb-deep-research-log-event-time">{entry.timeLabel}</span> : null}
+                    </div>
+                  ) : null}
+                  <RunnerMarkdown
+                    content={entry.message}
+                    className="tb-message-markdown tb-message-markdown-summary tb-deep-research-log-event-markdown"
+                    softBreaks
+                    disallowHeadings
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="tb-subagent-log-preview-footer">
+            <button type="button" className="tb-subagent-log-open-button" onClick={onOpenDetails}>
+              <span>View all logs</span>
+              <ChevronRight className="tb-subagent-log-open-button-icon" strokeWidth={1.6} />
+            </button>
+          </div>
+        </div>
       </LogPanel>
     </div>
+  );
+}
+
+export function DeepResearchDetailDrawer({
+  log,
+  logs,
+  runningCommandLog,
+  timeLabel,
+  onClose,
+}: {
+  log?: RunnerLog;
+  logs?: RunnerLog[];
+  runningCommandLog?: RunnerLog;
+  timeLabel?: string;
+  onClose: () => void;
+}) {
+  const {
+    streamingLogs,
+    parsed,
+    topic,
+    isError,
+    isComplete,
+    isLoading,
+    statusLabel,
+  } = useMemo(
+    () => getDeepResearchLogState({ log, logs, runningCommandLog }),
+    [log, logs, runningCommandLog]
+  );
+
+  const displayLogs = useMemo(
+    () =>
+      buildDeepResearchDisplayLogs({
+        streamingLogs,
+        parsed,
+        topic,
+        isError,
+        isComplete,
+        isLoading,
+      }),
+    [isComplete, isError, isLoading, parsed, streamingLogs, topic]
+  );
+
+  const taskCopy = String(topic || parsed.topic || "Deep research task").trim();
+
+  return (
+    <aside className="tb-subagent-detail-drawer tb-deep-research-detail-drawer">
+      <div className="tb-subagent-detail-drawer-header">
+        <div className="tb-subagent-detail-drawer-header-copy">
+          <Telescope className="tb-attachment-preview-drawer-header-icon" strokeWidth={1.6} />
+          <div className="tb-subagent-detail-drawer-header-text">
+            <div className="tb-subagent-detail-drawer-title" title={taskCopy || "Deep Research"}>{taskCopy || "Deep Research"}</div>
+          </div>
+        </div>
+        <div className="tb-subagent-detail-drawer-header-actions">
+          {timeLabel ? <span className="tb-subagent-detail-drawer-time">{timeLabel}</span> : null}
+          <button type="button" className="tb-attachment-preview-drawer-action" onClick={onClose} aria-label="Close deep research details">
+            <X className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.8} />
+          </button>
+        </div>
+      </div>
+      <div className="tb-subagent-detail-drawer-body">
+        <div className="tb-deep-research-log-shell">
+          {taskCopy ? (
+            <div className="tb-subagent-log-prompt tb-deep-research-log-task-surface">
+              <RunnerMarkdown
+                content={taskCopy}
+                className="tb-message-markdown tb-message-markdown-user tb-subagent-log-prompt-markdown"
+                softBreaks
+                disallowHeadings
+              />
+            </div>
+          ) : null}
+          <div className="tb-subagent-log-meta">
+            <span className="tb-turn-agent-name">Deep Research</span>
+            <span className={`tb-log-card-pill ${isError ? "is-error" : ""}`.trim()}>{statusLabel}</span>
+          </div>
+          <div className="tb-deep-research-log-events tb-deep-research-log-events-drawer">
+            {displayLogs.length > 0 ? (
+              displayLogs.map((entry) => (
+                <div key={entry.key} className={`tb-deep-research-log-event ${entry.tone === "error" ? "is-error" : entry.tone === "success" ? "is-success" : ""}`.trim()}>
+                  {entry.label || entry.timeLabel ? (
+                    <div className="tb-deep-research-log-event-header">
+                      {entry.label ? <span className="tb-deep-research-log-event-label">{entry.label}</span> : <span />}
+                      {entry.timeLabel ? <span className="tb-deep-research-log-event-time">{entry.timeLabel}</span> : null}
+                    </div>
+                  ) : null}
+                  <RunnerMarkdown
+                    content={entry.message}
+                    className="tb-message-markdown tb-message-markdown-summary tb-deep-research-log-event-markdown"
+                    softBreaks
+                    disallowHeadings
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="tb-log-card-empty">No research logs yet.</div>
+            )}
+          </div>
+          {(parsed.reportFile || parsed.sourcesCount > 0 || parsed.elapsedSeconds > 0 || (isError && parsed.errorMessage)) ? (
+            <div className={`tb-deep-research-log-summary ${isError ? "is-error" : ""}`.trim()}>
+              {parsed.reportFile ? (
+                <div className="tb-log-meta-row">
+                  <span className="tb-log-meta-label">Report</span>
+                  <span className="tb-log-meta-value">{parsed.reportFile}</span>
+                </div>
+              ) : null}
+              {parsed.sourcesCount > 0 ? (
+                <div className="tb-log-meta-row">
+                  <span className="tb-log-meta-label">Sources</span>
+                  <span className="tb-log-meta-value">{parsed.sourcesCount}</span>
+                </div>
+              ) : null}
+              {parsed.elapsedSeconds > 0 ? (
+                <div className="tb-log-meta-row">
+                  <span className="tb-log-meta-label">Elapsed</span>
+                  <span className="tb-log-meta-value">{parsed.elapsedSeconds}s</span>
+                </div>
+              ) : null}
+              {isError && parsed.errorMessage ? (
+                <div className="tb-log-card-state tb-log-card-state-error">{parsed.errorMessage}</div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </aside>
   );
 }
 

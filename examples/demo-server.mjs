@@ -390,9 +390,14 @@ const html = `<!doctype html>
         transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      .playground-shell.is-projects-page .playground-sidebar {
+      .playground-shell.is-projects-page .playground-sidebar:not(.is-collapsed) {
         backdrop-filter: blur(50px);
         -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-shell.is-projects-page .playground-sidebar.is-collapsed {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .playground-sidebar-panel,
@@ -523,7 +528,7 @@ const html = `<!doctype html>
         flex-direction: column;
         align-items: center;
         gap: 14px;
-        padding: 9px 8px 0;
+        padding: 11px 8px 0;
         opacity: 0;
         transform: translateX(-12px);
         visibility: hidden;
@@ -1561,7 +1566,7 @@ const html = `<!doctype html>
 
       .playground-thread-subagent-drawer .tb-subagent-detail-drawer-header {
         min-height: 56px;
-        padding: 6px 28px 12px;
+        padding: 2px 28px 12px;
       }
 
       .playground-thread-subagent-drawer .tb-subagent-detail-drawer-body {
@@ -1602,6 +1607,10 @@ const html = `<!doctype html>
         backdrop-filter: blur(50px);
       }
 
+      .playground-thread-runner.is-project-wallpaper-active .task-input-box {
+        --tb-task-input-base-bg: rgba(255, 255, 255, 0.1);
+      }
+
       .playground-thread-welcome {
         width: min(100%, 780px);
         display: flex;
@@ -1624,7 +1633,7 @@ const html = `<!doctype html>
       }
 
       .playground-thread-welcome-plan {
-        margin: 0;
+        margin: 100px 0 0;
         color: rgba(255, 255, 255, 0.72);
         font-family: Georgia, serif;
         font-size: 14px;
@@ -13919,7 +13928,7 @@ const html = `<!doctype html>
         width: 100%;
         min-width: 0;
         padding: 10px;
-        border: 1px solid transparent;
+        border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 10px;
         background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.05));
         backdrop-filter: blur(20px);
@@ -14641,7 +14650,7 @@ const html = `<!doctype html>
         flex-direction: column;
         gap: 0;
         padding: 12px;
-        border: 0;
+        border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 8px;
         background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.05));
         box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
@@ -26179,6 +26188,11 @@ const html = `<!doctype html>
                       onRequestSidebarCollapse();
                     }
                   },
+                  onDeepResearchDetailOpenChange: (isOpen) => {
+                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
+                      onRequestSidebarCollapse();
+                    }
+                  },
                 })
               )
             )
@@ -37529,6 +37543,16 @@ const html = `<!doctype html>
             return current.map((project) => project.id === normalized.id ? normalized : project);
           });
 
+          setThreadProjectRecordsById((current) => {
+            if (!normalized?.id) {
+              return current;
+            }
+            return {
+              ...current,
+              [normalized.id]: normalized,
+            };
+          });
+
           if (selectedProjectId === normalized.id || extra.selectImmediately) {
             setSelectedProjectDetail((current) => ({
               project: normalized,
@@ -45665,6 +45689,11 @@ const html = `<!doctype html>
                       onRequestSidebarCollapse();
                     }
                   },
+                  onDeepResearchDetailOpenChange: (isOpen) => {
+                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
+                      onRequestSidebarCollapse();
+                    }
+                  },
                 })
               ),
             extraToolbarContent: React.createElement(React.Fragment, null,
@@ -49131,6 +49160,7 @@ const html = `<!doctype html>
         const [welcomeWidgetPreviewAttachment, setWelcomeWidgetPreviewAttachment] = useState(null);
         const [threadTaskOpenRequest, setThreadTaskOpenRequest] = useState(null);
         const [threadSubagentDetailOpen, setThreadSubagentDetailOpen] = useState(false);
+        const [threadDeepResearchDetailOpen, setThreadDeepResearchDetailOpen] = useState(false);
         const [threadSubagentDetailHost, setThreadSubagentDetailHost] = useState(null);
         const [settingsSection, setSettingsSection] = useState("costs-plans");
         const [contentMode, setContentMode] = useState("chat");
@@ -56811,12 +56841,18 @@ const html = `<!doctype html>
           : (typeof selectedKnownThread?.projectId === "string" && selectedKnownThread.projectId.trim()
             ? selectedKnownThread.projectId.trim()
             : (typeof selectedThreadCachedProjectContext?.projectId === "string" ? selectedThreadCachedProjectContext.projectId.trim() : ""));
+        const listedSelectedThreadProjectRecord = selectedThreadProjectId
+          ? (projectsById[selectedThreadProjectId] || null)
+          : null;
         const cachedSelectedThreadProjectRecord = selectedThreadProjectId
           ? (threadProjectRecordsById[selectedThreadProjectId] || null)
           : null;
         const selectedThreadProjectRecord = useMemo(() => {
           if (!selectedThreadProjectId) {
             return null;
+          }
+          if (listedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
+            return listedSelectedThreadProjectRecord;
           }
           if (cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
             return cachedSelectedThreadProjectRecord;
@@ -56825,7 +56861,7 @@ const html = `<!doctype html>
             return welcomeWidgetProject;
           }
           return null;
-        }, [cachedSelectedThreadProjectRecord, selectedThreadProjectId, welcomeWidgetProject]);
+        }, [cachedSelectedThreadProjectRecord, listedSelectedThreadProjectRecord, selectedThreadProjectId, welcomeWidgetProject]);
         const selectedThreadShellBackground = useMemo(() => {
           if (!selectedThreadProjectRecord) {
             return "";
@@ -57095,6 +57131,11 @@ const html = `<!doctype html>
           }
         }, [activePage, sidebarOpen, threadSubagentDetailOpen]);
         useEffect(() => {
+          if (activePage === "thread" && threadDeepResearchDetailOpen && sidebarOpen) {
+            setSidebarOpen(false);
+          }
+        }, [activePage, sidebarOpen, threadDeepResearchDetailOpen]);
+        useEffect(() => {
           if (activePage === "thread" && welcomeWidgetPreviewAttachment && sidebarOpen) {
             setSidebarOpen(false);
           }
@@ -57102,6 +57143,7 @@ const html = `<!doctype html>
         useEffect(() => {
           if (activePage !== "thread") {
             setThreadSubagentDetailOpen(false);
+            setThreadDeepResearchDetailOpen(false);
           }
         }, [activePage]);
         useEffect(() => {
@@ -57115,10 +57157,10 @@ const html = `<!doctype html>
           }
         }, [activePage]);
         useEffect(() => {
-          if (threadTaskOpenRequest || threadSubagentDetailOpen) {
+          if (threadTaskOpenRequest || threadSubagentDetailOpen || threadDeepResearchDetailOpen) {
             setWelcomeWidgetPreviewAttachment(null);
           }
-        }, [threadSubagentDetailOpen, threadTaskOpenRequest]);
+        }, [threadDeepResearchDetailOpen, threadSubagentDetailOpen, threadTaskOpenRequest]);
         const threadActionTarget = useMemo(() => {
           if (!threadActionMenuState?.threadId) {
             return null;
@@ -57143,15 +57185,23 @@ const html = `<!doctype html>
         const isThreadSubagentDetailOpen =
           activePage === "thread" &&
           Boolean(threadSubagentDetailOpen) &&
+          !threadDeepResearchDetailOpen &&
           !threadTaskOpenRequest &&
+          hasRealAccess;
+        const isThreadDeepResearchDetailOpen =
+          activePage === "thread" &&
+          Boolean(threadDeepResearchDetailOpen) &&
+          !threadTaskOpenRequest &&
+          !threadSubagentDetailOpen &&
           hasRealAccess;
         const isThreadPreviewDetailOpen =
           activePage === "thread" &&
           Boolean(welcomeWidgetPreviewAttachment) &&
           !threadTaskOpenRequest &&
           !threadSubagentDetailOpen &&
+          !threadDeepResearchDetailOpen &&
           hasRealAccess;
-        const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen || isThreadPreviewDetailOpen;
+        const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen || isThreadPreviewDetailOpen;
 
         function renderAuthGate() {
           return React.createElement("div", { className: "playground-auth-panel" },
@@ -58497,6 +58547,12 @@ const html = `<!doctype html>
                                         setSidebarOpen(false);
                                       }
                                     },
+                                    onDeepResearchDetailOpenChange: (isOpen) => {
+                                      setThreadDeepResearchDetailOpen(isOpen);
+                                      if (isOpen) {
+                                        setSidebarOpen(false);
+                                      }
+                                    },
                                     onSubagentDetailOpenChange: (isOpen) => {
                                       setThreadSubagentDetailOpen(isOpen);
                                     },
@@ -58653,14 +58709,15 @@ const html = `<!doctype html>
                     : null,
                   activePage === "thread" && hasRealAccess
                     ? React.createElement("aside", {
-                        className: "playground-thread-subagent-drawer" + (isThreadSubagentDetailOpen ? " is-open" : ""),
-                        "aria-hidden": isThreadSubagentDetailOpen ? "false" : "true",
+                        className: "playground-thread-subagent-drawer" + (isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen ? " is-open" : ""),
+                        "aria-hidden": isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen ? "false" : "true",
                       },
                         React.createElement("div", {
                           ref: threadSubagentDetailHostRef,
                           className:
                             "playground-thread-subagent-drawer-host tb-runner-chat" +
-                            (isThreadSubagentDetailOpen ? " tb-runner-chat-subagent-detail-open" : ""),
+                            (isThreadSubagentDetailOpen ? " tb-runner-chat-subagent-detail-open" : "") +
+                            (isThreadDeepResearchDetailOpen ? " tb-runner-chat-deep-research-detail-open" : ""),
                         })
                       )
                     : null,
