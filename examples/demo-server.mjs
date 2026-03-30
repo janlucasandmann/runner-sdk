@@ -412,7 +412,7 @@ const html = `<!doctype html>
         height: 100%;
         display: flex;
         flex-direction: column;
-        padding: 14px 10px 0;
+        padding: 0 10px 0;
         opacity: 1;
         transform: translateX(0);
         visibility: visible;
@@ -421,11 +421,6 @@ const html = `<!doctype html>
           opacity 180ms ease,
           transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
           visibility 0s linear 0s;
-      }
-
-      .playground-shell.is-projects-page .playground-sidebar-panel,
-      .playground-shell.is-project-thread-page .playground-sidebar-panel {
-        padding-top: 6px;
       }
 
       .sidebar-hide-button {
@@ -465,14 +460,9 @@ const html = `<!doctype html>
       .playground-sidebar-top {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        margin-bottom: 18px;
-      }
-
-      .playground-shell.is-projects-page .playground-sidebar-top,
-      .playground-shell.is-project-thread-page .playground-sidebar-top {
+        justify-content: flex-start;
         min-height: 56px;
-        padding: 2px 0 12px;
+        padding: 2px 0 6px;
         margin-bottom: 0;
         box-sizing: border-box;
       }
@@ -521,27 +511,73 @@ const html = `<!doctype html>
       }
 
       .playground-sidebar-brand {
-        display: flex;
-        align-items: center;
-        min-width: 0;
+        position: relative;
+        width: 30px;
+        height: 30px;
+        margin-left: 4px;
+        padding: 0;
         border: 0;
-        padding: 0 0 0 12px;
         background: transparent;
+        color: rgba(255, 255, 255, 0.76);
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-sidebar-brand:hover,
+      .playground-sidebar-brand:focus-visible {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
       }
 
       .playground-sidebar-brand-logo {
+        position: absolute;
+        inset: 0;
+        margin: auto;
         display: block;
         width: auto;
         height: 14px;
         object-fit: contain;
+        transform: scale(1);
+        transform-origin: center;
+        opacity: 1;
+        transition: opacity 160ms ease, transform 160ms ease;
+      }
+
+      .playground-sidebar-brand-close-icon {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 14px;
+        height: 14px;
+        transform: scale(0.9);
+        transform-origin: center;
+        opacity: 0;
+        transition: opacity 160ms ease, transform 160ms ease;
+      }
+
+      .playground-sidebar-brand:hover .playground-sidebar-brand-logo,
+      .playground-sidebar-brand:focus-visible .playground-sidebar-brand-logo {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      .playground-sidebar-brand:hover .playground-sidebar-brand-close-icon,
+      .playground-sidebar-brand:focus-visible .playground-sidebar-brand-close-icon {
+        opacity: 1;
+        transform: scale(1);
       }
 
       .playground-sidebar-rail {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 14px;
-        padding: 11px 8px 0;
+        gap: 0;
+        padding: 0 8px 0;
         opacity: 0;
         transform: translateX(-12px);
         visibility: hidden;
@@ -552,9 +588,13 @@ const html = `<!doctype html>
           visibility 0s linear 180ms;
       }
 
-      .playground-shell.is-projects-page .playground-sidebar-rail,
-      .playground-shell.is-project-thread-page .playground-sidebar-rail {
-        padding-top: 6px;
+      .sidebar-rail-top {
+        min-height: 56px;
+        padding: 2px 0 6px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .playground-sidebar.is-collapsed .playground-sidebar-panel {
@@ -575,8 +615,8 @@ const html = `<!doctype html>
 
       .sidebar-rail-logo-button,
       .sidebar-rail-button {
-        width: 36px;
-        height: 36px;
+        width: 30px;
+        height: 30px;
         padding: 0;
         border: 0;
         border-radius: 10px;
@@ -642,7 +682,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: 4px;
       }
 
       .sidebar-rail-button.is-active {
@@ -652,10 +692,10 @@ const html = `<!doctype html>
       }
 
       .sidebar-rail-account {
-        width: 36px;
-        height: 36px;
+        width: 30px;
+        height: 30px;
         margin-top: auto;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
         padding: 0;
         border: 0;
         border-radius: 10px;
@@ -1263,7 +1303,7 @@ const html = `<!doctype html>
       .playground-main {
         min-width: 0;
         height: 100%;
-        padding: 6px 0 0;
+        padding: 0;
         overflow: hidden;
       }
 
@@ -1272,7 +1312,7 @@ const html = `<!doctype html>
       }
 
       .playground-shell.is-project-thread-page .playground-main {
-        padding: 6px 0 0;
+        padding: 0;
       }
 
       .playground-shell.is-initial-thread-page .playground-main {
@@ -1295,7 +1335,7 @@ const html = `<!doctype html>
         align-items: center;
         gap: 16px;
         min-height: 56px;
-        padding: 2px 12px 12px;
+        padding: 2px 12px 6px;
         box-sizing: border-box;
         transition: padding-right 280ms cubic-bezier(0.16, 1, 0.3, 1);
       }
@@ -11001,7 +11041,7 @@ const html = `<!doctype html>
 
       .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail .playground-tasks-detail-navbar {
         min-height: 56px;
-        padding: 2px 12px 12px;
+        padding: 2px 12px 6px;
         box-sizing: border-box;
       }
 
@@ -13629,7 +13669,7 @@ const html = `<!doctype html>
 
       .playground-tasks-project-navbar {
         min-height: 56px;
-        padding: 2px 12px 12px;
+        padding: 2px 12px 6px;
         box-sizing: border-box;
       }
 
@@ -13647,7 +13687,7 @@ const html = `<!doctype html>
 
       .playground-tasks-project-home-navbar {
         min-height: 56px;
-        padding: 2px 12px 12px;
+        padding: 2px 12px 6px;
         margin-bottom: 12px;
         border-bottom: 0;
         box-sizing: border-box;
@@ -58322,19 +58362,20 @@ const html = `<!doctype html>
           const shouldShowSidebarThreadSection = isThreadsLoading || baseThreadItems.length > 0;
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-sidebar-top" },
-              React.createElement("div", { className: "playground-sidebar-brand" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-sidebar-brand",
+                onClick: () => setSidebarOpen(false),
+                "aria-label": "Collapse sidebar",
+                title: "Collapse sidebar"
+              },
                 React.createElement("img", {
                   className: "playground-sidebar-brand-logo",
                   src: RUNNER_TRANSPARENT_LOGO_URL,
                   alt: "Runner"
-                })
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "sidebar-hide-button",
-                onClick: () => setSidebarOpen(false),
-                "aria-label": "Hide sidebar"
-              }, React.createElement(PanelLeftClose, { className: "sidebar-toggle-icon", strokeWidth: 1.5 }))
+                }),
+                React.createElement(PanelLeftClose, { className: "playground-sidebar-brand-close-icon", strokeWidth: 1.5 })
+              )
             ),
             React.createElement("div", { className: "sidebar-action-list" },
               React.createElement("button", {
@@ -58444,19 +58485,21 @@ const html = `<!doctype html>
 
         function renderCollapsedSidebarRail() {
           return React.createElement(React.Fragment, null,
-            React.createElement("button", {
-              type: "button",
-              className: "sidebar-rail-logo-button",
-              onClick: () => setSidebarOpen(true),
-              "aria-label": "Open sidebar",
-              title: "Open sidebar"
-            },
-              React.createElement("img", {
-                className: "sidebar-rail-logo",
-                src: RUNNER_TRANSPARENT_LOGO_URL,
-                alt: "Runner"
-              }),
-              React.createElement(PanelLeftOpen, { className: "sidebar-rail-logo-open-icon", strokeWidth: 1.5 })
+            React.createElement("div", { className: "sidebar-rail-top" },
+              React.createElement("button", {
+                type: "button",
+                className: "sidebar-rail-logo-button",
+                onClick: () => setSidebarOpen(true),
+                "aria-label": "Open sidebar",
+                title: "Open sidebar"
+              },
+                React.createElement("img", {
+                  className: "sidebar-rail-logo",
+                  src: RUNNER_TRANSPARENT_LOGO_URL,
+                  alt: "Runner"
+                }),
+                React.createElement(PanelLeftOpen, { className: "sidebar-rail-logo-open-icon", strokeWidth: 1.5 })
+              )
             ),
             React.createElement("div", { className: "sidebar-rail-actions" },
               React.createElement("button", {
