@@ -11008,6 +11008,7 @@ const html = `<!doctype html>
         min-height: 0;
         display: grid;
         grid-template-columns: minmax(0, 1fr) 0px;
+        position: relative;
         transition: grid-template-columns 220ms ease;
       }
 
@@ -11017,6 +11018,10 @@ const html = `<!doctype html>
 
       .playground-tasks-shell.is-detail-open.is-preview-open {
         grid-template-columns: minmax(0, 1fr) minmax(760px, 920px);
+      }
+
+      .playground-tasks-shell.is-detail-open.is-detail-expanded {
+        grid-template-columns: minmax(0, 1fr) 0px;
       }
 
       .playground-tasks-main {
@@ -11047,6 +11052,16 @@ const html = `<!doctype html>
         transform: translateX(0);
         pointer-events: auto;
         border-left-color: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-tasks-shell.is-detail-open.is-detail-expanded .playground-tasks-detail-panel {
+        position: absolute;
+        inset: 0;
+        z-index: 12;
+        width: 100%;
+        height: 100%;
+        border-left-color: rgba(255, 255, 255, 0.08);
+        box-shadow: -24px 0 60px rgba(0, 0, 0, 0.24);
       }
 
       .playground-tasks-detail-panel.is-inline-detail {
@@ -33691,6 +33706,7 @@ const html = `<!doctype html>
         const releaseDescriptionTextareaRef = useRef(null);
         const [isReleaseDescriptionEditing, setIsReleaseDescriptionEditing] = useState(false);
         const [selectedTaskId, setSelectedTaskId] = useState("");
+        const [isTaskDetailExpanded, setIsTaskDetailExpanded] = useState(false);
         const [draftTask, setDraftTask] = useState(null);
         const [isTaskDescriptionEditing, setIsTaskDescriptionEditing] = useState(false);
         const [taskDetailsCollapsed, setTaskDetailsCollapsed] = useState(false);
@@ -39103,6 +39119,7 @@ const html = `<!doctype html>
             setTaskDetailPopover("");
             setTaskSkillsPopoverOpen(false);
             setTaskConnectorBrowserOpen(false);
+            setIsTaskDetailExpanded(false);
           }
         }, [selectedTaskId, taskView]);
 
@@ -42435,6 +42452,7 @@ const html = `<!doctype html>
           setBacklogTaskContextMenu(null);
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
+          setIsTaskDetailExpanded(false);
           setTaskParentPickerState(null);
           setTaskDeleteDialogState(null);
           setTaskScheduleDialogState(null);
@@ -48605,6 +48623,18 @@ const html = `<!doctype html>
                   ref: taskDetailActionsRef,
                 },
                   React.createElement("span", { className: activeTaskStatusClassName, title: activeTaskStatusLabel }, activeTaskStatusLabel),
+                  !isDetailOnlyMode
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-header-icon-button is-plain" + (isTaskDetailExpanded ? " is-active" : ""),
+                        onClick: () => setIsTaskDetailExpanded((current) => !current),
+                        title: isTaskDetailExpanded ? "Restore sidebar width" : "Expand sidebar",
+                        "aria-label": isTaskDetailExpanded ? "Restore sidebar width" : "Expand sidebar",
+                      }, isTaskDetailExpanded
+                        ? React.createElement(PanelLeftOpen, { width: 16, height: 16, strokeWidth: 1.8 })
+                        : React.createElement(PanelLeftClose, { width: 16, height: 16, strokeWidth: 1.8 })
+                      )
+                    : null,
                   React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                     React.createElement("button", {
                       type: "button",
@@ -49390,7 +49420,7 @@ const html = `<!doctype html>
         }
 
         return React.createElement("div", { className: "playground-tasks-page" },
-          React.createElement("div", { className: "playground-tasks-shell" + (isDetailOpen ? " is-detail-open" : "") + (isTaskAttachmentPreviewOpen ? " is-preview-open" : "") },
+          React.createElement("div", { className: "playground-tasks-shell" + (isDetailOpen ? " is-detail-open" : "") + (isTaskAttachmentPreviewOpen ? " is-preview-open" : "") + (isTaskDetailOpen && isTaskDetailExpanded ? " is-detail-expanded" : "") },
             React.createElement("section", { className: "playground-tasks-main" },
               React.createElement("div", {
                   className: "playground-tasks-main-scroll" + (selectedProject ? " is-project-workspace" : " is-projects-home"),
