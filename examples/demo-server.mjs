@@ -1245,7 +1245,7 @@ const html = `<!doctype html>
       .playground-main {
         min-width: 0;
         height: 100%;
-        padding: 6px;
+        padding: 6px 0 0;
         overflow: hidden;
       }
 
