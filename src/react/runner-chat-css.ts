@@ -4678,7 +4678,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   display: flex;
   flex-direction: column;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
-  background: transparent;
+  background: rgba(0, 0, 0, 0.5);
   box-shadow: -32px 0 80px rgba(0, 0, 0, 0.42);
   transform: translateX(100%);
   opacity: 0;
@@ -4705,7 +4705,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   min-height: 0;
   flex: 1 1 auto;
   border-left: 0;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.5);
   box-shadow: none;
   transform: none;
   opacity: 1;

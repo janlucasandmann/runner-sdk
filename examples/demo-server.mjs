@@ -1496,7 +1496,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         border-left: 1px solid rgba(255, 255, 255, 0.08);
-        background: transparent;
+        background: rgba(0, 0, 0, 0.5);
         opacity: 0;
         transform: translateX(100%);
         pointer-events: none;
@@ -1522,7 +1522,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         border-left: 1px solid rgba(255, 255, 255, 0.08);
-        background: transparent;
+        background: rgba(0, 0, 0, 0.5);
         opacity: 0;
         transform: translateX(100%);
         pointer-events: none;
@@ -1548,7 +1548,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         border-left: 1px solid rgba(255, 255, 255, 0.08);
-        background: transparent;
+        background: rgba(0, 0, 0, 0.5);
         opacity: 0;
         transform: translateX(100%);
         pointer-events: none;
@@ -1579,7 +1579,7 @@ const html = `<!doctype html>
         width: 100%;
         height: 100%;
         border-left: 0;
-        background: transparent;
+        background: rgba(0, 0, 0, 0.5);
         box-shadow: none;
         transform: none;
         opacity: 1;
@@ -10992,7 +10992,7 @@ const html = `<!doctype html>
         transform: translateX(24px);
         pointer-events: none;
         transition: opacity 240ms ease, transform 240ms ease;
-        background: transparent;
+        background: rgba(0, 0, 0, 0.5);
       }
 
       .playground-thread-detail-shell.is-task-detail-open .playground-thread-detail-panel {
@@ -11038,6 +11038,7 @@ const html = `<!doctype html>
         transform: translateX(24px);
         pointer-events: none;
         border-left: 1px solid transparent;
+        background: rgba(0, 0, 0, 0.5);
         transition: opacity 220ms ease, transform 220ms ease, border-color 220ms ease;
       }
 
@@ -11054,7 +11055,7 @@ const html = `<!doctype html>
         transform: none;
         pointer-events: auto;
         border-left-color: rgba(255, 255, 255, 0.08);
-        background: transparent;
+        background: rgba(0, 0, 0, 0.5);
       }
 
       .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail {
@@ -11102,6 +11103,7 @@ const html = `<!doctype html>
         transform: translateX(24px);
         pointer-events: none;
         border-left: 1px solid transparent;
+        background: rgba(0, 0, 0, 0.5);
         transition: opacity 220ms ease, transform 220ms ease, border-color 220ms ease;
       }
 
@@ -11389,6 +11391,166 @@ const html = `<!doctype html>
         gap: 4px;
       }
 
+      .playground-mission-control-status-overview {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 6px 0 10px;
+      }
+
+      .playground-mission-control-status-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .playground-mission-control-status-metric {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .playground-mission-control-status-value {
+        font-size: 17px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-mission-control-status-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        line-height: 1.2;
+        font-weight: 400;
+        color: #fff;
+        white-space: nowrap;
+      }
+
+      .playground-mission-control-status-label svg {
+        width: 12px;
+        height: 12px;
+        flex: 0 0 auto;
+      }
+
+      .playground-mission-control-status-label.is-total svg {
+        color: rgba(137, 126, 255, 0.92);
+      }
+
+      .playground-mission-control-status-label.is-backlog svg {
+        color: rgba(120, 111, 255, 0.92);
+      }
+
+      .playground-mission-control-status-label.is-in-progress svg {
+        color: rgba(170, 138, 255, 0.94);
+      }
+
+      .playground-mission-control-status-label.is-done svg {
+        color: rgba(237, 170, 255, 0.94);
+      }
+
+      .playground-mission-control-status-bar {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+        height: 58px;
+        overflow: hidden;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-mission-control-status-bar::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+        mix-blend-mode: screen;
+      }
+
+      .playground-mission-control-status-bar.is-empty {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-mission-control-status-segment {
+        position: relative;
+        min-width: 0;
+        height: 100%;
+      }
+
+      .playground-mission-control-status-segment::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 52%),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.16) 0 2px,
+            rgba(255, 255, 255, 0) 2px 54px
+          );
+        pointer-events: none;
+      }
+
+      .playground-mission-control-status-segment + .playground-mission-control-status-segment {
+        box-shadow: inset 2px 0 0 rgba(255, 255, 255, 0.18);
+      }
+
+      .playground-mission-control-status-segment.is-backlog {
+        background: linear-gradient(90deg, rgba(102, 95, 230, 0.92) 0%, rgba(124, 110, 238, 0.9) 100%);
+      }
+
+      .playground-mission-control-status-segment.is-in-progress {
+        background: linear-gradient(90deg, rgba(150, 119, 242, 0.92) 0%, rgba(181, 141, 248, 0.9) 100%);
+      }
+
+      .playground-mission-control-status-segment.is-done {
+        background: linear-gradient(90deg, rgba(221, 161, 252, 0.9) 0%, rgba(243, 182, 246, 0.92) 100%);
+      }
+
+      .playground-mission-control-run-button {
+        width: 100%;
+        min-height: 36px;
+        margin-top: 8px;
+        margin-bottom: 5px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.96);
+        color: #000;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 500;
+        cursor: pointer;
+        transition: 0.2s all;
+      }
+
+      .playground-mission-control-run-button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-mission-control-run-button:disabled {
+        opacity: 0.56;
+        cursor: default;
+      }
+
+      .playground-mission-control-run-button-icon {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 auto;
+      }
+
       .playground-tasks-detail-fact {
         display: grid;
         grid-template-columns: minmax(88px, 110px) minmax(0, 1fr);
@@ -11399,7 +11561,7 @@ const html = `<!doctype html>
 
       .playground-tasks-detail-fact-label {
         font-size: 12px;
-        font-weight: 500;
+        font-weight: 400;
         color: rgba(255, 255, 255, 0.56);
         line-height: 1.35;
       }
@@ -33788,6 +33950,33 @@ const html = `<!doctype html>
 
           return nextSummary;
         }, [releases, selectedProject, selectedProjectDetail, selectedProjectId, sprints, taskLoadState.status, tasks]);
+        const selectedProjectTaskStatusOverview = useMemo(() => {
+          if (selectedProjectId && taskLoadState.status === "ready") {
+            const total = tasks.length;
+            const backlog = tasks.filter((task) => {
+              const status = String(task?.status || "").trim();
+              return status === "backlog" || status === "todo";
+            }).length;
+            const inProgress = tasks.filter((task) => {
+              const status = String(task?.status || "").trim();
+              return status === "in_progress" || status === "blocked";
+            }).length;
+            const done = tasks.filter((task) => String(task?.status || "").trim() === "done").length;
+            return {
+              total,
+              backlog,
+              inProgress,
+              done,
+            };
+          }
+
+          return {
+            total: Number(selectedProjectSummary.tasksCount) || 0,
+            backlog: 0,
+            inProgress: 0,
+            done: 0,
+          };
+        }, [selectedProjectId, selectedProjectSummary.tasksCount, taskLoadState.status, tasks]);
         const selectedProjectMissionControl = useMemo(() => {
           return getPlaygroundProjectMissionControlRecord(selectedProject);
         }, [selectedProject]);
@@ -47726,6 +47915,53 @@ const html = `<!doctype html>
               : null;
             const missionControlTaskCount = Number(selectedProjectSummary.tasksCount) || 0;
             const missionControlOpenTaskCount = Number(selectedProjectSummary.openTasksCount) || 0;
+            const missionControlStatusMetrics = [
+              {
+                key: "backlog",
+                label: "Backlog",
+                count: Number(selectedProjectTaskStatusOverview.backlog) || 0,
+                Icon: FolderOpen,
+                toneClassName: "is-backlog",
+              },
+              {
+                key: "in-progress",
+                label: "In progress",
+                count: Number(selectedProjectTaskStatusOverview.inProgress) || 0,
+                Icon: Zap,
+                toneClassName: "is-in-progress",
+              },
+              {
+                key: "done",
+                label: "Finished",
+                count: Number(selectedProjectTaskStatusOverview.done) || 0,
+                Icon: Sparkles,
+                toneClassName: "is-done",
+              },
+            ];
+            const missionControlStatusSegments = [
+              {
+                key: "backlog",
+                count: Number(selectedProjectTaskStatusOverview.backlog) || 0,
+                className: "is-backlog",
+              },
+              {
+                key: "in-progress",
+                count: Number(selectedProjectTaskStatusOverview.inProgress) || 0,
+                className: "is-in-progress",
+              },
+              {
+                key: "done",
+                count: Number(selectedProjectTaskStatusOverview.done) || 0,
+                className: "is-done",
+              },
+            ]
+              .map((segment) => ({
+                ...segment,
+                percentage: missionControlTaskCount > 0
+                  ? (segment.count / missionControlTaskCount) * 100
+                  : 0,
+              }))
+              .filter((segment) => segment.count > 0);
             const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
             return React.createElement("div", { className: "playground-tasks-detail-shell" },
               React.createElement("div", { className: "playground-tasks-detail-main" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
@@ -47737,19 +47973,6 @@ const html = `<!doctype html>
                   ),
                   React.createElement("div", { className: "playground-content-nav-center" }),
                   React.createElement("div", { className: "playground-content-nav-right playground-tasks-detail-navbar-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      disabled: isSelectedProjectMissionControlRunning,
-                      onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
-                    },
-                      isSelectedProjectMissionControlRunning
-                        ? React.createElement(React.Fragment, null,
-                            React.createElement(Loader2, { className: "playground-tasks-mission-control-button-spinner", strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Running...")
-                          )
-                        : "Run Mission Control"
-                    ),
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-header-icon-button is-plain",
@@ -47830,28 +48053,38 @@ const html = `<!doctype html>
                       ),
                       !missionControlDetailsCollapsed
                         ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact" },
-                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Environment"),
-                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                renderTaskDetailSelectControl({
-                                  popoverId: "mission-control-environment",
-                                  valueLabel: missionControlDefaultEnvironment?.name || "No environment selected",
-                                  disabled: availableBacklogEnvironments.length === 0,
-                                  isEmpty: !missionControlDefaultEnvironmentId,
-                                  menuClassName: "playground-tasks-toolbar-popup-menu-environment",
-                                  children: availableBacklogEnvironments.length > 0
-                                    ? availableBacklogEnvironments.map((environment) =>
-                                        renderTaskDetailSelectOptionRow({
-                                          key: environment.id,
-                                          label: environment.name + (environment.isDefault ? " (Default)" : ""),
-                                          selected: missionControlDefaultEnvironmentId === environment.id,
-                                          onClick: () => {
-                                            void handleMissionControlEnvironmentSelectionChange(environment.id);
-                                          },
-                                        })
-                                      )
-                                    : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available."),
-                                })
+                            React.createElement("div", { className: "playground-mission-control-status-overview" },
+                              React.createElement("div", { className: "playground-mission-control-status-metrics" },
+                                missionControlStatusMetrics.map((metric) =>
+                                  React.createElement("div", {
+                                    key: metric.key,
+                                    className: "playground-mission-control-status-metric",
+                                  },
+                                    React.createElement("div", { className: "playground-mission-control-status-value" }, String(metric.count)),
+                                    metric.label
+                                      ? React.createElement("div", { className: "playground-mission-control-status-label " + metric.toneClassName },
+                                          React.createElement("span", null, metric.label),
+                                          React.createElement(metric.Icon, { strokeWidth: 1.8 })
+                                        )
+                                      : null
+                                  )
+                                )
+                              ),
+                              React.createElement("div", {
+                                className: "playground-mission-control-status-bar" + (missionControlStatusSegments.length === 0 ? " is-empty" : ""),
+                                "aria-label": "Project task progress overview",
+                              },
+                                missionControlStatusSegments.map((segment) =>
+                                  React.createElement("div", {
+                                    key: segment.key,
+                                    className: "playground-mission-control-status-segment " + segment.className,
+                                    style: {
+                                      width: segment.percentage + "%",
+                                      flex: "0 0 " + segment.percentage + "%",
+                                    },
+                                    title: Math.round(segment.percentage) + "% " + segment.key.replace("-", " "),
+                                  })
+                                )
                               )
                             ),
                             React.createElement("div", { className: "playground-tasks-detail-fact" },
@@ -47865,6 +48098,31 @@ const html = `<!doctype html>
                               React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                                 React.createElement("div", { className: "playground-tasks-detail-fact-button" }, String(missionControlOpenTaskCount))
                               )
+                            ),
+                            React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", {
+                                className: "playground-tasks-detail-fact-label",
+                                style: { whiteSpace: "nowrap" },
+                              }, "Mission Confidence"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                React.createElement("div", { className: "playground-tasks-detail-fact-button" }, "100%")
+                              )
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-mission-control-run-button",
+                              disabled: isSelectedProjectMissionControlRunning,
+                              onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
+                            },
+                              isSelectedProjectMissionControlRunning
+                                ? React.createElement(React.Fragment, null,
+                                    React.createElement(Loader2, { className: "playground-mission-control-run-button-icon", strokeWidth: 1.8 }),
+                                    React.createElement("span", null, "Running Mission Control")
+                                  )
+                                : React.createElement(React.Fragment, null,
+                                    React.createElement(Rocket, { className: "playground-mission-control-run-button-icon", strokeWidth: 1.8 }),
+                                    React.createElement("span", null, "Run Mission Control")
+                                  )
                             )
                           )
                         : null
