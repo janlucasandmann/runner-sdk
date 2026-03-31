@@ -2267,6 +2267,12 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 12px;
 }
 
+.tb-runner-chat .tb-log-card.tb-log-card-browser.is-detail-open .tb-log-card-panel {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .tb-runner-chat .tb-log-card.tb-log-card-subagent.is-detail-open .tb-log-card-panel {
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -2732,6 +2738,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.tb-runner-chat .tb-browser-carousel-footer-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .tb-runner-chat .tb-browser-carousel-action {

@@ -31,6 +31,7 @@ import {
   LoaderCircle,
   ListTodo,
   Mail,
+  Monitor,
   MousePointerClick,
   Route,
   Music,
@@ -80,6 +81,7 @@ interface RunnerWorkLogEntryProps {
   backendUrl?: string;
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
+  renderComputerUseMcpAsGeneric?: boolean;
   activeTaskPreviewId?: string | null;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
   onTaskPreviewClick?: (preview: {
@@ -5180,6 +5182,8 @@ type BrowserSkillResult = {
   textExcerpt?: string;
   elements: BrowserSkillElement[];
   screenshotPaths: string[];
+  coordinate?: [number, number] | null;
+  startCoordinate?: [number, number] | null;
 };
 
 type BrowserSkillStep = {
@@ -5192,9 +5196,19 @@ type BrowserSkillStep = {
   isRunning: boolean;
 };
 
+type VisualInteractionVariant = "browser" | "computer-use";
+
 export function isBrowserSkillCommand(command?: string): boolean {
   if (!command) return false;
   return command.includes(".claude/skills/browser/") || command.includes("browser.mjs");
+}
+
+export function isComputerUseMcpLog(log?: RunnerLog | null): boolean {
+  if (!log || log.eventType !== "mcp_tool_call") {
+    return false;
+  }
+  const serverName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  return serverName === "computer-use" || serverName === "testbase-computer";
 }
 
 export function isBrowserSkillLaunchCommand(command?: string): boolean {
@@ -5205,6 +5219,11 @@ export function isBrowserSkillLaunchCommand(command?: string): boolean {
 function normalizeBrowserSkillWorkspacePath(filePath?: string | null): string | null {
   const normalized = String(filePath || "").trim().replace(/^\/workspace\//, "").replace(/^workspace\//, "");
   return normalized ? normalized : null;
+}
+
+function isComputerUseWorkspacePath(filePath?: string | null): boolean {
+  const normalized = normalizeBrowserSkillWorkspacePath(filePath);
+  return Boolean(normalized && normalized.startsWith("tmp/computer-use/"));
 }
 
 function guessBrowserSkillAction(command?: string): string {
@@ -5267,6 +5286,124 @@ function parseBrowserSkillOutput(output?: string, command?: string): BrowserSkil
           })
       : [],
     screenshotPaths,
+    coordinate: null,
+    startCoordinate: null,
+  };
+}
+
+function extractMarkedJsonPayload(prefix: string, value: unknown): Record<string, unknown> | null {
+  const textCandidates: string[] = [];
+
+  const visit = (entry: unknown): void => {
+    if (!entry) return;
+    if (typeof entry === "string") {
+      textCandidates.push(entry);
+      return;
+    }
+    if (Array.isArray(entry)) {
+      for (const nestedEntry of entry) visit(nestedEntry);
+      return;
+    }
+    if (typeof entry === "object") {
+      const record = entry as Record<string, unknown>;
+      if (typeof record.action === "string") {
+        textCandidates.push(JSON.stringify(record));
+      }
+      for (const nestedEntry of Object.values(record)) {
+        visit(nestedEntry);
+      }
+    }
+  };
+
+  visit(value);
+
+  for (const candidate of textCandidates) {
+    const lines = String(candidate || "")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    for (const line of lines) {
+      if (!line.startsWith(prefix)) {
+        continue;
+      }
+      try {
+        const parsed = JSON.parse(line.slice(prefix.length));
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return parsed as Record<string, unknown>;
+        }
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  return null;
+}
+
+function parseComputerUseOutput(result: unknown): BrowserSkillResult {
+  const parsed = extractMarkedJsonPayload("COMPUTER_USE_RESULT::", result);
+  const explicitScreenshotPaths = (
+    [
+      normalizeBrowserSkillWorkspacePath(typeof parsed?.screenshotPath === "string" ? parsed.screenshotPath : null),
+      ...(Array.isArray(parsed?.screenshotPaths)
+        ? parsed.screenshotPaths.map((value) => normalizeBrowserSkillWorkspacePath(typeof value === "string" ? value : null))
+        : []),
+    ] as Array<string | null>
+  ).filter((value): value is string => Boolean(value));
+  const fallbackScreenshotPath = normalizeBrowserSkillWorkspacePath(extractWorkspaceImagePathFromResult(result));
+  const fallbackScreenshotPaths =
+    isComputerUseWorkspacePath(fallbackScreenshotPath) && fallbackScreenshotPath
+      ? [fallbackScreenshotPath]
+      : [];
+  const screenshotPaths = Array.from(
+    new Set(
+      explicitScreenshotPaths.length > 0
+        ? explicitScreenshotPaths
+        : fallbackScreenshotPaths
+    )
+  );
+  const coordinate =
+    Array.isArray(parsed?.coordinate) &&
+    parsed.coordinate.length >= 2 &&
+    Number.isFinite(Number(parsed.coordinate[0])) &&
+    Number.isFinite(Number(parsed.coordinate[1]))
+      ? [Number(parsed.coordinate[0]), Number(parsed.coordinate[1])] as [number, number]
+      : null;
+  const startCoordinate =
+    Array.isArray(parsed?.startCoordinate) &&
+    parsed.startCoordinate.length >= 2 &&
+    Number.isFinite(Number(parsed.startCoordinate[0])) &&
+    Number.isFinite(Number(parsed.startCoordinate[1]))
+      ? [Number(parsed.startCoordinate[0]), Number(parsed.startCoordinate[1])] as [number, number]
+      : Array.isArray(parsed?.start_coordinate) &&
+          parsed.start_coordinate.length >= 2 &&
+          Number.isFinite(Number(parsed.start_coordinate[0])) &&
+          Number.isFinite(Number(parsed.start_coordinate[1]))
+        ? [Number(parsed.start_coordinate[0]), Number(parsed.start_coordinate[1])] as [number, number]
+        : null;
+
+  return {
+    ok: parsed?.ok !== false,
+    action: typeof parsed?.action === "string" && parsed.action.trim() ? parsed.action.trim() : "computer",
+    title:
+      typeof parsed?.title === "string" && parsed.title.trim()
+        ? parsed.title.trim()
+        : typeof parsed?.displayLabel === "string" && parsed.displayLabel.trim()
+          ? parsed.displayLabel.trim()
+          : "Desktop",
+    selector: null,
+    text: typeof parsed?.textExcerpt === "string"
+      ? parsed.textExcerpt
+      : typeof parsed?.text === "string"
+        ? parsed.text
+        : null,
+    key: typeof parsed?.key === "string" ? parsed.key : null,
+    error: typeof parsed?.error === "string" ? parsed.error : undefined,
+    textExcerpt: typeof parsed?.textExcerpt === "string" ? parsed.textExcerpt : undefined,
+    elements: [],
+    screenshotPaths,
+    coordinate,
+    startCoordinate,
   };
 }
 
@@ -5312,20 +5449,52 @@ function formatBrowserSkillActionTarget(value?: string | null): string {
   return normalized.length > 64 ? `${normalized.slice(0, 61)}...` : normalized;
 }
 
+function formatInteractionCoordinate(value?: [number, number] | null): string {
+  if (!value || value.length < 2) {
+    return "";
+  }
+  return `${Math.round(value[0])}, ${Math.round(value[1])}`;
+}
+
 function formatBrowserSkillStepAction(parsed: BrowserSkillResult): string {
   const action = parsed.action.toLowerCase();
   const clickTarget = formatBrowserSkillActionTarget(parsed.text || parsed.selector || parsed.title || parsed.url);
   const fieldTarget = formatBrowserSkillActionTarget(parsed.selector || parsed.title || parsed.url);
   const waitTarget = formatBrowserSkillActionTarget(parsed.selector || parsed.text || parsed.title || parsed.url);
+  const coordinateTarget = formatInteractionCoordinate(parsed.coordinate);
+  const dragStart = formatInteractionCoordinate(parsed.startCoordinate);
 
   if (action === "launch") return "Launch browser";
   if (action === "navigate") return "Navigate";
   if (action === "snapshot" || action === "manual") return "Capture page";
+  if (action === "screenshot") return "Capture screen";
   if (action === "scroll") return "Scroll";
+  if (action === "mouse_move") return coordinateTarget ? `Move cursor to ${coordinateTarget}` : "Move cursor";
+  if (action === "hover") return coordinateTarget ? `Hover ${coordinateTarget}` : "Hover";
   if (action === "click") return clickTarget ? `Click ${clickTarget}` : "Click";
-  if (action === "type") return fieldTarget ? `Type into ${fieldTarget}` : "Type";
+  if (action === "left_click") return coordinateTarget ? `Click ${coordinateTarget}` : "Click";
+  if (action === "double_click") return coordinateTarget ? `Double click ${coordinateTarget}` : "Double click";
+  if (action === "triple_click") return coordinateTarget ? `Triple click ${coordinateTarget}` : "Triple click";
+  if (action === "right_click") return coordinateTarget ? `Right click ${coordinateTarget}` : "Right click";
+  if (action === "middle_click") return coordinateTarget ? `Middle click ${coordinateTarget}` : "Middle click";
+  if (action === "left_mouse_down") return coordinateTarget ? `Mouse down ${coordinateTarget}` : "Mouse down";
+  if (action === "left_mouse_up") return coordinateTarget ? `Mouse up ${coordinateTarget}` : "Mouse up";
+  if (action === "type") {
+    const typedText = formatBrowserSkillActionTarget(parsed.textExcerpt || parsed.text);
+    if (typedText) return `Type ${typedText}`;
+    return fieldTarget ? `Type into ${fieldTarget}` : "Type";
+  }
+  if (action === "key") return parsed.key ? `Press ${parsed.key}` : "Press key";
+  if (action === "cursor_position") return "Inspect cursor position";
+  if (action === "left_click_drag") {
+    if (dragStart && coordinateTarget) {
+      return `Drag ${dragStart} to ${coordinateTarget}`;
+    }
+    return "Drag";
+  }
   if (action === "press") return parsed.key ? `Press ${parsed.key}` : "Press key";
   if (action === "wait-for") return waitTarget ? `Wait for ${waitTarget}` : "Wait";
+  if (action === "wait") return "Wait";
   return formatBrowserSkillAction(parsed.action);
 }
 
@@ -5334,15 +5503,19 @@ function buildBrowserSkillStep({
   index,
   backendUrl,
   environmentId,
+  variant,
 }: {
   log: RunnerLog;
   index: number;
   backendUrl?: string;
   environmentId?: string | null;
+  variant: VisualInteractionVariant;
 }): BrowserSkillStep {
   const command = log.metadata?.command || log.message || "";
   const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
-  const parsed = parseBrowserSkillOutput(output || log.message, command);
+  const parsed = variant === "computer-use"
+    ? parseComputerUseOutput(log.metadata?.result || log.message)
+    : parseBrowserSkillOutput(output || log.message, command);
   const previewSources = parsed.screenshotPaths
     .map((filePath) => buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath))
     .filter((value): value is string => Boolean(value));
@@ -5365,6 +5538,8 @@ export function BrowserSkillLogBox({
   backendUrl,
   environmentId,
   requestHeaders,
+  onOpenDetails,
+  isDetailOpen = false,
 }: {
   log?: RunnerLog;
   logs?: RunnerLog[];
@@ -5372,11 +5547,17 @@ export function BrowserSkillLogBox({
   backendUrl?: string;
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
+  onOpenDetails?: () => void;
+  isDetailOpen?: boolean;
 }) {
   const sourceLogs = useMemo(() => {
     const rawLogs = Array.isArray(logs) && logs.length > 0 ? logs : log ? [log] : [];
     return rawLogs.filter((entry) => !isBrowserSkillLaunchCommand(entry.metadata?.command || entry.message || ""));
   }, [log, logs]);
+  const variant = useMemo<VisualInteractionVariant>(
+    () => (sourceLogs.some((entry) => isComputerUseMcpLog(entry)) ? "computer-use" : "browser"),
+    [sourceLogs]
+  );
   const steps = useMemo(
     () =>
       sourceLogs.map((entry, index) =>
@@ -5385,9 +5566,10 @@ export function BrowserSkillLogBox({
           index,
           backendUrl,
           environmentId,
+          variant,
         })
       ),
-    [backendUrl, environmentId, sourceLogs]
+    [backendUrl, environmentId, sourceLogs, variant]
   );
   const [collapsed, setCollapsed] = useState(false);
   const [isFollowingLatest, setIsFollowingLatest] = useState(true);
@@ -5411,7 +5593,10 @@ export function BrowserSkillLogBox({
   const isRunning = Boolean(lastLog && (lastLog.metadata?.status === "running" || lastLog.metadata?.status === "started"));
   const canMoveBackward = selectedIndex > 0;
   const canMoveForward = selectedIndex < steps.length - 1;
-  const cardTitle = steps.length > 1 ? `${steps.length} interactions` : currentStep?.actionLabel || "Browser session";
+  const cardLabel = variant === "computer-use" ? "Computer Use" : "Browser";
+  const cardTitle = steps.length > 1
+    ? `${steps.length} interactions`
+    : currentStep?.actionLabel || (variant === "computer-use" ? "Computer use session" : "Browser session");
 
   function moveToStep(nextIndex: number) {
     setSelectedIndex(nextIndex);
@@ -5423,10 +5608,14 @@ export function BrowserSkillLogBox({
   }
 
   return (
-    <div className="tb-log-card tb-log-card-browser">
+    <div className={`tb-log-card tb-log-card-browser ${isDetailOpen ? "is-detail-open" : ""}`.trim()}>
       <LogHeader
-        icon={<Globe className="tb-log-card-small-icon tb-log-card-small-icon-browser" strokeWidth={1.5} />}
-        label="Browser"
+        icon={
+          variant === "computer-use"
+            ? <Monitor className="tb-log-card-small-icon tb-log-card-small-icon-browser" strokeWidth={1.5} />
+            : <Globe className="tb-log-card-small-icon tb-log-card-small-icon-browser" strokeWidth={1.5} />
+        }
+        label={cardLabel}
         title={cardTitle}
         timeLabel={timeLabel}
         meta={isRunning ? <span className="tb-log-card-status">running...</span> : null}
@@ -5465,25 +5654,33 @@ export function BrowserSkillLogBox({
                 <MousePointerClick className="tb-browser-carousel-meta-icon" strokeWidth={1.6} />
                 <span className="tb-browser-carousel-action-copy">{currentStep.actionLabel}</span>
               </div>
-              <div className="tb-browser-carousel-controls">
-                <button
-                  type="button"
-                  className="tb-browser-carousel-control"
-                  onClick={() => moveToStep(selectedIndex - 1)}
-                  disabled={!canMoveBackward}
-                  aria-label="Show previous browser step"
-                >
-                  <ChevronLeft className="tb-browser-carousel-control-icon" strokeWidth={1.5} />
-                </button>
-                <button
-                  type="button"
-                  className="tb-browser-carousel-control"
-                  onClick={() => moveToStep(selectedIndex + 1)}
-                  disabled={!canMoveForward}
-                  aria-label="Show next browser step"
-                >
-                  <ChevronRight className="tb-browser-carousel-control-icon" strokeWidth={1.5} />
-                </button>
+              <div className="tb-browser-carousel-footer-actions">
+                <div className="tb-browser-carousel-controls">
+                  <button
+                    type="button"
+                    className="tb-browser-carousel-control"
+                    onClick={() => moveToStep(selectedIndex - 1)}
+                    disabled={!canMoveBackward}
+                    aria-label="Show previous browser step"
+                  >
+                    <ChevronLeft className="tb-browser-carousel-control-icon" strokeWidth={1.5} />
+                  </button>
+                  <button
+                    type="button"
+                    className="tb-browser-carousel-control"
+                    onClick={() => moveToStep(selectedIndex + 1)}
+                    disabled={!canMoveForward}
+                    aria-label="Show next browser step"
+                  >
+                    <ChevronRight className="tb-browser-carousel-control-icon" strokeWidth={1.5} />
+                  </button>
+                </div>
+                {variant === "computer-use" && onOpenDetails ? (
+                  <button type="button" className="tb-subagent-log-open-button" onClick={onOpenDetails}>
+                    <span>View all logs</span>
+                    <ChevronRight className="tb-subagent-log-open-button-icon" strokeWidth={1.6} />
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -5560,6 +5757,82 @@ export function SubagentLogBox({
         </div>
       </LogPanel>
     </div>
+  );
+}
+
+export function ComputerUseDetailDrawer({
+  title = "Computer Use",
+  environmentName,
+  workLabel,
+  timeLabel,
+  running = false,
+  onClose,
+  children,
+}: {
+  title?: string;
+  environmentName?: string | null;
+  workLabel: string;
+  timeLabel?: string;
+  running?: boolean;
+  onClose: () => void;
+  children?: ReactNode;
+}) {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <aside className="tb-subagent-detail-drawer tb-computer-use-detail-drawer">
+      <div className="tb-subagent-detail-drawer-header">
+        <div className="tb-subagent-detail-drawer-header-copy">
+          <Monitor className="tb-attachment-preview-drawer-header-icon" strokeWidth={1.6} />
+          <div className="tb-subagent-detail-drawer-header-text">
+            <div className="tb-subagent-detail-drawer-title" title={title}>{title}</div>
+          </div>
+        </div>
+        <div className="tb-subagent-detail-drawer-header-actions">
+          {timeLabel ? <span className="tb-subagent-detail-drawer-time">{timeLabel}</span> : null}
+          <button type="button" className="tb-attachment-preview-drawer-action" onClick={onClose} aria-label="Close computer use details">
+            <X className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.8} />
+          </button>
+        </div>
+      </div>
+      <div className="tb-subagent-detail-drawer-body">
+        <div className="tb-subagent-log-shell">
+          <div className="tb-subagent-log-meta">
+            <span className="tb-turn-agent-name">{title}</span>
+            {environmentName ? (
+              <div className="tb-turn-environment-pill">
+                <Cloud className="tb-turn-environment-icon" strokeWidth={1.6} />
+                <span className="tb-turn-environment-label">{environmentName}</span>
+              </div>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            className="tb-work-header"
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={expanded}
+          >
+            <Route className="tb-step-row-icon" strokeWidth={1.5} />
+            <span className="tb-work-label">{running ? "Computer use is running" : workLabel}</span>
+            {expanded ? <ChevronDown className="tb-chevron" strokeWidth={1.5} /> : <ChevronRight className="tb-chevron" strokeWidth={1.5} />}
+          </button>
+          <div className={`tb-work-collapse ${expanded ? "" : "collapsed"}`}>
+            {expanded ? (
+              <div className="tb-work-collapse-inner">
+                {children ? (
+                  <div className="agent-steps-container tb-subagent-log-steps">
+                    <div className="agent-steps-line" />
+                    {children}
+                  </div>
+                ) : (
+                  <div className="tb-log-card-empty">No computer-use logs yet.</div>
+                )}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </aside>
   );
 }
 
@@ -5778,6 +6051,24 @@ function GenericMcpToolLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: 
   );
 }
 
+function ComputerUseEventLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+  const parsed = parseComputerUseOutput(log.metadata?.result || log.message);
+  const actionLabel = formatBrowserSkillStepAction(parsed);
+
+  return (
+    <div className="tb-log-card">
+      <LogHeader
+        icon={<MousePointerClick className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Computer Use"
+        title={actionLabel}
+        timeLabel={timeLabel}
+        collapsed
+        onToggle={() => undefined}
+      />
+    </div>
+  );
+}
+
 export function InlineStatusLogBox({
   icon,
   label,
@@ -5802,7 +6093,7 @@ export function InlineStatusLogBox({
   );
 }
 
-export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, requestHeaders, activeTaskPreviewId, onPreviewDocument, onTaskPreviewClick }: RunnerWorkLogEntryProps) {
+export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, requestHeaders, renderComputerUseMcpAsGeneric = false, activeTaskPreviewId, onPreviewDocument, onTaskPreviewClick }: RunnerWorkLogEntryProps) {
   const normalizedMessage = stripRunnerSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
 
   if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") {
@@ -5878,6 +6169,12 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
     }
     if (shouldRenderTaskManagementCreateLog(log)) {
       return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
+    }
+    if (isComputerUseMcpLog(log)) {
+      if (renderComputerUseMcpAsGeneric) {
+        return <ComputerUseEventLogBox log={log} timeLabel={timeLabel} />;
+      }
+      return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     if (isLikelyImageGenerationLog(log)) {
       return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;

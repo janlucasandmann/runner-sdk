@@ -68,7 +68,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isDeepResearchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -236,6 +236,11 @@ interface RunnerSelectedSubagentDetail {
 
 interface RunnerSelectedDeepResearchDetail {
   turnId: string;
+}
+
+interface RunnerSelectedComputerUseDetail {
+  turnId: string;
+  groupId: string;
 }
 
 type RunnerForkFileCopyMode = "all" | "thread_only" | "none";
@@ -5052,6 +5057,7 @@ export function RunnerChat({
   const [previewedDocumentAttachment, setPreviewedDocumentAttachment] = useState<RunnerTurnAttachment | null>(null);
   const [selectedSubagentDetail, setSelectedSubagentDetail] = useState<RunnerSelectedSubagentDetail | null>(null);
   const [selectedDeepResearchDetail, setSelectedDeepResearchDetail] = useState<RunnerSelectedDeepResearchDetail | null>(null);
+  const [selectedComputerUseDetail, setSelectedComputerUseDetail] = useState<RunnerSelectedComputerUseDetail | null>(null);
   const [documentPreviewDrawerWidth, setDocumentPreviewDrawerWidth] = useState<number | null>(null);
   const [isThreadHistoryLoading, setIsThreadHistoryLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -5755,6 +5761,10 @@ export function RunnerChat({
     setSelectedDeepResearchDetail(null);
   }
 
+  function closeComputerUseDetailDrawer() {
+    setSelectedComputerUseDetail(null);
+  }
+
   function closeSubagentDetailDrawer() {
     setSelectedSubagentDetail(null);
   }
@@ -5764,6 +5774,7 @@ export function RunnerChat({
       return;
     }
     closeDeepResearchDetailDrawer();
+    closeComputerUseDetailDrawer();
     closeDocumentAttachmentPreview();
     setSelectedSubagentDetail({ turnId, invocationId });
   }
@@ -5773,8 +5784,19 @@ export function RunnerChat({
       return;
     }
     closeSubagentDetailDrawer();
+    closeComputerUseDetailDrawer();
     closeDocumentAttachmentPreview();
     setSelectedDeepResearchDetail({ turnId });
+  }
+
+  function openComputerUseDetailDrawer(turnId: string, groupId: string) {
+    if (!turnId || !groupId) {
+      return;
+    }
+    closeSubagentDetailDrawer();
+    closeDeepResearchDetailDrawer();
+    closeDocumentAttachmentPreview();
+    setSelectedComputerUseDetail({ turnId, groupId });
   }
 
   function startDocumentPreviewResize(event: ReactPointerEvent<HTMLButtonElement>) {
@@ -5798,6 +5820,7 @@ export function RunnerChat({
     }
     closeDeepResearchDetailDrawer();
     closeSubagentDetailDrawer();
+    closeComputerUseDetailDrawer();
     setPreviewedDocumentAttachment((current) => (current?.id === attachment.id ? null : attachment));
   }
 
@@ -9724,6 +9747,13 @@ export function RunnerChat({
     logs: RunnerLog[];
     completionLog?: RunnerLog;
   };
+  type RunnerComputerUseGroup = {
+    id: string;
+    startLog: RunnerLog;
+    endLog: RunnerLog;
+    logs: RunnerLog[];
+    sessionLogs: RunnerLog[];
+  };
   type RunnerSubagentPresentation = {
     invocationId: string;
     title: string;
@@ -9737,10 +9767,20 @@ export function RunnerChat({
     workLabel: string;
     nestedItems: RunnerTimelineItem[];
   };
+  type RunnerComputerUsePresentation = {
+    groupId: string;
+    title: string;
+    environmentName: string;
+    running: boolean;
+    timeLabel?: string;
+    workLabel: string;
+    nestedItems: RunnerTimelineItem[];
+  };
   type RunnerTimelineItem =
     | { kind: "log"; log: RunnerLog }
     | { kind: "deep_research_group"; logs: RunnerLog[]; runningCommandLog?: RunnerLog }
     | { kind: "browser_group"; logs: RunnerLog[] }
+    | { kind: "computer_use_group"; group: RunnerComputerUseGroup }
     | { kind: "subagent_group"; invocationLog: RunnerLog; logs: RunnerLog[]; completionLog?: RunnerLog };
   type RunnerTurnTimelineState = {
     agentMessage?: RunnerLog;
@@ -9751,6 +9791,18 @@ export function RunnerChat({
     if (log.eventType !== "command_execution") return false;
     const command = log.metadata?.command || log.message || "";
     return isBrowserSkillCommand(command) && !isBrowserSkillLaunchCommand(command);
+  }
+
+  function isComputerUseTimelineLog(log: RunnerLog): boolean {
+    return isComputerUseMcpLog(log);
+  }
+
+  function isTimelineTerminalLog(log: RunnerLog): boolean {
+    return (
+      log.eventType === "agent_message" ||
+      log.eventType === "llm_response" ||
+      log.eventType === "turn_completed"
+    );
   }
 
   function getSubagentInvocationMetadata(log: RunnerLog) {
@@ -9862,6 +9914,74 @@ export function RunnerChat({
     return browserLogs;
   }
 
+  function collectComputerUseTimelineLogs(logs: RunnerLog[], subagentGroups: Map<string, RunnerSubagentGroup>): RunnerLog[] {
+    const computerUseLogs: RunnerLog[] = [];
+
+    for (const currentLog of logs) {
+      const invocationId = getSubagentInvocationId(currentLog);
+      if (invocationId && subagentGroups.has(invocationId)) {
+        continue;
+      }
+      if (isComputerUseTimelineLog(currentLog)) {
+        computerUseLogs.push(currentLog);
+      }
+    }
+
+    return computerUseLogs;
+  }
+
+  function buildComputerUseTimelineGroups(logs: RunnerLog[], subagentGroups: Map<string, RunnerSubagentGroup>) {
+    const groups: RunnerComputerUseGroup[] = [];
+    let activeGroup: RunnerComputerUseGroup | null = null;
+
+    function closeActiveGroup() {
+      if (!activeGroup) {
+        return;
+      }
+      groups.push(activeGroup);
+      activeGroup = null;
+    }
+
+    for (let index = 0; index < logs.length; index += 1) {
+      const currentLog = logs[index];
+      const invocationId = getSubagentInvocationId(currentLog);
+      const belongsToSubagent = Boolean(invocationId && subagentGroups.has(invocationId));
+      const isDeepResearchLog =
+        !belongsToSubagent &&
+        (currentLog.eventType === "deep_research" || isDeepResearchTimelineCommand(currentLog));
+      const isBrowserLog = !belongsToSubagent && isBrowserTimelineLog(currentLog);
+
+      if (belongsToSubagent || isDeepResearchLog || isBrowserLog || isTimelineTerminalLog(currentLog)) {
+        closeActiveGroup();
+        continue;
+      }
+
+      if (isComputerUseTimelineLog(currentLog)) {
+        if (!activeGroup) {
+          activeGroup = {
+            id: `computer-use-${index}-${currentLog.time || "00:00"}`,
+            startLog: currentLog,
+            endLog: currentLog,
+            logs: [currentLog],
+            sessionLogs: [currentLog],
+          };
+        } else {
+          activeGroup.logs.push(currentLog);
+          activeGroup.sessionLogs.push(currentLog);
+          activeGroup.endLog = currentLog;
+        }
+        continue;
+      }
+
+      if (activeGroup) {
+        activeGroup.sessionLogs.push(currentLog);
+      }
+    }
+
+    closeActiveGroup();
+    return groups;
+  }
+
   function isDeepResearchTimelineCommand(log: RunnerLog): boolean {
     return log.eventType === "command_execution" && isDeepResearchCommand(log.metadata?.command || log.message || "");
   }
@@ -9882,7 +10002,7 @@ export function RunnerChat({
     return deepResearchLogs;
   }
 
-  function buildTimelineItems(logs: RunnerLog[]): RunnerTimelineItem[] {
+  function buildTimelineItems(logs: RunnerLog[], options?: { groupComputerUse?: boolean }): RunnerTimelineItem[] {
     const subagentGroups = buildSubagentTimelineGroups(logs);
     const deepResearchLogs = collectDeepResearchTimelineLogs(logs, subagentGroups);
     const deepResearchCommandLog = logs.find((currentLog) => {
@@ -9893,10 +10013,22 @@ export function RunnerChat({
       return isDeepResearchTimelineCommand(currentLog);
     });
     const browserLogs = collectBrowserTimelineLogs(logs, subagentGroups);
+    const groupComputerUse = options?.groupComputerUse !== false;
+    const computerUseLogs = collectComputerUseTimelineLogs(logs, subagentGroups);
+    const computerUseGroups = groupComputerUse ? buildComputerUseTimelineGroups(logs, subagentGroups) : [];
+    const computerUseGroupsByStartLog = new Map<RunnerLog, RunnerComputerUseGroup>();
+    const computerUseSessionLogs = new Set<RunnerLog>();
+    for (const group of computerUseGroups) {
+      computerUseGroupsByStartLog.set(group.startLog, group);
+      for (const sessionLog of group.sessionLogs) {
+        computerUseSessionLogs.add(sessionLog);
+      }
+    }
     const items: RunnerTimelineItem[] = [];
     const shouldShowDeepResearchGroup = deepResearchLogs.length > 0 || Boolean(deepResearchCommandLog);
     let deepResearchGroupInserted = false;
     let browserGroupInserted = false;
+    const insertedComputerUseGroupIds = new Set<string>();
     const insertedSubagentInvocations = new Set<string>();
 
     for (let index = 0; index < logs.length; index += 1) {
@@ -9913,6 +10045,9 @@ export function RunnerChat({
           });
           insertedSubagentInvocations.add(invocationId);
         }
+        continue;
+      }
+      if (groupComputerUse && computerUseSessionLogs.has(log) && !computerUseGroupsByStartLog.has(log)) {
         continue;
       }
       if (log.eventType === "deep_research") {
@@ -9936,6 +10071,18 @@ export function RunnerChat({
         }
         continue;
       }
+      if (isComputerUseTimelineLog(log)) {
+        if (!groupComputerUse) {
+          items.push({ kind: "log", log });
+          continue;
+        }
+        const group = computerUseGroupsByStartLog.get(log);
+        if (group && !insertedComputerUseGroupIds.has(group.id)) {
+          items.push({ kind: "computer_use_group", group });
+          insertedComputerUseGroupIds.add(group.id);
+        }
+        continue;
+      }
       items.push({ kind: "log", log });
     }
 
@@ -9945,6 +10092,14 @@ export function RunnerChat({
 
     if (!browserGroupInserted && browserLogs.length > 0) {
       items.push({ kind: "browser_group", logs: browserLogs });
+    }
+
+    if (groupComputerUse && computerUseLogs.length > 0) {
+      for (const group of computerUseGroups) {
+        if (!insertedComputerUseGroupIds.has(group.id) && group.logs.length > 0) {
+          items.push({ kind: "computer_use_group", group });
+        }
+      }
     }
 
     return items;
@@ -9997,6 +10152,26 @@ export function RunnerChat({
     };
   }
 
+  function buildComputerUseGroupPresentation(turn: RunnerTurn, item: RunnerComputerUseGroup): RunnerComputerUsePresentation {
+    const computerUseTitle = "Computer Use";
+    const computerUseEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
+    const interactionCount = item.logs.length;
+    const isComputerUseRunning =
+      turn.status === "running" &&
+      item.endLog.metadata?.status !== "failed" &&
+      item.endLog.metadata?.status !== "completed";
+
+    return {
+      groupId: item.id,
+      title: computerUseTitle,
+      environmentName: computerUseEnvironmentLabel,
+      running: isComputerUseRunning,
+      timeLabel: toDurationLabel(item.endLog || item.startLog),
+      workLabel: `${interactionCount} ${interactionCount === 1 ? "interaction" : "interactions"}`,
+      nestedItems: buildTimelineItems(item.sessionLogs, { groupComputerUse: false }),
+    };
+  }
+
   function timelineItemKey(turnId: string, index: number, item: RunnerTimelineItem): string {
     if (item.kind === "deep_research_group") {
       const anchorLog = item.logs[0] || item.runningCommandLog;
@@ -10005,6 +10180,10 @@ export function RunnerChat({
     if (item.kind === "browser_group") {
       const anchorLog = item.logs[0] || item.logs[item.logs.length - 1];
       return anchorLog ? `${turnId}-browser-${stepRowKey(turnId, index, anchorLog)}` : `${turnId}-browser-${index}`;
+    }
+    if (item.kind === "computer_use_group") {
+      const anchorLog = item.group.startLog || item.group.endLog;
+      return anchorLog ? `${turnId}-computer-use-${item.group.id}-${stepRowKey(turnId, index, anchorLog)}` : `${turnId}-computer-use-${item.group.id}-${index}`;
     }
     if (item.kind === "subagent_group") {
       const invocationId = getSubagentInvocationMetadata(item.invocationLog)?.invocationId || index;
@@ -10216,12 +10395,12 @@ export function RunnerChat({
   function renderNestedTimelineItems(turn: RunnerTurn, items: RunnerTimelineItem[]) {
     return items.map((nestedItem, nestedIndex) => (
       <div key={timelineItemKey(turn.id, nestedIndex, nestedItem)} className="agent-step-item">
-        <div className="agent-step-content">{renderTimelineItem(turn, nestedItem, nestedIndex)}</div>
+        <div className="agent-step-content">{renderTimelineItem(turn, nestedItem, nestedIndex, { renderComputerUseMcpAsGeneric: true })}</div>
       </div>
     ));
   }
 
-  function renderTimelineItem(turn: RunnerTurn, item: RunnerTimelineItem, index: number) {
+  function renderTimelineItem(turn: RunnerTurn, item: RunnerTimelineItem, index: number, options?: { renderComputerUseMcpAsGeneric?: boolean }) {
     const runnerEnvironmentId = activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
     const runnerHeaders = buildRunnerHeaders(requestHeaders, apiKey.trim());
 
@@ -10235,6 +10414,25 @@ export function RunnerChat({
           backendUrl={normalizedBackendUrl}
           environmentId={runnerEnvironmentId}
           requestHeaders={runnerHeaders}
+        />
+      );
+    }
+
+    if (item.kind === "computer_use_group") {
+      const latestLog = item.group.logs[item.group.logs.length - 1] || item.group.endLog;
+      return (
+        <BrowserSkillLogBox
+          log={latestLog}
+          logs={item.group.logs}
+          timeLabel={latestLog ? toDurationLabel(latestLog) : undefined}
+          backendUrl={normalizedBackendUrl}
+          environmentId={runnerEnvironmentId}
+          requestHeaders={runnerHeaders}
+          isDetailOpen={
+            selectedComputerUseDetail?.turnId === turn.id &&
+            selectedComputerUseDetail?.groupId === item.group.id
+          }
+          onOpenDetails={() => openComputerUseDetailDrawer(turn.id, item.group.id)}
         />
       );
     }
@@ -10280,6 +10478,7 @@ export function RunnerChat({
         backendUrl={normalizedBackendUrl}
         environmentId={runnerEnvironmentId}
         requestHeaders={runnerHeaders}
+        renderComputerUseMcpAsGeneric={options?.renderComputerUseMcpAsGeneric}
         activeTaskPreviewId={activeTaskPreviewId}
         onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
         onTaskPreviewClick={onTaskPreviewClick}
@@ -10736,6 +10935,32 @@ export function RunnerChat({
     };
   }, [selectedDeepResearchDetail, turns]);
 
+  const selectedComputerUseDetailPresentation = useMemo(() => {
+    if (!selectedComputerUseDetail) {
+      return null;
+    }
+
+    const selectedTurn = turns.find((turn) => turn.id === selectedComputerUseDetail.turnId);
+    if (!selectedTurn) {
+      return null;
+    }
+
+    const timelineState = getTurnTimelineState(selectedTurn);
+    const computerUseGroup = timelineState.displayedTimelineItems.find(
+      (item): item is Extract<RunnerTimelineItem, { kind: "computer_use_group" }> =>
+        item.kind === "computer_use_group" && item.group.id === selectedComputerUseDetail.groupId
+    );
+
+    if (!computerUseGroup) {
+      return null;
+    }
+
+    return {
+      turn: selectedTurn,
+      ...buildComputerUseGroupPresentation(selectedTurn, computerUseGroup.group),
+    };
+  }, [displayedEnvironmentLabel, selectedComputerUseDetail, turns]);
+
   const selectedSubagentDetailPresentation = useMemo(() => {
     if (!selectedSubagentDetail) {
       return null;
@@ -10980,6 +11205,22 @@ export function RunnerChat({
     deepResearchDetailDrawerContent && subagentDetailPortalTarget && typeof document !== "undefined"
       ? createPortal(deepResearchDetailDrawerContent, subagentDetailPortalTarget)
       : deepResearchDetailDrawerContent;
+  const computerUseDetailDrawerContent = selectedComputerUseDetailPresentation ? (
+    <ComputerUseDetailDrawer
+      title={selectedComputerUseDetailPresentation.title}
+      environmentName={selectedComputerUseDetailPresentation.environmentName}
+      workLabel={selectedComputerUseDetailPresentation.workLabel}
+      timeLabel={selectedComputerUseDetailPresentation.timeLabel}
+      running={selectedComputerUseDetailPresentation.running}
+      onClose={closeComputerUseDetailDrawer}
+    >
+      {renderNestedTimelineItems(selectedComputerUseDetailPresentation.turn, selectedComputerUseDetailPresentation.nestedItems)}
+    </ComputerUseDetailDrawer>
+  ) : null;
+  const computerUseDetailDrawer =
+    computerUseDetailDrawerContent && subagentDetailPortalTarget && typeof document !== "undefined"
+      ? createPortal(computerUseDetailDrawerContent, subagentDetailPortalTarget)
+      : computerUseDetailDrawerContent;
   const subagentDetailDrawerContent = selectedSubagentDetailPresentation ? (
     <SubagentDetailDrawer
       title={selectedSubagentDetailPresentation.title}
@@ -11217,8 +11458,15 @@ export function RunnerChat({
   }, [selectedSubagentDetail, selectedSubagentDetailPresentation]);
 
   useEffect(() => {
+    if (selectedComputerUseDetail && !selectedComputerUseDetailPresentation) {
+      setSelectedComputerUseDetail(null);
+    }
+  }, [selectedComputerUseDetail, selectedComputerUseDetailPresentation]);
+
+  useEffect(() => {
     setSelectedSubagentDetail(null);
     setSelectedDeepResearchDetail(null);
+    setSelectedComputerUseDetail(null);
   }, [localThreadId]);
 
   useEffect(() => {
@@ -11228,7 +11476,10 @@ export function RunnerChat({
     if (disableSubagentDetailDrawer && selectedDeepResearchDetail) {
       setSelectedDeepResearchDetail(null);
     }
-  }, [disableSubagentDetailDrawer, selectedDeepResearchDetail, selectedSubagentDetail]);
+    if (disableSubagentDetailDrawer && selectedComputerUseDetail) {
+      setSelectedComputerUseDetail(null);
+    }
+  }, [disableSubagentDetailDrawer, selectedComputerUseDetail, selectedDeepResearchDetail, selectedSubagentDetail]);
 
   useEffect(() => {
     if (selectedDeepResearchDetail && !selectedDeepResearchDetailPresentation) {
@@ -11237,8 +11488,8 @@ export function RunnerChat({
   }, [selectedDeepResearchDetail, selectedDeepResearchDetailPresentation]);
 
   useEffect(() => {
-    onSubagentDetailOpenChange?.(Boolean(selectedSubagentDetailPresentation));
-  }, [onSubagentDetailOpenChange, selectedSubagentDetailPresentation]);
+    onSubagentDetailOpenChange?.(Boolean(selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation));
+  }, [onSubagentDetailOpenChange, selectedComputerUseDetailPresentation, selectedSubagentDetailPresentation]);
 
   useEffect(() => {
     return () => {
@@ -12017,7 +12268,7 @@ export function RunnerChat({
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${selectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${selectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
       style={
         {
           "--tb-document-preview-width": previewedDocumentAttachment
@@ -13583,6 +13834,7 @@ export function RunnerChat({
       ) : null}
 
       {deepResearchDetailDrawer}
+      {computerUseDetailDrawer}
       {subagentDetailDrawer}
       {documentAttachmentPreviewDrawer}
 

@@ -9625,7 +9625,12 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.92);
         text-align: left;
         cursor: pointer;
+        position: relative;
         transition: background-color 160ms ease;
+      }
+
+      .playground-environments-list-item.has-actions {
+        padding-right: 44px;
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-list-item {
@@ -9641,6 +9646,54 @@ const html = `<!doctype html>
 
       .playground-environments-list-item.is-active {
         background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-environments-list-item-row {
+        position: relative;
+      }
+
+      .playground-environments-list-item-side {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: 24px;
+        height: 24px;
+        transform: translateY(-50%);
+      }
+
+      .playground-environments-list-item-menu-button {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.58);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-environments-list-item-menu-button:hover,
+      .playground-environments-list-item-menu-button.is-open {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .playground-environments-list-item-row:hover .playground-environments-list-item-menu-button,
+      .playground-environments-list-item-row:focus-within .playground-environments-list-item-menu-button,
+      .playground-environments-list-item-row.is-active .playground-environments-list-item-menu-button,
+      .playground-environments-list-item-menu-button.is-open {
+        opacity: 1;
+        pointer-events: auto;
       }
 
       .playground-environments-list-item-icon {
@@ -9943,6 +9996,12 @@ const html = `<!doctype html>
         min-height: 30px;
         padding: 0 11px;
         font-size: 11px;
+      }
+
+      .playground-environment-composer-modal .playground-tasks-project-modal-actions .playground-environments-action-button {
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 12px;
       }
 
       .playground-environments-action-button:hover,
@@ -13699,6 +13758,53 @@ const html = `<!doctype html>
         font-size: 12px;
         line-height: 1.45;
         color: #ffb0b0;
+      }
+
+      .playground-environment-composer-modal {
+        width: min(540px, 100%);
+      }
+
+      .playground-environment-composer-modal .playground-tasks-project-modal-name-row {
+        padding-bottom: 0;
+      }
+
+      .playground-environment-composer-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .playground-environment-composer-runtime-facts {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-environment-composer-runtime-facts .playground-tasks-detail-fact {
+        min-height: 32px;
+      }
+
+      .playground-agent-composer-modal {
+        width: min(560px, 100%);
+      }
+
+      .playground-agent-composer-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-height: min(72vh, 720px);
+        overflow-y: auto;
+        padding-right: 2px;
+      }
+
+      .playground-skill-composer-modal {
+        width: min(560px, 100%);
+      }
+
+      .playground-skill-composer-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
 
       .playground-tasks-release-modal {
@@ -19157,6 +19263,26 @@ const html = `<!doctype html>
         { id: "hard-drive", label: "Environment", icon: HardDrive },
         { id: "zap", label: "Execution", icon: Zap },
       ];
+      const PLAYGROUND_SKILL_ICON_OPTIONS = [
+        { id: "code", label: "Code", icon: Code },
+        { id: "terminal", label: "Terminal", icon: Terminal },
+        { id: "globe", label: "Web", icon: Globe },
+        { id: "search", label: "Search", icon: Search },
+        { id: "telescope", label: "Research", icon: Telescope },
+        { id: "brain", label: "Memory", icon: Brain },
+        { id: "image", label: "Image", icon: ImageIcon },
+        { id: "file-text", label: "Document", icon: FileText },
+        { id: "database", label: "Data", icon: Database },
+        { id: "palette", label: "Design", icon: Paintbrush },
+        { id: "calendar", label: "Calendar", icon: CalendarIcon },
+        { id: "mail", label: "Mail", icon: Mail },
+        { id: "shield", label: "Security", icon: Shield },
+        { id: "server", label: "Server", icon: Server },
+        { id: "package", label: "Package", icon: Package },
+        { id: "list", label: "Tasks", icon: ListTodo },
+        { id: "sparkles", label: "Sparkles", icon: Sparkles },
+        { id: "zap", label: "Automation", icon: Zap },
+      ];
       const PLAYGROUND_TASK_BOARD_LANES = [
         { id: "todo", label: "To do", statuses: ["backlog", "todo"] },
         { id: "in_progress", label: "In doing", statuses: ["in_progress"] },
@@ -19352,6 +19478,18 @@ const html = `<!doctype html>
       function getPlaygroundProjectIconConfig(iconId) {
         return PLAYGROUND_PROJECT_ICON_OPTIONS.find((option) => option.id === getPlaygroundProjectIconId(iconId))
           || PLAYGROUND_PROJECT_ICON_OPTIONS[0];
+      }
+
+      function getPlaygroundSkillIconId(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        return PLAYGROUND_SKILL_ICON_OPTIONS.some((option) => option.id === normalized)
+          ? normalized
+          : PLAYGROUND_SKILL_ICON_OPTIONS[0].id;
+      }
+
+      function getPlaygroundSkillIconConfig(iconId) {
+        return PLAYGROUND_SKILL_ICON_OPTIONS.find((option) => option.id === getPlaygroundSkillIconId(iconId))
+          || PLAYGROUND_SKILL_ICON_OPTIONS[0];
       }
 
       function buildPlaygroundDefaultTaskDraft() {
@@ -22725,6 +22863,16 @@ const html = `<!doctype html>
           .map((segment) => encodeURIComponent(segment))
           .join("/");
         return backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/files/download/" + encodedPath;
+      }
+
+      function buildPlaygroundEnvironmentHtmlPreviewUrl(backendUrl, environmentId, filePath) {
+        if (!backendUrl || !environmentId || !filePath) return "";
+        const encodedPath = normalizeHistoryPath(filePath)
+          .split("/")
+          .filter(Boolean)
+          .map((segment) => encodeURIComponent(segment))
+          .join("/");
+        return backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/files/preview-html/" + encodedPath;
       }
 
       function resolveThreadSortTimestamp(thread) {
@@ -26671,15 +26819,21 @@ const html = `<!doctype html>
             return null;
           }
 
+          const fileKind = getPlaygroundFileKind(singleSelectedEntry);
+          const htmlPreviewUrl = fileKind === "html"
+            ? buildPlaygroundEnvironmentHtmlPreviewUrl(backendUrl, selectedEnvironmentId, singleSelectedEntry.path)
+            : undefined;
+
           return {
             id: "playground-files-preview:" + selectedEnvironmentId + ":" + singleSelectedEntry.path,
             filename: singleSelectedEntry.name,
             mimeType: getPlaygroundPreviewMimeType(singleSelectedEntry),
-            type: getPlaygroundFileKind(singleSelectedEntry) === "image" ? "image" : "document",
+            type: fileKind === "image" ? "image" : "document",
             url: singleSelectedEntryDownloadUrl,
             previewUrl: singleSelectedEntryDownloadUrl,
+            htmlPreviewUrl,
           };
-        }, [selectedEnvironmentId, singleSelectedEntry, singleSelectedEntryDownloadUrl]);
+        }, [backendUrl, selectedEnvironmentId, singleSelectedEntry, singleSelectedEntryDownloadUrl]);
         const hasSingleFilePreview = Boolean(singleSelectedEntryPreviewAttachment && singleSelectedEntry && !singleSelectedEntry.isFolder);
         const hasFileChatPanel = hasPreviewPanel && hasSingleFilePreview && isFileChatOpen;
         const showBrowserMinimizeButton = hasPreviewPanel && hasSingleFilePreview;
@@ -28537,13 +28691,26 @@ const html = `<!doctype html>
         );
       }
 
+      function handleComposerSubmitShortcut(event) {
+        if (event.key !== "Enter" || (!event.metaKey && !event.ctrlKey) || event.altKey) {
+          return;
+        }
+        if (!event.currentTarget || typeof event.currentTarget.requestSubmit !== "function") {
+          return;
+        }
+        event.preventDefault();
+        event.currentTarget.requestSubmit();
+      }
+
       function PlaygroundEnvironmentsPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, onEnvironmentMutated }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
         const environmentDetailMainRef = useRef(null);
         const environmentDescriptionTextareaRef = useRef(null);
         const environmentDockerfileTextareaRef = useRef(null);
+        const environmentComposerDescriptionTextareaRef = useRef(null);
         const environmentRuntimePopoverRef = useRef(null);
+        const environmentComposerRuntimePopoverRef = useRef(null);
         const environmentActionsPopoverRef = useRef(null);
         const environmentRenameInputRef = useRef(null);
         const environmentAutosaveTimerRef = useRef(null);
@@ -28576,6 +28743,15 @@ const html = `<!doctype html>
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
+        const [environmentComposerOpen, setEnvironmentComposerOpen] = useState(false);
+        const [environmentComposerDraft, setEnvironmentComposerDraft] = useState(() => buildPlaygroundDefaultEnvironmentDraft());
+        const [environmentComposerSaveState, setEnvironmentComposerSaveState] = useState({
+          isSaving: false,
+          error: "",
+        });
+        const [isEnvironmentComposerDescriptionEditing, setIsEnvironmentComposerDescriptionEditing] = useState(false);
+        const [environmentComposerRuntimePopover, setEnvironmentComposerRuntimePopover] = useState("");
+        const [environmentListActionMenuState, setEnvironmentListActionMenuState] = useState(null);
         const [availableRuntimes, setAvailableRuntimes] = useState(PLAYGROUND_DEFAULT_AVAILABLE_RUNTIMES);
         const [expandedSections, setExpandedSections] = useState(() => new Set(["general", "overview", "runtimes", "packages-system", "packages-python", "packages-node", "variables"]));
         const [modifiedSecrets, setModifiedSecrets] = useState({});
@@ -28593,6 +28769,13 @@ const html = `<!doctype html>
             return String(left?.name || "").localeCompare(String(right?.name || ""));
           });
         }, [environments]);
+
+        const environmentListActionTarget = useMemo(() => {
+          if (!environmentListActionMenuState?.environmentId) {
+            return null;
+          }
+          return orderedEnvironments.find((environment) => environment.id === environmentListActionMenuState.environmentId) || null;
+        }, [environmentListActionMenuState, orderedEnvironments]);
 
         const selectedEnvironmentSnapshot = useMemo(() => {
           if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
@@ -29023,6 +29206,31 @@ const html = `<!doctype html>
         }, [environmentRuntimePopover]);
 
         useEffect(() => {
+          if (!environmentComposerRuntimePopover) return undefined;
+
+          function handleEnvironmentComposerRuntimePopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !environmentComposerRuntimePopoverRef.current || environmentComposerRuntimePopoverRef.current.contains(target)) {
+              return;
+            }
+            setEnvironmentComposerRuntimePopover("");
+          }
+
+          function handleEnvironmentComposerRuntimePopoverEscape(event) {
+            if (event.key === "Escape") {
+              setEnvironmentComposerRuntimePopover("");
+            }
+          }
+
+          document.addEventListener("mousedown", handleEnvironmentComposerRuntimePopoverPointerDown);
+          window.addEventListener("keydown", handleEnvironmentComposerRuntimePopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleEnvironmentComposerRuntimePopoverPointerDown);
+            window.removeEventListener("keydown", handleEnvironmentComposerRuntimePopoverEscape);
+          };
+        }, [environmentComposerRuntimePopover]);
+
+        useEffect(() => {
           if (!environmentActionsPopoverOpen) return undefined;
 
           function handleEnvironmentActionsPopoverPointerDown(event) {
@@ -29085,6 +29293,13 @@ const html = `<!doctype html>
         useLayoutEffect(() => {
           resizeEnvironmentDescriptionTextarea(environmentDockerfileTextareaRef.current);
         }, [draftEnvironment?.dockerfileExtensions, draftEnvironment?.id]);
+
+        useLayoutEffect(() => {
+          if (!environmentComposerOpen) {
+            return;
+          }
+          resizeEnvironmentDescriptionTextarea(environmentComposerDescriptionTextareaRef.current);
+        }, [environmentComposerDraft?.description, environmentComposerOpen]);
 
         useEffect(() => {
           const textarea = environmentDescriptionTextareaRef.current;
@@ -29160,16 +29375,63 @@ const html = `<!doctype html>
           commitDraftEnvironmentIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setEnvironmentListActionMenuState(null);
           setSelectedEnvironmentId(environmentId);
         }
 
-        function handleCreateEnvironment() {
+        function openEnvironmentComposer() {
           commitDraftEnvironmentIfDirty();
           resetEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
-          setSelectedEnvironmentId(PLAYGROUND_ENVIRONMENT_DRAFT_ID);
-          setDraftEnvironment(buildPlaygroundDefaultEnvironmentDraft());
+          setEnvironmentListActionMenuState(null);
+          setEnvironmentComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setEnvironmentComposerDraft(buildPlaygroundDefaultEnvironmentDraft());
+          setEnvironmentComposerOpen(true);
+        }
+
+        function closeEnvironmentComposer() {
+          if (environmentComposerSaveState.isSaving) {
+            return;
+          }
+          setEnvironmentComposerOpen(false);
+          setIsEnvironmentComposerDescriptionEditing(false);
+          setEnvironmentComposerRuntimePopover("");
+          setEnvironmentComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setEnvironmentComposerDraft(buildPlaygroundDefaultEnvironmentDraft());
+        }
+
+        function handleCreateEnvironment() {
+          openEnvironmentComposer();
+        }
+
+        function closeEnvironmentListActionMenu() {
+          setEnvironmentListActionMenuState(null);
+        }
+
+        function openEnvironmentListActionMenu(event, environment) {
+          if (!environment?.id || environment.isSystem || environment.isDefault) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          const rect = event.currentTarget.getBoundingClientRect();
+          const menuWidth = 220;
+          setEnvironmentListActionMenuState((current) =>
+            current?.environmentId === environment.id
+              ? null
+              : {
+                  environmentId: environment.id,
+                  top: rect.bottom + 8,
+                  left: Math.max(12, Math.min(window.innerWidth - menuWidth - 12, rect.right - menuWidth)),
+                }
+          );
         }
 
         function buildSanitizedEnvironmentPayload(environment) {
@@ -29607,6 +29869,138 @@ const html = `<!doctype html>
           setEnvironmentRenameError("");
         }
 
+        function updateEnvironmentComposerField(field, value) {
+          setEnvironmentComposerDraft((current) => ({
+            ...(current || buildPlaygroundDefaultEnvironmentDraft()),
+            [field]: value,
+          }));
+          setEnvironmentComposerSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
+        function updateEnvironmentComposerRuntime(key, value) {
+          setEnvironmentComposerDraft((current) => {
+            const base = current || buildPlaygroundDefaultEnvironmentDraft();
+            const nextRuntimes = {
+              ...(base.runtimes || {}),
+            };
+            const nextPackageVersions = {
+              ...(base.packageVersions || {}),
+            };
+            const normalizedValue = String(value || "").trim();
+            if (!normalizedValue) {
+              delete nextRuntimes[key];
+              delete nextPackageVersions[key];
+            } else {
+              nextRuntimes[key] = normalizedValue;
+              nextPackageVersions[key] = normalizedValue;
+            }
+            return {
+              ...base,
+              runtimes: nextRuntimes,
+              packageVersions: nextPackageVersions,
+            };
+          });
+          setEnvironmentComposerSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
+        function applyEnvironmentComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateEnvironmentComposerField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = environmentComposerDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeEnvironmentDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleEnvironmentComposerDescriptionFormat(formatType) {
+          const textarea = environmentComposerDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(environmentComposerDraft?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyEnvironmentComposerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        async function handleEnvironmentComposerSubmit(event) {
+          event.preventDefault();
+          const nextDraft = normalizePlaygroundEnvironmentRecord(environmentComposerDraft || buildPlaygroundDefaultEnvironmentDraft());
+          const nextName = String(nextDraft.name || "").trim().replace(/\\s+/g, " ");
+          if (!nextName) {
+            setEnvironmentComposerSaveState({
+              isSaving: false,
+              error: "Environment name is required.",
+            });
+            return;
+          }
+
+          setEnvironmentComposerSaveState({
+            isSaving: true,
+            error: "",
+          });
+
+          try {
+            const savedEnvironment = await persistEnvironmentRecord({
+              ...nextDraft,
+              name: nextName,
+            });
+
+            resetEditorAuxiliaryState();
+            setEnvironmentDetailsCollapsed(false);
+            setEnvironmentDetailsById((current) => ({
+              ...current,
+              [savedEnvironment.id]: savedEnvironment,
+            }));
+            setSelectedEnvironmentId(savedEnvironment.id);
+            setDraftEnvironment(savedEnvironment);
+            setEnvironmentComposerOpen(false);
+            setEnvironmentComposerDraft(buildPlaygroundDefaultEnvironmentDraft());
+            setEnvironmentComposerSaveState({
+              isSaving: false,
+              error: "",
+            });
+
+            if (onEnvironmentMutated) {
+              await onEnvironmentMutated();
+            }
+          } catch (error) {
+            setEnvironmentComposerSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create environment.",
+            });
+          }
+        }
+
         function openEnvironmentRenameDialog(environment) {
           if (!environment?.id || environment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
             return;
@@ -29626,7 +30020,7 @@ const html = `<!doctype html>
             return;
           }
 
-          const nextName = String(environmentRenameValue || "").trim().replace(/\s+/g, " ");
+          const nextName = String(environmentRenameValue || "").trim().replace(/\\s+/g, " ");
           if (!nextName) {
             setEnvironmentRenameError("Environment name cannot be empty.");
             return;
@@ -29728,6 +30122,244 @@ const html = `<!doctype html>
                     className: "sidebar-thread-rename-button is-primary",
                     disabled: saveState.isSaving,
                   }, saveState.isSaving ? "Saving..." : "Save")
+                )
+              )
+            );
+        }
+
+        function renderEnvironmentListActionMenu() {
+          if (!environmentListActionMenuState || !environmentListActionTarget) {
+            return null;
+          }
+
+          const isDeleting = saveState.isSaving && environmentListActionTarget.id === selectedEnvironmentId;
+
+          return React.createElement("div", {
+              className: "sidebar-thread-popup-scrim",
+              onClick: closeEnvironmentListActionMenu,
+            },
+              React.createElement("div", {
+                className: "sidebar-thread-popup",
+                style: {
+                  top: environmentListActionMenuState.top + "px",
+                  left: environmentListActionMenuState.left + "px",
+                },
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", { className: "sidebar-thread-popup-title" }, "Environment"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row",
+                  onClick: () => {
+                    closeEnvironmentListActionMenu();
+                    openEnvironmentRenameDialog(environmentListActionTarget);
+                  },
+                },
+                  React.createElement(SquarePen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Rename")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row is-danger",
+                  onClick: () => {
+                    closeEnvironmentListActionMenu();
+                    void handleDeleteEnvironment(environmentListActionTarget.id);
+                  },
+                  disabled: isDeleting,
+                },
+                  React.createElement(Trash2, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isDeleting ? "Deleting..." : "Delete")
+                )
+              )
+            );
+        }
+
+        function renderEnvironmentComposerDialog() {
+          if (!environmentComposerOpen) {
+            return null;
+          }
+
+          const composerDraft = environmentComposerDraft || buildPlaygroundDefaultEnvironmentDraft();
+
+          return React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop",
+              onClick: () => {
+                if (!environmentComposerSaveState.isSaving) {
+                  closeEnvironmentComposer();
+                }
+              },
+            },
+              React.createElement("form", {
+                  className: "playground-tasks-project-modal playground-environment-composer-modal",
+                  onClick: (event) => event.stopPropagation(),
+                  onKeyDown: handleComposerSubmitShortcut,
+                  onSubmit: (event) => void handleEnvironmentComposerSubmit(event),
+                },
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("div", {
+                      className: "playground-tasks-project-modal-icon-trigger",
+                      "aria-hidden": "true",
+                    }, React.createElement(HardDrive, { width: 18, height: 18, strokeWidth: 1.9 })),
+                    React.createElement("input", {
+                      className: "playground-tasks-project-modal-name-input",
+                      value: composerDraft.name,
+                      onChange: (event) => updateEnvironmentComposerField("name", event.target.value),
+                      placeholder: "Environment name",
+                      autoFocus: true,
+                      disabled: environmentComposerSaveState.isSaving,
+                    })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: closeEnvironmentComposer,
+                    title: "Close",
+                    disabled: environmentComposerSaveState.isSaving,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-environment-composer-modal-body" },
+                  React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                      React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                        [
+                          { id: "bold", label: "Bold", icon: Bold },
+                          { id: "italic", label: "Italic", icon: Italic },
+                          { id: "underline", label: "Underline", icon: Underline },
+                          { id: "list", label: "List", icon: List },
+                        ].map((action) =>
+                          React.createElement("button", {
+                            key: action.id,
+                            type: "button",
+                            className: "playground-tasks-detail-format-button",
+                            title: action.label,
+                            "aria-label": action.label,
+                            disabled: environmentComposerSaveState.isSaving,
+                            onMouseDown: (event) => event.preventDefault(),
+                            onClick: () => handleEnvironmentComposerDescriptionFormat(action.id),
+                          }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                        )
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEnvironmentComposerDescriptionEditing ? " is-editing" : " is-preview") },
+                      !isEnvironmentComposerDescriptionEditing
+                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                            String(composerDraft.description || "").trim()
+                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                  content: composerDraft.description,
+                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                })
+                              : React.createElement("div", {
+                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                }, "Add a short description about what this environment is used for.")
+                          )
+                        : null,
+                      React.createElement("textarea", {
+                        ref: environmentComposerDescriptionTextareaRef,
+                        className: "playground-tasks-detail-description-input " + (isEnvironmentComposerDescriptionEditing ? "is-editing" : "is-preview"),
+                        rows: 1,
+                        placeholder: isEnvironmentComposerDescriptionEditing ? "Add a short description about what this environment is used for." : "",
+                        value: composerDraft.description || "",
+                        disabled: environmentComposerSaveState.isSaving,
+                        onFocus: () => setIsEnvironmentComposerDescriptionEditing(true),
+                        onChange: (event) => {
+                          updateEnvironmentComposerField("description", event.target.value);
+                          resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                        },
+                        onBlur: () => {
+                          setIsEnvironmentComposerDescriptionEditing(false);
+                        },
+                      })
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Runtime Versions"),
+                    React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
+                      PLAYGROUND_RUNTIME_DEFINITIONS
+                        .filter((runtime) => runtime.key === "python" || runtime.key === "nodejs")
+                        .map((runtime) => {
+                          const currentValue = composerDraft.runtimes?.[runtime.key] || "";
+                          const runtimeOptions = currentValue && !(availableRuntimes[runtime.key] || []).includes(currentValue)
+                            ? [currentValue, ...(availableRuntimes[runtime.key] || [])]
+                            : (availableRuntimes[runtime.key] || []);
+                          const isPopoverOpen = environmentComposerRuntimePopover === runtime.key;
+
+                          return React.createElement("div", { className: "playground-tasks-detail-fact", key: runtime.key },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, runtime.label),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("div", {
+                                  className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isPopoverOpen ? " is-open" : ""),
+                                  ref: isPopoverOpen ? environmentComposerRuntimePopoverRef : null,
+                                },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-runtime-value-button playground-tasks-detail-select-trigger" + (currentValue ? "" : " is-empty") + (isPopoverOpen ? " is-active" : ""),
+                                  onClick: () => setEnvironmentComposerRuntimePopover((current) => current === runtime.key ? "" : runtime.key),
+                                  disabled: environmentComposerSaveState.isSaving,
+                                },
+                                  React.createElement("span", { className: "playground-environments-runtime-value-label" }, currentValue || "Disabled"),
+                                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
+                                ),
+                                isPopoverOpen
+                                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                      React.createElement("button", {
+                                          type: "button",
+                                          className: "tb-popup-row tb-popup-row-select" + (!currentValue ? " selected" : ""),
+                                          onClick: () => {
+                                            updateEnvironmentComposerRuntime(runtime.key, "");
+                                            setEnvironmentComposerRuntimePopover("");
+                                          },
+                                        },
+                                        React.createElement("span", { className: "tb-popup-check-slot" },
+                                          !currentValue
+                                            ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                            : null
+                                        ),
+                                        React.createElement("span", null, "Disabled")
+                                      ),
+                                      runtimeOptions.map((option) =>
+                                        React.createElement("button", {
+                                            key: runtime.key + ":" + option,
+                                            type: "button",
+                                            className: "tb-popup-row tb-popup-row-select" + (currentValue === option ? " selected" : ""),
+                                            onClick: () => {
+                                              updateEnvironmentComposerRuntime(runtime.key, option);
+                                              setEnvironmentComposerRuntimePopover("");
+                                            },
+                                          },
+                                          React.createElement("span", { className: "tb-popup-check-slot" },
+                                            currentValue === option
+                                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                              : null
+                                          ),
+                                          React.createElement("span", null, option)
+                                        )
+                                      )
+                                    )
+                                  : null
+                              )
+                            )
+                          );
+                        })
+                    )
+                  )
+                ),
+                environmentComposerSaveState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, environmentComposerSaveState.error)
+                  : null,
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: closeEnvironmentComposer,
+                    disabled: environmentComposerSaveState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: environmentComposerSaveState.isSaving || !String(composerDraft.name || "").trim(),
+                  }, environmentComposerSaveState.isSaving ? "Creating..." : "Create")
                 )
               )
             );
@@ -30880,47 +31512,52 @@ const html = `<!doctype html>
                     React.createElement("div", { className: "playground-files-toolbar-anchor" },
                       React.createElement("button", {
                         type: "button",
-                        className: "playground-files-header-icon-button" + (toolbarPopover === "create" ? " is-active" : ""),
-                        onClick: () => toggleToolbarPopover("create"),
+                        className: "playground-files-header-icon-button" + (environmentComposerOpen ? " is-active" : ""),
+                        onClick: handleCreateEnvironment,
                         title: "Create environment",
                       }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
-                      toolbarPopover === "create"
-                        ? React.createElement("div", { className: "playground-files-toolbar-menu" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-toolbar-menu-item",
-                              onClick: handleCreateEnvironment,
-                            },
-                              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                React.createElement("span", null, "New Environment"),
-                                React.createElement("span", null, "Create a new editable environment.")
-                              )
-                            )
-                          )
-                        : null
                     )
                   )
                 )
               ),
               React.createElement("div", { className: "playground-environments-list-body" },
                 displayEnvironments.length > 0
-                  ? displayEnvironments.map((environment) =>
-                      React.createElement("button", {
+                  ? displayEnvironments.map((environment) => {
+                      const isActive = selectedEnvironmentId === environment.id;
+                      const hasActions = !environment.isDefault && !environment.isSystem;
+                      const isMenuOpen = environmentListActionMenuState?.environmentId === environment.id;
+                      return React.createElement("div", {
                           key: environment.id,
-                          type: "button",
-                          className: "playground-environments-list-item" + (selectedEnvironmentId === environment.id ? " is-active" : ""),
-                          onClick: () => handleEnvironmentSelect(environment.id),
+                          className: "playground-environments-list-item-row" + (isActive ? " is-active" : ""),
                         },
-                          React.createElement(HardDrive, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-environments-list-item-copy" },
-                            React.createElement("div", { className: "playground-environments-list-item-title" }, environment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID ? (draftEnvironment?.name || "New Environment") : (environment.name || "Untitled Environment"))
-                          ),
-                          environment.isDefault
-                            ? React.createElement("span", { className: "playground-environments-badge" }, "Default")
+                          React.createElement("button", {
+                              type: "button",
+                              className: "playground-environments-list-item" + (isActive ? " is-active" : "") + (hasActions ? " has-actions" : ""),
+                              onClick: () => handleEnvironmentSelect(environment.id),
+                            },
+                              React.createElement(HardDrive, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-environments-list-item-copy" },
+                                React.createElement("div", { className: "playground-environments-list-item-title" }, environment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID ? (draftEnvironment?.name || "New Environment") : (environment.name || "Untitled Environment"))
+                              ),
+                              environment.isDefault
+                                ? React.createElement("span", { className: "playground-environments-badge" }, "Default")
+                                : null
+                            ),
+                          hasActions
+                            ? React.createElement("div", { className: "playground-environments-list-item-side" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-list-item-menu-button" + (isMenuOpen ? " is-open" : ""),
+                                  onClick: (event) => openEnvironmentListActionMenu(event, environment),
+                                  "aria-label": "Environment actions",
+                                  "aria-expanded": isMenuOpen ? "true" : "false",
+                                },
+                                  React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })
+                                )
+                              )
                             : null
-                        )
-                    )
+                        );
+                    })
                   : React.createElement("div", { className: "playground-environments-empty-state" },
                       React.createElement("div", { className: "playground-environments-empty-title" }, "No environments"),
                       React.createElement("div", { className: "playground-environments-empty-copy" }, "Create your first environment to configure runtimes, packages, and context."),
@@ -30943,7 +31580,9 @@ const html = `<!doctype html>
                 : renderCurrentEnvironmentEditor()
             )
           ),
-          renderEnvironmentRenameModal()
+          renderEnvironmentListActionMenu(),
+          renderEnvironmentRenameModal(),
+          renderEnvironmentComposerDialog()
         );
       }
 
@@ -30961,9 +31600,11 @@ const html = `<!doctype html>
         const agentDetailMainRef = useRef(null);
         const agentDescriptionTextareaRef = useRef(null);
         const agentInstructionsTextareaRef = useRef(null);
+        const agentComposerDescriptionTextareaRef = useRef(null);
         const agentActionsPopoverRef = useRef(null);
         const agentRenameInputRef = useRef(null);
         const agentModelPopoverRef = useRef(null);
+        const agentComposerModelPopoverRef = useRef(null);
         const lastAppliedFocusedAgentSelectionTokenRef = useRef("");
         const [selectedAgentId, setSelectedAgentId] = useState(initialAgentId || "");
         const [agentDetailsById, setAgentDetailsById] = useState(() => {
@@ -30995,6 +31636,15 @@ const html = `<!doctype html>
         const [agentRenameValue, setAgentRenameValue] = useState("");
         const [agentRenameError, setAgentRenameError] = useState("");
         const [agentModelPopover, setAgentModelPopover] = useState("");
+        const [agentComposerOpen, setAgentComposerOpen] = useState(false);
+        const [agentComposerDraft, setAgentComposerDraft] = useState(() => buildPlaygroundDefaultAgentDraft());
+        const [agentComposerSaveState, setAgentComposerSaveState] = useState({
+          isSaving: false,
+          error: "",
+        });
+        const [isAgentComposerDescriptionEditing, setIsAgentComposerDescriptionEditing] = useState(false);
+        const [agentComposerModelPopover, setAgentComposerModelPopover] = useState("");
+        const [agentListActionMenuState, setAgentListActionMenuState] = useState(null);
         const [expandedSections, setExpandedSections] = useState(() => new Set(["team", "model", "instructions"]));
 
         const orderedAgents = useMemo(() => {
@@ -31008,6 +31658,13 @@ const html = `<!doctype html>
             return String(left?.name || "").localeCompare(String(right?.name || ""));
           });
         }, [agents]);
+
+        const agentListActionTarget = useMemo(() => {
+          if (!agentListActionMenuState?.agentId) {
+            return null;
+          }
+          return orderedAgents.find((agent) => agent.id === agentListActionMenuState.agentId) || null;
+        }, [agentListActionMenuState, orderedAgents]);
 
         const allKnownAgents = useMemo(() => {
           const next = {};
@@ -31597,6 +32254,13 @@ const html = `<!doctype html>
           resizeAgentDescriptionTextarea(agentInstructionsTextareaRef.current);
         }, [draftAgent?.instructions, draftAgent?.id]);
 
+        useLayoutEffect(() => {
+          if (!agentComposerOpen) {
+            return;
+          }
+          resizeAgentDescriptionTextarea(agentComposerDescriptionTextareaRef.current);
+        }, [agentComposerDraft?.description, agentComposerOpen]);
+
         useEffect(() => {
           const textarea = agentDescriptionTextareaRef.current;
           const detailMain = agentDetailMainRef.current;
@@ -31644,40 +32308,208 @@ const html = `<!doctype html>
           };
         }, [draftAgent?.id]);
 
+        useEffect(() => {
+          if (!agentComposerModelPopover) {
+            return undefined;
+          }
+
+          function handleAgentComposerModelPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentComposerModelPopoverRef.current || agentComposerModelPopoverRef.current.contains(target)) {
+              return;
+            }
+            setAgentComposerModelPopover("");
+          }
+
+          function handleAgentComposerModelPopoverEscape(event) {
+            if (event.key === "Escape") {
+              setAgentComposerModelPopover("");
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentComposerModelPopoverPointerDown);
+          window.addEventListener("keydown", handleAgentComposerModelPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentComposerModelPopoverPointerDown);
+            window.removeEventListener("keydown", handleAgentComposerModelPopoverEscape);
+          };
+        }, [agentComposerModelPopover]);
+
         function handleAgentSelect(agentId) {
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setAgentListActionMenuState(null);
           setSelectedAgentId(agentId);
         }
 
         function handleAgentListModeChange(nextMode) {
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setAgentListActionMenuState(null);
           setAgentListMode(nextMode === "teams" ? "teams" : "agents");
         }
 
-        function handleCreateAgent() {
+        function openAgentComposer(kind = "single") {
           resetEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
-          setAgentListMode("agents");
-          setSelectedAgentId(PLAYGROUND_AGENT_DRAFT_ID);
-          setDraftAgent(buildPlaygroundDefaultAgentDraft());
+          setAgentListActionMenuState(null);
+          setAgentListMode(kind === "team" ? "teams" : "agents");
+          setAgentComposerDraft(buildPlaygroundDefaultAgentDraft(kind));
+          setAgentComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setIsAgentComposerDescriptionEditing(false);
+          setAgentComposerModelPopover("");
+          setAgentComposerOpen(true);
+        }
+
+        function closeAgentComposer() {
+          if (agentComposerSaveState.isSaving) {
+            return;
+          }
+          setAgentComposerOpen(false);
+          setAgentComposerDraft(buildPlaygroundDefaultAgentDraft());
+          setAgentComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setIsAgentComposerDescriptionEditing(false);
+          setAgentComposerModelPopover("");
+        }
+
+        function handleCreateAgent() {
+          openAgentComposer("single");
         }
 
         function handleCreateTeam() {
-          resetEditorAuxiliaryState();
-          setToolbarPopover("");
-          setSearchPopupQuery("");
-          setAgentListMode("teams");
-          setSelectedAgentId(PLAYGROUND_AGENT_DRAFT_ID);
-          setDraftAgent(buildPlaygroundDefaultAgentDraft("team"));
+          openAgentComposer("team");
+        }
+
+        function closeAgentListActionMenu() {
+          setAgentListActionMenuState(null);
+        }
+
+        function openAgentListActionMenu(event, agent) {
+          if (!agent?.id || agent.isSystem || agent.isDefault) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          const rect = event.currentTarget.getBoundingClientRect();
+          const menuWidth = 220;
+          setAgentListActionMenuState((current) =>
+            current?.agentId === agent.id
+              ? null
+              : {
+                  agentId: agent.id,
+                  top: rect.bottom + 8,
+                  left: Math.max(12, Math.min(window.innerWidth - menuWidth - 12, rect.right - menuWidth)),
+                }
+          );
         }
 
         function closeAgentRenameDialog() {
           setAgentRenameState(null);
           setAgentRenameValue("");
           setAgentRenameError("");
+        }
+
+        function updateAgentComposerField(field, value) {
+          setAgentComposerDraft((current) => ({
+            ...(current || buildPlaygroundDefaultAgentDraft()),
+            [field]: value,
+          }));
+          setAgentComposerSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
+        function updateAgentComposerTeamOrchestrator(agentId) {
+          setAgentComposerDraft((current) => {
+            const base = current || buildPlaygroundDefaultAgentDraft("team");
+            const normalizedId = String(agentId || "").trim();
+            return {
+              ...base,
+              teamOrchestratorAgentId: normalizedId,
+              teamSubagentIds: dedupePlaygroundAgentIds(base.teamSubagentIds).filter((value) => value !== normalizedId),
+              model: availableTeamMemberAgentsById[normalizedId]?.model || base.model,
+            };
+          });
+          setAgentComposerSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
+        function toggleAgentComposerTeamSubagent(agentId) {
+          setAgentComposerDraft((current) => {
+            const base = current || buildPlaygroundDefaultAgentDraft("team");
+            const normalizedId = String(agentId || "").trim();
+            const orchestratorAgentId = String(base.teamOrchestratorAgentId || "").trim();
+            if (!normalizedId || normalizedId === orchestratorAgentId) {
+              return base;
+            }
+
+            const currentIds = dedupePlaygroundAgentIds(base.teamSubagentIds).filter((value) => value !== orchestratorAgentId);
+            const nextIds = currentIds.includes(normalizedId)
+              ? currentIds.filter((value) => value !== normalizedId)
+              : currentIds.concat(normalizedId);
+
+            return {
+              ...base,
+              teamSubagentIds: nextIds,
+            };
+          });
+          setAgentComposerSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
+        function applyAgentComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateAgentComposerField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = agentComposerDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeAgentDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleAgentComposerDescriptionFormat(formatType) {
+          const textarea = agentComposerDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(agentComposerDraft?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildAgentMarkdownListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyAgentComposerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         function openAgentRenameDialog(agent) {
@@ -31805,6 +32637,54 @@ const html = `<!doctype html>
           return savedAgent;
         }
 
+        async function handleAgentComposerSubmit(event) {
+          event.preventDefault();
+          const composerDraft = normalizePlaygroundAgentRecord(agentComposerDraft || buildPlaygroundDefaultAgentDraft());
+          const nextName = String(composerDraft.name || "").trim().replace(/\\s+/g, " ");
+          if (!nextName) {
+            setAgentComposerSaveState({
+              isSaving: false,
+              error: composerDraft.agentType === "team" ? "Team name is required." : "Agent name is required.",
+            });
+            return;
+          }
+
+          setAgentComposerSaveState({
+            isSaving: true,
+            error: "",
+          });
+
+          try {
+            const savedAgent = await persistAgentRecord({
+              ...composerDraft,
+              name: nextName,
+            });
+            setAgentDetailsById((current) => ({
+              ...current,
+              [savedAgent.id]: savedAgent,
+            }));
+            setSelectedAgentId(savedAgent.id);
+            setAgentListMode(getPlaygroundAgentListMode(savedAgent));
+            setDraftAgent(savedAgent);
+            setAgentComposerOpen(false);
+            setAgentComposerDraft(buildPlaygroundDefaultAgentDraft());
+            setAgentComposerSaveState({
+              isSaving: false,
+              error: "",
+            });
+            setIsAgentComposerDescriptionEditing(false);
+            setAgentComposerModelPopover("");
+            if (onAgentMutated) {
+              await onAgentMutated();
+            }
+          } catch (error) {
+            setAgentComposerSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create agent.",
+            });
+          }
+        }
+
         async function handleSaveAgent() {
           if (!draftAgent || isSystemAgent) {
             return;
@@ -31849,7 +32729,7 @@ const html = `<!doctype html>
             return;
           }
 
-          const nextName = String(agentRenameValue || "").trim().replace(/\s+/g, " ");
+          const nextName = String(agentRenameValue || "").trim().replace(/\\s+/g, " ");
           if (!nextName) {
             setAgentRenameError("Agent name cannot be empty.");
             return;
@@ -32017,6 +32897,282 @@ const html = `<!doctype html>
                     className: "sidebar-thread-rename-button is-primary",
                     disabled: saveState.isSaving,
                   }, saveState.isSaving ? "Saving..." : "Save")
+                )
+              )
+            );
+        }
+
+        function renderAgentListActionMenu() {
+          if (!agentListActionMenuState || !agentListActionTarget) {
+            return null;
+          }
+
+          const isDeleting = saveState.isSaving && agentListActionTarget.id === selectedAgentId;
+          const targetIsTeam = agentListActionTarget.agentType === "team" || isPlaygroundTeamAgent(agentListActionTarget);
+
+          return React.createElement("div", {
+              className: "sidebar-thread-popup-scrim",
+              onClick: closeAgentListActionMenu,
+            },
+              React.createElement("div", {
+                className: "sidebar-thread-popup",
+                style: {
+                  top: agentListActionMenuState.top + "px",
+                  left: agentListActionMenuState.left + "px",
+                },
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", { className: "sidebar-thread-popup-title" }, targetIsTeam ? "Team" : "Agent"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row",
+                  onClick: () => {
+                    closeAgentListActionMenu();
+                    openAgentRenameDialog(agentListActionTarget);
+                  },
+                },
+                  React.createElement(SquarePen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Rename")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row is-danger",
+                  onClick: () => {
+                    closeAgentListActionMenu();
+                    void handleDeleteAgent(agentListActionTarget.id);
+                  },
+                  disabled: isDeleting,
+                },
+                  React.createElement(Trash2, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isDeleting ? "Deleting..." : "Delete")
+                )
+              )
+            );
+        }
+
+        function renderAgentComposerDialog() {
+          if (!agentComposerOpen) {
+            return null;
+          }
+
+          const composerDraft = agentComposerDraft || buildPlaygroundDefaultAgentDraft(agentListMode === "teams" ? "team" : "single");
+          const isTeamComposer = composerDraft.agentType === "team";
+          const selectedComposerModel = PLAYGROUND_AGENT_MODEL_OPTIONS.find((option) => option.id === (composerDraft.model || "claude-haiku-4-5")) || PLAYGROUND_AGENT_MODEL_OPTIONS[0];
+          const composerSelectedSubagentIds = dedupePlaygroundAgentIds(composerDraft.teamSubagentIds).filter((value) => value !== String(composerDraft.teamOrchestratorAgentId || "").trim());
+          const hasRequiredTeamSelection = !isTeamComposer || (String(composerDraft.teamOrchestratorAgentId || "").trim() && composerSelectedSubagentIds.length > 0);
+
+          return React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop",
+              onClick: () => {
+                if (!agentComposerSaveState.isSaving) {
+                  closeAgentComposer();
+                }
+              },
+            },
+              React.createElement("form", {
+                  className: "playground-tasks-project-modal playground-agent-composer-modal",
+                  onClick: (event) => event.stopPropagation(),
+                  onKeyDown: handleComposerSubmitShortcut,
+                  onSubmit: (event) => void handleAgentComposerSubmit(event),
+                },
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("div", {
+                      className: "playground-tasks-project-modal-icon-trigger",
+                      "aria-hidden": "true",
+                    }, isTeamComposer
+                      ? React.createElement(Layers, { width: 18, height: 18, strokeWidth: 1.9 })
+                      : React.createElement(Bot, { width: 18, height: 18, strokeWidth: 1.9 })
+                    ),
+                    React.createElement("input", {
+                      className: "playground-tasks-project-modal-name-input",
+                      value: composerDraft.name,
+                      onChange: (event) => updateAgentComposerField("name", event.target.value),
+                      placeholder: isTeamComposer ? "Team name" : "Agent name",
+                      autoFocus: true,
+                      disabled: agentComposerSaveState.isSaving,
+                    })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: closeAgentComposer,
+                    title: "Close",
+                    disabled: agentComposerSaveState.isSaving,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-agent-composer-modal-body" },
+                  React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                      React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                        [
+                          { id: "bold", label: "Bold", icon: Bold },
+                          { id: "italic", label: "Italic", icon: Italic },
+                          { id: "underline", label: "Underline", icon: Underline },
+                          { id: "list", label: "List", icon: List },
+                        ].map((action) =>
+                          React.createElement("button", {
+                            key: action.id,
+                            type: "button",
+                            className: "playground-tasks-detail-format-button",
+                            title: action.label,
+                            "aria-label": action.label,
+                            disabled: agentComposerSaveState.isSaving,
+                            onMouseDown: (event) => event.preventDefault(),
+                            onClick: () => handleAgentComposerDescriptionFormat(action.id),
+                          }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                        )
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isAgentComposerDescriptionEditing ? " is-editing" : " is-preview") },
+                      !isAgentComposerDescriptionEditing
+                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                            String(composerDraft.description || "").trim()
+                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                  content: composerDraft.description,
+                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                })
+                              : React.createElement("div", {
+                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                }, isTeamComposer ? "Add a short description for this team." : "Add a short description for this agent.")
+                          )
+                        : null,
+                      React.createElement("textarea", {
+                        ref: agentComposerDescriptionTextareaRef,
+                        className: "playground-tasks-detail-description-input " + (isAgentComposerDescriptionEditing ? "is-editing" : "is-preview"),
+                        rows: 1,
+                        placeholder: isAgentComposerDescriptionEditing
+                          ? (isTeamComposer ? "Add a short description for this team." : "Add a short description for this agent.")
+                          : "",
+                        value: composerDraft.description || "",
+                        disabled: agentComposerSaveState.isSaving,
+                        onFocus: () => setIsAgentComposerDescriptionEditing(true),
+                        onChange: (event) => {
+                          updateAgentComposerField("description", event.target.value);
+                          resizeAgentDescriptionTextarea(event.currentTarget);
+                        },
+                        onBlur: () => setIsAgentComposerDescriptionEditing(false),
+                      })
+                    )
+                  ),
+                  isTeamComposer
+                    ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                        React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Team Setup"),
+                        React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Orchestrator"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("select", {
+                                className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
+                                value: composerDraft.teamOrchestratorAgentId || "",
+                                onChange: (event) => updateAgentComposerTeamOrchestrator(event.target.value),
+                                disabled: agentComposerSaveState.isSaving || availableTeamMemberAgents.length === 0,
+                              },
+                                React.createElement("option", { value: "" }, "Select orchestrator"),
+                                availableTeamMemberAgents.map((agent) =>
+                                  React.createElement("option", { key: agent.id, value: agent.id }, agent.name || agent.id)
+                                )
+                              )
+                            )
+                          )
+                        ),
+                        availableTeamMemberAgents.filter((agent) => agent.id !== composerDraft.teamOrchestratorAgentId).length > 0
+                          ? React.createElement("div", { className: "playground-agents-team-grid" },
+                              availableTeamMemberAgents
+                                .filter((agent) => agent.id !== composerDraft.teamOrchestratorAgentId)
+                                .map((agent) => {
+                                  const isSelected = composerSelectedSubagentIds.includes(agent.id);
+                                  return React.createElement("button", {
+                                      key: agent.id,
+                                      type: "button",
+                                      className: "playground-agents-team-card" + (isSelected ? " is-selected" : ""),
+                                      onClick: () => toggleAgentComposerTeamSubagent(agent.id),
+                                      disabled: agentComposerSaveState.isSaving,
+                                    },
+                                      React.createElement("div", { className: "playground-agents-team-card-header" },
+                                        React.createElement("div", { className: "playground-agents-team-card-title" }, agent.name || agent.id),
+                                        isSelected
+                                          ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 2 })
+                                          : null
+                                      ),
+                                      React.createElement("div", { className: "playground-agents-team-card-copy" }, agent.description || agent.id)
+                                    );
+                                })
+                            )
+                          : React.createElement("div", { className: "playground-environments-muted" }, "Create a few single agents first, then assemble them into a team here."),
+                        composerSelectedSubagentIds.length > 0
+                          ? React.createElement("div", { className: "playground-agents-team-selected-list" },
+                              composerSelectedSubagentIds.map((agentId) =>
+                                React.createElement("span", { key: agentId, className: "playground-agents-team-selected-pill" }, availableTeamMemberAgentsById[agentId]?.name || agentId)
+                              )
+                            )
+                          : null
+                      )
+                    : React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                        React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Model Configuration"),
+                        React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Model"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("div", {
+                                  className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (agentComposerModelPopover === "model" ? " is-open" : ""),
+                                  ref: agentComposerModelPopover === "model" ? agentComposerModelPopoverRef : null,
+                                },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-runtime-value-button playground-tasks-detail-select-trigger" + (agentComposerModelPopover === "model" ? " is-active" : ""),
+                                  onClick: () => setAgentComposerModelPopover((current) => current === "model" ? "" : "model"),
+                                  disabled: agentComposerSaveState.isSaving,
+                                },
+                                  React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedComposerModel.label || "Select model"),
+                                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
+                                ),
+                                agentComposerModelPopover === "model"
+                                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                      PLAYGROUND_AGENT_MODEL_OPTIONS.map((option) =>
+                                        React.createElement("button", {
+                                            key: option.id,
+                                            type: "button",
+                                            className: "tb-popup-row tb-popup-row-select" + ((composerDraft.model || "claude-haiku-4-5") === option.id ? " selected" : ""),
+                                            onClick: () => {
+                                              updateAgentComposerField("model", option.id);
+                                              setAgentComposerModelPopover("");
+                                            },
+                                          },
+                                          React.createElement("span", { className: "tb-popup-check-slot" },
+                                            (composerDraft.model || "claude-haiku-4-5") === option.id
+                                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                              : null
+                                          ),
+                                          React.createElement("span", null, option.label)
+                                        )
+                                      )
+                                    )
+                                  : null
+                              )
+                            )
+                          )
+                        )
+                      )
+                ),
+                agentComposerSaveState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, agentComposerSaveState.error)
+                  : null,
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: closeAgentComposer,
+                    disabled: agentComposerSaveState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: agentComposerSaveState.isSaving || !String(composerDraft.name || "").trim() || !hasRequiredTeamSelection,
+                  }, agentComposerSaveState.isSaving
+                    ? (isTeamComposer ? "Creating..." : "Creating...")
+                    : (isTeamComposer ? "Create Team" : "Create Agent"))
                 )
               )
             );
@@ -32641,36 +33797,16 @@ const html = `<!doctype html>
                     React.createElement("div", { className: "playground-files-toolbar-anchor" },
                       React.createElement("button", {
                         type: "button",
-                        className: "playground-files-header-icon-button" + (toolbarPopover === "create" ? " is-active" : ""),
-                        onClick: () => toggleToolbarPopover("create"),
+                        className: "playground-files-header-icon-button" + (agentComposerOpen ? " is-active" : ""),
+                        onClick: () => {
+                          if (agentListMode === "teams") {
+                            handleCreateTeam();
+                          } else {
+                            handleCreateAgent();
+                          }
+                        },
                         title: "Create agent or team",
                       }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
-                      toolbarPopover === "create"
-                        ? React.createElement("div", { className: "playground-files-toolbar-menu" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-toolbar-menu-item",
-                              onClick: handleCreateAgent,
-                            },
-                              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                React.createElement("span", null, "New Agent"),
-                                React.createElement("span", null, "Create a new editable agent.")
-                              )
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-toolbar-menu-item",
-                              onClick: handleCreateTeam,
-                            },
-                              React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                React.createElement("span", null, "New Team"),
-                                React.createElement("span", null, "Create a fixed orchestrator plus subagent team.")
-                              )
-                            )
-                      )
-                        : null
                     )
                   )
                 ),
@@ -32696,6 +33832,9 @@ const html = `<!doctype html>
                   ? displayAgents.map((agent) => {
                       const teamMetadata = getPlaygroundAgentTeamMetadata(agent.metadata);
                       const isTeamListItem = agent?.agentType === "team" || Boolean(teamMetadata);
+                      const isActive = selectedAgentId === agent.id;
+                      const hasActions = !agent.isDefault && !agent.isSystem;
+                      const isMenuOpen = agentListActionMenuState?.agentId === agent.id;
                       const badgeLabel = agent.isDefault
                         ? "Default"
                         : agent.isSystem
@@ -32703,20 +33842,37 @@ const html = `<!doctype html>
                           : isTeamListItem
                             ? "Team"
                             : "";
-                      return React.createElement("button", {
+                      return React.createElement("div", {
                           key: agent.id,
-                          type: "button",
-                          className: "playground-environments-list-item" + (selectedAgentId === agent.id ? " is-active" : ""),
-                          onClick: () => handleAgentSelect(agent.id),
+                          className: "playground-environments-list-item-row" + (isActive ? " is-active" : ""),
                         },
-                          isTeamListItem
-                            ? React.createElement(Layers, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
-                            : React.createElement(Bot, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-environments-list-item-copy" },
-                            React.createElement("div", { className: "playground-environments-list-item-title" }, agent.id === PLAYGROUND_AGENT_DRAFT_ID ? (draftAgent?.name || (draftAgent?.agentType === "team" ? "New Team" : "New Agent")) : (agent.name || "Untitled Agent"))
-                          ),
-                          badgeLabel
-                            ? React.createElement("span", { className: "playground-environments-badge" }, badgeLabel)
+                          React.createElement("button", {
+                              type: "button",
+                              className: "playground-environments-list-item" + (isActive ? " is-active" : "") + (hasActions ? " has-actions" : ""),
+                              onClick: () => handleAgentSelect(agent.id),
+                            },
+                              isTeamListItem
+                                ? React.createElement(Layers, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                : React.createElement(Bot, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-environments-list-item-copy" },
+                                React.createElement("div", { className: "playground-environments-list-item-title" }, agent.id === PLAYGROUND_AGENT_DRAFT_ID ? (draftAgent?.name || (draftAgent?.agentType === "team" ? "New Team" : "New Agent")) : (agent.name || "Untitled Agent"))
+                              ),
+                              badgeLabel && !hasActions
+                                ? React.createElement("span", { className: "playground-environments-badge" }, badgeLabel)
+                                : null
+                            ),
+                          hasActions
+                            ? React.createElement("div", { className: "playground-environments-list-item-side" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-list-item-menu-button" + (isMenuOpen ? " is-open" : ""),
+                                  onClick: (event) => openAgentListActionMenu(event, agent),
+                                  "aria-label": "Agent actions",
+                                  "aria-expanded": isMenuOpen ? "true" : "false",
+                                },
+                                  React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })
+                                )
+                              )
                             : null
                         );
                     })
@@ -32755,7 +33911,9 @@ const html = `<!doctype html>
                 : renderCurrentAgentEditor()
             )
           ),
-          renderAgentRenameModal()
+          renderAgentListActionMenu(),
+          renderAgentRenameModal(),
+          renderAgentComposerDialog()
         );
       }
 
@@ -32771,8 +33929,18 @@ const html = `<!doctype html>
       }) {
         const searchPopupInputRef = useRef(null);
         const skillCodeFileInputRef = useRef(null);
+        const skillComposerCodeFileInputRef = useRef(null);
         const skillActionsPopoverRef = useRef(null);
         const skillRenameInputRef = useRef(null);
+        const skillComposerDescriptionTextareaRef = useRef(null);
+        function buildPlaygroundDefaultSkillComposerDraft() {
+          return {
+            name: "New Skill",
+            description: "",
+            icon: getPlaygroundSkillIconId("code"),
+            codeFiles: [],
+          };
+        }
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [skillListMode, setSkillListMode] = useState("system");
@@ -32785,6 +33953,16 @@ const html = `<!doctype html>
         const [skillsLoading, setSkillsLoading] = useState(false);
         const [skillsLoaded, setSkillsLoaded] = useState(false);
         const [skillsError, setSkillsError] = useState("");
+        const [skillComposerOpen, setSkillComposerOpen] = useState(false);
+        const [skillComposerDraft, setSkillComposerDraft] = useState(() => buildPlaygroundDefaultSkillComposerDraft());
+        const [skillComposerSaveState, setSkillComposerSaveState] = useState({
+          isSaving: false,
+          error: "",
+        });
+        const [isSkillComposerDescriptionEditing, setIsSkillComposerDescriptionEditing] = useState(false);
+        const [skillComposerIconPickerOpen, setSkillComposerIconPickerOpen] = useState(false);
+        const [isSkillComposerCodeDragging, setIsSkillComposerCodeDragging] = useState(false);
+        const [skillListActionMenuState, setSkillListActionMenuState] = useState(null);
         const [skillSaveState, setSkillSaveState] = useState({
           isSaving: false,
           error: "",
@@ -32813,6 +33991,7 @@ const html = `<!doctype html>
         const [skillEnvironmentFilePickerSelectedPaths, setSkillEnvironmentFilePickerSelectedPaths] = useState([]);
         const [skillEnvironmentSelectionId, setSkillEnvironmentSelectionId] = useState("");
         const [skillEnvironmentPopoverOpen, setSkillEnvironmentPopoverOpen] = useState(false);
+        const [skillEnvironmentFilePickerTarget, setSkillEnvironmentFilePickerTarget] = useState("detail");
         const skillDescriptionTextareaRef = useRef(null);
         const skillUsageTextareaRef = useRef(null);
         const skillProcessTextareaRef = useRef(null);
@@ -33265,6 +34444,13 @@ const html = `<!doctype html>
           return skillListMode === "custom" ? normalizedCustomSkills : systemSkills;
         }, [normalizedCustomSkills, skillListMode, systemSkills]);
 
+        const skillListActionTarget = useMemo(() => {
+          if (!skillListActionMenuState?.skillId) {
+            return null;
+          }
+          return normalizedCustomSkills.find((skill) => skill.id === skillListActionMenuState.skillId) || null;
+        }, [normalizedCustomSkills, skillListActionMenuState]);
+
         const selectedSkill = useMemo(() => {
           return displaySkills.find((skill) => skill.id === selectedSkillId) || null;
         }, [displaySkills, selectedSkillId]);
@@ -33285,6 +34471,7 @@ const html = `<!doctype html>
         }, [displaySkills, searchPopupQuery]);
 
         const selectedSkillProjectId = String(selectedSkill?.projectId || projectId || "__runner_playground__").trim() || "__runner_playground__";
+        const baseSkillProjectId = String(projectId || "").trim();
         const selectedSkillEnvironment = useMemo(() => {
           return availableSkillEnvironments.find((environment) => environment.id === skillEnvironmentSelectionId) || null;
         }, [availableSkillEnvironments, skillEnvironmentSelectionId]);
@@ -33383,6 +34570,13 @@ const html = `<!doctype html>
             window.removeEventListener("keydown", handleKeyDown);
           };
         }, [toolbarPopover]);
+
+        useLayoutEffect(() => {
+          if (!skillComposerOpen) {
+            return;
+          }
+          resizeSkillTextarea(skillComposerDescriptionTextareaRef.current);
+        }, [skillComposerDraft.description, skillComposerOpen]);
 
         useEffect(() => {
           if (!skillActionsPopoverOpen) {
@@ -33572,8 +34766,68 @@ const html = `<!doctype html>
           setToolbarPopover((current) => current === nextValue ? "" : nextValue);
         }
 
+        function openSkillComposer() {
+          setToolbarPopover("");
+          setSkillListActionMenuState(null);
+          setSkillListMode("custom");
+          setSkillComposerDraft(buildPlaygroundDefaultSkillComposerDraft());
+          setSkillComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setSkillCodeFilesTransferState({
+            isProcessing: false,
+            error: "",
+          });
+          setIsSkillComposerDescriptionEditing(false);
+          setSkillComposerIconPickerOpen(false);
+          setIsSkillComposerCodeDragging(false);
+          setSkillEnvironmentFilePickerOpen(false);
+          setSkillEnvironmentPopoverOpen(false);
+          setSkillEnvironmentFilePickerSelectedPaths([]);
+          setSkillEnvironmentFilePickerSearch("");
+          setSkillEnvironmentFilePickerTarget("detail");
+          setSkillComposerOpen(true);
+        }
+
+        function closeSkillComposer() {
+          if (skillComposerSaveState.isSaving) {
+            return;
+          }
+          setSkillComposerOpen(false);
+          setSkillComposerDraft(buildPlaygroundDefaultSkillComposerDraft());
+          setSkillComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setSkillCodeFilesTransferState({
+            isProcessing: false,
+            error: "",
+          });
+          setIsSkillComposerDescriptionEditing(false);
+          setSkillComposerIconPickerOpen(false);
+          setIsSkillComposerCodeDragging(false);
+          setSkillEnvironmentFilePickerOpen(false);
+          setSkillEnvironmentPopoverOpen(false);
+          setSkillEnvironmentFilePickerSelectedPaths([]);
+          setSkillEnvironmentFilePickerSearch("");
+          setSkillEnvironmentFilePickerTarget("detail");
+        }
+
+        function updateSkillComposerField(field, value) {
+          setSkillComposerDraft((current) => ({
+            ...current,
+            [field]: value,
+          }));
+          setSkillComposerSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
         function handleSkillSelect(skillId) {
           setToolbarPopover("");
+          setSkillListActionMenuState(null);
           setSelectedSkillId(PLAYGROUND_RUNNER_SKILL_ID_ALIASES[String(skillId || "").trim()] || String(skillId || "").trim());
         }
 
@@ -33581,6 +34835,30 @@ const html = `<!doctype html>
           const normalizedMode = nextMode === "custom" ? "custom" : "system";
           setSkillListMode(normalizedMode);
           setToolbarPopover("");
+          setSkillListActionMenuState(null);
+        }
+
+        function closeSkillListActionMenu() {
+          setSkillListActionMenuState(null);
+        }
+
+        function openSkillListActionMenu(event, skill) {
+          if (!skill?.id || !skill.isCustom) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          const rect = event.currentTarget.getBoundingClientRect();
+          const menuWidth = 220;
+          setSkillListActionMenuState((current) =>
+            current?.skillId === skill.id
+              ? null
+              : {
+                  skillId: skill.id,
+                  top: rect.bottom + 8,
+                  left: Math.max(12, Math.min(window.innerWidth - menuWidth - 12, rect.right - menuWidth)),
+                }
+          );
         }
 
         function getPlaygroundSkillIconComponent(skill) {
@@ -33667,6 +34945,48 @@ const html = `<!doctype html>
           return Array.from(mergedByName.values()).sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
         }
 
+        function applySkillComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateSkillComposerField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = skillComposerDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeSkillTextarea(textarea);
+          });
+        }
+
+        function handleSkillComposerDescriptionFormat(formatType) {
+          const textarea = skillComposerDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const currentValue = String(skillComposerDraft.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : currentValue.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+          if (formatType === "bold") {
+            edit = buildWrappedSkillMarkdownEdit(currentValue, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedSkillMarkdownEdit(currentValue, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedSkillMarkdownEdit(currentValue, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildSkillMarkdownListEdit(currentValue, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applySkillComposerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
         function updateLoadedSkillRecord(skillId, nextSkill) {
           setLoadedSkills((current) => {
             let replaced = false;
@@ -33679,6 +34999,114 @@ const html = `<!doctype html>
             });
             return replaced ? next : next.concat(nextSkill);
           });
+        }
+
+        async function handleSkillComposerSubmit(event) {
+          event.preventDefault();
+          const nextName = String(skillComposerDraft.name || "").trim().replace(/\\s+/g, " ");
+          if (!nextName) {
+            setSkillComposerSaveState({
+              isSaving: false,
+              error: "Skill name cannot be empty.",
+            });
+            return;
+          }
+
+          if (!baseSkillProjectId) {
+            setSkillComposerSaveState({
+              isSaving: false,
+              error: "Project scope is unavailable for skill creation.",
+            });
+            return;
+          }
+
+          setSkillComposerSaveState({
+            isSaving: true,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              "/api/aios/projects/" + encodeURIComponent(baseSkillProjectId) + "/skills",
+              {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(apiKey && String(apiKey).trim() ? { "X-API-Key": String(apiKey).trim() } : {}),
+                  ...(upstreamUrl ? { "X-Runner-Upstream-Url": upstreamUrl } : {}),
+                },
+                body: JSON.stringify({
+                  name: nextName,
+                  description: String(skillComposerDraft.description || ""),
+                  markdown: computePlaygroundSkillMarkdownFromSections(nextName, {
+                    usage: "Describe when this skill should be invoked...",
+                    process: "1. Step one\\n2. Step two",
+                    outputFormat: "Describe what this skill should return...",
+                    configuration: "Add configuration notes here...",
+                    examplePrompts: "- Example prompt",
+                  }),
+                  codeFiles: normalizeSkillCodeFiles(skillComposerDraft.codeFiles).map((file) => ({
+                    id: file.id,
+                    name: file.name,
+                    content: file.content,
+                    language: file.language,
+                  })),
+                  icon: getPlaygroundSkillIconId(skillComposerDraft.icon),
+                  category: "custom",
+                  isActive: true,
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create skill.");
+            }
+
+            const normalizedCreatedSkill = normalizeSkillRecord(data?.skill || {
+              id: data?.id,
+              projectId: baseSkillProjectId,
+              name: nextName,
+              description: String(skillComposerDraft.description || ""),
+              category: "custom",
+              icon: getPlaygroundSkillIconId(skillComposerDraft.icon),
+              codeFiles: normalizeSkillCodeFiles(skillComposerDraft.codeFiles),
+              isActive: true,
+              isSystem: false,
+              isDefault: false,
+            });
+            if (!normalizedCreatedSkill) {
+              throw new Error("Skill creation response was empty.");
+            }
+
+            setLoadedSkills((current) => [normalizedCreatedSkill, ...current.filter((skill) => skill.id !== normalizedCreatedSkill.id)]);
+            setSkillListMode("custom");
+            setSelectedSkillId(normalizedCreatedSkill.id);
+            setSkillComposerOpen(false);
+            setSkillComposerDraft(buildPlaygroundDefaultSkillComposerDraft());
+            setSkillComposerSaveState({
+              isSaving: false,
+              error: "",
+            });
+            setSkillCodeFilesTransferState({
+              isProcessing: false,
+              error: "",
+            });
+            setIsSkillComposerDescriptionEditing(false);
+            setSkillComposerIconPickerOpen(false);
+            setIsSkillComposerCodeDragging(false);
+            setSkillEnvironmentFilePickerOpen(false);
+            setSkillEnvironmentPopoverOpen(false);
+            setSkillEnvironmentFilePickerSelectedPaths([]);
+            setSkillEnvironmentFilePickerSearch("");
+            setSkillEnvironmentFilePickerTarget("detail");
+            void loadSkills({ force: true });
+          } catch (error) {
+            setSkillComposerSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create skill.",
+            });
+          }
         }
 
         function updateSelectedSkillLocal(updater) {
@@ -33705,16 +35133,18 @@ const html = `<!doctype html>
           setSkillRenameError("");
         }
 
-        function openSkillRenameDialog() {
-          if (!selectedSkill?.id || !selectedSkill.isCustom) {
+        function openSkillRenameDialog(targetSkill = selectedSkill) {
+          if (!targetSkill?.id || !targetSkill.isCustom) {
             return;
           }
+          setSelectedSkillId(targetSkill.id);
+          closeSkillListActionMenu();
           setSkillActionsPopoverOpen(false);
           setSkillRenameState({
-            skillId: selectedSkill.id,
-            originalName: String(selectedSkill.name || "").trim(),
+            skillId: targetSkill.id,
+            originalName: String(targetSkill.name || "").trim(),
           });
-          setSkillRenameValue(String(selectedSkill.name || ""));
+          setSkillRenameValue(String(targetSkill.name || ""));
           setSkillRenameError("");
         }
 
@@ -33780,7 +35210,7 @@ const html = `<!doctype html>
             return;
           }
 
-          const nextName = String(skillRenameValue || "").trim().replace(/\s+/g, " ");
+          const nextName = String(skillRenameValue || "").trim().replace(/\\s+/g, " ");
           if (!nextName) {
             setSkillRenameError("Skill name cannot be empty.");
             return;
@@ -33815,15 +35245,17 @@ const html = `<!doctype html>
           }
         }
 
-        async function handleDeleteSelectedSkill() {
-          if (!selectedSkill?.id || !selectedSkill.isCustom) {
+        async function handleDeleteSelectedSkill(targetSkill = selectedSkill) {
+          if (!targetSkill?.id || !targetSkill.isCustom) {
             return;
           }
+          setSelectedSkillId(targetSkill.id);
+          closeSkillListActionMenu();
           if (!window.confirm("Delete this skill?")) {
             return;
           }
 
-          const deletingSkillId = selectedSkill.id;
+          const deletingSkillId = targetSkill.id;
           const nextSelectedCustomSkillId = normalizedCustomSkills.find((skill) => skill.id !== deletingSkillId)?.id || "";
           setSkillSaveState({
             isSaving: true,
@@ -34106,9 +35538,52 @@ const html = `<!doctype html>
           }
         }
 
+        async function handleSkillComposerCodeFileSelection(fileList) {
+          if (!fileList?.length) {
+            return;
+          }
+
+          setSkillCodeFilesTransferState({
+            isProcessing: true,
+            error: "",
+          });
+
+          try {
+            const nextFiles = await Promise.all(
+              Array.from(fileList).map(async (file) => {
+                const content = await file.text();
+                return buildPlaygroundSkillCodeFileRecord(file.name, content);
+              })
+            );
+            setSkillComposerDraft((current) => ({
+              ...(current || buildPlaygroundDefaultSkillComposerDraft()),
+              codeFiles: mergePlaygroundSkillCodeFiles(current?.codeFiles || [], nextFiles),
+            }));
+            setSkillCodeFilesTransferState({
+              isProcessing: false,
+              error: "",
+            });
+          } catch (error) {
+            setSkillCodeFilesTransferState({
+              isProcessing: false,
+              error: error instanceof Error ? error.message : "Failed to add code files.",
+            });
+          }
+        }
+
         async function handleSkillCodeFileInputChange(event) {
           try {
             await handleSkillCodeFileSelection(event.target.files);
+          } finally {
+            if (event.target) {
+              event.target.value = "";
+            }
+          }
+        }
+
+        async function handleSkillComposerCodeFileInputChange(event) {
+          try {
+            await handleSkillComposerCodeFileSelection(event.target.files);
           } finally {
             if (event.target) {
               event.target.value = "";
@@ -34125,8 +35600,18 @@ const html = `<!doctype html>
           await handleSkillCodeFileSelection(event.dataTransfer?.files);
         }
 
+        async function handleSkillComposerCodeFileDrop(event) {
+          event.preventDefault();
+          setIsSkillComposerCodeDragging(false);
+          if (skillCodeFilesTransferState.isProcessing) {
+            return;
+          }
+          await handleSkillComposerCodeFileSelection(event.dataTransfer?.files);
+        }
+
         async function handleAttachSkillEnvironmentFiles() {
-          if (!selectedSkill || !selectedSkill.isCustom || !selectedSkillEnvironment?.id) {
+          const isComposerTarget = skillEnvironmentFilePickerTarget === "composer";
+          if (!selectedSkillEnvironment?.id || (!isComposerTarget && (!selectedSkill || !selectedSkill.isCustom))) {
             return;
           }
 
@@ -34160,10 +35645,24 @@ const html = `<!doctype html>
                 return buildPlaygroundSkillCodeFileRecord(entry.path, content);
               })
             );
-            const mergedFiles = mergePlaygroundSkillCodeFiles(selectedSkill.codeFiles, nextCodeFiles);
-            await saveSelectedSkillCodeFiles(mergedFiles);
+            if (isComposerTarget) {
+              setSkillComposerDraft((current) => ({
+                ...(current || buildPlaygroundDefaultSkillComposerDraft()),
+                codeFiles: mergePlaygroundSkillCodeFiles(current?.codeFiles || [], nextCodeFiles),
+              }));
+              setSkillCodeFilesTransferState({
+                isProcessing: false,
+                error: "",
+              });
+            } else {
+              const mergedFiles = mergePlaygroundSkillCodeFiles(selectedSkill.codeFiles, nextCodeFiles);
+              await saveSelectedSkillCodeFiles(mergedFiles);
+            }
             setSkillEnvironmentFilePickerOpen(false);
+            setSkillEnvironmentPopoverOpen(false);
             setSkillEnvironmentFilePickerSelectedPaths([]);
+            setSkillEnvironmentFilePickerSearch("");
+            setSkillEnvironmentFilePickerTarget("detail");
           } catch (error) {
             setSkillCodeFilesTransferState({
               isProcessing: false,
@@ -34180,6 +35679,17 @@ const html = `<!doctype html>
           void saveSelectedSkillCodeFiles(nextCodeFiles);
         }
 
+        function handleRemoveSkillComposerCodeFile(codeFileId) {
+          setSkillComposerDraft((current) => ({
+            ...(current || buildPlaygroundDefaultSkillComposerDraft()),
+            codeFiles: normalizeSkillCodeFiles(current?.codeFiles).filter((file) => file.id !== codeFileId),
+          }));
+          setSkillCodeFilesTransferState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
         function openSkillCodeFilePicker() {
           if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing) {
             return;
@@ -34191,6 +35701,16 @@ const html = `<!doctype html>
           if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing || availableSkillEnvironments.length === 0) {
             return;
           }
+          setSkillEnvironmentFilePickerTarget("detail");
+          setSkillEnvironmentFilePickerSearch("");
+          setSkillEnvironmentFilePickerOpen(true);
+        }
+
+        function openSkillComposerEnvironmentFilePicker() {
+          if (skillCodeFilesTransferState.isProcessing || availableSkillEnvironments.length === 0) {
+            return;
+          }
+          setSkillEnvironmentFilePickerTarget("composer");
           setSkillEnvironmentFilePickerSearch("");
           setSkillEnvironmentFilePickerOpen(true);
         }
@@ -34318,7 +35838,9 @@ const html = `<!doctype html>
           );
         }
 
-        function renderSkillCodeFileChip(codeFile) {
+        function renderSkillCodeFileChip(codeFile, options = {}) {
+          const removable = options?.removable !== false;
+          const onRemove = typeof options?.onRemove === "function" ? options.onRemove : null;
           return React.createElement("div", {
               key: codeFile.id,
               className: "runner-attachment runner-attachment-file",
@@ -34337,13 +35859,13 @@ const html = `<!doctype html>
               ),
               React.createElement("div", { className: "runner-attachment-file-name" }, codeFile.name)
             ),
-            isSelectedSkillCodeFilesEditable
+            removable && onRemove
               ? React.createElement("button", {
                   type: "button",
                   className: "runner-attachment-remove runner-attachment-remove-file",
                   onClick: (event) => {
                     event.stopPropagation();
-                    handleRemoveSkillCodeFile(codeFile.id);
+                    onRemove(codeFile.id);
                   },
                   "aria-label": "Remove " + codeFile.name,
                 }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
@@ -34619,6 +36141,49 @@ const html = `<!doctype html>
             );
         }
 
+        function renderSkillListActionMenu() {
+          if (!skillListActionMenuState || !skillListActionTarget) {
+            return null;
+          }
+
+          const isDeleting = skillSaveState.isSaving && selectedSkillId === skillListActionTarget.id;
+
+          return React.createElement("div", {
+              className: "sidebar-thread-popup-scrim",
+              onClick: closeSkillListActionMenu,
+            },
+              React.createElement("div", {
+                className: "sidebar-thread-popup",
+                style: {
+                  top: skillListActionMenuState.top + "px",
+                  left: skillListActionMenuState.left + "px",
+                },
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", { className: "sidebar-thread-popup-title" }, "Skill"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row",
+                  onClick: () => openSkillRenameDialog(skillListActionTarget),
+                },
+                  React.createElement(SquarePen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Rename")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row is-danger",
+                  onClick: () => {
+                    void handleDeleteSelectedSkill(skillListActionTarget);
+                  },
+                  disabled: isDeleting,
+                },
+                  React.createElement(Trash2, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isDeleting ? "Deleting..." : "Delete")
+                )
+              )
+            );
+        }
+
         function renderCurrentSkillDetail() {
           if (!selectedSkill) {
             return React.createElement("div", { className: "playground-files-state" },
@@ -34705,7 +36270,10 @@ const html = `<!doctype html>
                           )
                         : null,
                       React.createElement("div", { className: "runner-attachments" },
-                        selectedSkill.codeFiles.map((codeFile) => renderSkillCodeFileChip(codeFile))
+                        selectedSkill.codeFiles.map((codeFile) => renderSkillCodeFileChip(codeFile, {
+                          removable: isSelectedSkillCodeFilesEditable,
+                          onRemove: handleRemoveSkillCodeFile,
+                        }))
                       )
                     )
                   : isSelectedSkillCodeFilesEditable
@@ -34836,8 +36404,233 @@ const html = `<!doctype html>
               }),
               codeFilesSection
             ),
-            renderSkillEnvironmentFilePicker()
           );
+        }
+
+        function renderSkillComposerDialog() {
+          if (!skillComposerOpen) {
+            return null;
+          }
+
+          const selectedSkillComposerIcon = getPlaygroundSkillIconConfig(skillComposerDraft.icon);
+          const SelectedSkillComposerIcon = selectedSkillComposerIcon.icon;
+          const composerCodeFiles = normalizeSkillCodeFiles(skillComposerDraft.codeFiles);
+
+          return React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop",
+              onClick: () => {
+                if (!skillComposerSaveState.isSaving) {
+                  closeSkillComposer();
+                }
+              },
+            },
+              React.createElement("form", {
+                  className: "playground-tasks-project-modal playground-skill-composer-modal",
+                  onClick: (event) => event.stopPropagation(),
+                  onKeyDown: handleComposerSubmitShortcut,
+                  onSubmit: (event) => void handleSkillComposerSubmit(event),
+                },
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-project-modal-icon-trigger" + (skillComposerIconPickerOpen ? " is-active" : ""),
+                      onClick: (event) => {
+                        event.preventDefault();
+                        setSkillComposerIconPickerOpen((current) => !current);
+                      },
+                      title: "Choose skill icon",
+                    },
+                      React.createElement(SelectedSkillComposerIcon, { width: 18, height: 18, strokeWidth: 1.9 })
+                    ),
+                    React.createElement("input", {
+                      className: "playground-tasks-project-modal-name-input",
+                      value: skillComposerDraft.name,
+                      onChange: (event) => updateSkillComposerField("name", event.target.value),
+                      placeholder: "Skill name",
+                      autoFocus: true,
+                      disabled: skillComposerSaveState.isSaving,
+                    }),
+                    skillComposerIconPickerOpen
+                      ? React.createElement("div", { className: "playground-tasks-project-icon-picker" },
+                          PLAYGROUND_SKILL_ICON_OPTIONS.map((option) => {
+                            const Icon = option.icon;
+                            const isActive = getPlaygroundSkillIconId(skillComposerDraft.icon) === option.id;
+                            return React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "playground-tasks-project-icon-option" + (isActive ? " is-active" : ""),
+                              title: option.label,
+                              onClick: (event) => {
+                                event.preventDefault();
+                                updateSkillComposerField("icon", option.id);
+                                setSkillComposerIconPickerOpen(false);
+                              },
+                            },
+                              React.createElement(Icon, { width: 18, height: 18, strokeWidth: 1.9 })
+                            );
+                          })
+                        )
+                      : null
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: closeSkillComposer,
+                    title: "Close",
+                    disabled: skillComposerSaveState.isSaving,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-skill-composer-modal-body" },
+                  React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                      React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                        [
+                          { id: "bold", label: "Bold", icon: Bold },
+                          { id: "italic", label: "Italic", icon: Italic },
+                          { id: "underline", label: "Underline", icon: Underline },
+                          { id: "list", label: "List", icon: List },
+                        ].map((action) =>
+                          React.createElement("button", {
+                            key: action.id,
+                            type: "button",
+                            className: "playground-tasks-detail-format-button",
+                            title: action.label,
+                            "aria-label": action.label,
+                            disabled: skillComposerSaveState.isSaving,
+                            onMouseDown: (event) => event.preventDefault(),
+                            onClick: () => handleSkillComposerDescriptionFormat(action.id),
+                          }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                        )
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isSkillComposerDescriptionEditing ? " is-editing" : " is-preview") },
+                      !isSkillComposerDescriptionEditing
+                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                            String(skillComposerDraft.description || "").trim()
+                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                  content: skillComposerDraft.description,
+                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                })
+                              : React.createElement("div", {
+                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                }, "Add a short description for this custom skill.")
+                          )
+                        : null,
+                      React.createElement("textarea", {
+                        ref: skillComposerDescriptionTextareaRef,
+                        className: "playground-tasks-detail-description-input " + (isSkillComposerDescriptionEditing ? "is-editing" : "is-preview"),
+                        rows: 1,
+                        placeholder: isSkillComposerDescriptionEditing ? "Add a short description for this custom skill." : "",
+                        value: skillComposerDraft.description,
+                        disabled: skillComposerSaveState.isSaving,
+                        onFocus: () => setIsSkillComposerDescriptionEditing(true),
+                        onChange: (event) => {
+                          updateSkillComposerField("description", event.target.value);
+                          resizeSkillTextarea(event.currentTarget);
+                        },
+                        onBlur: () => setIsSkillComposerDescriptionEditing(false),
+                      })
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-attachments" },
+                    React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Code Files"),
+                      React.createElement("div", { className: "playground-tasks-attachments-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                          onClick: openSkillComposerEnvironmentFilePicker,
+                          disabled: skillCodeFilesTransferState.isProcessing || availableSkillEnvironments.length === 0,
+                          title: availableSkillEnvironments.length > 0
+                            ? "Add files from " + (selectedSkillEnvironment?.name || "an environment")
+                            : "No environments available",
+                        }, "From Environment")
+                      )
+                    ),
+                    React.createElement("input", {
+                      ref: skillComposerCodeFileInputRef,
+                      type: "file",
+                      multiple: true,
+                      hidden: true,
+                      onChange: (event) => void handleSkillComposerCodeFileInputChange(event),
+                    }),
+                    React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+                      React.createElement("div", {
+                        className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isSkillComposerCodeDragging ? " dragging" : "") + (composerCodeFiles.length > 0 ? " is-filled" : ""),
+                        onDragOver: (event) => {
+                          event.preventDefault();
+                          if (skillCodeFilesTransferState.isProcessing) {
+                            return;
+                          }
+                          setIsSkillComposerCodeDragging(true);
+                        },
+                        onDragLeave: (event) => {
+                          if (event.currentTarget.contains(event.relatedTarget)) {
+                            return;
+                          }
+                          setIsSkillComposerCodeDragging(false);
+                        },
+                        onDrop: (event) => void handleSkillComposerCodeFileDrop(event),
+                      },
+                        composerCodeFiles.length > 0
+                          ? React.createElement(React.Fragment, null,
+                              React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                                React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                                React.createElement("span", null, isSkillComposerCodeDragging ? "Drop files here" : "Drop files to attach, or"),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-tasks-attachments-browse",
+                                  disabled: skillCodeFilesTransferState.isProcessing,
+                                  onClick: () => skillComposerCodeFileInputRef.current?.click?.(),
+                                }, "browse.")
+                              ),
+                              React.createElement("div", { className: "runner-attachments" },
+                                composerCodeFiles.map((codeFile) => renderSkillCodeFileChip(codeFile, {
+                                  removable: true,
+                                  onRemove: handleRemoveSkillComposerCodeFile,
+                                }))
+                              )
+                            )
+                          : React.createElement("button", {
+                              type: "button",
+                              className: "playground-tasks-attachments-empty-button",
+                              disabled: skillCodeFilesTransferState.isProcessing,
+                              onClick: () => skillComposerCodeFileInputRef.current?.click?.(),
+                            },
+                              React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                              React.createElement("span", { className: "tb-popup-dropzone-title" }, isSkillComposerCodeDragging ? "Drop files here" : "Drag & drop files here"),
+                              React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
+                            )
+                      )
+                    ),
+                    skillCodeFilesTransferState.isProcessing
+                      ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Adding code files...")
+                      : null,
+                    skillCodeFilesTransferState.error
+                      ? React.createElement("div", { className: "playground-environments-error" }, skillCodeFilesTransferState.error)
+                      : null
+                  )
+                ),
+                skillComposerSaveState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, skillComposerSaveState.error)
+                  : null,
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: closeSkillComposer,
+                    disabled: skillComposerSaveState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: skillComposerSaveState.isSaving || !String(skillComposerDraft.name || "").trim() || !baseSkillProjectId,
+                  }, skillComposerSaveState.isSaving ? "Creating..." : "Create Skill")
+                )
+              )
+            );
         }
 
         return React.createElement("div", { className: "playground-environments-page playground-agents-page playground-skills-page" },
@@ -34911,14 +36704,10 @@ const html = `<!doctype html>
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-header-icon-button",
-                      onClick: () => {
-                        void loadSkills({ force: true });
-                      },
-                      title: "Refresh skills",
-                      disabled: skillsLoading,
-                    }, skillsLoading
-                      ? React.createElement(Loader2, { width: 16, height: 16, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                      : React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
+                      onClick: openSkillComposer,
+                      title: "Create custom skill",
+                      disabled: skillComposerSaveState.isSaving || !baseSkillProjectId,
+                    }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
                   )
                 ),
                 React.createElement("div", { className: "playground-agents-list-switch-row" },
@@ -34940,22 +36729,42 @@ const html = `<!doctype html>
               ),
               React.createElement("div", { className: "playground-environments-list-body" },
                 displaySkills.length > 0
-                  ? displaySkills.map((skill) =>
-                      React.createElement("button", {
+                  ? displaySkills.map((skill) => {
+                      const isActive = selectedSkillId === skill.id;
+                      const hasActions = skill.isCustom;
+                      const isMenuOpen = skillListActionMenuState?.skillId === skill.id;
+                      return React.createElement("div", {
                           key: skill.id,
-                          type: "button",
-                          className: "playground-environments-list-item" + (selectedSkillId === skill.id ? " is-active" : ""),
-                          onClick: () => handleSkillSelect(skill.id),
+                          className: "playground-environments-list-item-row" + (isActive ? " is-active" : ""),
                         },
-                          renderSkillIcon(skill, "playground-environments-list-item-icon"),
-                          React.createElement("div", { className: "playground-environments-list-item-copy" },
-                            React.createElement("div", { className: "playground-environments-list-item-title" }, skill.name || skill.id)
-                          ),
-                          !skill.isCustom
-                            ? React.createElement("span", { className: "playground-environments-badge" }, "System")
+                          React.createElement("button", {
+                              type: "button",
+                              className: "playground-environments-list-item" + (isActive ? " is-active" : "") + (hasActions ? " has-actions" : ""),
+                              onClick: () => handleSkillSelect(skill.id),
+                            },
+                              renderSkillIcon(skill, "playground-environments-list-item-icon"),
+                              React.createElement("div", { className: "playground-environments-list-item-copy" },
+                                React.createElement("div", { className: "playground-environments-list-item-title" }, skill.name || skill.id)
+                              ),
+                              !skill.isCustom
+                                ? React.createElement("span", { className: "playground-environments-badge" }, "System")
+                                : null
+                            ),
+                          hasActions
+                            ? React.createElement("div", { className: "playground-environments-list-item-side" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-list-item-menu-button" + (isMenuOpen ? " is-open" : ""),
+                                  onClick: (event) => openSkillListActionMenu(event, skill),
+                                  "aria-label": "Skill actions",
+                                  "aria-expanded": isMenuOpen ? "true" : "false",
+                                },
+                                  React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })
+                                )
+                              )
                             : null
-                        )
-                    )
+                        );
+                    })
                   : React.createElement("div", { className: "playground-environments-empty-state" },
                       skillsLoading
                         ? React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
@@ -34965,7 +36774,18 @@ const html = `<!doctype html>
                         skillListMode === "custom"
                           ? (skillsError || "Skills from the current project will appear here.")
                           : "System skills available to the runner will appear here."
-                      )
+                      ),
+                      skillListMode === "custom"
+                        ? React.createElement("button", {
+                            type: "button",
+                            className: "playground-environments-action-button is-primary",
+                            onClick: openSkillComposer,
+                            disabled: skillComposerSaveState.isSaving || !baseSkillProjectId,
+                          },
+                            React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("span", null, "New Skill")
+                          )
+                        : null
                     )
               )
             ),
@@ -34973,7 +36793,10 @@ const html = `<!doctype html>
               renderCurrentSkillDetail()
             )
           ),
-          renderSkillRenameModal()
+          renderSkillListActionMenu(),
+          renderSkillRenameModal(),
+          renderSkillEnvironmentFilePicker(),
+          renderSkillComposerDialog()
         );
       }
 
@@ -46454,6 +48277,7 @@ const html = `<!doctype html>
               React.createElement("form", {
                   className: "playground-tasks-project-modal",
                   onClick: (event) => event.stopPropagation(),
+                  onKeyDown: handleComposerSubmitShortcut,
                   onSubmit: (event) => void (projectComposerMode === "edit" ? handleSaveProject(event) : handleCreateProject(event)),
                 },
                 React.createElement("div", { className: "playground-tasks-project-modal-top" },
@@ -62442,6 +64266,13 @@ async function proxyUpstreamBinaryGet(req, res, upstreamPath) {
       upstream = await fetchAiosCloud(req, upstreamPath, {
         method: "GET",
       });
+      if (isUnauthorizedHttpStatus(upstream.status) || upstream.status === 404) {
+        const fallbackApiPath = `/api${upstreamPath}${requestUrl.search}`;
+        const fallbackResponse = await fetchAiosApi(req, fallbackApiPath, {
+          method: "GET",
+        });
+        upstream = fallbackResponse;
+      }
     } else {
       return sendJson(res, 401, {
         error: "Unauthorized",
@@ -62458,6 +64289,91 @@ async function proxyUpstreamBinaryGet(req, res, upstreamPath) {
   } catch (error) {
     return sendJson(res, 502, {
       error: "Failed to proxy upstream binary GET request",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+async function proxyEnvironmentHtmlPreview(req, res, environmentId, filePath) {
+  try {
+    const upstreamUrl = parseUpstreamUrl(req, {});
+    const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
+    const apiKey = readOptionalApiKey(req, {});
+    const normalizedEnvironmentId = encodeURIComponent(decodeURIComponent(environmentId));
+    const normalizedFilePath = filePath
+      .split("/")
+      .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
+      .join("/");
+    const upstreamPath = `/environments/${normalizedEnvironmentId}/files/download/${normalizedFilePath}`;
+
+    let upstream;
+    if (apiKey) {
+      const upstreamTarget = new URL(`${upstreamUrl}${upstreamPath}`);
+      upstreamTarget.search = requestUrl.search;
+      upstream = await fetch(upstreamTarget.toString(), {
+        method: "GET",
+        headers: {
+          "X-API-Key": apiKey,
+        },
+      });
+    } else if (hasAiosSession(req)) {
+      upstream = await fetchAiosCloud(req, upstreamPath, {
+        method: "GET",
+      });
+      if (isUnauthorizedHttpStatus(upstream.status) || upstream.status === 404) {
+        upstream = await fetchAiosApi(req, `/api${upstreamPath}${requestUrl.search}`, {
+          method: "GET",
+        });
+      }
+    } else {
+      return sendJson(res, 401, {
+        error: "Unauthorized",
+        message: "Sign in with Computer Agents or provide an API key.",
+      });
+    }
+
+    const responseText = await upstream.text();
+    if (!upstream.ok) {
+      let parsed = {};
+      try {
+        parsed = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        parsed = { message: responseText };
+      }
+      return sendJson(res, upstream.status, parsed);
+    }
+
+    const normalizedPathSegments = normalizedFilePath.split("/").filter(Boolean);
+    const directorySegments = normalizedPathSegments.slice(0, -1);
+    const directoryDownloadUrl = new URL(
+      `/api/real/environments/${normalizedEnvironmentId}/files/download/${directorySegments.length ? `${directorySegments.join("/")}/` : ""}`,
+      requestUrl.origin,
+    ).toString();
+    const escapedBaseHref = directoryDownloadUrl
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    const baseTag = `<base href="${escapedBaseHref}" />`;
+    const shellStyles =
+      '<style>html,body{margin:0;padding:0;background:#fff;color:#111;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}img,svg,video,canvas,iframe{max-width:100%;height:auto;}pre{white-space:pre-wrap;word-break:break-word;}table{max-width:100%;border-collapse:collapse;}*{box-sizing:border-box;}</style>';
+    let rewrittenHtml = String(responseText || "");
+    if (/<head[\s>]/i.test(rewrittenHtml)) {
+      rewrittenHtml = rewrittenHtml.replace(/<head(\s[^>]*)?>/i, (match) => `${match}${baseTag}${shellStyles}`);
+    } else if (/<html[\s>]/i.test(rewrittenHtml)) {
+      rewrittenHtml = rewrittenHtml.replace(/<html(\s[^>]*)?>/i, (match) => `${match}<head>${baseTag}${shellStyles}</head>`);
+    } else {
+      rewrittenHtml = `<!doctype html><html><head><meta charset="utf-8" />${baseTag}${shellStyles}</head><body>${rewrittenHtml}</body></html>`;
+    }
+
+    res.writeHead(200, {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+    });
+    res.end(rewrittenHtml);
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to load environment HTML preview",
       message: error instanceof Error ? error.message : String(error),
     });
   }
@@ -63086,8 +65002,8 @@ const server = http.createServer((req, res) => {
   }
 
   const projectSkillsMatch = url.pathname.match(/^\/api\/aios\/projects\/([^/]+)\/skills$/);
-  if (req.method === "GET" && projectSkillsMatch) {
-    void proxyAiosJsonRequest(req, res, `/api/projects/${projectSkillsMatch[1]}/skills`, "GET");
+  if (["GET", "POST"].includes(req.method || "") && projectSkillsMatch) {
+    void proxyAiosJsonRequest(req, res, `/api/projects/${projectSkillsMatch[1]}/skills`, req.method);
     return;
   }
 
@@ -63831,6 +65747,12 @@ const server = http.createServer((req, res) => {
       .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
       .join("/");
     void proxyUpstreamBinaryGet(req, res, `/environments/${environmentId}/files/download/${filePath}`);
+    return;
+  }
+
+  const environmentHtmlPreviewMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/files\/preview-html\/(.+)$/);
+  if (req.method === "GET" && environmentHtmlPreviewMatch) {
+    void proxyEnvironmentHtmlPreview(req, res, environmentHtmlPreviewMatch[1], environmentHtmlPreviewMatch[2]);
     return;
   }
 
