@@ -9901,6 +9901,51 @@ const html = `<!doctype html>
         gap: 0;
       }
 
+      .playground-skills-detail-navbar-icon-shell {
+        position: relative;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 6px;
+      }
+
+      .playground-skills-detail-navbar-icon-button {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-skills-detail-navbar-icon-button:hover,
+      .playground-skills-detail-navbar-icon-button.is-active {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-skills-detail-navbar-icon-button.is-readonly {
+        cursor: default;
+      }
+
+      .playground-skills-detail-navbar-icon {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+      }
+
+      .playground-skills-detail-navbar-icon-shell .playground-tasks-project-icon-picker {
+        top: calc(100% + 10px);
+        left: 0;
+        z-index: 8;
+      }
+
       .playground-environments-editor-navbar-icon {
         width: 28px;
         height: 28px;
@@ -33931,6 +33976,7 @@ const html = `<!doctype html>
         const skillCodeFileInputRef = useRef(null);
         const skillComposerCodeFileInputRef = useRef(null);
         const skillActionsPopoverRef = useRef(null);
+        const skillDetailIconPickerRef = useRef(null);
         const skillRenameInputRef = useRef(null);
         const skillComposerDescriptionTextareaRef = useRef(null);
         function buildPlaygroundDefaultSkillComposerDraft() {
@@ -33961,6 +34007,7 @@ const html = `<!doctype html>
         });
         const [isSkillComposerDescriptionEditing, setIsSkillComposerDescriptionEditing] = useState(false);
         const [skillComposerIconPickerOpen, setSkillComposerIconPickerOpen] = useState(false);
+        const [skillDetailIconPickerOpen, setSkillDetailIconPickerOpen] = useState(false);
         const [isSkillComposerCodeDragging, setIsSkillComposerCodeDragging] = useState(false);
         const [skillListActionMenuState, setSkillListActionMenuState] = useState(null);
         const [skillSaveState, setSkillSaveState] = useState({
@@ -34606,6 +34653,33 @@ const html = `<!doctype html>
         }, [skillActionsPopoverOpen]);
 
         useEffect(() => {
+          if (!skillDetailIconPickerOpen) {
+            return undefined;
+          }
+
+          function handleSkillDetailIconPickerPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !skillDetailIconPickerRef.current || skillDetailIconPickerRef.current.contains(target)) {
+              return;
+            }
+            setSkillDetailIconPickerOpen(false);
+          }
+
+          function handleSkillDetailIconPickerEscape(event) {
+            if (event.key === "Escape") {
+              setSkillDetailIconPickerOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleSkillDetailIconPickerPointerDown);
+          window.addEventListener("keydown", handleSkillDetailIconPickerEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleSkillDetailIconPickerPointerDown);
+            window.removeEventListener("keydown", handleSkillDetailIconPickerEscape);
+          };
+        }, [skillDetailIconPickerOpen]);
+
+        useEffect(() => {
           if (selectedSkillId && displaySkills.some((skill) => skill.id === selectedSkillId)) {
             return;
           }
@@ -34625,6 +34699,7 @@ const html = `<!doctype html>
             configuration: false,
             examplePrompts: false,
           });
+          setSkillDetailIconPickerOpen(false);
           setSkillSaveState({
             isSaving: false,
             error: "",
@@ -35202,6 +35277,21 @@ const html = `<!doctype html>
               error: error instanceof Error ? error.message : "Failed to save skill.",
             });
           }
+        }
+
+        function handleSelectedSkillIconChange(iconId) {
+          if (!selectedSkill?.isCustom) {
+            return;
+          }
+          const normalizedIconId = getPlaygroundSkillIconId(iconId);
+          updateSelectedSkillLocal((current) => ({
+            ...current,
+            icon: normalizedIconId,
+          }));
+          setSkillDetailIconPickerOpen(false);
+          void saveSelectedSkillFields({
+            icon: normalizedIconId,
+          });
         }
 
         async function handleSkillRenameSubmit(event) {
@@ -36300,9 +36390,53 @@ const html = `<!doctype html>
               : null
           );
 
+          const detailSkillIconControl = React.createElement("div", {
+              className: "playground-skills-detail-navbar-icon-shell",
+              ref: skillDetailIconPickerRef,
+            },
+            selectedSkill.isCustom
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "playground-skills-detail-navbar-icon-button" + (skillDetailIconPickerOpen ? " is-active" : ""),
+                  onClick: () => {
+                    setSkillActionsPopoverOpen(false);
+                    setSkillDetailIconPickerOpen((current) => !current);
+                  },
+                  title: "Choose skill icon",
+                  "aria-label": "Choose skill icon",
+                  "aria-expanded": skillDetailIconPickerOpen ? "true" : "false",
+                  disabled: skillSaveState.isSaving,
+                }, renderSkillIcon(selectedSkill, "playground-skills-detail-navbar-icon"))
+              : React.createElement("div", {
+                  className: "playground-skills-detail-navbar-icon-button is-readonly",
+                  "aria-hidden": "true",
+                }, renderSkillIcon(selectedSkill, "playground-skills-detail-navbar-icon")),
+            selectedSkill.isCustom && skillDetailIconPickerOpen
+              ? React.createElement("div", { className: "playground-tasks-project-icon-picker" },
+                  PLAYGROUND_SKILL_ICON_OPTIONS.map((option) => {
+                    const Icon = option.icon;
+                    const isActive = getPlaygroundSkillIconId(selectedSkill.icon) === option.id;
+                    return React.createElement("button", {
+                      key: option.id,
+                      type: "button",
+                      className: "playground-tasks-project-icon-option" + (isActive ? " is-active" : ""),
+                      title: option.label,
+                      onClick: (event) => {
+                        event.preventDefault();
+                        handleSelectedSkillIconChange(option.id);
+                      },
+                    },
+                      React.createElement(Icon, { width: 18, height: 18, strokeWidth: 1.9 })
+                    );
+                  })
+                )
+              : null
+          );
+
           return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
             React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
               React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                detailSkillIconControl,
                 React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
                   React.createElement("div", { className: "playground-content-title" }, selectedSkill.name || "Skill")
                 )
