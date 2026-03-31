@@ -2680,6 +2680,22 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   text-align: center;
 }
 
+.tb-runner-chat .tb-browser-carousel-path-computer {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.tb-runner-chat .tb-browser-carousel-path-button {
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-browser-carousel-path-button:hover {
+  color: #fff;
+}
+
 .tb-runner-chat .tb-browser-carousel-frame {
   display: flex;
   align-items: stretch;

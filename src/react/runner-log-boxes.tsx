@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   AlertCircle,
@@ -58,6 +58,11 @@ const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.ur
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
 const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
+const RUNNER_DETAIL_DRAWER_AUTO_SCROLL_THRESHOLD_PX = 24;
+
+function isRunnerDetailDrawerPinnedToBottom(element: HTMLDivElement): boolean {
+  return element.scrollHeight - element.scrollTop - element.clientHeight <= RUNNER_DETAIL_DRAWER_AUTO_SCROLL_THRESHOLD_PX;
+}
 
 function sanitizeSubagentDisplayText(value: string | null | undefined): string {
   return stripRunnerSystemTags(String(value || ""))
@@ -5540,6 +5545,8 @@ export function BrowserSkillLogBox({
   requestHeaders,
   onOpenDetails,
   isDetailOpen = false,
+  environmentName,
+  onOpenEnvironmentDesktop,
 }: {
   log?: RunnerLog;
   logs?: RunnerLog[];
@@ -5549,6 +5556,8 @@ export function BrowserSkillLogBox({
   requestHeaders?: HeadersInit;
   onOpenDetails?: () => void;
   isDetailOpen?: boolean;
+  environmentName?: string | null;
+  onOpenEnvironmentDesktop?: () => void;
 }) {
   const sourceLogs = useMemo(() => {
     const rawLogs = Array.isArray(logs) && logs.length > 0 ? logs : log ? [log] : [];
@@ -5597,6 +5606,7 @@ export function BrowserSkillLogBox({
   const cardTitle = steps.length > 1
     ? `${steps.length} interactions`
     : currentStep?.actionLabel || (variant === "computer-use" ? "Computer use session" : "Browser session");
+  const computerLabel = `${String(environmentName || "Environment").trim() || "Environment"} Computer`;
 
   function moveToStep(nextIndex: number) {
     setSelectedIndex(nextIndex);
@@ -5625,10 +5635,29 @@ export function BrowserSkillLogBox({
       <LogPanel collapsed={collapsed}>
         {currentStep ? (
           <div className="tb-browser-carousel">
-            <div className="tb-browser-carousel-path" title={currentStep.locationLabel}>
-              <HardDrive className="tb-browser-carousel-meta-icon" strokeWidth={1.6} />
-              <span className="tb-browser-carousel-meta-copy">{currentStep.locationLabel}</span>
-            </div>
+            {variant === "computer-use" ? (
+              onOpenEnvironmentDesktop ? (
+                <button
+                  type="button"
+                  className="tb-browser-carousel-path tb-browser-carousel-path-computer tb-browser-carousel-path-button"
+                  title={computerLabel}
+                  onClick={onOpenEnvironmentDesktop}
+                >
+                  <Monitor className="tb-browser-carousel-meta-icon" strokeWidth={1.6} />
+                  <span className="tb-browser-carousel-meta-copy">{computerLabel}</span>
+                </button>
+              ) : (
+                <div className="tb-browser-carousel-path tb-browser-carousel-path-computer" title={computerLabel}>
+                  <Monitor className="tb-browser-carousel-meta-icon" strokeWidth={1.6} />
+                  <span className="tb-browser-carousel-meta-copy">{computerLabel}</span>
+                </div>
+              )
+            ) : (
+              <div className="tb-browser-carousel-path" title={currentStep.locationLabel}>
+                <HardDrive className="tb-browser-carousel-meta-icon" strokeWidth={1.6} />
+                <span className="tb-browser-carousel-meta-copy">{currentStep.locationLabel}</span>
+              </div>
+            )}
             <div className="tb-browser-carousel-frame">
               {currentStep.previewSrc ? (
                 <RunnerImagePreviewSurface
@@ -5778,6 +5807,32 @@ export function ComputerUseDetailDrawer({
   children?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
+
+  useEffect(() => {
+    const scrollElement = bodyRef.current;
+    if (!scrollElement) {
+      return;
+    }
+    const resolvedScrollElement = scrollElement;
+
+    function handleScroll() {
+      shouldAutoScrollRef.current = isRunnerDetailDrawerPinnedToBottom(resolvedScrollElement);
+    }
+
+    handleScroll();
+    resolvedScrollElement.addEventListener("scroll", handleScroll, { passive: true });
+    return () => resolvedScrollElement.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useLayoutEffect(() => {
+    const scrollElement = bodyRef.current;
+    if (!scrollElement || !shouldAutoScrollRef.current) {
+      return;
+    }
+    scrollElement.scrollTop = scrollElement.scrollHeight;
+  }, [children, expanded]);
 
   return (
     <aside className="tb-subagent-detail-drawer tb-computer-use-detail-drawer">
@@ -5795,7 +5850,7 @@ export function ComputerUseDetailDrawer({
           </button>
         </div>
       </div>
-      <div className="tb-subagent-detail-drawer-body">
+      <div ref={bodyRef} className="tb-subagent-detail-drawer-body">
         <div className="tb-subagent-log-shell">
           <div className="tb-subagent-log-meta">
             <span className="tb-turn-agent-name">{title}</span>

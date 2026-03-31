@@ -2716,6 +2716,8 @@ async function generateThreadTitle(params: {
   return nextTitle.trim();
 }
 
+const environmentStartPromises = new Map<string, Promise<void>>();
+
 async function startEnvironment(params: {
   backendUrl: string;
   apiKey: string;
@@ -2724,6 +2726,18 @@ async function startEnvironment(params: {
   agentId?: string;
   enabledSkills?: Record<string, unknown> | null;
 }): Promise<void> {
+  const requestKey = JSON.stringify({
+    backendUrl: sanitizeBackendUrl(params.backendUrl),
+    environmentId: params.environmentId,
+    agentId: params.agentId || null,
+    enabledSkills: params.enabledSkills || null,
+  });
+  const existingPromise = environmentStartPromises.get(requestKey);
+  if (existingPromise) {
+    return existingPromise;
+  }
+
+  const startPromise = (async () => {
   const backendUrl = sanitizeBackendUrl(params.backendUrl);
   const headers = new Headers(params.requestHeaders || {});
   headers.set("Content-Type", "application/json");
@@ -2742,6 +2756,12 @@ async function startEnvironment(params: {
     const bodyText = await response.text().catch(() => "");
     throw new Error(bodyText || `Failed to start environment (${response.status})`);
   }
+  })().finally(() => {
+    environmentStartPromises.delete(requestKey);
+  });
+
+  environmentStartPromises.set(requestKey, startPromise);
+  return startPromise;
 }
 
 async function prepareGithubRepositorySelection(params: {
@@ -3954,7 +3974,6 @@ function buildHydratedTurnsFromPayload(
     threadStatus: payload.threadStatus,
     completedAtMs: payload.completedAtMs,
   });
-
   const hasConversationMessages = payload.messages.some(
     (message) =>
       (message.role === "user" || message.role === "assistant") &&
@@ -4515,7 +4534,6 @@ function mergeHydratedTurns(existingTurns: RunnerTurn[], hydratedTurns: RunnerTu
     const shouldCarryForward =
       localTurn.status === "queued" ||
       localPresentation === "btw" ||
-      (localPresentation === "context-action-notice" && localTurn.status === "running") ||
       Boolean(localTurn.quotedSelection) ||
       Boolean(localTurn.attachments?.length);
 
@@ -5799,6 +5817,110 @@ export function RunnerChat({
     setSelectedComputerUseDetail({ turnId, groupId });
   }
 
+  async function openEnvironmentDesktopWindow(targetEnvironmentId?: string | null, targetEnvironmentName?: string | null) {
+    if (typeof window === "undefined" || !normalizedBackendUrl) {
+      return;
+    }
+
+    const normalizedEnvironmentId = String(
+      targetEnvironmentId || activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || ""
+    ).trim();
+    if (!normalizedEnvironmentId) {
+      return;
+    }
+
+    const normalizedEnvironmentName = String(
+      targetEnvironmentName || activeThreadEnvironmentName || selectedEnvironment?.name || displayedEnvironmentLabel || "Environment"
+    ).trim() || "Environment";
+    const desktopWindow = window.open("about:blank", "_blank");
+
+    const renderDesktopWindowMessage = (message: string) => {
+      if (!desktopWindow || desktopWindow.closed) {
+        return;
+      }
+      try {
+        const nextDocument = desktopWindow.document;
+        nextDocument.title = `${normalizedEnvironmentName} Desktop`;
+        nextDocument.body.innerHTML = "";
+        nextDocument.body.style.margin = "0";
+        nextDocument.body.style.background = "#000";
+        nextDocument.body.style.color = "rgba(255,255,255,0.92)";
+        nextDocument.body.style.fontFamily = "system-ui, sans-serif";
+        nextDocument.body.style.display = "flex";
+        nextDocument.body.style.alignItems = "center";
+        nextDocument.body.style.justifyContent = "center";
+        nextDocument.body.style.minHeight = "100vh";
+        nextDocument.body.style.padding = "24px";
+        const copy = nextDocument.createElement("div");
+        copy.style.fontSize = "14px";
+        copy.style.lineHeight = "1.5";
+        copy.style.textAlign = "center";
+        copy.textContent = message;
+        nextDocument.body.appendChild(copy);
+      } catch {
+        // Ignore viewer placeholder rendering failures.
+      }
+    };
+
+    renderDesktopWindowMessage(`Opening ${normalizedEnvironmentName} Computer...`);
+
+    try {
+      const response = await fetch(
+        `${normalizedBackendUrl}/environments/${encodeURIComponent(normalizedEnvironmentId)}/gui/session`,
+        {
+          method: "POST",
+          headers: {
+            ...buildRunnerHeaders(requestHeaders, apiKey.trim()),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+          cache: "no-store",
+        }
+      );
+      const data = await response.json().catch(() => ({} as Record<string, unknown>));
+      if (!response.ok) {
+        throw new Error(
+          String((data as { message?: unknown; error?: unknown })?.message || (data as { error?: unknown })?.error || "Failed to open computer.")
+        );
+      }
+
+      const websocketPath = String((data as { websocketPath?: unknown })?.websocketPath || "").trim();
+      if (!websocketPath) {
+        throw new Error("Desktop session did not return a websocket path.");
+      }
+
+      let viewerWsUrl: URL;
+      if (websocketPath.startsWith("/api/real/ws/vnc")) {
+        viewerWsUrl = new URL(websocketPath, window.location.origin);
+        viewerWsUrl.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      } else {
+        const backendTarget = new URL(normalizedBackendUrl, window.location.origin);
+        viewerWsUrl = new URL(websocketPath, backendTarget);
+        viewerWsUrl.protocol =
+          viewerWsUrl.protocol === "https:"
+            ? "wss:"
+            : viewerWsUrl.protocol === "http:"
+              ? "ws:"
+              : viewerWsUrl.protocol;
+      }
+
+      const viewerUrl = new URL("/environment-gui/viewer", window.location.origin);
+      viewerUrl.searchParams.set("wsUrl", viewerWsUrl.toString());
+      viewerUrl.searchParams.set("title", normalizedEnvironmentName);
+      viewerUrl.searchParams.set("environmentId", normalizedEnvironmentId);
+      viewerUrl.searchParams.set("ts", String(Date.now()));
+
+      if (desktopWindow && !desktopWindow.closed) {
+        desktopWindow.location.replace(viewerUrl.toString());
+      } else {
+        window.open(viewerUrl.toString(), "_blank", "noopener,noreferrer");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to open computer.";
+      renderDesktopWindowMessage(message);
+    }
+  }
+
   function startDocumentPreviewResize(event: ReactPointerEvent<HTMLButtonElement>) {
     if (typeof window === "undefined") {
       return;
@@ -6822,6 +6944,21 @@ export function RunnerChat({
 
     onRunStart?.(threadId);
     try {
+      if (runEnvironmentId && normalizedBackendUrl && apiKey.trim()) {
+        await startEnvironment({
+          backendUrl: normalizedBackendUrl,
+          apiKey: apiKey.trim(),
+          requestHeaders,
+          environmentId: runEnvironmentId,
+          ...(effectiveAgentId ? { agentId: effectiveAgentId } : {}),
+          ...(options?.enabledSkillsOverride !== undefined
+            ? { enabledSkills: options.enabledSkillsOverride }
+            : enabledSkillsPayload
+              ? { enabledSkills: enabledSkillsPayload }
+              : {}),
+        });
+      }
+
       const resolvedAttachments =
         options?.resolvedAttachmentsOverride !== undefined
           ? options.resolvedAttachmentsOverride || undefined
@@ -7187,7 +7324,9 @@ export function RunnerChat({
 
   useEffect(() => {
     if (threadId) {
-      initializedThreadHistoryIdRef.current = null;
+      if (threadId !== localThreadId) {
+        initializedThreadHistoryIdRef.current = null;
+      }
       setLocalThreadId(threadId);
       setEditingTurnId(null);
       setEditingTurnDraft("");
@@ -7196,7 +7335,7 @@ export function RunnerChat({
       setPreviewedDocumentAttachment(null);
       resetForkConfiguration();
     }
-  }, [threadId]);
+  }, [localThreadId, threadId]);
 
   useEffect(() => {
     if (!quotedSelectionPopup) {
@@ -7238,8 +7377,12 @@ export function RunnerChat({
       && handledExternalRunRequestTokenRef.current !== externalRunRequest?.token
       && String(externalRunRequest?.threadId || "").trim() === String(threadId || "").trim()
       && String(externalRunRequest?.prompt || "").trim().length > 0;
+    const hasLocalExecutionStateForRequestedThread =
+      Boolean(threadId) &&
+      initializedThreadHistoryIdRef.current === threadId &&
+      (isPreparingRun || isRunning || hasRunningTurn || pendingQueuedMessages.length > 0);
 
-    if (!threadId || !hasApiKey || isRunning || hasPendingExternalRunForThread) {
+    if (!threadId || !hasApiKey || isRunning || hasPendingExternalRunForThread || hasLocalExecutionStateForRequestedThread) {
       setIsThreadHistoryLoading(false);
       return () => {
         cancelled = true;
@@ -7346,7 +7489,19 @@ export function RunnerChat({
     return () => {
       cancelled = true;
     };
-  }, [apiKey, clear, externalRunRequest, hasApiKey, isRunning, normalizedBackendUrl, requestHeaders, threadId]);
+  }, [
+    apiKey,
+    clear,
+    externalRunRequest,
+    hasApiKey,
+    hasRunningTurn,
+    isPreparingRun,
+    isRunning,
+    normalizedBackendUrl,
+    pendingQueuedMessages.length,
+    requestHeaders,
+    threadId,
+  ]);
 
   useEffect(() => {
     setThreadContextDetails(null);
@@ -7898,6 +8053,7 @@ export function RunnerChat({
       title: title || DEFAULT_NEW_THREAD_TITLE,
     });
 
+    initializedThreadHistoryIdRef.current = createdThread.threadId;
     setLocalThreadId(createdThread.threadId);
     setActiveThreadEnvironmentId(effectiveEnvironmentId || null);
     setActiveThreadEnvironmentName(selectedEnvironment?.name || null);
@@ -10420,6 +10576,8 @@ export function RunnerChat({
 
     if (item.kind === "computer_use_group") {
       const latestLog = item.group.logs[item.group.logs.length - 1] || item.group.endLog;
+      const computerUseEnvironmentName =
+        turn.environmentName || activeThreadEnvironmentName || selectedEnvironment?.name || displayedEnvironmentLabel || "Environment";
       return (
         <BrowserSkillLogBox
           log={latestLog}
@@ -10428,10 +10586,14 @@ export function RunnerChat({
           backendUrl={normalizedBackendUrl}
           environmentId={runnerEnvironmentId}
           requestHeaders={runnerHeaders}
+          environmentName={computerUseEnvironmentName}
           isDetailOpen={
             selectedComputerUseDetail?.turnId === turn.id &&
             selectedComputerUseDetail?.groupId === item.group.id
           }
+          onOpenEnvironmentDesktop={() => {
+            void openEnvironmentDesktopWindow(runnerEnvironmentId, computerUseEnvironmentName);
+          }}
           onOpenDetails={() => openComputerUseDetailDrawer(turn.id, item.group.id)}
         />
       );
@@ -11518,7 +11680,12 @@ export function RunnerChat({
   }, [onDeepResearchDetailOpenChange]);
 
   useEffect(() => {
-    if (!currentThreadId || !hasApiKey || !normalizedBackendUrl || isRunning) {
+    const hasLocalExecutionStateForCurrentThread =
+      Boolean(currentThreadId) &&
+      initializedThreadHistoryIdRef.current === currentThreadId &&
+      (isPreparingRun || isRunning || hasRunningTurn || pendingQueuedMessages.length > 0);
+
+    if (!currentThreadId || !hasApiKey || !normalizedBackendUrl || isRunning || hasLocalExecutionStateForCurrentThread) {
       return;
     }
 
@@ -11633,8 +11800,11 @@ export function RunnerChat({
     displayedEnvironmentLabel,
     hasApiKey,
     hasHydratedReattachActivity,
+    hasRunningTurn,
+    isPreparingRun,
     isRunning,
     normalizedBackendUrl,
+    pendingQueuedMessages.length,
     requestHeaders,
   ]);
 
@@ -12315,7 +12485,9 @@ export function RunnerChat({
             {turns.length === 0
               ? hasCustomEmptyState
                 ? emptyState
-                : <div className="runner-log-empty">No logs yet. Run a task to start streaming.</div>
+                : (isPreparingRun || hasRunningTurn || pendingQueuedMessages.length > 0 || isThreadHistoryLoading)
+                  ? null
+                  : <div className="runner-log-empty">No logs yet. Run a task to start streaming.</div>
               : null}
             {turns.map((turn, turnIndex) => {
               const isTurnRunning = turn.status === "running";

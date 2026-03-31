@@ -10667,6 +10667,36 @@ const html = `<!doctype html>
         gap: 8px;
       }
 
+      .playground-environments-desktop-header-button {
+        min-height: 28px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+        font-weight: 400;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .playground-environments-desktop-header-button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.92);
+        color: #000;
+      }
+
+      .playground-environments-desktop-header-button.is-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-environments-desktop-header-button.is-secondary:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
+      }
+
       .playground-environments-desktop-status {
         display: inline-flex;
         align-items: center;
@@ -10822,6 +10852,27 @@ const html = `<!doctype html>
         gap: 10px;
         color: rgba(255, 255, 255, 0.52);
         font-size: 12px;
+      }
+
+      .playground-environments-desktop-placeholder-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        text-align: center;
+      }
+
+      .playground-environments-desktop-placeholder-title {
+        font-size: 13px;
+        line-height: 1.35;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-environments-desktop-placeholder-subtitle {
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.54);
       }
 
       .playground-environments-desktop-loading {
@@ -17614,6 +17665,7 @@ const html = `<!doctype html>
       const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
       const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
       const PLAYGROUND_AGENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/agentsappicon.png")};
+      const PLAYGROUND_BROWSER_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/browsericon.png")};
       const PLAYGROUND_FILES_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/filesicon.png")};
       const PLAYGROUND_TERMINAL_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/terminalicon.png")};
       const PLAYGROUND_ENVIRONMENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/envappicon.png")};
@@ -31771,15 +31823,23 @@ const html = `<!doctype html>
             }, environmentDesktopStatusLabel),
             React.createElement("button", {
               type: "button",
-              className: "playground-environments-action-button",
+              className: "playground-environments-action-button playground-environments-desktop-header-button is-secondary",
               onClick: () => {
                 void handleOpenEnvironmentGui({ forceRestart: true });
               },
               disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting,
-            }, environmentGuiState.isStarting ? "Restarting..." : "Restart"),
+            },
+              React.createElement(RefreshCw, {
+                width: 12,
+                height: 12,
+                strokeWidth: 1.8,
+                className: environmentGuiState.isStarting ? "playground-environments-spin" : "",
+              }),
+              React.createElement("span", null, environmentGuiState.isStarting ? "Restarting..." : "Restart")
+            ),
             React.createElement("button", {
               type: "button",
-              className: "playground-environments-action-button is-primary",
+              className: "playground-environments-action-button playground-environments-desktop-header-button",
               onClick: () => {
                 void handleOpenEnvironmentGui();
               },
@@ -31843,14 +31903,40 @@ const html = `<!doctype html>
                             allow: "clipboard-read; clipboard-write",
                           })
                         : React.createElement("div", { className: "playground-environments-desktop-placeholder" },
-                            React.createElement(HardDrive, { width: 18, height: 18, strokeWidth: 1.8 }),
-                            React.createElement("span", null,
-                              environmentGuiState.isStarting
-                                ? "Starting container..."
-                                : environmentGuiState.isLoading
-                                  ? "Loading desktop..."
-                                  : "Desktop will appear here."
-                            )
+                            environmentGuiState.isStarting
+                              ? [
+                                  React.createElement(Loader2, {
+                                    key: "spinner",
+                                    className: "playground-environments-spin",
+                                    width: 20,
+                                    height: 20,
+                                    strokeWidth: 1.8,
+                                  }),
+                                  React.createElement("div", {
+                                    key: "copy",
+                                    className: "playground-environments-desktop-placeholder-copy",
+                                  },
+                                    React.createElement("div", {
+                                      className: "playground-environments-desktop-placeholder-title",
+                                    }, "Starting Computer"),
+                                    React.createElement("div", {
+                                      className: "playground-environments-desktop-placeholder-subtitle",
+                                    }, "This might take up to 2 minutes.")
+                                  ),
+                                ]
+                              : [
+                                  React.createElement(HardDrive, {
+                                    key: "icon",
+                                    width: 18,
+                                    height: 18,
+                                    strokeWidth: 1.8,
+                                  }),
+                                  React.createElement("span", { key: "label" },
+                                    environmentGuiState.isLoading
+                                      ? "Loading desktop..."
+                                      : "Desktop will appear here."
+                                  ),
+                                ]
                           ),
                       environmentGuiState.isLoading && environmentGuiFrameUrl
                         ? React.createElement("div", { className: "playground-environments-desktop-loading" },
@@ -31861,6 +31947,21 @@ const html = `<!doctype html>
                   )
                 ),
                 React.createElement("div", { className: "playground-environments-desktop-overlay-footer" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button playground-environments-desktop-footer-button",
+                    onClick: () => {
+                      void launchEnvironmentGuiApp("browser");
+                    },
+                    disabled: normalizedEnvironmentRuntimeStatus !== "running",
+                    "aria-label": "Open Browser",
+                    title: "Open Browser",
+                  }, React.createElement("img", {
+                    className: "playground-environments-desktop-footer-icon",
+                    src: PLAYGROUND_BROWSER_APP_ICON_URL,
+                    alt: "Browser",
+                    draggable: false,
+                  })),
                   React.createElement("button", {
                     type: "button",
                     className: "playground-environments-action-button playground-environments-desktop-footer-button",
