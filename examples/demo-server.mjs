@@ -9585,7 +9585,7 @@ const html = `<!doctype html>
         min-width: 0;
         padding: 4px 12px;
         font-size: 10px;
-        font-weight: 500;
+        font-weight: 400;
         color: rgba(255, 255, 255, 0.72);
       }
 
@@ -14153,6 +14153,21 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 16px;
+      }
+
+      .playground-environment-composer-toggle-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .playground-environment-composer-toggle-help {
+        min-width: 0;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.56);
       }
 
       .playground-environment-composer-runtime-facts {
@@ -31000,6 +31015,22 @@ const html = `<!doctype html>
                     )
                   ),
                   React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Graphical User Interface"),
+                    React.createElement("div", { className: "playground-environment-composer-toggle-row" },
+                      React.createElement("div", { className: "playground-environment-composer-toggle-help" },
+                        "Enable desktop apps and computer use. Turn this off to keep the environment lighter and reduce startup overhead."
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-toggle" + (composerDraft.guiEnabled !== false ? " is-active" : ""),
+                        onClick: () => updateEnvironmentComposerField("guiEnabled", !(composerDraft.guiEnabled !== false)),
+                        "aria-pressed": composerDraft.guiEnabled !== false ? "true" : "false",
+                        title: composerDraft.guiEnabled !== false ? "GUI enabled" : "GUI disabled",
+                        disabled: environmentComposerSaveState.isSaving,
+                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-modal-field" },
                     React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Runtime Versions"),
                     React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
                       PLAYGROUND_RUNTIME_DEFINITIONS
@@ -31069,7 +31100,7 @@ const html = `<!doctype html>
                           );
                         })
                     )
-                  )
+                  ),
                 ),
                 environmentComposerSaveState.error
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, environmentComposerSaveState.error)
@@ -31819,7 +31850,7 @@ const html = `<!doctype html>
                       title: draftEnvironment.guiEnabled !== false ? "GUI enabled" : "GUI disabled",
                     }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
                   ),
-                  renderEnvironmentFactRow("Office",
+                  renderEnvironmentFactRow("Install Office",
                     React.createElement("button", {
                       type: "button",
                       className: "playground-environments-toggle" + (officeAppsEnabled ? " is-active" : ""),
