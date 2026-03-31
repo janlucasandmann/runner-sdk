@@ -2,16 +2,19 @@ import http from "node:http";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { WebSocketServer, WebSocket } from "ws";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const packageRoot = path.resolve(__dirname, "..");
 const distRoot = path.join(packageRoot, "dist");
 const examplesRoot = path.join(packageRoot, "examples");
+const noVncNextRoot = path.join(packageRoot, "node_modules", "novnc-next");
 const aiosPublicRoot = path.resolve(packageRoot, "..", "..", "web", "hosting", "public");
 const port = Number(process.env.PORT || 4177);
 const aiosOrigin = (process.env.AIOS_APP_ORIGIN || "http://localhost:3000").replace(/\/+$/, "");
 const defaultUpstreamOrigin = (process.env.RUNNER_UPSTREAM_ORIGIN || "https://api.computer-agents.com").replace(/\/+$/, "");
+const localVncProxyWss = new WebSocketServer({ noServer: true, perMessageDeflate: false });
 
 const html = `<!doctype html>
 <html lang="en">
@@ -10705,17 +10708,90 @@ const html = `<!doctype html>
         gap: 10px;
       }
 
+      .playground-environments-desktop-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 240;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        background: #000;
+      }
+
+      .playground-environments-desktop-overlay-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px 12px;
+        background: #000;
+      }
+
+      .playground-environments-desktop-overlay-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-environments-desktop-overlay-label {
+        font-size: 14px;
+        line-height: 1.2;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.96);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-environments-desktop-overlay-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: nowrap;
+      }
+
+      .playground-environments-desktop-overlay-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        background: #000;
+      }
+
+      .playground-environments-desktop-overlay-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 18px 14px;
+        background: #000;
+      }
+
       .playground-environments-desktop-viewer {
         position: relative;
         width: 100%;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.04);
+        border: 0;
+        border-radius: 0;
+        background: #000;
         min-height: 240px;
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      .playground-environments-desktop-overlay .playground-environments-desktop-viewer-shell {
+        min-height: 0;
+        flex: 1 1 auto;
+        background: #000;
+      }
+
+      .playground-environments-desktop-overlay .playground-environments-desktop-viewer {
+        min-height: 0;
+        flex: 1 1 auto;
       }
 
       .playground-environments-desktop-image {
@@ -10724,6 +10800,15 @@ const html = `<!doctype html>
         height: auto;
         user-select: none;
         cursor: crosshair;
+        background: #000;
+      }
+
+      .playground-environments-desktop-iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        border: 0;
         background: #000;
       }
 
@@ -10757,6 +10842,60 @@ const html = `<!doctype html>
         font-size: 12px;
         line-height: 1.5;
         color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-environments-desktop-restart-button {
+        min-height: 28px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-environments-desktop-restart-button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.92);
+        color: #000;
+      }
+
+      .playground-environments-desktop-close-button {
+        min-height: auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-environments-desktop-close-button:hover:not(:disabled) {
+        background: transparent;
+        color: #fff;
+      }
+
+      .playground-environments-desktop-footer-button {
+        min-height: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-environments-desktop-footer-button:hover:not(:disabled) {
+        background: transparent;
+      }
+
+      .playground-environments-desktop-footer-icon {
+        display: block;
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        object-fit: cover;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+      }
+
+      .playground-environments-desktop-footer-button:disabled .playground-environments-desktop-footer-icon {
+        opacity: 0.4;
       }
 
       .playground-environments-desktop-input-row {
@@ -17476,6 +17615,7 @@ const html = `<!doctype html>
       const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
       const PLAYGROUND_AGENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/agentsappicon.png")};
       const PLAYGROUND_FILES_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/filesicon.png")};
+      const PLAYGROUND_TERMINAL_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/terminalicon.png")};
       const PLAYGROUND_ENVIRONMENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/envappicon.png")};
       const PLAYGROUND_SKILLS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/skillsicon.webp")};
       const PLAYGROUND_FOLDER_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/folder.png")};
@@ -19116,8 +19256,10 @@ const html = `<!doctype html>
           mcpServers: [],
           documentation: [],
           internetAccess: true,
+          guiEnabled: true,
           dockerfileExtensions: "",
           baseImage: "",
+          metadata: null,
           estimatedStorageMB: 0,
           estimatedCostPerMinute: 0,
           isSystem: false,
@@ -19218,6 +19360,12 @@ const html = `<!doctype html>
               Object.entries(rawRuntimes).filter(([, value]) => typeof value === "string" && value.trim())
             )
           : draft.runtimes;
+        const normalizedMetadata = environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)
+          ? environment.metadata
+          : null;
+        const guiEnabled = typeof environment?.guiEnabled === "boolean"
+          ? environment.guiEnabled
+          : normalizedMetadata?.guiEnabled !== false;
 
         return {
           ...draft,
@@ -19238,8 +19386,10 @@ const html = `<!doctype html>
           mcpServers: normalizePlaygroundMcpServers(environment.mcpServers),
           documentation: normalizePlaygroundDocumentationFiles(environment.documentation),
           internetAccess: environment.internetAccess !== false,
+          guiEnabled,
           dockerfileExtensions: typeof environment.dockerfileExtensions === "string" ? environment.dockerfileExtensions : "",
           baseImage: typeof environment.baseImage === "string" ? environment.baseImage : "",
+          metadata: normalizedMetadata,
           estimatedStorageMB: Number.isFinite(environment.estimatedStorageMB) ? environment.estimatedStorageMB : draft.estimatedStorageMB,
           estimatedCostPerMinute: Number.isFinite(environment.estimatedCostPerMinute) ? environment.estimatedCostPerMinute : draft.estimatedCostPerMinute,
           isSystem: Boolean(environment.isSystem),
@@ -29359,11 +29509,14 @@ const html = `<!doctype html>
           }
         }, [backendUrl, requestHeaders]);
 
-        const loadEnvironmentGuiScreenshot = useCallback(async (environmentId) => {
+        const loadEnvironmentGuiScreenshot = useCallback(async (environmentId, options = {}) => {
           const normalizedEnvironmentId = String(environmentId || "").trim();
           if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
             return false;
           }
+
+          const maxAttempts = Math.max(1, Math.min(10, Number(options?.attempts) || 1));
+          const retryDelayMs = Math.max(250, Math.min(2000, Number(options?.retryDelayMs) || 500));
 
           setEnvironmentGuiState((current) => ({
             ...current,
@@ -29371,55 +29524,92 @@ const html = `<!doctype html>
             error: "",
           }));
 
-          try {
-            const response = await fetch(backendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/gui/screenshot?ts=" + Date.now(), {
-              method: "GET",
-              headers: requestHeaders,
-              cache: "no-store",
-            });
-            if (!response.ok) {
-              const message = await readEnvironmentGuiErrorMessage(response, "Failed to capture desktop screenshot.");
-              if (selectedEnvironmentIdRef.current === normalizedEnvironmentId) {
-                if (response.status === 409) {
+          let lastMessage = "Failed to open the live desktop.";
+
+          for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+            try {
+              const response = await fetch(backendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/gui/session", {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({}),
+                cache: "no-store",
+              });
+              if (!response.ok) {
+                lastMessage = await readEnvironmentGuiErrorMessage(response, "Failed to create desktop session.");
+                if (response.status === 409 && selectedEnvironmentIdRef.current === normalizedEnvironmentId) {
                   setEnvironmentRuntimeState({
                     status: "stopped",
                     containerId: "",
                     message: "Container not running",
                   });
                 }
-                setEnvironmentGuiState((current) => ({
-                  ...current,
-                  isLoading: false,
-                  error: message,
-                }));
+                if ((response.status === 409 || response.status === 503) && attempt < maxAttempts - 1) {
+                  await new Promise((resolve) => window.setTimeout(resolve, retryDelayMs));
+                  continue;
+                }
+                throw new Error(lastMessage);
               }
-              return false;
-            }
 
-            const blob = await response.blob();
-            if (selectedEnvironmentIdRef.current !== normalizedEnvironmentId) {
-              return false;
-            }
-            const nextUrl = URL.createObjectURL(blob);
-            replaceEnvironmentGuiFrameUrl(nextUrl);
-            setEnvironmentGuiState((current) => ({
-              ...current,
-              isLoading: false,
-              error: "",
-              lastLoadedAt: new Date().toISOString(),
-            }));
-            return true;
-          } catch (error) {
-            if (selectedEnvironmentIdRef.current === normalizedEnvironmentId) {
+              const data = await response.json().catch(() => ({}));
+              if (selectedEnvironmentIdRef.current !== normalizedEnvironmentId) {
+                return false;
+              }
+
+              const websocketPath = String(data?.websocketPath || "").trim();
+              if (!websocketPath) {
+                throw new Error("Desktop session did not return a websocket path.");
+              }
+
+              const localViewerWsUrl = new URL("/api/real/ws/vnc", window.location.origin);
+              localViewerWsUrl.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+              if (websocketPath.startsWith("/api/real/ws/vnc")) {
+                const proxiedWebsocketUrl = new URL(websocketPath, window.location.origin);
+                localViewerWsUrl.search = proxiedWebsocketUrl.search;
+              } else {
+                const backendTarget = new URL(backendUrl);
+                const websocketUrl = new URL(websocketPath, backendTarget);
+                websocketUrl.protocol = websocketUrl.protocol === "https:"
+                  ? "wss:"
+                  : websocketUrl.protocol === "http:"
+                    ? "ws:"
+                    : websocketUrl.protocol;
+                localViewerWsUrl.searchParams.set("upstream", websocketUrl.toString());
+              }
+
+              const viewerUrl = new URL("/environment-gui/viewer", window.location.origin);
+              viewerUrl.searchParams.set("wsUrl", localViewerWsUrl.toString());
+              viewerUrl.searchParams.set("title", draftEnvironment?.name || "Environment Desktop");
+              viewerUrl.searchParams.set("environmentId", normalizedEnvironmentId);
+              viewerUrl.searchParams.set("ts", String(Date.now()));
+              replaceEnvironmentGuiFrameUrl(viewerUrl.toString());
               setEnvironmentGuiState((current) => ({
                 ...current,
                 isLoading: false,
-                error: error instanceof Error ? error.message : "Failed to capture desktop screenshot.",
+                error: "",
+                lastLoadedAt: new Date().toISOString(),
               }));
+              return true;
+            } catch (error) {
+              lastMessage = error instanceof Error ? error.message : "Failed to create desktop session.";
+              if (attempt < maxAttempts - 1) {
+                await new Promise((resolve) => window.setTimeout(resolve, retryDelayMs));
+                continue;
+              }
             }
-            return false;
           }
-        }, [backendUrl, requestHeaders]);
+
+          if (selectedEnvironmentIdRef.current === normalizedEnvironmentId) {
+            setEnvironmentGuiState((current) => ({
+              ...current,
+              isLoading: false,
+              error: lastMessage,
+            }));
+          }
+          return false;
+        }, [backendUrl, draftEnvironment?.name, requestHeaders]);
 
         const sendEnvironmentGuiAction = useCallback(async (actionPayload, options = {}) => {
           const normalizedEnvironmentId = String(options?.environmentId || selectedEnvironmentIdRef.current || "").trim();
@@ -29452,9 +29642,6 @@ const html = `<!doctype html>
               return false;
             }
 
-            window.setTimeout(() => {
-              void loadEnvironmentGuiScreenshot(normalizedEnvironmentId);
-            }, 80);
             return true;
           } catch (error) {
             if (selectedEnvironmentIdRef.current === normalizedEnvironmentId) {
@@ -29465,18 +29652,53 @@ const html = `<!doctype html>
             }
             return false;
           }
-        }, [backendUrl, loadEnvironmentGuiScreenshot, requestHeaders]);
+        }, [backendUrl, requestHeaders]);
 
         const launchEnvironmentGuiApp = useCallback(async (app) => {
           const normalizedApp = String(app || "").trim().toLowerCase();
           if (!normalizedApp) {
             return false;
           }
+          if (draftEnvironment?.guiEnabled === false) {
+            setEnvironmentGuiState((current) => ({
+              ...current,
+              error: "GUI is disabled for this environment. Turn it on and restart the environment to use desktop apps.",
+            }));
+            return false;
+          }
           return await sendEnvironmentGuiAction({
             action: "launch_app",
             app: normalizedApp,
           });
-        }, [sendEnvironmentGuiAction]);
+        }, [draftEnvironment?.guiEnabled, sendEnvironmentGuiAction]);
+
+        const stopEnvironmentRuntime = useCallback(async (environmentId) => {
+          const normalizedEnvironmentId = String(environmentId || "").trim();
+          if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            return false;
+          }
+
+          const response = await fetch(backendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/stop", {
+            method: "POST",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({}),
+          });
+          if (!response.ok) {
+            const message = await readEnvironmentGuiErrorMessage(response, "Failed to stop the environment.");
+            throw new Error(message);
+          }
+          if (selectedEnvironmentIdRef.current === normalizedEnvironmentId) {
+            setEnvironmentRuntimeState({
+              status: "stopped",
+              containerId: "",
+              message: "Container stopped",
+            });
+          }
+          return true;
+        }, [backendUrl, requestHeaders]);
 
         useEffect(() => {
           setEnvironmentDetailsById((current) => {
@@ -29578,37 +29800,6 @@ const html = `<!doctype html>
           });
           void loadEnvironmentRuntimeStatus(selectedEnvironmentId);
         }, [loadEnvironmentRuntimeStatus, selectedEnvironmentId]);
-
-        useEffect(() => {
-          if (!environmentGuiOpen || !draftEnvironment?.id || environmentRuntimeState.status !== "running") {
-            return undefined;
-          }
-
-          let cancelled = false;
-          let isPolling = false;
-
-          const poll = async () => {
-            if (cancelled || isPolling) {
-              return;
-            }
-            isPolling = true;
-            try {
-              await loadEnvironmentGuiScreenshot(draftEnvironment.id);
-            } finally {
-              isPolling = false;
-            }
-          };
-
-          void poll();
-          const interval = window.setInterval(() => {
-            void poll();
-          }, 2000);
-
-          return () => {
-            cancelled = true;
-            window.clearInterval(interval);
-          };
-        }, [draftEnvironment?.id, environmentGuiOpen, environmentRuntimeState.status, loadEnvironmentGuiScreenshot]);
 
         useEffect(() => {
           if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
@@ -29967,6 +30158,10 @@ const html = `<!doctype html>
             mcpServers: preparedMcpServers,
             documentation,
             internetAccess: environment?.internetAccess !== false,
+            metadata: {
+              ...((environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)) ? environment.metadata : {}),
+              guiEnabled: environment?.guiEnabled !== false,
+            },
           };
         }
 
@@ -30056,6 +30251,7 @@ const html = `<!doctype html>
                 mcpServers: payload.mcpServers,
                 documentation: payload.documentation,
                 internetAccess: payload.internetAccess,
+                metadata: payload.metadata,
               }),
             });
             const createData = await createResponse.json().catch(() => ({}));
@@ -31294,13 +31490,23 @@ const html = `<!doctype html>
           );
         }
 
-        async function handleOpenEnvironmentGui() {
+        async function handleOpenEnvironmentGui(options = {}) {
           const normalizedEnvironmentId = String(draftEnvironment?.id || "").trim();
           if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
             return;
           }
+          if (draftEnvironment?.guiEnabled === false) {
+            setEnvironmentGuiState((current) => ({
+              ...current,
+              isStarting: false,
+              error: "GUI is disabled for this environment. Turn it on and restart the environment to use the desktop.",
+            }));
+            return;
+          }
+          const forceRestart = Boolean(options?.forceRestart);
 
           setEnvironmentGuiOpen(true);
+          replaceEnvironmentGuiFrameUrl("");
           setEnvironmentGuiState((current) => ({
             ...current,
             isStarting: true,
@@ -31313,6 +31519,10 @@ const html = `<!doctype html>
           }));
 
           try {
+            if (forceRestart) {
+              await stopEnvironmentRuntime(normalizedEnvironmentId);
+            }
+
             const currentStatus = await loadEnvironmentRuntimeStatus(normalizedEnvironmentId);
             const normalizedStatus = String(currentStatus?.status || environmentRuntimeState.status || "").trim().toLowerCase();
 
@@ -31337,7 +31547,13 @@ const html = `<!doctype html>
             }, {
               environmentId: normalizedEnvironmentId,
             });
-            await loadEnvironmentGuiScreenshot(normalizedEnvironmentId);
+            const didOpenViewer = await loadEnvironmentGuiScreenshot(normalizedEnvironmentId, {
+              attempts: 8,
+              retryDelayMs: 650,
+            });
+            if (!didOpenViewer) {
+              throw new Error("Failed to connect the live desktop viewer.");
+            }
             setEnvironmentGuiState((current) => ({
               ...current,
               isStarting: false,
@@ -31518,6 +31734,15 @@ const html = `<!doctype html>
                       title: draftEnvironment.internetAccess ? "Internet access enabled" : "Internet access disabled",
                     }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
                   ),
+                  renderEnvironmentFactRow("GUI",
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-toggle" + (draftEnvironment.guiEnabled !== false ? " is-active" : ""),
+                      onClick: () => updateEnvironmentField("guiEnabled", !(draftEnvironment.guiEnabled !== false)),
+                      "aria-pressed": draftEnvironment.guiEnabled !== false ? "true" : "false",
+                      title: draftEnvironment.guiEnabled !== false ? "GUI enabled" : "GUI disabled",
+                    }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                  ),
                   renderEnvironmentFactRow("Status",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, environmentStatusLabel)
                   )
@@ -31544,131 +31769,131 @@ const html = `<!doctype html>
                       : "stopped"
               ),
             }, environmentDesktopStatusLabel),
-            environmentGuiOpen
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button",
-                  onClick: () => setEnvironmentGuiOpen(false),
-                }, "Hide")
-              : React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button is-primary",
-                  onClick: () => {
-                    void handleOpenEnvironmentGui();
-                  },
-                  disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting,
-                }, environmentGuiState.isStarting ? "Opening..." : "Open GUI"),
-            environmentGuiOpen
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button",
-                  onClick: () => {
-                    void launchEnvironmentGuiApp("files");
-                  },
-                  disabled: normalizedEnvironmentRuntimeStatus !== "running",
-                }, "Files")
-              : null,
-            environmentGuiOpen
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button",
-                  onClick: () => {
-                    void launchEnvironmentGuiApp("terminal");
-                  },
-                  disabled: normalizedEnvironmentRuntimeStatus !== "running",
-                }, "Terminal")
-              : null,
-            environmentGuiOpen
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button",
-                  onClick: () => {
-                    void loadEnvironmentGuiScreenshot(draftEnvironment.id);
-                  },
-                  disabled: environmentGuiState.isLoading || !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID,
-                },
-                  React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8, className: environmentGuiState.isLoading ? "playground-environments-spin" : "" }),
-                  React.createElement("span", null, "Refresh")
-                )
-              : null
+            React.createElement("button", {
+              type: "button",
+              className: "playground-environments-action-button",
+              onClick: () => {
+                void handleOpenEnvironmentGui({ forceRestart: true });
+              },
+              disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting,
+            }, environmentGuiState.isStarting ? "Restarting..." : "Restart"),
+            React.createElement("button", {
+              type: "button",
+              className: "playground-environments-action-button is-primary",
+              onClick: () => {
+                void handleOpenEnvironmentGui();
+              },
+              disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting || draftEnvironment.guiEnabled === false,
+            }, environmentGuiState.isStarting ? "Opening..." : (environmentGuiOpen ? "Show Desktop" : "Open GUI"))
           );
           const desktopSection = React.createElement("div", { className: "playground-environments-desktop-section" },
             !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID
               ? React.createElement("div", { className: "playground-environments-empty-copy" }, "Save the environment first, then open the live desktop here.")
+              : draftEnvironment.guiEnabled === false
+                ? React.createElement("div", { className: "playground-environments-empty-copy" }, "GUI is disabled for this environment. Turn it on and restart the environment to use the desktop viewer or computer use.")
               : !environmentGuiOpen
-                ? React.createElement("div", { className: "playground-environments-empty-copy" }, "Open the live desktop to inspect the running container and interact with it directly.")
-                : React.createElement(React.Fragment, null,
-                    React.createElement("div", { className: "playground-environments-desktop-viewer-shell" },
-                      React.createElement("div", {
-                        className: "playground-environments-desktop-viewer" + (environmentGuiState.isLoading ? " is-loading" : ""),
-                      },
-                        environmentGuiFrameUrl
-                          ? React.createElement("img", {
-                              ref: environmentGuiImageRef,
-                              className: "playground-environments-desktop-image",
-                              src: environmentGuiFrameUrl,
-                              alt: "Live environment desktop",
-                              draggable: false,
-                              onClick: handleEnvironmentGuiImageClick,
-                              onDoubleClick: handleEnvironmentGuiImageDoubleClick,
-                              onContextMenu: handleEnvironmentGuiImageContextMenu,
-                              onWheel: handleEnvironmentGuiImageWheel,
-                            })
-                          : React.createElement("div", { className: "playground-environments-desktop-placeholder" },
-                              React.createElement(HardDrive, { width: 18, height: 18, strokeWidth: 1.8 }),
-                              React.createElement("span", null,
-                                environmentGuiState.isStarting
-                                  ? "Starting container..."
-                                  : environmentGuiState.isLoading
-                                    ? "Loading desktop..."
-                                    : "Desktop will appear here."
-                              )
-                            ),
-                        environmentGuiState.isLoading && environmentGuiFrameUrl
-                          ? React.createElement("div", { className: "playground-environments-desktop-loading" },
-                              React.createElement(Loader2, { className: "playground-environments-spin", width: 18, height: 18, strokeWidth: 1.8 })
-                            )
-                          : null
-                      ),
-                      React.createElement("div", { className: "playground-environments-desktop-hint" }, "Click to interact, right-click for context menus, scroll with the mouse wheel, use the field below to type, and relaunch Files or Terminal from the header if the desktop is empty.")
-                    ),
-                    React.createElement("div", { className: "playground-environments-desktop-input-row" },
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-environments-input playground-environments-desktop-input",
-                        value: environmentGuiInputValue,
-                        placeholder: "Type into the environment",
-                        onChange: (event) => setEnvironmentGuiInputValue(event.target.value),
-                        onKeyDown: handleEnvironmentGuiInputKeyDown,
-                      }),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: () => {
-                          void sendEnvironmentGuiAction({ action: "key", key: "Return" });
-                        },
-                      }, "Enter"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: () => {
-                          void sendEnvironmentGuiAction({ action: "key", key: "BackSpace" });
-                        },
-                      }, "Backspace"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button is-primary",
-                        onClick: () => {
-                          void handleEnvironmentGuiTypeSubmit();
-                        },
-                        disabled: !String(environmentGuiInputValue || "").trim(),
-                      }, "Type")
-                    )
-                  ),
+                ? React.createElement("div", { className: "playground-environments-empty-copy" }, "Open the live desktop to inspect the running container and interact with it in a fullscreen viewer.")
+                : React.createElement("div", { className: "playground-environments-empty-copy" }, "The desktop is open in a fullscreen overlay. Use Restart if the environment is still on an older image."),
             environmentGuiState.error
               ? React.createElement("div", { className: "playground-environments-error" }, environmentGuiState.error)
               : null
           );
+          const desktopOverlay = environmentGuiOpen
+            ? React.createElement("div", { className: "playground-environments-desktop-overlay" },
+                React.createElement("div", { className: "playground-environments-desktop-overlay-header" },
+                  React.createElement("div", { className: "playground-environments-desktop-overlay-title" },
+                    React.createElement("div", { className: "playground-environments-desktop-overlay-label" }, (draftEnvironment.name || "Environment") + " Desktop")
+                  ),
+                  React.createElement("div", { className: "playground-environments-desktop-overlay-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button playground-environments-desktop-restart-button",
+                      onClick: () => {
+                        void handleOpenEnvironmentGui({ forceRestart: true });
+                      },
+                      disabled: environmentGuiState.isStarting,
+                    },
+                      React.createElement(RefreshCw, {
+                        width: 13,
+                        height: 13,
+                        strokeWidth: 1.8,
+                        className: environmentGuiState.isStarting ? "playground-environments-spin" : "",
+                      }),
+                      React.createElement("span", null, environmentGuiState.isStarting ? "Restarting..." : "Restart")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button playground-environments-desktop-close-button",
+                      onClick: () => setEnvironmentGuiOpen(false),
+                      "aria-label": "Close desktop",
+                      title: "Close desktop",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.9 }))
+                  )
+                ),
+                React.createElement("div", { className: "playground-environments-desktop-overlay-body" },
+                  React.createElement("div", { className: "playground-environments-desktop-viewer-shell" },
+                    React.createElement("div", {
+                      className: "playground-environments-desktop-viewer" + (environmentGuiState.isLoading ? " is-loading" : ""),
+                    },
+                      environmentGuiFrameUrl
+                        ? React.createElement("iframe", {
+                            className: "playground-environments-desktop-iframe",
+                            src: environmentGuiFrameUrl,
+                            title: "Live environment desktop",
+                            allow: "clipboard-read; clipboard-write",
+                          })
+                        : React.createElement("div", { className: "playground-environments-desktop-placeholder" },
+                            React.createElement(HardDrive, { width: 18, height: 18, strokeWidth: 1.8 }),
+                            React.createElement("span", null,
+                              environmentGuiState.isStarting
+                                ? "Starting container..."
+                                : environmentGuiState.isLoading
+                                  ? "Loading desktop..."
+                                  : "Desktop will appear here."
+                            )
+                          ),
+                      environmentGuiState.isLoading && environmentGuiFrameUrl
+                        ? React.createElement("div", { className: "playground-environments-desktop-loading" },
+                            React.createElement(Loader2, { className: "playground-environments-spin", width: 18, height: 18, strokeWidth: 1.8 })
+                          )
+                        : null
+                    ),
+                  )
+                ),
+                React.createElement("div", { className: "playground-environments-desktop-overlay-footer" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button playground-environments-desktop-footer-button",
+                    onClick: () => {
+                      void launchEnvironmentGuiApp("files");
+                    },
+                    disabled: normalizedEnvironmentRuntimeStatus !== "running",
+                    "aria-label": "Open Files",
+                    title: "Open Files",
+                  }, React.createElement("img", {
+                    className: "playground-environments-desktop-footer-icon",
+                    src: PLAYGROUND_FILES_APP_ICON_URL,
+                    alt: "Files",
+                    draggable: false,
+                  })),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button playground-environments-desktop-footer-button",
+                    onClick: () => {
+                      void launchEnvironmentGuiApp("terminal");
+                    },
+                    disabled: normalizedEnvironmentRuntimeStatus !== "running",
+                    "aria-label": "Open Terminal",
+                    title: "Open Terminal",
+                  }, React.createElement("img", {
+                    className: "playground-environments-desktop-footer-icon",
+                    src: PLAYGROUND_TERMINAL_APP_ICON_URL,
+                    alt: "Terminal",
+                    draggable: false,
+                  }))
+                )
+              )
+            : null;
           const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
             React.createElement("div", { className: "playground-tasks-detail-section-header" },
               React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
@@ -32034,8 +32259,9 @@ const html = `<!doctype html>
             )
           );
 
-          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: environmentDetailMainRef },
-            React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: environmentDetailMainRef },
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
               React.createElement("div", { className: "playground-environments-editor-navbar-title" },
                 React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
                   React.createElement("input", {
@@ -32205,20 +32431,22 @@ const html = `<!doctype html>
                 }, "Add Script"),
                 false
               ),
-              renderEditorSection(
-                "dockerfile",
-                "Dockerfile Extension",
-                "",
-                dockerfileSection,
-                null,
-                false
-              ),
-            )
+                renderEditorSection(
+                  "dockerfile",
+                  "Dockerfile Extension",
+                  "",
+                  dockerfileSection,
+                  null,
+                  false
+                ),
+              )
+            ),
+            desktopOverlay
           );
         }
 
         return React.createElement("div", { className: "playground-environments-page" },
-          React.createElement("div", { className: "playground-environments-shell" },
+            React.createElement("div", { className: "playground-environments-shell" },
             React.createElement("aside", { className: "playground-environments-list-pane" },
               React.createElement("div", { className: "playground-files-browser-header playground-environments-list-header" },
                 toolbarPopover
@@ -65047,6 +65275,67 @@ async function proxyUpstreamJsonRequest(req, res, upstreamPath, method) {
   }
 }
 
+async function proxyEnvironmentGuiSession(req, res, environmentId) {
+  try {
+    const upstreamUrl = normalizeBackendUrl(readHeader(req, "X-Runner-Upstream-Url") || defaultUpstreamOrigin);
+    const body = await readRequestBody(req);
+    const apiKey = readOptionalApiKey(req, body);
+    let upstream;
+
+    if (apiKey) {
+      upstream = await fetch(`${upstreamUrl}/environments/${encodeURIComponent(environmentId)}/gui/session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey,
+        },
+        body: JSON.stringify(body || {}),
+      });
+    } else if (hasAiosSession(req)) {
+      upstream = await fetchAiosCloud(req, `/environments/${encodeURIComponent(environmentId)}/gui/session`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(body || {}),
+      });
+    } else {
+      return sendJson(res, 401, {
+        error: "Unauthorized",
+        message: "Sign in with Computer Agents or provide an API key.",
+      });
+    }
+
+    const text = await upstream.text();
+    let parsed = {};
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      parsed = { message: text };
+    }
+
+    if (upstream.ok && parsed && typeof parsed === "object") {
+      const websocketPath = typeof parsed.websocketPath === "string" ? parsed.websocketPath.trim() : "";
+      if (websocketPath) {
+        const upstreamWsTarget = new URL(websocketPath, upstreamUrl);
+        upstreamWsTarget.protocol = upstreamWsTarget.protocol === "https:"
+          ? "wss:"
+          : upstreamWsTarget.protocol === "http:"
+            ? "ws:"
+            : upstreamWsTarget.protocol;
+        parsed.websocketPath = `/api/real/ws/vnc?upstream=${encodeURIComponent(upstreamWsTarget.toString())}`;
+      }
+    }
+
+    return sendJson(res, upstream.status, parsed);
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to create desktop session",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 async function proxyUpstreamRawRequest(req, res, upstreamPath, method) {
   try {
     const upstreamUrl = normalizeBackendUrl(readHeader(req, "X-Runner-Upstream-Url") || defaultUpstreamOrigin);
@@ -65617,6 +65906,278 @@ async function serveExampleAsset(req, res) {
   }
 }
 
+async function serveVendorAsset(req, res, vendorRoot, vendorPrefix) {
+  const pathname = new URL(req.url, `http://localhost:${port}`).pathname;
+  const relativePath = pathname.startsWith(vendorPrefix) ? pathname.slice(vendorPrefix.length) : "";
+  const localPath = path.join(vendorRoot, relativePath);
+  const normalized = path.normalize(localPath);
+
+  if (!normalized.startsWith(vendorRoot)) {
+    res.writeHead(403);
+    res.end("Forbidden");
+    return;
+  }
+
+  try {
+    const file = await fs.readFile(normalized);
+    const contentType = pathname.endsWith(".js")
+      ? "text/javascript; charset=utf-8"
+      : pathname.endsWith(".map")
+        ? "application/json; charset=utf-8"
+        : pathname.endsWith(".css")
+          ? "text/css; charset=utf-8"
+          : pathname.endsWith(".svg")
+            ? "image/svg+xml"
+            : pathname.endsWith(".woff2")
+              ? "font/woff2"
+              : "application/octet-stream";
+
+    res.writeHead(200, {
+      "Content-Type": contentType,
+      "Cache-Control": "no-store",
+    });
+    res.end(file);
+  } catch {
+    res.writeHead(404);
+    res.end("Not found");
+  }
+}
+
+function normalizeWebSocketTarget(value) {
+  try {
+    const parsed = new URL(String(value || "").trim());
+    if (!["ws:", "wss:"].includes(parsed.protocol)) {
+      return null;
+    }
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+localVncProxyWss.on("connection", (clientSocket, req, upstreamTarget) => {
+  const normalizedTarget = normalizeWebSocketTarget(upstreamTarget);
+  if (!normalizedTarget) {
+    clientSocket.close(1008, "Invalid desktop target");
+    return;
+  }
+
+  const upstreamSocket = new WebSocket(normalizedTarget, {
+    perMessageDeflate: false,
+    headers: {
+      "User-Agent": "runner-web-sdk-demo-vnc-proxy",
+    },
+  });
+
+  const closeUpstream = () => {
+    if (upstreamSocket.readyState === WebSocket.OPEN || upstreamSocket.readyState === WebSocket.CONNECTING) {
+      upstreamSocket.close();
+    }
+  };
+
+  const closeClient = (code = 1011, reason = "Desktop proxy failed") => {
+    if (clientSocket.readyState === WebSocket.OPEN || clientSocket.readyState === WebSocket.CONNECTING) {
+      clientSocket.close(code, reason);
+    }
+  };
+
+  upstreamSocket.on("open", () => {
+  });
+
+  upstreamSocket.on("message", (data, isBinary) => {
+    if (clientSocket.readyState !== WebSocket.OPEN) {
+      closeUpstream();
+      return;
+    }
+    clientSocket.send(data, { binary: isBinary });
+  });
+
+  upstreamSocket.on("error", () => {
+    closeClient(1011, "Desktop stream failed");
+  });
+
+  upstreamSocket.on("close", (code, reason) => {
+    if (clientSocket.readyState === WebSocket.OPEN || clientSocket.readyState === WebSocket.CONNECTING) {
+      clientSocket.close(code || 1000, reason?.toString() || "Desktop stream ended");
+    }
+  });
+
+  clientSocket.on("message", (data, isBinary) => {
+    if (upstreamSocket.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    upstreamSocket.send(data, { binary: isBinary });
+  });
+
+  clientSocket.on("error", () => {
+    closeUpstream();
+  });
+
+  clientSocket.on("close", () => {
+    closeUpstream();
+  });
+});
+
+function serveEnvironmentGuiViewerPage(res) {
+  res.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
+  res.end(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Environment Desktop</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #050607;
+        color: rgba(255, 255, 255, 0.92);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      }
+      body {
+        position: relative;
+      }
+      #tb-environment-gui-root {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: #000;
+      }
+      #tb-environment-gui-status {
+        display: none;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="tb-environment-gui-root"></div>
+    <div id="tb-environment-gui-status" data-tone="idle">Connecting…</div>
+    <script type="module">
+      import RFB from "/vendor/novnc-next/lib/index.esm.js";
+
+      const params = new URLSearchParams(window.location.search);
+      const websocketUrl = params.get("wsUrl") || "";
+      const title = params.get("title") || "Desktop";
+      const desktopRoot = document.getElementById("tb-environment-gui-root");
+      const statusLabel = document.getElementById("tb-environment-gui-status");
+
+      document.title = title;
+
+      let rfb = null;
+      let reconnectTimer = 0;
+      let manualDisconnect = false;
+
+      function setStatus(message, tone = "idle") {
+        if (!statusLabel) return;
+        statusLabel.textContent = message;
+        statusLabel.dataset.tone = tone;
+      }
+
+      function clearReconnectTimer() {
+        if (reconnectTimer) {
+          window.clearTimeout(reconnectTimer);
+          reconnectTimer = 0;
+        }
+      }
+
+      function teardownCurrentConnection() {
+        if (!rfb) return;
+        const current = rfb;
+        rfb = null;
+        try {
+          if (current && current._rfbConnectionState && current._rfbConnectionState !== "disconnected") {
+            current.disconnect();
+          }
+        } catch {}
+      }
+
+      function scheduleReconnect() {
+        clearReconnectTimer();
+        reconnectTimer = window.setTimeout(() => {
+          reconnectTimer = 0;
+          connect();
+        }, 1200);
+      }
+
+      function connect() {
+        if (!desktopRoot) return;
+        if (!websocketUrl) {
+          setStatus("Desktop connection is missing.", "error");
+          return;
+        }
+
+        teardownCurrentConnection();
+        clearReconnectTimer();
+        setStatus("Connecting…", "connecting");
+        document.body.classList.remove("is-connected");
+
+        const nextRfb = new RFB(desktopRoot, websocketUrl, { shared: true });
+        nextRfb.background = "transparent";
+        nextRfb.clipViewport = true;
+        nextRfb.scaleViewport = true;
+        nextRfb.qualityLevel = 6;
+        nextRfb.compressionLevel = 2;
+        nextRfb.focusOnClick = true;
+        nextRfb.showDotCursor = true;
+
+        nextRfb.addEventListener("connect", () => {
+          document.body.classList.add("is-connected");
+          setStatus("Live desktop", "connected");
+          nextRfb.focus();
+        });
+
+        nextRfb.addEventListener("disconnect", (event) => {
+          document.body.classList.remove("is-connected");
+          const clean = Boolean(event?.detail?.clean);
+          if (manualDisconnect) {
+            setStatus("Desktop closed.", "idle");
+            return;
+          }
+          if (clean) {
+            setStatus("Desktop session ended.", "idle");
+            return;
+          }
+          setStatus("Connection lost. Reconnecting…", "error");
+          scheduleReconnect();
+        });
+
+        nextRfb.addEventListener("credentialsrequired", () => {
+          setStatus("Desktop authentication is required.", "error");
+        });
+
+        nextRfb.addEventListener("securityfailure", () => {
+          setStatus("Desktop connection was rejected.", "error");
+        });
+
+        rfb = nextRfb;
+      }
+
+      desktopRoot?.addEventListener("pointerdown", () => {
+        if (rfb) {
+          rfb.focus();
+        }
+      });
+
+      window.addEventListener("beforeunload", () => {
+        manualDisconnect = true;
+        clearReconnectTimer();
+        teardownCurrentConnection();
+      });
+
+      connect();
+    </script>
+  </body>
+</html>`);
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", `http://localhost:${port}`);
 
@@ -65626,6 +66187,16 @@ const server = http.createServer((req, res) => {
       "Cache-Control": "no-store",
     });
     res.end(html);
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/environment-gui/viewer") {
+    serveEnvironmentGuiViewerPage(res);
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname.startsWith("/vendor/novnc-next/")) {
+    void serveVendorAsset(req, res, noVncNextRoot, "/vendor/novnc-next/");
     return;
   }
 
@@ -66609,6 +67180,17 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const environmentStopMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/stop$/);
+  if (req.method === "POST" && environmentStopMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentStopMatch[1]))}/stop`,
+      "POST",
+    );
+    return;
+  }
+
   const environmentStatusMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/status$/);
   if (req.method === "GET" && environmentStatusMatch) {
     void proxyUpstreamGet(
@@ -66637,6 +67219,12 @@ const server = http.createServer((req, res) => {
       `/environments/${encodeURIComponent(decodeURIComponent(environmentGuiActionMatch[1]))}/gui/action`,
       "POST",
     );
+    return;
+  }
+
+  const environmentGuiSessionMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/gui\/session$/);
+  if (req.method === "POST" && environmentGuiSessionMatch) {
+    void proxyEnvironmentGuiSession(req, res, decodeURIComponent(environmentGuiSessionMatch[1]));
     return;
   }
 
@@ -66743,6 +67331,26 @@ const server = http.createServer((req, res) => {
 
   res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
   res.end("Not found");
+});
+
+server.on("upgrade", (req, socket, head) => {
+  const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
+  if (requestUrl.pathname !== "/api/real/ws/vnc") {
+    socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+
+  const upstreamTarget = normalizeWebSocketTarget(requestUrl.searchParams.get("upstream"));
+  if (!upstreamTarget) {
+    socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+
+  localVncProxyWss.handleUpgrade(req, socket, head, (ws) => {
+    localVncProxyWss.emit("connection", ws, req, upstreamTarget);
+  });
 });
 
 server.listen(port, () => {
