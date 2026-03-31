@@ -10945,7 +10945,24 @@ const html = `<!doctype html>
         box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
       }
 
+      .playground-environments-desktop-footer-glyph {
+        width: 42px;
+        height: 42px;
+        padding: 9px;
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+      }
+
       .playground-environments-desktop-footer-button:disabled .playground-environments-desktop-footer-icon {
+        opacity: 0.4;
+      }
+
+      .playground-environments-desktop-footer-button:disabled .playground-environments-desktop-footer-glyph {
         opacity: 0.4;
       }
 
@@ -19309,6 +19326,7 @@ const html = `<!doctype html>
           documentation: [],
           internetAccess: true,
           guiEnabled: true,
+          officeAppsEnabled: false,
           dockerfileExtensions: "",
           baseImage: "",
           metadata: null,
@@ -19418,6 +19436,9 @@ const html = `<!doctype html>
         const guiEnabled = typeof environment?.guiEnabled === "boolean"
           ? environment.guiEnabled
           : normalizedMetadata?.guiEnabled !== false;
+        const officeAppsEnabled = typeof environment?.officeAppsEnabled === "boolean"
+          ? environment.officeAppsEnabled
+          : normalizedMetadata?.officeAppsEnabled === true;
 
         return {
           ...draft,
@@ -19439,6 +19460,7 @@ const html = `<!doctype html>
           documentation: normalizePlaygroundDocumentationFiles(environment.documentation),
           internetAccess: environment.internetAccess !== false,
           guiEnabled,
+          officeAppsEnabled,
           dockerfileExtensions: typeof environment.dockerfileExtensions === "string" ? environment.dockerfileExtensions : "",
           baseImage: typeof environment.baseImage === "string" ? environment.baseImage : "",
           metadata: normalizedMetadata,
@@ -30213,6 +30235,7 @@ const html = `<!doctype html>
             metadata: {
               ...((environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)) ? environment.metadata : {}),
               guiEnabled: environment?.guiEnabled !== false,
+              officeAppsEnabled: environment?.officeAppsEnabled === true,
             },
           };
         }
@@ -31743,6 +31766,7 @@ const html = `<!doctype html>
             : draftEnvironment.isSystem
               ? "System"
               : "Custom";
+          const officeAppsEnabled = draftEnvironment.officeAppsEnabled === true;
           const isEnvironmentDescriptionLocked = Boolean(draftEnvironment.isDefault);
           const renderEnvironmentFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
@@ -31795,6 +31819,15 @@ const html = `<!doctype html>
                       title: draftEnvironment.guiEnabled !== false ? "GUI enabled" : "GUI disabled",
                     }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
                   ),
+                  renderEnvironmentFactRow("Office",
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-toggle" + (officeAppsEnabled ? " is-active" : ""),
+                      onClick: () => updateEnvironmentField("officeAppsEnabled", !officeAppsEnabled),
+                      "aria-pressed": officeAppsEnabled ? "true" : "false",
+                      title: officeAppsEnabled ? "Office apps enabled" : "Office apps disabled",
+                    }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                  ),
                   renderEnvironmentFactRow("Status",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, environmentStatusLabel)
                   )
@@ -31809,6 +31842,83 @@ const html = `<!doctype html>
               : normalizedEnvironmentRuntimeStatus === "error"
                 ? "Unavailable"
                 : "Stopped";
+          const desktopLaunchers = [
+            {
+              id: "browser",
+              label: "Open Browser",
+              title: "Open Browser",
+              renderIcon: () => React.createElement("img", {
+                className: "playground-environments-desktop-footer-icon",
+                src: PLAYGROUND_BROWSER_APP_ICON_URL,
+                alt: "Browser",
+                draggable: false,
+              }),
+            },
+            {
+              id: "files",
+              label: "Open Files",
+              title: "Open Files",
+              renderIcon: () => React.createElement("img", {
+                className: "playground-environments-desktop-footer-icon",
+                src: PLAYGROUND_FILES_APP_ICON_URL,
+                alt: "Files",
+                draggable: false,
+              }),
+            },
+            {
+              id: "terminal",
+              label: "Open Terminal",
+              title: "Open Terminal",
+              renderIcon: () => React.createElement("img", {
+                className: "playground-environments-desktop-footer-icon",
+                src: PLAYGROUND_TERMINAL_APP_ICON_URL,
+                alt: "Terminal",
+                draggable: false,
+              }),
+            },
+            {
+              id: "editor",
+              label: "Open Editor",
+              title: "Open Editor",
+              renderIcon: () => React.createElement("span", { className: "playground-environments-desktop-footer-glyph" },
+                React.createElement(SquarePen, { width: 22, height: 22, strokeWidth: 1.85 })
+              ),
+            },
+            {
+              id: "pdf",
+              label: "Open PDF Viewer",
+              title: "Open PDF Viewer",
+              renderIcon: () => React.createElement("span", { className: "playground-environments-desktop-footer-glyph" },
+                React.createElement(File, { width: 22, height: 22, strokeWidth: 1.85 })
+              ),
+            },
+            {
+              id: "archive",
+              label: "Open Archive Manager",
+              title: "Open Archive Manager",
+              renderIcon: () => React.createElement("span", { className: "playground-environments-desktop-footer-glyph" },
+                React.createElement(Package, { width: 22, height: 22, strokeWidth: 1.85 })
+              ),
+            },
+            {
+              id: "writer",
+              label: "Open Writer",
+              title: officeAppsEnabled ? "Open Writer" : "Enable Office on the environment details page to use Writer",
+              requiresOffice: true,
+              renderIcon: () => React.createElement("span", { className: "playground-environments-desktop-footer-glyph" },
+                React.createElement(FileText, { width: 22, height: 22, strokeWidth: 1.85 })
+              ),
+            },
+            {
+              id: "calc",
+              label: "Open Calc",
+              title: officeAppsEnabled ? "Open Calc" : "Enable Office on the environment details page to use Calc",
+              requiresOffice: true,
+              renderIcon: () => React.createElement("span", { className: "playground-environments-desktop-footer-glyph" },
+                React.createElement(Calculator, { width: 22, height: 22, strokeWidth: 1.85 })
+              ),
+            },
+          ];
           const environmentDesktopHeaderActions = React.createElement("div", { className: "playground-environments-desktop-header-actions" },
             React.createElement("span", {
               className: "playground-environments-desktop-status is-" + (
@@ -31947,51 +32057,19 @@ const html = `<!doctype html>
                   )
                 ),
                 React.createElement("div", { className: "playground-environments-desktop-overlay-footer" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-environments-desktop-footer-button",
-                    onClick: () => {
-                      void launchEnvironmentGuiApp("browser");
-                    },
-                    disabled: normalizedEnvironmentRuntimeStatus !== "running",
-                    "aria-label": "Open Browser",
-                    title: "Open Browser",
-                  }, React.createElement("img", {
-                    className: "playground-environments-desktop-footer-icon",
-                    src: PLAYGROUND_BROWSER_APP_ICON_URL,
-                    alt: "Browser",
-                    draggable: false,
-                  })),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-environments-desktop-footer-button",
-                    onClick: () => {
-                      void launchEnvironmentGuiApp("files");
-                    },
-                    disabled: normalizedEnvironmentRuntimeStatus !== "running",
-                    "aria-label": "Open Files",
-                    title: "Open Files",
-                  }, React.createElement("img", {
-                    className: "playground-environments-desktop-footer-icon",
-                    src: PLAYGROUND_FILES_APP_ICON_URL,
-                    alt: "Files",
-                    draggable: false,
-                  })),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-environments-desktop-footer-button",
-                    onClick: () => {
-                      void launchEnvironmentGuiApp("terminal");
-                    },
-                    disabled: normalizedEnvironmentRuntimeStatus !== "running",
-                    "aria-label": "Open Terminal",
-                    title: "Open Terminal",
-                  }, React.createElement("img", {
-                    className: "playground-environments-desktop-footer-icon",
-                    src: PLAYGROUND_TERMINAL_APP_ICON_URL,
-                    alt: "Terminal",
-                    draggable: false,
-                  }))
+                  desktopLaunchers.map((launcher) =>
+                    React.createElement("button", {
+                      key: launcher.id,
+                      type: "button",
+                      className: "playground-environments-action-button playground-environments-desktop-footer-button",
+                      onClick: () => {
+                        void launchEnvironmentGuiApp(launcher.id);
+                      },
+                      disabled: normalizedEnvironmentRuntimeStatus !== "running" || (launcher.requiresOffice && !officeAppsEnabled),
+                      "aria-label": launcher.label,
+                      title: launcher.title,
+                    }, launcher.renderIcon())
+                  )
                 )
               )
             : null;
