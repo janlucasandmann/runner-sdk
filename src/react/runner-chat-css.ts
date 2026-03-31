@@ -4402,6 +4402,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   font-size: 14px;
 }
 
+.tb-runner-chat .tb-message-markdown-user {
+  color: #fff;
+  font-weight: 400;
+}
+
 .tb-runner-chat .tb-message-markdown-user .tb-message-markdown-paragraph,
 .tb-runner-chat .tb-message-markdown-user .tb-message-markdown-list,
 .tb-runner-chat .tb-message-markdown-user .tb-message-markdown-heading,
@@ -4411,6 +4416,16 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-message-markdown-summary .tb-message-markdown-heading,
 .tb-runner-chat .tb-message-markdown-summary .tb-message-markdown-table {
   font-size: inherit;
+}
+
+.tb-runner-chat .tb-message-markdown-user .tb-message-markdown-paragraph,
+.tb-runner-chat .tb-message-markdown-user .tb-message-markdown-list,
+.tb-runner-chat .tb-message-markdown-user .tb-message-markdown-heading,
+.tb-runner-chat .tb-message-markdown-user .tb-message-markdown-table,
+.tb-runner-chat .tb-message-markdown-user .tb-message-markdown-list-item,
+.tb-runner-chat .tb-message-markdown-user .tb-message-markdown-link {
+  color: inherit;
+  font-weight: inherit;
 }
 
 .tb-runner-chat .tb-message-markdown-paragraph {
