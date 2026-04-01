@@ -267,6 +267,30 @@ const html = `<!doctype html>
         margin-top: 2px;
       }
 
+      .status-indicator-progress {
+        position: relative;
+        width: 100%;
+        height: 4px;
+        margin-top: 8px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .status-indicator-progress-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #7c6df5 0%, #b98cf4 100%);
+        transition: width 220ms ease;
+      }
+
+      .status-indicator-progress-fill.is-indeterminate {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 42%;
+        animation: playground-status-indicator-progress 1.15s ease-in-out infinite;
+      }
+
       .status-indicator-close {
         width: 18px;
         height: 18px;
@@ -6285,6 +6309,16 @@ const html = `<!doctype html>
         }
       }
 
+      @keyframes playground-status-indicator-progress {
+        0% {
+          transform: translateX(-105%);
+        }
+
+        100% {
+          transform: translateX(260%);
+        }
+      }
+
       .playground-settings-loading-icon {
         width: 18px;
         height: 18px;
@@ -9888,8 +9922,54 @@ const html = `<!doctype html>
       .playground-environments-editor-main {
         min-width: 0;
         min-height: 0;
+        flex: 1;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
+      }
+
+      .playground-servers-editor-layout {
+        min-width: 0;
+        min-height: 0;
+        flex: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 0;
+        gap: 0;
+      }
+
+      .playground-servers-editor-layout.has-preview {
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+      }
+
+      .playground-servers-editor-topbar {
+        min-width: 0;
+        flex-shrink: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+      }
+
+      .playground-servers-editor-topbar.has-preview {
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+      }
+
+      .playground-servers-editor-topbar .playground-content-nav {
+        min-width: 0;
+      }
+
+      .playground-servers-editor-sidebar {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 14px 18px 18px 22px;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .playground-servers-editor-sidebar-topnav {
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        padding-left: 22px;
       }
 
       .playground-environments-editor-navbar {
@@ -10508,6 +10588,341 @@ const html = `<!doctype html>
         min-height: 320px;
         border: 0;
         background: transparent;
+      }
+
+      .playground-servers-source-files-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+      }
+
+      .playground-servers-source-files-layout.has-preview {
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+      }
+
+      .playground-servers-source-files-panel {
+        min-width: 0;
+      }
+
+      .playground-servers-source-preview-sidebar {
+        min-width: 0;
+        min-height: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-servers-source-preview-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-servers-source-preview-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-servers-source-preview-path {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-servers-source-preview-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .playground-servers-source-preview-close-button {
+        min-width: 0;
+        width: auto;
+        height: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-servers-source-preview-close-button:hover:not(:disabled) {
+        background: transparent;
+        color: #fff;
+      }
+
+      .playground-servers-source-preview-status {
+        padding: 10px 0 0;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .playground-servers-source-preview-status.is-warning {
+        color: #f1c87a;
+      }
+
+      .playground-servers-source-preview-status.is-success {
+        color: #85d6a5;
+      }
+
+      .playground-servers-source-preview-status.is-error {
+        color: #ff9c9c;
+      }
+
+      .playground-servers-source-preview-body {
+        min-height: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding-top: 14px;
+      }
+
+      .playground-servers-source-preview-editor-shell {
+        min-height: 420px;
+        height: 420px;
+        background: transparent;
+        border-radius: 0;
+        overflow: hidden;
+      }
+
+      .playground-servers-source-preview-editor-shell.playground-code-preview-editor-shell,
+      .playground-servers-source-preview-editor-shell.playground-code-preview-editor-shell .monaco-editor,
+      .playground-servers-source-preview-editor-shell.playground-code-preview-editor-shell .monaco-editor-background,
+      .playground-servers-source-preview-editor-shell.playground-code-preview-editor-shell .monaco-scrollable-element,
+      .playground-servers-source-preview-editor-shell.playground-code-preview-editor-shell .margin,
+      .playground-servers-source-preview-editor-shell.playground-code-preview-editor-shell .overflow-guard {
+        background: transparent !important;
+      }
+
+      .playground-servers-source-preview-empty {
+        min-height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 12px;
+        line-height: 1.5;
+        padding: 18px;
+      }
+
+      .playground-server-deploy-pill-button {
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-server-deploy-pill-button:hover:not(:disabled) {
+        border-color: rgba(255, 255, 255, 0.24);
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .playground-server-deploy-pill-button.is-primary {
+        border-color: rgba(255, 255, 255, 0.92);
+        background: rgba(255, 255, 255, 0.96);
+        color: #0f1115;
+      }
+
+      .playground-server-deploy-pill-button.is-primary:hover:not(:disabled) {
+        background: #ffffff;
+        border-color: #ffffff;
+        color: #0f1115;
+      }
+
+      .playground-server-deploy-pill-button:disabled {
+        opacity: 0.46;
+        cursor: default;
+      }
+
+      .playground-servers-deploy-help-modal {
+        width: min(720px, calc(100vw - 32px));
+      }
+
+      .playground-servers-deploy-help-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .playground-servers-deploy-help-copy {
+        color: rgba(255, 255, 255, 0.74);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .playground-servers-editor-bottom-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 12;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: auto;
+        padding: 12px 18px 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(18px);
+      }
+
+      .playground-servers-editor-bottom-bar-copy {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-servers-editor-bottom-message {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        line-height: 1.45;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-servers-editor-bottom-message.is-success {
+        color: #85d6a5;
+      }
+
+      .playground-servers-editor-bottom-message.is-error {
+        color: #ff9c9c;
+      }
+
+      .playground-servers-editor-bottom-progress-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-servers-editor-bottom-progress-label,
+      .playground-servers-editor-bottom-progress-value {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .playground-servers-editor-bottom-progress-value {
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-servers-editor-bottom-progress-track {
+        position: relative;
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-servers-editor-bottom-progress-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #7d70f4 0%, #e8b0e5 100%);
+        transition: width 280ms ease;
+      }
+
+      .playground-servers-editor-bottom-actions {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-servers-function-deploy-section {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 0;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .playground-servers-function-deploy-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 0 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-servers-function-deploy-copy {
+        padding: 0 0 2px;
+      }
+
+      .playground-servers-function-preview-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-servers-function-preview-pane {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 0;
+      }
+
+      .playground-servers-function-preview-pane + .playground-servers-function-preview-pane {
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-servers-function-preview-label {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1.4;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .playground-servers-function-editor-shell {
+        min-height: 188px;
+        height: 188px;
+        background: transparent;
+        border-radius: 0;
+        overflow: hidden;
+      }
+
+      .playground-servers-function-editor-shell.playground-code-preview-editor-shell,
+      .playground-servers-function-editor-shell.playground-code-preview-editor-shell .monaco-editor,
+      .playground-servers-function-editor-shell.playground-code-preview-editor-shell .monaco-editor-background,
+      .playground-servers-function-editor-shell.playground-code-preview-editor-shell .monaco-scrollable-element,
+      .playground-servers-function-editor-shell.playground-code-preview-editor-shell .margin,
+      .playground-servers-function-editor-shell.playground-code-preview-editor-shell .overflow-guard {
+        background: transparent !important;
       }
 
       .playground-database-browser-surface {
@@ -19273,6 +19688,50 @@ const html = `<!doctype html>
         return null;
       }
 
+      function buildServerDeployStatusIndicatorItem(deployState) {
+        const normalizedServerId = typeof deployState?.serverId === "string" ? deployState.serverId.trim() : "";
+        if (!normalizedServerId) {
+          return null;
+        }
+
+        const serverLabel = typeof deployState?.serverName === "string" && deployState.serverName.trim()
+          ? deployState.serverName.trim()
+          : "Server";
+        const phase = typeof deployState?.phase === "string" ? deployState.phase.trim().toLowerCase() : "";
+
+        if (phase === "starting" || phase === "running") {
+          return {
+            id: "server-deploy:" + normalizedServerId,
+            title: "Deployment started",
+            copy: serverLabel,
+            indeterminate: true,
+          };
+        }
+
+        if (phase === "finished") {
+          return {
+            id: "server-deploy:" + normalizedServerId,
+            title: "Deployment finished",
+            copy: typeof deployState?.serviceUrl === "string" && deployState.serviceUrl.trim()
+              ? deployState.serviceUrl.trim()
+              : serverLabel,
+            progress: 100,
+          };
+        }
+
+        if (phase === "failed") {
+          return {
+            id: "server-deploy:" + normalizedServerId,
+            title: "Deployment failed",
+            copy: typeof deployState?.error === "string" && deployState.error.trim()
+              ? deployState.error.trim()
+              : serverLabel,
+          };
+        }
+
+        return null;
+      }
+
       function getAccountInitials(value) {
         const normalized = String(value || "").trim();
         if (!normalized) {
@@ -20052,9 +20511,11 @@ const html = `<!doctype html>
         );
       }
 
-      function StatusIndicator({ title, copy, logoUrl, brand, onDismiss }) {
+      function StatusIndicator({ title, copy, logoUrl, brand, progress, indeterminate, onDismiss }) {
         const [isVisible, setIsVisible] = useState(false);
         const [isExiting, setIsExiting] = useState(false);
+        const hasProgress = Number.isFinite(progress) || indeterminate;
+        const normalizedProgress = Number.isFinite(progress) ? Math.max(0, Math.min(100, Number(progress))) : 0;
 
         useEffect(() => {
           const frameId = window.requestAnimationFrame(() => setIsVisible(true));
@@ -20087,7 +20548,15 @@ const html = `<!doctype html>
             : null,
           React.createElement("div", { className: "status-indicator-body" },
             React.createElement("div", { className: "status-indicator-title" }, title),
-            React.createElement("div", { className: "status-indicator-copy" }, copy)
+            React.createElement("div", { className: "status-indicator-copy" }, copy),
+            hasProgress
+              ? React.createElement("div", { className: "status-indicator-progress" },
+                  React.createElement("div", {
+                    className: "status-indicator-progress-fill" + (indeterminate ? " is-indeterminate" : ""),
+                    style: indeterminate ? undefined : { width: normalizedProgress + "%" },
+                  })
+                )
+              : null
           ),
           React.createElement("button", {
             type: "button",
@@ -20113,6 +20582,8 @@ const html = `<!doctype html>
                 copy: item.copy,
                 logoUrl: item.logoUrl,
                 brand: item.brand,
+                progress: item.progress,
+                indeterminate: item.indeterminate,
                 onDismiss: () => onDismiss(item.id)
               })
             )
@@ -30890,15 +31361,18 @@ const html = `<!doctype html>
         event.currentTarget.requestSubmit();
       }
 
-      function PlaygroundEnvironmentsPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, onEnvironmentMutated }) {
+      function PlaygroundEnvironmentsPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, onEnvironmentMutated, onRequestSidebarCollapse }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
         const environmentDetailMainRef = useRef(null);
         const serverDetailMainRef = useRef(null);
+        const serverDetailSelectPopoverRef = useRef(null);
         const environmentDescriptionTextareaRef = useRef(null);
         const serverDescriptionTextareaRef = useRef(null);
         const databaseDescriptionTextareaRef = useRef(null);
         const serverActionsPopoverRef = useRef(null);
+        const serverFileActionsPopoverRef = useRef(null);
+        const serverDeployProgressTimerRef = useRef(null);
         const serverRenameInputRef = useRef(null);
         const serverFileUploadInputRef = useRef(null);
         const environmentDockerfileTextareaRef = useRef(null);
@@ -30988,9 +31462,12 @@ const html = `<!doctype html>
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
         const [serverActionsPopoverOpen, setServerActionsPopoverOpen] = useState(false);
+        const [serverFileActionsPopoverOpen, setServerFileActionsPopoverOpen] = useState(false);
+        const [serverDeploymentHelpOpen, setServerDeploymentHelpOpen] = useState(false);
         const [serverRenameState, setServerRenameState] = useState(null);
         const [serverRenameValue, setServerRenameValue] = useState("");
         const [serverRenameError, setServerRenameError] = useState("");
+        const [serverDetailSelectPopover, setServerDetailSelectPopover] = useState("");
         const [databaseActionsPopoverOpen, setDatabaseActionsPopoverOpen] = useState(false);
         const [databaseRenameState, setDatabaseRenameState] = useState(null);
         const [databaseRenameValue, setDatabaseRenameValue] = useState("");
@@ -31021,6 +31498,7 @@ const html = `<!doctype html>
           error: "",
           message: "",
         });
+        const [isServerFileDragging, setIsServerFileDragging] = useState(false);
         const [serverFileEditorState, setServerFileEditorState] = useState({
           path: "",
           status: "idle",
@@ -31038,12 +31516,19 @@ const html = `<!doctype html>
           error: "",
           message: "",
           lastResponseText: "",
+          deployProgress: 0,
         });
         const [serverAnalyticsView, setServerAnalyticsView] = useState("editor");
         const [serverLogsState, setServerLogsState] = useState({
           kind: "request",
           loadingKey: "",
           error: "",
+        });
+        const [serverAnalyticsVisibility, setServerAnalyticsVisibility] = useState({
+          requests: true,
+          success: true,
+          latency: true,
+          errors: true,
         });
         const [hasLoadedServers, setHasLoadedServers] = useState(false);
         const [hasLoadedDatabases, setHasLoadedDatabases] = useState(false);
@@ -31070,6 +31555,8 @@ const html = `<!doctype html>
         const [databaseDocumentViewMode, setDatabaseDocumentViewMode] = useState("preview");
         const [databaseJsonEditorModule, setDatabaseJsonEditorModule] = useState(null);
         const [databaseJsonEditorModuleError, setDatabaseJsonEditorModuleError] = useState("");
+        const [serverPreviewEditorModule, setServerPreviewEditorModule] = useState(null);
+        const [serverPreviewEditorModuleError, setServerPreviewEditorModuleError] = useState("");
         const [databaseCollectionComposerState, setDatabaseCollectionComposerState] = useState({
           open: false,
           name: "items",
@@ -31350,6 +31837,15 @@ const html = `<!doctype html>
           return () => window.removeEventListener("keydown", handleServerEditorSaveShortcut);
         }, [handleServerFileSave, resourceMode, serverFileEditorState.path, serverFileEditorState.status]);
 
+        useEffect(() => {
+          return () => {
+            if (serverDeployProgressTimerRef.current) {
+              window.clearInterval(serverDeployProgressTimerRef.current);
+              serverDeployProgressTimerRef.current = null;
+            }
+          };
+        }, []);
+
         function resetEditorAuxiliaryState() {
           editorDirtyRef.current = false;
           setEnvironmentRuntimePopover("");
@@ -31369,15 +31865,23 @@ const html = `<!doctype html>
 
         function resetServerEditorAuxiliaryState() {
           serverEditorDirtyRef.current = false;
+          if (serverDeployProgressTimerRef.current) {
+            window.clearInterval(serverDeployProgressTimerRef.current);
+            serverDeployProgressTimerRef.current = null;
+          }
           if (serverAutosaveTimerRef.current) {
             window.clearTimeout(serverAutosaveTimerRef.current);
             serverAutosaveTimerRef.current = null;
           }
           serverAutosaveQueuedRef.current = null;
           setServerActionsPopoverOpen(false);
+          setServerFileActionsPopoverOpen(false);
+          setServerDeploymentHelpOpen(false);
           setServerRenameState(null);
           setServerRenameValue("");
           setServerRenameError("");
+          setServerDetailSelectPopover("");
+          setIsServerFileDragging(false);
           setServerSaveState({
             isSaving: false,
             error: "",
@@ -31394,6 +31898,7 @@ const html = `<!doctype html>
             error: "",
             message: "",
             lastResponseText: "",
+            deployProgress: 0,
           });
           setServerFileEditorState({
             path: "",
@@ -31412,6 +31917,34 @@ const html = `<!doctype html>
             loadingKey: "",
             error: "",
           });
+        }
+
+        function clearServerDeployProgressTimer() {
+          if (serverDeployProgressTimerRef.current) {
+            window.clearInterval(serverDeployProgressTimerRef.current);
+            serverDeployProgressTimerRef.current = null;
+          }
+        }
+
+        function startServerDeployProgressTimer() {
+          clearServerDeployProgressTimer();
+          serverDeployProgressTimerRef.current = window.setInterval(() => {
+            setServerDeploymentState((current) => {
+              if (!current.isDeploying) {
+                return current;
+              }
+              const currentProgress = Number(current.deployProgress || 0);
+              const step = currentProgress < 0.42 ? 0.14 : currentProgress < 0.72 ? 0.07 : 0.03;
+              const nextProgress = Math.min(0.92, currentProgress + step);
+              if (nextProgress === currentProgress) {
+                return current;
+              }
+              return {
+                ...current,
+                deployProgress: nextProgress,
+              };
+            });
+          }, 650);
         }
 
         function resetDatabaseEditorAuxiliaryState() {
@@ -32734,6 +33267,12 @@ const html = `<!doctype html>
         }, [currentServerFiles, selectedServerId, serverFileEditorState.path]);
 
         useEffect(() => {
+          if (resourceMode === "servers" && serverFileEditorState.path && typeof onRequestSidebarCollapse === "function") {
+            onRequestSidebarCollapse();
+          }
+        }, [onRequestSidebarCollapse, resourceMode, serverFileEditorState.path]);
+
+        useEffect(() => {
           if (resourceMode !== "servers" || hasLoadedDatabases || databaseListLoading) {
             return;
           }
@@ -32899,6 +33438,56 @@ const html = `<!doctype html>
         }, [serverActionsPopoverOpen]);
 
         useEffect(() => {
+          if (!serverFileActionsPopoverOpen) return undefined;
+
+          function handleServerFileActionsPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !serverFileActionsPopoverRef.current || serverFileActionsPopoverRef.current.contains(target)) {
+              return;
+            }
+            setServerFileActionsPopoverOpen(false);
+          }
+
+          function handleServerFileActionsPopoverEscape(event) {
+            if (event.key === "Escape") {
+              setServerFileActionsPopoverOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleServerFileActionsPopoverPointerDown);
+          window.addEventListener("keydown", handleServerFileActionsPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleServerFileActionsPopoverPointerDown);
+            window.removeEventListener("keydown", handleServerFileActionsPopoverEscape);
+          };
+        }, [serverFileActionsPopoverOpen]);
+
+        useEffect(() => {
+          if (!serverDetailSelectPopover) return undefined;
+
+          function handleServerDetailSelectPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !serverDetailSelectPopoverRef.current || serverDetailSelectPopoverRef.current.contains(target)) {
+              return;
+            }
+            setServerDetailSelectPopover("");
+          }
+
+          function handleServerDetailSelectPopoverEscape(event) {
+            if (event.key === "Escape") {
+              setServerDetailSelectPopover("");
+            }
+          }
+
+          document.addEventListener("mousedown", handleServerDetailSelectPopoverPointerDown);
+          window.addEventListener("keydown", handleServerDetailSelectPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleServerDetailSelectPopoverPointerDown);
+            window.removeEventListener("keydown", handleServerDetailSelectPopoverEscape);
+          };
+        }, [serverDetailSelectPopover]);
+
+        useEffect(() => {
           if (!databaseActionsPopoverOpen) return undefined;
 
           function handleDatabaseActionsPopoverPointerDown(event) {
@@ -33043,6 +33632,40 @@ const html = `<!doctype html>
             cancelled = true;
           };
         }, [databaseDocumentViewMode, databaseJsonEditorModule, databaseJsonEditorModuleError]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers" || !selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID || serverPreviewEditorModule || serverPreviewEditorModuleError) {
+            return;
+          }
+
+          let cancelled = false;
+
+          void loadPlaygroundCodeEditorModule()
+            .then((module) => {
+              if (cancelled || !module) {
+                return;
+              }
+              setServerPreviewEditorModule(module);
+              setServerPreviewEditorModuleError("");
+              void module.loader?.init?.()
+                .then((monaco) => {
+                  if (!cancelled) {
+                    ensurePlaygroundCodeEditorTheme(monaco);
+                  }
+                })
+                .catch(() => {});
+            })
+            .catch((error) => {
+              if (cancelled) {
+                return;
+              }
+              setServerPreviewEditorModuleError(error instanceof Error ? error.message : "Failed to load editor.");
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [resourceMode, selectedServerId, serverPreviewEditorModule, serverPreviewEditorModuleError]);
 
         useEffect(() => {
           if (
@@ -35092,12 +35715,9 @@ const html = `<!doctype html>
           serverFileUploadInputRef.current?.click();
         }
 
-        async function handleServerFileUploadSelection(event) {
-          const files = Array.from(event?.target?.files || []);
-          if (event?.target) {
-            event.target.value = "";
-          }
-          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || files.length === 0) {
+        async function handleServerFileUploadFiles(files) {
+          const normalizedFiles = Array.from(files || []).filter(Boolean);
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || normalizedFiles.length === 0) {
             return;
           }
 
@@ -35108,7 +35728,7 @@ const html = `<!doctype html>
           });
 
           try {
-            for (const file of files) {
+            for (const file of normalizedFiles) {
               const formData = new FormData();
               formData.append("file", file);
               formData.append("path", "");
@@ -35131,7 +35751,7 @@ const html = `<!doctype html>
             setServerFileTransferState({
               isUploading: false,
               error: "",
-              message: files.length === 1 ? "Uploaded 1 file" : "Uploaded " + files.length + " files",
+              message: normalizedFiles.length === 1 ? "Uploaded 1 file" : "Uploaded " + normalizedFiles.length + " files",
             });
           } catch (error) {
             setServerFileTransferState({
@@ -35140,6 +35760,17 @@ const html = `<!doctype html>
               message: "",
             });
           }
+        }
+
+        async function handleServerFileUploadSelection(event) {
+          const files = Array.from(event?.target?.files || []);
+          if (event?.target) {
+            event.target.value = "";
+          }
+          if (files.length === 0) {
+            return;
+          }
+          await handleServerFileUploadFiles(files);
         }
 
         async function handleServerFileDownload(entry) {
@@ -35263,6 +35894,21 @@ const html = `<!doctype html>
           }));
         }
 
+        function handleCloseServerFileEditor() {
+          setServerFileActionsPopoverOpen(false);
+          setServerFileEditorState({
+            path: "",
+            status: "idle",
+            value: "",
+            initialValue: "",
+            error: "",
+            saveError: "",
+            saveMessage: "",
+            isSaving: false,
+            wordWrap: true,
+          });
+        }
+
         async function handleServerFileSave() {
           if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !serverFileEditorState.path || serverFileEditorState.status !== "ready" || serverFileEditorState.isSaving) {
             return;
@@ -35376,7 +36022,9 @@ const html = `<!doctype html>
             error: "",
             message: "",
             lastResponseText: "",
+            deployProgress: 0.08,
           });
+          startServerDeployProgressTimer();
 
           try {
             const response = await fetch(
@@ -35415,22 +36063,26 @@ const html = `<!doctype html>
               }
             }
 
+            clearServerDeployProgressTimer();
             setServerDeploymentState({
               isDeploying: false,
               isInvoking: false,
               error: "",
               message: data?.serviceUrl ? "Deployed to " + data.serviceUrl : "Deployment finished",
               lastResponseText: "",
+              deployProgress: 1,
             });
             void loadServerAnalytics(draftServer.id, { force: true });
             void loadServerLogs(draftServer.id, "deployment", { force: true });
           } catch (error) {
+            clearServerDeployProgressTimer();
             setServerDeploymentState({
               isDeploying: false,
               isInvoking: false,
               error: error instanceof Error ? error.message : "Failed to deploy server.",
               message: "",
               lastResponseText: "",
+              deployProgress: 0,
             });
           }
         }
@@ -37286,10 +37938,64 @@ const html = `<!doctype html>
             );
           }
 
+          const isFunctionServer = canonicalizePlaygroundServerKind(draftServer.kind) === "function";
+          const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
           const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
           );
+          const renderServerDetailSelectOptionRow = ({ key, label, description, selected, onClick, disabled = false }) => React.createElement("button", {
+              key,
+              type: "button",
+              className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+              onClick,
+              disabled,
+            },
+            React.createElement("span", { className: "tb-popup-check-slot" },
+              selected
+                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                : null
+            ),
+            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+              React.createElement("span", null, label),
+              description
+                ? React.createElement("span", null, description)
+                : null
+            )
+          );
+          const renderServerDetailSelectControl = ({
+            popoverId,
+            valueLabel,
+            disabled = false,
+            isEmpty = false,
+            children,
+          }) => {
+            const isOpen = serverDetailSelectPopover === popoverId;
+            return React.createElement("div", {
+                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isOpen ? " is-open" : ""),
+                ref: isOpen ? serverDetailSelectPopoverRef : null,
+              },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
+                disabled,
+                onClick: () => {
+                  if (disabled) return;
+                  setServerDetailSelectPopover((current) => current === popoverId ? "" : popoverId);
+                },
+                title: valueLabel,
+                "aria-expanded": isOpen ? "true" : "false",
+              },
+                React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
+                React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+              ),
+              isOpen
+                ? React.createElement("div", {
+                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                  }, children)
+                : null
+            );
+          };
           const buildServerAnalyticsSvgLinePath = (points) => {
             if (!Array.isArray(points) || points.length === 0) {
               return "";
@@ -37315,8 +38021,17 @@ const html = `<!doctype html>
           const isServerLogsLoading = serverLogsState.loadingKey === activeServerLogLoadingKey;
           const activeServerTrafficLabels = activeServerTrafficBuckets.map((bucket) => bucket?.label || "");
           const activeServerTrafficCounts = activeServerTrafficBuckets.map((bucket) => Number(bucket?.total || 0));
-          const activeServerTrafficFailures = activeServerTrafficBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0));
-          const activeServerStatusSuccess = activeServerStatusBuckets.map((bucket) => Number(bucket?.success || 0));
+          const activeServerTrafficErrors = activeServerTrafficBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0));
+          const activeServerStatusSuccess = activeServerStatusBuckets.map((bucket) => {
+            const explicitRate = Number(bucket?.successRate);
+            if (Number.isFinite(explicitRate)) {
+              return explicitRate;
+            }
+            const total = Number(bucket?.total || 0);
+            const success = Number(bucket?.success || 0);
+            return total > 0 ? Math.round((success / total) * 1000) / 10 : 0;
+          });
+          const activeServerStatusLatency = activeServerStatusBuckets.map((bucket) => Number(bucket?.p95LatencyMs || 0));
           const activeServerStatusErrors = activeServerStatusBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0));
           const serverAnalyticsLogKinds = [
             { id: "request", label: "Requests", Icon: Globe },
@@ -37328,7 +38043,22 @@ const html = `<!doctype html>
               key: label,
             },
             React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
-            React.createElement("div", { className: "playground-database-overview-kpi-label is-static" + (tone ? " is-" + tone : "") },
+            React.createElement("button", {
+                type: "button",
+                className: "playground-database-overview-kpi-label"
+                  + (tone ? " is-" + tone : "")
+                  + (tone && serverAnalyticsVisibility[tone] === false ? " is-inactive" : ""),
+                onClick: () => {
+                  if (!tone) {
+                    return;
+                  }
+                  setServerAnalyticsVisibility((current) => ({
+                    ...current,
+                    [tone]: current[tone] === false,
+                  }));
+                },
+                "aria-pressed": tone ? (serverAnalyticsVisibility[tone] === false ? "false" : "true") : "true",
+              },
               React.createElement("span", { className: "playground-database-overview-kpi-check" },
                 React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
               ),
@@ -37337,9 +38067,11 @@ const html = `<!doctype html>
           );
           const renderServerTelemetryChart = (config) => {
             const labels = Array.isArray(config?.labels) ? config.labels : [];
-            const series = Array.isArray(config?.series) ? config.series.filter(Boolean) : [];
+            const series = Array.isArray(config?.series)
+              ? config.series.filter((entry) => entry && serverAnalyticsVisibility[entry.key] !== false)
+              : [];
             if (!labels.length || !series.length) {
-              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No data yet");
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
             }
 
             const svgWidth = 420;
@@ -37461,9 +38193,9 @@ const html = `<!doctype html>
                                   values: activeServerTrafficCounts,
                                 },
                                 {
-                                  key: "failures",
-                                  tone: "failures",
-                                  values: activeServerTrafficFailures,
+                                  key: "errors",
+                                  tone: "errors",
+                                  values: activeServerTrafficErrors,
                                 },
                               ],
                               emptyText: "No request data yet",
@@ -37482,33 +38214,18 @@ const html = `<!doctype html>
                                   values: activeServerStatusSuccess,
                                 },
                                 {
-                                  key: "errors",
-                                  tone: "errors",
-                                  values: activeServerStatusErrors,
+                                  key: "latency",
+                                  tone: "latency",
+                                  values: activeServerStatusLatency,
                                 },
                               ],
                               emptyText: "No status data yet",
-                              ariaLabel: "Successful and failed requests over time",
+                              ariaLabel: "Success rate and latency over time",
                             })
                           : React.createElement("div", { className: "playground-settings-usage-chart-empty" }, "No status data yet")
                       )
                     ),
-                    serverAnalyticsView !== "analytics"
-                      ? React.createElement("button", {
-                          type: "button",
-                          className: "playground-mission-control-run-button",
-                          onClick: () => {
-                            setServerAnalyticsView("analytics");
-                            if (draftServer.id) {
-                              void loadServerAnalytics(draftServer.id, { force: true });
-                              void loadServerLogs(draftServer.id, serverLogsState.kind);
-                            }
-                          },
-                        },
-                          React.createElement(Telescope, { className: "playground-mission-control-run-button-icon", strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Open Analytics")
-                        )
-                      : null
+                    null
                   );
           const renderServerLogRow = (entry, kind) => {
             const normalizedKind = String(kind || "request");
@@ -37637,15 +38354,77 @@ const html = `<!doctype html>
                       title: draftServer.id || "Unsaved server",
                     }, draftServer.id || "Unsaved server")
                   ),
+                  renderServerFactRow("Service URL",
+                    draftServer.serviceUrl
+                      ? React.createElement("button", {
+                          type: "button",
+                          className: "playground-tasks-detail-fact-button",
+                          onClick: () => window.open(draftServer.serviceUrl, "_blank", "noopener,noreferrer"),
+                          title: draftServer.serviceUrl,
+                        }, draftServer.serviceUrl)
+                      : React.createElement("div", { className: "playground-tasks-detail-fact-button is-empty" }, "Not deployed")
+                  ),
                   renderServerFactRow("Auth",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.authMode || "public")
+                    isFunctionServer
+                      ? renderServerDetailSelectControl({
+                          popoverId: "server-auth",
+                          valueLabel: draftServer.authMode === "private" ? "Private" : "Public",
+                          children: [
+                            renderServerDetailSelectOptionRow({
+                              key: "public",
+                              label: "Public",
+                              selected: (draftServer.authMode || "public") !== "private",
+                              onClick: () => {
+                                updateServerField("authMode", "public");
+                                setServerDetailSelectPopover("");
+                              },
+                            }),
+                            renderServerDetailSelectOptionRow({
+                              key: "private",
+                              label: "Private",
+                              selected: draftServer.authMode === "private",
+                              onClick: () => {
+                                updateServerField("authMode", "private");
+                                setServerDetailSelectPopover("");
+                              },
+                            }),
+                          ],
+                        })
+                      : React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.authMode || "public")
                   ),
                   renderServerFactRow("Runtime",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.runtime || "nodejs22")
+                    isFunctionServer
+                      ? renderServerDetailSelectControl({
+                          popoverId: "server-runtime",
+                          valueLabel: draftServer.runtime || "nodejs22",
+                          children: [
+                            renderServerDetailSelectOptionRow({
+                              key: "nodejs22",
+                              label: "nodejs22",
+                              selected: (draftServer.runtime || "nodejs22") === "nodejs22",
+                              onClick: () => {
+                                updateServerField("runtime", "nodejs22");
+                                setServerDetailSelectPopover("");
+                              },
+                            }),
+                            renderServerDetailSelectOptionRow({
+                              key: "nodejs20",
+                              label: "nodejs20",
+                              selected: draftServer.runtime === "nodejs20",
+                              onClick: () => {
+                                updateServerField("runtime", "nodejs20");
+                                setServerDetailSelectPopover("");
+                              },
+                            }),
+                          ],
+                        })
+                      : React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.runtime || "nodejs22")
                   ),
-                  renderServerFactRow("Region",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.region || "europe-west1")
-                  ),
+                  !isFunctionServer
+                    ? renderServerFactRow("Region",
+                        React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.region || "europe-west1")
+                      )
+                    : null,
                   renderServerFactRow("Updated",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftServer.updatedAt))
                   )
@@ -38030,14 +38809,14 @@ const html = `<!doctype html>
           const isLoadingCurrentServerFiles = loadingServerFilesId === draftServer.id;
           const serverFileEditorIsDirty = serverFileEditorState.status === "ready" && serverFileEditorState.value !== serverFileEditorState.initialValue;
           const serverFileEditorStatusClassName = serverFileEditorState.saveError
-            ? "playground-code-preview-status is-error"
+            ? "playground-servers-source-preview-status is-error"
             : serverFileEditorState.isSaving
-              ? "playground-code-preview-status"
+              ? "playground-servers-source-preview-status"
               : serverFileEditorIsDirty
-                ? "playground-code-preview-status is-warning"
+                ? "playground-servers-source-preview-status is-warning"
                 : serverFileEditorState.saveMessage
-                  ? "playground-code-preview-status is-success"
-                  : "playground-code-preview-status";
+                  ? "playground-servers-source-preview-status is-success"
+                  : "playground-servers-source-preview-status";
           const serverFileEditorStatusText = serverFileEditorState.saveError
             ? serverFileEditorState.saveError
             : serverFileEditorState.isSaving
@@ -38047,219 +38826,323 @@ const html = `<!doctype html>
                 : serverFileEditorState.saveMessage
                   ? serverFileEditorState.saveMessage
                   : "No unsaved changes";
-          const sourceFilesSection = React.createElement("div", { className: "playground-environments-editor-surface playground-servers-source-files-section" },
-            React.createElement("div", { className: "playground-servers-source-files-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Source Files"),
-              draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
-                ? React.createElement("div", { className: "playground-servers-source-files-actions" },
-                    React.createElement("input", {
-                      ref: serverFileUploadInputRef,
-                      type: "file",
-                      multiple: true,
-                      onChange: (event) => void handleServerFileUploadSelection(event),
-                      style: { display: "none" },
-                    }),
+          const renderServerSourceFileChip = (entry) => React.createElement("div", {
+              key: entry.id || entry.path,
+              className: "runner-attachment runner-attachment-file" + (serverFileEditorState.path === entry.path ? " runner-attachment-document-active" : ""),
+            },
+            React.createElement("button", {
+              type: "button",
+              className: "runner-attachment-file-button",
+              onClick: () => {
+                if (!entry.isFolder && isPlaygroundTextPreviewable(entry)) {
+                  void handleServerFileOpen(entry);
+                }
+              },
+              disabled: entry.isFolder || !isPlaygroundTextPreviewable(entry),
+              title: entry.path || entry.name || "File",
+            },
+              React.createElement("span", { className: "runner-attachment-file-icon-slot", "aria-hidden": "true" },
+                React.createElement("img", {
+                  src: entry.isFolder ? PLAYGROUND_FOLDER_ICON_URL : PLAYGROUND_TEXT_FILE_ICON_URL,
+                  alt: "",
+                  draggable: false,
+                  className: "runner-attachment-file-icon",
+                })
+              ),
+              React.createElement("div", { className: "runner-attachment-file-name" }, entry.name || entry.path || "Untitled")
+            ),
+            React.createElement("button", {
+              type: "button",
+              className: "runner-attachment-remove runner-attachment-remove-file",
+              onClick: (event) => {
+                event.stopPropagation();
+                void handleServerFileDelete(entry);
+              },
+              "aria-label": "Delete " + String(entry.name || entry.path || "file"),
+            }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
+          );
+          const renderServerDeploymentCodePreview = ({ path, language, value, emptyText }) => {
+            if (!String(value || "").trim()) {
+              return React.createElement("div", { className: "playground-files-state" }, emptyText);
+            }
+            if (ServerPreviewEditorComponent) {
+              return React.createElement("div", { className: "playground-code-preview-editor-shell playground-database-browser-json-editor-shell playground-servers-function-editor-shell" },
+                React.createElement(ServerPreviewEditorComponent, {
+                  path,
+                  height: "168px",
+                  language,
+                  theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                  value,
+                  beforeMount: ensurePlaygroundCodeEditorTheme,
+                  options: {
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    smoothScrolling: true,
+                    readOnly: true,
+                    fontSize: 12,
+                    lineHeight: 20,
+                    tabSize: 2,
+                    insertSpaces: true,
+                    renderLineHighlight: "none",
+                    lineNumbersMinChars: 3,
+                    overviewRulerBorder: false,
+                    hideCursorInOverviewRuler: true,
+                    wordWrap: "on",
+                    padding: { top: 12, bottom: 12 },
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                  },
+                })
+              );
+            }
+            return React.createElement("div", { className: "playground-code-preview-editor-shell playground-database-browser-json-editor-shell playground-servers-function-editor-shell" },
+              React.createElement("textarea", {
+                className: "playground-code-preview-textarea playground-servers-source-editor-textarea",
+                value,
+                readOnly: true,
+                spellCheck: false,
+                wrap: "off",
+              })
+            );
+          };
+          const sourceFilesSidebarTopbar = serverFileEditorState.path
+            ? React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-servers-editor-sidebar-topnav" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                  React.createElement("div", { className: "playground-environments-editor-navbar-copy playground-servers-source-preview-copy" },
+                    React.createElement("div", { className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-servers-source-preview-title" }, currentServerEditorEntry?.name || serverFileEditorState.path || "Source file")
+                  )
+                ),
+                React.createElement("div", { className: "playground-content-nav-center" }),
+                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-servers-source-preview-actions" },
+                  React.createElement("div", {
+                    className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                    ref: serverFileActionsPopoverRef,
+                  },
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-environments-action-button is-primary",
-                      onClick: openServerFileUploadPicker,
-                      disabled: serverFileTransferState.isUploading,
+                      className: "playground-content-menu-button",
+                      "aria-label": "Source file actions",
+                      "aria-expanded": serverFileActionsPopoverOpen ? "true" : "false",
+                      onClick: () => setServerFileActionsPopoverOpen((current) => !current),
+                      disabled: serverFileEditorState.status !== "ready",
+                    }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                    serverFileActionsPopoverOpen
+                      ? React.createElement("div", {
+                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                          onClick: (event) => event.stopPropagation(),
+                        },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setServerFileActionsPopoverOpen(false);
+                              void handleServerFileSave();
+                            },
+                            disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
+                          },
+                            React.createElement(HardDrive, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, serverFileEditorState.isSaving ? "Saving..." : "Save")
+                            )
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setServerFileActionsPopoverOpen(false);
+                              if (currentServerEditorEntry) {
+                                void handleServerFileDownload(currentServerEditorEntry);
+                              }
+                            },
+                            disabled: !currentServerEditorEntry,
+                          },
+                            React.createElement(Download, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "Download")
+                            )
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setServerFileActionsPopoverOpen(false);
+                              if (currentServerEditorEntry) {
+                                void handleServerFileDelete(currentServerEditorEntry);
+                              }
+                            },
+                            disabled: !currentServerEditorEntry,
+                          },
+                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "Delete")
+                            )
+                          )
+                        )
+                      : null
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-servers-source-preview-close-button",
+                    onClick: handleCloseServerFileEditor,
+                    title: "Close",
+                    "aria-label": "Close source file editor",
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                )
+              )
+            : null;
+          const sourceFilesSidebar = serverFileEditorState.path
+            ? React.createElement("aside", { className: "playground-servers-source-preview-sidebar" },
+                React.createElement("div", { className: "playground-servers-source-preview-body" },
+                  serverFileEditorState.status === "loading"
+                    ? React.createElement("div", { className: "playground-code-preview-state" },
+                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                        React.createElement("span", null, "Opening source file...")
+                      )
+                    : serverFileEditorState.status === "error"
+                      ? React.createElement("div", { className: "playground-code-preview-state is-error" }, serverFileEditorState.error || "Failed to open source file.")
+                      : ServerPreviewEditorComponent
+                        ? React.createElement("div", { className: "playground-code-preview-editor-shell playground-database-browser-json-editor-shell playground-servers-source-preview-editor-shell" },
+                            React.createElement(ServerPreviewEditorComponent, {
+                              path: currentServerEditorEntry?.path || serverFileEditorState.path,
+                              height: "100%",
+                              language: getPlaygroundCodeEditorLanguage(currentServerEditorEntry || {
+                                path: serverFileEditorState.path,
+                                name: currentServerEditorEntry?.name || serverFileEditorState.path,
+                              }),
+                              theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                              value: serverFileEditorState.value,
+                              onChange: handleServerFileEditorChange,
+                              beforeMount: ensurePlaygroundCodeEditorTheme,
+                              options: {
+                                automaticLayout: true,
+                                minimap: { enabled: false },
+                                scrollBeyondLastLine: false,
+                                smoothScrolling: true,
+                                fontSize: 12,
+                                lineHeight: 20,
+                                tabSize: 2,
+                                insertSpaces: true,
+                                renderLineHighlight: "gutter",
+                                lineNumbersMinChars: 3,
+                                overviewRulerBorder: false,
+                                hideCursorInOverviewRuler: true,
+                                wordWrap: serverFileEditorState.wordWrap ? "on" : "off",
+                                padding: { top: 12, bottom: 12 },
+                                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                              },
+                            })
+                          )
+                        : React.createElement("div", { className: "playground-code-preview-editor-shell playground-database-browser-json-editor-shell playground-servers-source-preview-editor-shell" },
+                            React.createElement("textarea", {
+                              className: "playground-code-preview-textarea playground-servers-source-editor-textarea",
+                              value: serverFileEditorState.value,
+                              onChange: (event) => handleServerFileEditorChange(event.target.value),
+                              spellCheck: false,
+                              wrap: serverFileEditorState.wordWrap ? "soft" : "off",
+                          })
+                        )
+                )
+                ,
+                React.createElement("div", { className: serverFileEditorStatusClassName }, serverFileEditorStatusText)
+              )
+            : null;
+          const sourceFilesSection = React.createElement("div", { className: "playground-tasks-attachments" },
+            React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Source Files"),
+              draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
+                ? React.createElement("div", { className: "playground-tasks-attachments-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                      onClick: () => setServerDeploymentHelpOpen(true),
                     },
-                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, serverFileTransferState.isUploading ? "Uploading..." : "Upload Files")
+                      React.createElement(CircleHelp, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Help")
                     ),
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-environments-action-button",
+                      className: "playground-environments-action-button playground-tasks-attachments-environment-button",
                       onClick: () => void handleCreateServerFile(),
                     },
-                      React.createElement(FilePlus2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
                       React.createElement("span", null, "New File")
                     )
                   )
                 : null
             ),
-            React.createElement("div", { className: "playground-servers-source-files-copy" },
-              draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
-                ? "Upload the source bundle this server should eventually build and publish."
-                : "Save this server first to start uploading source files."
-            ),
-            serverFileTransferState.error
-              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverFileTransferState.error)
-              : serverFileTransferState.message
-                ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, serverFileTransferState.message)
-                : null,
-            !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
-              ? React.createElement("div", { className: "playground-files-state" }, "Create the server to enable source files.")
-              : isLoadingCurrentServerFiles
-                ? React.createElement("div", { className: "playground-files-state" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                  )
-                : currentServerFiles.length > 0
-                  ? React.createElement("div", { className: "playground-servers-source-files-list" },
-                      currentServerFiles.map((entry) =>
-                        React.createElement("div", {
-                          key: entry.id || entry.path,
-                          className: "playground-servers-source-file-row" + (serverFileEditorState.path === entry.path ? " is-active" : ""),
-                        },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-servers-source-file-main",
-                            onClick: () => void handleServerFileOpen(entry),
-                            disabled: entry.isFolder || !isPlaygroundTextPreviewable(entry),
-                            title: entry.isFolder
-                              ? "Folders cannot be edited inline."
-                              : isPlaygroundTextPreviewable(entry)
-                                ? "Open in editor"
-                                : "Only text files can be edited inline.",
-                          },
-                            React.createElement(PlaygroundFileIcon, { entry }),
-                            React.createElement("div", { className: "playground-servers-source-file-copy" },
-                              React.createElement("div", { className: "playground-servers-source-file-name" }, entry.name || entry.path || "Untitled"),
-                              React.createElement("div", { className: "playground-servers-source-file-meta" },
-                                entry.path || "",
-                                entry.isFolder
-                                  ? " • Folder"
-                                  : " • " + formatPlaygroundFileSize(entry.size)
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-servers-source-file-actions" },
-                            !entry.isFolder && isPlaygroundTextPreviewable(entry)
-                              ? React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-environments-action-button",
-                                  onClick: () => void handleServerFileOpen(entry),
-                                },
-                                  React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                  React.createElement("span", null, "Edit")
-                                )
-                              : null,
-                            !entry.isFolder
-                              ? React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-environments-action-button",
-                                  onClick: () => void handleServerFileDownload(entry),
-                                },
-                                  React.createElement(Download, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                  React.createElement("span", null, "Download")
-                                )
-                              : null,
+            React.createElement("input", {
+              ref: serverFileUploadInputRef,
+              type: "file",
+              multiple: true,
+              hidden: true,
+              onChange: (event) => void handleServerFileUploadSelection(event),
+            }),
+            React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+              React.createElement("div", {
+                className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isServerFileDragging ? " dragging" : "") + (currentServerFiles.length > 0 ? " is-filled" : ""),
+                onDragOver: (event) => {
+                  event.preventDefault();
+                  if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || serverFileTransferState.isUploading) {
+                    return;
+                  }
+                  setIsServerFileDragging(true);
+                },
+                onDragLeave: (event) => {
+                  if (event.currentTarget.contains(event.relatedTarget)) {
+                    return;
+                  }
+                  setIsServerFileDragging(false);
+                },
+                onDrop: (event) => {
+                  event.preventDefault();
+                  setIsServerFileDragging(false);
+                  const droppedFiles = Array.from(event.dataTransfer?.files || []);
+                  if (!droppedFiles.length) {
+                    return;
+                  }
+                  void handleServerFileUploadFiles(droppedFiles);
+                },
+              },
+                !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
+                  ? React.createElement("div", {
+                      className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                    }, "Create the function to start adding source files.")
+                  : isLoadingCurrentServerFiles
+                    ? React.createElement("div", { className: "playground-files-state" },
+                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                      )
+                    : currentServerFiles.length > 0
+                      ? React.createElement(React.Fragment, null,
+                          React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                            React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                            React.createElement("span", null, isServerFileDragging ? "Drop files here" : "Drop files to attach, or"),
                             React.createElement("button", {
                               type: "button",
-                              className: "playground-environments-action-button",
-                              onClick: () => void handleServerFileDelete(entry),
-                            },
-                              React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("span", null, "Delete")
-                            )
+                              className: "playground-tasks-attachments-browse",
+                              onClick: openServerFileUploadPicker,
+                            }, "browse.")
+                          ),
+                          React.createElement("div", { className: "runner-attachments" },
+                            currentServerFiles.map((entry) => renderServerSourceFileChip(entry))
                           )
                         )
-                      )
-                    )
-                  : React.createElement("div", { className: "playground-files-state" }, "No source files uploaded yet.")
-            ,
-            serverFileEditorState.path
-              ? React.createElement("div", { className: "playground-servers-source-editor" },
-                  React.createElement("div", { className: "playground-code-preview-toolbar" },
-                    React.createElement("div", { className: "playground-code-preview-toolbar-group" },
-                      React.createElement("span", { className: "playground-code-preview-badge" }, currentServerEditorEntry ? formatPlaygroundCodeEditorLanguageLabel(currentServerEditorEntry) : "Text"),
-                      React.createElement("span", { className: "playground-code-preview-badge" }, currentServerEditorEntry?.path || serverFileEditorState.path),
-                      React.createElement("span", { className: serverFileEditorStatusClassName }, serverFileEditorStatusText)
-                    ),
-                    React.createElement("div", { className: "playground-code-preview-toolbar-group is-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-code-preview-toolbar-button" + (serverFileEditorState.wordWrap ? " is-active" : ""),
-                        onClick: () => setServerFileEditorState((current) => ({
-                          ...current,
-                          wordWrap: !current.wordWrap,
-                        })),
-                      }, "Wrap"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-code-preview-toolbar-button",
-                        onClick: handleServerFileEditorRevert,
-                        disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
-                      },
-                        React.createElement(RotateCcw, { width: 12, height: 12, strokeWidth: 1.9 }),
-                        React.createElement("span", null, "Revert")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-code-preview-toolbar-button is-primary",
-                        onClick: () => void handleServerFileSave(),
-                        disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
-                        title: "Save changes (Ctrl+S)",
-                      },
-                        React.createElement(HardDrive, { width: 12, height: 12, strokeWidth: 1.9 }),
-                        React.createElement("span", null, serverFileEditorState.isSaving ? "Saving..." : "Save")
-                      )
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-code-preview-editor-shell playground-servers-source-editor-shell" },
-                    serverFileEditorState.status === "loading"
-                      ? React.createElement("div", { className: "playground-code-preview-state" },
-                          React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                          React.createElement("span", null, "Opening source file...")
+                      : React.createElement("button", {
+                          type: "button",
+                          className: "playground-tasks-attachments-empty-button",
+                          onClick: openServerFileUploadPicker,
+                        },
+                          React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                          React.createElement("span", { className: "tb-popup-dropzone-title" }, isServerFileDragging ? "Drop files here" : "Drag & drop files here"),
+                          React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
                         )
-                      : serverFileEditorState.status === "error"
-                        ? React.createElement("div", { className: "playground-code-preview-state is-error" }, serverFileEditorState.error || "Failed to open source file.")
-                        : React.createElement("textarea", {
-                            className: "playground-code-preview-textarea playground-servers-source-editor-textarea",
-                            value: serverFileEditorState.value,
-                            onChange: (event) => handleServerFileEditorChange(event.target.value),
-                            spellCheck: false,
-                            wrap: serverFileEditorState.wordWrap ? "soft" : "off",
-                          })
-                  )
-                )
-              : null
-          );
-
-          const publishingSection = React.createElement("div", { className: "playground-environments-editor-surface" },
-            React.createElement("div", { className: "playground-environments-field-grid" },
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Service URL"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: draftServer.serviceUrl || "",
-                  onChange: (event) => updateServerField("serviceUrl", event.target.value),
-                  placeholder: "https://example.run.app",
-                })
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Custom Domain"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: draftServer.customDomain || "",
-                  onChange: (event) => updateServerField("customDomain", event.target.value),
-                  placeholder: "app.example.com",
-                })
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Cloud Run Service"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: draftServer.cloudRunServiceName || "",
-                  onChange: (event) => updateServerField("cloudRunServiceName", event.target.value),
-                  placeholder: "srv-my-app",
-                })
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Image URL"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: draftServer.imageUrl || "",
-                  onChange: (event) => updateServerField("imageUrl", event.target.value),
-                  placeholder: "europe-west1-docker.pkg.dev/...",
-                })
               )
-            )
+            ),
+            serverFileTransferState.error
+              ? React.createElement("div", { className: "playground-environments-error" }, serverFileTransferState.error)
+              : null,
+            serverFileTransferState.isUploading
+              ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading source files...")
+              : null
           );
 
           const serverKindLabel = formatPlaygroundServerKindLabel(draftServer.kind);
@@ -38269,6 +39152,7 @@ const html = `<!doctype html>
             : draftServer.kind === "function"
               ? "Test Invoke"
               : "Test Request";
+          const deployProgressPercent = Math.max(8, Math.round(Number(serverDeploymentState.deployProgress || 0) * 100));
           const deploymentGuideCopy = draftServer.kind === "function"
             ? React.createElement("div", { className: "playground-servers-source-files-copy" },
                 "Upload ",
@@ -38309,54 +39193,120 @@ const html = `<!doctype html>
                 '  "scripts": { "start": "node server.js" }',
                 "}",
               ].join("\\n");
-          const deploymentSection = React.createElement("div", { className: "playground-environments-editor-surface playground-servers-function-deploy-section" },
-            React.createElement("div", { className: "playground-servers-source-files-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, serverKindLabel + " Runtime"),
-              React.createElement("div", { className: "playground-servers-source-files-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button is-primary",
-                  onClick: () => void handleDeployServer(),
-                  disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                },
-                  serverDeploymentState.isDeploying
-                    ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                    : React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, deployActionLabel)
-                ),
-                draftServer.serviceUrl
-                  ? React.createElement("button", {
+          function openServerAnalyticsView() {
+            setServerAnalyticsView("analytics");
+            if (draftServer.id) {
+              void loadServerAnalytics(draftServer.id, { force: true });
+              void loadServerLogs(draftServer.id, serverLogsState.kind);
+            }
+          }
+          const serverDeploymentHelpModal = serverDeploymentHelpOpen
+            ? React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop",
+                onClick: () => setServerDeploymentHelpOpen(false),
+              },
+                React.createElement("div", {
+                    className: "playground-tasks-project-modal playground-database-browser-modal playground-servers-deploy-help-modal",
+                    onClick: (event) => event.stopPropagation(),
+                  },
+                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                        React.createElement(CircleHelp, { width: 18, height: 18, strokeWidth: 1.9 })
+                      ),
+                      React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, serverKindLabel + " Help")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: () => setServerDeploymentHelpOpen(false),
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-servers-deploy-help-body" },
+                    React.createElement("div", { className: "playground-servers-deploy-help-copy" }, deploymentGuideCopy),
+                    React.createElement("div", { className: "playground-servers-function-preview-pane" },
+                      renderServerDeploymentCodePreview({
+                        path: draftServer.kind === "function" ? "index.js" : "package.json",
+                        language: draftServer.kind === "function" ? "javascript" : "json",
+                        value: deploymentSnippet,
+                        emptyText: "No deployment snippet available.",
+                      })
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                    React.createElement("button", {
                       type: "button",
                       className: "playground-environments-action-button",
-                      onClick: () => window.open(draftServer.serviceUrl, "_blank", "noopener,noreferrer"),
-                    },
-                      React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Open URL")
-                    )
-                  : null,
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button",
-                  onClick: () => void handleInvokeServer(),
-                  disabled: serverDeploymentState.isInvoking || !draftServer.serviceUrl,
-                },
-                  serverDeploymentState.isInvoking
-                    ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                    : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, requestActionLabel)
+                      onClick: () => setServerDeploymentHelpOpen(false),
+                    }, "Close")
+                  )
                 )
               )
+            : null;
+          const serverBottomBar = React.createElement("div", { className: "playground-servers-editor-bottom-bar" },
+            React.createElement("div", { className: "playground-servers-editor-bottom-bar-copy" },
+              serverDeploymentState.isDeploying
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-servers-editor-bottom-progress-header" },
+                      React.createElement("div", { className: "playground-servers-editor-bottom-progress-label" }, "Deploy started"),
+                      React.createElement("div", { className: "playground-servers-editor-bottom-progress-value" }, deployProgressPercent + "%")
+                    ),
+                    React.createElement("div", { className: "playground-servers-editor-bottom-progress-track" },
+                      React.createElement("div", {
+                        className: "playground-servers-editor-bottom-progress-fill",
+                        style: { width: Math.max(0, Math.min(100, deployProgressPercent)) + "%" },
+                      })
+                    )
+                  )
+                : React.createElement("div", {
+                    className: "playground-servers-editor-bottom-message"
+                      + (serverDeploymentState.error ? " is-error" : serverDeploymentState.message ? " is-success" : ""),
+                  },
+                    serverDeploymentState.error
+                      ? serverDeploymentState.error
+                      : serverDeploymentState.isInvoking
+                        ? "Testing live invocation..."
+                        : serverDeploymentState.message
+                          ? serverDeploymentState.message
+                          : (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID)
+                            ? "Save this " + serverKindLabel.toLowerCase() + " to deploy it."
+                            : "Deployment"
+                  )
             ),
-            deploymentGuideCopy,
-            React.createElement("pre", { className: "playground-servers-function-snippet" }, deploymentSnippet),
-            serverDeploymentState.error
-              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverDeploymentState.error)
-              : serverDeploymentState.message
-                ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, serverDeploymentState.message)
-                : null,
-            serverDeploymentState.lastResponseText
-              ? React.createElement("pre", { className: "playground-servers-function-response" }, serverDeploymentState.lastResponseText)
-              : null
+            React.createElement("div", { className: "playground-servers-editor-bottom-actions" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-server-deploy-pill-button",
+                onClick: openServerAnalyticsView,
+                disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+              },
+                React.createElement(Telescope, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Logs")
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-server-deploy-pill-button",
+                onClick: () => void handleInvokeServer(),
+                disabled: serverDeploymentState.isInvoking || !draftServer.serviceUrl,
+              },
+                serverDeploymentState.isInvoking
+                  ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                  : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, requestActionLabel)
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-server-deploy-pill-button is-primary",
+                onClick: () => void handleDeployServer(),
+                disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+              },
+                serverDeploymentState.isDeploying
+                  ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                  : React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, deployActionLabel)
+              )
+            )
           );
 
           if (serverAnalyticsView === "analytics") {
@@ -38461,137 +39411,159 @@ const html = `<!doctype html>
             );
           }
 
-          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
-            React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
-              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                  React.createElement("input", {
-                    type: "text",
-                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input",
-                    value: draftServer.name || "",
-                    placeholder: "Server",
-                    "aria-label": "Server name",
-                    title: draftServer.name || "Server",
-                    onChange: (event) => updateServerField("name", event.target.value),
-                    onBlur: () => {
-                      void commitDraftServerIfDirty();
-                    },
-                  })
+          const serverEditorScroll = React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+            serverSaveState.error
+              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
+              : null,
+            descriptionSection,
+            factsSection,
+            !isFunctionServer
+              ? renderEditorSection("server-source", "Source", "Connect this server to a computer workspace or source path.", sourceSection, null, false)
+              : null,
+            !isFunctionServer
+              ? renderEditorSection("server-database", "Database", "Link a Firestore-backed database to this server and manage its collections/documents here.", databaseBindingSection, null, false)
+              : null,
+            !isFunctionServer
+              ? renderEditorSection(
+                  "server-database-details",
+                  "Database Details",
+                  "Edit the linked database record and inspect its Firestore collection/document counts.",
+                  linkedDatabaseDetailsSection,
+                  draftDatabase
+                    ? React.createElement("div", { className: "playground-servers-source-files-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button",
+                          onClick: () => void handleDeleteDatabase(draftDatabase.id),
+                          disabled: databaseSaveState.isSaving,
+                        },
+                          React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, databaseSaveState.isSaving ? "Deleting..." : "Delete Database")
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button is-primary",
+                          onClick: () => void handleDatabaseSave(),
+                          disabled: databaseSaveState.isSaving || !String(draftDatabase.name || "").trim(),
+                        },
+                          React.createElement(HardDrive, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, databaseSaveState.isSaving ? "Saving..." : "Save Database")
+                        )
+                      )
+                    : null,
+                  false
                 )
-              ),
-              React.createElement("div", { className: "playground-content-nav-center" }),
-              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
-                  ? React.createElement("div", {
-                      className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
-                      ref: serverActionsPopoverRef,
-                    },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-content-menu-button",
-                        "aria-label": "Server actions",
-                        "aria-expanded": serverActionsPopoverOpen ? "true" : "false",
-                        onClick: () => setServerActionsPopoverOpen((current) => !current),
-                        disabled: serverSaveState.isSaving || serverDeploymentState.isDeploying,
-                      }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                      serverActionsPopoverOpen
-                        ? React.createElement("div", {
-                            className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                            onClick: (event) => event.stopPropagation(),
-                          },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "tb-popup-row",
-                              onClick: () => openServerRenameDialog(draftServer),
-                            },
-                              React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, "Rename")
-                              )
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "tb-popup-row",
-                              onClick: () => {
-                                setServerActionsPopoverOpen(false);
-                                void handleDeployServer();
-                              },
-                              disabled: serverDeploymentState.isDeploying,
-                            },
-                              React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
-                              )
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "tb-popup-row",
-                              onClick: () => {
-                                setServerActionsPopoverOpen(false);
-                                void handleDeleteServer(draftServer.id);
-                              },
-                            },
-                              React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, "Delete")
-                              )
-                            )
-                          )
-                        : null
-                    )
-                  : null,
+              : null,
+            !isFunctionServer && linkedDatabaseCollectionsSection
+              ? renderEditorSection("server-database-collections", "Collections", "Logical groupings of Firestore documents for this server.", linkedDatabaseCollectionsSection, null, false)
+              : null,
+            !isFunctionServer && linkedDatabaseDocumentsSection
+              ? renderEditorSection("server-database-documents", "Documents", "Browse and manage documents inside the selected collection.", linkedDatabaseDocumentsSection, null, false)
+              : null,
+            !isFunctionServer && linkedDatabaseEditorSection
+              ? renderEditorSection("server-database-json", "Document JSON", "Edit the selected document as raw JSON.", linkedDatabaseEditorSection, null, false)
+              : null,
+            sourceFilesSection
+          );
+
+          const serverMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
+            React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+              React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input",
+                  value: draftServer.name || "",
+                  placeholder: "Server",
+                  "aria-label": "Server name",
+                  title: draftServer.name || "Server",
+                  onChange: (event) => updateServerField("name", event.target.value),
+                  onBlur: () => {
+                    void commitDraftServerIfDirty();
+                  },
+                })
               )
             ),
-            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-              serverSaveState.error
-                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
+            React.createElement("div", { className: "playground-content-nav-center" }),
+            React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+              draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
+                ? React.createElement("div", {
+                    className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                    ref: serverActionsPopoverRef,
+                  },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-content-menu-button",
+                      "aria-label": "Server actions",
+                      "aria-expanded": serverActionsPopoverOpen ? "true" : "false",
+                      onClick: () => setServerActionsPopoverOpen((current) => !current),
+                      disabled: serverSaveState.isSaving || serverDeploymentState.isDeploying,
+                    }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                    serverActionsPopoverOpen
+                      ? React.createElement("div", {
+                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                          onClick: (event) => event.stopPropagation(),
+                        },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => openServerRenameDialog(draftServer),
+                          },
+                            React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "Rename")
+                            )
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setServerActionsPopoverOpen(false);
+                              void handleDeployServer();
+                            },
+                            disabled: serverDeploymentState.isDeploying,
+                          },
+                            React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
+                            )
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setServerActionsPopoverOpen(false);
+                              void handleDeleteServer(draftServer.id);
+                            },
+                          },
+                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "Delete")
+                            )
+                          )
+                        )
+                      : null
+                  )
                 : null,
-              descriptionSection,
-              factsSection,
-              renderEditorSection("server-source", "Source", "Connect this server to a computer workspace or source path.", sourceSection, null, false),
-              renderEditorSection("server-database", "Database", "Link a Firestore-backed database to this server and manage its collections/documents here.", databaseBindingSection, null, false),
-              renderEditorSection(
-                "server-database-details",
-                "Database Details",
-                "Edit the linked database record and inspect its Firestore collection/document counts.",
-                linkedDatabaseDetailsSection,
-                draftDatabase
-                  ? React.createElement("div", { className: "playground-servers-source-files-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: () => void handleDeleteDatabase(draftDatabase.id),
-                        disabled: databaseSaveState.isSaving,
-                      },
-                        React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, databaseSaveState.isSaving ? "Deleting..." : "Delete Database")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button is-primary",
-                        onClick: () => void handleDatabaseSave(),
-                        disabled: databaseSaveState.isSaving || !String(draftDatabase.name || "").trim(),
-                      },
-                        React.createElement(HardDrive, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, databaseSaveState.isSaving ? "Saving..." : "Save Database")
-                      )
-                    )
-                  : null,
-                false
-              ),
-              linkedDatabaseCollectionsSection
-                ? renderEditorSection("server-database-collections", "Collections", "Logical groupings of Firestore documents for this server.", linkedDatabaseCollectionsSection, null, false)
-                : null,
-              linkedDatabaseDocumentsSection
-                ? renderEditorSection("server-database-documents", "Documents", "Browse and manage documents inside the selected collection.", linkedDatabaseDocumentsSection, null, false)
-                : null,
-              linkedDatabaseEditorSection
-                ? renderEditorSection("server-database-json", "Document JSON", "Edit the selected document as raw JSON.", linkedDatabaseEditorSection, null, false)
-                : null,
-              renderEditorSection("server-source-files", "Source Files", "Manage the source bundle that this server will eventually build and publish.", sourceFilesSection, null, false),
-              renderEditorSection("server-publish", "Publishing", "These fields will be populated by deployment flows in the next phase.", publishingSection, null, false),
-              renderEditorSection("server-deployments", "Deployments", "", deploymentSection, null, false)
             )
+          );
+
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
+              sourceFilesSidebarTopbar
+                ? React.createElement("div", { className: "playground-servers-editor-topbar has-preview" },
+                    serverMainTopbar,
+                    sourceFilesSidebarTopbar
+                  )
+                : serverMainTopbar,
+              React.createElement("div", { className: "playground-servers-editor-layout" + (sourceFilesSidebar ? " has-preview" : "") },
+                serverEditorScroll,
+                sourceFilesSidebar
+                  ? React.createElement("div", { className: "playground-servers-editor-sidebar" }, sourceFilesSidebar)
+                  : null
+              ),
+              serverBottomBar
+            ),
+            serverDeploymentHelpModal
           );
         }
 
@@ -38942,6 +39914,7 @@ const html = `<!doctype html>
                     )
                   ),
                   React.createElement("div", { className: "playground-database-summary-divider" }),
+                  renderDatabaseSummaryFact("ID", draftDatabase.id || "Unsaved database"),
                   renderDatabaseSummaryFact("Location", draftDatabase.location || "eur3"),
                   renderDatabaseSummaryFact("Updated", formatPlaygroundFileDate(draftDatabase.updatedAt))
                 )
@@ -71790,6 +72763,9 @@ const html = `<!doctype html>
                               initialEnvironmentId: resolvedEnvironmentId || "",
                               onEnvironmentMutated: async () => {
                                 await refreshEnvironments();
+                              },
+                              onRequestSidebarCollapse: () => {
+                                setSidebarOpen(false);
                               },
                             })
                           : renderAuthGate()
