@@ -38002,14 +38002,32 @@ const html = `<!doctype html>
             }
             return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
           };
+          const buildZeroTelemetryHourLabels = (count = 8) => {
+            const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric" });
+            const anchor = new Date();
+            anchor.setMinutes(0, 0, 0);
+            return Array.from({ length: count }, (_, index) => {
+              const date = new Date(anchor);
+              date.setHours(anchor.getHours() - (count - 1 - index));
+              return formatter.format(date);
+            });
+          };
           const activeServerAnalytics = draftServer.id ? serverAnalyticsById[draftServer.id] || null : null;
           const activeServerAnalyticsSummary = activeServerAnalytics?.summary || null;
+          const resolvedServerAnalyticsSummary = activeServerAnalyticsSummary || {
+            totalRequests24h: 0,
+            successRate24h: 0,
+            p95LatencyMs: 0,
+            clientErrors24h: 0,
+            serverErrors24h: 0,
+          };
           const activeServerTrafficBuckets = Array.isArray(activeServerAnalytics?.charts?.traffic24h)
             ? activeServerAnalytics.charts.traffic24h
             : [];
           const activeServerStatusBuckets = Array.isArray(activeServerAnalytics?.charts?.status24h)
             ? activeServerAnalytics.charts.status24h
             : [];
+          const zeroTelemetryLabels = buildZeroTelemetryHourLabels(8);
           const activeServerRecentRequests = Array.isArray(activeServerAnalytics?.recentRequests)
             ? activeServerAnalytics.recentRequests
             : [];
@@ -38019,10 +38037,19 @@ const html = `<!doctype html>
           const activeServerLogList = Array.isArray(activeServerLogs[serverLogsState.kind]) ? activeServerLogs[serverLogsState.kind] : [];
           const activeServerLogLoadingKey = draftServer.id ? draftServer.id + ":" + serverLogsState.kind : "";
           const isServerLogsLoading = serverLogsState.loadingKey === activeServerLogLoadingKey;
-          const activeServerTrafficLabels = activeServerTrafficBuckets.map((bucket) => bucket?.label || "");
-          const activeServerTrafficCounts = activeServerTrafficBuckets.map((bucket) => Number(bucket?.total || 0));
-          const activeServerTrafficErrors = activeServerTrafficBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0));
-          const activeServerStatusSuccess = activeServerStatusBuckets.map((bucket) => {
+          const activeServerTrafficLabels = activeServerTrafficBuckets.length > 0
+            ? activeServerTrafficBuckets.map((bucket) => bucket?.label || "")
+            : zeroTelemetryLabels;
+          const activeServerTrafficCounts = activeServerTrafficBuckets.length > 0
+            ? activeServerTrafficBuckets.map((bucket) => Number(bucket?.total || 0))
+            : zeroTelemetryLabels.map(() => 0);
+          const activeServerTrafficErrors = activeServerTrafficBuckets.length > 0
+            ? activeServerTrafficBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0))
+            : zeroTelemetryLabels.map(() => 0);
+          const activeServerStatusLabels = activeServerStatusBuckets.length > 0
+            ? activeServerStatusBuckets.map((bucket) => bucket?.label || "")
+            : zeroTelemetryLabels;
+          const activeServerStatusSuccess = activeServerStatusBuckets.length > 0 ? activeServerStatusBuckets.map((bucket) => {
             const explicitRate = Number(bucket?.successRate);
             if (Number.isFinite(explicitRate)) {
               return explicitRate;
@@ -38030,9 +38057,13 @@ const html = `<!doctype html>
             const total = Number(bucket?.total || 0);
             const success = Number(bucket?.success || 0);
             return total > 0 ? Math.round((success / total) * 1000) / 10 : 0;
-          });
-          const activeServerStatusLatency = activeServerStatusBuckets.map((bucket) => Number(bucket?.p95LatencyMs || 0));
-          const activeServerStatusErrors = activeServerStatusBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0));
+          }) : zeroTelemetryLabels.map(() => 0);
+          const activeServerStatusLatency = activeServerStatusBuckets.length > 0
+            ? activeServerStatusBuckets.map((bucket) => Number(bucket?.p95LatencyMs || 0))
+            : zeroTelemetryLabels.map(() => 0);
+          const activeServerStatusErrors = activeServerStatusBuckets.length > 0
+            ? activeServerStatusBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0))
+            : zeroTelemetryLabels.map(() => 0);
           const serverAnalyticsLogKinds = [
             { id: "request", label: "Requests", Icon: Globe },
             { id: "runtime", label: "Console", Icon: Terminal },
@@ -38164,69 +38195,56 @@ const html = `<!doctype html>
               )
             );
           };
-          const serverAnalyticsOverview = !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
-            ? React.createElement("div", { className: "playground-files-state" }, "Save this server first to unlock analytics.")
-            : !draftServer.cloudRunServiceName && !draftServer.serviceUrl && !activeServerAnalyticsSummary
-              ? React.createElement("div", { className: "playground-files-state" }, "Deploy this server to unlock request graphs, latency KPIs, and runtime logs.")
-              : isServerAnalyticsLoading && !activeServerAnalyticsSummary
-                ? React.createElement("div", { className: "playground-files-state" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                  )
-                : React.createElement("div", { className: "playground-database-overview" },
-                    React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
-                      [
-                        renderServerAnalyticsKpi("Requests (24h)", String(activeServerAnalyticsSummary?.totalRequests24h || 0), "requests"),
-                        renderServerAnalyticsKpi("Success rate", formatPlaygroundServerRate(activeServerAnalyticsSummary?.successRate24h), "success"),
-                        renderServerAnalyticsKpi("P95 latency", formatPlaygroundServerLatency(activeServerAnalyticsSummary?.p95LatencyMs), "latency"),
-                        renderServerAnalyticsKpi("4xx / 5xx", String(Number(activeServerAnalyticsSummary?.clientErrors24h || 0) + Number(activeServerAnalyticsSummary?.serverErrors24h || 0)), "errors"),
-                      ]
-                    ),
-                    React.createElement("div", { className: "playground-database-overview-chart-grid" },
-                      React.createElement("div", { className: "playground-database-overview-chart-block" },
-                        activeServerTrafficLabels.length > 0
-                          ? renderServerTelemetryChart({
-                              labels: activeServerTrafficLabels,
-                              series: [
-                                {
-                                  key: "requests",
-                                  tone: "requests",
-                                  values: activeServerTrafficCounts,
-                                },
-                                {
-                                  key: "errors",
-                                  tone: "errors",
-                                  values: activeServerTrafficErrors,
-                                },
-                              ],
-                              emptyText: "No request data yet",
-                              ariaLabel: "Requests and failed requests over time",
-                            })
-                          : React.createElement("div", { className: "playground-settings-usage-chart-empty" }, "No request data yet")
-                      ),
-                      React.createElement("div", { className: "playground-database-overview-chart-block" },
-                        activeServerStatusBuckets.length > 0
-                          ? renderServerTelemetryChart({
-                              labels: activeServerStatusBuckets.map((bucket) => bucket?.label || ""),
-                              series: [
-                                {
-                                  key: "success",
-                                  tone: "success",
-                                  values: activeServerStatusSuccess,
-                                },
-                                {
-                                  key: "latency",
-                                  tone: "latency",
-                                  values: activeServerStatusLatency,
-                                },
-                              ],
-                              emptyText: "No status data yet",
-                              ariaLabel: "Success rate and latency over time",
-                            })
-                          : React.createElement("div", { className: "playground-settings-usage-chart-empty" }, "No status data yet")
-                      )
-                    ),
-                    null
-                  );
+          const serverAnalyticsOverview = React.createElement("div", { className: "playground-database-overview" },
+            React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+              [
+                renderServerAnalyticsKpi("Requests (24h)", String(resolvedServerAnalyticsSummary.totalRequests24h || 0), "requests"),
+                renderServerAnalyticsKpi("Success rate", formatPlaygroundServerRate(resolvedServerAnalyticsSummary.successRate24h), "success"),
+                renderServerAnalyticsKpi("P95 latency", formatPlaygroundServerLatency(resolvedServerAnalyticsSummary.p95LatencyMs), "latency"),
+                renderServerAnalyticsKpi("4xx / 5xx", String(Number(resolvedServerAnalyticsSummary.clientErrors24h || 0) + Number(resolvedServerAnalyticsSummary.serverErrors24h || 0)), "errors"),
+              ]
+            ),
+            React.createElement("div", { className: "playground-database-overview-chart-grid" },
+              React.createElement("div", { className: "playground-database-overview-chart-block" },
+                renderServerTelemetryChart({
+                  labels: activeServerTrafficLabels,
+                  series: [
+                    {
+                      key: "requests",
+                      tone: "requests",
+                      values: activeServerTrafficCounts,
+                    },
+                    {
+                      key: "errors",
+                      tone: "errors",
+                      values: activeServerTrafficErrors,
+                    },
+                  ],
+                  emptyText: "No request data yet",
+                  ariaLabel: "Requests and failed requests over time",
+                })
+              ),
+              React.createElement("div", { className: "playground-database-overview-chart-block" },
+                renderServerTelemetryChart({
+                  labels: activeServerStatusLabels,
+                  series: [
+                    {
+                      key: "success",
+                      tone: "success",
+                      values: activeServerStatusSuccess,
+                    },
+                    {
+                      key: "latency",
+                      tone: "latency",
+                      values: activeServerStatusLatency,
+                    },
+                  ],
+                  emptyText: "No status data yet",
+                  ariaLabel: "Success rate and latency over time",
+                })
+              )
+            )
+          );
           const renderServerLogRow = (entry, kind) => {
             const normalizedKind = String(kind || "request");
             if (normalizedKind === "request") {
@@ -38365,66 +38383,57 @@ const html = `<!doctype html>
                       : React.createElement("div", { className: "playground-tasks-detail-fact-button is-empty" }, "Not deployed")
                   ),
                   renderServerFactRow("Auth",
-                    isFunctionServer
-                      ? renderServerDetailSelectControl({
-                          popoverId: "server-auth",
-                          valueLabel: draftServer.authMode === "private" ? "Private" : "Public",
-                          children: [
-                            renderServerDetailSelectOptionRow({
-                              key: "public",
-                              label: "Public",
-                              selected: (draftServer.authMode || "public") !== "private",
-                              onClick: () => {
-                                updateServerField("authMode", "public");
-                                setServerDetailSelectPopover("");
-                              },
-                            }),
-                            renderServerDetailSelectOptionRow({
-                              key: "private",
-                              label: "Private",
-                              selected: draftServer.authMode === "private",
-                              onClick: () => {
-                                updateServerField("authMode", "private");
-                                setServerDetailSelectPopover("");
-                              },
-                            }),
-                          ],
-                        })
-                      : React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.authMode || "public")
+                    renderServerDetailSelectControl({
+                      popoverId: "server-auth",
+                      valueLabel: draftServer.authMode === "private" ? "Private" : "Public",
+                      children: [
+                        renderServerDetailSelectOptionRow({
+                          key: "public",
+                          label: "Public",
+                          selected: (draftServer.authMode || "public") !== "private",
+                          onClick: () => {
+                            updateServerField("authMode", "public");
+                            setServerDetailSelectPopover("");
+                          },
+                        }),
+                        renderServerDetailSelectOptionRow({
+                          key: "private",
+                          label: "Private",
+                          selected: draftServer.authMode === "private",
+                          onClick: () => {
+                            updateServerField("authMode", "private");
+                            setServerDetailSelectPopover("");
+                          },
+                        }),
+                      ],
+                    })
                   ),
                   renderServerFactRow("Runtime",
-                    isFunctionServer
-                      ? renderServerDetailSelectControl({
-                          popoverId: "server-runtime",
-                          valueLabel: draftServer.runtime || "nodejs22",
-                          children: [
-                            renderServerDetailSelectOptionRow({
-                              key: "nodejs22",
-                              label: "nodejs22",
-                              selected: (draftServer.runtime || "nodejs22") === "nodejs22",
-                              onClick: () => {
-                                updateServerField("runtime", "nodejs22");
-                                setServerDetailSelectPopover("");
-                              },
-                            }),
-                            renderServerDetailSelectOptionRow({
-                              key: "nodejs20",
-                              label: "nodejs20",
-                              selected: draftServer.runtime === "nodejs20",
-                              onClick: () => {
-                                updateServerField("runtime", "nodejs20");
-                                setServerDetailSelectPopover("");
-                              },
-                            }),
-                          ],
-                        })
-                      : React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.runtime || "nodejs22")
+                    renderServerDetailSelectControl({
+                      popoverId: "server-runtime",
+                      valueLabel: draftServer.runtime || "nodejs22",
+                      children: [
+                        renderServerDetailSelectOptionRow({
+                          key: "nodejs22",
+                          label: "nodejs22",
+                          selected: (draftServer.runtime || "nodejs22") === "nodejs22",
+                          onClick: () => {
+                            updateServerField("runtime", "nodejs22");
+                            setServerDetailSelectPopover("");
+                          },
+                        }),
+                        renderServerDetailSelectOptionRow({
+                          key: "nodejs20",
+                          label: "nodejs20",
+                          selected: draftServer.runtime === "nodejs20",
+                          onClick: () => {
+                            updateServerField("runtime", "nodejs20");
+                            setServerDetailSelectPopover("");
+                          },
+                        }),
+                      ],
+                    })
                   ),
-                  !isFunctionServer
-                    ? renderServerFactRow("Region",
-                        React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.region || "europe-west1")
-                      )
-                    : null,
                   renderServerFactRow("Updated",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftServer.updatedAt))
                   )
@@ -39417,52 +39426,6 @@ const html = `<!doctype html>
               : null,
             descriptionSection,
             factsSection,
-            !isFunctionServer
-              ? renderEditorSection("server-source", "Source", "Connect this server to a computer workspace or source path.", sourceSection, null, false)
-              : null,
-            !isFunctionServer
-              ? renderEditorSection("server-database", "Database", "Link a Firestore-backed database to this server and manage its collections/documents here.", databaseBindingSection, null, false)
-              : null,
-            !isFunctionServer
-              ? renderEditorSection(
-                  "server-database-details",
-                  "Database Details",
-                  "Edit the linked database record and inspect its Firestore collection/document counts.",
-                  linkedDatabaseDetailsSection,
-                  draftDatabase
-                    ? React.createElement("div", { className: "playground-servers-source-files-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: () => void handleDeleteDatabase(draftDatabase.id),
-                          disabled: databaseSaveState.isSaving,
-                        },
-                          React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, databaseSaveState.isSaving ? "Deleting..." : "Delete Database")
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button is-primary",
-                          onClick: () => void handleDatabaseSave(),
-                          disabled: databaseSaveState.isSaving || !String(draftDatabase.name || "").trim(),
-                        },
-                          React.createElement(HardDrive, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, databaseSaveState.isSaving ? "Saving..." : "Save Database")
-                        )
-                      )
-                    : null,
-                  false
-                )
-              : null,
-            !isFunctionServer && linkedDatabaseCollectionsSection
-              ? renderEditorSection("server-database-collections", "Collections", "Logical groupings of Firestore documents for this server.", linkedDatabaseCollectionsSection, null, false)
-              : null,
-            !isFunctionServer && linkedDatabaseDocumentsSection
-              ? renderEditorSection("server-database-documents", "Documents", "Browse and manage documents inside the selected collection.", linkedDatabaseDocumentsSection, null, false)
-              : null,
-            !isFunctionServer && linkedDatabaseEditorSection
-              ? renderEditorSection("server-database-json", "Document JSON", "Edit the selected document as raw JSON.", linkedDatabaseEditorSection, null, false)
-              : null,
             sourceFilesSection
           );
 
@@ -39597,12 +39560,43 @@ const html = `<!doctype html>
             }
             return new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(date);
           };
+          const buildZeroDatabaseTelemetryBuckets = (count = 8) => {
+            const anchor = new Date();
+            anchor.setMinutes(0, 0, 0);
+            return Array.from({ length: count }, (_, index) => {
+              const date = new Date(anchor);
+              date.setHours(anchor.getHours() - (count - 1 - index));
+              return {
+                timestamp: date.toISOString(),
+                collections: 0,
+                documents: 0,
+                reads: 0,
+                writes: 0,
+                deletes: 0,
+              };
+            });
+          };
           const buildDatabaseAnalyticsSvgLinePath = (points) => {
             if (!Array.isArray(points) || points.length === 0) {
               return "";
             }
             return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
           };
+          const resolvedDatabaseVolumeBuckets = activeDatabaseVolumeBuckets.length > 0
+            ? activeDatabaseVolumeBuckets
+            : buildZeroDatabaseTelemetryBuckets(8).map((bucket) => ({
+                timestamp: bucket.timestamp,
+                collections: 0,
+                documents: 0,
+              }));
+          const resolvedDatabaseOperationBuckets = activeDatabaseOperationBuckets.length > 0
+            ? activeDatabaseOperationBuckets
+            : buildZeroDatabaseTelemetryBuckets(8).map((bucket) => ({
+                timestamp: bucket.timestamp,
+                reads: 0,
+                writes: 0,
+                deletes: 0,
+              }));
           const renderDatabaseAnalyticsKpi = (label, value, tone) => React.createElement("div", {
               className: "playground-servers-analytics-kpi",
               key: label,
@@ -39856,60 +39850,52 @@ const html = `<!doctype html>
                   ),
                   React.createElement("div", { className: "playground-database-overview-chart-grid" },
                     React.createElement("div", { className: "playground-database-overview-chart-block" },
-                      isDatabaseAnalyticsLoading && !activeDatabaseAnalytics
-                        ? React.createElement("div", { className: "playground-files-state" },
-                            React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                          )
-                        : renderDatabaseTelemetryChart({
-                            buckets: activeDatabaseVolumeBuckets,
-                            series: [
-                              {
-                                key: "collections",
-                                label: "Collections",
-                                total: activeDatabaseAnalyticsSummary?.totalCollections ?? currentDatabaseCollections.length,
-                                tone: "collections",
-                              },
-                              {
-                                key: "documents",
-                                label: "Documents",
-                                total: activeDatabaseAnalyticsSummary?.totalDocuments ?? collectionStats,
-                                tone: "documents",
-                              },
-                            ],
-                            emptyText: "No database volume data yet",
-                            ariaLabel: "Collections and documents over time",
-                          })
+                      renderDatabaseTelemetryChart({
+                        buckets: resolvedDatabaseVolumeBuckets,
+                        series: [
+                          {
+                            key: "collections",
+                            label: "Collections",
+                            total: activeDatabaseAnalyticsSummary?.totalCollections ?? currentDatabaseCollections.length,
+                            tone: "collections",
+                          },
+                          {
+                            key: "documents",
+                            label: "Documents",
+                            total: activeDatabaseAnalyticsSummary?.totalDocuments ?? collectionStats,
+                            tone: "documents",
+                          },
+                        ],
+                        emptyText: "No database volume data yet",
+                        ariaLabel: "Collections and documents over time",
+                      })
                       ),
                       React.createElement("div", { className: "playground-database-overview-chart-block" },
-                        isDatabaseAnalyticsLoading && !activeDatabaseAnalytics
-                          ? React.createElement("div", { className: "playground-files-state" },
-                              React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                            )
-                          : renderDatabaseTelemetryChart({
-                              buckets: activeDatabaseOperationBuckets,
-                              series: [
-                                {
-                                  key: "reads",
-                                  label: "Reads",
-                                  total: activeDatabaseAnalyticsSummary?.reads24h || 0,
-                                  tone: "reads",
-                                },
-                                {
-                                  key: "writes",
-                                  label: "Writes",
-                                  total: activeDatabaseAnalyticsSummary?.writes24h || 0,
-                                  tone: "writes",
-                                },
-                                {
-                                  key: "deletes",
-                                  label: "Deletes",
-                                  total: activeDatabaseAnalyticsSummary?.deletes24h || 0,
-                                  tone: "deletes",
-                                },
-                              ],
-                              emptyText: "No operation data yet",
-                              ariaLabel: "Database operations over time",
-                            })
+                        renderDatabaseTelemetryChart({
+                          buckets: resolvedDatabaseOperationBuckets,
+                          series: [
+                            {
+                              key: "reads",
+                              label: "Reads",
+                              total: activeDatabaseAnalyticsSummary?.reads24h || 0,
+                              tone: "reads",
+                            },
+                            {
+                              key: "writes",
+                              label: "Writes",
+                              total: activeDatabaseAnalyticsSummary?.writes24h || 0,
+                              tone: "writes",
+                            },
+                            {
+                              key: "deletes",
+                              label: "Deletes",
+                              total: activeDatabaseAnalyticsSummary?.deletes24h || 0,
+                              tone: "deletes",
+                            },
+                          ],
+                          emptyText: "No operation data yet",
+                          ariaLabel: "Database operations over time",
+                        })
                       )
                     )
                   ),
@@ -41452,7 +41438,7 @@ const html = `<!doctype html>
                     })
                   : null,
                 React.createElement("div", { className: "playground-files-topbar" },
-                  React.createElement("div", { className: "playground-environments-list-title" }, isServersMode ? "Servers" : "Computers"),
+                  React.createElement("div", { className: "playground-environments-list-title" }, "Environments"),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
                     React.createElement("div", { className: "playground-files-toolbar-anchor" },
                       React.createElement("button", {
