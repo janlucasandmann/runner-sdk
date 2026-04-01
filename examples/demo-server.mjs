@@ -10277,6 +10277,10 @@ const html = `<!doctype html>
         padding-top: 2px;
       }
 
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-section.is-database-browser .playground-environments-section-header.is-static {
+        padding-bottom: 11px;
+      }
+
       .playground-environments-page:not(.playground-agents-page) .playground-environments-section-body {
         padding: 0;
         border-top: 0;
@@ -10300,6 +10304,10 @@ const html = `<!doctype html>
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-editor-surface.playground-database-browser-surface {
+        padding-top: 0;
       }
 
       .playground-environments-field-grid {
@@ -10370,6 +10378,740 @@ const html = `<!doctype html>
       .playground-environments-editor-surface .playground-environments-field-grid,
       .playground-environments-editor-surface .playground-environments-stack {
         padding-top: 0;
+      }
+
+      .playground-servers-source-files-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-servers-source-files-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-servers-source-files-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-servers-source-files-copy {
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-servers-source-files-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-servers-source-file-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-servers-source-file-row.is-active {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .playground-servers-source-file-main,
+      .playground-servers-source-file-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .playground-servers-source-file-main {
+        flex: 1 1 auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-servers-source-file-main:disabled {
+        cursor: default;
+        opacity: 0.72;
+      }
+
+      .playground-servers-source-file-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-servers-source-file-name {
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.92);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-servers-source-file-meta {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-servers-function-snippet,
+      .playground-servers-function-response {
+        margin: 0;
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.32);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        line-height: 1.6;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .playground-servers-source-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .playground-servers-source-editor-shell {
+        min-height: 320px;
+      }
+
+      .playground-servers-source-editor-textarea {
+        height: 100%;
+        min-height: 320px;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-database-browser-surface {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        border-radius: 18px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .playground-database-browser-selector-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 56px;
+        padding: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-database-browser-selector-label {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-database-browser-selector-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 3px;
+        border-radius: 6px;
+        position: relative;
+        top: -2px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-database-browser-selector-main {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .playground-database-browser-select-shell {
+        position: relative;
+        min-width: min(240px, 46vw);
+        max-width: 100%;
+      }
+
+      .playground-database-browser-select {
+        width: 100%;
+        min-width: 0;
+        height: 40px;
+        padding: 0 36px 0 14px;
+        border: 0;
+        outline: none;
+        appearance: none;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+        text-align: right;
+        cursor: pointer;
+      }
+
+      .playground-database-browser-select:disabled {
+        cursor: default;
+        opacity: 0.5;
+      }
+
+      .playground-database-browser-select-chevron {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.74);
+        pointer-events: none;
+      }
+
+      .playground-database-browser-selector-action {
+        width: auto;
+        height: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.78);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-database-browser-selector-action:hover:not(:disabled) {
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-database-browser-selector-action:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .playground-database-browser-fields-card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 360px;
+        padding: 16px 0 18px;
+      }
+
+      .playground-database-summary-divider {
+        width: 100%;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-database-browser-fields-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-database-browser-fields-title {
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-database-browser-fields-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-database-browser-mode-switch {
+        width: auto;
+        min-width: 120px;
+        gap: 6px;
+        padding: 2px;
+      }
+
+      .playground-database-browser-mode-switch .content-mode-button {
+        padding: 4px 10px;
+        font-size: 10px;
+        font-weight: 400;
+      }
+
+      .playground-database-browser-add-field {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-right: 5px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #8db2ff;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+        cursor: pointer;
+      }
+
+      .playground-database-browser-fields-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-database-browser-field-tree,
+      .playground-database-browser-field-children {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-database-browser-field-children {
+        position: relative;
+      }
+
+      .playground-database-browser-field-node {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-database-browser-field-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 30px;
+      }
+
+      .playground-database-browser-field-main {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-database-browser-field-toggle,
+      .playground-database-browser-field-toggle-placeholder {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+      }
+
+      .playground-database-browser-field-toggle {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.38);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-database-browser-field-toggle.is-expanded {
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .playground-database-browser-field-toggle.is-expanded svg {
+        transform: rotate(0deg);
+      }
+
+      .playground-database-browser-field-toggle svg {
+        transform: rotate(-90deg);
+        transition: transform 160ms ease;
+      }
+
+      .playground-database-browser-field-key,
+      .playground-database-browser-field-separator,
+      .playground-database-browser-field-preview,
+      .playground-database-browser-value-static {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .playground-database-browser-field-key {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-database-browser-field-separator {
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-database-browser-field-group {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-database-browser-field-type-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 20px;
+        padding: 0 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.64);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .playground-database-browser-field-preview {
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-database-browser-field-value-shell {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-database-browser-value-input,
+      .playground-database-browser-value-select {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        color: rgba(255, 255, 255, 1);
+        font-size: 12px;
+        outline: none;
+      }
+
+      .playground-database-browser-value-input {
+        width: min(420px, 100%);
+        height: auto;
+        padding: 0;
+      }
+
+      .playground-database-browser-value-select {
+        height: auto;
+        padding: 0 18px 0 0;
+        appearance: none;
+      }
+
+      .playground-database-browser-value-static {
+        color: rgba(255, 255, 255, 1);
+      }
+
+      .playground-database-browser-field-actions {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 160ms ease;
+      }
+
+      .playground-database-browser-field-row:hover .playground-database-browser-field-actions,
+      .playground-database-browser-field-row:focus-within .playground-database-browser-field-actions {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .playground-database-browser-field-action {
+        width: auto;
+        height: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-database-browser-field-action:hover {
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-database-browser-field-action.is-danger:hover {
+        color: rgba(255, 173, 173, 0.98);
+      }
+
+      .playground-database-browser-empty-fields {
+        padding: 18px 0 4px;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .playground-database-browser-empty-fields.is-root {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+      }
+
+      .playground-database-browser-json-editor-shell {
+        min-height: 320px;
+        height: 320px;
+        display: flex;
+        border-radius: 0;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .playground-database-browser-json-editor-shell.playground-code-preview-editor-shell,
+      .playground-database-browser-json-editor-shell.playground-code-preview-editor-shell .monaco-editor,
+      .playground-database-browser-json-editor-shell.playground-code-preview-editor-shell .monaco-editor-background,
+      .playground-database-browser-json-editor-shell.playground-code-preview-editor-shell .monaco-scrollable-element,
+      .playground-database-browser-json-editor-shell.playground-code-preview-editor-shell .margin,
+      .playground-database-browser-json-editor-shell.playground-code-preview-editor-shell .overflow-guard {
+        background: transparent !important;
+      }
+
+      .playground-database-browser-modal {
+        width: min(520px, 100%);
+      }
+
+      .playground-database-browser-modal-title-row {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .playground-database-browser-modal-title {
+        color: rgba(255, 255, 255, 0.98);
+        font-size: 17px;
+        font-weight: 400;
+        line-height: 1.2;
+      }
+
+      .playground-database-browser-modal-copy {
+        margin: 0 0 16px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .playground-database-browser-modal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 16px;
+        align-items: start;
+      }
+
+      .playground-database-browser-modal-grid.is-single-column {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .playground-database-browser-modal-field--full {
+        grid-column: 1 / -1;
+      }
+
+      .playground-database-browser-modal-select-shell {
+        position: relative;
+      }
+
+      .playground-database-browser-modal-value-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-database-browser-modal-value-input {
+        width: 100%;
+      }
+
+      .playground-database-browser-modal-hint {
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-database-browser-modal-error {
+        color: #ff9797;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-database-browser-modal .playground-tasks-project-modal-label,
+      .playground-database-browser-modal .playground-environments-input,
+      .playground-database-browser-modal .playground-environments-select,
+      .playground-database-browser-modal .playground-environments-textarea {
+        font-size: 12px;
+      }
+
+      .playground-servers-analytics-summary,
+      .playground-servers-analytics-page {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .playground-servers-analytics-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-servers-analytics-chart-block {
+        min-width: 0;
+      }
+
+      .playground-servers-analytics-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .playground-servers-analytics-kpi {
+        min-width: 0;
+        padding: 2px 0 0;
+      }
+
+      .playground-servers-analytics-kpi-value {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 24px;
+        font-weight: 500;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+
+      .playground-servers-analytics-kpi-label {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .playground-servers-analytics-logs-surface {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-servers-analytics-log-tabs {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .playground-servers-analytics-log-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-servers-analytics-log-row {
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .playground-servers-analytics-log-row.is-request {
+        padding-bottom: 10px;
+      }
+
+      .playground-servers-analytics-log-row-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .playground-servers-analytics-log-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .playground-servers-analytics-log-method,
+      .playground-servers-analytics-log-latency,
+      .playground-servers-analytics-log-time {
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .playground-servers-analytics-log-path {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        line-height: 1.45;
+        word-break: break-all;
+      }
+
+      .playground-servers-analytics-log-message {
+        margin: 10px 0 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        line-height: 1.55;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       }
 
       .playground-environments-subsection {
@@ -12115,6 +12857,154 @@ const html = `<!doctype html>
 
       .playground-mission-control-status-segment.is-done {
         background: linear-gradient(90deg, rgba(221, 161, 252, 0.9) 0%, rgba(243, 182, 246, 0.92) 100%);
+      }
+
+      .playground-database-summary-card {
+        padding: 10px 12px 12px;
+      }
+
+      .playground-database-summary-header {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-database-summary-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .playground-database-summary-copy {
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-database-overview {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 4px 0 10px;
+      }
+
+      .playground-database-overview-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .playground-database-overview-metric {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .playground-database-overview-value {
+        font-size: 17px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-database-overview-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        line-height: 1.2;
+        font-weight: 400;
+        color: #fff;
+        white-space: nowrap;
+      }
+
+      .playground-database-overview-label svg {
+        width: 12px;
+        height: 12px;
+        flex: 0 0 auto;
+      }
+
+      .playground-database-overview-label.is-collections svg {
+        color: rgba(120, 111, 255, 0.92);
+      }
+
+      .playground-database-overview-label.is-documents svg {
+        color: rgba(170, 138, 255, 0.94);
+      }
+
+      .playground-database-overview-label.is-density svg {
+        color: rgba(237, 170, 255, 0.94);
+      }
+
+      .playground-database-overview-chart-block {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-database-overview-chart-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-database-overview-chart {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-database-overview-chart-row {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-database-overview-chart-label {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .playground-database-overview-chart-track {
+        position: relative;
+        width: 100%;
+        height: 4px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-database-overview-chart-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        min-width: 4px;
+        border-radius: 999px;
+      }
+
+      .playground-database-overview-chart-fill.is-collections,
+      .playground-database-overview-chart-fill.is-reads {
+        background: linear-gradient(90deg, rgba(102, 95, 230, 0.92) 0%, rgba(124, 110, 238, 0.9) 100%);
+      }
+
+      .playground-database-overview-chart-fill.is-documents,
+      .playground-database-overview-chart-fill.is-writes {
+        background: linear-gradient(90deg, rgba(170, 138, 255, 0.94) 0%, rgba(221, 161, 252, 0.9) 100%);
+      }
+
+      .playground-database-overview-chart-value {
+        min-width: 24px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 1.35;
+        text-align: right;
       }
 
       .playground-mission-control-run-button {
@@ -17589,7 +18479,7 @@ const html = `<!doctype html>
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FileText, Flame, Folder, FolderOpen, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -18750,6 +19640,109 @@ const html = `<!doctype html>
         );
       }
 
+      function PlaygroundDotLoader({
+        dotCount = 9,
+        dotSize = 4,
+        gap = 3,
+        speed = 800,
+      }) {
+        const [activeIndex, setActiveIndex] = useState(0);
+        const gridSize = dotCount === 4 ? 2 : 3;
+        const pattern = dotCount === 4
+          ? [1, 0, 2, 3, -1, -1, -1]
+          : [2, 1, 0, 3, 6, 7, 8, 5, 4, -1, -1, -1, -1];
+
+        useEffect(() => {
+          const interval = window.setInterval(() => {
+            setActiveIndex((current) => (current + 1) % pattern.length);
+          }, speed / pattern.length);
+          return () => window.clearInterval(interval);
+        }, [pattern.length, speed]);
+
+        function getDotOpacity(dotIndex) {
+          const currentPatternValue = pattern[activeIndex];
+
+          if (currentPatternValue === -1) {
+            return 0.1;
+          }
+
+          const patternPosition = pattern.indexOf(dotIndex);
+          if (patternPosition === -1) {
+            return 0.1;
+          }
+
+          const distance = (activeIndex - patternPosition + pattern.length) % pattern.length;
+
+          if (distance === 0) return 1;
+          if (distance === 1) return 0.5;
+          if (distance === 2) return 0.25;
+          return 0.1;
+        }
+
+        return React.createElement("div", {
+            className: "grid",
+            style: {
+              display: "grid",
+              gridTemplateColumns: "repeat(" + gridSize + ", " + dotSize + "px)",
+              gap: String(gap) + "px",
+            },
+          },
+          Array.from({ length: dotCount }).map((_, index) =>
+            React.createElement("span", {
+              key: "playground-dot-loader:" + index,
+              className: "rounded-full",
+              style: {
+                width: dotSize,
+                height: dotSize,
+                borderRadius: "999px",
+                backgroundColor: "rgba(255, 255, 255, " + getDotOpacity(index) + ")",
+                transition: "background-color 200ms ease-out",
+              },
+            })
+          )
+        );
+      }
+
+      function PlaygroundAppLoadingScreen({ label = "Agentic Compute Platform" }) {
+        return React.createElement("div", {
+            style: {
+              position: "fixed",
+              inset: 0,
+              zIndex: 100,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#000",
+              pointerEvents: "none",
+              opacity: 1,
+              transition: "opacity 0.2s ease-out",
+            },
+          },
+          React.createElement("div", {
+              style: {
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+              },
+            },
+            React.createElement(PlaygroundDotLoader, {
+              dotCount: 9,
+              dotSize: 4,
+              gap: 3,
+              speed: 800,
+            }),
+            React.createElement("span", {
+              style: {
+                fontSize: "18px",
+                lineHeight: 1,
+                fontWeight: 600,
+                color: "#fff",
+              },
+            }, label)
+          )
+        );
+      }
+
       function readFileAsDataUrl(file) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -19107,6 +20100,10 @@ const html = `<!doctype html>
         return date.toLocaleDateString();
       }
 
+      function formatPlaygroundRelativeTime(value) {
+        return formatPlaygroundFileDate(value);
+      }
+
       function formatPlaygroundFolderItemCount(entry) {
         const itemCount = Array.isArray(entry?.children) ? entry.children.length : 0;
         if (itemCount > 0 || entry?.hasChildren === false) {
@@ -19117,6 +20114,8 @@ const html = `<!doctype html>
 
       const PLAYGROUND_MASKED_SECRET_VALUE = "••••••••";
       const PLAYGROUND_ENVIRONMENT_DRAFT_ID = "__playground_new_environment__";
+      const PLAYGROUND_SERVER_DRAFT_ID = "__playground_new_server__";
+      const PLAYGROUND_DATABASE_DRAFT_ID = "__playground_new_database__";
       const PLAYGROUND_AGENT_DRAFT_ID = "__playground_new_agent__";
       const PLAYGROUND_DEFAULT_AVAILABLE_RUNTIMES = {
         python: ["3.9", "3.10", "3.11", "3.12", "3.13"],
@@ -19355,6 +20354,56 @@ const html = `<!doctype html>
         };
       }
 
+      function buildPlaygroundDefaultServerDraft() {
+        const now = new Date().toISOString();
+        return {
+          id: "",
+          userId: "",
+          projectId: null,
+          name: "New Server",
+          description: "",
+          kind: "web_app",
+          sourceType: "manual",
+          sourceEnvironmentId: null,
+          sourcePath: "",
+          region: "europe-west1",
+          runtime: "nodejs22",
+          authMode: "public",
+          serviceUrl: "",
+          customDomain: "",
+          cloudRunServiceName: "",
+          imageUrl: "",
+          status: "draft",
+          lastDeployedAt: "",
+          databaseMode: "none",
+          databaseId: "",
+          databaseName: "",
+          databaseDescription: "",
+          databaseLocation: "eur3",
+          metadata: null,
+          createdAt: now,
+          updatedAt: now,
+        };
+      }
+
+      function buildPlaygroundDefaultDatabaseDraft() {
+        const now = new Date().toISOString();
+        return {
+          id: "",
+          userId: "",
+          projectId: null,
+          name: "New Database",
+          description: "",
+          provider: "firestore",
+          location: "eur3",
+          status: "active",
+          firestoreNamespace: "",
+          metadata: null,
+          createdAt: now,
+          updatedAt: now,
+        };
+      }
+
       function buildPlaygroundDefaultAgentDraft(kind = "single") {
         const now = new Date().toISOString();
         return {
@@ -19504,6 +20553,209 @@ const html = `<!doctype html>
         const source = data?.environment || data?.data || data;
         return source && typeof source === "object" && typeof source.id === "string"
           ? normalizePlaygroundEnvironmentRecord(source)
+          : null;
+      }
+
+      function normalizePlaygroundServerRecord(server) {
+        if (!server || typeof server !== "object") {
+          return buildPlaygroundDefaultServerDraft();
+        }
+
+        const draft = buildPlaygroundDefaultServerDraft();
+        const metadata = server?.metadata && typeof server.metadata === "object" && !Array.isArray(server.metadata)
+          ? server.metadata
+          : null;
+        const runnerPlayground = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+          ? metadata.runnerPlayground
+          : null;
+        const databaseBinding = runnerPlayground?.database && typeof runnerPlayground.database === "object" && !Array.isArray(runnerPlayground.database)
+          ? runnerPlayground.database
+          : null;
+        const databaseId = typeof server.databaseId === "string" && server.databaseId.trim()
+          ? server.databaseId.trim()
+          : typeof databaseBinding?.id === "string" && databaseBinding.id.trim()
+            ? databaseBinding.id.trim()
+            : "";
+        const databaseName = typeof server.databaseName === "string" && server.databaseName.trim()
+          ? server.databaseName.trim()
+          : typeof databaseBinding?.name === "string"
+            ? databaseBinding.name
+            : "";
+        const databaseDescription = typeof server.databaseDescription === "string"
+          ? server.databaseDescription
+          : typeof databaseBinding?.description === "string"
+            ? databaseBinding.description
+            : "";
+        const databaseLocation = typeof server.databaseLocation === "string" && server.databaseLocation.trim()
+          ? server.databaseLocation.trim()
+          : typeof databaseBinding?.location === "string" && databaseBinding.location.trim()
+            ? databaseBinding.location.trim()
+            : draft.databaseLocation;
+        const databaseMode = typeof server.databaseMode === "string" && ["none", "existing", "create"].includes(server.databaseMode)
+          ? server.databaseMode
+          : databaseId
+            ? "existing"
+            : databaseName || databaseDescription
+              ? "create"
+              : "none";
+
+        return {
+          ...draft,
+          id: typeof server.id === "string" ? server.id : draft.id,
+          userId: typeof server.userId === "string" ? server.userId : draft.userId,
+          projectId: typeof server.projectId === "string" && server.projectId.trim() ? server.projectId.trim() : null,
+          name: typeof server.name === "string" && server.name.trim() ? server.name : draft.name,
+          description: typeof server.description === "string" ? server.description : draft.description,
+          kind: canonicalizePlaygroundServerKind(server.kind || draft.kind),
+          sourceType: ["manual", "computer", "git"].includes(server.sourceType) ? server.sourceType : draft.sourceType,
+          sourceEnvironmentId: typeof server.sourceEnvironmentId === "string" && server.sourceEnvironmentId.trim() ? server.sourceEnvironmentId.trim() : null,
+          sourcePath: typeof server.sourcePath === "string" ? server.sourcePath : draft.sourcePath,
+          region: typeof server.region === "string" && server.region.trim() ? server.region.trim() : draft.region,
+          runtime: typeof server.runtime === "string" && server.runtime.trim() ? server.runtime.trim() : draft.runtime,
+          authMode: ["public", "private"].includes(server.authMode) ? server.authMode : draft.authMode,
+          serviceUrl: typeof server.serviceUrl === "string" ? server.serviceUrl : draft.serviceUrl,
+          customDomain: typeof server.customDomain === "string" ? server.customDomain : draft.customDomain,
+          cloudRunServiceName: typeof server.cloudRunServiceName === "string" ? server.cloudRunServiceName : draft.cloudRunServiceName,
+          imageUrl: typeof server.imageUrl === "string" ? server.imageUrl : draft.imageUrl,
+          status: ["draft", "deploying", "deployed", "failed", "inactive"].includes(server.status) ? server.status : draft.status,
+          lastDeployedAt: typeof server.lastDeployedAt === "string" ? server.lastDeployedAt : draft.lastDeployedAt,
+          databaseMode,
+          databaseId,
+          databaseName,
+          databaseDescription,
+          databaseLocation,
+          metadata,
+          createdAt: typeof server.createdAt === "string" && server.createdAt ? server.createdAt : draft.createdAt,
+          updatedAt: typeof server.updatedAt === "string" && server.updatedAt ? server.updatedAt : draft.updatedAt,
+        };
+      }
+
+      function getPlaygroundServerDatabaseBinding(server) {
+        const normalized = normalizePlaygroundServerRecord(server);
+        return {
+          mode: ["none", "existing", "create"].includes(normalized.databaseMode) ? normalized.databaseMode : "none",
+          id: String(normalized.databaseId || "").trim(),
+          name: String(normalized.databaseName || "").trim(),
+          description: typeof normalized.databaseDescription === "string" ? normalized.databaseDescription : "",
+          location: String(normalized.databaseLocation || "").trim() || "eur3",
+        };
+      }
+
+      function buildPlaygroundServerMetadata(server) {
+        const normalized = normalizePlaygroundServerRecord(server);
+        const currentMetadata = normalized.metadata && typeof normalized.metadata === "object" && !Array.isArray(normalized.metadata)
+          ? { ...normalized.metadata }
+          : {};
+        const currentRunnerPlayground = currentMetadata.runnerPlayground && typeof currentMetadata.runnerPlayground === "object" && !Array.isArray(currentMetadata.runnerPlayground)
+          ? { ...currentMetadata.runnerPlayground }
+          : {};
+        const databaseBinding = getPlaygroundServerDatabaseBinding(normalized);
+
+        if (databaseBinding.id) {
+          currentRunnerPlayground.database = {
+            id: databaseBinding.id,
+            name: databaseBinding.name || "",
+            description: databaseBinding.description || "",
+            location: databaseBinding.location || "eur3",
+          };
+        } else {
+          delete currentRunnerPlayground.database;
+        }
+
+        if (Object.keys(currentRunnerPlayground).length > 0) {
+          currentMetadata.runnerPlayground = currentRunnerPlayground;
+        } else {
+          delete currentMetadata.runnerPlayground;
+        }
+
+        return Object.keys(currentMetadata).length > 0 ? currentMetadata : null;
+      }
+
+      function buildPlaygroundServerWithLinkedDatabase(server, database, mode = "existing") {
+        const normalizedServer = normalizePlaygroundServerRecord(server);
+        const normalizedDatabase = normalizePlaygroundDatabaseRecord(database);
+        return normalizePlaygroundServerRecord({
+          ...normalizedServer,
+          databaseMode: mode === "create" ? "create" : "existing",
+          databaseId: normalizedDatabase.id || "",
+          databaseName: normalizedDatabase.name || "",
+          databaseDescription: normalizedDatabase.description || "",
+          databaseLocation: normalizedDatabase.location || "eur3",
+        });
+      }
+
+      function clearPlaygroundServerDatabaseBinding(server) {
+        const normalizedServer = normalizePlaygroundServerRecord(server);
+        return normalizePlaygroundServerRecord({
+          ...normalizedServer,
+          databaseMode: "none",
+          databaseId: "",
+          databaseName: "",
+          databaseDescription: "",
+          databaseLocation: normalizedServer.databaseLocation || "eur3",
+        });
+      }
+
+      function parsePlaygroundServerListResponse(data) {
+        const items = Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.servers)
+            ? data.servers
+            : Array.isArray(data?.items)
+              ? data.items
+              : [];
+        return items.map(normalizePlaygroundServerRecord);
+      }
+
+      function getPlaygroundServerResponseRecord(data) {
+        const source = data?.server || data?.data || data;
+        return source && typeof source === "object" && typeof source.id === "string"
+          ? normalizePlaygroundServerRecord(source)
+          : null;
+      }
+
+      function normalizePlaygroundDatabaseRecord(database) {
+        if (!database || typeof database !== "object") {
+          return buildPlaygroundDefaultDatabaseDraft();
+        }
+
+        const draft = buildPlaygroundDefaultDatabaseDraft();
+        const metadata = database?.metadata && typeof database.metadata === "object" && !Array.isArray(database.metadata)
+          ? database.metadata
+          : null;
+
+        return {
+          ...draft,
+          id: typeof database.id === "string" ? database.id : draft.id,
+          userId: typeof database.userId === "string" ? database.userId : draft.userId,
+          projectId: typeof database.projectId === "string" && database.projectId.trim() ? database.projectId.trim() : null,
+          name: typeof database.name === "string" && database.name.trim() ? database.name : draft.name,
+          description: typeof database.description === "string" ? database.description : draft.description,
+          provider: "firestore",
+          location: typeof database.location === "string" && database.location.trim() ? database.location.trim() : draft.location,
+          status: ["active", "provisioning", "error"].includes(database.status) ? database.status : draft.status,
+          firestoreNamespace: typeof database.firestoreNamespace === "string" ? database.firestoreNamespace : draft.firestoreNamespace,
+          metadata,
+          createdAt: typeof database.createdAt === "string" && database.createdAt ? database.createdAt : draft.createdAt,
+          updatedAt: typeof database.updatedAt === "string" && database.updatedAt ? database.updatedAt : draft.updatedAt,
+        };
+      }
+
+      function parsePlaygroundDatabaseListResponse(data) {
+        const items = Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.databases)
+            ? data.databases
+            : Array.isArray(data?.items)
+              ? data.items
+              : [];
+        return items.map(normalizePlaygroundDatabaseRecord);
+      }
+
+      function getPlaygroundDatabaseResponseRecord(data) {
+        const source = data?.database || data?.data || data;
+        return source && typeof source === "object" && typeof source.id === "string"
+          ? normalizePlaygroundDatabaseRecord(source)
           : null;
       }
 
@@ -22946,6 +24198,303 @@ const html = `<!doctype html>
           params.set("path", normalizedFolderPath);
         }
         return backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/files?" + params.toString();
+      }
+
+      function buildPlaygroundServerFilesListUrl(backendUrl, serverId, folderPath = "", depth = 1) {
+        if (!backendUrl || !serverId) return "";
+        const normalizedFolderPath = normalizeHistoryPath(folderPath);
+        const params = new URLSearchParams();
+        params.set("depth", String(depth));
+        if (normalizedFolderPath) {
+          params.set("path", normalizedFolderPath);
+        }
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/files?" + params.toString();
+      }
+
+      function buildPlaygroundServerFileContentUrl(backendUrl, serverId, filePath = "") {
+        if (!backendUrl || !serverId || !filePath) return "";
+        const normalizedPath = normalizeHistoryPath(filePath);
+        if (!normalizedPath) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/files/content/" + normalizedPath
+          .split("/")
+          .filter(Boolean)
+          .map((segment) => encodeURIComponent(segment))
+          .join("/");
+      }
+
+      function buildPlaygroundServerAnalyticsUrl(backendUrl, serverId) {
+        if (!backendUrl || !serverId) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/analytics";
+      }
+
+      function buildPlaygroundServerLogsUrl(backendUrl, serverId, kind = "request", limit = 80) {
+        if (!backendUrl || !serverId) return "";
+        const params = new URLSearchParams();
+        params.set("kind", String(kind || "request"));
+        params.set("limit", String(Math.max(1, Math.min(250, Number(limit) || 80))));
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/logs?" + params.toString();
+      }
+
+      function buildPlaygroundDatabaseCollectionsUrl(backendUrl, databaseId) {
+        if (!backendUrl || !databaseId) return "";
+        return backendUrl + "/databases/" + encodeURIComponent(databaseId) + "/collections";
+      }
+
+      function buildPlaygroundDatabaseDocumentsUrl(backendUrl, databaseId, collectionId, limit = 100) {
+        if (!backendUrl || !databaseId || !collectionId) return "";
+        const params = new URLSearchParams();
+        params.set("limit", String(Math.max(1, Math.min(250, Number(limit) || 100))));
+        return backendUrl
+          + "/databases/" + encodeURIComponent(databaseId)
+          + "/collections/" + encodeURIComponent(collectionId)
+          + "/documents?" + params.toString();
+      }
+
+      function buildPlaygroundDatabaseDocumentUrl(backendUrl, databaseId, collectionId, documentId) {
+        if (!backendUrl || !databaseId || !collectionId || !documentId) return "";
+        return backendUrl
+          + "/databases/" + encodeURIComponent(databaseId)
+          + "/collections/" + encodeURIComponent(collectionId)
+          + "/documents/" + encodeURIComponent(documentId);
+      }
+
+      function canonicalizePlaygroundServerKind(kind) {
+        const normalizedKind = String(kind || "").trim().toLowerCase();
+        if (normalizedKind === "function") return "function";
+        if (normalizedKind === "database") return "database";
+        return "web_app";
+      }
+
+      function formatPlaygroundServerKindLabel(kind) {
+        const normalizedKind = canonicalizePlaygroundServerKind(kind);
+        if (normalizedKind === "function") return "Function";
+        if (normalizedKind === "database") return "Database";
+        return "Web App";
+      }
+
+      function formatPlaygroundServerLatency(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue) || numericValue < 0) {
+          return "—";
+        }
+        if (numericValue >= 1000) {
+          return (Math.round((numericValue / 1000) * 10) / 10).toFixed(1).replace(/\.0$/, "") + "s";
+        }
+        return Math.round(numericValue) + "ms";
+      }
+
+      function formatPlaygroundServerRate(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue) || numericValue < 0) {
+          return "—";
+        }
+        return (Math.round(numericValue * 10) / 10).toFixed(1).replace(/\.0$/, "") + "%";
+      }
+
+      function formatPlaygroundServerLogKindLabel(kind) {
+        const normalizedKind = String(kind || "").trim().toLowerCase();
+        if (normalizedKind === "runtime") return "Console";
+        if (normalizedKind === "deployment") return "Deploy";
+        return "Requests";
+      }
+
+      function formatPlaygroundServerRequestStatus(status) {
+        const numericStatus = Number(status);
+        return Number.isFinite(numericStatus) && numericStatus > 0 ? String(Math.round(numericStatus)) : "—";
+      }
+
+      function formatPlaygroundDatabaseDocumentJson(value) {
+        try {
+          return JSON.stringify(value && typeof value === "object" ? value : {}, null, 2);
+        } catch {
+          return "{}";
+        }
+      }
+
+      function isPlaygroundDatabasePlainObject(value) {
+        return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+      }
+
+      function parsePlaygroundDatabaseDocumentObject(value) {
+        if (typeof value === "string") {
+          try {
+            const parsed = JSON.parse(value || "{}");
+            return isPlaygroundDatabasePlainObject(parsed) ? parsed : {};
+          } catch {
+            return null;
+          }
+        }
+        return isPlaygroundDatabasePlainObject(value) ? value : {};
+      }
+
+      function clonePlaygroundDatabaseValue(value) {
+        try {
+          return JSON.parse(JSON.stringify(value));
+        } catch {
+          if (Array.isArray(value)) return value.slice();
+          if (isPlaygroundDatabasePlainObject(value)) return { ...value };
+          return value;
+        }
+      }
+
+      function getPlaygroundDatabasePathKey(path) {
+        return Array.isArray(path) && path.length ? path.join(".") : "__root__";
+      }
+
+      function getPlaygroundDatabaseFieldType(value) {
+        if (Array.isArray(value)) return "array";
+        if (isPlaygroundDatabasePlainObject(value)) return "map";
+        if (value === null) return "null";
+        if (typeof value === "boolean") return "boolean";
+        if (typeof value === "number") return "number";
+        return "string";
+      }
+
+      function getPlaygroundDatabaseValueAtPath(rootValue, path) {
+        if (!Array.isArray(path) || !path.length) {
+          return rootValue;
+        }
+        let current = rootValue;
+        for (const segment of path) {
+          if (Array.isArray(current)) {
+            const index = Number(segment);
+            if (!Number.isInteger(index) || index < 0 || index >= current.length) {
+              return undefined;
+            }
+            current = current[index];
+            continue;
+          }
+          if (isPlaygroundDatabasePlainObject(current)) {
+            current = current[segment];
+            continue;
+          }
+          return undefined;
+        }
+        return current;
+      }
+
+      function setPlaygroundDatabaseValueAtPath(rootValue, path, nextValue) {
+        if (!Array.isArray(path) || !path.length) {
+          return clonePlaygroundDatabaseValue(nextValue);
+        }
+
+        const clonedRoot = clonePlaygroundDatabaseValue(rootValue);
+        let current = clonedRoot;
+
+        for (let index = 0; index < path.length - 1; index += 1) {
+          const segment = path[index];
+          if (Array.isArray(current)) {
+            const arrayIndex = Number(segment);
+            if (!Number.isInteger(arrayIndex) || arrayIndex < 0 || arrayIndex >= current.length) {
+              return clonedRoot;
+            }
+            current[arrayIndex] = clonePlaygroundDatabaseValue(current[arrayIndex]);
+            current = current[arrayIndex];
+            continue;
+          }
+          if (!isPlaygroundDatabasePlainObject(current)) {
+            return clonedRoot;
+          }
+          current[segment] = clonePlaygroundDatabaseValue(current[segment]);
+          current = current[segment];
+        }
+
+        const leafSegment = path[path.length - 1];
+        if (Array.isArray(current)) {
+          const arrayIndex = Number(leafSegment);
+          if (!Number.isInteger(arrayIndex) || arrayIndex < 0 || arrayIndex >= current.length) {
+            return clonedRoot;
+          }
+          current[arrayIndex] = nextValue;
+          return clonedRoot;
+        }
+        if (isPlaygroundDatabasePlainObject(current)) {
+          current[leafSegment] = nextValue;
+        }
+        return clonedRoot;
+      }
+
+      function deletePlaygroundDatabaseValueAtPath(rootValue, path) {
+        if (!Array.isArray(path) || !path.length) {
+          return clonePlaygroundDatabaseValue(rootValue);
+        }
+
+        const clonedRoot = clonePlaygroundDatabaseValue(rootValue);
+        let current = clonedRoot;
+
+        for (let index = 0; index < path.length - 1; index += 1) {
+          const segment = path[index];
+          if (Array.isArray(current)) {
+            const arrayIndex = Number(segment);
+            if (!Number.isInteger(arrayIndex) || arrayIndex < 0 || arrayIndex >= current.length) {
+              return clonedRoot;
+            }
+            current[arrayIndex] = clonePlaygroundDatabaseValue(current[arrayIndex]);
+            current = current[arrayIndex];
+            continue;
+          }
+          if (!isPlaygroundDatabasePlainObject(current)) {
+            return clonedRoot;
+          }
+          current[segment] = clonePlaygroundDatabaseValue(current[segment]);
+          current = current[segment];
+        }
+
+        const leafSegment = path[path.length - 1];
+        if (Array.isArray(current)) {
+          const arrayIndex = Number(leafSegment);
+          if (Number.isInteger(arrayIndex) && arrayIndex >= 0 && arrayIndex < current.length) {
+            current.splice(arrayIndex, 1);
+          }
+          return clonedRoot;
+        }
+        if (isPlaygroundDatabasePlainObject(current)) {
+          delete current[leafSegment];
+        }
+        return clonedRoot;
+      }
+
+      function createPlaygroundDatabaseFieldValue(type, rawValue) {
+        const normalizedType = String(type || "string").trim().toLowerCase();
+        if (normalizedType === "number") {
+          const numericValue = Number(String(rawValue || "").trim());
+          if (!Number.isFinite(numericValue)) {
+            throw new Error("Number value is invalid.");
+          }
+          return numericValue;
+        }
+        if (normalizedType === "boolean") {
+          return String(rawValue || "").trim().toLowerCase() === "true";
+        }
+        if (normalizedType === "null") {
+          return null;
+        }
+        if (normalizedType === "map") {
+          return {};
+        }
+        if (normalizedType === "array") {
+          return [];
+        }
+        return String(rawValue || "");
+      }
+
+      function formatPlaygroundDatabaseFieldPreview(value) {
+        const type = getPlaygroundDatabaseFieldType(value);
+        if (type === "map") {
+          const size = Object.keys(value || {}).length;
+          return size + " field" + (size === 1 ? "" : "s");
+        }
+        if (type === "array") {
+          const size = Array.isArray(value) ? value.length : 0;
+          return size + " item" + (size === 1 ? "" : "s");
+        }
+        if (type === "null") {
+          return "null";
+        }
+        if (type === "boolean" || type === "number") {
+          return String(value);
+        }
+        return JSON.stringify(String(value || ""));
       }
 
       function buildPlaygroundSyntheticFolderEntry(folderPath, currentEntry = null, childEntries = null) {
@@ -29119,9 +30668,14 @@ const html = `<!doctype html>
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
         const environmentDetailMainRef = useRef(null);
+        const serverDetailMainRef = useRef(null);
         const environmentDescriptionTextareaRef = useRef(null);
+        const serverDescriptionTextareaRef = useRef(null);
+        const databaseDescriptionTextareaRef = useRef(null);
+        const serverFileUploadInputRef = useRef(null);
         const environmentDockerfileTextareaRef = useRef(null);
         const environmentComposerDescriptionTextareaRef = useRef(null);
+        const serverComposerDescriptionTextareaRef = useRef(null);
         const environmentGuiImageRef = useRef(null);
         const environmentGuiClickTimerRef = useRef(null);
         const environmentGuiScrollTimerRef = useRef(null);
@@ -29129,12 +30683,23 @@ const html = `<!doctype html>
         const environmentComposerRuntimePopoverRef = useRef(null);
         const environmentActionsPopoverRef = useRef(null);
         const environmentRenameInputRef = useRef(null);
+        const databaseActionsPopoverRef = useRef(null);
+        const databaseRenameInputRef = useRef(null);
+        const databaseDocumentAutosaveTimerRef = useRef(null);
+        const databaseDocumentSaveInFlightRef = useRef(false);
         const environmentAutosaveTimerRef = useRef(null);
         const environmentAutosaveQueuedRef = useRef(null);
         const environmentAutosaveInFlightRef = useRef(false);
         const selectedEnvironmentIdRef = useRef(initialEnvironmentId || "");
+        const selectedServerIdRef = useRef("");
+        const selectedDatabaseIdRef = useRef("");
         const environmentSeededSelectionRef = useRef("");
+        const serverSeededSelectionRef = useRef("");
+        const databaseSeededSelectionRef = useRef("");
+        const [resourceMode, setResourceMode] = useState("computers");
         const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(initialEnvironmentId || "");
+        const [selectedServerId, setSelectedServerId] = useState("");
+        const [selectedDatabaseId, setSelectedDatabaseId] = useState("");
         const [environmentDetailsById, setEnvironmentDetailsById] = useState(() => {
           const next = {};
           environments.forEach((environment) => {
@@ -29143,31 +30708,141 @@ const html = `<!doctype html>
           });
           return next;
         });
+        const [servers, setServers] = useState([]);
+        const [databases, setDatabases] = useState([]);
+        const [serverDetailsById, setServerDetailsById] = useState({});
+        const [databaseDetailsById, setDatabaseDetailsById] = useState({});
+        const [serverFilesById, setServerFilesById] = useState({});
+        const [serverAnalyticsById, setServerAnalyticsById] = useState({});
+        const [serverLogsById, setServerLogsById] = useState({});
         const [draftEnvironment, setDraftEnvironment] = useState(null);
+        const [draftServer, setDraftServer] = useState(null);
+        const [draftDatabase, setDraftDatabase] = useState(null);
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [loadingEnvironmentId, setLoadingEnvironmentId] = useState("");
+        const [loadingServerId, setLoadingServerId] = useState("");
+        const [loadingDatabaseId, setLoadingDatabaseId] = useState("");
+        const [loadingServerAnalyticsId, setLoadingServerAnalyticsId] = useState("");
         const [saveState, setSaveState] = useState({
           isSaving: false,
           error: "",
           message: "",
         });
+        const [serverSaveState, setServerSaveState] = useState({
+          isSaving: false,
+          error: "",
+          message: "",
+        });
+        const [databaseSaveState, setDatabaseSaveState] = useState({
+          isSaving: false,
+          error: "",
+          message: "",
+        });
         const [isEnvironmentDescriptionEditing, setIsEnvironmentDescriptionEditing] = useState(false);
+        const [isServerDescriptionEditing, setIsServerDescriptionEditing] = useState(false);
+        const [isDatabaseDescriptionEditing, setIsDatabaseDescriptionEditing] = useState(false);
         const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
+        const [serverDetailsCollapsed, setServerDetailsCollapsed] = useState(false);
+        const [databaseDetailsCollapsed, setDatabaseDetailsCollapsed] = useState(false);
         const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
         const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
+        const [databaseActionsPopoverOpen, setDatabaseActionsPopoverOpen] = useState(false);
+        const [databaseRenameState, setDatabaseRenameState] = useState(null);
+        const [databaseRenameValue, setDatabaseRenameValue] = useState("");
+        const [databaseRenameError, setDatabaseRenameError] = useState("");
         const [environmentComposerOpen, setEnvironmentComposerOpen] = useState(false);
+        const [serverComposerOpen, setServerComposerOpen] = useState(false);
         const [environmentComposerDraft, setEnvironmentComposerDraft] = useState(() => buildPlaygroundDefaultEnvironmentDraft());
+        const [serverComposerDraft, setServerComposerDraft] = useState(() => buildPlaygroundDefaultServerDraft());
         const [environmentComposerSaveState, setEnvironmentComposerSaveState] = useState({
           isSaving: false,
           error: "",
         });
+        const [serverComposerSaveState, setServerComposerSaveState] = useState({
+          isSaving: false,
+          error: "",
+        });
         const [isEnvironmentComposerDescriptionEditing, setIsEnvironmentComposerDescriptionEditing] = useState(false);
+        const [isServerComposerDescriptionEditing, setIsServerComposerDescriptionEditing] = useState(false);
         const [environmentComposerRuntimePopover, setEnvironmentComposerRuntimePopover] = useState("");
         const [environmentListActionMenuState, setEnvironmentListActionMenuState] = useState(null);
+        const [serverListLoading, setServerListLoading] = useState(false);
+        const [databaseListLoading, setDatabaseListLoading] = useState(false);
+        const [loadingServerFilesId, setLoadingServerFilesId] = useState("");
+        const [loadingDatabaseCollectionsId, setLoadingDatabaseCollectionsId] = useState("");
+        const [loadingDatabaseDocumentsKey, setLoadingDatabaseDocumentsKey] = useState("");
+        const [serverFileTransferState, setServerFileTransferState] = useState({
+          isUploading: false,
+          error: "",
+          message: "",
+        });
+        const [serverFileEditorState, setServerFileEditorState] = useState({
+          path: "",
+          status: "idle",
+          value: "",
+          initialValue: "",
+          error: "",
+          saveError: "",
+          saveMessage: "",
+          isSaving: false,
+          wordWrap: true,
+        });
+        const [serverDeploymentState, setServerDeploymentState] = useState({
+          isDeploying: false,
+          isInvoking: false,
+          error: "",
+          message: "",
+          lastResponseText: "",
+        });
+        const [serverAnalyticsView, setServerAnalyticsView] = useState("editor");
+        const [serverLogsState, setServerLogsState] = useState({
+          kind: "request",
+          loadingKey: "",
+          error: "",
+        });
+        const [hasLoadedServers, setHasLoadedServers] = useState(false);
+        const [hasLoadedDatabases, setHasLoadedDatabases] = useState(false);
+        const [databaseCollectionsById, setDatabaseCollectionsById] = useState({});
+        const [databaseDocumentsByCollectionKey, setDatabaseDocumentsByCollectionKey] = useState({});
+        const [selectedDatabaseCollectionId, setSelectedDatabaseCollectionId] = useState("");
+        const [selectedDatabaseDocumentId, setSelectedDatabaseDocumentId] = useState("");
+        const [databaseDocumentEditorState, setDatabaseDocumentEditorState] = useState({
+          documentId: "",
+          value: "{}",
+          initialValue: "{}",
+          error: "",
+          saveError: "",
+          saveMessage: "",
+          isSaving: false,
+        });
+        const [databaseDocumentViewMode, setDatabaseDocumentViewMode] = useState("preview");
+        const [databaseJsonEditorModule, setDatabaseJsonEditorModule] = useState(null);
+        const [databaseJsonEditorModuleError, setDatabaseJsonEditorModuleError] = useState("");
+        const [databaseCollectionComposerState, setDatabaseCollectionComposerState] = useState({
+          open: false,
+          name: "items",
+          error: "",
+          isSaving: false,
+        });
+        const [databaseDocumentComposerState, setDatabaseDocumentComposerState] = useState({
+          open: false,
+          documentId: "",
+          error: "",
+          isSaving: false,
+        });
+        const [databaseFieldExpansionState, setDatabaseFieldExpansionState] = useState({});
+        const [databaseFieldComposerState, setDatabaseFieldComposerState] = useState({
+          open: false,
+          parentPath: [],
+          key: "",
+          type: "string",
+          value: "",
+          error: "",
+        });
         const [availableRuntimes, setAvailableRuntimes] = useState(PLAYGROUND_DEFAULT_AVAILABLE_RUNTIMES);
         const [expandedSections, setExpandedSections] = useState(() => new Set(["general", "overview", "runtimes", "packages-system", "packages-python", "packages-node", "variables"]));
         const [modifiedSecrets, setModifiedSecrets] = useState({});
@@ -29207,6 +30882,111 @@ const html = `<!doctype html>
           return orderedEnvironments.find((environment) => environment.id === environmentListActionMenuState.environmentId) || null;
         }, [environmentListActionMenuState, orderedEnvironments]);
 
+        const orderedServers = useMemo(() => {
+          return [...servers].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
+        }, [servers]);
+
+        const orderedDatabases = useMemo(() => {
+          return [...databases].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
+        }, [databases]);
+
+        const currentServerFiles = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+          const items = Array.isArray(serverFilesById[selectedServerId]) ? serverFilesById[selectedServerId] : [];
+          return [...items].sort((left, right) => {
+            if (Boolean(left?.isFolder) !== Boolean(right?.isFolder)) {
+              return left?.isFolder ? -1 : 1;
+            }
+            return String(left?.path || "").localeCompare(String(right?.path || ""));
+          });
+        }, [selectedServerId, serverFilesById]);
+
+        const currentServerEditorEntry = useMemo(() => {
+          if (!serverFileEditorState.path) {
+            return null;
+          }
+          return currentServerFiles.find((entry) => entry.path === serverFileEditorState.path) || null;
+        }, [currentServerFiles, serverFileEditorState.path]);
+
+        const currentServerAnalytics = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return null;
+          }
+          return serverAnalyticsById[selectedServerId] || null;
+        }, [selectedServerId, serverAnalyticsById]);
+
+        const currentServerLogs = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return {};
+          }
+          return serverLogsById[selectedServerId] || {};
+        }, [selectedServerId, serverLogsById]);
+
+        const selectedServerSnapshot = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return null;
+          }
+          return serverDetailsById[selectedServerId]
+            || orderedServers.find((server) => server.id === selectedServerId)
+            || null;
+        }, [orderedServers, selectedServerId, serverDetailsById]);
+
+        const displayServers = useMemo(() => {
+          const items = [...orderedServers];
+          if (selectedServerId === PLAYGROUND_SERVER_DRAFT_ID && draftServer) {
+            items.unshift({
+              ...draftServer,
+              id: PLAYGROUND_SERVER_DRAFT_ID,
+            });
+          }
+          return items;
+        }, [draftServer, orderedServers, selectedServerId]);
+
+        const displayServerResources = useMemo(() => {
+          const serverItems = displayServers.map((server) => ({
+            ...server,
+            resourceType: "server",
+          }));
+          const databaseItems = orderedDatabases.map((database) => ({
+            ...database,
+            kind: "database",
+            resourceType: "database",
+          }));
+          return [...serverItems, ...databaseItems].sort((left, right) =>
+            String(left?.name || "").localeCompare(String(right?.name || ""))
+          );
+        }, [displayServers, orderedDatabases]);
+
+        const selectedDatabaseSnapshot = useMemo(() => {
+          if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return null;
+          }
+          return databaseDetailsById[selectedDatabaseId]
+            || orderedDatabases.find((database) => database.id === selectedDatabaseId)
+            || null;
+        }, [databaseDetailsById, orderedDatabases, selectedDatabaseId]);
+
+        const currentDatabaseCollections = useMemo(() => {
+          if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return [];
+          }
+          return Array.isArray(databaseCollectionsById[selectedDatabaseId]) ? databaseCollectionsById[selectedDatabaseId] : [];
+        }, [databaseCollectionsById, selectedDatabaseId]);
+
+        const currentDatabaseDocuments = useMemo(() => {
+          if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId) {
+            return [];
+          }
+          const key = selectedDatabaseId + ":" + selectedDatabaseCollectionId;
+          return Array.isArray(databaseDocumentsByCollectionKey[key]) ? databaseDocumentsByCollectionKey[key] : [];
+        }, [databaseDocumentsByCollectionKey, selectedDatabaseCollectionId, selectedDatabaseId]);
+
+        const currentDatabaseCollection = useMemo(() => {
+          return currentDatabaseCollections.find((collection) => collection.id === selectedDatabaseCollectionId) || null;
+        }, [currentDatabaseCollections, selectedDatabaseCollectionId]);
+
         const selectedEnvironmentSnapshot = useMemo(() => {
           if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
             return null;
@@ -29230,13 +31010,21 @@ const html = `<!doctype html>
         const searchResults = useMemo(() => {
           const query = searchPopupQuery.trim().toLowerCase();
           if (!query) return [];
+          if (resourceMode === "servers") {
+            return displayServerResources
+              .filter((resource) => {
+                const haystack = [resource?.name || "", resource?.description || ""].join(" ").toLowerCase();
+                return haystack.includes(query);
+              })
+              .slice(0, 12);
+          }
           return displayEnvironments
             .filter((environment) => {
               const haystack = [environment?.name || "", environment?.description || ""].join(" ").toLowerCase();
               return haystack.includes(query);
             })
             .slice(0, 12);
-        }, [displayEnvironments, searchPopupQuery]);
+        }, [displayEnvironments, displayServerResources, resourceMode, searchPopupQuery]);
 
         const existingSecretKeys = useMemo(() => {
           return new Set(
@@ -29262,9 +31050,45 @@ const html = `<!doctype html>
           && loadingEnvironmentId === selectedEnvironmentId
         );
 
+        const isLoadingCurrentServer = Boolean(
+          selectedServerId
+          && selectedServerId !== PLAYGROUND_SERVER_DRAFT_ID
+          && loadingServerId === selectedServerId
+        );
+
+        const isLoadingCurrentDatabase = Boolean(
+          selectedDatabaseId
+          && selectedDatabaseId !== PLAYGROUND_DATABASE_DRAFT_ID
+          && loadingDatabaseId === selectedDatabaseId
+        );
+
         useEffect(() => {
           selectedEnvironmentIdRef.current = selectedEnvironmentId;
         }, [selectedEnvironmentId]);
+
+        useEffect(() => {
+          selectedServerIdRef.current = selectedServerId;
+        }, [selectedServerId]);
+
+        useEffect(() => {
+          selectedDatabaseIdRef.current = selectedDatabaseId;
+        }, [selectedDatabaseId]);
+
+        useEffect(() => {
+          function handleServerEditorSaveShortcut(event) {
+            if (!(event.metaKey || event.ctrlKey) || event.altKey || String(event.key || "").toLowerCase() !== "s") {
+              return;
+            }
+            if (resourceMode !== "servers" || !serverFileEditorState.path || serverFileEditorState.status !== "ready") {
+              return;
+            }
+            event.preventDefault();
+            void handleServerFileSave();
+          }
+
+          window.addEventListener("keydown", handleServerEditorSaveShortcut);
+          return () => window.removeEventListener("keydown", handleServerEditorSaveShortcut);
+        }, [handleServerFileSave, resourceMode, serverFileEditorState.path, serverFileEditorState.status]);
 
         function resetEditorAuxiliaryState() {
           editorDirtyRef.current = false;
@@ -29281,6 +31105,67 @@ const html = `<!doctype html>
             error: "",
             message: "",
           });
+        }
+
+        function resetServerEditorAuxiliaryState() {
+          setServerSaveState({
+            isSaving: false,
+            error: "",
+            message: "",
+          });
+          setServerFileTransferState({
+            isUploading: false,
+            error: "",
+            message: "",
+          });
+          setServerDeploymentState({
+            isDeploying: false,
+            isInvoking: false,
+            error: "",
+            message: "",
+            lastResponseText: "",
+          });
+          setServerFileEditorState({
+            path: "",
+            status: "idle",
+            value: "",
+            initialValue: "",
+            error: "",
+            saveError: "",
+            saveMessage: "",
+            isSaving: false,
+            wordWrap: true,
+          });
+          setServerAnalyticsView("editor");
+          setServerLogsState({
+            kind: "request",
+            loadingKey: "",
+            error: "",
+          });
+        }
+
+        function resetDatabaseEditorAuxiliaryState() {
+          if (databaseDocumentAutosaveTimerRef.current) {
+            window.clearTimeout(databaseDocumentAutosaveTimerRef.current);
+            databaseDocumentAutosaveTimerRef.current = null;
+          }
+          setDatabaseSaveState({
+            isSaving: false,
+            error: "",
+            message: "",
+          });
+          setDatabaseDocumentEditorState({
+            documentId: "",
+            value: "{}",
+            initialValue: "{}",
+            error: "",
+            saveError: "",
+            saveMessage: "",
+            isSaving: false,
+          });
+          setDatabaseDocumentViewMode("preview");
+          setSelectedDatabaseCollectionId("");
+          setSelectedDatabaseDocumentId("");
         }
 
         function revokeEnvironmentGuiFrameUrl(url) {
@@ -29557,6 +31442,485 @@ const html = `<!doctype html>
           }
         }, [backendUrl, requestHeaders]);
 
+        const loadServers = useCallback(async (options = {}) => {
+          setHasLoadedServers(true);
+          setServerListLoading(true);
+          try {
+            const response = await fetch(backendUrl + "/servers", {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load servers.");
+            }
+
+            const nextServers = parsePlaygroundServerListResponse(data);
+            setServers(nextServers);
+            setServerDetailsById((current) => {
+              const next = { ...current };
+              nextServers.forEach((server) => {
+                if (!server?.id) return;
+                next[server.id] = normalizePlaygroundServerRecord({
+                  ...(next[server.id] || {}),
+                  ...server,
+                });
+              });
+              return next;
+            });
+
+            if (options?.selectId) {
+              setSelectedServerId(options.selectId);
+            } else if (!selectedServerIdRef.current && nextServers[0]?.id) {
+              setSelectedServerId(nextServers[0].id);
+            } else if (selectedServerIdRef.current && !nextServers.some((server) => server.id === selectedServerIdRef.current)) {
+              setSelectedServerId(nextServers[0]?.id || "");
+            }
+
+            return nextServers;
+          } catch (error) {
+            setServerSaveState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load servers.",
+            }));
+            return [];
+          } finally {
+            setServerListLoading(false);
+          }
+        }, [backendUrl, requestHeaders]);
+
+        const loadServerDetails = useCallback(async (serverId) => {
+          if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+
+          setLoadingServerId(serverId);
+          try {
+            const response = await fetch(backendUrl + "/servers/" + encodeURIComponent(serverId), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load server.");
+            }
+
+            const normalized = getPlaygroundServerResponseRecord(data);
+            if (!normalized) {
+              throw new Error("Server response was empty.");
+            }
+
+            setServerDetailsById((current) => ({
+              ...current,
+              [serverId]: normalized,
+            }));
+            if (selectedServerIdRef.current === serverId) {
+              setDraftServer(normalized);
+            }
+            return normalized;
+          } catch (error) {
+            if (selectedServerIdRef.current === serverId) {
+              setServerSaveState((current) => ({
+                ...current,
+                error: error instanceof Error ? error.message : "Failed to load server.",
+              }));
+            }
+            return null;
+          } finally {
+            setLoadingServerId((current) => current === serverId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders]);
+
+        const loadServerFiles = useCallback(async (serverId) => {
+          if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+
+          setLoadingServerFilesId(serverId);
+          try {
+            const response = await fetch(
+              buildPlaygroundServerFilesListUrl(backendUrl, serverId, "", -1),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load source files.");
+            }
+
+            const files = normalizePlaygroundEnvironmentInventory(data?.files || []);
+            setServerFilesById((current) => ({
+              ...current,
+              [serverId]: files,
+            }));
+            setServerFileTransferState((current) => ({
+              ...current,
+              error: "",
+            }));
+            return files;
+          } catch (error) {
+            if (selectedServerIdRef.current === serverId) {
+              setServerFileTransferState((current) => ({
+                ...current,
+                error: error instanceof Error ? error.message : "Failed to load source files.",
+              }));
+            }
+            return [];
+          } finally {
+            setLoadingServerFilesId((current) => current === serverId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders]);
+
+        const loadServerFileContent = useCallback(async (serverId, filePath, options = {}) => {
+          const normalizedServerId = String(serverId || "").trim();
+          const normalizedPath = normalizeHistoryPath(filePath);
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID || !normalizedPath) {
+            return null;
+          }
+
+          setServerFileEditorState((current) => ({
+            ...current,
+            path: normalizedPath,
+            status: "loading",
+            error: "",
+            saveError: "",
+            saveMessage: "",
+          }));
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerFileContentUrl(backendUrl, normalizedServerId, normalizedPath),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to open source file.");
+            }
+
+            const nextValue = typeof data?.content === "string"
+              ? data.content
+              : typeof options?.fallbackValue === "string"
+                ? options.fallbackValue
+                : "";
+
+            setServerFileEditorState((current) => ({
+              ...current,
+              path: normalizedPath,
+              status: "ready",
+              value: nextValue,
+              initialValue: nextValue,
+              error: "",
+              saveError: "",
+              saveMessage: "",
+            }));
+            return nextValue;
+          } catch (error) {
+            setServerFileEditorState((current) => ({
+              ...current,
+              path: normalizedPath,
+              status: "error",
+              error: error instanceof Error ? error.message : "Failed to open source file.",
+              saveError: "",
+              saveMessage: "",
+            }));
+            return null;
+          }
+        }, [backendUrl, requestHeaders]);
+
+        const loadServerAnalytics = useCallback(async (serverId, options = {}) => {
+          const normalizedServerId = String(serverId || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return null;
+          }
+
+          const force = options?.force === true;
+          if (!force && serverAnalyticsById[normalizedServerId]) {
+            return serverAnalyticsById[normalizedServerId];
+          }
+
+          setLoadingServerAnalyticsId(normalizedServerId);
+          try {
+            const response = await fetch(
+              buildPlaygroundServerAnalyticsUrl(backendUrl, normalizedServerId),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load analytics.");
+            }
+
+            const normalizedRecord = {
+              ...data,
+              loadedAt: new Date().toISOString(),
+            };
+            setServerAnalyticsById((current) => ({
+              ...current,
+              [normalizedServerId]: normalizedRecord,
+            }));
+            return normalizedRecord;
+          } catch (error) {
+            setServerLogsState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load analytics.",
+            }));
+            return null;
+          } finally {
+            setLoadingServerAnalyticsId((current) => current === normalizedServerId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders, serverAnalyticsById]);
+
+        const loadServerLogs = useCallback(async (serverId, kind = "request", options = {}) => {
+          const normalizedServerId = String(serverId || "").trim();
+          const normalizedKind = ["request", "runtime", "deployment"].includes(String(kind || "").trim().toLowerCase())
+            ? String(kind).trim().toLowerCase()
+            : "request";
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+
+          const force = options?.force === true;
+          const existingLogs = serverLogsById[normalizedServerId]?.[normalizedKind];
+          if (!force && Array.isArray(existingLogs)) {
+            return existingLogs;
+          }
+
+          const loadingKey = normalizedServerId + ":" + normalizedKind;
+          setServerLogsState((current) => ({
+            ...current,
+            loadingKey,
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerLogsUrl(backendUrl, normalizedServerId, normalizedKind, options?.limit || 80),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load logs.");
+            }
+
+            const nextLogs = Array.isArray(data?.logs) ? data.logs : [];
+            setServerLogsById((current) => ({
+              ...current,
+              [normalizedServerId]: {
+                ...(current[normalizedServerId] || {}),
+                [normalizedKind]: nextLogs,
+              },
+            }));
+            return nextLogs;
+          } catch (error) {
+            setServerLogsState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load logs.",
+            }));
+            return [];
+          } finally {
+            setServerLogsState((current) => ({
+              ...current,
+              loadingKey: current.loadingKey === loadingKey ? "" : current.loadingKey,
+            }));
+          }
+        }, [backendUrl, requestHeaders, serverLogsById]);
+
+        const loadDatabases = useCallback(async (options = {}) => {
+          setHasLoadedDatabases(true);
+          setDatabaseListLoading(true);
+          try {
+            const response = await fetch(backendUrl + "/databases", {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load databases.");
+            }
+
+            const nextDatabases = parsePlaygroundDatabaseListResponse(data);
+            setDatabases(nextDatabases);
+            setDatabaseDetailsById((current) => {
+              const next = { ...current };
+              nextDatabases.forEach((database) => {
+                if (!database?.id) return;
+                next[database.id] = normalizePlaygroundDatabaseRecord({
+                  ...(next[database.id] || {}),
+                  ...database,
+                });
+              });
+              return next;
+            });
+
+            if (options?.selectId) {
+              setSelectedDatabaseId(options.selectId);
+            } else if (selectedDatabaseIdRef.current && !nextDatabases.some((database) => database.id === selectedDatabaseIdRef.current)) {
+              setSelectedDatabaseId("");
+            }
+
+            return nextDatabases;
+          } catch (error) {
+            setDatabaseSaveState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load databases.",
+            }));
+            return [];
+          } finally {
+            setDatabaseListLoading(false);
+          }
+        }, [backendUrl, requestHeaders]);
+
+        const loadDatabaseDetails = useCallback(async (databaseId) => {
+          if (!databaseId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return null;
+          }
+
+          setLoadingDatabaseId(databaseId);
+          try {
+            const response = await fetch(backendUrl + "/databases/" + encodeURIComponent(databaseId), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load database.");
+            }
+
+            const normalized = getPlaygroundDatabaseResponseRecord(data);
+            if (!normalized) {
+              throw new Error("Database response was empty.");
+            }
+
+            setDatabaseDetailsById((current) => ({
+              ...current,
+              [databaseId]: normalized,
+            }));
+            if (selectedDatabaseIdRef.current === databaseId) {
+              setDraftDatabase(normalized);
+            }
+            return normalized;
+          } catch (error) {
+            if (selectedDatabaseIdRef.current === databaseId) {
+              setDatabaseSaveState((current) => ({
+                ...current,
+                error: error instanceof Error ? error.message : "Failed to load database.",
+              }));
+            }
+            return null;
+          } finally {
+            setLoadingDatabaseId((current) => current === databaseId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders]);
+
+        const loadDatabaseCollections = useCallback(async (databaseId) => {
+          if (!databaseId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return [];
+          }
+
+          setLoadingDatabaseCollectionsId(databaseId);
+          try {
+            const response = await fetch(buildPlaygroundDatabaseCollectionsUrl(backendUrl, databaseId), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load collections.");
+            }
+
+            const collections = Array.isArray(data?.collections) ? data.collections : [];
+            setDatabaseCollectionsById((current) => ({
+              ...current,
+              [databaseId]: collections,
+            }));
+            if (selectedDatabaseIdRef.current === databaseId) {
+              const nextCollectionId = collections.some((item) => item.id === selectedDatabaseCollectionId)
+                ? selectedDatabaseCollectionId
+                : collections[0]?.id || "";
+              setSelectedDatabaseCollectionId(nextCollectionId);
+              if (!nextCollectionId) {
+                setSelectedDatabaseDocumentId("");
+                setDatabaseDocumentEditorState({
+                  documentId: "",
+                  value: "{}",
+                  initialValue: "{}",
+                  error: "",
+                  saveError: "",
+                  saveMessage: "",
+                  isSaving: false,
+                });
+              }
+            }
+            return collections;
+          } catch (error) {
+            setDatabaseSaveState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load collections.",
+            }));
+            return [];
+          } finally {
+            setLoadingDatabaseCollectionsId((current) => current === databaseId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders, selectedDatabaseCollectionId]);
+
+        const loadDatabaseDocuments = useCallback(async (databaseId, collectionId) => {
+          if (!databaseId || !collectionId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return [];
+          }
+
+          const loadingKey = databaseId + ":" + collectionId;
+          setLoadingDatabaseDocumentsKey(loadingKey);
+          try {
+            const response = await fetch(buildPlaygroundDatabaseDocumentsUrl(backendUrl, databaseId, collectionId), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load documents.");
+            }
+
+            const documents = Array.isArray(data?.documents) ? data.documents : [];
+            setDatabaseDocumentsByCollectionKey((current) => ({
+              ...current,
+              [loadingKey]: documents,
+            }));
+            if (selectedDatabaseIdRef.current === databaseId && selectedDatabaseCollectionId === collectionId) {
+              const nextDocument = documents.find((entry) => entry.id === selectedDatabaseDocumentId) || documents[0] || null;
+              setSelectedDatabaseDocumentId(nextDocument?.id || "");
+              setDatabaseDocumentEditorState((current) => ({
+                ...current,
+                documentId: nextDocument?.id || "",
+                value: nextDocument ? formatPlaygroundDatabaseDocumentJson(nextDocument.data) : "{}",
+                initialValue: nextDocument ? formatPlaygroundDatabaseDocumentJson(nextDocument.data) : "{}",
+                error: "",
+                saveError: "",
+                saveMessage: "",
+                isSaving: false,
+              }));
+            }
+            return documents;
+          } catch (error) {
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load documents.",
+            }));
+            return [];
+          } finally {
+            setLoadingDatabaseDocumentsKey((current) => current === loadingKey ? "" : current);
+          }
+        }, [backendUrl, requestHeaders, selectedDatabaseCollectionId, selectedDatabaseDocumentId]);
+
         const loadEnvironmentRuntimeStatus = useCallback(async (environmentId) => {
           const normalizedEnvironmentId = String(environmentId || "").trim();
           if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
@@ -29815,6 +32179,41 @@ const html = `<!doctype html>
         }, [orderedEnvironments, selectedEnvironmentId]);
 
         useEffect(() => {
+          if (resourceMode !== "servers" || hasLoadedServers || serverListLoading) {
+            return;
+          }
+          void loadServers();
+        }, [hasLoadedServers, loadServers, resourceMode, serverListLoading]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers") {
+            return;
+          }
+          if (selectedServerId === PLAYGROUND_SERVER_DRAFT_ID || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return;
+          }
+          if (selectedServerId && orderedServers.some((server) => server.id === selectedServerId)) {
+            return;
+          }
+          if (!selectedServerId && selectedDatabaseId && orderedDatabases.some((database) => database.id === selectedDatabaseId)) {
+            return;
+          }
+          const firstResource = displayServerResources[0] || null;
+          if (!firstResource) {
+            setSelectedServerId("");
+            setSelectedDatabaseId("");
+            return;
+          }
+          if (firstResource.resourceType === "database") {
+            setSelectedServerId("");
+            setSelectedDatabaseId(firstResource.id);
+            return;
+          }
+          setSelectedDatabaseId("");
+          setSelectedServerId(firstResource.id || "");
+        }, [displayServerResources, orderedDatabases, orderedServers, resourceMode, selectedDatabaseId, selectedServerId]);
+
+        useEffect(() => {
           if (!toolbarPopover) return;
 
           const focusFrame = toolbarPopover === "search"
@@ -29916,6 +32315,164 @@ const html = `<!doctype html>
         }, [environmentDetailsById, loadEnvironmentDetails, orderedEnvironments, selectedEnvironmentId]);
 
         useEffect(() => {
+          if (resourceMode !== "servers") {
+            return;
+          }
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            serverSeededSelectionRef.current = selectedServerId;
+            if (selectedServerId !== PLAYGROUND_SERVER_DRAFT_ID) {
+              setDraftServer(null);
+              resetServerEditorAuxiliaryState();
+            }
+            return;
+          }
+
+          if (serverSeededSelectionRef.current === selectedServerId) {
+            return;
+          }
+          serverSeededSelectionRef.current = selectedServerId;
+
+          const seedServer = serverDetailsById[selectedServerId]
+            || orderedServers.find((server) => server.id === selectedServerId)
+            || null;
+
+          resetServerEditorAuxiliaryState();
+          setServerDetailsCollapsed(false);
+          setDraftServer(seedServer ? normalizePlaygroundServerRecord(seedServer) : null);
+          void loadServerDetails(selectedServerId);
+          void loadServerFiles(selectedServerId);
+        }, [loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers") {
+            return;
+          }
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
+          if (!activeServer?.id) {
+            return;
+          }
+          if (!activeServer.cloudRunServiceName && !activeServer.serviceUrl) {
+            return;
+          }
+          if (serverAnalyticsById[selectedServerId]) {
+            return;
+          }
+          void loadServerAnalytics(selectedServerId);
+        }, [draftServer, loadServerAnalytics, resourceMode, selectedServerId, selectedServerSnapshot, serverAnalyticsById]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers" || serverAnalyticsView !== "analytics") {
+            return;
+          }
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          void loadServerAnalytics(selectedServerId);
+          void loadServerLogs(selectedServerId, serverLogsState.kind);
+        }, [loadServerAnalytics, loadServerLogs, resourceMode, selectedServerId, serverAnalyticsView, serverLogsState.kind]);
+
+        useEffect(() => {
+          if (!serverFileEditorState.path) {
+            return;
+          }
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            setServerFileEditorState({
+              path: "",
+              status: "idle",
+              value: "",
+              initialValue: "",
+              error: "",
+              saveError: "",
+              saveMessage: "",
+              isSaving: false,
+              wordWrap: true,
+            });
+            return;
+          }
+          if (currentServerFiles.some((entry) => entry.path === serverFileEditorState.path)) {
+            return;
+          }
+          setServerFileEditorState({
+            path: "",
+            status: "idle",
+            value: "",
+            initialValue: "",
+            error: "",
+            saveError: "",
+            saveMessage: "",
+            isSaving: false,
+            wordWrap: true,
+          });
+        }, [currentServerFiles, selectedServerId, serverFileEditorState.path]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers" || hasLoadedDatabases || databaseListLoading) {
+            return;
+          }
+          void loadDatabases();
+        }, [databaseListLoading, hasLoadedDatabases, loadDatabases, resourceMode]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers" || !selectedServerId) {
+            return;
+          }
+          const linkedDatabaseId = String(draftServer?.databaseId || "").trim();
+          if (!linkedDatabaseId) {
+            if (selectedDatabaseId) {
+              setSelectedDatabaseId("");
+            }
+            return;
+          }
+          if (selectedDatabaseId !== linkedDatabaseId) {
+            setSelectedDatabaseId(linkedDatabaseId);
+          }
+        }, [draftServer?.databaseId, resourceMode, selectedDatabaseId]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers") {
+            return;
+          }
+          if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            databaseSeededSelectionRef.current = selectedDatabaseId;
+            setDraftDatabase(null);
+            resetDatabaseEditorAuxiliaryState();
+            return;
+          }
+
+          if (databaseSeededSelectionRef.current === selectedDatabaseId) {
+            return;
+          }
+          databaseSeededSelectionRef.current = selectedDatabaseId;
+
+          const seedDatabase = databaseDetailsById[selectedDatabaseId]
+            || orderedDatabases.find((database) => database.id === selectedDatabaseId)
+            || null;
+
+          resetDatabaseEditorAuxiliaryState();
+          setDraftDatabase(seedDatabase ? normalizePlaygroundDatabaseRecord(seedDatabase) : null);
+          void loadDatabaseDetails(selectedDatabaseId);
+          void loadDatabaseCollections(selectedDatabaseId);
+        }, [databaseDetailsById, loadDatabaseCollections, loadDatabaseDetails, orderedDatabases, resourceMode, selectedDatabaseId]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers") {
+            return;
+          }
+          if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId) {
+            return;
+          }
+          void loadDatabaseDocuments(selectedDatabaseId, selectedDatabaseCollectionId);
+        }, [loadDatabaseDocuments, resourceMode, selectedDatabaseCollectionId, selectedDatabaseId]);
+
+        useEffect(() => {
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+        }, [resourceMode]);
+
+        useEffect(() => {
           if (!environmentRuntimePopover) return undefined;
 
           function handleEnvironmentRuntimePopoverPointerDown(event) {
@@ -29991,6 +32548,31 @@ const html = `<!doctype html>
         }, [environmentActionsPopoverOpen]);
 
         useEffect(() => {
+          if (!databaseActionsPopoverOpen) return undefined;
+
+          function handleDatabaseActionsPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !databaseActionsPopoverRef.current || databaseActionsPopoverRef.current.contains(target)) {
+              return;
+            }
+            setDatabaseActionsPopoverOpen(false);
+          }
+
+          function handleDatabaseActionsPopoverEscape(event) {
+            if (event.key === "Escape") {
+              setDatabaseActionsPopoverOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleDatabaseActionsPopoverPointerDown);
+          window.addEventListener("keydown", handleDatabaseActionsPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleDatabaseActionsPopoverPointerDown);
+            window.removeEventListener("keydown", handleDatabaseActionsPopoverEscape);
+          };
+        }, [databaseActionsPopoverOpen]);
+
+        useEffect(() => {
           if (!environmentRenameState || !environmentRenameInputRef.current) {
             return undefined;
           }
@@ -30014,12 +32596,125 @@ const html = `<!doctype html>
           };
         }, [environmentRenameState, saveState.isSaving]);
 
+        useEffect(() => {
+          if (!databaseRenameState || !databaseRenameInputRef.current) {
+            return undefined;
+          }
+
+          const focusFrame = window.requestAnimationFrame(() => {
+            databaseRenameInputRef.current?.focus();
+            databaseRenameInputRef.current?.select();
+          });
+
+          function handleDatabaseRenameEscape(event) {
+            if (event.key === "Escape" && !databaseSaveState.isSaving) {
+              event.preventDefault();
+              closeDatabaseRenameDialog();
+            }
+          }
+
+          window.addEventListener("keydown", handleDatabaseRenameEscape);
+          return () => {
+            window.cancelAnimationFrame(focusFrame);
+            window.removeEventListener("keydown", handleDatabaseRenameEscape);
+          };
+        }, [databaseRenameState, databaseSaveState.isSaving]);
+
         useEffect(() => () => {
           if (environmentAutosaveTimerRef.current) {
             window.clearTimeout(environmentAutosaveTimerRef.current);
             environmentAutosaveTimerRef.current = null;
           }
+          if (databaseDocumentAutosaveTimerRef.current) {
+            window.clearTimeout(databaseDocumentAutosaveTimerRef.current);
+            databaseDocumentAutosaveTimerRef.current = null;
+          }
         }, []);
+
+        useEffect(() => {
+          if (databaseDocumentViewMode !== "json" || databaseJsonEditorModule || databaseJsonEditorModuleError) {
+            return;
+          }
+
+          let cancelled = false;
+
+          void loadPlaygroundCodeEditorModule()
+            .then((module) => {
+              if (cancelled || !module) {
+                return;
+              }
+              setDatabaseJsonEditorModule(module);
+              setDatabaseJsonEditorModuleError("");
+              void module.loader?.init?.()
+                .then((monaco) => {
+                  if (!cancelled) {
+                    ensurePlaygroundCodeEditorTheme(monaco);
+                  }
+                })
+                .catch(() => {});
+            })
+            .catch((error) => {
+              if (cancelled) {
+                return;
+              }
+              setDatabaseJsonEditorModuleError(error instanceof Error ? error.message : "Failed to load editor.");
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [databaseDocumentViewMode, databaseJsonEditorModule, databaseJsonEditorModuleError]);
+
+        useEffect(() => {
+          if (
+            !draftDatabase?.id
+            || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID
+            || !selectedDatabaseCollectionId
+            || !databaseDocumentEditorState.documentId
+            || databaseDocumentViewMode === "json"
+            || databaseDocumentEditorState.isSaving
+            || databaseDocumentEditorState.value === databaseDocumentEditorState.initialValue
+          ) {
+            if (databaseDocumentAutosaveTimerRef.current) {
+              window.clearTimeout(databaseDocumentAutosaveTimerRef.current);
+              databaseDocumentAutosaveTimerRef.current = null;
+            }
+            return;
+          }
+
+          const parsedDocument = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
+          if (!parsedDocument) {
+            if (databaseDocumentAutosaveTimerRef.current) {
+              window.clearTimeout(databaseDocumentAutosaveTimerRef.current);
+              databaseDocumentAutosaveTimerRef.current = null;
+            }
+            return;
+          }
+
+          if (databaseDocumentAutosaveTimerRef.current) {
+            window.clearTimeout(databaseDocumentAutosaveTimerRef.current);
+          }
+
+          databaseDocumentAutosaveTimerRef.current = window.setTimeout(() => {
+            databaseDocumentAutosaveTimerRef.current = null;
+            void handleSaveDatabaseDocument();
+          }, 700);
+
+          return () => {
+            if (databaseDocumentAutosaveTimerRef.current) {
+              window.clearTimeout(databaseDocumentAutosaveTimerRef.current);
+              databaseDocumentAutosaveTimerRef.current = null;
+            }
+          };
+        }, [
+          draftDatabase?.id,
+          selectedDatabaseCollectionId,
+          databaseDocumentViewMode,
+          databaseDocumentEditorState.documentId,
+          databaseDocumentEditorState.value,
+          databaseDocumentEditorState.initialValue,
+          databaseDocumentEditorState.isSaving,
+        ]);
 
         useLayoutEffect(() => {
           resizeEnvironmentDescriptionTextarea(environmentDescriptionTextareaRef.current);
@@ -30035,6 +32730,17 @@ const html = `<!doctype html>
           }
           resizeEnvironmentDescriptionTextarea(environmentComposerDescriptionTextareaRef.current);
         }, [environmentComposerDraft?.description, environmentComposerOpen]);
+
+        useLayoutEffect(() => {
+          if (!serverComposerOpen) {
+            return;
+          }
+          resizeEnvironmentDescriptionTextarea(serverComposerDescriptionTextareaRef.current);
+        }, [serverComposerDraft?.description, serverComposerOpen]);
+
+        useLayoutEffect(() => {
+          resizeEnvironmentDescriptionTextarea(databaseDescriptionTextareaRef.current);
+        }, [draftDatabase?.description, draftDatabase?.id]);
 
         useEffect(() => {
           const textarea = environmentDescriptionTextareaRef.current;
@@ -30082,6 +32788,98 @@ const html = `<!doctype html>
             observer.disconnect();
           };
         }, [draftEnvironment?.id]);
+
+        useEffect(() => {
+          const textarea = serverDescriptionTextareaRef.current;
+          const detailMain = serverDetailMainRef.current;
+          if (!textarea || !detailMain) return undefined;
+
+          let frameId = 0;
+          const timeoutIds = [];
+          const scheduleResize = () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            frameId = window.requestAnimationFrame(() => {
+              resizeEnvironmentDescriptionTextarea(serverDescriptionTextareaRef.current);
+            });
+          };
+
+          scheduleResize();
+          [120, 240, 360].forEach((delay) => {
+            timeoutIds.push(window.setTimeout(scheduleResize, delay));
+          });
+
+          if (typeof ResizeObserver === "undefined") {
+            window.addEventListener("resize", scheduleResize);
+            return () => {
+              if (frameId) {
+                window.cancelAnimationFrame(frameId);
+              }
+              timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+              window.removeEventListener("resize", scheduleResize);
+            };
+          }
+
+          const observer = new ResizeObserver(() => {
+            scheduleResize();
+          });
+          observer.observe(detailMain);
+
+          return () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+            observer.disconnect();
+          };
+        }, [draftServer?.id]);
+
+        useEffect(() => {
+          const textarea = databaseDescriptionTextareaRef.current;
+          const detailMain = serverDetailMainRef.current;
+          if (!textarea || !detailMain) return undefined;
+
+          let frameId = 0;
+          const timeoutIds = [];
+          const scheduleResize = () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            frameId = window.requestAnimationFrame(() => {
+              resizeEnvironmentDescriptionTextarea(databaseDescriptionTextareaRef.current);
+            });
+          };
+
+          scheduleResize();
+          [120, 240, 360].forEach((delay) => {
+            timeoutIds.push(window.setTimeout(scheduleResize, delay));
+          });
+
+          if (typeof ResizeObserver === "undefined") {
+            window.addEventListener("resize", scheduleResize);
+            return () => {
+              if (frameId) {
+                window.cancelAnimationFrame(frameId);
+              }
+              timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+              window.removeEventListener("resize", scheduleResize);
+            };
+          }
+
+          const observer = new ResizeObserver(() => {
+            scheduleResize();
+          });
+          observer.observe(detailMain);
+
+          return () => {
+            if (frameId) {
+              window.cancelAnimationFrame(frameId);
+            }
+            timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+            observer.disconnect();
+          };
+        }, [draftDatabase?.id]);
 
         useEffect(() => {
           if (!draftEnvironment || !editorDirtyRef.current) {
@@ -30169,6 +32967,237 @@ const html = `<!doctype html>
           );
         }
 
+        function handleServerSelect(serverId) {
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+          setSelectedDatabaseId("");
+          setDraftDatabase(null);
+          setSelectedServerId(serverId);
+        }
+
+        function handleDatabaseSelect(databaseId) {
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+          setDatabaseActionsPopoverOpen(false);
+          setSelectedServerId("");
+          setSelectedDatabaseId(databaseId);
+        }
+
+        function updateDraftDatabase(updater) {
+          setDraftDatabase((current) => {
+            const base = current || normalizePlaygroundDatabaseRecord(selectedDatabaseSnapshot || buildPlaygroundDefaultDatabaseDraft());
+            return typeof updater === "function" ? updater(base) : updater;
+          });
+          setDatabaseSaveState((current) => ({
+            ...current,
+            error: "",
+            message: "",
+          }));
+        }
+
+        function updateDatabaseField(field, value) {
+          updateDraftDatabase((current) => ({
+            ...current,
+            [field]: value,
+          }));
+        }
+
+        function applyDatabaseDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateDatabaseField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = databaseDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeEnvironmentDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleDatabaseDescriptionFormat(formatType) {
+          const textarea = databaseDescriptionTextareaRef.current;
+          if (!textarea || !draftDatabase) {
+            return;
+          }
+          const value = String(draftDatabase?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyDatabaseDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        function openServerComposer() {
+          if (!hasLoadedDatabases && !databaseListLoading) {
+            void loadDatabases();
+          }
+          resetServerEditorAuxiliaryState();
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+          setServerComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setServerComposerDraft(buildPlaygroundDefaultServerDraft());
+          setServerComposerOpen(true);
+        }
+
+        function closeServerComposer() {
+          if (serverComposerSaveState.isSaving) {
+            return;
+          }
+          setServerComposerOpen(false);
+          setIsServerComposerDescriptionEditing(false);
+          setServerComposerSaveState({
+            isSaving: false,
+            error: "",
+          });
+          setServerComposerDraft(buildPlaygroundDefaultServerDraft());
+        }
+
+        function handleCreateServer() {
+          openServerComposer();
+        }
+
+        function updateDraftServer(updater) {
+          setDraftServer((current) => {
+            const base = current || normalizePlaygroundServerRecord(selectedServerSnapshot || buildPlaygroundDefaultServerDraft());
+            return typeof updater === "function" ? updater(base) : updater;
+          });
+          setServerSaveState((current) => ({
+            ...current,
+            error: "",
+            message: "",
+          }));
+        }
+
+        function updateServerField(field, value) {
+          updateDraftServer((current) => ({
+            ...current,
+            [field]: value,
+          }));
+        }
+
+        function applyDatabaseSelectionToServerDraft(databaseId, scope = "editor") {
+          const normalizedDatabaseId = String(databaseId || "").trim();
+          const selectedDatabase = normalizedDatabaseId
+            ? (databaseDetailsById[normalizedDatabaseId] || databases.find((database) => database.id === normalizedDatabaseId) || null)
+            : null;
+          const nextServerRecord = selectedDatabase
+            ? buildPlaygroundServerWithLinkedDatabase(
+                scope === "composer" ? (serverComposerDraft || buildPlaygroundDefaultServerDraft()) : (draftServer || buildPlaygroundDefaultServerDraft()),
+                selectedDatabase,
+                "existing",
+              )
+            : clearPlaygroundServerDatabaseBinding(scope === "composer" ? (serverComposerDraft || buildPlaygroundDefaultServerDraft()) : (draftServer || buildPlaygroundDefaultServerDraft()));
+
+          if (scope === "composer") {
+            setServerComposerDraft(nextServerRecord);
+            setServerComposerSaveState((current) => ({
+              ...current,
+              error: "",
+            }));
+          } else {
+            setDraftServer(nextServerRecord);
+            setServerSaveState((current) => ({
+              ...current,
+              error: "",
+              message: "",
+            }));
+          }
+        }
+
+        function updateServerDatabaseMode(mode, scope = "editor") {
+          const normalizedMode = mode === "create" || mode === "existing" ? mode : "none";
+          const updateTarget = (current) => {
+            const base = normalizePlaygroundServerRecord(current || buildPlaygroundDefaultServerDraft());
+            if (normalizedMode === "none") {
+              return clearPlaygroundServerDatabaseBinding(base);
+            }
+            if (normalizedMode === "existing") {
+              return normalizePlaygroundServerRecord({
+                ...base,
+                databaseMode: "existing",
+                databaseId: normalizedMode === "existing" ? base.databaseId : "",
+              });
+            }
+            return normalizePlaygroundServerRecord({
+              ...base,
+              databaseMode: "create",
+              databaseId: "",
+              databaseName: base.databaseName || (String(base.name || "").trim() ? String(base.name || "").trim() + " Database" : ""),
+              databaseDescription: base.databaseDescription || "",
+              databaseLocation: base.databaseLocation || "eur3",
+            });
+          };
+
+          if (scope === "composer") {
+            setServerComposerDraft((current) => updateTarget(current));
+            setServerComposerSaveState((current) => ({
+              ...current,
+              error: "",
+            }));
+            return;
+          }
+
+          setDraftServer((current) => updateTarget(current));
+          setServerSaveState((current) => ({
+            ...current,
+            error: "",
+            message: "",
+          }));
+        }
+
+        function updateServerDatabaseField(field, value, scope = "editor") {
+          const updater = (current) => ({
+            ...normalizePlaygroundServerRecord(current || buildPlaygroundDefaultServerDraft()),
+            [field]: value,
+          });
+          if (scope === "composer") {
+            setServerComposerDraft((current) => updater(current));
+            setServerComposerSaveState((current) => ({
+              ...current,
+              error: "",
+            }));
+            return;
+          }
+          setDraftServer((current) => updater(current));
+          setServerSaveState((current) => ({
+            ...current,
+            error: "",
+            message: "",
+          }));
+        }
+
+        function updateServerComposerField(field, value) {
+          setServerComposerDraft((current) => ({
+            ...(current || buildPlaygroundDefaultServerDraft()),
+            [field]: value,
+          }));
+          setServerComposerSaveState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
         function buildSanitizedEnvironmentPayload(environment) {
           const runtimes = Object.fromEntries(
             Object.entries(environment?.runtimes || {}).filter(([, value]) => typeof value === "string" && value.trim())
@@ -30252,6 +33281,39 @@ const html = `<!doctype html>
               guiEnabled: environment?.guiEnabled !== false,
               officeAppsEnabled: environment?.officeAppsEnabled === true,
             },
+          };
+        }
+
+        function buildSanitizedServerPayload(server) {
+          return {
+            name: String(server?.name || "").trim() || "Untitled Server",
+            description: typeof server?.description === "string" ? server.description : "",
+            projectId: typeof server?.projectId === "string" && server.projectId.trim() ? server.projectId.trim() : null,
+            kind: canonicalizePlaygroundServerKind(server?.kind),
+            sourceType: ["manual", "computer", "git"].includes(server?.sourceType) ? server.sourceType : "manual",
+            sourceEnvironmentId: typeof server?.sourceEnvironmentId === "string" && server.sourceEnvironmentId.trim() ? server.sourceEnvironmentId.trim() : null,
+            sourcePath: typeof server?.sourcePath === "string" && server.sourcePath.trim() ? server.sourcePath : null,
+            region: typeof server?.region === "string" && server.region.trim() ? server.region.trim() : "europe-west1",
+            runtime: typeof server?.runtime === "string" && server.runtime.trim() ? server.runtime.trim() : "nodejs22",
+            authMode: server?.authMode === "private" ? "private" : "public",
+            serviceUrl: typeof server?.serviceUrl === "string" && server.serviceUrl.trim() ? server.serviceUrl.trim() : null,
+            customDomain: typeof server?.customDomain === "string" && server.customDomain.trim() ? server.customDomain.trim() : null,
+            cloudRunServiceName: typeof server?.cloudRunServiceName === "string" && server.cloudRunServiceName.trim() ? server.cloudRunServiceName.trim() : null,
+            imageUrl: typeof server?.imageUrl === "string" && server.imageUrl.trim() ? server.imageUrl.trim() : null,
+            status: ["draft", "deploying", "deployed", "failed", "inactive"].includes(server?.status) ? server.status : "draft",
+            lastDeployedAt: typeof server?.lastDeployedAt === "string" && server.lastDeployedAt.trim() ? server.lastDeployedAt.trim() : null,
+            metadata: buildPlaygroundServerMetadata(server),
+          };
+        }
+
+        function buildSanitizedDatabasePayload(database) {
+          return {
+            name: String(database?.name || "").trim() || "Untitled Database",
+            description: typeof database?.description === "string" ? database.description : "",
+            projectId: typeof database?.projectId === "string" && database.projectId.trim() ? database.projectId.trim() : null,
+            location: typeof database?.location === "string" && database.location.trim() ? database.location.trim() : "eur3",
+            status: ["active", "provisioning", "error"].includes(database?.status) ? database.status : "active",
+            metadata: database?.metadata && typeof database.metadata === "object" && !Array.isArray(database.metadata) ? database.metadata : null,
           };
         }
 
@@ -30395,6 +33457,1499 @@ const html = `<!doctype html>
           }
 
           return savedEnvironment;
+        }
+
+        async function persistServerRecord(serverRecord) {
+          if (!serverRecord) {
+            return null;
+          }
+
+          const payload = buildSanitizedServerPayload(serverRecord);
+          const isNewServer = !serverRecord.id || serverRecord.id === PLAYGROUND_SERVER_DRAFT_ID;
+          const response = await fetch(
+            isNewServer
+              ? backendUrl + "/servers"
+              : backendUrl + "/servers/" + encodeURIComponent(serverRecord.id),
+            {
+              method: isNewServer ? "POST" : "PATCH",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            }
+          );
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || (isNewServer ? "Failed to create server." : "Failed to save server."));
+          }
+
+          return getPlaygroundServerResponseRecord(data) || normalizePlaygroundServerRecord({
+            ...serverRecord,
+            ...payload,
+            id: isNewServer ? serverRecord.id : serverRecord.id,
+            updatedAt: new Date().toISOString(),
+          });
+        }
+
+        async function persistDatabaseRecord(databaseRecord) {
+          if (!databaseRecord) {
+            return null;
+          }
+
+          const payload = buildSanitizedDatabasePayload(databaseRecord);
+          const isNewDatabase = !databaseRecord.id || databaseRecord.id === PLAYGROUND_DATABASE_DRAFT_ID;
+          const response = await fetch(
+            isNewDatabase
+              ? backendUrl + "/databases"
+              : backendUrl + "/databases/" + encodeURIComponent(databaseRecord.id),
+            {
+              method: isNewDatabase ? "POST" : "PATCH",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            }
+          );
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || (isNewDatabase ? "Failed to create database." : "Failed to save database."));
+          }
+
+          return getPlaygroundDatabaseResponseRecord(data) || normalizePlaygroundDatabaseRecord({
+            ...databaseRecord,
+            ...payload,
+            updatedAt: new Date().toISOString(),
+          });
+        }
+
+        function upsertLocalDatabaseRecord(savedDatabase) {
+          if (!savedDatabase?.id) {
+            return;
+          }
+          setDatabases((current) => {
+            const existingIndex = current.findIndex((database) => database.id === savedDatabase.id);
+            if (existingIndex === -1) {
+              return [savedDatabase, ...current];
+            }
+            const next = [...current];
+            next[existingIndex] = savedDatabase;
+            return next;
+          });
+          setDatabaseDetailsById((current) => ({
+            ...current,
+            [savedDatabase.id]: savedDatabase,
+          }));
+        }
+
+        async function resolveServerDatabaseDraft(serverRecord, options = {}) {
+          const normalizedServer = normalizePlaygroundServerRecord(serverRecord);
+          const databaseBinding = getPlaygroundServerDatabaseBinding(normalizedServer);
+
+          if (databaseBinding.mode === "none") {
+            return {
+              server: clearPlaygroundServerDatabaseBinding(normalizedServer),
+              createdDatabase: null,
+            };
+          }
+
+          if (databaseBinding.mode === "existing" && databaseBinding.id) {
+            const existingDatabase = databaseDetailsById[databaseBinding.id]
+              || databases.find((database) => database.id === databaseBinding.id)
+              || null;
+            return {
+              server: existingDatabase
+                ? buildPlaygroundServerWithLinkedDatabase(normalizedServer, existingDatabase, "existing")
+                : normalizedServer,
+              createdDatabase: null,
+            };
+          }
+
+          const nextDatabaseDraft = normalizePlaygroundDatabaseRecord({
+            ...buildPlaygroundDefaultDatabaseDraft(),
+            projectId: normalizedServer.projectId,
+            name: databaseBinding.name || (String(normalizedServer.name || "").trim() ? String(normalizedServer.name || "").trim() + " Database" : "New Database"),
+            description: databaseBinding.description || "",
+            location: databaseBinding.location || "eur3",
+          });
+          const savedDatabase = await persistDatabaseRecord(nextDatabaseDraft);
+          if (!savedDatabase) {
+            throw new Error("Database creation failed.");
+          }
+          upsertLocalDatabaseRecord(savedDatabase);
+          return {
+            server: buildPlaygroundServerWithLinkedDatabase(normalizedServer, savedDatabase, "existing"),
+            createdDatabase: savedDatabase,
+          };
+        }
+
+        async function handleServerSave() {
+          if (!draftServer) {
+            return;
+          }
+
+          setServerSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          let createdDatabase = null;
+          try {
+            let serverDraftToPersist = normalizePlaygroundServerRecord(draftServer);
+            const resolved = await resolveServerDatabaseDraft(serverDraftToPersist);
+            serverDraftToPersist = resolved.server;
+            createdDatabase = resolved.createdDatabase;
+
+            const savedServer = await persistServerRecord(serverDraftToPersist);
+            if (!savedServer) {
+              throw new Error("Server save failed.");
+            }
+
+            setServers((current) => {
+              const existingIndex = current.findIndex((server) => server.id === savedServer.id);
+              if (existingIndex === -1) {
+                return [...current, savedServer];
+              }
+              const next = [...current];
+              next[existingIndex] = savedServer;
+              return next;
+            });
+            setServerDetailsById((current) => ({
+              ...current,
+              [savedServer.id]: savedServer,
+            }));
+            setSelectedServerId(savedServer.id);
+            setDraftServer(savedServer);
+            if (savedServer.databaseId) {
+              setSelectedDatabaseId(savedServer.databaseId);
+            }
+            setServerSaveState({
+              isSaving: false,
+              error: "",
+              message: "Saved",
+            });
+          } catch (error) {
+            if (createdDatabase?.id) {
+              try {
+                await fetch(backendUrl + "/databases/" + encodeURIComponent(createdDatabase.id), {
+                  method: "DELETE",
+                  headers: requestHeaders,
+                });
+              } catch {}
+            }
+            setServerSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to save server.",
+              message: "",
+            });
+          }
+        }
+
+        async function handleDatabaseSave() {
+          if (!draftDatabase) {
+            return;
+          }
+
+          setDatabaseSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const savedDatabase = await persistDatabaseRecord(draftDatabase);
+            if (!savedDatabase) {
+              throw new Error("Database save failed.");
+            }
+
+            upsertLocalDatabaseRecord(savedDatabase);
+            setSelectedDatabaseId(savedDatabase.id);
+            setDraftDatabase(savedDatabase);
+            if (draftServer?.databaseId === savedDatabase.id) {
+              setDraftServer((current) => buildPlaygroundServerWithLinkedDatabase(current || draftServer, savedDatabase, "existing"));
+            }
+            setDatabaseSaveState({
+              isSaving: false,
+              error: "",
+              message: "Saved",
+            });
+            void loadDatabaseCollections(savedDatabase.id);
+          } catch (error) {
+            setDatabaseSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to save database.",
+              message: "",
+            });
+          }
+        }
+
+        function closeDatabaseRenameDialog() {
+          setDatabaseRenameState(null);
+          setDatabaseRenameValue("");
+          setDatabaseRenameError("");
+        }
+
+        function openDatabaseRenameDialog(databaseRecord) {
+          if (!databaseRecord?.id || databaseRecord.id === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return;
+          }
+          setDatabaseActionsPopoverOpen(false);
+          setDatabaseRenameState({
+            databaseId: databaseRecord.id,
+            originalName: String(databaseRecord.name || "").trim(),
+          });
+          setDatabaseRenameValue(String(databaseRecord.name || ""));
+          setDatabaseRenameError("");
+        }
+
+        async function handleDatabaseRenameSubmit(event) {
+          event.preventDefault();
+          if (!databaseRenameState?.databaseId || !draftDatabase) {
+            return;
+          }
+
+          const nextName = String(databaseRenameValue || "").trim().replace(/\s+/g, " ");
+          if (!nextName) {
+            setDatabaseRenameError("Database name cannot be empty.");
+            return;
+          }
+
+          if (nextName === databaseRenameState.originalName) {
+            closeDatabaseRenameDialog();
+            return;
+          }
+
+          setDatabaseSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+          setDatabaseRenameError("");
+
+          try {
+            const savedDatabase = await persistDatabaseRecord({
+              ...draftDatabase,
+              name: nextName,
+            });
+            if (!savedDatabase) {
+              throw new Error("Database save failed.");
+            }
+            upsertLocalDatabaseRecord(savedDatabase);
+            setSelectedDatabaseId(savedDatabase.id);
+            setDraftDatabase(savedDatabase);
+            setDatabaseSaveState({
+              isSaving: false,
+              error: "",
+              message: "Saved",
+            });
+            closeDatabaseRenameDialog();
+          } catch (error) {
+            setDatabaseRenameError(error instanceof Error ? error.message : "Failed to rename database.");
+            setDatabaseSaveState({
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+          }
+        }
+
+        function renderDatabaseRenameModal() {
+          if (!databaseRenameState) {
+            return null;
+          }
+
+          return React.createElement("div", {
+              className: "sidebar-thread-rename-scrim",
+              onClick: () => {
+                if (!databaseSaveState.isSaving) {
+                  closeDatabaseRenameDialog();
+                }
+              },
+            },
+              React.createElement("form", {
+                className: "sidebar-thread-rename-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  void handleDatabaseRenameSubmit(event);
+                },
+              },
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Rename Database"),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" }, "Choose a new name for this database."),
+                React.createElement("input", {
+                  ref: databaseRenameInputRef,
+                  className: "sidebar-thread-rename-input",
+                  value: databaseRenameValue,
+                  onChange: (event) => setDatabaseRenameValue(event.target.value),
+                  placeholder: "Database name",
+                  disabled: databaseSaveState.isSaving,
+                }),
+                databaseRenameError
+                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, databaseRenameError)
+                  : null,
+                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "sidebar-thread-rename-button is-secondary",
+                    onClick: closeDatabaseRenameDialog,
+                    disabled: databaseSaveState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "sidebar-thread-rename-button is-primary",
+                    disabled: databaseSaveState.isSaving,
+                  }, databaseSaveState.isSaving ? "Saving..." : "Save")
+                )
+              )
+            );
+        }
+
+        async function handleDeleteServer(serverId) {
+          if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          if (!window.confirm("Delete this server?")) {
+            return;
+          }
+
+          setServerSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const response = await fetch(backendUrl + "/servers/" + encodeURIComponent(serverId), {
+              method: "DELETE",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to delete server.");
+            }
+
+            const nextServers = servers.filter((server) => server.id !== serverId);
+            setServers(nextServers);
+            setServerDetailsById((current) => {
+              const next = { ...current };
+              delete next[serverId];
+              return next;
+            });
+            setServerFilesById((current) => {
+              const next = { ...current };
+              delete next[serverId];
+              return next;
+            });
+            if (selectedServerIdRef.current === serverId) {
+              setSelectedServerId(nextServers[0]?.id || "");
+              setDraftServer(null);
+            }
+            setServerSaveState({
+              isSaving: false,
+              error: "",
+              message: "Deleted",
+            });
+          } catch (error) {
+            setServerSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to delete server.",
+              message: "",
+            });
+          }
+        }
+
+        async function handleDeleteDatabase(databaseId) {
+          if (!databaseId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return;
+          }
+          if (!window.confirm("Delete this database and all of its collections/documents?")) {
+            return;
+          }
+
+          setDatabaseSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const response = await fetch(backendUrl + "/databases/" + encodeURIComponent(databaseId), {
+              method: "DELETE",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to delete database.");
+            }
+
+            const nextDatabases = databases.filter((database) => database.id !== databaseId);
+            setDatabases(nextDatabases);
+            setDatabaseDetailsById((current) => {
+              const next = { ...current };
+              delete next[databaseId];
+              return next;
+            });
+            setDatabaseCollectionsById((current) => {
+              const next = { ...current };
+              delete next[databaseId];
+              return next;
+            });
+            if (selectedDatabaseIdRef.current === databaseId) {
+              setSelectedDatabaseId("");
+              setDraftDatabase(null);
+            }
+            if (draftServer?.databaseId === databaseId) {
+              const clearedServer = clearPlaygroundServerDatabaseBinding(draftServer);
+              setDraftServer(clearedServer);
+              if (clearedServer.id && clearedServer.id !== PLAYGROUND_SERVER_DRAFT_ID) {
+                try {
+                  const savedServer = await persistServerRecord(clearedServer);
+                  setServers((current) => current.map((server) => server.id === savedServer.id ? savedServer : server));
+                  setServerDetailsById((current) => ({
+                    ...current,
+                    [savedServer.id]: savedServer,
+                  }));
+                  setDraftServer(savedServer);
+                } catch (persistError) {
+                  console.error("Failed to clear deleted database binding from server", persistError);
+                }
+              }
+            }
+            setDatabaseSaveState({
+              isSaving: false,
+              error: "",
+              message: "Deleted",
+            });
+          } catch (error) {
+            setDatabaseSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to delete database.",
+              message: "",
+            });
+          }
+        }
+
+        function closeDatabaseCollectionComposer() {
+          setDatabaseCollectionComposerState({
+            open: false,
+            name: "items",
+            error: "",
+            isSaving: false,
+          });
+        }
+
+        function handleCreateDatabaseCollection() {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return;
+          }
+          setDatabaseCollectionComposerState({
+            open: true,
+            name: "items",
+            error: "",
+            isSaving: false,
+          });
+        }
+
+        async function handleSubmitDatabaseCollectionComposer(event) {
+          event.preventDefault();
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return;
+          }
+          const name = String(databaseCollectionComposerState.name || "").trim();
+          if (!name) {
+            setDatabaseCollectionComposerState((current) => ({
+              ...current,
+              error: "Collection name is required.",
+            }));
+            return;
+          }
+
+          setDatabaseCollectionComposerState((current) => ({
+            ...current,
+            isSaving: true,
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(buildPlaygroundDatabaseCollectionsUrl(backendUrl, draftDatabase.id), {
+              method: "POST",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create collection.");
+            }
+            const collections = await loadDatabaseCollections(draftDatabase.id);
+            const createdCollectionId = data?.collection?.id || collections[0]?.id || "";
+            if (createdCollectionId) {
+              setSelectedDatabaseCollectionId(createdCollectionId);
+            }
+            closeDatabaseCollectionComposer();
+            setDatabaseSaveState({
+              isSaving: false,
+              error: "",
+              message: "Collection created",
+            });
+          } catch (error) {
+            setDatabaseCollectionComposerState((current) => ({
+              ...current,
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create collection.",
+            }));
+            setDatabaseSaveState({
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+          }
+        }
+
+        async function handleDeleteDatabaseCollection(collectionId) {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !collectionId) {
+            return;
+          }
+          if (!window.confirm("Delete this collection and all documents inside it?")) {
+            return;
+          }
+          try {
+            const response = await fetch(
+              backendUrl + "/databases/" + encodeURIComponent(draftDatabase.id) + "/collections/" + encodeURIComponent(collectionId),
+              {
+                method: "DELETE",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to delete collection.");
+            }
+            await loadDatabaseCollections(draftDatabase.id);
+            setSelectedDatabaseCollectionId("");
+            setSelectedDatabaseDocumentId("");
+          } catch (error) {
+            setDatabaseSaveState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to delete collection.",
+            }));
+          }
+        }
+
+        function closeDatabaseDocumentComposer() {
+          setDatabaseDocumentComposerState({
+            open: false,
+            documentId: "",
+            error: "",
+            isSaving: false,
+          });
+        }
+
+        function handleCreateDatabaseDocument() {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId) {
+            return;
+          }
+          setDatabaseDocumentComposerState({
+            open: true,
+            documentId: "doc_" + Date.now().toString(36),
+            error: "",
+            isSaving: false,
+          });
+        }
+
+        async function handleSubmitDatabaseDocumentComposer(event) {
+          event.preventDefault();
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId) {
+            return;
+          }
+          const documentId = String(databaseDocumentComposerState.documentId || "").trim();
+          if (!documentId) {
+            setDatabaseDocumentComposerState((current) => ({
+              ...current,
+              error: "Document ID is required.",
+            }));
+            return;
+          }
+
+          setDatabaseDocumentComposerState((current) => ({
+            ...current,
+            isSaving: true,
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(
+              backendUrl + "/databases/" + encodeURIComponent(draftDatabase.id)
+                + "/collections/" + encodeURIComponent(selectedDatabaseCollectionId)
+                + "/documents",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  id: documentId,
+                  data: {},
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create document.");
+            }
+
+            await loadDatabaseCollections(draftDatabase.id);
+            await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId);
+            closeDatabaseDocumentComposer();
+            setSelectedDatabaseDocumentId(documentId);
+            setDatabaseDocumentEditorState({
+              documentId,
+              value: "{}",
+              initialValue: "{}",
+              error: "",
+              saveError: "",
+              saveMessage: "",
+              isSaving: false,
+            });
+            setDatabaseFieldExpansionState({});
+            closeDatabaseFieldComposer();
+          } catch (error) {
+            setDatabaseDocumentComposerState((current) => ({
+              ...current,
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create document.",
+            }));
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              error: "",
+            }));
+          }
+        }
+
+        function handleSelectDatabaseDocument(document) {
+          setSelectedDatabaseDocumentId(document?.id || "");
+          setDatabaseDocumentEditorState({
+            documentId: document?.id || "",
+            value: formatPlaygroundDatabaseDocumentJson(document?.data || {}),
+            initialValue: formatPlaygroundDatabaseDocumentJson(document?.data || {}),
+            error: "",
+            saveError: "",
+            saveMessage: "",
+            isSaving: false,
+          });
+          setDatabaseFieldExpansionState({});
+          closeDatabaseFieldComposer();
+        }
+
+        function handleDatabaseDocumentEditorChange(nextValue) {
+          setDatabaseDocumentEditorState((current) => ({
+            ...current,
+            value: typeof nextValue === "string" ? nextValue : "",
+            saveError: "",
+            saveMessage: "",
+          }));
+        }
+
+        function setDatabaseDocumentFromObject(nextObject, options = {}) {
+          const nextValue = formatPlaygroundDatabaseDocumentJson(nextObject);
+          setDatabaseDocumentEditorState((current) => ({
+            ...current,
+            value: nextValue,
+            initialValue: options.preserveInitialValue ? current.initialValue : nextValue,
+            error: "",
+            saveError: "",
+            saveMessage: "",
+          }));
+        }
+
+        function toggleDatabaseFieldExpansion(path) {
+          const pathKey = getPlaygroundDatabasePathKey(path);
+          setDatabaseFieldExpansionState((current) => ({
+            ...current,
+            [pathKey]: current[pathKey] === false,
+          }));
+        }
+
+        function closeDatabaseFieldComposer() {
+          setDatabaseFieldComposerState({
+            open: false,
+            parentPath: [],
+            key: "",
+            type: "string",
+            value: "",
+            error: "",
+          });
+        }
+
+        function openDatabaseFieldComposer(parentPath = []) {
+          setDatabaseFieldComposerState({
+            open: true,
+            parentPath: Array.isArray(parentPath) ? parentPath : [],
+            key: "",
+            type: "string",
+            value: "",
+            error: "",
+          });
+        }
+
+        function handleDatabaseFieldValueChange(path, nextValue) {
+          const parsedDocument = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
+          if (!parsedDocument) {
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              saveError: "Document JSON is invalid.",
+              saveMessage: "",
+            }));
+            return;
+          }
+          const currentValue = getPlaygroundDatabaseValueAtPath(parsedDocument, path);
+          const valueType = getPlaygroundDatabaseFieldType(currentValue);
+          let resolvedValue = nextValue;
+          if (valueType === "number") {
+            const numericValue = Number(String(nextValue || "").trim());
+            if (!Number.isFinite(numericValue)) {
+              setDatabaseDocumentEditorState((current) => ({
+                ...current,
+                saveError: "Number value is invalid.",
+                saveMessage: "",
+              }));
+              return;
+            }
+            resolvedValue = numericValue;
+          } else if (valueType === "boolean") {
+            resolvedValue = Boolean(nextValue);
+          } else if (valueType === "null") {
+            resolvedValue = null;
+          } else {
+            resolvedValue = String(nextValue || "");
+          }
+          const nextDocument = setPlaygroundDatabaseValueAtPath(parsedDocument, path, resolvedValue);
+          setDatabaseDocumentFromObject(nextDocument, { preserveInitialValue: true });
+        }
+
+        function handleDeleteDatabaseField(path) {
+          const parsedDocument = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
+          if (!parsedDocument) {
+            return;
+          }
+          const nextDocument = deletePlaygroundDatabaseValueAtPath(parsedDocument, path);
+          setDatabaseDocumentFromObject(nextDocument, { preserveInitialValue: true });
+        }
+
+        function handleSubmitDatabaseFieldComposer(event) {
+          event.preventDefault();
+          const parsedDocument = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
+          if (!parsedDocument) {
+            setDatabaseFieldComposerState((current) => ({
+              ...current,
+              error: "Document JSON is invalid.",
+            }));
+            return;
+          }
+
+          const fieldKey = String(databaseFieldComposerState.key || "").trim();
+          if (!fieldKey) {
+            setDatabaseFieldComposerState((current) => ({
+              ...current,
+              error: "Field is required.",
+            }));
+            return;
+          }
+
+          const parentValue = getPlaygroundDatabaseValueAtPath(parsedDocument, databaseFieldComposerState.parentPath);
+          if (!isPlaygroundDatabasePlainObject(parentValue)) {
+            setDatabaseFieldComposerState((current) => ({
+              ...current,
+              error: "Fields can only be added to object values.",
+            }));
+            return;
+          }
+
+          let fieldValue = null;
+          try {
+            fieldValue = createPlaygroundDatabaseFieldValue(databaseFieldComposerState.type, databaseFieldComposerState.value);
+          } catch (error) {
+            setDatabaseFieldComposerState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Field value is invalid.",
+            }));
+            return;
+          }
+
+          const nextDocument = setPlaygroundDatabaseValueAtPath(
+            parsedDocument,
+            [...databaseFieldComposerState.parentPath, fieldKey],
+            fieldValue,
+          );
+          setDatabaseDocumentFromObject(nextDocument, { preserveInitialValue: true });
+          setDatabaseFieldExpansionState((current) => ({
+            ...current,
+            [getPlaygroundDatabasePathKey(databaseFieldComposerState.parentPath)]: true,
+          }));
+          closeDatabaseFieldComposer();
+        }
+
+        async function handleSaveDatabaseDocument(options = {}) {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId || !databaseDocumentEditorState.documentId || databaseDocumentEditorState.isSaving || databaseDocumentSaveInFlightRef.current) {
+            return;
+          }
+
+          if (databaseDocumentAutosaveTimerRef.current) {
+            window.clearTimeout(databaseDocumentAutosaveTimerRef.current);
+            databaseDocumentAutosaveTimerRef.current = null;
+          }
+
+          const preserveFormatting = options?.preserveFormatting === true;
+          const silent = options?.silent === true;
+          const preservedEditorValue = databaseDocumentEditorState.value;
+          databaseDocumentSaveInFlightRef.current = true;
+
+          let parsedData = null;
+          try {
+            parsedData = JSON.parse(databaseDocumentEditorState.value || "{}");
+          } catch (error) {
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              saveError: error instanceof Error ? error.message : "Document JSON is invalid.",
+              saveMessage: "",
+            }));
+            databaseDocumentSaveInFlightRef.current = false;
+            return;
+          }
+
+          if (!parsedData || typeof parsedData !== "object" || Array.isArray(parsedData)) {
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              saveError: "Document JSON must be an object.",
+              saveMessage: "",
+            }));
+            databaseDocumentSaveInFlightRef.current = false;
+            return;
+          }
+
+          setDatabaseDocumentEditorState((current) => ({
+            ...current,
+            isSaving: true,
+            saveError: "",
+            saveMessage: "",
+          }));
+
+          try {
+            const response = await fetch(
+              buildPlaygroundDatabaseDocumentUrl(backendUrl, draftDatabase.id, selectedDatabaseCollectionId, databaseDocumentEditorState.documentId),
+              {
+                method: "PUT",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  data: parsedData,
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to save document.");
+            }
+
+            await loadDatabaseCollections(draftDatabase.id);
+            await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId);
+            const nextValue = formatPlaygroundDatabaseDocumentJson(parsedData);
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              isSaving: false,
+              initialValue: preserveFormatting ? preservedEditorValue : nextValue,
+              value: preserveFormatting ? preservedEditorValue : nextValue,
+              saveError: "",
+              saveMessage: silent ? "" : "Saved",
+            }));
+          } catch (error) {
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              isSaving: false,
+              saveError: error instanceof Error ? error.message : "Failed to save document.",
+              saveMessage: "",
+            }));
+          } finally {
+            databaseDocumentSaveInFlightRef.current = false;
+          }
+        }
+
+        function handleDatabaseJsonEditorBlur() {
+          if (databaseDocumentViewMode !== "json" || !databaseDocumentEditorState.documentId) {
+            return;
+          }
+          if (databaseDocumentEditorState.value === databaseDocumentEditorState.initialValue) {
+            return;
+          }
+          const parsedDocument = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
+          if (!parsedDocument) {
+            return;
+          }
+          void handleSaveDatabaseDocument({
+            silent: true,
+            preserveFormatting: true,
+          });
+        }
+
+        function switchDatabaseDocumentViewMode(nextMode) {
+          const normalizedMode = nextMode === "json" ? "json" : "preview";
+          if (normalizedMode === databaseDocumentViewMode) {
+            return;
+          }
+
+          if (normalizedMode === "json") {
+            setDatabaseDocumentViewMode("json");
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              saveMessage: "",
+            }));
+            return;
+          }
+
+          if (databaseDocumentViewMode === "json" && databaseDocumentEditorState.documentId) {
+            const parsedDocument = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
+            if (!parsedDocument) {
+              return;
+            }
+            if (databaseDocumentEditorState.value !== databaseDocumentEditorState.initialValue) {
+              void handleSaveDatabaseDocument({
+                silent: true,
+                preserveFormatting: true,
+              });
+            }
+          }
+
+          setDatabaseDocumentViewMode("preview");
+        }
+
+        async function handleDeleteDatabaseDocument(documentId) {
+          if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId || !documentId) {
+            return;
+          }
+          if (!window.confirm("Delete this document?")) {
+            return;
+          }
+
+          try {
+            const response = await fetch(
+              buildPlaygroundDatabaseDocumentUrl(backendUrl, draftDatabase.id, selectedDatabaseCollectionId, documentId),
+              {
+                method: "DELETE",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to delete document.");
+            }
+
+            await loadDatabaseCollections(draftDatabase.id);
+            await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId);
+            if (databaseDocumentEditorState.documentId === documentId) {
+              setSelectedDatabaseDocumentId("");
+              setDatabaseDocumentEditorState({
+                documentId: "",
+                value: "{}",
+                initialValue: "{}",
+                error: "",
+                saveError: "",
+                saveMessage: "",
+                isSaving: false,
+              });
+              setDatabaseFieldExpansionState({});
+              closeDatabaseFieldComposer();
+            }
+          } catch (error) {
+            setDatabaseDocumentEditorState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to delete document.",
+            }));
+          }
+        }
+
+        function openServerFileUploadPicker() {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || serverFileTransferState.isUploading) {
+            return;
+          }
+          serverFileUploadInputRef.current?.click();
+        }
+
+        async function handleServerFileUploadSelection(event) {
+          const files = Array.from(event?.target?.files || []);
+          if (event?.target) {
+            event.target.value = "";
+          }
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || files.length === 0) {
+            return;
+          }
+
+          setServerFileTransferState({
+            isUploading: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            for (const file of files) {
+              const formData = new FormData();
+              formData.append("file", file);
+              formData.append("path", "");
+
+              const response = await fetch(
+                backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/files/upload",
+                {
+                  method: "POST",
+                  headers: requestHeaders,
+                  body: formData,
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || ("Failed to upload " + file.name + "."));
+              }
+            }
+
+            await loadServerFiles(draftServer.id);
+            setServerFileTransferState({
+              isUploading: false,
+              error: "",
+              message: files.length === 1 ? "Uploaded 1 file" : "Uploaded " + files.length + " files",
+            });
+          } catch (error) {
+            setServerFileTransferState({
+              isUploading: false,
+              error: error instanceof Error ? error.message : "Failed to upload source files.",
+              message: "",
+            });
+          }
+        }
+
+        async function handleServerFileDownload(entry) {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !entry || entry.isFolder) {
+            return;
+          }
+
+          try {
+            const encodedPath = String(entry.path || "")
+              .split("/")
+              .filter(Boolean)
+              .map((segment) => encodeURIComponent(segment))
+              .join("/");
+            const response = await fetch(
+              backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/files/download/" + encodedPath,
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            if (!response.ok) {
+              const data = await response.json().catch(() => ({}));
+              throw new Error(data?.message || data?.error || "Failed to download file.");
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = downloadUrl;
+            anchor.download = entry.name || "download";
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+          } catch (error) {
+            setServerFileTransferState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to download source file.",
+            }));
+          }
+        }
+
+        async function handleServerFileDelete(entry) {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !entry?.path) {
+            return;
+          }
+          if (!window.confirm('Delete "' + (entry.name || entry.path) + '" from this server source bundle?')) {
+            return;
+          }
+
+          try {
+            const encodedPath = String(entry.path || "")
+              .split("/")
+              .filter(Boolean)
+              .map((segment) => encodeURIComponent(segment))
+              .join("/");
+            const response = await fetch(
+              backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/files/" + encodedPath,
+              {
+                method: "DELETE",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to delete source file.");
+            }
+
+            await loadServerFiles(draftServer.id);
+            setServerFileTransferState((current) => ({
+              ...current,
+              error: "",
+              message: "Deleted",
+            }));
+          } catch (error) {
+            setServerFileTransferState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to delete source file.",
+              message: "",
+            }));
+          }
+        }
+
+        async function handleServerFileOpen(entry) {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !entry?.path || entry.isFolder) {
+            return;
+          }
+          if (!isPlaygroundTextPreviewable(entry)) {
+            setServerFileEditorState({
+              path: entry.path,
+              status: "error",
+              value: "",
+              initialValue: "",
+              error: "Only text-based source files can be edited inline right now.",
+              saveError: "",
+              saveMessage: "",
+              isSaving: false,
+              wordWrap: true,
+            });
+            return;
+          }
+          await loadServerFileContent(draftServer.id, entry.path);
+        }
+
+        function handleServerFileEditorChange(nextValue) {
+          const normalizedValue = typeof nextValue === "string" ? nextValue : "";
+          setServerFileEditorState((current) => ({
+            ...current,
+            value: normalizedValue,
+            saveError: "",
+            saveMessage: "",
+          }));
+        }
+
+        function handleServerFileEditorRevert() {
+          setServerFileEditorState((current) => ({
+            ...current,
+            value: current.initialValue,
+            saveError: "",
+            saveMessage: "",
+          }));
+        }
+
+        async function handleServerFileSave() {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !serverFileEditorState.path || serverFileEditorState.status !== "ready" || serverFileEditorState.isSaving) {
+            return;
+          }
+
+          setServerFileEditorState((current) => ({
+            ...current,
+            isSaving: true,
+            saveError: "",
+            saveMessage: "",
+          }));
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerFileContentUrl(backendUrl, draftServer.id, serverFileEditorState.path),
+              {
+                method: "PUT",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  content: serverFileEditorState.value,
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to save source file.");
+            }
+
+            setServerFileEditorState((current) => ({
+              ...current,
+              isSaving: false,
+              initialValue: current.value,
+              saveError: "",
+              saveMessage: "Saved",
+            }));
+            await loadServerFiles(draftServer.id);
+          } catch (error) {
+            setServerFileEditorState((current) => ({
+              ...current,
+              isSaving: false,
+              saveError: error instanceof Error ? error.message : "Failed to save source file.",
+              saveMessage: "",
+            }));
+          }
+        }
+
+        async function handleCreateServerFile() {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const rawPath = window.prompt("New file path", "index.js");
+          const normalizedPath = normalizeHistoryPath(rawPath || "");
+          if (!normalizedPath) {
+            return;
+          }
+
+          setServerFileTransferState({
+            isUploading: false,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerFileContentUrl(backendUrl, draftServer.id, normalizedPath),
+              {
+                method: "PUT",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  content: "",
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create source file.");
+            }
+
+            await loadServerFiles(draftServer.id);
+            setServerFileTransferState({
+              isUploading: false,
+              error: "",
+              message: "Created " + normalizedPath,
+            });
+            await loadServerFileContent(draftServer.id, normalizedPath, { fallbackValue: "" });
+          } catch (error) {
+            setServerFileTransferState({
+              isUploading: false,
+              error: error instanceof Error ? error.message : "Failed to create source file.",
+              message: "",
+            });
+          }
+        }
+
+        async function handleDeployServer() {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+
+          setServerDeploymentState({
+            isDeploying: true,
+            isInvoking: false,
+            error: "",
+            message: "",
+            lastResponseText: "",
+          });
+
+          try {
+            const response = await fetch(
+              backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/deploy",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({}),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to deploy server.");
+            }
+
+            const updatedServer = getPlaygroundServerResponseRecord(data);
+            if (updatedServer) {
+              setServers((current) => {
+                const existingIndex = current.findIndex((server) => server.id === updatedServer.id);
+                if (existingIndex === -1) {
+                  return [updatedServer, ...current];
+                }
+                const next = [...current];
+                next[existingIndex] = updatedServer;
+                return next;
+              });
+              setServerDetailsById((current) => ({
+                ...current,
+                [updatedServer.id]: updatedServer,
+              }));
+              if (selectedServerIdRef.current === updatedServer.id) {
+                setDraftServer(updatedServer);
+              }
+            }
+
+            setServerDeploymentState({
+              isDeploying: false,
+              isInvoking: false,
+              error: "",
+              message: data?.serviceUrl ? "Deployed to " + data.serviceUrl : "Deployment finished",
+              lastResponseText: "",
+            });
+            void loadServerAnalytics(draftServer.id, { force: true });
+            void loadServerLogs(draftServer.id, "deployment", { force: true });
+          } catch (error) {
+            setServerDeploymentState({
+              isDeploying: false,
+              isInvoking: false,
+              error: error instanceof Error ? error.message : "Failed to deploy server.",
+              message: "",
+              lastResponseText: "",
+            });
+          }
+        }
+
+        async function handleInvokeServer() {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+
+          setServerDeploymentState((current) => ({
+            ...current,
+            isInvoking: true,
+            error: "",
+            message: "",
+            lastResponseText: "",
+          }));
+
+          try {
+            const response = await fetch(
+              backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/invoke",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  method: "GET",
+                  path: "/",
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to request server.");
+            }
+
+            const responseText = typeof data?.text === "string"
+              ? data.text
+              : JSON.stringify(data?.body ?? null, null, 2);
+
+            setServerDeploymentState((current) => ({
+              ...current,
+              isInvoking: false,
+              error: "",
+              message: "Invocation returned " + String(data?.status || 200),
+              lastResponseText: responseText,
+            }));
+            void loadServerAnalytics(draftServer.id, { force: true });
+            void loadServerLogs(draftServer.id, "request", { force: true });
+          } catch (error) {
+            setServerDeploymentState((current) => ({
+              ...current,
+              isInvoking: false,
+              error: error instanceof Error ? error.message : "Failed to request server.",
+              message: "",
+              lastResponseText: "",
+            }));
+          }
+        }
+
+        async function handleServerComposerSubmit(event) {
+          if (event?.preventDefault) {
+            event.preventDefault();
+          }
+
+          const composerDraft = serverComposerDraft || buildPlaygroundDefaultServerDraft();
+          if (!String(composerDraft.name || "").trim()) {
+            setServerComposerSaveState({
+              isSaving: false,
+              error: "Name is required.",
+            });
+            return;
+          }
+
+          setServerComposerSaveState({
+            isSaving: true,
+            error: "",
+          });
+
+          let createdDatabase = null;
+          try {
+            if (canonicalizePlaygroundServerKind(composerDraft.kind) === "database") {
+              const savedDatabase = await persistDatabaseRecord(normalizePlaygroundDatabaseRecord({
+                ...buildPlaygroundDefaultDatabaseDraft(),
+                name: composerDraft.name,
+                description: composerDraft.description,
+                location: composerDraft.databaseLocation || "eur3",
+              }));
+              if (!savedDatabase) {
+                throw new Error("Database creation failed.");
+              }
+              upsertLocalDatabaseRecord(savedDatabase);
+              setSelectedServerId("");
+              setSelectedDatabaseId(savedDatabase.id);
+              setDraftDatabase(savedDatabase);
+              closeServerComposer();
+              return;
+            }
+
+            let serverDraftToPersist = normalizePlaygroundServerRecord(composerDraft);
+            const resolved = await resolveServerDatabaseDraft(serverDraftToPersist);
+            serverDraftToPersist = resolved.server;
+            createdDatabase = resolved.createdDatabase;
+
+            const savedServer = await persistServerRecord(serverDraftToPersist);
+            if (!savedServer) {
+              throw new Error("Server creation failed.");
+            }
+
+            setServers((current) => [savedServer, ...current.filter((server) => server.id !== savedServer.id)]);
+            setServerDetailsById((current) => ({
+              ...current,
+              [savedServer.id]: savedServer,
+            }));
+            setSelectedDatabaseId(savedServer.databaseId || "");
+            setSelectedServerId(savedServer.id);
+            setDraftServer(savedServer);
+            closeServerComposer();
+          } catch (error) {
+            if (createdDatabase?.id) {
+              try {
+                await fetch(backendUrl + "/databases/" + encodeURIComponent(createdDatabase.id), {
+                  method: "DELETE",
+                  headers: requestHeaders,
+                });
+              } catch {}
+            }
+            setServerComposerSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create server.",
+            });
+          }
         }
 
         async function flushQueuedEnvironmentAutosave() {
@@ -31502,7 +36057,7 @@ const html = `<!doctype html>
 
         function renderEditorSection(sectionId, title, description, content, headerActions, collapsible = true) {
           const isExpanded = collapsible ? expandedSections.has(sectionId) : true;
-          return React.createElement("section", { className: "playground-environments-section" + (sectionId === "runtimes" ? " is-runtimes" : ""), key: sectionId },
+          return React.createElement("section", { className: "playground-environments-section" + (sectionId === "runtimes" ? " is-runtimes" : "") + (sectionId === "database-browser" ? " is-database-browser" : ""), key: sectionId },
             React.createElement(collapsible ? "button" : "div", collapsible ? {
               type: "button",
               className: "playground-environments-section-header",
@@ -31780,6 +36335,2472 @@ const html = `<!doctype html>
             event.preventDefault();
             void handleEnvironmentGuiTypeSubmit();
           }
+        }
+
+        function renderServerComposerDialog() {
+          if (!serverComposerOpen) {
+            return null;
+          }
+
+          const composerDraft = serverComposerDraft || buildPlaygroundDefaultServerDraft();
+          const composerKind = canonicalizePlaygroundServerKind(composerDraft.kind);
+          const isDatabaseComposer = composerKind === "database";
+          const composerNamePlaceholder = isDatabaseComposer ? "Database name" : "Server name";
+          const composerDescriptionPlaceholder = isDatabaseComposer
+            ? "Describe what this database will store."
+            : "Describe what this server will publish.";
+
+          return React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop",
+              onClick: () => {
+                if (!serverComposerSaveState.isSaving) {
+                  closeServerComposer();
+                }
+              },
+            },
+              React.createElement("form", {
+                  className: "playground-tasks-project-modal playground-environment-composer-modal",
+                  onClick: (event) => event.stopPropagation(),
+                  onKeyDown: handleComposerSubmitShortcut,
+                  onSubmit: (event) => void handleServerComposerSubmit(event),
+                },
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("div", {
+                      className: "playground-tasks-project-modal-icon-trigger",
+                      "aria-hidden": "true",
+                    },
+                      isDatabaseComposer
+                        ? React.createElement(Database, { width: 18, height: 18, strokeWidth: 1.9 })
+                        : React.createElement(Server, { width: 18, height: 18, strokeWidth: 1.9 })
+                    ),
+                    React.createElement("input", {
+                      className: "playground-tasks-project-modal-name-input",
+                      value: composerDraft.name,
+                      onChange: (event) => updateServerComposerField("name", event.target.value),
+                      placeholder: composerNamePlaceholder,
+                      autoFocus: true,
+                      disabled: serverComposerSaveState.isSaving,
+                    })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: closeServerComposer,
+                    title: "Close",
+                    disabled: serverComposerSaveState.isSaving,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-environment-composer-modal-body" },
+                  React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description")
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerComposerDescriptionEditing ? " is-editing" : " is-preview") },
+                      !isServerComposerDescriptionEditing
+                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                            String(composerDraft.description || "").trim()
+                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                  content: composerDraft.description,
+                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                })
+                              : React.createElement("div", {
+                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                }, composerDescriptionPlaceholder)
+                          )
+                        : null,
+                      React.createElement("textarea", {
+                        ref: serverComposerDescriptionTextareaRef,
+                        className: "playground-tasks-detail-description-input " + (isServerComposerDescriptionEditing ? "is-editing" : "is-preview"),
+                        rows: 1,
+                        placeholder: isServerComposerDescriptionEditing ? composerDescriptionPlaceholder : "",
+                        value: composerDraft.description || "",
+                        disabled: serverComposerSaveState.isSaving,
+                        onFocus: () => setIsServerComposerDescriptionEditing(true),
+                        onChange: (event) => {
+                          updateServerComposerField("description", event.target.value);
+                          resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                        },
+                        onBlur: () => setIsServerComposerDescriptionEditing(false),
+                      })
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-environments-editor-surface" },
+                    React.createElement("div", { className: "playground-environments-field-grid" },
+                      React.createElement("label", { className: "playground-environments-field" },
+                        React.createElement("span", { className: "playground-environments-field-label" }, "Kind"),
+                        React.createElement("select", {
+                          className: "playground-environments-input",
+                          value: composerDraft.kind,
+                          disabled: serverComposerSaveState.isSaving,
+                          onChange: (event) => updateServerComposerField("kind", event.target.value),
+                        },
+                          React.createElement("option", { value: "web_app" }, "Web App"),
+                          React.createElement("option", { value: "function" }, "Function"),
+                          React.createElement("option", { value: "database" }, "Database")
+                        )
+                      ),
+                      isDatabaseComposer
+                        ? React.createElement("label", { className: "playground-environments-field" },
+                            React.createElement("span", { className: "playground-environments-field-label" }, "Location"),
+                            React.createElement("input", {
+                              type: "text",
+                              className: "playground-environments-input",
+                              value: composerDraft.databaseLocation || "eur3",
+                              disabled: serverComposerSaveState.isSaving,
+                              onChange: (event) => updateServerDatabaseField("databaseLocation", event.target.value, "composer"),
+                              placeholder: "eur3",
+                            })
+                          )
+                        : React.createElement("label", { className: "playground-environments-field" },
+                            React.createElement("span", { className: "playground-environments-field-label" }, "Auth"),
+                            React.createElement("select", {
+                              className: "playground-environments-input",
+                              value: composerDraft.authMode,
+                              disabled: serverComposerSaveState.isSaving,
+                              onChange: (event) => updateServerComposerField("authMode", event.target.value),
+                            },
+                              React.createElement("option", { value: "public" }, "Public"),
+                              React.createElement("option", { value: "private" }, "Private")
+                            )
+                          ),
+                      !isDatabaseComposer
+                        ? React.createElement("label", { className: "playground-environments-field" },
+                            React.createElement("span", { className: "playground-environments-field-label" }, "Runtime"),
+                            React.createElement("input", {
+                              type: "text",
+                              className: "playground-environments-input",
+                              value: composerDraft.runtime || "",
+                              disabled: serverComposerSaveState.isSaving,
+                              onChange: (event) => updateServerComposerField("runtime", event.target.value),
+                              placeholder: "nodejs22",
+                            })
+                          )
+                        : null,
+                      !isDatabaseComposer
+                        ? React.createElement("label", { className: "playground-environments-field" },
+                            React.createElement("span", { className: "playground-environments-field-label" }, "Region"),
+                            React.createElement("input", {
+                              type: "text",
+                              className: "playground-environments-input",
+                              value: composerDraft.region || "",
+                              disabled: serverComposerSaveState.isSaving,
+                              onChange: (event) => updateServerComposerField("region", event.target.value),
+                              placeholder: "europe-west1",
+                            })
+                          )
+                        : null
+                    )
+                  ),
+                  !isDatabaseComposer
+                    ? React.createElement("div", { className: "playground-environments-editor-surface" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Database")
+                    ),
+                    React.createElement("div", { className: "playground-environments-field-grid" },
+                      React.createElement("label", { className: "playground-environments-field" },
+                        React.createElement("span", { className: "playground-environments-field-label" }, "Database Setup"),
+                        React.createElement("select", {
+                          className: "playground-environments-input",
+                          value: composerDraft.databaseMode || "none",
+                          disabled: serverComposerSaveState.isSaving,
+                          onChange: (event) => updateServerDatabaseMode(event.target.value, "composer"),
+                        },
+                          React.createElement("option", { value: "none" }, "None"),
+                          React.createElement("option", { value: "create" }, "Create New Database"),
+                          React.createElement("option", { value: "existing" }, "Use Existing Database")
+                        )
+                      ),
+                      composerDraft.databaseMode === "existing"
+                        ? React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
+                            React.createElement("span", { className: "playground-environments-field-label" }, "Database"),
+                            React.createElement("select", {
+                              className: "playground-environments-input",
+                              value: composerDraft.databaseId || "",
+                              disabled: serverComposerSaveState.isSaving,
+                              onChange: (event) => applyDatabaseSelectionToServerDraft(event.target.value, "composer"),
+                            },
+                              React.createElement("option", { value: "" }, databaseListLoading ? "Loading databases..." : "Select database"),
+                              orderedDatabases.map((database) =>
+                                React.createElement("option", { key: database.id, value: database.id }, database.name || "Untitled Database")
+                              )
+                            )
+                          )
+                        : null,
+                      composerDraft.databaseMode === "create"
+                        ? React.createElement(React.Fragment, null,
+                            React.createElement("label", { className: "playground-environments-field" },
+                              React.createElement("span", { className: "playground-environments-field-label" }, "Database Name"),
+                              React.createElement("input", {
+                                type: "text",
+                                className: "playground-environments-input",
+                                value: composerDraft.databaseName || "",
+                                disabled: serverComposerSaveState.isSaving,
+                                onChange: (event) => updateServerDatabaseField("databaseName", event.target.value, "composer"),
+                                placeholder: "App Database",
+                              })
+                            ),
+                            React.createElement("label", { className: "playground-environments-field" },
+                              React.createElement("span", { className: "playground-environments-field-label" }, "Location"),
+                              React.createElement("input", {
+                                type: "text",
+                                className: "playground-environments-input",
+                                value: composerDraft.databaseLocation || "eur3",
+                                disabled: serverComposerSaveState.isSaving,
+                                onChange: (event) => updateServerDatabaseField("databaseLocation", event.target.value, "composer"),
+                                placeholder: "eur3",
+                              })
+                            ),
+                            React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
+                              React.createElement("span", { className: "playground-environments-field-label" }, "Database Description"),
+                              React.createElement("textarea", {
+                                className: "playground-environments-input playground-environments-textarea",
+                                value: composerDraft.databaseDescription || "",
+                                rows: 3,
+                                disabled: serverComposerSaveState.isSaving,
+                                onChange: (event) => updateServerDatabaseField("databaseDescription", event.target.value, "composer"),
+                                placeholder: "Store app data, users, content, and other Firestore documents here.",
+                              })
+                            )
+                          )
+                        : null
+                    )
+                  )
+                    : null
+                ),
+                serverComposerSaveState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverComposerSaveState.error)
+                  : null,
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: closeServerComposer,
+                    disabled: serverComposerSaveState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: serverComposerSaveState.isSaving || !String(composerDraft.name || "").trim(),
+                  }, serverComposerSaveState.isSaving ? "Creating..." : (isDatabaseComposer ? "Create Database" : "Create"))
+                )
+              )
+            );
+        }
+
+        function renderCurrentServerEditor() {
+          if (!draftServer) {
+            return React.createElement("div", { className: "playground-environments-detail-empty" },
+              React.createElement("div", { className: "playground-files-state" }, "Select a server to configure its runtime, source, and publish settings.")
+            );
+          }
+
+          const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
+            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
+            React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+          );
+          const buildServerAnalyticsSvgLinePath = (points) => {
+            if (!Array.isArray(points) || points.length === 0) {
+              return "";
+            }
+            return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
+          };
+          const buildServerAnalyticsSvgAreaPath = (points, baselineY) => {
+            if (!Array.isArray(points) || points.length === 0) {
+              return "";
+            }
+            const linePath = buildServerAnalyticsSvgLinePath(points);
+            const firstPoint = points[0];
+            const lastPoint = points[points.length - 1];
+            return linePath
+              + " L " + lastPoint.x.toFixed(2) + " " + baselineY.toFixed(2)
+              + " L " + firstPoint.x.toFixed(2) + " " + baselineY.toFixed(2)
+              + " Z";
+          };
+          const renderServerAnalyticsMixedChart = (config) => {
+            const labels = Array.isArray(config?.labels) ? config.labels : [];
+            const barValues = Array.isArray(config?.barValues) ? config.barValues : [];
+            const lineValues = Array.isArray(config?.lineValues) ? config.lineValues : [];
+            if (!labels.length || !barValues.length) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No data yet");
+            }
+
+            const svgWidth = 320;
+            const svgHeight = 240;
+            const marginTop = 12;
+            const marginRight = 14;
+            const marginBottom = 38;
+            const marginLeft = 40;
+            const plotWidth = svgWidth - marginLeft - marginRight;
+            const plotHeight = svgHeight - marginTop - marginBottom;
+            const slotWidth = plotWidth / Math.max(labels.length, 1);
+            const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+            const baselineY = marginTop + plotHeight;
+            const yMax = Math.max(1, ...barValues.map((value) => Number(value || 0)), ...lineValues.map((value) => Number(value || 0)));
+            const labelStep = Math.max(1, Math.ceil(labels.length / 8));
+            const barRects = barValues.map((value, index) => {
+              const normalizedValue = Math.max(0, Number(value || 0));
+              const height = normalizedValue > 0 ? (normalizedValue / yMax) * plotHeight : 0;
+              return {
+                x: marginLeft + slotWidth * index + (slotWidth - barWidth) / 2,
+                y: baselineY - height,
+                width: barWidth,
+                height,
+              };
+            });
+            const linePoints = lineValues.reduce((points, value, index) => {
+              const numericValue = Number(value);
+              if (!Number.isFinite(numericValue)) {
+                return points;
+              }
+              points.push({
+                x: marginLeft + slotWidth * index + slotWidth / 2,
+                y: baselineY - (Math.max(0, numericValue) / yMax) * plotHeight,
+              });
+              return points;
+            }, []);
+            const linePath = buildServerAnalyticsSvgLinePath(linePoints);
+            const areaPath = buildServerAnalyticsSvgAreaPath(linePoints, baselineY);
+
+            return React.createElement("div", {
+                className: "playground-settings-usage-chart-frame",
+                "aria-label": config?.ariaLabel || "Usage chart",
+              },
+              React.createElement("svg", {
+                className: "playground-settings-usage-chart-svg",
+                viewBox: "0 0 " + svgWidth + " " + svgHeight,
+                preserveAspectRatio: "xMidYMid meet",
+                role: "img",
+                "aria-label": config?.ariaLabel || "Usage chart",
+              },
+                Array.from({ length: 5 }).map((_, index) => {
+                  const y = marginTop + (plotHeight / 4) * index;
+                  return React.createElement("line", {
+                    key: "grid:" + index,
+                    x1: marginLeft,
+                    y1: y,
+                    x2: svgWidth - marginRight,
+                    y2: y,
+                    stroke: "rgba(255,255,255,0.10)",
+                    strokeWidth: "1",
+                  });
+                }),
+                areaPath
+                  ? React.createElement("path", {
+                      d: areaPath,
+                      fill: config?.areaColor || "rgba(162, 138, 255, 0.12)",
+                    })
+                  : null,
+                barRects.map((bar, index) =>
+                  React.createElement("rect", {
+                    key: "bar:" + index,
+                    x: bar.x,
+                    y: bar.y,
+                    width: bar.width,
+                    height: Math.max(bar.height, 1),
+                    rx: "3",
+                    fill: config?.barColor || "rgba(162, 138, 255, 0.9)",
+                  })
+                ),
+                linePath
+                  ? React.createElement("path", {
+                      d: linePath,
+                      fill: "none",
+                      stroke: config?.lineColor || "rgba(255, 255, 255, 0.92)",
+                      strokeWidth: "2",
+                      strokeLinecap: "round",
+                      strokeLinejoin: "round",
+                    })
+                  : null,
+                labels.map((label, index) => (
+                  index % labelStep === 0 || index === labels.length - 1
+                    ? React.createElement("text", {
+                        key: "label:" + index,
+                        x: marginLeft + slotWidth * index + slotWidth / 2,
+                        y: svgHeight - 10,
+                        textAnchor: "middle",
+                        fill: "rgba(255,255,255,0.4)",
+                        fontSize: "10",
+                      }, label)
+                    : null
+                ))
+              )
+            );
+          };
+          const renderServerAnalyticsStackedChart = (config) => {
+            const labels = Array.isArray(config?.labels) ? config.labels : [];
+            const primaryValues = Array.isArray(config?.primaryValues) ? config.primaryValues : [];
+            const secondaryValues = Array.isArray(config?.secondaryValues) ? config.secondaryValues : [];
+            if (!labels.length || !primaryValues.length) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No data yet");
+            }
+
+            const svgWidth = 320;
+            const svgHeight = 210;
+            const marginTop = 12;
+            const marginRight = 14;
+            const marginBottom = 38;
+            const marginLeft = 34;
+            const plotWidth = svgWidth - marginLeft - marginRight;
+            const plotHeight = svgHeight - marginTop - marginBottom;
+            const slotWidth = plotWidth / Math.max(labels.length, 1);
+            const barWidth = Math.min(22, Math.max(8, slotWidth * 0.56));
+            const baselineY = marginTop + plotHeight;
+            const totals = labels.map((_, index) => Math.max(0, Number(primaryValues[index] || 0)) + Math.max(0, Number(secondaryValues[index] || 0)));
+            const yMax = Math.max(1, ...totals, 1);
+            const labelStep = Math.max(1, Math.ceil(labels.length / 8));
+
+            return React.createElement("div", {
+                className: "playground-settings-usage-chart-frame is-medium",
+                "aria-label": config?.ariaLabel || "Usage breakdown chart",
+              },
+              React.createElement("svg", {
+                className: "playground-settings-usage-chart-svg",
+                viewBox: "0 0 " + svgWidth + " " + svgHeight,
+                preserveAspectRatio: "xMidYMid meet",
+                role: "img",
+                "aria-label": config?.ariaLabel || "Usage breakdown chart",
+              },
+                Array.from({ length: 5 }).map((_, index) => {
+                  const y = marginTop + (plotHeight / 4) * index;
+                  return React.createElement("line", {
+                    key: "grid:" + index,
+                    x1: marginLeft,
+                    y1: y,
+                    x2: svgWidth - marginRight,
+                    y2: y,
+                    stroke: "rgba(255,255,255,0.10)",
+                    strokeWidth: "1",
+                  });
+                }),
+                labels.map((label, index) => {
+                  const primary = Math.max(0, Number(primaryValues[index] || 0));
+                  const secondary = Math.max(0, Number(secondaryValues[index] || 0));
+                  const secondaryHeight = secondary > 0 ? (secondary / yMax) * plotHeight : 0;
+                  const primaryHeight = primary > 0 ? (primary / yMax) * plotHeight : 0;
+                  const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                  const secondaryY = baselineY - secondaryHeight;
+                  const primaryY = secondaryY - primaryHeight;
+                  return React.createElement(React.Fragment, { key: "stack:" + index },
+                    React.createElement("rect", {
+                      x,
+                      y: secondaryY,
+                      width: barWidth,
+                      height: Math.max(secondaryHeight, 1),
+                      rx: "3",
+                      fill: config?.secondaryColor || "rgba(255, 146, 146, 0.86)",
+                    }),
+                    React.createElement("rect", {
+                      x,
+                      y: primaryY,
+                      width: barWidth,
+                      height: Math.max(primaryHeight, 1),
+                      rx: "3",
+                      fill: config?.primaryColor || "rgba(255,255,255,0.96)",
+                    }),
+                    index % labelStep === 0 || index === labels.length - 1
+                      ? React.createElement("text", {
+                          x: marginLeft + slotWidth * index + slotWidth / 2,
+                          y: svgHeight - 10,
+                          textAnchor: "middle",
+                          fill: "rgba(255,255,255,0.4)",
+                          fontSize: "9",
+                        }, label)
+                      : null
+                  );
+                })
+              )
+            );
+          };
+          const activeServerAnalytics = draftServer.id ? serverAnalyticsById[draftServer.id] || null : null;
+          const activeServerAnalyticsSummary = activeServerAnalytics?.summary || null;
+          const activeServerTrafficBuckets = Array.isArray(activeServerAnalytics?.charts?.traffic24h)
+            ? activeServerAnalytics.charts.traffic24h
+            : [];
+          const activeServerStatusBuckets = Array.isArray(activeServerAnalytics?.charts?.status24h)
+            ? activeServerAnalytics.charts.status24h
+            : [];
+          const activeServerRecentRequests = Array.isArray(activeServerAnalytics?.recentRequests)
+            ? activeServerAnalytics.recentRequests
+            : [];
+          const activeServerDeploymentRecord = activeServerAnalytics?.deployment || draftServer?.metadata?.lastDeployment || null;
+          const isServerAnalyticsLoading = loadingServerAnalyticsId === draftServer.id;
+          const activeServerLogs = currentServerLogs || {};
+          const activeServerLogList = Array.isArray(activeServerLogs[serverLogsState.kind]) ? activeServerLogs[serverLogsState.kind] : [];
+          const activeServerLogLoadingKey = draftServer.id ? draftServer.id + ":" + serverLogsState.kind : "";
+          const isServerLogsLoading = serverLogsState.loadingKey === activeServerLogLoadingKey;
+          const activeServerTrafficLabels = activeServerTrafficBuckets.map((bucket) => bucket?.label || "");
+          const activeServerTrafficCounts = activeServerTrafficBuckets.map((bucket) => Number(bucket?.total || 0));
+          const activeServerTrafficFailures = activeServerTrafficBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0));
+          const activeServerStatusSuccess = activeServerStatusBuckets.map((bucket) => Number(bucket?.success || 0));
+          const activeServerStatusErrors = activeServerStatusBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0));
+          const serverAnalyticsLogKinds = [
+            { id: "request", label: "Requests", Icon: Globe },
+            { id: "runtime", label: "Console", Icon: Terminal },
+            { id: "deployment", label: "Deploy", Icon: Rocket },
+          ];
+          const renderServerAnalyticsKpi = (label, value) => React.createElement("div", {
+              className: "playground-servers-analytics-kpi",
+              key: label,
+            },
+            React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
+            React.createElement("div", { className: "playground-servers-analytics-kpi-label" }, label)
+          );
+          const serverAnalyticsOverview = !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
+            ? React.createElement("div", { className: "playground-files-state" }, "Save this server first to unlock analytics.")
+            : !draftServer.cloudRunServiceName && !draftServer.serviceUrl && !activeServerAnalyticsSummary
+              ? React.createElement("div", { className: "playground-files-state" }, "Deploy this server to unlock request graphs, latency KPIs, and runtime logs.")
+              : isServerAnalyticsLoading && !activeServerAnalyticsSummary
+                ? React.createElement("div", { className: "playground-files-state" },
+                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                  )
+                : React.createElement("div", { className: "playground-servers-analytics-summary" },
+                    React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+                      [
+                        renderServerAnalyticsKpi("Requests (24h)", String(activeServerAnalyticsSummary?.totalRequests24h || 0)),
+                        renderServerAnalyticsKpi("Success rate", formatPlaygroundServerRate(activeServerAnalyticsSummary?.successRate24h)),
+                        renderServerAnalyticsKpi("P95 latency", formatPlaygroundServerLatency(activeServerAnalyticsSummary?.p95LatencyMs)),
+                        renderServerAnalyticsKpi("4xx / 5xx", String(Number(activeServerAnalyticsSummary?.clientErrors24h || 0) + Number(activeServerAnalyticsSummary?.serverErrors24h || 0))),
+                      ]
+                    ),
+                    React.createElement("div", { className: "playground-servers-analytics-summary-grid" },
+                      React.createElement("div", { className: "playground-servers-analytics-chart-block" },
+                        React.createElement("div", { className: "playground-environments-summary-title" }, "Traffic"),
+                        activeServerTrafficLabels.length > 0
+                          ? renderServerAnalyticsMixedChart({
+                              labels: activeServerTrafficLabels,
+                              barValues: activeServerTrafficCounts,
+                              lineValues: activeServerTrafficFailures,
+                              yMax: Math.max(1, ...activeServerTrafficCounts, ...activeServerTrafficFailures),
+                              barColor: "rgba(162, 138, 255, 0.9)",
+                              lineColor: "rgba(255, 255, 255, 0.92)",
+                              areaColor: "rgba(162, 138, 255, 0.12)",
+                              emptyText: "No request data yet",
+                              ariaLabel: "Requests and failed requests over time",
+                            })
+                          : React.createElement("div", { className: "playground-settings-usage-chart-empty" }, "No request data yet")
+                      ),
+                      React.createElement("div", { className: "playground-servers-analytics-chart-block" },
+                        React.createElement("div", { className: "playground-environments-summary-title" }, "Status Mix"),
+                        activeServerTrafficLabels.length > 0
+                          ? renderServerAnalyticsStackedChart({
+                              labels: activeServerTrafficLabels,
+                              primaryValues: activeServerStatusSuccess,
+                              secondaryValues: activeServerStatusErrors,
+                              primaryColor: "rgba(255,255,255,0.96)",
+                              secondaryColor: "rgba(255, 146, 146, 0.86)",
+                              emptyText: "No status data yet",
+                              ariaLabel: "Successful and failed requests over time",
+                            })
+                          : React.createElement("div", { className: "playground-settings-usage-chart-empty" }, "No status data yet")
+                      )
+                    ),
+                    serverAnalyticsView !== "analytics"
+                      ? React.createElement("button", {
+                          type: "button",
+                          className: "playground-mission-control-run-button",
+                          onClick: () => {
+                            setServerAnalyticsView("analytics");
+                            if (draftServer.id) {
+                              void loadServerAnalytics(draftServer.id, { force: true });
+                              void loadServerLogs(draftServer.id, serverLogsState.kind);
+                            }
+                          },
+                        },
+                          React.createElement(Telescope, { className: "playground-mission-control-run-button-icon", strokeWidth: 1.8 }),
+                          React.createElement("span", null, "Open Analytics")
+                        )
+                      : null
+                  );
+          const renderServerLogRow = (entry, kind) => {
+            const normalizedKind = String(kind || "request");
+            if (normalizedKind === "request") {
+              return React.createElement("div", {
+                  key: String(entry?.timestamp || "") + ":" + String(entry?.path || ""),
+                  className: "playground-servers-analytics-log-row is-request",
+                },
+                React.createElement("div", { className: "playground-servers-analytics-log-row-top" },
+                  React.createElement("span", { className: "playground-servers-analytics-log-pill" }, formatPlaygroundServerRequestStatus(entry?.status)),
+                  React.createElement("span", { className: "playground-servers-analytics-log-method" }, String(entry?.method || "GET")),
+                  React.createElement("span", { className: "playground-servers-analytics-log-latency" }, formatPlaygroundServerLatency(entry?.latencyMs)),
+                  React.createElement("span", { className: "playground-servers-analytics-log-time" }, formatPlaygroundFileDate(entry?.timestamp))
+                ),
+                React.createElement("div", { className: "playground-servers-analytics-log-path" }, String(entry?.path || "/"))
+              );
+            }
+            return React.createElement("div", {
+                key: String(entry?.timestamp || "") + ":" + String(entry?.stream || "") + ":" + String(entry?.message || "").slice(0, 24),
+                className: "playground-servers-analytics-log-row",
+              },
+              React.createElement("div", { className: "playground-servers-analytics-log-row-top" },
+                React.createElement("span", { className: "playground-servers-analytics-log-pill" }, normalizedKind === "deployment" ? String(entry?.stream || "deploy") : String(entry?.severity || "INFO")),
+                React.createElement("span", { className: "playground-servers-analytics-log-time" }, formatPlaygroundFileDate(entry?.timestamp))
+              ),
+              React.createElement("pre", { className: "playground-servers-analytics-log-message" }, String(entry?.message || ""))
+            );
+          };
+
+          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description")
+            ),
+            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerDescriptionEditing ? " is-editing" : " is-preview") },
+              !isServerDescriptionEditing
+                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                    String(draftServer.description || "").trim()
+                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                          content: draftServer.description,
+                          className: "playground-tasks-detail-description-preview tb-message-markdown",
+                        })
+                      : React.createElement("div", {
+                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                        }, "Describe what this server should publish.")
+                  )
+                : null,
+              React.createElement("textarea", {
+                ref: serverDescriptionTextareaRef,
+                className: "playground-tasks-detail-description-input " + (isServerDescriptionEditing ? "is-editing" : "is-preview"),
+                rows: 1,
+                placeholder: isServerDescriptionEditing ? "Describe what this server should publish." : "",
+                value: draftServer.description || "",
+                onFocus: () => setIsServerDescriptionEditing(true),
+                onChange: (event) => {
+                  updateServerField("description", event.target.value);
+                  resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                },
+                onBlur: () => setIsServerDescriptionEditing(false),
+              })
+            )
+          );
+
+          const factsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
+            React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-detail-facts-toggle" + (serverDetailsCollapsed ? " is-collapsed" : ""),
+                onClick: () => setServerDetailsCollapsed((current) => !current),
+                title: serverDetailsCollapsed ? "Expand details" : "Collapse details",
+                "aria-label": serverDetailsCollapsed ? "Expand details" : "Collapse details",
+                "aria-expanded": serverDetailsCollapsed ? "false" : "true",
+              }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
+            ),
+            !serverDetailsCollapsed
+              ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  serverAnalyticsOverview,
+                  renderServerFactRow("ID",
+                    React.createElement("span", {
+                      className: "playground-environments-editor-fact-value is-id",
+                      title: draftServer.id || "Unsaved server",
+                    }, draftServer.id || "Unsaved server")
+                  ),
+                  renderServerFactRow("Status",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.status || "draft")
+                  ),
+                  renderServerFactRow("Kind",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundServerKindLabel(draftServer.kind))
+                  ),
+                  renderServerFactRow("Auth",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.authMode || "public")
+                  ),
+                  renderServerFactRow("Runtime",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.runtime || "nodejs22")
+                  ),
+                  renderServerFactRow("Region",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.region || "europe-west1")
+                  ),
+                  renderServerFactRow("Updated",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftServer.updatedAt))
+                  )
+                )
+              : null
+          );
+
+          const sourceSection = React.createElement("div", { className: "playground-environments-editor-surface" },
+            React.createElement("div", { className: "playground-environments-field-grid" },
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Source Type"),
+                React.createElement("select", {
+                  className: "playground-environments-input",
+                  value: draftServer.sourceType || "manual",
+                  onChange: (event) => updateServerField("sourceType", event.target.value),
+                },
+                  React.createElement("option", { value: "manual" }, "Manual"),
+                  React.createElement("option", { value: "computer" }, "Computer"),
+                  React.createElement("option", { value: "git" }, "Git")
+                )
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Source Computer"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-environments-input",
+                  value: draftServer.sourceEnvironmentId || "",
+                  onChange: (event) => updateServerField("sourceEnvironmentId", event.target.value),
+                  placeholder: "env_...",
+                })
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Source Path"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-environments-input",
+                  value: draftServer.sourcePath || "",
+                  onChange: (event) => updateServerField("sourcePath", event.target.value),
+                  placeholder: "/workspace/app",
+                })
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Region"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-environments-input",
+                  value: draftServer.region || "",
+                  onChange: (event) => updateServerField("region", event.target.value),
+                  placeholder: "europe-west1",
+                })
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Runtime"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-environments-input",
+                  value: draftServer.runtime || "",
+                  onChange: (event) => updateServerField("runtime", event.target.value),
+                  placeholder: "nodejs22",
+                })
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Auth"),
+                React.createElement("select", {
+                  className: "playground-environments-input",
+                  value: draftServer.authMode || "public",
+                  onChange: (event) => updateServerField("authMode", event.target.value),
+                },
+                  React.createElement("option", { value: "public" }, "Public"),
+                  React.createElement("option", { value: "private" }, "Private")
+                )
+              )
+            )
+          );
+
+          const linkedServerDatabaseId = String(draftServer.databaseId || "").trim();
+          const linkedServerDatabaseMode = ["none", "existing", "create"].includes(draftServer.databaseMode) ? draftServer.databaseMode : (linkedServerDatabaseId ? "existing" : "none");
+          const collectionLoading = loadingDatabaseCollectionsId === linkedServerDatabaseId;
+          const documentsLoading = loadingDatabaseDocumentsKey === (linkedServerDatabaseId + ":" + selectedDatabaseCollectionId);
+          const selectedCollection = currentDatabaseCollection;
+          const selectedDocument = currentDatabaseDocuments.find((document) => document.id === selectedDatabaseDocumentId) || null;
+          const collectionStats = currentDatabaseCollections.reduce((sum, collection) => sum + Number(collection?.documentCount || 0), 0);
+          const documentIsDirty = databaseDocumentEditorState.value !== databaseDocumentEditorState.initialValue;
+
+          const databaseBindingSection = React.createElement("div", { className: "playground-environments-editor-surface" },
+            React.createElement("div", { className: "playground-environments-field-grid" },
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Database Setup"),
+                React.createElement("select", {
+                  className: "playground-environments-input",
+                  value: linkedServerDatabaseMode,
+                  onChange: (event) => updateServerDatabaseMode(event.target.value),
+                },
+                  React.createElement("option", { value: "none" }, "None"),
+                  React.createElement("option", { value: "create" }, "Create New Database"),
+                  React.createElement("option", { value: "existing" }, "Use Existing Database")
+                )
+              ),
+              linkedServerDatabaseMode === "existing"
+                ? React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
+                    React.createElement("span", { className: "playground-environments-field-label" }, "Database"),
+                    React.createElement("select", {
+                      className: "playground-environments-input",
+                      value: linkedServerDatabaseId,
+                      onChange: (event) => applyDatabaseSelectionToServerDraft(event.target.value),
+                    },
+                      React.createElement("option", { value: "" }, databaseListLoading ? "Loading databases..." : "Select database"),
+                      orderedDatabases.map((database) =>
+                        React.createElement("option", { key: database.id, value: database.id }, database.name || "Untitled Database")
+                      )
+                    )
+                  )
+                : null,
+              linkedServerDatabaseMode === "create"
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("label", { className: "playground-environments-field" },
+                      React.createElement("span", { className: "playground-environments-field-label" }, "Database Name"),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: draftServer.databaseName || "",
+                        onChange: (event) => updateServerDatabaseField("databaseName", event.target.value),
+                        placeholder: "App Database",
+                      })
+                    ),
+                    React.createElement("label", { className: "playground-environments-field" },
+                      React.createElement("span", { className: "playground-environments-field-label" }, "Location"),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: draftServer.databaseLocation || "eur3",
+                        onChange: (event) => updateServerDatabaseField("databaseLocation", event.target.value),
+                        placeholder: "eur3",
+                      })
+                    ),
+                    React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
+                      React.createElement("span", { className: "playground-environments-field-label" }, "Database Description"),
+                      React.createElement("textarea", {
+                        className: "playground-environments-input playground-environments-textarea",
+                        value: draftServer.databaseDescription || "",
+                        rows: 3,
+                        onChange: (event) => updateServerDatabaseField("databaseDescription", event.target.value),
+                        placeholder: "Store Firestore documents for this deployed app here.",
+                      })
+                    )
+                  )
+                : null
+            ),
+            linkedServerDatabaseMode === "none"
+              ? React.createElement("div", { className: "playground-servers-source-files-copy" }, "Attach a Firestore-backed database if this server needs persistent application data.")
+              : linkedServerDatabaseMode === "create"
+                ? React.createElement("div", { className: "playground-servers-source-files-copy" }, "The database will be created and linked when you save the server.")
+                : !linkedServerDatabaseId
+                  ? React.createElement("div", { className: "playground-servers-source-files-copy" }, "Choose an existing database to link it to this server.")
+                  : React.createElement("div", { className: "playground-servers-source-files-copy" }, "This server is linked to a Firestore-backed database.")
+          );
+
+          const linkedDatabaseDetailsSection = !draftDatabase
+            ? React.createElement("div", { className: "playground-files-state" },
+                linkedServerDatabaseMode === "create"
+                  ? "Save the server to create and open the linked database."
+                  : linkedServerDatabaseMode === "existing"
+                    ? "Select a linked database to browse its collections and documents."
+                    : "No database linked."
+              )
+            : React.createElement("div", { className: "playground-environments-editor-surface" },
+                React.createElement("div", { className: "playground-environments-field-grid" },
+                  React.createElement("label", { className: "playground-environments-field" },
+                    React.createElement("span", { className: "playground-environments-field-label" }, "Name"),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-environments-input",
+                      value: draftDatabase.name || "",
+                      onChange: (event) => updateDatabaseField("name", event.target.value),
+                      placeholder: "Database",
+                    })
+                  ),
+                  React.createElement("label", { className: "playground-environments-field" },
+                    React.createElement("span", { className: "playground-environments-field-label" }, "Location"),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-environments-input",
+                      value: draftDatabase.location || "",
+                      onChange: (event) => updateDatabaseField("location", event.target.value),
+                      placeholder: "eur3",
+                    })
+                  ),
+                  React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
+                    React.createElement("span", { className: "playground-environments-field-label" }, "Description"),
+                    React.createElement("textarea", {
+                      className: "playground-environments-input playground-environments-textarea",
+                      value: draftDatabase.description || "",
+                      rows: 3,
+                      onChange: (event) => updateDatabaseField("description", event.target.value),
+                      placeholder: "What kind of app data should live here?",
+                    })
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-details-grid" },
+                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Provider"),
+                    React.createElement("div", { className: "playground-tasks-detail-fact-value" }, "Firestore")
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Collections"),
+                    React.createElement("div", { className: "playground-tasks-detail-fact-value" }, String(currentDatabaseCollections.length))
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Documents"),
+                    React.createElement("div", { className: "playground-tasks-detail-fact-value" }, String(collectionStats))
+                  )
+                )
+              );
+
+          const linkedDatabaseCollectionsSection = !draftDatabase
+            ? null
+            : React.createElement("div", { className: "playground-environments-editor-surface playground-servers-source-files-section" },
+                React.createElement("div", { className: "playground-servers-source-files-header" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Collections"),
+                  React.createElement("div", { className: "playground-servers-source-files-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: () => void handleCreateDatabaseCollection(),
+                    },
+                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "New Collection")
+                    )
+                  )
+                ),
+                collectionLoading
+                  ? React.createElement("div", { className: "playground-files-state" },
+                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                    )
+                  : currentDatabaseCollections.length > 0
+                    ? React.createElement("div", { className: "playground-servers-source-files-list" },
+                        currentDatabaseCollections.map((collection) =>
+                          React.createElement("div", {
+                              key: collection.id,
+                              className: "playground-servers-source-file-row" + (selectedDatabaseCollectionId === collection.id ? " is-active" : ""),
+                            },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-servers-source-file-main",
+                              onClick: () => setSelectedDatabaseCollectionId(collection.id),
+                            },
+                              React.createElement(Database, { className: "playground-files-entry-icon", strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-servers-source-file-copy" },
+                                React.createElement("div", { className: "playground-servers-source-file-name" }, collection.name || "Collection"),
+                                React.createElement("div", { className: "playground-servers-source-file-meta" }, String(collection.documentCount || 0) + " documents")
+                              )
+                            ),
+                            React.createElement("div", { className: "playground-servers-source-file-actions" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-environments-action-button",
+                                onClick: () => void handleDeleteDatabaseCollection(collection.id),
+                              },
+                                React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("span", null, "Delete")
+                              )
+                            )
+                          )
+                        )
+                      )
+                    : React.createElement("div", { className: "playground-files-state" }, "No collections yet.")
+              );
+
+          const linkedDatabaseDocumentsSection = !draftDatabase
+            ? null
+            : React.createElement("div", { className: "playground-environments-editor-surface playground-servers-source-files-section" },
+                React.createElement("div", { className: "playground-servers-source-files-header" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, selectedCollection ? (selectedCollection.name + " Documents") : "Documents"),
+                  selectedDatabaseCollectionId
+                    ? React.createElement("div", { className: "playground-servers-source-files-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button",
+                          onClick: () => void handleCreateDatabaseDocument(),
+                        },
+                          React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, "New Document")
+                        )
+                      )
+                    : null
+                ),
+                !selectedCollection
+                  ? React.createElement("div", { className: "playground-files-state" }, "Select a collection to browse its documents.")
+                  : documentsLoading
+                    ? React.createElement("div", { className: "playground-files-state" },
+                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                      )
+                    : currentDatabaseDocuments.length > 0
+                      ? React.createElement("div", { className: "playground-servers-source-files-list" },
+                          currentDatabaseDocuments.map((document) =>
+                            React.createElement("div", {
+                                key: document.id,
+                                className: "playground-servers-source-file-row" + (selectedDatabaseDocumentId === document.id ? " is-active" : ""),
+                              },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-servers-source-file-main",
+                                onClick: () => handleSelectDatabaseDocument(document),
+                              },
+                                React.createElement(FileText, { className: "playground-files-entry-icon", strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-servers-source-file-copy" },
+                                  React.createElement("div", { className: "playground-servers-source-file-name" }, document.id || "Document"),
+                                  React.createElement("div", { className: "playground-servers-source-file-meta" }, formatPlaygroundRelativeTime(document.updatedAt))
+                                )
+                              ),
+                              React.createElement("div", { className: "playground-servers-source-file-actions" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-action-button",
+                                  onClick: () => void handleDeleteDatabaseDocument(document.id),
+                                },
+                                  React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                  React.createElement("span", null, "Delete")
+                                )
+                              )
+                            )
+                          )
+                        )
+                      : React.createElement("div", { className: "playground-files-state" }, "No documents in this collection yet.")
+              );
+
+          const linkedDatabaseEditorSection = !draftDatabase
+            ? null
+            : React.createElement("div", { className: "playground-environments-editor-surface playground-servers-source-editor" },
+                React.createElement("div", { className: "playground-code-preview-toolbar" },
+                  React.createElement("div", { className: "playground-code-preview-toolbar-group" },
+                    React.createElement("span", { className: "playground-code-preview-badge" }, selectedDocument ? selectedDocument.id : "JSON"),
+                    documentIsDirty
+                      ? React.createElement("span", { className: "playground-code-preview-badge" }, "Unsaved")
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-code-preview-toolbar-group is-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-code-preview-toolbar-button",
+                      onClick: () => setDatabaseDocumentEditorState((current) => ({
+                        ...current,
+                        value: current.initialValue,
+                        saveError: "",
+                        saveMessage: "",
+                      })),
+                      disabled: !documentIsDirty || databaseDocumentEditorState.isSaving,
+                    },
+                      React.createElement(RotateCcw, { width: 12, height: 12, strokeWidth: 1.9 }),
+                      React.createElement("span", null, "Revert")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-code-preview-toolbar-button is-primary",
+                      onClick: () => void handleSaveDatabaseDocument(),
+                      disabled: !selectedDocument || databaseDocumentEditorState.isSaving,
+                    },
+                      React.createElement(HardDrive, { width: 12, height: 12, strokeWidth: 1.9 }),
+                      React.createElement("span", null, databaseDocumentEditorState.isSaving ? "Saving..." : "Save")
+                    )
+                  )
+                ),
+                databaseDocumentEditorState.error
+                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseDocumentEditorState.error)
+                  : null,
+                databaseDocumentEditorState.saveError
+                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseDocumentEditorState.saveError)
+                  : databaseDocumentEditorState.saveMessage
+                    ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, databaseDocumentEditorState.saveMessage)
+                    : null,
+                React.createElement("div", { className: "playground-code-preview-editor-shell playground-servers-source-editor-shell" },
+                  React.createElement("textarea", {
+                    className: "playground-code-preview-textarea playground-servers-source-editor-textarea",
+                    value: databaseDocumentEditorState.value,
+                    onChange: (event) => handleDatabaseDocumentEditorChange(event.target.value),
+                    spellCheck: false,
+                    wrap: "off",
+                  })
+                )
+              );
+
+          const isLoadingCurrentServerFiles = loadingServerFilesId === draftServer.id;
+          const serverFileEditorIsDirty = serverFileEditorState.status === "ready" && serverFileEditorState.value !== serverFileEditorState.initialValue;
+          const serverFileEditorStatusClassName = serverFileEditorState.saveError
+            ? "playground-code-preview-status is-error"
+            : serverFileEditorState.isSaving
+              ? "playground-code-preview-status"
+              : serverFileEditorIsDirty
+                ? "playground-code-preview-status is-warning"
+                : serverFileEditorState.saveMessage
+                  ? "playground-code-preview-status is-success"
+                  : "playground-code-preview-status";
+          const serverFileEditorStatusText = serverFileEditorState.saveError
+            ? serverFileEditorState.saveError
+            : serverFileEditorState.isSaving
+              ? "Saving..."
+              : serverFileEditorIsDirty
+                ? "Unsaved changes"
+                : serverFileEditorState.saveMessage
+                  ? serverFileEditorState.saveMessage
+                  : "No unsaved changes";
+          const sourceFilesSection = React.createElement("div", { className: "playground-environments-editor-surface playground-servers-source-files-section" },
+            React.createElement("div", { className: "playground-servers-source-files-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Source Files"),
+              draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
+                ? React.createElement("div", { className: "playground-servers-source-files-actions" },
+                    React.createElement("input", {
+                      ref: serverFileUploadInputRef,
+                      type: "file",
+                      multiple: true,
+                      onChange: (event) => void handleServerFileUploadSelection(event),
+                      style: { display: "none" },
+                    }),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button is-primary",
+                      onClick: openServerFileUploadPicker,
+                      disabled: serverFileTransferState.isUploading,
+                    },
+                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, serverFileTransferState.isUploading ? "Uploading..." : "Upload Files")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: () => void handleCreateServerFile(),
+                    },
+                      React.createElement(FilePlus2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "New File")
+                    )
+                  )
+                : null
+            ),
+            React.createElement("div", { className: "playground-servers-source-files-copy" },
+              draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
+                ? "Upload the source bundle this server should eventually build and publish."
+                : "Save this server first to start uploading source files."
+            ),
+            serverFileTransferState.error
+              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverFileTransferState.error)
+              : serverFileTransferState.message
+                ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, serverFileTransferState.message)
+                : null,
+            !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
+              ? React.createElement("div", { className: "playground-files-state" }, "Create the server to enable source files.")
+              : isLoadingCurrentServerFiles
+                ? React.createElement("div", { className: "playground-files-state" },
+                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                  )
+                : currentServerFiles.length > 0
+                  ? React.createElement("div", { className: "playground-servers-source-files-list" },
+                      currentServerFiles.map((entry) =>
+                        React.createElement("div", {
+                          key: entry.id || entry.path,
+                          className: "playground-servers-source-file-row" + (serverFileEditorState.path === entry.path ? " is-active" : ""),
+                        },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-servers-source-file-main",
+                            onClick: () => void handleServerFileOpen(entry),
+                            disabled: entry.isFolder || !isPlaygroundTextPreviewable(entry),
+                            title: entry.isFolder
+                              ? "Folders cannot be edited inline."
+                              : isPlaygroundTextPreviewable(entry)
+                                ? "Open in editor"
+                                : "Only text files can be edited inline.",
+                          },
+                            React.createElement(PlaygroundFileIcon, { entry }),
+                            React.createElement("div", { className: "playground-servers-source-file-copy" },
+                              React.createElement("div", { className: "playground-servers-source-file-name" }, entry.name || entry.path || "Untitled"),
+                              React.createElement("div", { className: "playground-servers-source-file-meta" },
+                                entry.path || "",
+                                entry.isFolder
+                                  ? " • Folder"
+                                  : " • " + formatPlaygroundFileSize(entry.size)
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-servers-source-file-actions" },
+                            !entry.isFolder && isPlaygroundTextPreviewable(entry)
+                              ? React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-action-button",
+                                  onClick: () => void handleServerFileOpen(entry),
+                                },
+                                  React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                  React.createElement("span", null, "Edit")
+                                )
+                              : null,
+                            !entry.isFolder
+                              ? React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-action-button",
+                                  onClick: () => void handleServerFileDownload(entry),
+                                },
+                                  React.createElement(Download, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                  React.createElement("span", null, "Download")
+                                )
+                              : null,
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-environments-action-button",
+                              onClick: () => void handleServerFileDelete(entry),
+                            },
+                              React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "Delete")
+                            )
+                          )
+                        )
+                      )
+                    )
+                  : React.createElement("div", { className: "playground-files-state" }, "No source files uploaded yet.")
+            ,
+            serverFileEditorState.path
+              ? React.createElement("div", { className: "playground-servers-source-editor" },
+                  React.createElement("div", { className: "playground-code-preview-toolbar" },
+                    React.createElement("div", { className: "playground-code-preview-toolbar-group" },
+                      React.createElement("span", { className: "playground-code-preview-badge" }, currentServerEditorEntry ? formatPlaygroundCodeEditorLanguageLabel(currentServerEditorEntry) : "Text"),
+                      React.createElement("span", { className: "playground-code-preview-badge" }, currentServerEditorEntry?.path || serverFileEditorState.path),
+                      React.createElement("span", { className: serverFileEditorStatusClassName }, serverFileEditorStatusText)
+                    ),
+                    React.createElement("div", { className: "playground-code-preview-toolbar-group is-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-code-preview-toolbar-button" + (serverFileEditorState.wordWrap ? " is-active" : ""),
+                        onClick: () => setServerFileEditorState((current) => ({
+                          ...current,
+                          wordWrap: !current.wordWrap,
+                        })),
+                      }, "Wrap"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-code-preview-toolbar-button",
+                        onClick: handleServerFileEditorRevert,
+                        disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
+                      },
+                        React.createElement(RotateCcw, { width: 12, height: 12, strokeWidth: 1.9 }),
+                        React.createElement("span", null, "Revert")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-code-preview-toolbar-button is-primary",
+                        onClick: () => void handleServerFileSave(),
+                        disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
+                        title: "Save changes (Ctrl+S)",
+                      },
+                        React.createElement(HardDrive, { width: 12, height: 12, strokeWidth: 1.9 }),
+                        React.createElement("span", null, serverFileEditorState.isSaving ? "Saving..." : "Save")
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-code-preview-editor-shell playground-servers-source-editor-shell" },
+                    serverFileEditorState.status === "loading"
+                      ? React.createElement("div", { className: "playground-code-preview-state" },
+                          React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                          React.createElement("span", null, "Opening source file...")
+                        )
+                      : serverFileEditorState.status === "error"
+                        ? React.createElement("div", { className: "playground-code-preview-state is-error" }, serverFileEditorState.error || "Failed to open source file.")
+                        : React.createElement("textarea", {
+                            className: "playground-code-preview-textarea playground-servers-source-editor-textarea",
+                            value: serverFileEditorState.value,
+                            onChange: (event) => handleServerFileEditorChange(event.target.value),
+                            spellCheck: false,
+                            wrap: serverFileEditorState.wordWrap ? "soft" : "off",
+                          })
+                  )
+                )
+              : null
+          );
+
+          const publishingSection = React.createElement("div", { className: "playground-environments-editor-surface" },
+            React.createElement("div", { className: "playground-environments-field-grid" },
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Service URL"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-environments-input",
+                  value: draftServer.serviceUrl || "",
+                  onChange: (event) => updateServerField("serviceUrl", event.target.value),
+                  placeholder: "https://example.run.app",
+                })
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Custom Domain"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-environments-input",
+                  value: draftServer.customDomain || "",
+                  onChange: (event) => updateServerField("customDomain", event.target.value),
+                  placeholder: "app.example.com",
+                })
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Cloud Run Service"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-environments-input",
+                  value: draftServer.cloudRunServiceName || "",
+                  onChange: (event) => updateServerField("cloudRunServiceName", event.target.value),
+                  placeholder: "srv-my-app",
+                })
+              ),
+              React.createElement("label", { className: "playground-environments-field" },
+                React.createElement("span", { className: "playground-environments-field-label" }, "Image URL"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-environments-input",
+                  value: draftServer.imageUrl || "",
+                  onChange: (event) => updateServerField("imageUrl", event.target.value),
+                  placeholder: "europe-west1-docker.pkg.dev/...",
+                })
+              )
+            )
+          );
+
+          const serverKindLabel = formatPlaygroundServerKindLabel(draftServer.kind);
+          const deployActionLabel = serverDeploymentState.isDeploying ? "Deploying..." : "Deploy " + serverKindLabel;
+          const requestActionLabel = serverDeploymentState.isInvoking
+            ? "Requesting..."
+            : draftServer.kind === "function"
+              ? "Test Invoke"
+              : "Test Request";
+          const deploymentGuideCopy = draftServer.kind === "function"
+            ? React.createElement("div", { className: "playground-servers-source-files-copy" },
+                "Upload ",
+                React.createElement("code", null, "index.js"),
+                " or ",
+                React.createElement("code", null, "index.mjs"),
+                " at the source root and export a default async handler that receives a web ",
+                React.createElement("code", null, "Request"),
+                ". The deploy step packages that source into a Cloud Run function service."
+              )
+            : React.createElement("div", { className: "playground-servers-source-files-copy" },
+                "If the source root contains ",
+                React.createElement("code", null, "package.json"),
+                ", it is deployed directly as a Cloud Run app. Otherwise, if an ",
+                React.createElement("code", null, "index.html"),
+                " bundle exists at the source root, ",
+                React.createElement("code", null, "dist/"),
+                ", ",
+                React.createElement("code", null, "build/"),
+                ", or ",
+                React.createElement("code", null, "public/"),
+                ", it is deployed as a browser-routed static app."
+              );
+          const deploymentSnippet = draftServer.kind === "function"
+            ? [
+                "export default async function handler(request) {",
+                "  return {",
+                '    status: 200,',
+                '    headers: { \"content-type\": \"text/plain; charset=utf-8\" },',
+                '    body: \"hello world\",',
+                "  };",
+                "}",
+              ].join("\\n")
+            : [
+                "{",
+                '  "name": "my-app",',
+                '  "private": true,',
+                '  "scripts": { "start": "node server.js" }',
+                "}",
+              ].join("\\n");
+          const deploymentSection = React.createElement("div", { className: "playground-environments-editor-surface playground-servers-function-deploy-section" },
+            React.createElement("div", { className: "playground-servers-source-files-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, serverKindLabel + " Runtime"),
+              React.createElement("div", { className: "playground-servers-source-files-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button is-primary",
+                  onClick: () => void handleDeployServer(),
+                  disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                },
+                  serverDeploymentState.isDeploying
+                    ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                    : React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, deployActionLabel)
+                ),
+                draftServer.serviceUrl
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: () => window.open(draftServer.serviceUrl, "_blank", "noopener,noreferrer"),
+                    },
+                      React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Open URL")
+                    )
+                  : null,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => void handleInvokeServer(),
+                  disabled: serverDeploymentState.isInvoking || !draftServer.serviceUrl,
+                },
+                  serverDeploymentState.isInvoking
+                    ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                    : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, requestActionLabel)
+                )
+              )
+            ),
+            deploymentGuideCopy,
+            React.createElement("pre", { className: "playground-servers-function-snippet" }, deploymentSnippet),
+            serverDeploymentState.error
+              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverDeploymentState.error)
+              : serverDeploymentState.message
+                ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, serverDeploymentState.message)
+                : null,
+            serverDeploymentState.lastResponseText
+              ? React.createElement("pre", { className: "playground-servers-function-response" }, serverDeploymentState.lastResponseText)
+              : null
+          );
+
+          if (serverAnalyticsView === "analytics") {
+            return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                  React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                    React.createElement("div", { className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input" }, (draftServer.name || "Server") + " Analytics"),
+                    React.createElement("div", { className: "playground-environments-editor-navbar-subtitle" }, "Traffic, latency, status mix, deploy output, and runtime logs")
+                  )
+                ),
+                React.createElement("div", { className: "playground-content-nav-center" }),
+                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+                  draftServer.serviceUrl
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        onClick: () => window.open(draftServer.serviceUrl, "_blank", "noopener,noreferrer"),
+                      },
+                        React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Open URL")
+                      )
+                    : null,
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => {
+                      if (!draftServer.id) {
+                        return;
+                      }
+                      void loadServerAnalytics(draftServer.id, { force: true });
+                      void loadServerLogs(draftServer.id, serverLogsState.kind, { force: true });
+                    },
+                  },
+                    React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Refresh")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button is-primary",
+                    onClick: () => setServerAnalyticsView("editor"),
+                  },
+                    React.createElement(ArrowLeft, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Back")
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+                React.createElement("div", { className: "playground-environments-editor-surface playground-servers-analytics-page" },
+                  serverAnalyticsOverview
+                ),
+                React.createElement("div", { className: "playground-environments-editor-surface playground-servers-analytics-logs-surface" },
+                  React.createElement("div", { className: "playground-servers-source-files-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Logs"),
+                    React.createElement("div", { className: "playground-servers-analytics-log-tabs" },
+                      serverAnalyticsLogKinds.map((option) =>
+                        React.createElement("button", {
+                          key: option.id,
+                          type: "button",
+                          className: "playground-code-preview-toolbar-button" + (serverLogsState.kind === option.id ? " is-active" : ""),
+                          onClick: () => {
+                            setServerLogsState((current) => ({
+                              ...current,
+                              kind: option.id,
+                              error: "",
+                            }));
+                            if (draftServer.id) {
+                              void loadServerLogs(draftServer.id, option.id);
+                            }
+                          },
+                        },
+                          React.createElement(option.Icon, { width: 12, height: 12, strokeWidth: 1.8 }),
+                          React.createElement("span", null, option.label)
+                        )
+                      )
+                    )
+                  ),
+                  serverLogsState.error
+                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverLogsState.error)
+                    : null,
+                  isServerLogsLoading
+                    ? React.createElement("div", { className: "playground-files-state" },
+                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                      )
+                    : activeServerLogList.length > 0
+                      ? React.createElement("div", { className: "playground-servers-analytics-log-list" },
+                          activeServerLogList.map((entry) => renderServerLogRow(entry, serverLogsState.kind))
+                        )
+                      : React.createElement("div", { className: "playground-files-state" }, "No " + formatPlaygroundServerLogKindLabel(serverLogsState.kind).toLowerCase() + " logs yet.")
+                ),
+                activeServerRecentRequests.length > 0 && serverLogsState.kind !== "request"
+                  ? React.createElement("div", { className: "playground-environments-editor-surface playground-servers-analytics-logs-surface" },
+                      React.createElement("div", { className: "playground-servers-source-files-header" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Recent Requests")
+                      ),
+                      React.createElement("div", { className: "playground-servers-analytics-log-list" },
+                        activeServerRecentRequests.slice(0, 8).map((entry) => renderServerLogRow(entry, "request"))
+                      )
+                    )
+                  : null
+              )
+            );
+          }
+
+          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
+            React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
+              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input",
+                    value: draftServer.name || "",
+                    placeholder: "Server",
+                    "aria-label": "Server name",
+                    title: draftServer.name || "Server",
+                    onChange: (event) => updateServerField("name", event.target.value),
+                  })
+                )
+              ),
+              React.createElement("div", { className: "playground-content-nav-center" }),
+              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+                draftServer.id
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: () => void handleDeleteServer(draftServer.id),
+                      disabled: serverSaveState.isSaving,
+                    }, "Delete")
+                  : null,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button is-primary",
+                  onClick: () => void handleServerSave(),
+                  disabled: serverSaveState.isSaving || !String(draftServer.name || "").trim(),
+                }, serverSaveState.isSaving ? "Saving..." : "Save")
+              )
+            ),
+            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+              serverSaveState.error
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
+                : serverSaveState.message
+                  ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, serverSaveState.message)
+                  : null,
+              descriptionSection,
+              factsSection,
+              renderEditorSection("server-source", "Source", "Connect this server to a computer workspace or source path.", sourceSection, null, false),
+              renderEditorSection("server-database", "Database", "Link a Firestore-backed database to this server and manage its collections/documents here.", databaseBindingSection, null, false),
+              renderEditorSection(
+                "server-database-details",
+                "Database Details",
+                "Edit the linked database record and inspect its Firestore collection/document counts.",
+                linkedDatabaseDetailsSection,
+                draftDatabase
+                  ? React.createElement("div", { className: "playground-servers-source-files-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        onClick: () => void handleDeleteDatabase(draftDatabase.id),
+                        disabled: databaseSaveState.isSaving,
+                      },
+                        React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, databaseSaveState.isSaving ? "Deleting..." : "Delete Database")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button is-primary",
+                        onClick: () => void handleDatabaseSave(),
+                        disabled: databaseSaveState.isSaving || !String(draftDatabase.name || "").trim(),
+                      },
+                        React.createElement(HardDrive, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, databaseSaveState.isSaving ? "Saving..." : "Save Database")
+                      )
+                    )
+                  : null,
+                false
+              ),
+              linkedDatabaseCollectionsSection
+                ? renderEditorSection("server-database-collections", "Collections", "Logical groupings of Firestore documents for this server.", linkedDatabaseCollectionsSection, null, false)
+                : null,
+              linkedDatabaseDocumentsSection
+                ? renderEditorSection("server-database-documents", "Documents", "Browse and manage documents inside the selected collection.", linkedDatabaseDocumentsSection, null, false)
+                : null,
+              linkedDatabaseEditorSection
+                ? renderEditorSection("server-database-json", "Document JSON", "Edit the selected document as raw JSON.", linkedDatabaseEditorSection, null, false)
+                : null,
+              renderEditorSection("server-source-files", "Source Files", "Manage the source bundle that this server will eventually build and publish.", sourceFilesSection, null, false),
+              renderEditorSection("server-publish", "Publishing", "These fields will be populated by deployment flows in the next phase.", publishingSection, null, false),
+              renderEditorSection("server-deployments", "Deployments", "", deploymentSection, null, false)
+            )
+          );
+        }
+
+        function renderCurrentDatabaseEditor() {
+          if (!draftDatabase) {
+            return React.createElement("div", { className: "playground-environments-detail-empty" },
+              React.createElement("div", { className: "playground-files-state" }, "Select a database to browse its collections and documents.")
+            );
+          }
+
+          const DatabaseJsonEditorComponent = databaseJsonEditorModule?.default || null;
+          const collectionLoading = loadingDatabaseCollectionsId === draftDatabase.id;
+          const documentsLoading = loadingDatabaseDocumentsKey === (draftDatabase.id + ":" + selectedDatabaseCollectionId);
+          const selectedCollection = currentDatabaseCollection;
+          const selectedDocument = currentDatabaseDocuments.find((document) => document.id === selectedDatabaseDocumentId) || null;
+          const collectionStats = currentDatabaseCollections.reduce((sum, collection) => sum + Number(collection?.documentCount || 0), 0);
+          const sortedDatabaseCollections = [...currentDatabaseCollections].sort((left, right) => {
+            const leftCount = Number(left?.documentCount || 0);
+            const rightCount = Number(right?.documentCount || 0);
+            if (leftCount !== rightCount) {
+              return rightCount - leftCount;
+            }
+            return String(left?.name || "").localeCompare(String(right?.name || ""));
+          });
+          const largestCollection = sortedDatabaseCollections[0] || null;
+          const databaseMetadata = draftDatabase?.metadata && typeof draftDatabase.metadata === "object" && !Array.isArray(draftDatabase.metadata)
+            ? draftDatabase.metadata
+            : {};
+          const rawDatabaseReads = Number(
+            databaseMetadata.reads24h
+            ?? databaseMetadata.readCount
+            ?? databaseMetadata.reads
+            ?? databaseMetadata.analytics?.reads24h
+            ?? databaseMetadata.analytics?.reads
+            ?? databaseMetadata.metrics?.reads24h
+            ?? databaseMetadata.metrics?.reads
+            ?? 0
+          ) || 0;
+          const rawDatabaseWrites = Number(
+            databaseMetadata.writes24h
+            ?? databaseMetadata.writeCount
+            ?? databaseMetadata.writes
+            ?? databaseMetadata.analytics?.writes24h
+            ?? databaseMetadata.analytics?.writes
+            ?? databaseMetadata.metrics?.writes24h
+            ?? databaseMetadata.metrics?.writes
+            ?? 0
+          ) || 0;
+          const renderDatabaseHorizontalChart = (config) => {
+            const rows = Array.isArray(config?.rows) ? config.rows : [];
+            if (!rows.length) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No data yet");
+            }
+            const maxValue = Math.max(1, ...rows.map((row) => Math.max(0, Number(row?.value || 0))));
+            return React.createElement("div", {
+                className: "playground-database-overview-chart",
+                "aria-label": config?.ariaLabel || "Database chart",
+              },
+              rows.map((row) => {
+                const numericValue = Math.max(0, Number(row?.value || 0));
+                const width = maxValue > 0 ? (numericValue / maxValue) * 100 : 0;
+                return React.createElement("div", {
+                    key: row.key || row.label,
+                    className: "playground-database-overview-chart-row",
+                  },
+                  React.createElement("div", { className: "playground-database-overview-chart-label" }, row.label),
+                  React.createElement("div", { className: "playground-database-overview-chart-track" },
+                    numericValue > 0
+                      ? React.createElement("div", {
+                          className: "playground-database-overview-chart-fill " + (row.toneClassName || ""),
+                          style: { width: Math.max(width, 4) + "%" },
+                        })
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-database-overview-chart-value" }, String(numericValue))
+                );
+              })
+            );
+          };
+          const documentIsDirty = databaseDocumentEditorState.value !== databaseDocumentEditorState.initialValue;
+          const parsedDocumentData = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
+          const databaseFieldTypeLabels = {
+            string: "String",
+            number: "Number",
+            boolean: "Boolean",
+            null: "Null",
+            map: "Map",
+            array: "Array",
+          };
+
+          const renderDatabaseSummaryFact = (label, value) => React.createElement("div", {
+              className: "playground-tasks-detail-fact",
+              key: label,
+            },
+            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
+            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+              React.createElement("div", { className: "playground-tasks-detail-fact-button" }, value)
+            )
+          );
+
+          const databaseDescriptionSection = React.createElement("section", {
+              className: "playground-environments-section",
+              key: "database-description",
+            },
+            React.createElement("div", { className: "playground-environments-section-body" },
+              React.createElement("div", { className: "playground-tasks-detail-description" },
+                React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                  React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                    [
+                      {
+                        id: "bold",
+                        label: "Bold",
+                        icon: Bold,
+                      },
+                      {
+                        id: "italic",
+                        label: "Italic",
+                        icon: Italic,
+                      },
+                      {
+                        id: "underline",
+                        label: "Underline",
+                        icon: Underline,
+                      },
+                      {
+                        id: "list",
+                        label: "List",
+                        icon: List,
+                      },
+                    ].map((action) =>
+                      React.createElement("button", {
+                        key: action.id,
+                        type: "button",
+                        className: "playground-tasks-detail-format-button",
+                        title: action.label,
+                        "aria-label": action.label,
+                        onMouseDown: (event) => event.preventDefault(),
+                        onClick: () => handleDatabaseDescriptionFormat(action.id),
+                      }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isDatabaseDescriptionEditing ? " is-editing" : " is-preview") },
+                  !isDatabaseDescriptionEditing
+                    ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                        String(draftDatabase.description || "").trim()
+                          ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                              content: draftDatabase.description,
+                              className: "playground-tasks-detail-description-preview tb-message-markdown",
+                            })
+                          : React.createElement("div", {
+                              className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                            }, "Add Description here")
+                      )
+                    : null,
+                  React.createElement("textarea", {
+                    ref: databaseDescriptionTextareaRef,
+                    className: "playground-tasks-detail-description-input " + (isDatabaseDescriptionEditing ? "is-editing" : "is-preview"),
+                    rows: 1,
+                    placeholder: isDatabaseDescriptionEditing ? "Add Description here" : "",
+                    value: draftDatabase.description || "",
+                    onFocus: () => {
+                      setIsDatabaseDescriptionEditing(true);
+                    },
+                    onChange: (event) => {
+                      updateDatabaseField("description", event.target.value);
+                      resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                    },
+                    onBlur: () => {
+                      setIsDatabaseDescriptionEditing(false);
+                      if (String(draftDatabase.name || "").trim()) {
+                        void handleDatabaseSave();
+                      }
+                    },
+                  })
+                )
+              )
+            )
+          );
+
+          const detailsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-database-summary-card" },
+            React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-detail-facts-toggle" + (databaseDetailsCollapsed ? " is-collapsed" : ""),
+                onClick: () => setDatabaseDetailsCollapsed((current) => !current),
+                title: databaseDetailsCollapsed ? "Expand details" : "Collapse details",
+                "aria-label": databaseDetailsCollapsed ? "Expand details" : "Collapse details",
+                "aria-expanded": databaseDetailsCollapsed ? "false" : "true",
+              }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
+            ),
+            !databaseDetailsCollapsed
+              ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                React.createElement("div", { className: "playground-database-overview" },
+                  React.createElement("div", { className: "playground-database-overview-chart-grid" },
+                    React.createElement("div", { className: "playground-database-overview-chart-block" },
+                      renderDatabaseHorizontalChart({
+                          rows: [
+                            {
+                              key: "collections",
+                              label: "Collections",
+                              value: currentDatabaseCollections.length,
+                              toneClassName: "is-collections",
+                            },
+                            {
+                              key: "documents",
+                              label: "Documents",
+                              value: collectionStats,
+                              toneClassName: "is-documents",
+                            },
+                          ],
+                          emptyText: "No database data yet",
+                          ariaLabel: "Collections and documents",
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-database-overview-chart-block" },
+                        renderDatabaseHorizontalChart({
+                          rows: [
+                            {
+                              key: "reads",
+                              label: "Reads",
+                              value: rawDatabaseReads,
+                              toneClassName: "is-reads",
+                            },
+                            {
+                              key: "writes",
+                              label: "Writes",
+                              value: rawDatabaseWrites,
+                              toneClassName: "is-writes",
+                            },
+                          ],
+                          emptyText: "No operation data yet",
+                          ariaLabel: "Reads and writes",
+                        })
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-database-summary-divider" }),
+                  renderDatabaseSummaryFact("Location", draftDatabase.location || "eur3"),
+                  renderDatabaseSummaryFact(
+                    "Largest Collection",
+                    largestCollection
+                      ? (String(largestCollection.name || "Untitled Collection") + " · " + String(Number(largestCollection.documentCount || 0)) + " docs")
+                      : "None yet"
+                  ),
+                  renderDatabaseSummaryFact("Updated", formatPlaygroundFileDate(draftDatabase.updatedAt))
+                )
+              : null
+          );
+
+          const detailsSectionBlock = React.createElement("section", { className: "playground-environments-section", key: "database-details" },
+            React.createElement("div", { className: "playground-environments-section-body" }, detailsSection)
+          );
+
+          function renderDatabaseSelectorRow({
+            label,
+            count,
+            value,
+            options,
+            placeholder,
+            onChange,
+            onCreate,
+            createLabel,
+            createDisabled = false,
+          }) {
+            return React.createElement("div", { className: "playground-database-browser-selector-row" },
+              React.createElement("div", { className: "playground-database-browser-selector-label" },
+                React.createElement("span", null, label),
+                React.createElement("span", { className: "playground-database-browser-selector-count" }, String(count))
+              ),
+              React.createElement("div", { className: "playground-database-browser-selector-main" },
+                React.createElement("div", { className: "playground-database-browser-select-shell" },
+                  React.createElement("select", {
+                    className: "playground-database-browser-select",
+                    value,
+                    onChange,
+                    disabled: collectionLoading || documentsLoading || options.length === 0,
+                  },
+                    React.createElement("option", { value: "" }, placeholder),
+                    options.map((option) =>
+                      React.createElement("option", { key: option.value, value: option.value }, option.label)
+                    )
+                  ),
+                  React.createElement(ChevronDown, { className: "playground-database-browser-select-chevron", width: 16, height: 16, strokeWidth: 1.9 })
+                ),
+                onCreate
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-database-browser-selector-action",
+                      onClick: () => void onCreate(),
+                      disabled: createDisabled,
+                      title: createLabel,
+                      "aria-label": createLabel,
+                    }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
+                  : null
+              )
+            );
+          }
+
+          function renderDatabaseFieldValueInput(fieldPath, fieldValue) {
+            const valueType = getPlaygroundDatabaseFieldType(fieldValue);
+            if (valueType === "boolean") {
+              return React.createElement("select", {
+                className: "playground-database-browser-value-select",
+                value: fieldValue ? "true" : "false",
+                onChange: (event) => handleDatabaseFieldValueChange(fieldPath, event.target.value === "true"),
+              },
+                React.createElement("option", { value: "true" }, "true"),
+                React.createElement("option", { value: "false" }, "false")
+              );
+            }
+            if (valueType === "null") {
+              return React.createElement("div", { className: "playground-database-browser-value-static" }, "null");
+            }
+            return React.createElement("input", {
+              type: "text",
+              className: "playground-database-browser-value-input",
+              value: valueType === "number" ? String(fieldValue) : String(fieldValue || ""),
+              onChange: (event) => handleDatabaseFieldValueChange(fieldPath, event.target.value),
+              spellCheck: false,
+            });
+          }
+
+          function renderDatabaseFieldRows(containerValue, parentPath = [], depth = 0) {
+            const entries = Array.isArray(containerValue)
+              ? containerValue.map((item, index) => [String(index), item])
+              : Object.entries(isPlaygroundDatabasePlainObject(containerValue) ? containerValue : {});
+
+            if (!entries.length) {
+              return React.createElement("div", {
+                className: "playground-database-browser-empty-fields",
+                style: { marginLeft: depth > 0 ? String(depth * 18) + "px" : undefined },
+              }, "No fields yet.");
+            }
+
+            return React.createElement("div", { className: "playground-database-browser-field-tree" },
+              entries.map(([fieldKey, fieldValue]) => {
+                const fieldPath = [...parentPath, fieldKey];
+                const fieldType = getPlaygroundDatabaseFieldType(fieldValue);
+                const expandable = fieldType === "map" || fieldType === "array";
+                const expanded = databaseFieldExpansionState[getPlaygroundDatabasePathKey(fieldPath)] !== false;
+
+                return React.createElement("div", { key: getPlaygroundDatabasePathKey(fieldPath), className: "playground-database-browser-field-node" },
+                  React.createElement("div", {
+                      className: "playground-database-browser-field-row",
+                      style: { paddingLeft: String(depth * 18) + "px" },
+                    },
+                    React.createElement("div", { className: "playground-database-browser-field-main" },
+                      expandable
+                        ? React.createElement("button", {
+                            type: "button",
+                            className: "playground-database-browser-field-toggle" + (expanded ? " is-expanded" : ""),
+                            onClick: () => toggleDatabaseFieldExpansion(fieldPath),
+                            "aria-label": expanded ? "Collapse field" : "Expand field",
+                          }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
+                        : React.createElement("span", { className: "playground-database-browser-field-toggle-placeholder" }),
+                      React.createElement("span", { className: "playground-database-browser-field-key" }, fieldKey),
+                      React.createElement("span", { className: "playground-database-browser-field-separator" }, ":"),
+                      expandable
+                        ? React.createElement("div", { className: "playground-database-browser-field-group" },
+                            React.createElement("span", { className: "playground-database-browser-field-type-pill" }, databaseFieldTypeLabels[fieldType] || fieldType),
+                            React.createElement("span", { className: "playground-database-browser-field-preview" }, formatPlaygroundDatabaseFieldPreview(fieldValue))
+                          )
+                        : React.createElement("div", { className: "playground-database-browser-field-value-shell" },
+                            renderDatabaseFieldValueInput(fieldPath, fieldValue)
+                          )
+                    ),
+                    React.createElement("div", { className: "playground-database-browser-field-actions" },
+                      fieldType === "map"
+                        ? React.createElement("button", {
+                            type: "button",
+                            className: "playground-database-browser-field-action",
+                            onClick: () => openDatabaseFieldComposer(fieldPath),
+                            title: "Add nested field",
+                            "aria-label": "Add nested field",
+                          }, React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.9 }))
+                        : null,
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-database-browser-field-action is-danger",
+                        onClick: () => handleDeleteDatabaseField(fieldPath),
+                        title: "Delete field",
+                        "aria-label": "Delete field",
+                      }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.9 }))
+                    )
+                  ),
+                  expandable && expanded
+                    ? React.createElement("div", { className: "playground-database-browser-field-children" },
+                        renderDatabaseFieldRows(fieldValue, fieldPath, depth + 1)
+                      )
+                    : null
+                );
+              })
+            );
+          }
+
+          const databaseBrowserSection = React.createElement("div", { className: "playground-environments-editor-surface playground-database-browser-surface" },
+            renderDatabaseSelectorRow({
+              label: "Collection",
+              count: currentDatabaseCollections.length,
+              value: selectedDatabaseCollectionId,
+              placeholder: currentDatabaseCollections.length ? "Select collection" : "No collections",
+              options: currentDatabaseCollections.map((collection) => ({
+                value: collection.id,
+                label: collection.name || "Collection",
+              })),
+              onChange: (event) => {
+                setSelectedDatabaseCollectionId(event.target.value);
+                setSelectedDatabaseDocumentId("");
+              },
+              onCreate: draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
+                ? handleCreateDatabaseCollection
+                : null,
+              createLabel: "New collection",
+              createDisabled: !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
+            }),
+            renderDatabaseSelectorRow({
+              label: "Document",
+              count: selectedCollection ? Number(selectedCollection.documentCount || currentDatabaseDocuments.length || 0) : currentDatabaseDocuments.length,
+              value: selectedDatabaseDocumentId,
+              placeholder: selectedCollection ? "Select document" : "Select collection first",
+              options: currentDatabaseDocuments.map((document) => ({
+                value: document.id,
+                label: document.id || "Document",
+              })),
+              onChange: (event) => {
+                const nextDocument = currentDatabaseDocuments.find((document) => document.id === event.target.value) || null;
+                if (nextDocument) {
+                  handleSelectDatabaseDocument(nextDocument);
+                  return;
+                }
+                setSelectedDatabaseDocumentId("");
+                setDatabaseDocumentEditorState({
+                  documentId: "",
+                  value: "{}",
+                  initialValue: "{}",
+                  error: "",
+                  saveError: "",
+                  saveMessage: "",
+                  isSaving: false,
+                });
+              },
+              onCreate: draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID && selectedDatabaseCollectionId
+                ? handleCreateDatabaseDocument
+                : null,
+              createLabel: "New document",
+              createDisabled: !selectedDatabaseCollectionId,
+            }),
+            React.createElement("div", { className: "playground-database-browser-fields-card" },
+              React.createElement("div", { className: "playground-database-browser-fields-header" },
+                React.createElement("div", { className: "playground-database-browser-fields-title" }, "Fields"),
+                React.createElement("div", { className: "playground-database-browser-fields-actions" },
+                  selectedDocument && parsedDocumentData
+                    && databaseDocumentViewMode === "preview"
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-database-browser-add-field",
+                        onClick: () => openDatabaseFieldComposer([]),
+                      },
+                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
+                        React.createElement("span", null, "Add field")
+                      )
+                    : null,
+                  selectedDocument
+                    ? React.createElement("div", { className: "content-mode-switch playground-agents-list-switch playground-database-browser-mode-switch" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "content-mode-button" + (databaseDocumentViewMode === "preview" ? " is-active" : ""),
+                          onClick: () => switchDatabaseDocumentViewMode("preview"),
+                        }, "Preview"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "content-mode-button" + (databaseDocumentViewMode === "json" ? " is-active" : ""),
+                          onClick: () => switchDatabaseDocumentViewMode("json"),
+                        }, "JSON")
+                      )
+                    : null
+                )
+              ),
+              databaseDocumentEditorState.error
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseDocumentEditorState.error)
+                : null,
+              databaseDocumentEditorState.saveError
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseDocumentEditorState.saveError)
+                : (databaseDocumentViewMode !== "json" && databaseDocumentEditorState.saveMessage)
+                  ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, databaseDocumentEditorState.saveMessage)
+                  : null,
+              collectionLoading || documentsLoading
+                ? React.createElement("div", { className: "playground-files-state" },
+                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                  )
+                : !selectedCollection
+                ? React.createElement("div", { className: "playground-files-state" }, "Select a collection to browse its documents.")
+                : !selectedDocument
+                  ? React.createElement("div", { className: "playground-files-state" }, "Select a document to inspect its fields.")
+                  : databaseDocumentViewMode === "json"
+                    ? React.createElement("div", {
+                        className: "playground-database-browser-json-editor-shell playground-code-preview-editor-shell",
+                        onBlur: (event) => {
+                          const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+                          if (nextTarget && event.currentTarget.contains(nextTarget)) {
+                            return;
+                          }
+                          handleDatabaseJsonEditorBlur();
+                        },
+                      },
+                        DatabaseJsonEditorComponent
+                          ? React.createElement(DatabaseJsonEditorComponent, {
+                              path: "database:" + String(draftDatabase.id || "database") + ":" + String(databaseDocumentEditorState.documentId || "document") + ".json",
+                              height: "320px",
+                              language: "json",
+                              theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                              value: databaseDocumentEditorState.value,
+                              onChange: handleDatabaseDocumentEditorChange,
+                              beforeMount: ensurePlaygroundCodeEditorTheme,
+                              options: {
+                                automaticLayout: true,
+                                minimap: { enabled: false },
+                                scrollBeyondLastLine: false,
+                                smoothScrolling: true,
+                                fontSize: 12,
+                                lineHeight: 20,
+                                tabSize: 2,
+                                insertSpaces: true,
+                                renderLineHighlight: "gutter",
+                                lineNumbersMinChars: 3,
+                                overviewRulerBorder: false,
+                                hideCursorInOverviewRuler: true,
+                                wordWrap: "on",
+                                padding: {
+                                  top: 12,
+                                  bottom: 12,
+                                },
+                                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                              },
+                            })
+                          : !databaseJsonEditorModuleError
+                            ? React.createElement("div", { className: "playground-code-preview-state" },
+                                React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                                React.createElement("span", null, "Loading editor...")
+                              )
+                            : React.createElement("textarea", {
+                                className: "playground-code-preview-textarea playground-servers-source-editor-textarea",
+                                value: databaseDocumentEditorState.value,
+                                onChange: (event) => handleDatabaseDocumentEditorChange(event.target.value),
+                                spellCheck: false,
+                                wrap: "off",
+                              })
+                      )
+                    : React.createElement("div", { className: "playground-database-browser-fields-body" },
+                        parsedDocumentData && Object.keys(parsedDocumentData).length
+                          ? renderDatabaseFieldRows(parsedDocumentData, [], 0)
+                          : React.createElement("div", { className: "playground-database-browser-empty-fields is-root" },
+                              React.createElement("div", null, "This document does not contain any fields yet."),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-database-browser-add-field",
+                                onClick: () => openDatabaseFieldComposer([]),
+                              },
+                                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
+                                React.createElement("span", null, "Add first field")
+                              )
+                            )
+                      )
+            )
+          );
+
+          const databaseCollectionComposerModal = databaseCollectionComposerState.open
+            ? React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop",
+                onClick: closeDatabaseCollectionComposer,
+              },
+                React.createElement("form", {
+                    className: "playground-tasks-project-modal playground-database-browser-modal",
+                    onClick: (event) => event.stopPropagation(),
+                    onSubmit: handleSubmitDatabaseCollectionComposer,
+                  },
+                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                    React.createElement("div", { className: "playground-database-browser-modal-title-row" },
+                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger" },
+                        React.createElement(Database, { width: 16, height: 16, strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", { className: "playground-database-browser-modal-title" }, "New Collection")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: closeDatabaseCollectionComposer,
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-database-browser-modal-copy" }, "Create a new top-level collection inside this database."),
+                  React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
+                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Collection Name"),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: databaseCollectionComposerState.name,
+                        onChange: (event) => setDatabaseCollectionComposerState((current) => ({
+                          ...current,
+                          name: event.target.value,
+                          error: "",
+                        })),
+                        placeholder: "items",
+                        autoFocus: true,
+                      })
+                    )
+                  ),
+                  databaseCollectionComposerState.error
+                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, databaseCollectionComposerState.error)
+                    : null,
+                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: closeDatabaseCollectionComposer,
+                      disabled: databaseCollectionComposerState.isSaving,
+                    }, "Cancel"),
+                    React.createElement("button", {
+                      type: "submit",
+                      className: "playground-environments-action-button is-primary",
+                      disabled: databaseCollectionComposerState.isSaving,
+                    }, databaseCollectionComposerState.isSaving ? "Creating..." : "Create")
+                  )
+                )
+              )
+            : null;
+
+          const databaseDocumentComposerModal = databaseDocumentComposerState.open
+            ? React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop",
+                onClick: closeDatabaseDocumentComposer,
+              },
+                React.createElement("form", {
+                    className: "playground-tasks-project-modal playground-database-browser-modal",
+                    onClick: (event) => event.stopPropagation(),
+                    onSubmit: handleSubmitDatabaseDocumentComposer,
+                  },
+                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                    React.createElement("div", { className: "playground-database-browser-modal-title-row" },
+                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger" },
+                        React.createElement(FileText, { width: 16, height: 16, strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", { className: "playground-database-browser-modal-title" }, "New Document")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: closeDatabaseDocumentComposer,
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-database-browser-modal-copy" }, "Create a new document inside the selected collection."),
+                  React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
+                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Document ID"),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: databaseDocumentComposerState.documentId,
+                        onChange: (event) => setDatabaseDocumentComposerState((current) => ({
+                          ...current,
+                          documentId: event.target.value,
+                          error: "",
+                        })),
+                        placeholder: "doc_abc123",
+                        autoFocus: true,
+                      })
+                    )
+                  ),
+                  databaseDocumentComposerState.error
+                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, databaseDocumentComposerState.error)
+                    : null,
+                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: closeDatabaseDocumentComposer,
+                      disabled: databaseDocumentComposerState.isSaving,
+                    }, "Cancel"),
+                    React.createElement("button", {
+                      type: "submit",
+                      className: "playground-environments-action-button is-primary",
+                      disabled: databaseDocumentComposerState.isSaving,
+                    }, databaseDocumentComposerState.isSaving ? "Creating..." : "Create")
+                  )
+                )
+              )
+            : null;
+
+          const databaseFieldComposerModal = databaseFieldComposerState.open
+            ? React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop",
+                onClick: closeDatabaseFieldComposer,
+              },
+                React.createElement("form", {
+                    className: "playground-tasks-project-modal playground-database-browser-modal",
+                    onClick: (event) => event.stopPropagation(),
+                    onSubmit: handleSubmitDatabaseFieldComposer,
+                  },
+                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                    React.createElement("div", { className: "playground-database-browser-modal-title-row" },
+                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger" },
+                        React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", { className: "playground-database-browser-modal-title" }, "Add Field")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: closeDatabaseFieldComposer,
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-database-browser-modal-copy" }, "Create a new field on this document or nested object."),
+                  React.createElement("div", { className: "playground-database-browser-modal-grid" },
+                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Field"),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: databaseFieldComposerState.key,
+                        onChange: (event) => setDatabaseFieldComposerState((current) => ({
+                          ...current,
+                          key: event.target.value,
+                          error: "",
+                        })),
+                        placeholder: "title",
+                        autoFocus: true,
+                      })
+                    ),
+                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Type"),
+                      React.createElement("div", { className: "playground-database-browser-modal-select-shell" },
+                        React.createElement("select", {
+                          className: "playground-environments-select playground-database-browser-value-select",
+                          value: databaseFieldComposerState.type,
+                          onChange: (event) => setDatabaseFieldComposerState((current) => ({
+                            ...current,
+                            type: event.target.value,
+                            value: ["map", "array", "null"].includes(event.target.value) ? "" : current.value,
+                            error: "",
+                          })),
+                        },
+                          ["string", "number", "boolean", "null", "map", "array"].map((type) =>
+                            React.createElement("option", { key: type, value: type }, databaseFieldTypeLabels[type])
+                          )
+                        ),
+                        React.createElement(ChevronDown, { className: "playground-database-browser-select-chevron", width: 16, height: 16, strokeWidth: 1.9 })
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-modal-field playground-database-browser-modal-field--full playground-database-browser-modal-value-row" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Value"),
+                    databaseFieldComposerState.type === "boolean"
+                      ? React.createElement("select", {
+                          className: "playground-environments-select playground-database-browser-value-select",
+                          value: databaseFieldComposerState.value === "true" ? "true" : "false",
+                          onChange: (event) => setDatabaseFieldComposerState((current) => ({
+                            ...current,
+                            value: event.target.value,
+                            error: "",
+                          })),
+                        },
+                          React.createElement("option", { value: "true" }, "true"),
+                          React.createElement("option", { value: "false" }, "false")
+                        )
+                      : databaseFieldComposerState.type === "map"
+                        ? React.createElement("div", { className: "playground-database-browser-modal-hint" }, "Creates an empty nested object.")
+                        : databaseFieldComposerState.type === "array"
+                          ? React.createElement("div", { className: "playground-database-browser-modal-hint" }, "Creates an empty array.")
+                          : databaseFieldComposerState.type === "null"
+                            ? React.createElement("div", { className: "playground-database-browser-modal-hint" }, "Creates a null value.")
+                            : React.createElement("input", {
+                                type: "text",
+                                className: "playground-environments-input playground-database-browser-modal-value-input",
+                                value: databaseFieldComposerState.value,
+                                onChange: (event) => setDatabaseFieldComposerState((current) => ({
+                                  ...current,
+                                  value: event.target.value,
+                                  error: "",
+                                })),
+                                placeholder: databaseFieldComposerState.type === "number" ? "42" : "Value",
+                              })
+                  ),
+                  databaseFieldComposerState.error
+                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, databaseFieldComposerState.error)
+                    : null,
+                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: closeDatabaseFieldComposer,
+                    }, "Cancel"),
+                    React.createElement("button", {
+                      type: "submit",
+                      className: "playground-environments-action-button is-primary",
+                    }, "Add")
+                  )
+                )
+              )
+            : null;
+
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                  React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input",
+                      value: draftDatabase.name || "",
+                      placeholder: "Database",
+                      "aria-label": "Database name",
+                      title: draftDatabase.name || "Database",
+                      onChange: (event) => updateDatabaseField("name", event.target.value),
+                      onBlur: () => {
+                        if (String(draftDatabase.name || "").trim()) {
+                          void handleDatabaseSave();
+                        }
+                      },
+                    })
+                  )
+                ),
+                React.createElement("div", { className: "playground-content-nav-center" }),
+                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+                  draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
+                    ? React.createElement("div", {
+                        className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                        ref: databaseActionsPopoverRef,
+                      },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-content-menu-button",
+                          "aria-label": "Database actions",
+                          "aria-expanded": databaseActionsPopoverOpen ? "true" : "false",
+                          onClick: () => setDatabaseActionsPopoverOpen((current) => !current),
+                          disabled: databaseSaveState.isSaving,
+                        }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                        databaseActionsPopoverOpen
+                          ? React.createElement("div", {
+                              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                              onClick: (event) => event.stopPropagation(),
+                            },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row",
+                                onClick: () => openDatabaseRenameDialog(draftDatabase),
+                              },
+                                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                  React.createElement("span", null, "Rename")
+                                )
+                              ),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row",
+                                onClick: () => {
+                                  setDatabaseActionsPopoverOpen(false);
+                                  void handleDeleteDatabase(draftDatabase.id);
+                                },
+                              },
+                                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                  React.createElement("span", null, "Delete")
+                                )
+                              )
+                            )
+                          : null
+                      )
+                    : null
+                )
+              ),
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+                databaseSaveState.error
+                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseSaveState.error)
+                  : databaseSaveState.message
+                    ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, databaseSaveState.message)
+                    : null,
+                databaseDescriptionSection,
+                detailsSectionBlock,
+                renderEditorSection("database-browser", "Data", "", databaseBrowserSection, null, false)
+              )
+            ),
+            renderDatabaseRenameModal(),
+            databaseCollectionComposerModal,
+            databaseDocumentComposerModal,
+            databaseFieldComposerModal
+          );
         }
 
         function renderCurrentEnvironmentEditor() {
@@ -32655,8 +39676,15 @@ const html = `<!doctype html>
           );
         }
 
+        const isServersMode = resourceMode === "servers";
+        const currentSearchTitle = isServersMode ? "Search Resources" : "Search Computers";
+        const currentSearchEmpty = isServersMode ? "No matching resources found." : "No matching computers found.";
+        const currentSearchPlaceholder = isServersMode
+          ? "Search by name or description..."
+          : "Search by computer name or description...";
+
         return React.createElement("div", { className: "playground-environments-page" },
-            React.createElement("div", { className: "playground-environments-shell" },
+          React.createElement("div", { className: "playground-environments-shell" },
             React.createElement("aside", { className: "playground-environments-list-pane" },
               React.createElement("div", { className: "playground-files-browser-header playground-environments-list-header" },
                 toolbarPopover
@@ -32666,19 +39694,19 @@ const html = `<!doctype html>
                     })
                   : null,
                 React.createElement("div", { className: "playground-files-topbar" },
-                  React.createElement("div", { className: "playground-environments-list-title" }, "Environments"),
+                  React.createElement("div", { className: "playground-environments-list-title" }, isServersMode ? "Servers" : "Computers"),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
                     React.createElement("div", { className: "playground-files-toolbar-anchor" },
                       React.createElement("button", {
                         type: "button",
                         className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
                         onClick: () => toggleToolbarPopover("search"),
-                        title: "Search environments",
+                        title: currentSearchTitle,
                       }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
                       toolbarPopover === "search"
                         ? React.createElement("div", { className: "playground-files-search-popover" },
                             React.createElement("div", { className: "playground-files-search-popover-header" },
-                              React.createElement("div", { className: "playground-files-search-popover-title" }, "Search Environments"),
+                              React.createElement("div", { className: "playground-files-search-popover-title" }, currentSearchTitle),
                               React.createElement("button", {
                                 type: "button",
                                 className: "playground-files-search-popover-close",
@@ -32692,7 +39720,7 @@ const html = `<!doctype html>
                                   ref: searchPopupInputRef,
                                   type: "text",
                                   className: "playground-files-search-field-input",
-                                  placeholder: "Search by name or description...",
+                                  placeholder: currentSearchPlaceholder,
                                   value: searchPopupQuery,
                                   onChange: (event) => setSearchPopupQuery(event.target.value),
                                 })
@@ -32700,23 +39728,34 @@ const html = `<!doctype html>
                               searchPopupQuery.trim()
                                 ? searchResults.length > 0
                                   ? React.createElement("div", { className: "playground-files-search-results" },
-                                      searchResults.map((environment) =>
+                                      searchResults.map((item) =>
                                         React.createElement("button", {
-                                            key: environment.id,
+                                            key: item.id,
                                             type: "button",
                                             className: "playground-files-search-result",
-                                            onClick: () => handleEnvironmentSelect(environment.id),
+                                            onClick: () =>
+                                              isServersMode
+                                                ? (item.resourceType === "database" ? handleDatabaseSelect(item.id) : handleServerSelect(item.id))
+                                                : handleEnvironmentSelect(item.id),
                                           },
-                                            React.createElement(HardDrive, { className: "playground-files-entry-icon", strokeWidth: 1.8 }),
+                                            isServersMode
+                                              ? (
+                                                  item.resourceType === "database"
+                                                    ? React.createElement(Database, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
+                                                    : canonicalizePlaygroundServerKind(item.kind) === "function"
+                                                      ? React.createElement(FunctionSquare, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
+                                                      : React.createElement(Globe, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
+                                                )
+                                              : React.createElement(HardDrive, { className: "playground-files-entry-icon", strokeWidth: 1.8 }),
                                             React.createElement("div", { className: "playground-files-search-result-copy" },
-                                              React.createElement("div", { className: "playground-files-search-result-name" }, environment.name || "Untitled Environment"),
-                                              React.createElement("div", { className: "playground-files-search-result-path" }, environment.description || environment.id || "No description")
+                                              React.createElement("div", { className: "playground-files-search-result-name" }, item.name || (isServersMode ? "Untitled Resource" : "Untitled Computer")),
+                                              React.createElement("div", { className: "playground-files-search-result-path" }, item.description || item.id || "No description")
                                             )
                                           )
                                       )
                                     )
-                                  : React.createElement("div", { className: "playground-files-search-empty" }, "No matching environments found.")
-                                : React.createElement("div", { className: "playground-files-search-empty" }, "Type an environment name or description to search.")
+                                  : React.createElement("div", { className: "playground-files-search-empty" }, currentSearchEmpty)
+                                : React.createElement("div", { className: "playground-files-search-empty" }, "Type a name or description to search.")
                             )
                           )
                         : null
@@ -32724,77 +39763,164 @@ const html = `<!doctype html>
                     React.createElement("div", { className: "playground-files-toolbar-anchor" },
                       React.createElement("button", {
                         type: "button",
-                        className: "playground-files-header-icon-button" + (environmentComposerOpen ? " is-active" : ""),
-                        onClick: handleCreateEnvironment,
-                        title: "Create environment",
+                        className: "playground-files-header-icon-button" + ((isServersMode ? serverComposerOpen : environmentComposerOpen) ? " is-active" : ""),
+                        onClick: isServersMode ? handleCreateServer : handleCreateEnvironment,
+                        title: isServersMode ? "Create resource" : "Create computer",
                       }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
                     )
+                  )
+                ),
+                React.createElement("div", { className: "playground-agents-list-switch-row" },
+                  React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "content-mode-button" + (!isServersMode ? " is-active" : ""),
+                      onClick: () => setResourceMode("computers"),
+                    }, "Computers"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "content-mode-button" + (isServersMode ? " is-active" : ""),
+                      onClick: () => setResourceMode("servers"),
+                    }, "Servers")
                   )
                 )
               ),
               React.createElement("div", { className: "playground-environments-list-body" },
-                displayEnvironments.length > 0
-                  ? displayEnvironments.map((environment) => {
-                      const isActive = selectedEnvironmentId === environment.id;
-                      const hasActions = !environment.isDefault && !environment.isSystem;
-                      const isMenuOpen = environmentListActionMenuState?.environmentId === environment.id;
-                      return React.createElement("div", {
-                          key: environment.id,
-                          className: "playground-environments-list-item-row" + (isActive ? " is-active" : ""),
-                        },
-                          React.createElement("button", {
-                              type: "button",
-                              className: "playground-environments-list-item" + (isActive ? " is-active" : "") + (hasActions ? " has-actions" : ""),
-                              onClick: () => handleEnvironmentSelect(environment.id),
-                            },
-                              React.createElement(HardDrive, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-environments-list-item-copy" },
-                                React.createElement("div", { className: "playground-environments-list-item-title" }, environment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID ? (draftEnvironment?.name || "New Environment") : (environment.name || "Untitled Environment"))
-                              ),
-                              environment.isDefault
-                                ? React.createElement("span", { className: "playground-environments-badge" }, "Default")
-                                : null
-                            ),
-                          hasActions
-                            ? React.createElement("div", { className: "playground-environments-list-item-side" },
+                isServersMode
+                  ? (
+                    (serverListLoading || databaseListLoading) && displayServerResources.length === 0
+                      ? React.createElement("div", { className: "playground-files-state" },
+                          React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                        )
+                      : displayServerResources.length > 0
+                        ? displayServerResources.map((resource) => {
+                            const isDatabaseResource = resource.resourceType === "database";
+                            const isActive = isDatabaseResource ? (!selectedServerId && selectedDatabaseId === resource.id) : selectedServerId === resource.id;
+                            const normalizedKind = canonicalizePlaygroundServerKind(resource.kind);
+                            const serverListMetaLabel = normalizedKind === "web_app" || normalizedKind === "function" || normalizedKind === "database"
+                                ? ""
+                                : String(resource.kind || "").replace(/_/g, " ");
+                            return React.createElement("div", {
+                                key: (isDatabaseResource ? "database:" : "server:") + resource.id,
+                                className: "playground-environments-list-item-row" + (isActive ? " is-active" : ""),
+                              },
                                 React.createElement("button", {
                                   type: "button",
-                                  className: "playground-environments-list-item-menu-button" + (isMenuOpen ? " is-open" : ""),
-                                  onClick: (event) => openEnvironmentListActionMenu(event, environment),
-                                  "aria-label": "Environment actions",
-                                  "aria-expanded": isMenuOpen ? "true" : "false",
+                                  className: "playground-environments-list-item" + (isActive ? " is-active" : ""),
+                                  onClick: () => isDatabaseResource ? handleDatabaseSelect(resource.id) : handleServerSelect(resource.id),
                                 },
-                                  React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })
+                                  isDatabaseResource
+                                    ? React.createElement(Database, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                    : normalizedKind === "function"
+                                    ? React.createElement(FunctionSquare, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                    : normalizedKind === "web_app"
+                                      ? React.createElement(Globe, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                      : React.createElement(Server, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
+                                  React.createElement("div", { className: "playground-environments-list-item-copy" },
+                                    React.createElement("div", { className: "playground-environments-list-item-title" }, resource.name || "Untitled Resource"),
+                                    serverListMetaLabel
+                                      ? React.createElement("div", { className: "playground-files-search-result-path" }, serverListMetaLabel)
+                                      : null
+                                  )
                                 )
-                              )
-                            : null
-                        );
-                    })
-                  : React.createElement("div", { className: "playground-environments-empty-state" },
-                      React.createElement("div", { className: "playground-environments-empty-title" }, "No environments"),
-                      React.createElement("div", { className: "playground-environments-empty-copy" }, "Create your first environment to configure runtimes, packages, and context."),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button is-primary",
-                        onClick: handleCreateEnvironment,
-                      },
-                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "New Environment")
-                      )
-                    )
+                              );
+                          })
+                        : React.createElement("div", { className: "playground-environments-empty-state" },
+                            React.createElement("div", { className: "playground-environments-empty-title" }, "No resources"),
+                            React.createElement("div", { className: "playground-environments-empty-copy" }, "Create your first web app, function, or database."),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-environments-action-button is-primary",
+                              onClick: handleCreateServer,
+                            },
+                              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "New Resource")
+                            )
+                          )
+                  )
+                  : (
+                    displayEnvironments.length > 0
+                      ? displayEnvironments.map((environment) => {
+                          const isActive = selectedEnvironmentId === environment.id;
+                          const hasActions = !environment.isDefault && !environment.isSystem;
+                          const isMenuOpen = environmentListActionMenuState?.environmentId === environment.id;
+                          return React.createElement("div", {
+                              key: environment.id,
+                              className: "playground-environments-list-item-row" + (isActive ? " is-active" : ""),
+                            },
+                              React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-list-item" + (isActive ? " is-active" : "") + (hasActions ? " has-actions" : ""),
+                                  onClick: () => handleEnvironmentSelect(environment.id),
+                                },
+                                  React.createElement(HardDrive, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
+                                  React.createElement("div", { className: "playground-environments-list-item-copy" },
+                                    React.createElement("div", { className: "playground-environments-list-item-title" }, environment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID ? (draftEnvironment?.name || "New Computer") : (environment.name || "Untitled Computer"))
+                                  ),
+                                  environment.isDefault
+                                    ? React.createElement("span", { className: "playground-environments-badge" }, "Default")
+                                    : null
+                                ),
+                              hasActions
+                                ? React.createElement("div", { className: "playground-environments-list-item-side" },
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-environments-list-item-menu-button" + (isMenuOpen ? " is-open" : ""),
+                                      onClick: (event) => openEnvironmentListActionMenu(event, environment),
+                                      "aria-label": "Computer actions",
+                                      "aria-expanded": isMenuOpen ? "true" : "false",
+                                    },
+                                      React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })
+                                    )
+                                  )
+                                : null
+                            );
+                        })
+                      : React.createElement("div", { className: "playground-environments-empty-state" },
+                          React.createElement("div", { className: "playground-environments-empty-title" }, "No computers"),
+                          React.createElement("div", { className: "playground-environments-empty-copy" }, "Create your first computer to configure runtimes, packages, and context."),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-environments-action-button is-primary",
+                            onClick: handleCreateEnvironment,
+                          },
+                            React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("span", null, "New Computer")
+                          )
+                        )
+                  )
               )
             ),
             React.createElement("section", { className: "playground-environments-detail" },
-              isLoadingCurrentEnvironment && !draftEnvironment
-                ? React.createElement("div", { className: "playground-files-state" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+              isServersMode
+                ? (
+                    selectedServerId
+                      ? (isLoadingCurrentServer && !draftServer
+                          ? React.createElement("div", { className: "playground-files-state" },
+                              React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                            )
+                          : renderCurrentServerEditor())
+                      : selectedDatabaseId
+                        ? (isLoadingCurrentDatabase && !draftDatabase
+                            ? React.createElement("div", { className: "playground-files-state" },
+                                React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                              )
+                            : renderCurrentDatabaseEditor())
+                        : React.createElement("div", { className: "playground-environments-detail-empty" },
+                            React.createElement("div", { className: "playground-files-state" }, "Select a web app, function, or database to configure it.")
+                          )
                   )
-                : renderCurrentEnvironmentEditor()
+                : (isLoadingCurrentEnvironment && !draftEnvironment
+                    ? React.createElement("div", { className: "playground-files-state" },
+                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                      )
+                    : renderCurrentEnvironmentEditor())
             )
           ),
           renderEnvironmentListActionMenu(),
           renderEnvironmentRenameModal(),
-          renderEnvironmentComposerDialog()
+          renderEnvironmentComposerDialog(),
+          renderServerComposerDialog()
         );
       }
 
@@ -54238,8 +61364,13 @@ const html = `<!doctype html>
           return null;
         }
 
+        if (sessionStatus === "loading") {
+          return React.createElement(PlaygroundAppLoadingScreen, {
+            label: "Agentic Compute Platform",
+          });
+        }
+
         if (sessionStatus !== "authenticated" || !hasRealAccess) {
-          const isLoading = sessionStatus === "loading";
           return React.createElement("div", {
               className: "playground-onboarding-scrim",
               onClick: handleClose,
@@ -54251,13 +61382,11 @@ const html = `<!doctype html>
                 React.createElement("div", { className: "playground-onboarding-title-wrap" },
                   React.createElement("div", { className: "playground-onboarding-kicker" }, "Runner Playground"),
                   React.createElement("h2", { className: "playground-onboarding-auth-title" },
-                    isLoading ? "Preparing your onboarding flow" : "Sign in to continue setup"
+                    "Sign in to continue setup"
                   )
                 ),
                 React.createElement("p", { className: "playground-onboarding-auth-copy" },
-                  isLoading
-                    ? "Loading your Computer Agents session so the playground can create an agent, connect data, and generate an SDK key."
-                    : "The runner onboarding uses your real Computer Agents account, environments, connectors, and API keys. Sign in first, then reopen the playground with showOnboarding=true to test the full flow."
+                  "The runner onboarding uses your real Computer Agents account, environments, connectors, and API keys. Sign in first, then reopen the playground with showOnboarding=true to test the full flow."
                 ),
                 React.createElement("div", { className: "playground-onboarding-footer" },
                   React.createElement("button", {
@@ -54265,20 +61394,15 @@ const html = `<!doctype html>
                     className: "playground-onboarding-button",
                     onClick: handleClose,
                   }, "Close"),
-                  isLoading
-                    ? React.createElement("div", { className: "playground-onboarding-button" },
-                        React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.9, className: "spin" }),
-                        React.createElement("span", null, "Loading")
-                      )
-                    : React.createElement("button", {
-                        type: "button",
-                        className: "playground-onboarding-button is-primary",
-                        onClick: () => {
-                          if (typeof onSignIn === "function") {
-                            onSignIn();
-                          }
-                        },
-                      }, "Sign in")
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-button is-primary",
+                    onClick: () => {
+                      if (typeof onSignIn === "function") {
+                        onSignIn();
+                      }
+                    },
+                  }, "Sign in")
                 )
               )
             );
@@ -55052,7 +62176,6 @@ const html = `<!doctype html>
           setRealAgents([]);
           setRealEnvironments([]);
           setCurrentThreadId("");
-          window.location.replace(buildAiosLoginUrl());
         }, [sessionState.status]);
 
         useEffect(() => {
@@ -62699,20 +69822,22 @@ const html = `<!doctype html>
         const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen || isThreadPreviewDetailOpen;
 
         function renderAuthGate() {
+          if (sessionState.status === "loading") {
+            return React.createElement(PlaygroundAppLoadingScreen, {
+              label: "Agentic Compute Platform",
+            });
+          }
+
           return React.createElement("div", { className: "playground-auth-panel" },
             React.createElement("div", { className: "playground-auth-card" },
               React.createElement("div", { className: "playground-auth-title" },
-                sessionState.status === "loading"
-                  ? "Checking your Computer Agents session..."
-                  : sessionState.status === "unauthenticated"
-                    ? "Redirecting to sign in..."
+                sessionState.status === "unauthenticated"
+                    ? "Sign in with Computer Agents"
                     : "Sign in with Computer Agents"
               ),
               React.createElement("div", { className: "playground-auth-copy" },
-                sessionState.status === "loading"
-                  ? "The playground is verifying whether you already have an active account session."
-                  : sessionState.status === "unauthenticated"
-                    ? "You need a Computer Agents account session to use the playground. Redirecting to the shared sign-in page now."
+                sessionState.status === "unauthenticated"
+                    ? "You need a Computer Agents account session to use the playground. Sign in when you want to load your real threads, environments, agents, and attachments."
                     : "Use the same Computer Agents account everywhere. After sign-in, the playground will load your real threads, environments, agents, and attachments automatically."
               ),
               sessionState.error && sessionState.status === "error"
@@ -62722,14 +69847,12 @@ const html = `<!doctype html>
                 type: "button",
                 className: "playground-auth-button",
                 onClick: handleSignInWithComputerAgents,
-                disabled: sessionState.status === "loading" || sessionState.status === "unauthenticated",
+                disabled: false,
               },
                 React.createElement(LogIn, { className: "playground-auth-button-icon", strokeWidth: 1.9 }),
                 React.createElement("span", null,
-                  sessionState.status === "loading"
-                    ? "Checking Session"
-                    : sessionState.status === "unauthenticated"
-                      ? "Redirecting"
+                  sessionState.status === "unauthenticated"
+                      ? "Open Sign In"
                       : "Open Sign In"
                 )
               )
@@ -67041,6 +74164,201 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && url.pathname === "/api/real/servers") {
+    void proxyUpstreamGet(req, res, "/servers");
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/real/servers") {
+    void proxyUpstreamJsonRequest(req, res, "/servers", "POST");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/databases") {
+    void proxyUpstreamGet(req, res, "/databases");
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/real/databases") {
+    void proxyUpstreamJsonRequest(req, res, "/databases", "POST");
+    return;
+  }
+
+  const serverDetailMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)$/);
+  if (req.method === "GET" && serverDetailMatch) {
+    void proxyUpstreamGet(req, res, `/servers/${encodeURIComponent(decodeURIComponent(serverDetailMatch[1]))}`);
+    return;
+  }
+
+  if (req.method === "PATCH" && serverDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverDetailMatch[1]))}`,
+      "PATCH",
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && serverDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverDetailMatch[1]))}`,
+      "DELETE",
+    );
+    return;
+  }
+
+  const databaseDetailMatch = url.pathname.match(/^\/api\/real\/databases\/([^/]+)$/);
+  if (req.method === "GET" && databaseDetailMatch) {
+    void proxyUpstreamGet(req, res, `/databases/${encodeURIComponent(decodeURIComponent(databaseDetailMatch[1]))}`);
+    return;
+  }
+
+  if (req.method === "PATCH" && databaseDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseDetailMatch[1]))}`,
+      "PATCH",
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && databaseDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseDetailMatch[1]))}`,
+      "DELETE",
+    );
+    return;
+  }
+
+  const serverDeployMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/deploy$/);
+  if (req.method === "POST" && serverDeployMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverDeployMatch[1]))}/deploy`,
+      "POST",
+    );
+    return;
+  }
+
+  const serverAnalyticsMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/analytics$/);
+  if (req.method === "GET" && serverAnalyticsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverAnalyticsMatch[1]))}/analytics`,
+    );
+    return;
+  }
+
+  const serverLogsMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/logs$/);
+  if (req.method === "GET" && serverLogsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverLogsMatch[1]))}/logs`,
+    );
+    return;
+  }
+
+  const serverInvokeMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/invoke$/);
+  if (req.method === "POST" && serverInvokeMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverInvokeMatch[1]))}/invoke`,
+      "POST",
+    );
+    return;
+  }
+
+  const databaseCollectionsMatch = url.pathname.match(/^\/api\/real\/databases\/([^/]+)\/collections$/);
+  if (req.method === "GET" && databaseCollectionsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseCollectionsMatch[1]))}/collections`,
+    );
+    return;
+  }
+
+  if (req.method === "POST" && databaseCollectionsMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseCollectionsMatch[1]))}/collections`,
+      "POST",
+    );
+    return;
+  }
+
+  const databaseCollectionDetailMatch = url.pathname.match(/^\/api\/real\/databases\/([^/]+)\/collections\/([^/]+)$/);
+  if (req.method === "DELETE" && databaseCollectionDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseCollectionDetailMatch[1]))}/collections/${encodeURIComponent(decodeURIComponent(databaseCollectionDetailMatch[2]))}`,
+      "DELETE",
+    );
+    return;
+  }
+
+  const databaseDocumentsMatch = url.pathname.match(/^\/api\/real\/databases\/([^/]+)\/collections\/([^/]+)\/documents$/);
+  if (req.method === "GET" && databaseDocumentsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseDocumentsMatch[1]))}/collections/${encodeURIComponent(decodeURIComponent(databaseDocumentsMatch[2]))}/documents`,
+    );
+    return;
+  }
+
+  if (req.method === "POST" && databaseDocumentsMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseDocumentsMatch[1]))}/collections/${encodeURIComponent(decodeURIComponent(databaseDocumentsMatch[2]))}/documents`,
+      "POST",
+    );
+    return;
+  }
+
+  const databaseDocumentDetailMatch = url.pathname.match(/^\/api\/real\/databases\/([^/]+)\/collections\/([^/]+)\/documents\/([^/]+)$/);
+  if (req.method === "GET" && databaseDocumentDetailMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseDocumentDetailMatch[1]))}/collections/${encodeURIComponent(decodeURIComponent(databaseDocumentDetailMatch[2]))}/documents/${encodeURIComponent(decodeURIComponent(databaseDocumentDetailMatch[3]))}`,
+    );
+    return;
+  }
+
+  if (req.method === "PUT" && databaseDocumentDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseDocumentDetailMatch[1]))}/collections/${encodeURIComponent(decodeURIComponent(databaseDocumentDetailMatch[2]))}/documents/${encodeURIComponent(decodeURIComponent(databaseDocumentDetailMatch[3]))}`,
+      "PUT",
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && databaseDocumentDetailMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseDocumentDetailMatch[1]))}/collections/${encodeURIComponent(decodeURIComponent(databaseDocumentDetailMatch[2]))}/documents/${encodeURIComponent(decodeURIComponent(databaseDocumentDetailMatch[3]))}`,
+      "DELETE",
+    );
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/real/agents") {
     void proxyUpstreamGet(req, res, "/agents");
     return;
@@ -67513,6 +74831,66 @@ const server = http.createServer((req, res) => {
       .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
       .join("/");
     void proxyUpstreamJsonRequest(req, res, `/environments/${environmentId}/files/${filePath}`, "DELETE");
+    return;
+  }
+
+  const serverFilesMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/files$/);
+  if (req.method === "GET" && serverFilesMatch) {
+    void proxyUpstreamGet(req, res, `/servers/${encodeURIComponent(decodeURIComponent(serverFilesMatch[1]))}/files`);
+    return;
+  }
+
+  const serverFilesUploadMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/files\/upload$/);
+  if (req.method === "POST" && serverFilesUploadMatch) {
+    void proxyUpstreamRawRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverFilesUploadMatch[1]))}/files/upload`,
+      "POST",
+    );
+    return;
+  }
+
+  const serverFileContentMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/files\/content\/(.+)$/);
+  if (req.method === "GET" && serverFileContentMatch) {
+    const serverId = encodeURIComponent(decodeURIComponent(serverFileContentMatch[1]));
+    const filePath = serverFileContentMatch[2]
+      .split("/")
+      .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
+      .join("/");
+    void proxyUpstreamGet(req, res, `/servers/${serverId}/files/content/${filePath}`);
+    return;
+  }
+
+  if (req.method === "PUT" && serverFileContentMatch) {
+    const serverId = encodeURIComponent(decodeURIComponent(serverFileContentMatch[1]));
+    const filePath = serverFileContentMatch[2]
+      .split("/")
+      .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
+      .join("/");
+    void proxyUpstreamJsonRequest(req, res, `/servers/${serverId}/files/content/${filePath}`, "PUT");
+    return;
+  }
+
+  const serverDownloadMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/files\/download\/(.+)$/);
+  if (req.method === "GET" && serverDownloadMatch) {
+    const serverId = encodeURIComponent(decodeURIComponent(serverDownloadMatch[1]));
+    const filePath = serverDownloadMatch[2]
+      .split("/")
+      .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
+      .join("/");
+    void proxyUpstreamBinaryGet(req, res, `/servers/${serverId}/files/download/${filePath}`);
+    return;
+  }
+
+  const serverFilesDeleteMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/files\/(.+)$/);
+  if (req.method === "DELETE" && serverFilesDeleteMatch) {
+    const serverId = encodeURIComponent(decodeURIComponent(serverFilesDeleteMatch[1]));
+    const filePath = serverFilesDeleteMatch[2]
+      .split("/")
+      .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
+      .join("/");
+    void proxyUpstreamJsonRequest(req, res, `/servers/${serverId}/files/${filePath}`, "DELETE");
     return;
   }
 
