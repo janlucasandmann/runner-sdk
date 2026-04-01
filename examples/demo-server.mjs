@@ -13012,6 +13012,11 @@ const html = `<!doctype html>
         text-align: left;
       }
 
+      .playground-database-overview-kpi-label.is-static {
+        cursor: default;
+        pointer-events: none;
+      }
+
       .playground-database-overview-kpi-check {
         width: 14px;
         height: 14px;
@@ -13046,6 +13051,26 @@ const html = `<!doctype html>
 
       .playground-database-overview-kpi-label.is-reads .playground-database-overview-kpi-check {
         background: #5b8cff;
+      }
+
+      .playground-database-overview-kpi-label.is-requests .playground-database-overview-kpi-check {
+        background: #5b8cff;
+      }
+
+      .playground-database-overview-kpi-label.is-success .playground-database-overview-kpi-check {
+        background: #8f7cff;
+      }
+
+      .playground-database-overview-kpi-label.is-latency .playground-database-overview-kpi-check {
+        background: #ffb01f;
+      }
+
+      .playground-database-overview-kpi-label.is-errors .playground-database-overview-kpi-check {
+        background: #ff5aa0;
+      }
+
+      .playground-database-overview-kpi-label.is-failures .playground-database-overview-kpi-check {
+        background: #ffb01f;
       }
 
       .playground-database-overview-kpi-label.is-writes .playground-database-overview-kpi-check {
@@ -13110,7 +13135,16 @@ const html = `<!doctype html>
         stroke: #5b8cff;
       }
 
+      .playground-database-overview-timeseries-line.is-requests {
+        stroke: #5b8cff;
+      }
+
       .playground-database-overview-timeseries-dot.is-reads {
+        fill: #5b8cff;
+        stroke: #5b8cff;
+      }
+
+      .playground-database-overview-timeseries-dot.is-requests {
         fill: #5b8cff;
         stroke: #5b8cff;
       }
@@ -13126,6 +13160,33 @@ const html = `<!doctype html>
       .playground-database-overview-timeseries-dot.is-writes {
         fill: #ff9f0a;
         stroke: #ff9f0a;
+      }
+
+      .playground-database-overview-timeseries-line.is-failures {
+        stroke: #ffb01f;
+      }
+
+      .playground-database-overview-timeseries-dot.is-failures {
+        fill: #ffb01f;
+        stroke: #ffb01f;
+      }
+
+      .playground-database-overview-timeseries-line.is-success {
+        stroke: #8f7cff;
+      }
+
+      .playground-database-overview-timeseries-dot.is-success {
+        fill: #8f7cff;
+        stroke: #8f7cff;
+      }
+
+      .playground-database-overview-timeseries-line.is-errors {
+        stroke: #ff5aa0;
+      }
+
+      .playground-database-overview-timeseries-dot.is-errors {
+        fill: #ff5aa0;
+        stroke: #ff5aa0;
       }
 
       .playground-database-overview-timeseries-series.is-deletes .playground-database-overview-timeseries-check {
@@ -30837,6 +30898,8 @@ const html = `<!doctype html>
         const environmentDescriptionTextareaRef = useRef(null);
         const serverDescriptionTextareaRef = useRef(null);
         const databaseDescriptionTextareaRef = useRef(null);
+        const serverActionsPopoverRef = useRef(null);
+        const serverRenameInputRef = useRef(null);
         const serverFileUploadInputRef = useRef(null);
         const environmentDockerfileTextareaRef = useRef(null);
         const environmentComposerDescriptionTextareaRef = useRef(null);
@@ -30850,6 +30913,10 @@ const html = `<!doctype html>
         const environmentRenameInputRef = useRef(null);
         const databaseActionsPopoverRef = useRef(null);
         const databaseRenameInputRef = useRef(null);
+        const serverAutosaveTimerRef = useRef(null);
+        const serverAutosaveQueuedRef = useRef(null);
+        const serverAutosaveInFlightRef = useRef(false);
+        const serverEditorDirtyRef = useRef(false);
         const databaseDocumentAutosaveTimerRef = useRef(null);
         const databaseDocumentSaveInFlightRef = useRef(false);
         const environmentAutosaveTimerRef = useRef(null);
@@ -30920,6 +30987,10 @@ const html = `<!doctype html>
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
+        const [serverActionsPopoverOpen, setServerActionsPopoverOpen] = useState(false);
+        const [serverRenameState, setServerRenameState] = useState(null);
+        const [serverRenameValue, setServerRenameValue] = useState("");
+        const [serverRenameError, setServerRenameError] = useState("");
         const [databaseActionsPopoverOpen, setDatabaseActionsPopoverOpen] = useState(false);
         const [databaseRenameState, setDatabaseRenameState] = useState(null);
         const [databaseRenameValue, setDatabaseRenameValue] = useState("");
@@ -31297,6 +31368,16 @@ const html = `<!doctype html>
         }
 
         function resetServerEditorAuxiliaryState() {
+          serverEditorDirtyRef.current = false;
+          if (serverAutosaveTimerRef.current) {
+            window.clearTimeout(serverAutosaveTimerRef.current);
+            serverAutosaveTimerRef.current = null;
+          }
+          serverAutosaveQueuedRef.current = null;
+          setServerActionsPopoverOpen(false);
+          setServerRenameState(null);
+          setServerRenameValue("");
+          setServerRenameError("");
           setServerSaveState({
             isSaving: false,
             error: "",
@@ -31703,7 +31784,7 @@ const html = `<!doctype html>
               ...current,
               [serverId]: normalized,
             }));
-            if (selectedServerIdRef.current === serverId) {
+            if (selectedServerIdRef.current === serverId && !serverEditorDirtyRef.current) {
               setDraftServer(normalized);
             }
             return normalized;
@@ -32793,6 +32874,31 @@ const html = `<!doctype html>
         }, [environmentActionsPopoverOpen]);
 
         useEffect(() => {
+          if (!serverActionsPopoverOpen) return undefined;
+
+          function handleServerActionsPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !serverActionsPopoverRef.current || serverActionsPopoverRef.current.contains(target)) {
+              return;
+            }
+            setServerActionsPopoverOpen(false);
+          }
+
+          function handleServerActionsPopoverEscape(event) {
+            if (event.key === "Escape") {
+              setServerActionsPopoverOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleServerActionsPopoverPointerDown);
+          window.addEventListener("keydown", handleServerActionsPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleServerActionsPopoverPointerDown);
+            window.removeEventListener("keydown", handleServerActionsPopoverEscape);
+          };
+        }, [serverActionsPopoverOpen]);
+
+        useEffect(() => {
           if (!databaseActionsPopoverOpen) return undefined;
 
           function handleDatabaseActionsPopoverPointerDown(event) {
@@ -32842,6 +32948,30 @@ const html = `<!doctype html>
         }, [environmentRenameState, saveState.isSaving]);
 
         useEffect(() => {
+          if (!serverRenameState || !serverRenameInputRef.current) {
+            return undefined;
+          }
+
+          const focusFrame = window.requestAnimationFrame(() => {
+            serverRenameInputRef.current?.focus();
+            serverRenameInputRef.current?.select();
+          });
+
+          function handleServerRenameEscape(event) {
+            if (event.key === "Escape" && !serverSaveState.isSaving) {
+              event.preventDefault();
+              closeServerRenameDialog();
+            }
+          }
+
+          window.addEventListener("keydown", handleServerRenameEscape);
+          return () => {
+            window.cancelAnimationFrame(focusFrame);
+            window.removeEventListener("keydown", handleServerRenameEscape);
+          };
+        }, [serverRenameState, serverSaveState.isSaving]);
+
+        useEffect(() => {
           if (!databaseRenameState || !databaseRenameInputRef.current) {
             return undefined;
           }
@@ -32866,6 +32996,10 @@ const html = `<!doctype html>
         }, [databaseRenameState, databaseSaveState.isSaving]);
 
         useEffect(() => () => {
+          if (serverAutosaveTimerRef.current) {
+            window.clearTimeout(serverAutosaveTimerRef.current);
+            serverAutosaveTimerRef.current = null;
+          }
           if (environmentAutosaveTimerRef.current) {
             window.clearTimeout(environmentAutosaveTimerRef.current);
             environmentAutosaveTimerRef.current = null;
@@ -33127,6 +33261,29 @@ const html = `<!doctype html>
         }, [draftDatabase?.id]);
 
         useEffect(() => {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !serverEditorDirtyRef.current) {
+            return;
+          }
+
+          if (serverAutosaveTimerRef.current) {
+            window.clearTimeout(serverAutosaveTimerRef.current);
+          }
+
+          serverAutosaveTimerRef.current = window.setTimeout(() => {
+            serverAutosaveTimerRef.current = null;
+            serverAutosaveQueuedRef.current = normalizePlaygroundServerRecord(draftServer);
+            void flushQueuedServerAutosave();
+          }, 700);
+
+          return () => {
+            if (serverAutosaveTimerRef.current) {
+              window.clearTimeout(serverAutosaveTimerRef.current);
+              serverAutosaveTimerRef.current = null;
+            }
+          };
+        }, [draftServer]);
+
+        useEffect(() => {
           if (!draftEnvironment || !editorDirtyRef.current) {
             return;
           }
@@ -33213,16 +33370,20 @@ const html = `<!doctype html>
         }
 
         function handleServerSelect(serverId) {
+          void commitDraftServerIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setServerActionsPopoverOpen(false);
           setSelectedDatabaseId("");
           setDraftDatabase(null);
           setSelectedServerId(serverId);
         }
 
         function handleDatabaseSelect(databaseId) {
+          void commitDraftServerIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setServerActionsPopoverOpen(false);
           setDatabaseActionsPopoverOpen(false);
           setSelectedServerId("");
           setSelectedDatabaseId(databaseId);
@@ -33291,6 +33452,7 @@ const html = `<!doctype html>
         }
 
         function openServerComposer() {
+          void commitDraftServerIfDirty();
           if (!hasLoadedDatabases && !databaseListLoading) {
             void loadDatabases();
           }
@@ -33327,6 +33489,7 @@ const html = `<!doctype html>
             const base = current || normalizePlaygroundServerRecord(selectedServerSnapshot || buildPlaygroundDefaultServerDraft());
             return typeof updater === "function" ? updater(base) : updater;
           });
+          serverEditorDirtyRef.current = true;
           setServerSaveState((current) => ({
             ...current,
             error: "",
@@ -33339,6 +33502,61 @@ const html = `<!doctype html>
             ...current,
             [field]: value,
           }));
+        }
+
+        function applyServerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateServerField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = serverDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeEnvironmentDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleServerDescriptionFormat(formatType) {
+          const textarea = serverDescriptionTextareaRef.current;
+          if (!textarea || !draftServer) {
+            return;
+          }
+          const value = String(draftServer?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyServerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        async function commitDraftServerIfDirty() {
+          if (!serverEditorDirtyRef.current || !draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          if (serverAutosaveTimerRef.current) {
+            window.clearTimeout(serverAutosaveTimerRef.current);
+            serverAutosaveTimerRef.current = null;
+          }
+          serverAutosaveQueuedRef.current = normalizePlaygroundServerRecord(draftServer);
+          await flushQueuedServerAutosave();
         }
 
         function applyDatabaseSelectionToServerDraft(databaseId, scope = "editor") {
@@ -33769,6 +33987,25 @@ const html = `<!doctype html>
           });
         }
 
+        function upsertLocalServerRecord(savedServer) {
+          if (!savedServer?.id) {
+            return;
+          }
+          setServers((current) => {
+            const existingIndex = current.findIndex((server) => server.id === savedServer.id);
+            if (existingIndex === -1) {
+              return [savedServer, ...current];
+            }
+            const next = [...current];
+            next[existingIndex] = savedServer;
+            return next;
+          });
+          setServerDetailsById((current) => ({
+            ...current,
+            [savedServer.id]: savedServer,
+          }));
+        }
+
         function upsertLocalDatabaseRecord(savedDatabase) {
           if (!savedDatabase?.id) {
             return;
@@ -33831,7 +34068,7 @@ const html = `<!doctype html>
 
         async function handleServerSave() {
           if (!draftServer) {
-            return;
+            return null;
           }
 
           setServerSaveState({
@@ -33852,19 +34089,8 @@ const html = `<!doctype html>
               throw new Error("Server save failed.");
             }
 
-            setServers((current) => {
-              const existingIndex = current.findIndex((server) => server.id === savedServer.id);
-              if (existingIndex === -1) {
-                return [...current, savedServer];
-              }
-              const next = [...current];
-              next[existingIndex] = savedServer;
-              return next;
-            });
-            setServerDetailsById((current) => ({
-              ...current,
-              [savedServer.id]: savedServer,
-            }));
+            serverEditorDirtyRef.current = false;
+            upsertLocalServerRecord(savedServer);
             setSelectedServerId(savedServer.id);
             setDraftServer(savedServer);
             if (savedServer.databaseId) {
@@ -33873,8 +34099,9 @@ const html = `<!doctype html>
             setServerSaveState({
               isSaving: false,
               error: "",
-              message: "Saved",
+              message: "",
             });
+            return savedServer;
           } catch (error) {
             if (createdDatabase?.id) {
               try {
@@ -33889,7 +34116,140 @@ const html = `<!doctype html>
               error: error instanceof Error ? error.message : "Failed to save server.",
               message: "",
             });
+            return null;
           }
+        }
+
+        function closeServerRenameDialog() {
+          setServerRenameState(null);
+          setServerRenameValue("");
+          setServerRenameError("");
+        }
+
+        function openServerRenameDialog(serverRecord) {
+          if (!serverRecord?.id || serverRecord.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          setServerActionsPopoverOpen(false);
+          setServerRenameState({
+            serverId: serverRecord.id,
+            originalName: String(serverRecord.name || "").trim(),
+          });
+          setServerRenameValue(String(serverRecord.name || ""));
+          setServerRenameError("");
+        }
+
+        async function handleServerRenameSubmit(event) {
+          event.preventDefault();
+          if (!serverRenameState?.serverId || !draftServer) {
+            return;
+          }
+
+          const nextName = String(serverRenameValue || "").trim().replace(/\s+/g, " ");
+          if (!nextName) {
+            setServerRenameError("Server name cannot be empty.");
+            return;
+          }
+
+          if (nextName === serverRenameState.originalName) {
+            closeServerRenameDialog();
+            return;
+          }
+
+          if (serverAutosaveTimerRef.current) {
+            window.clearTimeout(serverAutosaveTimerRef.current);
+            serverAutosaveTimerRef.current = null;
+          }
+          serverAutosaveQueuedRef.current = null;
+          serverEditorDirtyRef.current = false;
+
+          setServerSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+          setServerRenameError("");
+
+          try {
+            const renamedServer = normalizePlaygroundServerRecord({
+              ...draftServer,
+              name: nextName,
+            });
+            const resolved = await resolveServerDatabaseDraft(renamedServer);
+            const savedServer = await persistServerRecord(resolved.server);
+            if (!savedServer) {
+              throw new Error("Server save failed.");
+            }
+            upsertLocalServerRecord(savedServer);
+            setSelectedServerId(savedServer.id);
+            setDraftServer(savedServer);
+            if (savedServer.databaseId) {
+              setSelectedDatabaseId(savedServer.databaseId);
+            }
+            setServerSaveState({
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+            closeServerRenameDialog();
+          } catch (error) {
+            setServerRenameError(error instanceof Error ? error.message : "Failed to rename server.");
+            setServerSaveState({
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+          }
+        }
+
+        function renderServerRenameModal() {
+          if (!serverRenameState) {
+            return null;
+          }
+
+          return React.createElement("div", {
+              className: "sidebar-thread-rename-scrim",
+              onClick: () => {
+                if (!serverSaveState.isSaving) {
+                  closeServerRenameDialog();
+                }
+              },
+            },
+              React.createElement("form", {
+                className: "sidebar-thread-rename-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  void handleServerRenameSubmit(event);
+                },
+              },
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Rename Server"),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" }, "Choose a new name for this server."),
+                React.createElement("input", {
+                  ref: serverRenameInputRef,
+                  className: "sidebar-thread-rename-input",
+                  value: serverRenameValue,
+                  onChange: (event) => setServerRenameValue(event.target.value),
+                  placeholder: "Server name",
+                  disabled: serverSaveState.isSaving,
+                }),
+                serverRenameError
+                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, serverRenameError)
+                  : null,
+                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "sidebar-thread-rename-button is-secondary",
+                    onClick: closeServerRenameDialog,
+                    disabled: serverSaveState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "sidebar-thread-rename-button is-primary",
+                    disabled: serverSaveState.isSaving,
+                  }, serverSaveState.isSaving ? "Saving..." : "Save")
+                )
+              )
+            );
         }
 
         async function handleDatabaseSave() {
@@ -35008,6 +35368,8 @@ const html = `<!doctype html>
             return;
           }
 
+          await commitDraftServerIfDirty();
+
           setServerDeploymentState({
             isDeploying: true,
             isInvoking: false,
@@ -35201,6 +35563,83 @@ const html = `<!doctype html>
               isSaving: false,
               error: error instanceof Error ? error.message : "Failed to create server.",
             });
+          }
+        }
+
+        async function flushQueuedServerAutosave() {
+          if (serverAutosaveInFlightRef.current) {
+            return;
+          }
+
+          serverAutosaveInFlightRef.current = true;
+          try {
+            while (serverAutosaveQueuedRef.current) {
+              let nextServerToSave = normalizePlaygroundServerRecord(serverAutosaveQueuedRef.current);
+              serverAutosaveQueuedRef.current = null;
+
+              setServerSaveState({
+                isSaving: true,
+                error: "",
+                message: "",
+              });
+
+              try {
+                const resolved = await resolveServerDatabaseDraft(nextServerToSave);
+                nextServerToSave = resolved.server;
+                const savedServer = await persistServerRecord(nextServerToSave);
+                if (!savedServer) {
+                  throw new Error("Server save failed.");
+                }
+
+                const hasQueuedFollowUp = Boolean(serverAutosaveQueuedRef.current);
+                const shouldKeepServerSelected =
+                  selectedServerIdRef.current === nextServerToSave.id
+                  || (!nextServerToSave.id && selectedServerIdRef.current === PLAYGROUND_SERVER_DRAFT_ID);
+
+                if (hasQueuedFollowUp && serverAutosaveQueuedRef.current) {
+                  serverAutosaveQueuedRef.current = normalizePlaygroundServerRecord({
+                    ...serverAutosaveQueuedRef.current,
+                    id: savedServer.id,
+                    userId: savedServer.userId || serverAutosaveQueuedRef.current.userId,
+                    createdAt: savedServer.createdAt || serverAutosaveQueuedRef.current.createdAt,
+                  });
+                }
+
+                serverEditorDirtyRef.current = hasQueuedFollowUp;
+                upsertLocalServerRecord(savedServer);
+                if (shouldKeepServerSelected) {
+                  setSelectedServerId(savedServer.id);
+                  setDraftServer((current) => {
+                    if (hasQueuedFollowUp && current) {
+                      return normalizePlaygroundServerRecord({
+                        ...savedServer,
+                        ...current,
+                        id: savedServer.id,
+                        userId: savedServer.userId,
+                        createdAt: savedServer.createdAt,
+                      });
+                    }
+                    return savedServer;
+                  });
+                }
+
+                setServerSaveState({
+                  isSaving: false,
+                  error: "",
+                  message: "",
+                });
+              } catch (error) {
+                serverEditorDirtyRef.current = true;
+                setServerSaveState({
+                  isSaving: false,
+                  error: error instanceof Error ? error.message : "Failed to save server.",
+                  message: "",
+                });
+                break;
+              }
+            }
+          } finally {
+            serverAutosaveInFlightRef.current = false;
           }
         }
 
@@ -36857,213 +37296,6 @@ const html = `<!doctype html>
             }
             return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
           };
-          const buildServerAnalyticsSvgAreaPath = (points, baselineY) => {
-            if (!Array.isArray(points) || points.length === 0) {
-              return "";
-            }
-            const linePath = buildServerAnalyticsSvgLinePath(points);
-            const firstPoint = points[0];
-            const lastPoint = points[points.length - 1];
-            return linePath
-              + " L " + lastPoint.x.toFixed(2) + " " + baselineY.toFixed(2)
-              + " L " + firstPoint.x.toFixed(2) + " " + baselineY.toFixed(2)
-              + " Z";
-          };
-          const renderServerAnalyticsMixedChart = (config) => {
-            const labels = Array.isArray(config?.labels) ? config.labels : [];
-            const barValues = Array.isArray(config?.barValues) ? config.barValues : [];
-            const lineValues = Array.isArray(config?.lineValues) ? config.lineValues : [];
-            if (!labels.length || !barValues.length) {
-              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No data yet");
-            }
-
-            const svgWidth = 320;
-            const svgHeight = 240;
-            const marginTop = 12;
-            const marginRight = 14;
-            const marginBottom = 38;
-            const marginLeft = 40;
-            const plotWidth = svgWidth - marginLeft - marginRight;
-            const plotHeight = svgHeight - marginTop - marginBottom;
-            const slotWidth = plotWidth / Math.max(labels.length, 1);
-            const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
-            const baselineY = marginTop + plotHeight;
-            const yMax = Math.max(1, ...barValues.map((value) => Number(value || 0)), ...lineValues.map((value) => Number(value || 0)));
-            const labelStep = Math.max(1, Math.ceil(labels.length / 8));
-            const barRects = barValues.map((value, index) => {
-              const normalizedValue = Math.max(0, Number(value || 0));
-              const height = normalizedValue > 0 ? (normalizedValue / yMax) * plotHeight : 0;
-              return {
-                x: marginLeft + slotWidth * index + (slotWidth - barWidth) / 2,
-                y: baselineY - height,
-                width: barWidth,
-                height,
-              };
-            });
-            const linePoints = lineValues.reduce((points, value, index) => {
-              const numericValue = Number(value);
-              if (!Number.isFinite(numericValue)) {
-                return points;
-              }
-              points.push({
-                x: marginLeft + slotWidth * index + slotWidth / 2,
-                y: baselineY - (Math.max(0, numericValue) / yMax) * plotHeight,
-              });
-              return points;
-            }, []);
-            const linePath = buildServerAnalyticsSvgLinePath(linePoints);
-            const areaPath = buildServerAnalyticsSvgAreaPath(linePoints, baselineY);
-
-            return React.createElement("div", {
-                className: "playground-settings-usage-chart-frame",
-                "aria-label": config?.ariaLabel || "Usage chart",
-              },
-              React.createElement("svg", {
-                className: "playground-settings-usage-chart-svg",
-                viewBox: "0 0 " + svgWidth + " " + svgHeight,
-                preserveAspectRatio: "xMidYMid meet",
-                role: "img",
-                "aria-label": config?.ariaLabel || "Usage chart",
-              },
-                Array.from({ length: 5 }).map((_, index) => {
-                  const y = marginTop + (plotHeight / 4) * index;
-                  return React.createElement("line", {
-                    key: "grid:" + index,
-                    x1: marginLeft,
-                    y1: y,
-                    x2: svgWidth - marginRight,
-                    y2: y,
-                    stroke: "rgba(255,255,255,0.10)",
-                    strokeWidth: "1",
-                  });
-                }),
-                areaPath
-                  ? React.createElement("path", {
-                      d: areaPath,
-                      fill: config?.areaColor || "rgba(162, 138, 255, 0.12)",
-                    })
-                  : null,
-                barRects.map((bar, index) =>
-                  React.createElement("rect", {
-                    key: "bar:" + index,
-                    x: bar.x,
-                    y: bar.y,
-                    width: bar.width,
-                    height: Math.max(bar.height, 1),
-                    rx: "3",
-                    fill: config?.barColor || "rgba(162, 138, 255, 0.9)",
-                  })
-                ),
-                linePath
-                  ? React.createElement("path", {
-                      d: linePath,
-                      fill: "none",
-                      stroke: config?.lineColor || "rgba(255, 255, 255, 0.92)",
-                      strokeWidth: "2",
-                      strokeLinecap: "round",
-                      strokeLinejoin: "round",
-                    })
-                  : null,
-                labels.map((label, index) => (
-                  index % labelStep === 0 || index === labels.length - 1
-                    ? React.createElement("text", {
-                        key: "label:" + index,
-                        x: marginLeft + slotWidth * index + slotWidth / 2,
-                        y: svgHeight - 10,
-                        textAnchor: "middle",
-                        fill: "rgba(255,255,255,0.4)",
-                        fontSize: "10",
-                      }, label)
-                    : null
-                ))
-              )
-            );
-          };
-          const renderServerAnalyticsStackedChart = (config) => {
-            const labels = Array.isArray(config?.labels) ? config.labels : [];
-            const primaryValues = Array.isArray(config?.primaryValues) ? config.primaryValues : [];
-            const secondaryValues = Array.isArray(config?.secondaryValues) ? config.secondaryValues : [];
-            if (!labels.length || !primaryValues.length) {
-              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No data yet");
-            }
-
-            const svgWidth = 320;
-            const svgHeight = 210;
-            const marginTop = 12;
-            const marginRight = 14;
-            const marginBottom = 38;
-            const marginLeft = 34;
-            const plotWidth = svgWidth - marginLeft - marginRight;
-            const plotHeight = svgHeight - marginTop - marginBottom;
-            const slotWidth = plotWidth / Math.max(labels.length, 1);
-            const barWidth = Math.min(22, Math.max(8, slotWidth * 0.56));
-            const baselineY = marginTop + plotHeight;
-            const totals = labels.map((_, index) => Math.max(0, Number(primaryValues[index] || 0)) + Math.max(0, Number(secondaryValues[index] || 0)));
-            const yMax = Math.max(1, ...totals, 1);
-            const labelStep = Math.max(1, Math.ceil(labels.length / 8));
-
-            return React.createElement("div", {
-                className: "playground-settings-usage-chart-frame is-medium",
-                "aria-label": config?.ariaLabel || "Usage breakdown chart",
-              },
-              React.createElement("svg", {
-                className: "playground-settings-usage-chart-svg",
-                viewBox: "0 0 " + svgWidth + " " + svgHeight,
-                preserveAspectRatio: "xMidYMid meet",
-                role: "img",
-                "aria-label": config?.ariaLabel || "Usage breakdown chart",
-              },
-                Array.from({ length: 5 }).map((_, index) => {
-                  const y = marginTop + (plotHeight / 4) * index;
-                  return React.createElement("line", {
-                    key: "grid:" + index,
-                    x1: marginLeft,
-                    y1: y,
-                    x2: svgWidth - marginRight,
-                    y2: y,
-                    stroke: "rgba(255,255,255,0.10)",
-                    strokeWidth: "1",
-                  });
-                }),
-                labels.map((label, index) => {
-                  const primary = Math.max(0, Number(primaryValues[index] || 0));
-                  const secondary = Math.max(0, Number(secondaryValues[index] || 0));
-                  const secondaryHeight = secondary > 0 ? (secondary / yMax) * plotHeight : 0;
-                  const primaryHeight = primary > 0 ? (primary / yMax) * plotHeight : 0;
-                  const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
-                  const secondaryY = baselineY - secondaryHeight;
-                  const primaryY = secondaryY - primaryHeight;
-                  return React.createElement(React.Fragment, { key: "stack:" + index },
-                    React.createElement("rect", {
-                      x,
-                      y: secondaryY,
-                      width: barWidth,
-                      height: Math.max(secondaryHeight, 1),
-                      rx: "3",
-                      fill: config?.secondaryColor || "rgba(255, 146, 146, 0.86)",
-                    }),
-                    React.createElement("rect", {
-                      x,
-                      y: primaryY,
-                      width: barWidth,
-                      height: Math.max(primaryHeight, 1),
-                      rx: "3",
-                      fill: config?.primaryColor || "rgba(255,255,255,0.96)",
-                    }),
-                    index % labelStep === 0 || index === labels.length - 1
-                      ? React.createElement("text", {
-                          x: marginLeft + slotWidth * index + slotWidth / 2,
-                          y: svgHeight - 10,
-                          textAnchor: "middle",
-                          fill: "rgba(255,255,255,0.4)",
-                          fontSize: "9",
-                        }, label)
-                      : null
-                  );
-                })
-              )
-            );
-          };
           const activeServerAnalytics = draftServer.id ? serverAnalyticsById[draftServer.id] || null : null;
           const activeServerAnalyticsSummary = activeServerAnalytics?.summary || null;
           const activeServerTrafficBuckets = Array.isArray(activeServerAnalytics?.charts?.traffic24h)
@@ -37091,13 +37323,115 @@ const html = `<!doctype html>
             { id: "runtime", label: "Console", Icon: Terminal },
             { id: "deployment", label: "Deploy", Icon: Rocket },
           ];
-          const renderServerAnalyticsKpi = (label, value) => React.createElement("div", {
+          const renderServerAnalyticsKpi = (label, value, tone) => React.createElement("div", {
               className: "playground-servers-analytics-kpi",
               key: label,
             },
             React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
-            React.createElement("div", { className: "playground-servers-analytics-kpi-label" }, label)
+            React.createElement("div", { className: "playground-database-overview-kpi-label is-static" + (tone ? " is-" + tone : "") },
+              React.createElement("span", { className: "playground-database-overview-kpi-check" },
+                React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
+              ),
+              React.createElement("span", null, label)
+            )
           );
+          const renderServerTelemetryChart = (config) => {
+            const labels = Array.isArray(config?.labels) ? config.labels : [];
+            const series = Array.isArray(config?.series) ? config.series.filter(Boolean) : [];
+            if (!labels.length || !series.length) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No data yet");
+            }
+
+            const svgWidth = 420;
+            const svgHeight = 178;
+            const marginTop = 14;
+            const marginRight = 10;
+            const marginBottom = 28;
+            const marginLeft = 30;
+            const plotWidth = svgWidth - marginLeft - marginRight;
+            const plotHeight = svgHeight - marginTop - marginBottom;
+            const baselineY = marginTop + plotHeight;
+            const slotWidth = plotWidth / Math.max(labels.length - 1, 1);
+            const xForIndex = (index) => labels.length === 1 ? marginLeft + plotWidth : marginLeft + slotWidth * index;
+            const maxValue = Math.max(
+              1,
+              ...series.flatMap((entry) => labels.map((_, index) => Math.max(0, Number(entry?.values?.[index] || 0)))),
+            );
+            const labelStep = Math.max(1, Math.ceil(labels.length / 6));
+            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
+
+            return React.createElement("div", {
+                className: "playground-database-overview-timeseries-card",
+                "aria-label": config?.ariaLabel || "Server telemetry chart",
+              },
+              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+                React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
+                  React.createElement("svg", {
+                    className: "playground-database-overview-timeseries-svg",
+                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
+                    preserveAspectRatio: "xMidYMid meet",
+                    role: "img",
+                    "aria-label": config?.ariaLabel || "Server telemetry chart",
+                  },
+                    Array.from({ length: 4 }).map((_, index) => {
+                      const y = marginTop + (plotHeight / 3) * index;
+                      return React.createElement("line", {
+                        key: "grid:" + index,
+                        className: "playground-database-overview-timeseries-grid-line",
+                        x1: marginLeft,
+                        y1: y,
+                        x2: svgWidth - marginRight,
+                        y2: y,
+                      });
+                    }),
+                    yAxisValues.map((value, index) =>
+                      React.createElement("text", {
+                        key: "y-axis:" + index,
+                        x: 0,
+                        y: marginTop + (plotHeight / 2) * index + 4,
+                        className: "playground-database-overview-timeseries-axis-label",
+                      }, String(value))
+                    ),
+                    series.map((entry) => {
+                      const points = labels.map((_, index) => ({
+                        x: xForIndex(index),
+                        y: baselineY - ((Math.max(0, Number(entry?.values?.[index] || 0)) / maxValue) * plotHeight),
+                      }));
+                      const linePath = buildServerAnalyticsSvgLinePath(points);
+                      const lastPoint = points[points.length - 1] || null;
+                      return React.createElement(React.Fragment, { key: "series:" + entry.key },
+                        linePath
+                          ? React.createElement("path", {
+                              d: linePath,
+                              className: "playground-database-overview-timeseries-line is-" + entry.tone,
+                            })
+                          : null,
+                        lastPoint
+                          ? React.createElement("circle", {
+                              cx: lastPoint.x,
+                              cy: lastPoint.y,
+                              r: "3.5",
+                              className: "playground-database-overview-timeseries-dot is-" + entry.tone,
+                            })
+                          : null
+                      );
+                    }),
+                    labels.map((label, index) => (
+                      index % labelStep === 0 || index === labels.length - 1
+                        ? React.createElement("text", {
+                            key: "label:" + index,
+                            x: xForIndex(index),
+                            y: svgHeight - 8,
+                            textAnchor: index === 0 ? "start" : index === labels.length - 1 ? "end" : "middle",
+                            className: "playground-database-overview-timeseries-axis-label",
+                          }, String(label || ""))
+                        : null
+                    ))
+                  )
+                )
+              )
+            );
+          };
           const serverAnalyticsOverview = !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
             ? React.createElement("div", { className: "playground-files-state" }, "Save this server first to unlock analytics.")
             : !draftServer.cloudRunServiceName && !draftServer.serviceUrl && !activeServerAnalyticsSummary
@@ -37106,41 +37440,53 @@ const html = `<!doctype html>
                 ? React.createElement("div", { className: "playground-files-state" },
                     React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                   )
-                : React.createElement("div", { className: "playground-servers-analytics-summary" },
+                : React.createElement("div", { className: "playground-database-overview" },
                     React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
                       [
-                        renderServerAnalyticsKpi("Requests (24h)", String(activeServerAnalyticsSummary?.totalRequests24h || 0)),
-                        renderServerAnalyticsKpi("Success rate", formatPlaygroundServerRate(activeServerAnalyticsSummary?.successRate24h)),
-                        renderServerAnalyticsKpi("P95 latency", formatPlaygroundServerLatency(activeServerAnalyticsSummary?.p95LatencyMs)),
-                        renderServerAnalyticsKpi("4xx / 5xx", String(Number(activeServerAnalyticsSummary?.clientErrors24h || 0) + Number(activeServerAnalyticsSummary?.serverErrors24h || 0))),
+                        renderServerAnalyticsKpi("Requests (24h)", String(activeServerAnalyticsSummary?.totalRequests24h || 0), "requests"),
+                        renderServerAnalyticsKpi("Success rate", formatPlaygroundServerRate(activeServerAnalyticsSummary?.successRate24h), "success"),
+                        renderServerAnalyticsKpi("P95 latency", formatPlaygroundServerLatency(activeServerAnalyticsSummary?.p95LatencyMs), "latency"),
+                        renderServerAnalyticsKpi("4xx / 5xx", String(Number(activeServerAnalyticsSummary?.clientErrors24h || 0) + Number(activeServerAnalyticsSummary?.serverErrors24h || 0)), "errors"),
                       ]
                     ),
-                    React.createElement("div", { className: "playground-servers-analytics-summary-grid" },
-                      React.createElement("div", { className: "playground-servers-analytics-chart-block" },
-                        React.createElement("div", { className: "playground-environments-summary-title" }, "Traffic"),
+                    React.createElement("div", { className: "playground-database-overview-chart-grid" },
+                      React.createElement("div", { className: "playground-database-overview-chart-block" },
                         activeServerTrafficLabels.length > 0
-                          ? renderServerAnalyticsMixedChart({
+                          ? renderServerTelemetryChart({
                               labels: activeServerTrafficLabels,
-                              barValues: activeServerTrafficCounts,
-                              lineValues: activeServerTrafficFailures,
-                              yMax: Math.max(1, ...activeServerTrafficCounts, ...activeServerTrafficFailures),
-                              barColor: "rgba(162, 138, 255, 0.9)",
-                              lineColor: "rgba(255, 255, 255, 0.92)",
-                              areaColor: "rgba(162, 138, 255, 0.12)",
+                              series: [
+                                {
+                                  key: "requests",
+                                  tone: "requests",
+                                  values: activeServerTrafficCounts,
+                                },
+                                {
+                                  key: "failures",
+                                  tone: "failures",
+                                  values: activeServerTrafficFailures,
+                                },
+                              ],
                               emptyText: "No request data yet",
                               ariaLabel: "Requests and failed requests over time",
                             })
                           : React.createElement("div", { className: "playground-settings-usage-chart-empty" }, "No request data yet")
                       ),
-                      React.createElement("div", { className: "playground-servers-analytics-chart-block" },
-                        React.createElement("div", { className: "playground-environments-summary-title" }, "Status Mix"),
-                        activeServerTrafficLabels.length > 0
-                          ? renderServerAnalyticsStackedChart({
-                              labels: activeServerTrafficLabels,
-                              primaryValues: activeServerStatusSuccess,
-                              secondaryValues: activeServerStatusErrors,
-                              primaryColor: "rgba(255,255,255,0.96)",
-                              secondaryColor: "rgba(255, 146, 146, 0.86)",
+                      React.createElement("div", { className: "playground-database-overview-chart-block" },
+                        activeServerStatusBuckets.length > 0
+                          ? renderServerTelemetryChart({
+                              labels: activeServerStatusBuckets.map((bucket) => bucket?.label || ""),
+                              series: [
+                                {
+                                  key: "success",
+                                  tone: "success",
+                                  values: activeServerStatusSuccess,
+                                },
+                                {
+                                  key: "errors",
+                                  tone: "errors",
+                                  values: activeServerStatusErrors,
+                                },
+                              ],
                               emptyText: "No status data yet",
                               ariaLabel: "Successful and failed requests over time",
                             })
@@ -37192,36 +37538,80 @@ const html = `<!doctype html>
             );
           };
 
-          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-            React.createElement("div", { className: "playground-tasks-detail-section-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description")
-            ),
-            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerDescriptionEditing ? " is-editing" : " is-preview") },
-              !isServerDescriptionEditing
-                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                    String(draftServer.description || "").trim()
-                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                          content: draftServer.description,
-                          className: "playground-tasks-detail-description-preview tb-message-markdown",
-                        })
-                      : React.createElement("div", {
-                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                        }, "Describe what this server should publish.")
+          const descriptionSection = React.createElement("section", {
+              className: "playground-environments-section",
+              key: "server-description",
+            },
+            React.createElement("div", { className: "playground-environments-section-body" },
+              React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
+                React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                  React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                    [
+                      {
+                        id: "bold",
+                        label: "Bold",
+                        icon: Bold,
+                      },
+                      {
+                        id: "italic",
+                        label: "Italic",
+                        icon: Italic,
+                      },
+                      {
+                        id: "underline",
+                        label: "Underline",
+                        icon: Underline,
+                      },
+                      {
+                        id: "list",
+                        label: "List",
+                        icon: List,
+                      },
+                    ].map((action) =>
+                      React.createElement("button", {
+                        key: action.id,
+                        type: "button",
+                        className: "playground-tasks-detail-format-button",
+                        title: action.label,
+                        "aria-label": action.label,
+                        onMouseDown: (event) => event.preventDefault(),
+                        onClick: () => handleServerDescriptionFormat(action.id),
+                      }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    )
                   )
-                : null,
-              React.createElement("textarea", {
-                ref: serverDescriptionTextareaRef,
-                className: "playground-tasks-detail-description-input " + (isServerDescriptionEditing ? "is-editing" : "is-preview"),
-                rows: 1,
-                placeholder: isServerDescriptionEditing ? "Describe what this server should publish." : "",
-                value: draftServer.description || "",
-                onFocus: () => setIsServerDescriptionEditing(true),
-                onChange: (event) => {
-                  updateServerField("description", event.target.value);
-                  resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                },
-                onBlur: () => setIsServerDescriptionEditing(false),
-              })
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerDescriptionEditing ? " is-editing" : " is-preview") },
+                  !isServerDescriptionEditing
+                    ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                        String(draftServer.description || "").trim()
+                          ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                              content: draftServer.description,
+                              className: "playground-tasks-detail-description-preview tb-message-markdown",
+                            })
+                          : React.createElement("div", {
+                              className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                            }, "Add Description here")
+                      )
+                    : null,
+                  React.createElement("textarea", {
+                    ref: serverDescriptionTextareaRef,
+                    className: "playground-tasks-detail-description-input " + (isServerDescriptionEditing ? "is-editing" : "is-preview"),
+                    rows: 1,
+                    placeholder: isServerDescriptionEditing ? "Add Description here" : "",
+                    value: draftServer.description || "",
+                    onFocus: () => setIsServerDescriptionEditing(true),
+                    onChange: (event) => {
+                      updateServerField("description", event.target.value);
+                      resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                    },
+                    onBlur: () => {
+                      setIsServerDescriptionEditing(false);
+                      void commitDraftServerIfDirty();
+                    },
+                  })
+                )
+              )
             )
           );
 
@@ -37240,17 +37630,12 @@ const html = `<!doctype html>
             !serverDetailsCollapsed
               ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                   serverAnalyticsOverview,
+                  React.createElement("div", { className: "playground-database-summary-divider" }),
                   renderServerFactRow("ID",
                     React.createElement("span", {
                       className: "playground-environments-editor-fact-value is-id",
                       title: draftServer.id || "Unsaved server",
                     }, draftServer.id || "Unsaved server")
-                  ),
-                  renderServerFactRow("Status",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.status || "draft")
-                  ),
-                  renderServerFactRow("Kind",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundServerKindLabel(draftServer.kind))
                   ),
                   renderServerFactRow("Auth",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.authMode || "public")
@@ -38088,33 +38473,79 @@ const html = `<!doctype html>
                     "aria-label": "Server name",
                     title: draftServer.name || "Server",
                     onChange: (event) => updateServerField("name", event.target.value),
+                    onBlur: () => {
+                      void commitDraftServerIfDirty();
+                    },
                   })
                 )
               ),
               React.createElement("div", { className: "playground-content-nav-center" }),
               React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                draftServer.id
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      onClick: () => void handleDeleteServer(draftServer.id),
-                      disabled: serverSaveState.isSaving,
-                    }, "Delete")
+                draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
+                  ? React.createElement("div", {
+                      className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                      ref: serverActionsPopoverRef,
+                    },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-content-menu-button",
+                        "aria-label": "Server actions",
+                        "aria-expanded": serverActionsPopoverOpen ? "true" : "false",
+                        onClick: () => setServerActionsPopoverOpen((current) => !current),
+                        disabled: serverSaveState.isSaving || serverDeploymentState.isDeploying,
+                      }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                      serverActionsPopoverOpen
+                        ? React.createElement("div", {
+                            className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                            onClick: (event) => event.stopPropagation(),
+                          },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "tb-popup-row",
+                              onClick: () => openServerRenameDialog(draftServer),
+                            },
+                              React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, "Rename")
+                              )
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "tb-popup-row",
+                              onClick: () => {
+                                setServerActionsPopoverOpen(false);
+                                void handleDeployServer();
+                              },
+                              disabled: serverDeploymentState.isDeploying,
+                            },
+                              React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
+                              )
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "tb-popup-row",
+                              onClick: () => {
+                                setServerActionsPopoverOpen(false);
+                                void handleDeleteServer(draftServer.id);
+                              },
+                            },
+                              React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, "Delete")
+                              )
+                            )
+                          )
+                        : null
+                    )
                   : null,
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button is-primary",
-                  onClick: () => void handleServerSave(),
-                  disabled: serverSaveState.isSaving || !String(draftServer.name || "").trim(),
-                }, serverSaveState.isSaving ? "Saving..." : "Save")
               )
             ),
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
               serverSaveState.error
                 ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
-                : serverSaveState.message
-                  ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, serverSaveState.message)
-                  : null,
+                : null,
               descriptionSection,
               factsSection,
               renderEditorSection("server-source", "Source", "Connect this server to a computer workspace or source path.", sourceSection, null, false),
@@ -40273,6 +40704,7 @@ const html = `<!doctype html>
           ),
           renderEnvironmentListActionMenu(),
           renderEnvironmentRenameModal(),
+          renderServerRenameModal(),
           renderEnvironmentComposerDialog(),
           renderServerComposerDialog()
         );
