@@ -12889,6 +12889,11 @@ const html = `<!doctype html>
         padding: 4px 0 10px;
       }
 
+      .playground-database-overview .playground-servers-analytics-kpi-grid {
+        grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+        gap: 8px;
+      }
+
       .playground-database-overview-metrics {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -12951,60 +12956,215 @@ const html = `<!doctype html>
         gap: 12px;
       }
 
-      .playground-database-overview-chart {
+      .playground-database-overview-timeseries-card {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 0;
+        min-height: 178px;
       }
 
-      .playground-database-overview-chart-row {
-        display: grid;
-        grid-template-columns: 96px minmax(0, 1fr) auto;
+      .playground-database-overview-timeseries-legend {
+        display: inline-flex;
         align-items: center;
-        gap: 10px;
+        flex-wrap: wrap;
+        gap: 14px;
       }
 
-      .playground-database-overview-chart-label {
+      .playground-database-overview-timeseries-series {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-database-overview-timeseries-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         color: rgba(255, 255, 255, 0.72);
         font-size: 12px;
         line-height: 1.35;
       }
 
-      .playground-database-overview-chart-track {
-        position: relative;
+      .playground-database-overview-timeseries-check {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(0, 0, 0, 0.92);
+        flex-shrink: 0;
+      }
+
+      .playground-database-overview-kpi-label {
+        margin-top: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 10px;
+        line-height: 1.2;
+        white-space: nowrap;
+        background: transparent;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .playground-database-overview-kpi-check {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(0, 0, 0, 0.92);
+        flex-shrink: 0;
+      }
+
+      .playground-database-overview-kpi-label.is-inactive {
+        color: rgba(255, 255, 255, 0.38);
+      }
+
+      .playground-database-overview-kpi-label.is-inactive .playground-database-overview-kpi-check {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: transparent;
+      }
+
+      .playground-database-overview-kpi-label:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.18);
+        outline-offset: 2px;
+        border-radius: 5px;
+      }
+
+      .playground-database-overview-kpi-check svg {
+        width: 9px;
+        height: 9px;
+      }
+
+      .playground-database-overview-kpi-label.is-reads .playground-database-overview-kpi-check {
+        background: #5b8cff;
+      }
+
+      .playground-database-overview-kpi-label.is-writes .playground-database-overview-kpi-check {
+        background: #ffb01f;
+      }
+
+      .playground-database-overview-kpi-label.is-deletes .playground-database-overview-kpi-check {
+        background: #ff5aa0;
+      }
+
+      .playground-database-overview-kpi-label.is-collections .playground-database-overview-kpi-check {
+        background: #8f7cff;
+      }
+
+      .playground-database-overview-kpi-label.is-documents .playground-database-overview-kpi-check {
+        background: #b59bff;
+      }
+
+      .playground-database-overview-timeseries-chart {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .playground-database-overview-timeseries-frame {
         width: 100%;
-        height: 4px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+        height: 100%;
       }
 
-      .playground-database-overview-chart-fill {
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        min-width: 4px;
-        border-radius: 999px;
+      .playground-database-overview-timeseries-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
       }
 
-      .playground-database-overview-chart-fill.is-collections,
-      .playground-database-overview-chart-fill.is-reads {
-        background: linear-gradient(90deg, rgba(102, 95, 230, 0.92) 0%, rgba(124, 110, 238, 0.9) 100%);
+      .playground-database-overview-timeseries-grid-line {
+        stroke: rgba(255, 255, 255, 0.10);
+        stroke-width: 1;
       }
 
-      .playground-database-overview-chart-fill.is-documents,
-      .playground-database-overview-chart-fill.is-writes {
-        background: linear-gradient(90deg, rgba(170, 138, 255, 0.94) 0%, rgba(221, 161, 252, 0.9) 100%);
+      .playground-database-overview-timeseries-axis-label {
+        fill: rgba(255, 255, 255, 0.46);
+        font-size: 10px;
       }
 
-      .playground-database-overview-chart-value {
-        min-width: 24px;
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 12px;
-        line-height: 1.35;
-        text-align: right;
+      .playground-database-overview-timeseries-line {
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .playground-database-overview-timeseries-dot {
+        stroke: rgba(19, 19, 19, 0.92);
+        stroke-width: 1.5;
+      }
+
+      .playground-database-overview-timeseries-series.is-reads .playground-database-overview-timeseries-check {
+        background: #5b8cff;
+      }
+
+      .playground-database-overview-timeseries-line.is-reads {
+        stroke: #5b8cff;
+      }
+
+      .playground-database-overview-timeseries-dot.is-reads {
+        fill: #5b8cff;
+        stroke: #5b8cff;
+      }
+
+      .playground-database-overview-timeseries-series.is-writes .playground-database-overview-timeseries-check {
+        background: #ff9f0a;
+      }
+
+      .playground-database-overview-timeseries-line.is-writes {
+        stroke: #ff9f0a;
+      }
+
+      .playground-database-overview-timeseries-dot.is-writes {
+        fill: #ff9f0a;
+        stroke: #ff9f0a;
+      }
+
+      .playground-database-overview-timeseries-series.is-deletes .playground-database-overview-timeseries-check {
+        background: #ff4d8d;
+      }
+
+      .playground-database-overview-timeseries-line.is-deletes {
+        stroke: #ff4d8d;
+      }
+
+      .playground-database-overview-timeseries-dot.is-deletes {
+        fill: #ff4d8d;
+        stroke: #ff4d8d;
+      }
+
+      .playground-database-overview-timeseries-series.is-collections .playground-database-overview-timeseries-check {
+        background: #7c6eee;
+      }
+
+      .playground-database-overview-timeseries-line.is-collections {
+        stroke: #7c6eee;
+      }
+
+      .playground-database-overview-timeseries-dot.is-collections {
+        fill: #7c6eee;
+        stroke: #7c6eee;
+      }
+
+      .playground-database-overview-timeseries-series.is-documents .playground-database-overview-timeseries-check {
+        background: #d5c4ff;
+      }
+
+      .playground-database-overview-timeseries-line.is-documents {
+        stroke: #d5c4ff;
+      }
+
+      .playground-database-overview-timeseries-dot.is-documents {
+        fill: #d5c4ff;
+        stroke: #d5c4ff;
       }
 
       .playground-mission-control-run-button {
@@ -24258,6 +24418,11 @@ const html = `<!doctype html>
           + "/documents/" + encodeURIComponent(documentId);
       }
 
+      function buildPlaygroundDatabaseAnalyticsUrl(backendUrl, databaseId) {
+        if (!backendUrl || !databaseId) return "";
+        return backendUrl + "/databases/" + encodeURIComponent(databaseId) + "/analytics";
+      }
+
       function canonicalizePlaygroundServerKind(kind) {
         const normalizedKind = String(kind || "").trim().toLowerCase();
         if (normalizedKind === "function") return "function";
@@ -30693,6 +30858,9 @@ const html = `<!doctype html>
         const selectedEnvironmentIdRef = useRef(initialEnvironmentId || "");
         const selectedServerIdRef = useRef("");
         const selectedDatabaseIdRef = useRef("");
+        const selectedDatabaseCollectionIdRef = useRef("");
+        const selectedDatabaseDocumentIdRef = useRef("");
+        const databaseAnalyticsByIdRef = useRef({});
         const environmentSeededSelectionRef = useRef("");
         const serverSeededSelectionRef = useRef("");
         const databaseSeededSelectionRef = useRef("");
@@ -30715,6 +30883,7 @@ const html = `<!doctype html>
         const [serverFilesById, setServerFilesById] = useState({});
         const [serverAnalyticsById, setServerAnalyticsById] = useState({});
         const [serverLogsById, setServerLogsById] = useState({});
+        const [databaseAnalyticsById, setDatabaseAnalyticsById] = useState({});
         const [draftEnvironment, setDraftEnvironment] = useState(null);
         const [draftServer, setDraftServer] = useState(null);
         const [draftDatabase, setDraftDatabase] = useState(null);
@@ -30724,6 +30893,7 @@ const html = `<!doctype html>
         const [loadingServerId, setLoadingServerId] = useState("");
         const [loadingDatabaseId, setLoadingDatabaseId] = useState("");
         const [loadingServerAnalyticsId, setLoadingServerAnalyticsId] = useState("");
+        const [loadingDatabaseAnalyticsId, setLoadingDatabaseAnalyticsId] = useState("");
         const [saveState, setSaveState] = useState({
           isSaving: false,
           error: "",
@@ -30818,6 +30988,13 @@ const html = `<!doctype html>
           saveError: "",
           saveMessage: "",
           isSaving: false,
+        });
+        const [databaseAnalyticsVisibility, setDatabaseAnalyticsVisibility] = useState({
+          collections: true,
+          documents: true,
+          reads: true,
+          writes: true,
+          deletes: true,
         });
         const [databaseDocumentViewMode, setDatabaseDocumentViewMode] = useState("preview");
         const [databaseJsonEditorModule, setDatabaseJsonEditorModule] = useState(null);
@@ -31073,6 +31250,18 @@ const html = `<!doctype html>
         useEffect(() => {
           selectedDatabaseIdRef.current = selectedDatabaseId;
         }, [selectedDatabaseId]);
+
+        useEffect(() => {
+          selectedDatabaseCollectionIdRef.current = selectedDatabaseCollectionId;
+        }, [selectedDatabaseCollectionId]);
+
+        useEffect(() => {
+          selectedDatabaseDocumentIdRef.current = selectedDatabaseDocumentId;
+        }, [selectedDatabaseDocumentId]);
+
+        useEffect(() => {
+          databaseAnalyticsByIdRef.current = databaseAnalyticsById;
+        }, [databaseAnalyticsById]);
 
         useEffect(() => {
           function handleServerEditorSaveShortcut(event) {
@@ -31677,6 +31866,59 @@ const html = `<!doctype html>
           }
         }, [backendUrl, requestHeaders, serverAnalyticsById]);
 
+        const loadDatabaseAnalytics = useCallback(async (databaseId, options = {}) => {
+          const normalizedDatabaseId = String(databaseId || "").trim();
+          if (!normalizedDatabaseId || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+            return null;
+          }
+
+          const force = options?.force === true;
+          if (!force && databaseAnalyticsByIdRef.current[normalizedDatabaseId]) {
+            return databaseAnalyticsByIdRef.current[normalizedDatabaseId];
+          }
+
+          setLoadingDatabaseAnalyticsId(normalizedDatabaseId);
+          try {
+            const response = await fetch(
+              buildPlaygroundDatabaseAnalyticsUrl(backendUrl, normalizedDatabaseId),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load database analytics.");
+            }
+
+            const normalizedRecord = data?.analytics && typeof data.analytics === "object"
+              ? {
+                  ...data.analytics,
+                  loadedAt: new Date().toISOString(),
+                }
+              : null;
+            if (!normalizedRecord) {
+              throw new Error("Database analytics response was empty.");
+            }
+
+            setDatabaseAnalyticsById((current) => ({
+              ...current,
+              [normalizedDatabaseId]: normalizedRecord,
+            }));
+            return normalizedRecord;
+          } catch (error) {
+            if (selectedDatabaseIdRef.current === normalizedDatabaseId) {
+              setDatabaseSaveState((current) => ({
+                ...current,
+                error: error instanceof Error ? error.message : "Failed to load database analytics.",
+              }));
+            }
+            return null;
+          } finally {
+            setLoadingDatabaseAnalyticsId((current) => current === normalizedDatabaseId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders]);
+
         const loadServerLogs = useCallback(async (serverId, kind = "request", options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
           const normalizedKind = ["request", "runtime", "deployment"].includes(String(kind || "").trim().toLowerCase())
@@ -31844,8 +32086,9 @@ const html = `<!doctype html>
               [databaseId]: collections,
             }));
             if (selectedDatabaseIdRef.current === databaseId) {
-              const nextCollectionId = collections.some((item) => item.id === selectedDatabaseCollectionId)
-                ? selectedDatabaseCollectionId
+              const currentSelectedCollectionId = selectedDatabaseCollectionIdRef.current;
+              const nextCollectionId = collections.some((item) => item.id === currentSelectedCollectionId)
+                ? currentSelectedCollectionId
                 : collections[0]?.id || "";
               setSelectedDatabaseCollectionId(nextCollectionId);
               if (!nextCollectionId) {
@@ -31871,7 +32114,7 @@ const html = `<!doctype html>
           } finally {
             setLoadingDatabaseCollectionsId((current) => current === databaseId ? "" : current);
           }
-        }, [backendUrl, requestHeaders, selectedDatabaseCollectionId]);
+        }, [backendUrl, requestHeaders]);
 
         const loadDatabaseDocuments = useCallback(async (databaseId, collectionId) => {
           if (!databaseId || !collectionId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
@@ -31895,8 +32138,9 @@ const html = `<!doctype html>
               ...current,
               [loadingKey]: documents,
             }));
-            if (selectedDatabaseIdRef.current === databaseId && selectedDatabaseCollectionId === collectionId) {
-              const nextDocument = documents.find((entry) => entry.id === selectedDatabaseDocumentId) || documents[0] || null;
+            if (selectedDatabaseIdRef.current === databaseId && selectedDatabaseCollectionIdRef.current === collectionId) {
+              const currentSelectedDocumentId = selectedDatabaseDocumentIdRef.current;
+              const nextDocument = documents.find((entry) => entry.id === currentSelectedDocumentId) || documents[0] || null;
               setSelectedDatabaseDocumentId(nextDocument?.id || "");
               setDatabaseDocumentEditorState((current) => ({
                 ...current,
@@ -31919,7 +32163,7 @@ const html = `<!doctype html>
           } finally {
             setLoadingDatabaseDocumentsKey((current) => current === loadingKey ? "" : current);
           }
-        }, [backendUrl, requestHeaders, selectedDatabaseCollectionId, selectedDatabaseDocumentId]);
+        }, [backendUrl, requestHeaders]);
 
         const loadEnvironmentRuntimeStatus = useCallback(async (environmentId) => {
           const normalizedEnvironmentId = String(environmentId || "").trim();
@@ -32454,8 +32698,9 @@ const html = `<!doctype html>
           resetDatabaseEditorAuxiliaryState();
           setDraftDatabase(seedDatabase ? normalizePlaygroundDatabaseRecord(seedDatabase) : null);
           void loadDatabaseDetails(selectedDatabaseId);
+          void loadDatabaseAnalytics(selectedDatabaseId);
           void loadDatabaseCollections(selectedDatabaseId);
-        }, [databaseDetailsById, loadDatabaseCollections, loadDatabaseDetails, orderedDatabases, resourceMode, selectedDatabaseId]);
+        }, [databaseDetailsById, loadDatabaseAnalytics, loadDatabaseCollections, loadDatabaseDetails, orderedDatabases, resourceMode, selectedDatabaseId]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -33673,9 +33918,10 @@ const html = `<!doctype html>
             setDatabaseSaveState({
               isSaving: false,
               error: "",
-              message: "Saved",
+              message: "",
             });
             void loadDatabaseCollections(savedDatabase.id);
+            void loadDatabaseAnalytics(savedDatabase.id, { force: true });
           } catch (error) {
             setDatabaseSaveState({
               isSaving: false,
@@ -33742,9 +33988,10 @@ const html = `<!doctype html>
             setDatabaseSaveState({
               isSaving: false,
               error: "",
-              message: "Saved",
+              message: "",
             });
             closeDatabaseRenameDialog();
+            void loadDatabaseAnalytics(savedDatabase.id, { force: true });
           } catch (error) {
             setDatabaseRenameError(error instanceof Error ? error.message : "Failed to rename database.");
             setDatabaseSaveState({
@@ -33985,6 +34232,7 @@ const html = `<!doctype html>
               throw new Error(data?.message || data?.error || "Failed to create collection.");
             }
             const collections = await loadDatabaseCollections(draftDatabase.id);
+            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             const createdCollectionId = data?.collection?.id || collections[0]?.id || "";
             if (createdCollectionId) {
               setSelectedDatabaseCollectionId(createdCollectionId);
@@ -34029,6 +34277,7 @@ const html = `<!doctype html>
               throw new Error(data?.message || data?.error || "Failed to delete collection.");
             }
             await loadDatabaseCollections(draftDatabase.id);
+            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             setSelectedDatabaseCollectionId("");
             setSelectedDatabaseDocumentId("");
           } catch (error) {
@@ -34104,6 +34353,7 @@ const html = `<!doctype html>
 
             await loadDatabaseCollections(draftDatabase.id);
             await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId);
+            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             closeDatabaseDocumentComposer();
             setSelectedDatabaseDocumentId(documentId);
             setDatabaseDocumentEditorState({
@@ -34359,6 +34609,7 @@ const html = `<!doctype html>
 
             await loadDatabaseCollections(draftDatabase.id);
             await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId);
+            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             const nextValue = formatPlaygroundDatabaseDocumentJson(parsedData);
             setDatabaseDocumentEditorState((current) => ({
               ...current,
@@ -34451,6 +34702,7 @@ const html = `<!doctype html>
 
             await loadDatabaseCollections(draftDatabase.id);
             await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId);
+            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
             if (databaseDocumentEditorState.documentId === documentId) {
               setSelectedDatabaseDocumentId("");
               setDatabaseDocumentEditorState({
@@ -37925,67 +38177,152 @@ const html = `<!doctype html>
           const selectedCollection = currentDatabaseCollection;
           const selectedDocument = currentDatabaseDocuments.find((document) => document.id === selectedDatabaseDocumentId) || null;
           const collectionStats = currentDatabaseCollections.reduce((sum, collection) => sum + Number(collection?.documentCount || 0), 0);
-          const sortedDatabaseCollections = [...currentDatabaseCollections].sort((left, right) => {
-            const leftCount = Number(left?.documentCount || 0);
-            const rightCount = Number(right?.documentCount || 0);
-            if (leftCount !== rightCount) {
-              return rightCount - leftCount;
+          const activeDatabaseAnalytics = draftDatabase.id ? databaseAnalyticsById[draftDatabase.id] || null : null;
+          const activeDatabaseAnalyticsSummary = activeDatabaseAnalytics?.summary || null;
+          const activeDatabaseOperationBuckets = Array.isArray(activeDatabaseAnalytics?.charts?.operations24h)
+            ? activeDatabaseAnalytics.charts.operations24h
+            : [];
+          const activeDatabaseVolumeBuckets = Array.isArray(activeDatabaseAnalytics?.charts?.volume24h)
+            ? activeDatabaseAnalytics.charts.volume24h
+            : [];
+          const isDatabaseAnalyticsLoading = loadingDatabaseAnalyticsId === draftDatabase.id;
+          const formatDatabaseTelemetryTotal = (value) => new Intl.NumberFormat("en-US").format(Math.max(0, Number(value || 0)) || 0);
+          const formatDatabaseTelemetryHour = (timestamp) => {
+            const date = new Date(timestamp);
+            if (Number.isNaN(date.getTime())) {
+              return "";
             }
-            return String(left?.name || "").localeCompare(String(right?.name || ""));
-          });
-          const largestCollection = sortedDatabaseCollections[0] || null;
-          const databaseMetadata = draftDatabase?.metadata && typeof draftDatabase.metadata === "object" && !Array.isArray(draftDatabase.metadata)
-            ? draftDatabase.metadata
-            : {};
-          const rawDatabaseReads = Number(
-            databaseMetadata.reads24h
-            ?? databaseMetadata.readCount
-            ?? databaseMetadata.reads
-            ?? databaseMetadata.analytics?.reads24h
-            ?? databaseMetadata.analytics?.reads
-            ?? databaseMetadata.metrics?.reads24h
-            ?? databaseMetadata.metrics?.reads
-            ?? 0
-          ) || 0;
-          const rawDatabaseWrites = Number(
-            databaseMetadata.writes24h
-            ?? databaseMetadata.writeCount
-            ?? databaseMetadata.writes
-            ?? databaseMetadata.analytics?.writes24h
-            ?? databaseMetadata.analytics?.writes
-            ?? databaseMetadata.metrics?.writes24h
-            ?? databaseMetadata.metrics?.writes
-            ?? 0
-          ) || 0;
-          const renderDatabaseHorizontalChart = (config) => {
-            const rows = Array.isArray(config?.rows) ? config.rows : [];
-            if (!rows.length) {
-              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No data yet");
+            return new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(date);
+          };
+          const buildDatabaseAnalyticsSvgLinePath = (points) => {
+            if (!Array.isArray(points) || points.length === 0) {
+              return "";
             }
-            const maxValue = Math.max(1, ...rows.map((row) => Math.max(0, Number(row?.value || 0))));
-            return React.createElement("div", {
-                className: "playground-database-overview-chart",
-                "aria-label": config?.ariaLabel || "Database chart",
+            return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
+          };
+          const renderDatabaseAnalyticsKpi = (label, value, tone) => React.createElement("div", {
+              className: "playground-servers-analytics-kpi",
+              key: label,
+            },
+            React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
+            React.createElement("button", {
+                type: "button",
+                className: "playground-database-overview-kpi-label"
+                  + (tone ? " is-" + tone : "")
+                  + (tone && databaseAnalyticsVisibility[tone] === false ? " is-inactive" : ""),
+                onClick: () => {
+                  if (!tone) {
+                    return;
+                  }
+                  setDatabaseAnalyticsVisibility((current) => ({
+                    ...current,
+                    [tone]: current[tone] === false,
+                  }));
+                },
+                "aria-pressed": tone ? (databaseAnalyticsVisibility[tone] === false ? "false" : "true") : "true",
               },
-              rows.map((row) => {
-                const numericValue = Math.max(0, Number(row?.value || 0));
-                const width = maxValue > 0 ? (numericValue / maxValue) * 100 : 0;
-                return React.createElement("div", {
-                    key: row.key || row.label,
-                    className: "playground-database-overview-chart-row",
+              React.createElement("span", { className: "playground-database-overview-kpi-check" },
+                React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
+              ),
+              React.createElement("span", null, label)
+            )
+          );
+          const renderDatabaseTelemetryChart = (config) => {
+            const buckets = Array.isArray(config?.buckets) ? config.buckets : [];
+            const series = Array.isArray(config?.series)
+              ? config.series.filter((entry) => entry && databaseAnalyticsVisibility[entry.key] !== false)
+              : [];
+            if (!series.length) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
+            }
+
+            const svgWidth = 420;
+            const svgHeight = 178;
+            const marginTop = 14;
+            const marginRight = 10;
+            const marginBottom = 28;
+            const marginLeft = 30;
+            const plotWidth = svgWidth - marginLeft - marginRight;
+            const plotHeight = svgHeight - marginTop - marginBottom;
+            const baselineY = marginTop + plotHeight;
+            const slotWidth = plotWidth / Math.max(buckets.length - 1, 1);
+            const maxValue = Math.max(
+              1,
+              ...series.flatMap((entry) => buckets.map((bucket) => Math.max(0, Number(bucket?.[entry.key] || 0)))),
+            );
+            const labelStep = Math.max(1, Math.ceil(buckets.length / 6));
+
+            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
+            return React.createElement("div", {
+                className: "playground-database-overview-timeseries-card",
+                "aria-label": config?.ariaLabel || "Database telemetry chart",
+              },
+              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+                React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
+                  React.createElement("svg", {
+                    className: "playground-database-overview-timeseries-svg",
+                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
+                    preserveAspectRatio: "xMidYMid meet",
+                    role: "img",
+                    "aria-label": config?.ariaLabel || "Database telemetry chart",
                   },
-                  React.createElement("div", { className: "playground-database-overview-chart-label" }, row.label),
-                  React.createElement("div", { className: "playground-database-overview-chart-track" },
-                    numericValue > 0
-                      ? React.createElement("div", {
-                          className: "playground-database-overview-chart-fill " + (row.toneClassName || ""),
-                          style: { width: Math.max(width, 4) + "%" },
-                        })
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-database-overview-chart-value" }, String(numericValue))
-                );
-              })
+                    Array.from({ length: 4 }).map((_, index) => {
+                      const y = marginTop + (plotHeight / 3) * index;
+                      return React.createElement("line", {
+                        key: "grid:" + index,
+                        className: "playground-database-overview-timeseries-grid-line",
+                        x1: marginLeft,
+                        y1: y,
+                        x2: svgWidth - marginRight,
+                        y2: y,
+                      });
+                    }),
+                    yAxisValues.map((value, index) =>
+                      React.createElement("text", {
+                        key: "y-axis:" + index,
+                        x: 0,
+                        y: marginTop + (plotHeight / 2) * index + 4,
+                        className: "playground-database-overview-timeseries-axis-label",
+                      }, formatDatabaseTelemetryTotal(value))
+                    ),
+                    series.map((entry) => {
+                      const points = buckets.map((bucket, index) => ({
+                        x: marginLeft + slotWidth * index,
+                        y: baselineY - ((Math.max(0, Number(bucket?.[entry.key] || 0)) / maxValue) * plotHeight),
+                      }));
+                      const linePath = buildDatabaseAnalyticsSvgLinePath(points);
+                      const lastPoint = points[points.length - 1] || null;
+                      return React.createElement(React.Fragment, { key: "series:" + entry.key },
+                        linePath
+                          ? React.createElement("path", {
+                              d: linePath,
+                              className: "playground-database-overview-timeseries-line is-" + entry.tone,
+                            })
+                          : null,
+                        lastPoint
+                          ? React.createElement("circle", {
+                              cx: lastPoint.x,
+                              cy: lastPoint.y,
+                              r: "3.5",
+                              className: "playground-database-overview-timeseries-dot is-" + entry.tone,
+                            })
+                          : null
+                      );
+                    }),
+                    buckets.map((bucket, index) => (
+                      index % labelStep === 0 || index === buckets.length - 1
+                        ? React.createElement("text", {
+                            key: "label:" + index,
+                            x: marginLeft + slotWidth * index,
+                            y: svgHeight - 8,
+                            textAnchor: index === 0 ? "start" : index === buckets.length - 1 ? "end" : "middle",
+                            className: "playground-database-overview-timeseries-axis-label",
+                          }, formatDatabaseTelemetryHour(bucket?.timestamp))
+                        : null
+                    ))
+                  )
+                )
+              )
             );
           };
           const documentIsDirty = databaseDocumentEditorState.value !== databaseDocumentEditorState.initialValue;
@@ -38105,57 +38442,76 @@ const html = `<!doctype html>
             !databaseDetailsCollapsed
               ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                 React.createElement("div", { className: "playground-database-overview" },
+                  React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+                    [
+                      renderDatabaseAnalyticsKpi("Collections", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.totalCollections ?? currentDatabaseCollections.length), "collections"),
+                      renderDatabaseAnalyticsKpi("Documents", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.totalDocuments ?? collectionStats), "documents"),
+                      renderDatabaseAnalyticsKpi("Reads", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.reads24h || 0), "reads"),
+                      renderDatabaseAnalyticsKpi("Writes", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.writes24h || 0), "writes"),
+                      renderDatabaseAnalyticsKpi("Deletes", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.deletes24h || 0), "deletes"),
+                    ]
+                  ),
                   React.createElement("div", { className: "playground-database-overview-chart-grid" },
                     React.createElement("div", { className: "playground-database-overview-chart-block" },
-                      renderDatabaseHorizontalChart({
-                          rows: [
-                            {
-                              key: "collections",
-                              label: "Collections",
-                              value: currentDatabaseCollections.length,
-                              toneClassName: "is-collections",
-                            },
-                            {
-                              key: "documents",
-                              label: "Documents",
-                              value: collectionStats,
-                              toneClassName: "is-documents",
-                            },
-                          ],
-                          emptyText: "No database data yet",
-                          ariaLabel: "Collections and documents",
-                        })
+                      isDatabaseAnalyticsLoading && !activeDatabaseAnalytics
+                        ? React.createElement("div", { className: "playground-files-state" },
+                            React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                          )
+                        : renderDatabaseTelemetryChart({
+                            buckets: activeDatabaseVolumeBuckets,
+                            series: [
+                              {
+                                key: "collections",
+                                label: "Collections",
+                                total: activeDatabaseAnalyticsSummary?.totalCollections ?? currentDatabaseCollections.length,
+                                tone: "collections",
+                              },
+                              {
+                                key: "documents",
+                                label: "Documents",
+                                total: activeDatabaseAnalyticsSummary?.totalDocuments ?? collectionStats,
+                                tone: "documents",
+                              },
+                            ],
+                            emptyText: "No database volume data yet",
+                            ariaLabel: "Collections and documents over time",
+                          })
                       ),
                       React.createElement("div", { className: "playground-database-overview-chart-block" },
-                        renderDatabaseHorizontalChart({
-                          rows: [
-                            {
-                              key: "reads",
-                              label: "Reads",
-                              value: rawDatabaseReads,
-                              toneClassName: "is-reads",
-                            },
-                            {
-                              key: "writes",
-                              label: "Writes",
-                              value: rawDatabaseWrites,
-                              toneClassName: "is-writes",
-                            },
-                          ],
-                          emptyText: "No operation data yet",
-                          ariaLabel: "Reads and writes",
-                        })
+                        isDatabaseAnalyticsLoading && !activeDatabaseAnalytics
+                          ? React.createElement("div", { className: "playground-files-state" },
+                              React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                            )
+                          : renderDatabaseTelemetryChart({
+                              buckets: activeDatabaseOperationBuckets,
+                              series: [
+                                {
+                                  key: "reads",
+                                  label: "Reads",
+                                  total: activeDatabaseAnalyticsSummary?.reads24h || 0,
+                                  tone: "reads",
+                                },
+                                {
+                                  key: "writes",
+                                  label: "Writes",
+                                  total: activeDatabaseAnalyticsSummary?.writes24h || 0,
+                                  tone: "writes",
+                                },
+                                {
+                                  key: "deletes",
+                                  label: "Deletes",
+                                  total: activeDatabaseAnalyticsSummary?.deletes24h || 0,
+                                  tone: "deletes",
+                                },
+                              ],
+                              emptyText: "No operation data yet",
+                              ariaLabel: "Database operations over time",
+                            })
                       )
                     )
                   ),
                   React.createElement("div", { className: "playground-database-summary-divider" }),
                   renderDatabaseSummaryFact("Location", draftDatabase.location || "eur3"),
-                  renderDatabaseSummaryFact(
-                    "Largest Collection",
-                    largestCollection
-                      ? (String(largestCollection.name || "Untitled Collection") + " · " + String(Number(largestCollection.documentCount || 0)) + " docs")
-                      : "None yet"
-                  ),
                   renderDatabaseSummaryFact("Updated", formatPlaygroundFileDate(draftDatabase.updatedAt))
                 )
               : null
@@ -38788,9 +39144,7 @@ const html = `<!doctype html>
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
                 databaseSaveState.error
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseSaveState.error)
-                  : databaseSaveState.message
-                    ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, databaseSaveState.message)
-                    : null,
+                  : null,
                 databaseDescriptionSection,
                 detailsSectionBlock,
                 renderEditorSection("database-browser", "Data", "", databaseBrowserSection, null, false)
@@ -74232,6 +74586,16 @@ const server = http.createServer((req, res) => {
       res,
       `/databases/${encodeURIComponent(decodeURIComponent(databaseDetailMatch[1]))}`,
       "DELETE",
+    );
+    return;
+  }
+
+  const databaseAnalyticsMatch = url.pathname.match(/^\/api\/real\/databases\/([^/]+)\/analytics$/);
+  if (req.method === "GET" && databaseAnalyticsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/databases/${encodeURIComponent(decodeURIComponent(databaseAnalyticsMatch[1]))}/analytics`,
     );
     return;
   }
