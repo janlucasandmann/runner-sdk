@@ -9768,7 +9768,7 @@ const html = `<!doctype html>
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-list-item-title {
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 500;
         line-height: 1.2;
       }
@@ -10393,7 +10393,7 @@ const html = `<!doctype html>
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-editor-surface.playground-database-browser-surface {
-        padding: 0;
+        padding: 0 12px 12px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 18px;
         background: rgba(255, 255, 255, 0.03);
@@ -12463,7 +12463,7 @@ const html = `<!doctype html>
       }
 
       .playground-agents-page .playground-environments-list-item-title {
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 500;
         line-height: 1.2;
       }
@@ -16195,6 +16195,10 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.7);
         max-width: 520px;
         margin-top: 10px;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        overflow: hidden;
       }
 
       .playground-tasks-project-card-body {
@@ -21399,6 +21403,10 @@ const html = `<!doctype html>
           imageUrl: "",
           status: "draft",
           lastDeployedAt: "",
+          template: "blank",
+          templateAgentId: "",
+          templateEnvironmentId: "",
+          templateDeploy: false,
           databaseMode: "none",
           databaseId: "",
           databaseName: "",
@@ -21643,6 +21651,10 @@ const html = `<!doctype html>
           imageUrl: typeof server.imageUrl === "string" ? server.imageUrl : draft.imageUrl,
           status: ["draft", "deploying", "deployed", "failed", "inactive"].includes(server.status) ? server.status : draft.status,
           lastDeployedAt: typeof server.lastDeployedAt === "string" ? server.lastDeployedAt : draft.lastDeployedAt,
+          template: typeof server.template === "string" && ["blank", "ai_chat_app"].includes(server.template) ? server.template : draft.template,
+          templateAgentId: typeof server.templateAgentId === "string" ? server.templateAgentId : draft.templateAgentId,
+          templateEnvironmentId: typeof server.templateEnvironmentId === "string" ? server.templateEnvironmentId : draft.templateEnvironmentId,
+          templateDeploy: server.templateDeploy === true,
           databaseMode,
           databaseId,
           databaseName,
@@ -31963,6 +31975,7 @@ const html = `<!doctype html>
         const [serverContextsById, setServerContextsById] = useState({});
         const [serverAuthUsersById, setServerAuthUsersById] = useState({});
         const [serverAgentRuntimeRunsById, setServerAgentRuntimeRunsById] = useState({});
+        const [serverAgentOptions, setServerAgentOptions] = useState([]);
         const [databaseAnalyticsById, setDatabaseAnalyticsById] = useState({});
         const [draftEnvironment, setDraftEnvironment] = useState(null);
         const [draftServer, setDraftServer] = useState(null);
@@ -31978,6 +31991,7 @@ const html = `<!doctype html>
         const [loadingServerContextId, setLoadingServerContextId] = useState("");
         const [loadingServerAuthUsersId, setLoadingServerAuthUsersId] = useState("");
         const [loadingServerAgentRuntimeRunsId, setLoadingServerAgentRuntimeRunsId] = useState("");
+        const [serverAgentOptionsLoading, setServerAgentOptionsLoading] = useState(false);
         const [loadingDatabaseAnalyticsId, setLoadingDatabaseAnalyticsId] = useState("");
         const [saveState, setSaveState] = useState({
           isSaving: false,
@@ -32043,6 +32057,7 @@ const html = `<!doctype html>
           error: "",
           isSubmitting: false,
         });
+        const [serverAgentPickerMode, setServerAgentPickerMode] = useState("agents");
         const [serverRenameState, setServerRenameState] = useState(null);
         const [serverRenameValue, setServerRenameValue] = useState("");
         const [serverRenameError, setServerRenameError] = useState("");
@@ -33134,6 +33149,38 @@ const html = `<!doctype html>
           }
         }, [backendUrl, requestHeaders]);
 
+        const loadServerAgentOptions = useCallback(async (options = {}) => {
+          if (serverAgentOptionsLoading && !options?.force) {
+            return serverAgentOptions;
+          }
+
+          setServerAgentOptionsLoading(true);
+          try {
+            const response = await fetch(backendUrl + "/agents?limit=200", {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load agents.");
+            }
+            const items = Array.isArray(data?.data)
+              ? data.data
+              : Array.isArray(data?.agents)
+                ? data.agents
+                : [];
+            const nextAgents = items
+              .map((agent) => normalizePlaygroundAgentRecord(agent))
+              .filter((agent) => agent?.id);
+            setServerAgentOptions(nextAgents);
+            return nextAgents;
+          } catch {
+            return [];
+          } finally {
+            setServerAgentOptionsLoading(false);
+          }
+        }, [backendUrl, requestHeaders, serverAgentOptions, serverAgentOptionsLoading]);
+
         const loadServers = useCallback(async (options = {}) => {
           setHasLoadedServers(true);
           setServerListLoading(true);
@@ -34129,6 +34176,13 @@ const html = `<!doctype html>
           }
           void loadServers();
         }, [hasLoadedServers, loadServers, resourceMode, serverListLoading]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers" || serverAgentOptionsLoading || serverAgentOptions.length > 0) {
+            return;
+          }
+          void loadServerAgentOptions();
+        }, [loadServerAgentOptions, resourceMode, serverAgentOptions.length, serverAgentOptionsLoading]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -35209,13 +35263,13 @@ const html = `<!doctype html>
           let edit = null;
 
           if (formatType === "bold") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
           } else if (formatType === "italic") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
           } else if (formatType === "underline") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
           } else if (formatType === "list") {
-            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
           }
 
           if (!edit) {
@@ -35323,13 +35377,13 @@ const html = `<!doctype html>
           let edit = null;
 
           if (formatType === "bold") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
           } else if (formatType === "italic") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
           } else if (formatType === "underline") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
           } else if (formatType === "list") {
-            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
           }
 
           if (!edit) {
@@ -35454,6 +35508,7 @@ const html = `<!doctype html>
         }
 
         function applyServerComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          setIsServerComposerDescriptionEditing(true);
           updateServerComposerField("description", nextValue);
           window.requestAnimationFrame(() => {
             const textarea = serverComposerDescriptionTextareaRef.current;
@@ -35480,13 +35535,13 @@ const html = `<!doctype html>
           let edit = null;
 
           if (formatType === "bold") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
           } else if (formatType === "italic") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
           } else if (formatType === "underline") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
           } else if (formatType === "list") {
-            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+            edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
           }
 
           if (!edit) {
@@ -36074,6 +36129,45 @@ const html = `<!doctype html>
             ...payload,
             updatedAt: new Date().toISOString(),
           });
+        }
+
+        async function persistAiChatAppTemplate(serverRecord) {
+          if (!serverRecord) {
+            return null;
+          }
+
+          const response = await fetch(backendUrl + "/servers/templates/ai-chat-app", {
+            method: "POST",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: String(serverRecord?.name || "").trim() || "AI Chat App",
+              title: String(serverRecord?.name || "").trim() || "AI Chat App",
+              description: typeof serverRecord?.description === "string" ? serverRecord.description : "",
+              projectId: typeof serverRecord?.projectId === "string" && serverRecord.projectId.trim() ? serverRecord.projectId.trim() : null,
+              region: typeof serverRecord?.region === "string" && serverRecord.region.trim() ? serverRecord.region.trim() : "europe-west1",
+              location: typeof serverRecord?.databaseLocation === "string" && serverRecord.databaseLocation.trim() ? serverRecord.databaseLocation.trim() : "eur3",
+              authMode: serverRecord?.authMode === "private" ? "private" : "public",
+              agentId: typeof serverRecord?.templateAgentId === "string" && serverRecord.templateAgentId.trim() ? serverRecord.templateAgentId.trim() : null,
+              environmentId: typeof serverRecord?.templateEnvironmentId === "string" && serverRecord.templateEnvironmentId.trim() ? serverRecord.templateEnvironmentId.trim() : null,
+            }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to create AI chat app.");
+          }
+
+          return {
+            template: data?.template || "ai_chat_app",
+            webApp: getPlaygroundServerResponseRecord({ server: data?.webApp }) || normalizePlaygroundServerRecord(data?.webApp || null),
+            auth: getPlaygroundServerResponseRecord({ server: data?.auth }) || normalizePlaygroundServerRecord(data?.auth || null),
+            agentRuntime: getPlaygroundServerResponseRecord({ server: data?.agentRuntime }) || normalizePlaygroundServerRecord(data?.agentRuntime || null),
+            database: getPlaygroundDatabaseResponseRecord({ database: data?.database }) || normalizePlaygroundDatabaseRecord(data?.database || null),
+            collections: Array.isArray(data?.collections) ? data.collections : [],
+            files: Array.isArray(data?.files) ? data.files : [],
+          };
         }
 
         function upsertLocalServerRecord(savedServer) {
@@ -37836,10 +37930,26 @@ const html = `<!doctype html>
           }
 
           const composerDraft = serverComposerDraft || buildPlaygroundDefaultServerDraft();
+          const composerKind = canonicalizePlaygroundServerKind(composerDraft.kind);
+          const isAiChatAppTemplate = composerKind === "web_app" && composerDraft.template === "ai_chat_app";
           if (!String(composerDraft.name || "").trim()) {
             setServerComposerSaveState({
               isSaving: false,
               error: "Name is required.",
+            });
+            return;
+          }
+          if (isAiChatAppTemplate && !String(composerDraft.templateAgentId || "").trim()) {
+            setServerComposerSaveState({
+              isSaving: false,
+              error: "Choose an agent for the AI chat app template.",
+            });
+            return;
+          }
+          if (isAiChatAppTemplate && !String(composerDraft.templateEnvironmentId || "").trim()) {
+            setServerComposerSaveState({
+              isSaving: false,
+              error: "Choose a computer for the AI chat app template.",
             });
             return;
           }
@@ -37850,7 +37960,7 @@ const html = `<!doctype html>
           });
 
           try {
-            if (canonicalizePlaygroundServerKind(composerDraft.kind) === "database") {
+            if (composerKind === "database") {
               const savedDatabase = await persistDatabaseRecord(normalizePlaygroundDatabaseRecord({
                 ...buildPlaygroundDefaultDatabaseDraft(),
                 name: composerDraft.name,
@@ -37864,6 +37974,24 @@ const html = `<!doctype html>
               setSelectedServerId("");
               setSelectedDatabaseId(savedDatabase.id);
               setDraftDatabase(savedDatabase);
+              closeServerComposer();
+              return;
+            }
+
+            if (isAiChatAppTemplate) {
+              const createdTemplate = await persistAiChatAppTemplate(normalizePlaygroundServerRecord(composerDraft));
+              if (!createdTemplate?.webApp?.id) {
+                throw new Error("AI chat app creation failed.");
+              }
+              if (createdTemplate.database?.id) {
+                upsertLocalDatabaseRecord(createdTemplate.database);
+              }
+              [createdTemplate.webApp, createdTemplate.auth, createdTemplate.agentRuntime]
+                .filter(Boolean)
+                .forEach((server) => upsertLocalServerRecord(server));
+              setSelectedDatabaseId("");
+              setSelectedServerId(createdTemplate.webApp.id);
+              setDraftServer(createdTemplate.webApp);
               closeServerComposer();
               return;
             }
@@ -39359,6 +39487,8 @@ const html = `<!doctype html>
           const isDatabaseComposer = composerKind === "database";
           const isAuthComposer = composerKind === "auth";
           const isAgentRuntimeComposer = composerKind === "agent_runtime";
+          const isAiChatAppTemplate = composerKind === "web_app" && composerDraft.template === "ai_chat_app";
+          const orderedComposerAgentOptions = [...serverAgentOptions].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
           const composerNamePlaceholder = isDatabaseComposer ? "Database name" : isAuthComposer ? "Auth name" : isAgentRuntimeComposer ? "Agent runtime name" : "Server name";
           const composerDescriptionPlaceholder = isDatabaseComposer
             ? "Describe what this database will store."
@@ -39414,85 +39544,63 @@ const html = `<!doctype html>
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
                 React.createElement("div", { className: "playground-environment-composer-modal-body" },
-                  React.createElement("section", {
-                      className: "playground-environments-section",
-                    },
-                    React.createElement("div", { className: "playground-environments-section-body" },
-                      React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                          React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                          React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                            [
-                              {
-                                id: "bold",
-                                label: "Bold",
-                                icon: Bold,
-                              },
-                              {
-                                id: "italic",
-                                label: "Italic",
-                                icon: Italic,
-                              },
-                              {
-                                id: "underline",
-                                label: "Underline",
-                                icon: Underline,
-                              },
-                              {
-                                id: "list",
-                                label: "List",
-                                icon: List,
-                              },
-                            ].map((action) =>
-                              React.createElement("button", {
-                                key: action.id,
-                                type: "button",
-                                className: "playground-tasks-detail-format-button",
-                                title: action.label,
-                                "aria-label": action.label,
-                                disabled: serverComposerSaveState.isSaving,
-                                onMouseDown: (event) => event.preventDefault(),
-                                onClick: () => handleServerComposerDescriptionFormat(action.id),
-                              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerComposerDescriptionEditing ? " is-editing" : " is-preview") },
-                          !isServerComposerDescriptionEditing
-                            ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                                String(composerDraft.description || "").trim()
-                                  ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                      content: composerDraft.description,
-                                      className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                    })
-                                  : React.createElement("div", {
-                                      className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                    }, composerDescriptionPlaceholder)
-                              )
-                            : null,
-                          React.createElement("textarea", {
-                            ref: serverComposerDescriptionTextareaRef,
-                            className: "playground-tasks-detail-description-input " + (isServerComposerDescriptionEditing ? "is-editing" : "is-preview"),
-                            rows: 1,
-                            placeholder: isServerComposerDescriptionEditing ? composerDescriptionPlaceholder : "",
-                            value: composerDraft.description || "",
+                  React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                      React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                        [
+                          { id: "bold", label: "Bold", icon: Bold },
+                          { id: "italic", label: "Italic", icon: Italic },
+                          { id: "underline", label: "Underline", icon: Underline },
+                          { id: "list", label: "List", icon: List },
+                        ].map((action) =>
+                          React.createElement("button", {
+                            key: action.id,
+                            type: "button",
+                            className: "playground-tasks-detail-format-button",
+                            title: action.label,
+                            "aria-label": action.label,
                             disabled: serverComposerSaveState.isSaving,
-                            onFocus: () => setIsServerComposerDescriptionEditing(true),
-                            onChange: (event) => {
-                              updateServerComposerField("description", event.target.value);
-                              resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                            },
-                            onBlur: () => setIsServerComposerDescriptionEditing(false),
-                          })
+                            onMouseDown: (event) => event.preventDefault(),
+                            onClick: () => handleServerComposerDescriptionFormat(action.id),
+                          }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
                         )
                       )
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerComposerDescriptionEditing ? " is-editing" : " is-preview") },
+                      !isServerComposerDescriptionEditing
+                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                            String(composerDraft.description || "").trim()
+                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                  content: composerDraft.description,
+                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                })
+                              : React.createElement("div", {
+                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                }, composerDescriptionPlaceholder)
+                          )
+                        : null,
+                      React.createElement("textarea", {
+                        ref: serverComposerDescriptionTextareaRef,
+                        className: "playground-tasks-detail-description-input " + (isServerComposerDescriptionEditing ? "is-editing" : "is-preview"),
+                        rows: 1,
+                        placeholder: isServerComposerDescriptionEditing ? composerDescriptionPlaceholder : "",
+                        value: composerDraft.description || "",
+                        disabled: serverComposerSaveState.isSaving,
+                        onFocus: () => setIsServerComposerDescriptionEditing(true),
+                        onChange: (event) => {
+                          updateServerComposerField("description", event.target.value);
+                          resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                        },
+                        onBlur: () => setIsServerComposerDescriptionEditing(false),
+                      })
                     )
                   ),
                   React.createElement("div", { className: "playground-environments-editor-surface" },
                     React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
-                      React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                        React.createElement("div", { className: "playground-tasks-detail-fact" },
-                          React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Kind"),
+                        React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Kind"),
                           React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                             React.createElement("select", {
                               className: "playground-environments-input playground-tasks-detail-fact-select",
@@ -39508,6 +39616,58 @@ const html = `<!doctype html>
                             )
                           )
                         ),
+                        composerKind === "web_app"
+                          ? React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Template"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                React.createElement("select", {
+                                  className: "playground-environments-input playground-tasks-detail-fact-select",
+                                  value: composerDraft.template || "blank",
+                                  disabled: serverComposerSaveState.isSaving,
+                                  onChange: (event) => updateServerComposerField("template", event.target.value),
+                                },
+                                  React.createElement("option", { value: "blank" }, "Blank Web App"),
+                                  React.createElement("option", { value: "ai_chat_app" }, "AI Chat App")
+                                )
+                              )
+                            )
+                          : null,
+                        isAiChatAppTemplate
+                          ? React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Agent"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                React.createElement("select", {
+                                  className: "playground-environments-input playground-tasks-detail-fact-select",
+                                  value: composerDraft.templateAgentId || "",
+                                  disabled: serverComposerSaveState.isSaving,
+                                  onChange: (event) => updateServerComposerField("templateAgentId", event.target.value),
+                                },
+                                  React.createElement("option", { value: "" }, serverAgentOptionsLoading ? "Loading agents..." : "Choose agent"),
+                                  orderedComposerAgentOptions.map((agent) =>
+                                    React.createElement("option", { key: agent.id, value: agent.id }, agent.name || agent.id)
+                                  )
+                                )
+                              )
+                            )
+                          : null,
+                        isAiChatAppTemplate
+                          ? React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Computer"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                React.createElement("select", {
+                                  className: "playground-environments-input playground-tasks-detail-fact-select",
+                                  value: composerDraft.templateEnvironmentId || "",
+                                  disabled: serverComposerSaveState.isSaving,
+                                  onChange: (event) => updateServerComposerField("templateEnvironmentId", event.target.value),
+                                },
+                                  React.createElement("option", { value: "" }, orderedEnvironments.length === 0 ? "No computers available" : "Choose computer"),
+                                  orderedEnvironments.map((environment) =>
+                                    React.createElement("option", { key: environment.id, value: environment.id }, environment.name || environment.id)
+                                  )
+                                )
+                              )
+                            )
+                          : null,
                         isDatabaseComposer
                           ? React.createElement("div", { className: "playground-tasks-detail-fact" },
                               React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Location"),
@@ -39535,9 +39695,24 @@ const html = `<!doctype html>
                                     React.createElement("option", { value: "public" }, "Public"),
                                     React.createElement("option", { value: "private" }, "Private")
                                   )
-                                )
                               )
-                            : null,
+                            )
+                          : null,
+                        isAiChatAppTemplate
+                          ? React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Database Location"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                React.createElement("input", {
+                                  type: "text",
+                                  className: "playground-environments-input playground-tasks-detail-fact-select",
+                                  value: composerDraft.databaseLocation || "eur3",
+                                  disabled: serverComposerSaveState.isSaving,
+                                  onChange: (event) => updateServerDatabaseField("databaseLocation", event.target.value, "composer"),
+                                  placeholder: "eur3",
+                                })
+                              )
+                            )
+                          : null,
                         !isDatabaseComposer
                           && !isAuthComposer
                           && !isAgentRuntimeComposer
@@ -39572,8 +39747,8 @@ const html = `<!doctype html>
                   React.createElement("button", {
                     type: "submit",
                     className: "playground-environments-action-button is-primary",
-                    disabled: serverComposerSaveState.isSaving || !String(composerDraft.name || "").trim(),
-                  }, serverComposerSaveState.isSaving ? "Creating..." : (isDatabaseComposer ? "Create Database" : "Create"))
+                    disabled: serverComposerSaveState.isSaving || !String(composerDraft.name || "").trim() || (isAiChatAppTemplate && (!String(composerDraft.templateAgentId || "").trim() || !String(composerDraft.templateEnvironmentId || "").trim())),
+                  }, serverComposerSaveState.isSaving ? "Creating..." : (isDatabaseComposer ? "Create Database" : (isAiChatAppTemplate ? "Create AI Chat App" : "Create")))
                 )
               )
             );
@@ -40995,6 +41170,19 @@ const html = `<!doctype html>
 
           if (isAgentRuntimeServer) {
             const agentRuntimeConfig = getPlaygroundServerAgentRuntimeConfig(draftServer);
+            const orderedAgentRuntimeAgentOptions = [...serverAgentOptions].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
+            const selectedAgentRuntimeAgent = orderedAgentRuntimeAgentOptions.find((agent) => agent.id === agentRuntimeConfig.agentId) || null;
+            const availableAgentRuntimeAgentModes = ["agents", "teams"].filter((mode) =>
+              orderedAgentRuntimeAgentOptions.some((agent) => getPlaygroundAgentListMode(agent) === mode)
+            );
+            const activeAgentRuntimeAgentMode = availableAgentRuntimeAgentModes.includes(serverAgentPickerMode)
+              ? serverAgentPickerMode
+              : selectedAgentRuntimeAgent && availableAgentRuntimeAgentModes.includes(getPlaygroundAgentListMode(selectedAgentRuntimeAgent))
+                ? getPlaygroundAgentListMode(selectedAgentRuntimeAgent)
+                : (availableAgentRuntimeAgentModes[0] || "agents");
+            const filteredAgentRuntimeAgentOptions = orderedAgentRuntimeAgentOptions.filter((agent) =>
+              getPlaygroundAgentListMode(agent) === activeAgentRuntimeAgentMode
+            );
             const agentRuntimeRuns = Array.isArray(currentServerAgentRuntimeRuns) ? currentServerAgentRuntimeRuns : [];
             const agentRuntimeRunsLoading = loadingServerAgentRuntimeRunsId === draftServer.id;
             const zeroAgentRuntimeBuckets = Array.from({ length: 8 }, (_, index) => {
@@ -41134,17 +41322,78 @@ const html = `<!doctype html>
                         React.createElement("div", { className: "playground-database-summary-divider" }),
                         renderServerFactRow("ID", React.createElement("div", { className: "playground-tasks-detail-fact-button" }, draftServer.id || "Unsaved agent runtime")),
                         renderServerFactRow("Endpoint", React.createElement("div", { className: "playground-tasks-detail-fact-button" }, draftServer.serviceUrl || "Created after save")),
-                        renderServerFactRow("Agent ID",
-                          React.createElement("input", {
-                            type: "text",
-                            className: "playground-environments-input",
-                            value: agentRuntimeConfig.agentId || "",
-                            placeholder: "agt_...",
-                            onChange: (event) => updateServerAgentRuntimeField("agentId", event.target.value),
-                            onBlur: () => {
-                              void commitDraftServerIfDirty();
+                        renderServerFactRow("Agent",
+                          React.createElement("div", {
+                              className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell playground-tasks-detail-assignee-shell" + (serverDetailSelectPopover === "agent-runtime-agent" ? " is-open" : ""),
+                              ref: serverDetailSelectPopover === "agent-runtime-agent" ? serverDetailSelectPopoverRef : null,
                             },
-                          })
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (!agentRuntimeConfig.agentId ? " is-empty" : "") + (serverDetailSelectPopover === "agent-runtime-agent" ? " is-active" : ""),
+                              onClick: () => setServerDetailSelectPopover((current) => current === "agent-runtime-agent" ? "" : "agent-runtime-agent"),
+                              title: selectedAgentRuntimeAgent?.name || agentRuntimeConfig.agentId || "Choose agent",
+                              "aria-expanded": serverDetailSelectPopover === "agent-runtime-agent" ? "true" : "false",
+                            },
+                              React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, selectedAgentRuntimeAgent?.name || agentRuntimeConfig.agentId || "Choose agent"),
+                              React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                            ),
+                            serverDetailSelectPopover === "agent-runtime-agent"
+                              ? React.createElement("div", { className: "tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                  React.createElement("div", { className: "tb-popup-menu-title" }, "Agent"),
+                                  availableAgentRuntimeAgentModes.length > 1
+                                    ? React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
+                                        React.createElement("div", { className: "tb-popup-nav" },
+                                          availableAgentRuntimeAgentModes.includes("agents")
+                                            ? React.createElement("button", {
+                                                type: "button",
+                                                className: "tb-popup-nav-button" + (activeAgentRuntimeAgentMode === "agents" ? " active" : ""),
+                                                onClick: () => setServerAgentPickerMode("agents"),
+                                              }, "Agents")
+                                            : null,
+                                          availableAgentRuntimeAgentModes.includes("teams")
+                                            ? React.createElement("button", {
+                                                type: "button",
+                                                className: "tb-popup-nav-button" + (activeAgentRuntimeAgentMode === "teams" ? " active" : ""),
+                                                onClick: () => setServerAgentPickerMode("teams"),
+                                              }, "Teams")
+                                            : null
+                                        )
+                                      )
+                                    : null,
+                                  React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent" },
+                                    serverAgentOptionsLoading
+                                      ? React.createElement("div", { className: "tb-popup-menu-inline-empty" },
+                                          React.createElement("div", { className: "tb-popup-empty-state" }, "Loading agents...")
+                                        )
+                                      : filteredAgentRuntimeAgentOptions.length > 0
+                                        ? filteredAgentRuntimeAgentOptions.map((agent) => {
+                                            const mode = getPlaygroundAgentListMode(agent);
+                                            const IconComponent = mode === "teams" ? Layers : User;
+                                            return React.createElement("button", {
+                                                key: agent.id,
+                                                type: "button",
+                                                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (agentRuntimeConfig.agentId === agent.id ? " selected" : ""),
+                                                onClick: () => {
+                                                  updateServerAgentRuntimeField("agentId", agent.id);
+                                                  setServerDetailSelectPopover("");
+                                                },
+                                              },
+                                              React.createElement(IconComponent, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                              React.createElement("span", { className: "tb-popup-label" }, agent.name || "Unknown"),
+                                              React.createElement("span", { className: "tb-popup-check-slot" },
+                                                agentRuntimeConfig.agentId === agent.id
+                                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                                  : null
+                                              )
+                                            );
+                                          })
+                                        : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
+                                            React.createElement("div", { className: "tb-popup-empty-state" }, "No agents yet.")
+                                          )
+                                  )
+                                )
+                              : null
+                          )
                         ),
                         renderServerFactRow("Computer",
                           renderServerDetailSelectControl({
@@ -41255,19 +41504,6 @@ const html = `<!doctype html>
                                 },
                               }),
                             ],
-                          })
-                        ),
-                        renderServerFactRow("Max Runtime",
-                          React.createElement("input", {
-                            type: "number",
-                            min: 30,
-                            step: 30,
-                            className: "playground-environments-input",
-                            value: String(agentRuntimeConfig.maxRuntimeSeconds || 1800),
-                            onChange: (event) => updateServerAgentRuntimeField("maxRuntimeSeconds", Math.max(30, Number(event.target.value || 1800) || 1800)),
-                            onBlur: () => {
-                              void commitDraftServerIfDirty();
-                            },
                           })
                         ),
                         renderServerFactRow("Updated", React.createElement("div", { className: "playground-tasks-detail-fact-button" }, formatPlaygroundFileDate(draftServer.updatedAt)))
@@ -41744,7 +41980,8 @@ const html = `<!doctype html>
                 React.createElement("div", { className: "playground-auth-users-section-header" },
                   React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Users")
                 ),
-                React.createElement("div", { className: "playground-environments-editor-surface" },
+                React.createElement("div", { className: "playground-tasks-detail-facts playground-database-summary-card playground-auth-users-surface" },
+                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                   React.createElement("div", { className: "playground-auth-users-toolbar" },
                     React.createElement("label", { className: "playground-auth-users-search" },
                       React.createElement(Search, { className: "playground-auth-users-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
@@ -41824,6 +42061,7 @@ const html = `<!doctype html>
                       : React.createElement("div", { className: "playground-files-state" },
                           serverAuthSearchQuery.trim() ? "No matching users found." : "No users yet."
                         )
+                  )
                 )
               )
             );
@@ -78784,6 +79022,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "POST" && url.pathname === "/api/real/servers") {
     void proxyUpstreamJsonRequest(req, res, "/servers", "POST");
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/real/servers/templates/ai-chat-app") {
+    void proxyUpstreamJsonRequest(req, res, "/servers/templates/ai-chat-app", "POST");
     return;
   }
 
