@@ -9547,12 +9547,16 @@ const html = `<!doctype html>
         min-height: 0;
         display: flex;
         flex-direction: column;
+        position: relative;
+        z-index: 2;
         background: transparent;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-environments-list-header {
         padding-bottom: 6px;
+        position: relative;
+        z-index: 94;
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-list-header {
@@ -9823,6 +9827,8 @@ const html = `<!doctype html>
         min-height: 0;
         display: flex;
         flex-direction: column;
+        position: relative;
+        z-index: 1;
       }
 
       .playground-environments-detail-scroll {
@@ -10380,14 +10386,24 @@ const html = `<!doctype html>
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-environments-editor-surface {
+        padding: 0 0 12px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-editor-surface.playground-database-browser-surface {
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .playground-environments-page:not(.playground-agents-page) .playground-environments-editor-surface.playground-auth-users-surface {
         padding: 12px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.05);
-      }
-
-      .playground-environments-page:not(.playground-agents-page) .playground-environments-editor-surface.playground-database-browser-surface {
-        padding-top: 0;
       }
 
       .playground-environments-field-grid {
@@ -10762,6 +10778,10 @@ const html = `<!doctype html>
         width: min(720px, calc(100vw - 32px));
       }
 
+      .playground-servers-runtime-preview-modal {
+        width: min(860px, calc(100vw - 32px));
+      }
+
       .playground-servers-deploy-help-body {
         display: flex;
         flex-direction: column;
@@ -10943,6 +10963,12 @@ const html = `<!doctype html>
 
       .playground-environments-connections-title {
         margin: 0;
+      }
+
+      .playground-servers-runtime-warning-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
       }
 
       .playground-database-browser-selector-row {
@@ -15906,6 +15932,43 @@ const html = `<!doctype html>
         gap: 16px;
       }
 
+      .playground-environment-composer-modal .playground-environments-editor-surface {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+
+      .playground-environment-composer-modal .playground-environments-editor-surface .playground-tasks-detail-facts {
+        padding: 0;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-environment-composer-modal .playground-environments-editor-surface .playground-tasks-detail-facts-body {
+        gap: 12px;
+      }
+
+      .playground-environment-composer-modal .playground-environments-editor-surface .playground-tasks-detail-fact {
+        min-height: 24px;
+      }
+
+      .playground-environment-composer-modal .playground-environments-editor-surface .playground-environments-input.playground-tasks-detail-fact-select {
+        height: auto;
+        min-height: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .playground-environment-composer-modal .playground-tasks-detail-description-editor {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 10px;
+      }
+
       .playground-environment-composer-toggle-row {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -16595,10 +16658,20 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-toolbar-popup-shell.playground-tasks-backlog-sort-shell .playground-tasks-toolbar-popup-menu,
-      .playground-tasks-toolbar-popup-shell.playground-tasks-backlog-filter-shell .playground-tasks-toolbar-popup-menu {
+      .playground-tasks-toolbar-popup-shell.playground-tasks-backlog-filter-shell .playground-tasks-toolbar-popup-menu,
+      .playground-tasks-toolbar-popup-shell.playground-tasks-board-filter-shell .playground-tasks-toolbar-popup-menu,
+      .playground-tasks-toolbar-popup-shell.playground-environments-search-shell .playground-tasks-toolbar-popup-menu {
         left: 0;
         right: auto;
         transform-origin: top left;
+      }
+
+      .playground-tasks-toolbar-popup-shell.playground-environments-search-shell {
+        z-index: 95;
+      }
+
+      .playground-tasks-toolbar-popup-shell.playground-environments-search-shell .playground-tasks-toolbar-popup-menu {
+        z-index: 96;
       }
 
       .playground-tasks-toolbar-popup-shell .playground-tasks-toolbar-popup-menu-animate-down-in {
@@ -19340,7 +19413,7 @@ const html = `<!doctype html>
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -20921,6 +20994,21 @@ const html = `<!doctype html>
         return taskPreview?.taskId ? taskPreview : null;
       }
 
+      function getThreadMissionControlMetadata(thread) {
+        const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+          ? thread.metadata
+          : null;
+        const runnerPlaygroundMetadata = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+          ? metadata.runnerPlayground
+          : null;
+        const missionControl = runnerPlaygroundMetadata?.missionControl && typeof runnerPlaygroundMetadata.missionControl === "object" && !Array.isArray(runnerPlaygroundMetadata.missionControl)
+          ? runnerPlaygroundMetadata.missionControl
+          : null;
+        return missionControl?.source === "project_backlog_mission_control"
+          ? missionControl
+          : null;
+      }
+
       function getSidebarThreadTitleParts(thread) {
         const safeThread = normalizeThreadItem(thread);
         const safeThreadTitle = typeof safeThread.title === "string" && safeThread.title.trim()
@@ -21131,6 +21219,11 @@ const html = `<!doctype html>
           label: "Computer Agents",
           description: "Inspect and manage agents, environments, skills, and threads from inside the run.",
         },
+        {
+          id: "app_platform",
+          label: "App Platform",
+          description: "Create, connect, deploy, and debug web apps, functions, databases, and auth resources.",
+        },
       ];
       const PLAYGROUND_RUNNER_SKILL_ID_ALIASES = {
         imageGeneration: "image_generation",
@@ -21159,6 +21252,9 @@ const html = `<!doctype html>
         computerAgents: "computer_agents",
         computer_agents: "computer_agents",
         "computer-agents": "computer_agents",
+        appPlatform: "app_platform",
+        app_platform: "app_platform",
+        "app-platform": "app_platform",
       };
 
       function dedupePlaygroundAgentIds(ids) {
@@ -21288,7 +21384,7 @@ const html = `<!doctype html>
           id: "",
           userId: "",
           projectId: null,
-          name: "New Server",
+          name: "New Resource",
           description: "",
           kind: "web_app",
           sourceType: "manual",
@@ -21566,6 +21662,22 @@ const html = `<!doctype html>
           name: String(normalized.databaseName || "").trim(),
           description: typeof normalized.databaseDescription === "string" ? normalized.databaseDescription : "",
           location: String(normalized.databaseLocation || "").trim() || "eur3",
+        };
+      }
+
+      function getPlaygroundServerAgentRuntimeConfig(server) {
+        const normalized = normalizePlaygroundServerRecord(server);
+        const metadata = normalized?.metadata && typeof normalized.metadata === "object" && !Array.isArray(normalized.metadata)
+          ? normalized.metadata
+          : null;
+        const agentRuntime = metadata?.agentRuntime && typeof metadata.agentRuntime === "object" && !Array.isArray(metadata.agentRuntime)
+          ? metadata.agentRuntime
+          : null;
+        return {
+          agentId: typeof agentRuntime?.agentId === "string" ? agentRuntime.agentId : "",
+          executionMode: agentRuntime?.executionMode === "sync" ? "sync" : "async",
+          streamingEnabled: agentRuntime?.streamingEnabled !== false,
+          maxRuntimeSeconds: Number.isFinite(Number(agentRuntime?.maxRuntimeSeconds)) ? Math.max(30, Number(agentRuntime.maxRuntimeSeconds)) : 1800,
         };
       }
 
@@ -25170,6 +25282,22 @@ const html = `<!doctype html>
         return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/bindings";
       }
 
+      function buildPlaygroundServerContextUrl(backendUrl, serverId) {
+        if (!backendUrl || !serverId) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/context";
+      }
+
+      function buildPlaygroundServerRuntimeConfigUrl(backendUrl, serverId) {
+        if (!backendUrl || !serverId) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/runtime-config";
+      }
+
+      function buildPlaygroundServerRuntimeSdkUrl(backendUrl, serverId, target = "server") {
+        if (!backendUrl || !serverId) return "";
+        const normalizedTarget = String(target || "").trim().toLowerCase() === "browser" ? "browser" : "server";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/runtime-sdk/" + encodeURIComponent(normalizedTarget);
+      }
+
       function buildPlaygroundServerBindingTargetUrl(backendUrl, serverId, targetType) {
         if (!backendUrl || !serverId || !targetType) return "";
         return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/bindings/" + encodeURIComponent(targetType);
@@ -25180,6 +25308,24 @@ const html = `<!doctype html>
         const params = new URLSearchParams();
         params.set("limit", String(Math.max(1, Math.min(1000, Number(limit) || 200))));
         return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/auth-users?" + params.toString();
+      }
+
+      function buildPlaygroundServerRunsUrl(backendUrl, serverId, limit = 50) {
+        if (!backendUrl || !serverId) return "";
+        const params = new URLSearchParams();
+        params.set("limit", String(Math.max(1, Math.min(200, Number(limit) || 50))));
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/runs?" + params.toString();
+      }
+
+      function buildPlaygroundServerRunUrl(backendUrl, serverId, runId, includeEvents = false) {
+        if (!backendUrl || !serverId || !runId) return "";
+        const base = backendUrl + "/servers/" + encodeURIComponent(serverId) + "/runs/" + encodeURIComponent(runId);
+        return includeEvents ? base + "/events" : base;
+      }
+
+      function buildPlaygroundServerRunCancelUrl(backendUrl, serverId, runId) {
+        if (!backendUrl || !serverId || !runId) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/runs/" + encodeURIComponent(runId) + "/cancel";
       }
 
       function buildPlaygroundServerLogsUrl(backendUrl, serverId, kind = "request", limit = 80) {
@@ -25223,6 +25369,7 @@ const html = `<!doctype html>
         if (normalizedKind === "function") return "function";
         if (normalizedKind === "database") return "database";
         if (normalizedKind === "auth") return "auth";
+        if (normalizedKind === "agent_runtime") return "agent_runtime";
         return "web_app";
       }
 
@@ -25231,6 +25378,7 @@ const html = `<!doctype html>
         if (normalizedKind === "function") return "Function";
         if (normalizedKind === "database") return "Database";
         if (normalizedKind === "auth") return "Auth";
+        if (normalizedKind === "agent_runtime") return "Agent Runtime";
         return "Web App";
       }
 
@@ -25239,7 +25387,7 @@ const html = `<!doctype html>
           return null;
         }
         const targetType = String(binding.targetType || "").trim().toLowerCase();
-        if (!["database", "auth"].includes(targetType)) {
+        if (!["database", "auth", "agent_runtime"].includes(targetType)) {
           return null;
         }
         const resource = binding.resource && typeof binding.resource === "object" && !Array.isArray(binding.resource)
@@ -25262,6 +25410,37 @@ const html = `<!doctype html>
                 kind: canonicalizePlaygroundServerKind(resource.kind),
                 location: typeof resource.location === "string" ? resource.location : "",
                 status: typeof resource.status === "string" ? resource.status : "",
+              }
+            : null,
+        };
+      }
+
+      function normalizePlaygroundServerContextRecord(context) {
+        if (!context || typeof context !== "object") {
+          return null;
+        }
+        const runtime = context.runtime && typeof context.runtime === "object" && !Array.isArray(context.runtime)
+          ? context.runtime
+          : null;
+        const diagnostics = context.diagnostics && typeof context.diagnostics === "object" && !Array.isArray(context.diagnostics)
+          ? context.diagnostics
+          : null;
+        return {
+          serverId: typeof context.serverId === "string" ? context.serverId : "",
+          bindings: Array.isArray(context.bindings)
+            ? context.bindings.map(normalizePlaygroundServerBindingRecord).filter(Boolean)
+            : [],
+          runtime,
+          diagnostics: diagnostics
+            ? {
+                ...diagnostics,
+                warnings: Array.isArray(diagnostics.warnings)
+                  ? diagnostics.warnings.filter((warning) => warning && typeof warning === "object").map((warning) => ({
+                      code: typeof warning.code === "string" ? warning.code : "",
+                      level: String(warning.level || "").trim().toLowerCase() === "warning" ? "warning" : "info",
+                      message: typeof warning.message === "string" ? warning.message : "",
+                    }))
+                  : [],
               }
             : null,
         };
@@ -31781,7 +31960,9 @@ const html = `<!doctype html>
         const [serverFilesById, setServerFilesById] = useState({});
         const [serverAnalyticsById, setServerAnalyticsById] = useState({});
         const [serverLogsById, setServerLogsById] = useState({});
+        const [serverContextsById, setServerContextsById] = useState({});
         const [serverAuthUsersById, setServerAuthUsersById] = useState({});
+        const [serverAgentRuntimeRunsById, setServerAgentRuntimeRunsById] = useState({});
         const [databaseAnalyticsById, setDatabaseAnalyticsById] = useState({});
         const [draftEnvironment, setDraftEnvironment] = useState(null);
         const [draftServer, setDraftServer] = useState(null);
@@ -31794,7 +31975,9 @@ const html = `<!doctype html>
         const [loadingDatabaseId, setLoadingDatabaseId] = useState("");
         const [loadingServerAnalyticsId, setLoadingServerAnalyticsId] = useState("");
         const [loadingServerBindingsId, setLoadingServerBindingsId] = useState("");
+        const [loadingServerContextId, setLoadingServerContextId] = useState("");
         const [loadingServerAuthUsersId, setLoadingServerAuthUsersId] = useState("");
+        const [loadingServerAgentRuntimeRunsId, setLoadingServerAgentRuntimeRunsId] = useState("");
         const [loadingDatabaseAnalyticsId, setLoadingDatabaseAnalyticsId] = useState("");
         const [saveState, setSaveState] = useState({
           isSaving: false,
@@ -31808,6 +31991,23 @@ const html = `<!doctype html>
         });
         const [serverBindingState, setServerBindingState] = useState({
           savingKey: "",
+          error: "",
+        });
+        const [serverRuntimeState, setServerRuntimeState] = useState({
+          error: "",
+        });
+        const [serverAgentRuntimeRunsState, setServerAgentRuntimeRunsState] = useState({
+          error: "",
+          message: "",
+        });
+        const [serverRuntimePreviewState, setServerRuntimePreviewState] = useState({
+          open: false,
+          target: "",
+          title: "",
+          path: "",
+          language: "json",
+          value: "",
+          loading: false,
           error: "",
         });
         const [databaseSaveState, setDatabaseSaveState] = useState({
@@ -31835,6 +32035,14 @@ const html = `<!doctype html>
         const [serverActionsPopoverOpen, setServerActionsPopoverOpen] = useState(false);
         const [serverFileActionsPopoverOpen, setServerFileActionsPopoverOpen] = useState(false);
         const [serverDeploymentHelpOpen, setServerDeploymentHelpOpen] = useState(false);
+        const [serverAgentRuntimeRunComposer, setServerAgentRuntimeRunComposer] = useState({
+          open: false,
+          title: "",
+          prompt: "",
+          mode: "async",
+          error: "",
+          isSubmitting: false,
+        });
         const [serverRenameState, setServerRenameState] = useState(null);
         const [serverRenameValue, setServerRenameValue] = useState("");
         const [serverRenameError, setServerRenameError] = useState("");
@@ -31920,6 +32128,13 @@ const html = `<!doctype html>
           success: true,
           latency: true,
           errors: true,
+        });
+        const [serverAgentRuntimeAnalyticsVisibility, setServerAgentRuntimeAnalyticsVisibility] = useState({
+          runs: true,
+          completed: true,
+          failed: true,
+          running: true,
+          cancelled: true,
         });
         const [hasLoadedServers, setHasLoadedServers] = useState(false);
         const [hasLoadedDatabases, setHasLoadedDatabases] = useState(false);
@@ -32050,6 +32265,13 @@ const html = `<!doctype html>
           return serverLogsById[selectedServerId] || {};
         }, [selectedServerId, serverLogsById]);
 
+        const currentServerContext = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return null;
+          }
+          return serverContextsById[selectedServerId] || null;
+        }, [selectedServerId, serverContextsById]);
+
         const currentServerBindings = useMemo(() => {
           if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
             return [];
@@ -32070,6 +32292,13 @@ const html = `<!doctype html>
           }
           return typeof serverAuthUsersById[selectedServerId]?.projectId === "string" ? serverAuthUsersById[selectedServerId].projectId : "";
         }, [selectedServerId, serverAuthUsersById]);
+
+        const currentServerAgentRuntimeRuns = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+          return Array.isArray(serverAgentRuntimeRunsById[selectedServerId]) ? serverAgentRuntimeRunsById[selectedServerId] : [];
+        }, [selectedServerId, serverAgentRuntimeRunsById]);
 
         const filteredServerAuthUsers = useMemo(() => {
           const query = String(serverAuthSearchQuery || "").trim().toLowerCase();
@@ -32301,6 +32530,9 @@ const html = `<!doctype html>
           setServerRenameValue("");
           setServerRenameError("");
           setServerDetailSelectPopover("");
+          setServerRuntimeState({
+            error: "",
+          });
           setServerAuthSearchQuery("");
           setServerAuthUserComposerState({
             open: false,
@@ -32316,6 +32548,16 @@ const html = `<!doctype html>
             signins: true,
             email: true,
             external: true,
+          });
+          setServerRuntimePreviewState({
+            open: false,
+            target: "",
+            title: "",
+            path: "",
+            language: "json",
+            value: "",
+            loading: false,
+            error: "",
           });
           setIsServerFileDragging(false);
           setServerSaveState({
@@ -32381,6 +32623,162 @@ const html = `<!doctype html>
               };
             });
           }, 650);
+        }
+
+        function PlaygroundEnvironmentTelemetryTimeseriesChart({
+          ariaLabel,
+          labels,
+          series,
+          emptyText,
+          buildLinePath,
+          getSeriesValue,
+          getXAxisLabel,
+          formatAxisValue,
+        }) {
+          const frameRef = useRef(null);
+          const [measuredWidth, setMeasuredWidth] = useState(0);
+
+          useLayoutEffect(() => {
+            const node = frameRef.current;
+            if (!node) {
+              return undefined;
+            }
+
+            const updateWidth = () => {
+              const nextWidth = Math.max(1, Math.round(node.clientWidth || 420));
+              setMeasuredWidth((current) => current === nextWidth ? current : nextWidth);
+            };
+
+            updateWidth();
+
+            if (typeof ResizeObserver === "undefined") {
+              window.addEventListener("resize", updateWidth);
+              return () => window.removeEventListener("resize", updateWidth);
+            }
+
+            const observer = new ResizeObserver(() => updateWidth());
+            observer.observe(node);
+            return () => observer.disconnect();
+          }, []);
+
+          const normalizedLabels = Array.isArray(labels) ? labels : [];
+          const normalizedSeries = Array.isArray(series) ? series.filter(Boolean) : [];
+          if (!normalizedLabels.length || !normalizedSeries.length) {
+            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "Select a metric");
+          }
+
+          const svgWidth = Math.max(1, Math.round(measuredWidth || 420));
+          const svgHeight = 178;
+          const marginTop = 14;
+          const marginRight = 10;
+          const marginBottom = 28;
+          const marginLeft = 30;
+          const plotWidth = svgWidth - marginLeft - marginRight;
+          const plotHeight = svgHeight - marginTop - marginBottom;
+          const baselineY = marginTop + plotHeight;
+          const readValue = typeof getSeriesValue === "function"
+            ? getSeriesValue
+            : (entry, _label, index) => entry?.values?.[index];
+          const renderXAxisLabel = typeof getXAxisLabel === "function"
+            ? getXAxisLabel
+            : (label) => String(label || "");
+          const renderYAxisLabel = typeof formatAxisValue === "function"
+            ? formatAxisValue
+            : (value) => String(value);
+          const maxValue = Math.max(
+            1,
+            ...normalizedSeries.flatMap((entry) =>
+              normalizedLabels.map((label, index) => Math.max(0, Number(readValue(entry, label, index) || 0)))
+            ),
+          );
+          const labelStep = Math.max(1, Math.ceil(normalizedLabels.length / 6));
+          const slotWidth = plotWidth / Math.max(normalizedLabels.length - 1, 1);
+          const xForIndex = (index) => normalizedLabels.length === 1
+            ? marginLeft + plotWidth
+            : marginLeft + slotWidth * index;
+          const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
+
+          return React.createElement("div", {
+              className: "playground-database-overview-timeseries-card",
+              "aria-label": ariaLabel || "Telemetry chart",
+            },
+            React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+              React.createElement("div", {
+                  ref: frameRef,
+                  className: "playground-database-overview-timeseries-frame",
+                  style: { height: "178px" },
+                },
+                React.createElement("svg", {
+                    className: "playground-database-overview-timeseries-svg",
+                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
+                    preserveAspectRatio: "none",
+                    role: "img",
+                    "aria-label": ariaLabel || "Telemetry chart",
+                  },
+                  Array.from({ length: 4 }).map((_, index) => {
+                    const y = marginTop + (plotHeight / 3) * index;
+                    return React.createElement("line", {
+                      key: "grid:" + index,
+                      className: "playground-database-overview-timeseries-grid-line",
+                      x1: marginLeft,
+                      y1: y,
+                      x2: svgWidth - marginRight,
+                      y2: y,
+                    });
+                  }),
+                  yAxisValues.map((value, index) =>
+                    React.createElement("text", {
+                      key: "y-axis:" + index,
+                      x: 0,
+                      y: marginTop + (plotHeight / 2) * index + 4,
+                      className: "playground-database-overview-timeseries-axis-label",
+                      fontSize: "10",
+                    }, renderYAxisLabel(value))
+                  ),
+                  normalizedSeries.map((entry) => {
+                    const points = normalizedLabels.map((label, index) => ({
+                      x: xForIndex(index),
+                      y: baselineY - ((Math.max(0, Number(readValue(entry, label, index) || 0)) / maxValue) * plotHeight),
+                    }));
+                    const linePath = typeof buildLinePath === "function" ? buildLinePath(points) : "";
+                    const lastPoint = points[points.length - 1] || null;
+                    return React.createElement(React.Fragment, { key: "series:" + entry.key },
+                      linePath
+                        ? React.createElement("path", {
+                            d: linePath,
+                            className: "playground-database-overview-timeseries-line is-" + entry.tone,
+                          })
+                        : null,
+                      lastPoint
+                        ? React.createElement("circle", {
+                            cx: lastPoint.x,
+                            cy: lastPoint.y,
+                            r: "3.5",
+                            className: "playground-database-overview-timeseries-dot is-" + entry.tone,
+                          })
+                        : null
+                    );
+                  }),
+                  normalizedLabels.map((label, index) => (
+                    index % labelStep === 0 || index === normalizedLabels.length - 1
+                      ? React.createElement("text", {
+                          key: "label:" + index,
+                          x: xForIndex(index),
+                          y: svgHeight - 8,
+                          textAnchor: index === 0 ? "start" : index === normalizedLabels.length - 1 ? "end" : "middle",
+                          className: "playground-database-overview-timeseries-axis-label",
+                          fontSize: "10",
+                        }, renderXAxisLabel(label, index))
+                      : null
+                  ))
+                )
+              )
+            )
+          );
+        }
+
+        function renderPlaygroundTelemetryTimeseriesChart(config) {
+          return React.createElement(PlaygroundEnvironmentTelemetryTimeseriesChart, config);
         }
 
         function resetDatabaseEditorAuxiliaryState() {
@@ -33024,6 +33422,58 @@ const html = `<!doctype html>
           }
         }, [backendUrl, requestHeaders, serverAuthUsersById]);
 
+        const loadServerAgentRuntimeRuns = useCallback(async (serverId, options = {}) => {
+          const normalizedServerId = String(serverId || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+
+          const force = options?.force === true;
+          const existingRuns = serverAgentRuntimeRunsById[normalizedServerId];
+          if (!force && Array.isArray(existingRuns)) {
+            return existingRuns;
+          }
+
+          setLoadingServerAgentRuntimeRunsId(normalizedServerId);
+          setServerAgentRuntimeRunsState((current) => ({
+            ...current,
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerRunsUrl(backendUrl, normalizedServerId, options?.limit || 80),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load runs.");
+            }
+
+            const runs = Array.isArray(data?.runs)
+              ? data.runs
+              : Array.isArray(data?.data)
+                ? data.data
+                : [];
+            setServerAgentRuntimeRunsById((current) => ({
+              ...current,
+              [normalizedServerId]: runs,
+            }));
+            return runs;
+          } catch (error) {
+            setServerAgentRuntimeRunsState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load runs.",
+            }));
+            return [];
+          } finally {
+            setLoadingServerAgentRuntimeRunsId((current) => current === normalizedServerId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders, serverAgentRuntimeRunsById]);
+
         const loadDatabaseAnalytics = useCallback(async (databaseId, options = {}) => {
           const normalizedDatabaseId = String(databaseId || "").trim();
           if (!normalizedDatabaseId || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
@@ -33175,6 +33625,58 @@ const html = `<!doctype html>
             setLoadingServerBindingsId((current) => current === normalizedServerId ? "" : current);
           }
         }, [backendUrl, requestHeaders]);
+
+        const loadServerContext = useCallback(async (serverId, options = {}) => {
+          const normalizedServerId = String(serverId || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return null;
+          }
+
+          const force = options?.force === true;
+          if (!force && serverContextsById[normalizedServerId]) {
+            return serverContextsById[normalizedServerId];
+          }
+
+          setLoadingServerContextId(normalizedServerId);
+          setServerRuntimeState((current) => ({
+            ...current,
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(buildPlaygroundServerContextUrl(backendUrl, normalizedServerId), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load runtime context.");
+            }
+
+            const context = normalizePlaygroundServerContextRecord(data);
+            if (!context) {
+              throw new Error("Runtime context response was empty.");
+            }
+
+            setServerContextsById((current) => ({
+              ...current,
+              [normalizedServerId]: context,
+            }));
+            setServerBindingsById((current) => ({
+              ...current,
+              [normalizedServerId]: Array.isArray(context.bindings) ? context.bindings : [],
+            }));
+            return context;
+          } catch (error) {
+            setServerRuntimeState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load runtime context.",
+            }));
+            return null;
+          } finally {
+            setLoadingServerContextId((current) => current === normalizedServerId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders, serverContextsById]);
 
         const loadDatabases = useCallback(async (options = {}) => {
           setHasLoadedDatabases(true);
@@ -33796,11 +34298,15 @@ const html = `<!doctype html>
           setServerDetailsCollapsed(false);
           setDraftServer(seedServer ? normalizePlaygroundServerRecord(seedServer) : null);
           void loadServerDetails(selectedServerId);
-          if (canonicalizePlaygroundServerKind(seedServer?.kind) !== "auth") {
+          if (!["auth", "agent_runtime"].includes(canonicalizePlaygroundServerKind(seedServer?.kind))) {
             void loadServerFiles(selectedServerId);
           }
-          void loadServerBindings(selectedServerId);
-        }, [loadServerBindings, loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
+          if (["function", "web_app"].includes(canonicalizePlaygroundServerKind(seedServer?.kind))) {
+            void loadServerContext(selectedServerId);
+          } else {
+            void loadServerBindings(selectedServerId);
+          }
+        }, [loadServerBindings, loadServerContext, loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -33827,7 +34333,27 @@ const html = `<!doctype html>
             return;
           }
           const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
+          if (!activeServer?.id || canonicalizePlaygroundServerKind(activeServer.kind) !== "agent_runtime") {
+            return;
+          }
+          if (Array.isArray(serverAgentRuntimeRunsById[selectedServerId])) {
+            return;
+          }
+          void loadServerAgentRuntimeRuns(selectedServerId);
+        }, [draftServer, loadServerAgentRuntimeRuns, resourceMode, selectedServerId, selectedServerSnapshot, serverAgentRuntimeRunsById]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers") {
+            return;
+          }
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
           if (!activeServer?.id) {
+            return;
+          }
+          if (["auth", "agent_runtime"].includes(canonicalizePlaygroundServerKind(activeServer.kind))) {
             return;
           }
           if (!activeServer.cloudRunServiceName && !activeServer.serviceUrl) {
@@ -33846,9 +34372,13 @@ const html = `<!doctype html>
           if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
             return;
           }
+          const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
+          if (["auth", "agent_runtime"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
+            return;
+          }
           void loadServerAnalytics(selectedServerId);
           void loadServerLogs(selectedServerId, serverLogsState.kind);
-        }, [loadServerAnalytics, loadServerLogs, resourceMode, selectedServerId, serverAnalyticsView, serverLogsState.kind]);
+        }, [draftServer, loadServerAnalytics, loadServerLogs, resourceMode, selectedServerId, selectedServerSnapshot, serverAnalyticsView, serverLogsState.kind]);
 
         useEffect(() => {
           if (!serverFileEditorState.path) {
@@ -34748,6 +35278,24 @@ const html = `<!doctype html>
           }));
         }
 
+        function updateServerAgentRuntimeField(field, value) {
+          updateDraftServer((current) => {
+            const normalized = normalizePlaygroundServerRecord(current || buildPlaygroundDefaultServerDraft());
+            const metadata = normalized?.metadata && typeof normalized.metadata === "object" && !Array.isArray(normalized.metadata)
+              ? { ...normalized.metadata }
+              : {};
+            const agentRuntime = metadata.agentRuntime && typeof metadata.agentRuntime === "object" && !Array.isArray(metadata.agentRuntime)
+              ? { ...metadata.agentRuntime }
+              : {};
+            agentRuntime[field] = value;
+            metadata.agentRuntime = agentRuntime;
+            return {
+              ...normalized,
+              metadata,
+            };
+          });
+        }
+
         function applyServerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
           updateServerField("description", nextValue);
           window.requestAnimationFrame(() => {
@@ -34905,6 +35453,49 @@ const html = `<!doctype html>
           }));
         }
 
+        function applyServerComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateServerComposerField("description", nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = serverComposerDescriptionTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeEnvironmentDescriptionTextarea(textarea);
+          });
+        }
+
+        function handleServerComposerDescriptionFormat(formatType) {
+          const textarea = serverComposerDescriptionTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(serverComposerDraft?.description || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applyServerComposerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
         function getCurrentServerBindingByType(targetType) {
           return currentServerBindings.find((binding) => binding.targetType === targetType) || null;
         }
@@ -34948,6 +35539,7 @@ const html = `<!doctype html>
               ...current,
               [normalizedServerId]: bindings,
             }));
+            void loadServerContext(normalizedServerId, { force: true });
             setServerBindingState({
               savingKey: "",
               error: "",
@@ -34993,6 +35585,7 @@ const html = `<!doctype html>
               ...current,
               [normalizedServerId]: bindings,
             }));
+            void loadServerContext(normalizedServerId, { force: true });
             setServerBindingState({
               savingKey: "",
               error: "",
@@ -35017,7 +35610,7 @@ const html = `<!doctype html>
             const nextDatabase = await persistDatabaseRecord(normalizePlaygroundDatabaseRecord({
               ...buildPlaygroundDefaultDatabaseDraft(),
               projectId: normalizedServer.projectId,
-              name: (String(normalizedServer.name || "").trim() || "New Server") + " Database",
+              name: (String(normalizedServer.name || "").trim() || "New Resource") + " Database",
               description: "Connected to " + (String(normalizedServer.name || "").trim() || "this server") + ".",
               location: "eur3",
             }));
@@ -35046,7 +35639,7 @@ const html = `<!doctype html>
             const nextAuth = await persistServerRecord(normalizePlaygroundServerRecord({
               ...buildPlaygroundDefaultServerDraft(),
               projectId: normalizedServer.projectId,
-              name: (String(normalizedServer.name || "").trim() || "New Server") + " Auth",
+              name: (String(normalizedServer.name || "").trim() || "New Resource") + " Auth",
               description: "Authentication for " + (String(normalizedServer.name || "").trim() || "this server") + ".",
               kind: "auth",
             }));
@@ -35063,6 +35656,89 @@ const html = `<!doctype html>
             });
             return null;
           }
+        }
+
+        async function createAndConnectAgentRuntime() {
+          setServerBindingState({
+            savingKey: "agent_runtime:create",
+            error: "",
+          });
+          try {
+            const normalizedServer = normalizePlaygroundServerRecord(draftServer);
+            const nextAgentRuntime = await persistServerRecord(normalizePlaygroundServerRecord({
+              ...buildPlaygroundDefaultServerDraft(),
+              projectId: normalizedServer.projectId,
+              name: (String(normalizedServer.name || "").trim() || "New Resource") + " Agent Runtime",
+              description: "Agent runtime for " + (String(normalizedServer.name || "").trim() || "this server") + ".",
+              kind: "agent_runtime",
+            }));
+            if (!nextAgentRuntime?.id) {
+              throw new Error("Agent runtime creation failed.");
+            }
+            upsertLocalServerRecord(nextAgentRuntime);
+            await upsertServerConnection("agent_runtime", nextAgentRuntime.id);
+            return nextAgentRuntime;
+          } catch (error) {
+            setServerBindingState({
+              savingKey: "",
+              error: error instanceof Error ? error.message : "Failed to create agent runtime connection.",
+            });
+            return null;
+          }
+        }
+
+        async function createServerAgentRuntimeRun(serverId, input) {
+          const normalizedServerId = String(serverId || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return null;
+          }
+
+          setServerAgentRuntimeRunsState({
+            error: "",
+            message: "",
+          });
+
+          const response = await fetch(buildPlaygroundServerRunsUrl(backendUrl, normalizedServerId), {
+            method: "POST",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(input || {}),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to start run.");
+          }
+          await loadServerAgentRuntimeRuns(normalizedServerId, { force: true });
+          setServerAgentRuntimeRunsState({
+            error: "",
+            message: "Run started.",
+          });
+          return data?.run || null;
+        }
+
+        async function cancelServerAgentRuntimeRun(serverId, runId) {
+          const normalizedServerId = String(serverId || "").trim();
+          const normalizedRunId = String(runId || "").trim();
+          if (!normalizedServerId || !normalizedRunId) {
+            return false;
+          }
+
+          const response = await fetch(buildPlaygroundServerRunCancelUrl(backendUrl, normalizedServerId, normalizedRunId), {
+            method: "POST",
+            headers: requestHeaders,
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to cancel run.");
+          }
+          await loadServerAgentRuntimeRuns(normalizedServerId, { force: true });
+          setServerAgentRuntimeRunsState({
+            error: "",
+            message: "Run cancelled.",
+          });
+          return true;
         }
 
         function buildSanitizedEnvironmentPayload(environment) {
@@ -36983,6 +37659,7 @@ const html = `<!doctype html>
               lastResponseText: "",
               deployProgress: 1,
             });
+            void loadServerContext(draftServer.id, { force: true });
             void loadServerAnalytics(draftServer.id, { force: true });
             void loadServerLogs(draftServer.id, "deployment", { force: true });
           } catch (error) {
@@ -37051,6 +37728,104 @@ const html = `<!doctype html>
               error: error instanceof Error ? error.message : "Failed to request server.",
               message: "",
               lastResponseText: "",
+            }));
+          }
+        }
+
+        function closeServerRuntimePreview() {
+          setServerRuntimePreviewState({
+            open: false,
+            target: "",
+            title: "",
+            path: "",
+            language: "json",
+            value: "",
+            loading: false,
+            error: "",
+          });
+        }
+
+        async function openServerRuntimePreview(target) {
+          const normalizedServerId = String(draftServer?.id || "").trim();
+          const normalizedTarget = String(target || "").trim().toLowerCase();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+
+          const isConfigTarget = normalizedTarget === "config";
+          const runtimeTarget = normalizedTarget === "browser" ? "browser" : "server";
+          const title = isConfigTarget
+            ? "Runtime Config"
+            : runtimeTarget === "browser"
+              ? "Browser SDK"
+              : "Server SDK";
+
+          setServerRuntimePreviewState({
+            open: true,
+            target: normalizedTarget,
+            title,
+            path: isConfigTarget
+              ? "testbase-runtime.json"
+              : runtimeTarget === "browser"
+                ? "testbase.runtime.browser.mjs"
+                : "testbase.runtime.server.mjs",
+            language: isConfigTarget ? "json" : "javascript",
+            value: "",
+            loading: true,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              isConfigTarget
+                ? buildPlaygroundServerRuntimeConfigUrl(backendUrl, normalizedServerId)
+                : buildPlaygroundServerRuntimeSdkUrl(backendUrl, normalizedServerId, runtimeTarget),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const payloadText = await response.text();
+            const payloadJson = isConfigTarget
+              ? (() => {
+                  try {
+                    return JSON.parse(payloadText || "{}");
+                  } catch {
+                    return null;
+                  }
+                })()
+              : null;
+            if (!response.ok) {
+              const message = payloadJson?.message || payloadJson?.error || payloadText || "Failed to load runtime preview.";
+              throw new Error(message);
+            }
+
+            const nextValue = isConfigTarget
+              ? JSON.stringify(payloadJson?.runtime || payloadJson || {}, null, 2)
+              : payloadText;
+            setServerRuntimePreviewState((current) => ({
+              ...current,
+              open: true,
+              target: normalizedTarget,
+              title,
+              path: isConfigTarget
+                ? "testbase-runtime.json"
+                : runtimeTarget === "browser"
+                  ? "testbase.runtime.browser.mjs"
+                  : "testbase.runtime.server.mjs",
+              language: isConfigTarget ? "json" : "javascript",
+              value: nextValue,
+              loading: false,
+              error: "",
+            }));
+          } catch (error) {
+            setServerRuntimePreviewState((current) => ({
+              ...current,
+              open: true,
+              target: normalizedTarget,
+              title,
+              loading: false,
+              error: error instanceof Error ? error.message : "Failed to load runtime preview.",
             }));
           }
         }
@@ -38583,11 +39358,14 @@ const html = `<!doctype html>
           const composerKind = canonicalizePlaygroundServerKind(composerDraft.kind);
           const isDatabaseComposer = composerKind === "database";
           const isAuthComposer = composerKind === "auth";
-          const composerNamePlaceholder = isDatabaseComposer ? "Database name" : isAuthComposer ? "Auth name" : "Server name";
+          const isAgentRuntimeComposer = composerKind === "agent_runtime";
+          const composerNamePlaceholder = isDatabaseComposer ? "Database name" : isAuthComposer ? "Auth name" : isAgentRuntimeComposer ? "Agent runtime name" : "Server name";
           const composerDescriptionPlaceholder = isDatabaseComposer
             ? "Describe what this database will store."
             : isAuthComposer
               ? "Describe how this auth module will be used."
+            : isAgentRuntimeComposer
+              ? "Describe what this agent runtime will execute."
             : "Describe what this server will publish.";
 
           return React.createElement("div", {
@@ -38614,6 +39392,8 @@ const html = `<!doctype html>
                         ? React.createElement(Database, { width: 18, height: 18, strokeWidth: 1.9 })
                         : isAuthComposer
                           ? React.createElement(Shield, { width: 18, height: 18, strokeWidth: 1.9 })
+                        : isAgentRuntimeComposer
+                          ? React.createElement(Bot, { width: 18, height: 18, strokeWidth: 1.9 })
                         : React.createElement(Server, { width: 18, height: 18, strokeWidth: 1.9 })
                     ),
                     React.createElement("input", {
@@ -38634,115 +39414,148 @@ const html = `<!doctype html>
                   }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
                 React.createElement("div", { className: "playground-environment-composer-modal-body" },
-                  React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description")
-                    ),
-                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerComposerDescriptionEditing ? " is-editing" : " is-preview") },
-                      !isServerComposerDescriptionEditing
-                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                            String(composerDraft.description || "").trim()
-                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                  content: composerDraft.description,
-                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                })
-                              : React.createElement("div", {
-                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                }, composerDescriptionPlaceholder)
+                  React.createElement("section", {
+                      className: "playground-environments-section",
+                    },
+                    React.createElement("div", { className: "playground-environments-section-body" },
+                      React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                          React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                          React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                            [
+                              {
+                                id: "bold",
+                                label: "Bold",
+                                icon: Bold,
+                              },
+                              {
+                                id: "italic",
+                                label: "Italic",
+                                icon: Italic,
+                              },
+                              {
+                                id: "underline",
+                                label: "Underline",
+                                icon: Underline,
+                              },
+                              {
+                                id: "list",
+                                label: "List",
+                                icon: List,
+                              },
+                            ].map((action) =>
+                              React.createElement("button", {
+                                key: action.id,
+                                type: "button",
+                                className: "playground-tasks-detail-format-button",
+                                title: action.label,
+                                "aria-label": action.label,
+                                disabled: serverComposerSaveState.isSaving,
+                                onMouseDown: (event) => event.preventDefault(),
+                                onClick: () => handleServerComposerDescriptionFormat(action.id),
+                              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                            )
                           )
-                        : null,
-                      React.createElement("textarea", {
-                        ref: serverComposerDescriptionTextareaRef,
-                        className: "playground-tasks-detail-description-input " + (isServerComposerDescriptionEditing ? "is-editing" : "is-preview"),
-                        rows: 1,
-                        placeholder: isServerComposerDescriptionEditing ? composerDescriptionPlaceholder : "",
-                        value: composerDraft.description || "",
-                        disabled: serverComposerSaveState.isSaving,
-                        onFocus: () => setIsServerComposerDescriptionEditing(true),
-                        onChange: (event) => {
-                          updateServerComposerField("description", event.target.value);
-                          resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                        },
-                        onBlur: () => setIsServerComposerDescriptionEditing(false),
-                      })
+                        ),
+                        React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerComposerDescriptionEditing ? " is-editing" : " is-preview") },
+                          !isServerComposerDescriptionEditing
+                            ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                                String(composerDraft.description || "").trim()
+                                  ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                      content: composerDraft.description,
+                                      className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                    })
+                                  : React.createElement("div", {
+                                      className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                    }, composerDescriptionPlaceholder)
+                              )
+                            : null,
+                          React.createElement("textarea", {
+                            ref: serverComposerDescriptionTextareaRef,
+                            className: "playground-tasks-detail-description-input " + (isServerComposerDescriptionEditing ? "is-editing" : "is-preview"),
+                            rows: 1,
+                            placeholder: isServerComposerDescriptionEditing ? composerDescriptionPlaceholder : "",
+                            value: composerDraft.description || "",
+                            disabled: serverComposerSaveState.isSaving,
+                            onFocus: () => setIsServerComposerDescriptionEditing(true),
+                            onChange: (event) => {
+                              updateServerComposerField("description", event.target.value);
+                              resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                            },
+                            onBlur: () => setIsServerComposerDescriptionEditing(false),
+                          })
+                        )
+                      )
                     )
                   ),
                   React.createElement("div", { className: "playground-environments-editor-surface" },
-                    React.createElement("div", { className: "playground-environments-field-grid" },
-                      React.createElement("label", { className: "playground-environments-field" },
-                        React.createElement("span", { className: "playground-environments-field-label" }, "Kind"),
-                        React.createElement("select", {
-                          className: "playground-environments-input",
-                          value: composerDraft.kind,
-                          disabled: serverComposerSaveState.isSaving,
-                          onChange: (event) => updateServerComposerField("kind", event.target.value),
-                        },
-                          React.createElement("option", { value: "web_app" }, "Web App"),
-                          React.createElement("option", { value: "function" }, "Function"),
-                          React.createElement("option", { value: "database" }, "Database"),
-                          React.createElement("option", { value: "auth" }, "Auth")
-                        )
-                      ),
-                      isDatabaseComposer
-                        ? React.createElement("label", { className: "playground-environments-field" },
-                            React.createElement("span", { className: "playground-environments-field-label" }, "Location"),
-                            React.createElement("input", {
-                              type: "text",
-                              className: "playground-environments-input",
-                              value: composerDraft.databaseLocation || "eur3",
+                    React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
+                      React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                        React.createElement("div", { className: "playground-tasks-detail-fact" },
+                          React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Kind"),
+                          React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                            React.createElement("select", {
+                              className: "playground-environments-input playground-tasks-detail-fact-select",
+                              value: composerDraft.kind,
                               disabled: serverComposerSaveState.isSaving,
-                              onChange: (event) => updateServerDatabaseField("databaseLocation", event.target.value, "composer"),
-                              placeholder: "eur3",
-                            })
+                              onChange: (event) => updateServerComposerField("kind", event.target.value),
+                            },
+                              React.createElement("option", { value: "web_app" }, "Web App"),
+                              React.createElement("option", { value: "function" }, "Function"),
+                              React.createElement("option", { value: "database" }, "Database"),
+                              React.createElement("option", { value: "auth" }, "Auth"),
+                              React.createElement("option", { value: "agent_runtime" }, "Agent Runtime")
+                            )
                           )
-                        : !isAuthComposer
-                          ? React.createElement("label", { className: "playground-environments-field" },
-                              React.createElement("span", { className: "playground-environments-field-label" }, "Auth"),
-                              React.createElement("select", {
-                                className: "playground-environments-input",
-                                value: composerDraft.authMode,
-                                disabled: serverComposerSaveState.isSaving,
-                                onChange: (event) => updateServerComposerField("authMode", event.target.value),
-                              },
-                                React.createElement("option", { value: "public" }, "Public"),
-                                React.createElement("option", { value: "private" }, "Private")
+                        ),
+                        isDatabaseComposer
+                          ? React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Location"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                React.createElement("input", {
+                                  type: "text",
+                                  className: "playground-environments-input playground-tasks-detail-fact-select",
+                                  value: composerDraft.databaseLocation || "eur3",
+                                  disabled: serverComposerSaveState.isSaving,
+                                  onChange: (event) => updateServerDatabaseField("databaseLocation", event.target.value, "composer"),
+                                  placeholder: "eur3",
+                                })
+                              )
+                            )
+                          : !isAuthComposer
+                            ? React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Auth"),
+                                React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                  React.createElement("select", {
+                                    className: "playground-environments-input playground-tasks-detail-fact-select",
+                                    value: composerDraft.authMode,
+                                    disabled: serverComposerSaveState.isSaving,
+                                    onChange: (event) => updateServerComposerField("authMode", event.target.value),
+                                  },
+                                    React.createElement("option", { value: "public" }, "Public"),
+                                    React.createElement("option", { value: "private" }, "Private")
+                                  )
+                                )
+                              )
+                            : null,
+                        !isDatabaseComposer
+                          && !isAuthComposer
+                          && !isAgentRuntimeComposer
+                          ? React.createElement("div", { className: "playground-tasks-detail-fact" },
+                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Region"),
+                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                React.createElement("input", {
+                                  type: "text",
+                                  className: "playground-environments-input playground-tasks-detail-fact-select",
+                                  value: composerDraft.region || "",
+                                  disabled: serverComposerSaveState.isSaving,
+                                  onChange: (event) => updateServerComposerField("region", event.target.value),
+                                  placeholder: "europe-west1",
+                                })
                               )
                             )
                           : null,
-                      isAuthComposer
-                        ? React.createElement("div", { className: "playground-environments-field playground-environments-field-span" },
-                            React.createElement("span", { className: "playground-environments-field-label" }, "Providers"),
-                            React.createElement("div", { className: "playground-database-browser-modal-hint" }, "Email/password users are supported first. Additional providers can be added next.")
-                          )
-                        : null,
-                      !isDatabaseComposer
-                        && !isAuthComposer
-                        ? React.createElement("label", { className: "playground-environments-field" },
-                            React.createElement("span", { className: "playground-environments-field-label" }, "Runtime"),
-                            React.createElement("input", {
-                              type: "text",
-                              className: "playground-environments-input",
-                              value: composerDraft.runtime || "",
-                              disabled: serverComposerSaveState.isSaving,
-                              onChange: (event) => updateServerComposerField("runtime", event.target.value),
-                              placeholder: "nodejs22",
-                            })
-                          )
-                        : null,
-                      !isDatabaseComposer
-                        && !isAuthComposer
-                        ? React.createElement("label", { className: "playground-environments-field" },
-                            React.createElement("span", { className: "playground-environments-field-label" }, "Region"),
-                            React.createElement("input", {
-                              type: "text",
-                              className: "playground-environments-input",
-                              value: composerDraft.region || "",
-                              disabled: serverComposerSaveState.isSaving,
-                              onChange: (event) => updateServerComposerField("region", event.target.value),
-                              placeholder: "europe-west1",
-                            })
-                          )
-                        : null
+                      )
                     )
                   )
                 ),
@@ -38776,6 +39589,7 @@ const html = `<!doctype html>
           const normalizedServerKind = canonicalizePlaygroundServerKind(draftServer.kind);
           const isFunctionServer = normalizedServerKind === "function";
           const isAuthServer = normalizedServerKind === "auth";
+          const isAgentRuntimeServer = normalizedServerKind === "agent_runtime";
           const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
           const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
@@ -38938,99 +39752,15 @@ const html = `<!doctype html>
             const series = Array.isArray(config?.series)
               ? config.series.filter((entry) => entry && serverAnalyticsVisibility[entry.key] !== false)
               : [];
-            if (!labels.length || !series.length) {
-              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
-            }
-
-            const svgWidth = 420;
-            const svgHeight = 178;
-            const marginTop = 14;
-            const marginRight = 10;
-            const marginBottom = 28;
-            const marginLeft = 30;
-            const plotWidth = svgWidth - marginLeft - marginRight;
-            const plotHeight = svgHeight - marginTop - marginBottom;
-            const baselineY = marginTop + plotHeight;
-            const slotWidth = plotWidth / Math.max(labels.length - 1, 1);
-            const xForIndex = (index) => labels.length === 1 ? marginLeft + plotWidth : marginLeft + slotWidth * index;
-            const maxValue = Math.max(
-              1,
-              ...series.flatMap((entry) => labels.map((_, index) => Math.max(0, Number(entry?.values?.[index] || 0)))),
-            );
-            const labelStep = Math.max(1, Math.ceil(labels.length / 6));
-            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
-
-            return React.createElement("div", {
-                className: "playground-database-overview-timeseries-card",
-                "aria-label": config?.ariaLabel || "Server telemetry chart",
-              },
-              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
-                React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
-                  React.createElement("svg", {
-                    className: "playground-database-overview-timeseries-svg",
-                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
-                    preserveAspectRatio: "xMidYMid meet",
-                    role: "img",
-                    "aria-label": config?.ariaLabel || "Server telemetry chart",
-                  },
-                    Array.from({ length: 4 }).map((_, index) => {
-                      const y = marginTop + (plotHeight / 3) * index;
-                      return React.createElement("line", {
-                        key: "grid:" + index,
-                        className: "playground-database-overview-timeseries-grid-line",
-                        x1: marginLeft,
-                        y1: y,
-                        x2: svgWidth - marginRight,
-                        y2: y,
-                      });
-                    }),
-                    yAxisValues.map((value, index) =>
-                      React.createElement("text", {
-                        key: "y-axis:" + index,
-                        x: 0,
-                        y: marginTop + (plotHeight / 2) * index + 4,
-                        className: "playground-database-overview-timeseries-axis-label",
-                      }, String(value))
-                    ),
-                    series.map((entry) => {
-                      const points = labels.map((_, index) => ({
-                        x: xForIndex(index),
-                        y: baselineY - ((Math.max(0, Number(entry?.values?.[index] || 0)) / maxValue) * plotHeight),
-                      }));
-                      const linePath = buildServerAnalyticsSvgLinePath(points);
-                      const lastPoint = points[points.length - 1] || null;
-                      return React.createElement(React.Fragment, { key: "series:" + entry.key },
-                        linePath
-                          ? React.createElement("path", {
-                              d: linePath,
-                              className: "playground-database-overview-timeseries-line is-" + entry.tone,
-                            })
-                          : null,
-                        lastPoint
-                          ? React.createElement("circle", {
-                              cx: lastPoint.x,
-                              cy: lastPoint.y,
-                              r: "3.5",
-                              className: "playground-database-overview-timeseries-dot is-" + entry.tone,
-                            })
-                          : null
-                      );
-                    }),
-                    labels.map((label, index) => (
-                      index % labelStep === 0 || index === labels.length - 1
-                        ? React.createElement("text", {
-                            key: "label:" + index,
-                            x: xForIndex(index),
-                            y: svgHeight - 8,
-                            textAnchor: index === 0 ? "start" : index === labels.length - 1 ? "end" : "middle",
-                            className: "playground-database-overview-timeseries-axis-label",
-                          }, String(label || ""))
-                        : null
-                    ))
-                  )
-                )
-              )
-            );
+            return renderPlaygroundTelemetryTimeseriesChart({
+              ariaLabel: config?.ariaLabel || "Server telemetry chart",
+              labels,
+              series,
+              emptyText: config?.emptyText || "Select a metric",
+              buildLinePath: buildServerAnalyticsSvgLinePath,
+              getSeriesValue: (entry, _label, index) => entry?.values?.[index],
+              getXAxisLabel: (label) => String(label || ""),
+            });
           };
           const serverAnalyticsOverview = React.createElement("div", { className: "playground-database-overview" },
             React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
@@ -39281,11 +40011,39 @@ const html = `<!doctype html>
           const isConnectableServer = normalizedServerKind === "function" || normalizedServerKind === "web_app";
           const activeDatabaseBinding = getCurrentServerBindingByType("database");
           const activeAuthBinding = getCurrentServerBindingByType("auth");
+          const activeAgentRuntimeBinding = getCurrentServerBindingByType("agent_runtime");
+          const activeServerContext = draftServer.id ? (serverContextsById[draftServer.id] || currentServerContext || null) : null;
+          const activeServerRuntimeDiagnostics = activeServerContext?.diagnostics || null;
+          const activeServerRuntimeWarnings = Array.isArray(activeServerRuntimeDiagnostics?.warnings)
+            ? activeServerRuntimeDiagnostics.warnings.filter((warning) => String(warning?.message || "").trim())
+            : [];
+          const activeServerRuntimeManifestUrl = typeof activeServerRuntimeDiagnostics?.runtime?.manifestUrl === "string"
+            ? activeServerRuntimeDiagnostics.runtime.manifestUrl
+            : "";
           const availableAuthModules = orderedServers.filter((server) =>
             canonicalizePlaygroundServerKind(server.kind) === "auth" && server.id !== draftServer.id
           );
+          const availableAgentRuntimes = orderedServers.filter((server) =>
+            canonicalizePlaygroundServerKind(server.kind) === "agent_runtime" && server.id !== draftServer.id
+          );
           const isSavingDatabaseConnection = serverBindingState.savingKey.startsWith("database");
           const isSavingAuthConnection = serverBindingState.savingKey.startsWith("auth");
+          const isSavingAgentRuntimeConnection = serverBindingState.savingKey.startsWith("agent_runtime");
+          const isLoadingServerRuntimeContext = loadingServerContextId === draftServer.id;
+          const renderRuntimePreviewButton = (label, target) => React.createElement("button", {
+              type: "button",
+              className: "playground-tasks-detail-fact-button",
+              onClick: () => {
+                void openServerRuntimePreview(target);
+              },
+              disabled: !draftServer.id
+                || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
+                || (serverRuntimePreviewState.loading && serverRuntimePreviewState.target === target),
+            },
+            serverRuntimePreviewState.loading && serverRuntimePreviewState.target === target
+              ? "Loading..."
+              : label
+          );
 
           const connectionsSection = isConnectableServer
             ? React.createElement("div", { className: "playground-environments-connections-section" },
@@ -39380,8 +40138,104 @@ const html = `<!doctype html>
                         ],
                       })
                     ),
+                    renderServerFactRow("Agent Runtime",
+                      renderServerDetailSelectControl({
+                        popoverId: "server-connection-agent-runtime",
+                        valueLabel: isSavingAgentRuntimeConnection
+                          ? "Connecting..."
+                          : (activeAgentRuntimeBinding?.resource?.name || activeAgentRuntimeBinding?.targetId || "None"),
+                        isEmpty: !activeAgentRuntimeBinding,
+                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSavingAgentRuntimeConnection,
+                        children: [
+                          renderServerDetailSelectOptionRow({
+                            key: "agent_runtime:none",
+                            label: "None",
+                            selected: !activeAgentRuntimeBinding,
+                            onClick: () => {
+                              setServerDetailSelectPopover("");
+                              void removeServerConnection("agent_runtime");
+                            },
+                          }),
+                          ...availableAgentRuntimes.map((server) =>
+                            renderServerDetailSelectOptionRow({
+                              key: "agent_runtime:" + server.id,
+                              label: server.name || "Untitled Agent Runtime",
+                              description: "Agent runtime",
+                              selected: activeAgentRuntimeBinding?.targetId === server.id,
+                              onClick: () => {
+                                setServerDetailSelectPopover("");
+                                void upsertServerConnection("agent_runtime", server.id);
+                              },
+                            })
+                          ),
+                          renderServerDetailSelectOptionRow({
+                            key: "agent_runtime:create",
+                            label: "Create And Connect New",
+                            description: "Creates a dedicated agent runtime for this app.",
+                            selected: false,
+                            onClick: () => {
+                              setServerDetailSelectPopover("");
+                              void createAndConnectAgentRuntime();
+                            },
+                          }),
+                        ],
+                      })
+                    ),
                     serverBindingState.error
                       ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverBindingState.error)
+                      : null
+                  )
+                )
+              )
+            : null;
+
+          const runtimeSection = isConnectableServer
+            ? React.createElement("div", { className: "playground-environments-connections-section" },
+                React.createElement("div", {
+                  className: "playground-tasks-detail-section-title playground-environments-connections-title",
+                }, "Runtime"),
+                React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
+                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                    renderServerFactRow("Status",
+                      React.createElement("span", { className: "playground-environments-editor-fact-value" },
+                        !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
+                          ? "Unsaved"
+                          : activeServerRuntimeDiagnostics?.ready
+                            ? "Ready"
+                            : "Deploy Required"
+                      )
+                    ),
+                    renderServerFactRow("Manifest",
+                      activeServerRuntimeManifestUrl
+                        ? React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-detail-fact-button",
+                            onClick: () => window.open(activeServerRuntimeManifestUrl, "_blank", "noopener,noreferrer"),
+                            title: activeServerRuntimeManifestUrl,
+                          }, activeServerRuntimeManifestUrl)
+                        : React.createElement("div", { className: "playground-tasks-detail-fact-button is-empty" }, "Not published yet")
+                    ),
+                    renderServerFactRow("Runtime Config", renderRuntimePreviewButton("Preview JSON", "config")),
+                    renderServerFactRow("Browser SDK", renderRuntimePreviewButton("Preview Module", "browser")),
+                    renderServerFactRow("Server SDK", renderRuntimePreviewButton("Preview Module", "server")),
+                    isLoadingServerRuntimeContext
+                      ? React.createElement("div", { className: "playground-environments-muted playground-environments-editor-notice" }, "Loading runtime diagnostics...")
+                      : null,
+                    serverRuntimeState.error
+                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverRuntimeState.error)
+                      : null,
+                    activeServerRuntimeWarnings.length > 0
+                      ? React.createElement("div", { className: "playground-servers-runtime-warning-list" },
+                          activeServerRuntimeWarnings.map((warning) =>
+                            React.createElement("div", {
+                              key: String(warning.code || warning.message),
+                              className: (warning.level === "warning"
+                                ? "playground-environments-error"
+                                : "playground-environments-muted")
+                                + " playground-environments-editor-notice",
+                            }, warning.message)
+                          )
+                        )
                       : null
                   )
                 )
@@ -39443,7 +40297,7 @@ const html = `<!doctype html>
               "aria-label": "Delete " + String(entry.name || entry.path || "file"),
             }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
           );
-          const renderServerDeploymentCodePreview = ({ path, language, value, emptyText }) => {
+          const renderServerDeploymentCodePreview = ({ path, language, value, emptyText, height = "168px" }) => {
             if (!String(value || "").trim()) {
               return React.createElement("div", { className: "playground-files-state" }, emptyText);
             }
@@ -39451,7 +40305,7 @@ const html = `<!doctype html>
               return React.createElement("div", { className: "playground-code-preview-editor-shell playground-database-browser-json-editor-shell playground-servers-function-editor-shell" },
                 React.createElement(ServerPreviewEditorComponent, {
                   path,
-                  height: "168px",
+                  height,
                   language,
                   theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
                   value,
@@ -39484,6 +40338,7 @@ const html = `<!doctype html>
                 readOnly: true,
                 spellCheck: false,
                 wrap: "off",
+                style: { minHeight: height, height },
               })
             );
           };
@@ -39826,6 +40681,57 @@ const html = `<!doctype html>
                 )
               )
             : null;
+          const serverRuntimePreviewModal = serverRuntimePreviewState.open
+            ? React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop",
+                onClick: closeServerRuntimePreview,
+              },
+                React.createElement("div", {
+                    className: "playground-tasks-project-modal playground-database-browser-modal playground-servers-runtime-preview-modal",
+                    onClick: (event) => event.stopPropagation(),
+                  },
+                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                        React.createElement(Code2, { width: 18, height: 18, strokeWidth: 1.9 })
+                      ),
+                      React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, serverRuntimePreviewState.title || "Runtime Preview")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: closeServerRuntimePreview,
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-servers-deploy-help-body" },
+                    serverRuntimePreviewState.error
+                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverRuntimePreviewState.error)
+                      : serverRuntimePreviewState.loading
+                        ? React.createElement("div", { className: "playground-files-state" },
+                            React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                            React.createElement("span", null, "Loading runtime preview...")
+                          )
+                        : React.createElement("div", { className: "playground-servers-function-preview-pane" },
+                            renderServerDeploymentCodePreview({
+                              path: serverRuntimePreviewState.path,
+                              language: serverRuntimePreviewState.language,
+                              value: serverRuntimePreviewState.value,
+                              emptyText: "Nothing to preview yet.",
+                              height: "360px",
+                            })
+                          )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: closeServerRuntimePreview,
+                    }, "Close")
+                  )
+                )
+              )
+            : null;
           const serverBottomBar = React.createElement("div", { className: "playground-servers-editor-bottom-bar" },
             React.createElement("div", { className: "playground-servers-editor-bottom-bar-copy" },
               serverDeploymentState.isDeploying
@@ -39891,7 +40797,7 @@ const html = `<!doctype html>
             )
           );
 
-          if (!isAuthServer && serverAnalyticsView === "analytics") {
+          if (!isAuthServer && !isAgentRuntimeServer && serverAnalyticsView === "analytics") {
             return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
                 React.createElement("div", { className: "playground-environments-editor-navbar-title" },
@@ -40000,6 +40906,7 @@ const html = `<!doctype html>
             descriptionSection,
             factsSection,
             connectionsSection,
+            runtimeSection,
             sourceFilesSection
           );
 
@@ -40050,7 +40957,7 @@ const html = `<!doctype html>
                               React.createElement("span", null, "Rename")
                             )
                           ),
-                          !isAuthServer
+                          !isAuthServer && !isAgentRuntimeServer
                             ? React.createElement("button", {
                                 type: "button",
                                 className: "tb-popup-row",
@@ -40085,6 +40992,548 @@ const html = `<!doctype html>
                 : null,
             )
           );
+
+          if (isAgentRuntimeServer) {
+            const agentRuntimeConfig = getPlaygroundServerAgentRuntimeConfig(draftServer);
+            const agentRuntimeRuns = Array.isArray(currentServerAgentRuntimeRuns) ? currentServerAgentRuntimeRuns : [];
+            const agentRuntimeRunsLoading = loadingServerAgentRuntimeRunsId === draftServer.id;
+            const zeroAgentRuntimeBuckets = Array.from({ length: 8 }, (_, index) => {
+              const date = new Date();
+              date.setMinutes(0, 0, 0);
+              date.setHours(date.getHours() - (7 - index));
+              return {
+                timestamp: date.toISOString(),
+                runs: 0,
+                completed: 0,
+                failed: 0,
+                running: 0,
+                cancelled: 0,
+              };
+            });
+            const getAgentRuntimeBucketIndex = (value) => {
+              const date = new Date(value);
+              if (Number.isNaN(date.getTime())) {
+                return -1;
+              }
+              const hour = new Date(date);
+              hour.setMinutes(0, 0, 0);
+              return zeroAgentRuntimeBuckets.findIndex((bucket) => {
+                const bucketDate = new Date(bucket.timestamp);
+                return bucketDate.getTime() === hour.getTime();
+              });
+            };
+            agentRuntimeRuns.forEach((run) => {
+              const bucketIndex = getAgentRuntimeBucketIndex(run?.createdAt || run?.updatedAt);
+              if (bucketIndex < 0) {
+                return;
+              }
+              zeroAgentRuntimeBuckets[bucketIndex].runs += 1;
+              if (run?.status === "completed") {
+                zeroAgentRuntimeBuckets[bucketIndex].completed += 1;
+              } else if (run?.status === "failed") {
+                zeroAgentRuntimeBuckets[bucketIndex].failed += 1;
+              } else if (run?.status === "cancelled") {
+                zeroAgentRuntimeBuckets[bucketIndex].cancelled += 1;
+              } else if (run?.status === "running" || run?.status === "queued") {
+                zeroAgentRuntimeBuckets[bucketIndex].running += 1;
+              }
+            });
+            const totalRuns = agentRuntimeRuns.length;
+            const completedRuns = agentRuntimeRuns.filter((run) => run?.status === "completed").length;
+            const failedRuns = agentRuntimeRuns.filter((run) => run?.status === "failed").length;
+            const runningRuns = agentRuntimeRuns.filter((run) => run?.status === "running" || run?.status === "queued").length;
+            const cancelledRuns = agentRuntimeRuns.filter((run) => run?.status === "cancelled").length;
+            const renderAgentRuntimeAnalyticsKpi = (label, value, key, tone) => React.createElement("div", {
+                className: "playground-servers-analytics-kpi",
+                key,
+              },
+              React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-database-overview-kpi-label"
+                    + (tone ? " is-" + tone : "")
+                    + (serverAgentRuntimeAnalyticsVisibility[key] === false ? " is-inactive" : ""),
+                  onClick: () => {
+                    setServerAgentRuntimeAnalyticsVisibility((current) => ({
+                      ...current,
+                      [key]: current[key] === false,
+                    }));
+                  },
+                  "aria-pressed": serverAgentRuntimeAnalyticsVisibility[key] === false ? "false" : "true",
+                },
+                React.createElement("span", { className: "playground-database-overview-kpi-check" },
+                  React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
+                ),
+                React.createElement("span", null, label)
+              )
+            );
+            const renderAgentRuntimeTelemetryChart = (config) => renderPlaygroundTelemetryTimeseriesChart({
+              ariaLabel: config?.ariaLabel || "Agent runtime telemetry chart",
+              labels: zeroAgentRuntimeBuckets,
+              series: Array.isArray(config?.series)
+                ? config.series.filter((entry) => entry && serverAgentRuntimeAnalyticsVisibility[entry.key] !== false)
+                : [],
+              emptyText: config?.emptyText || "No run data yet",
+              buildLinePath: buildServerAnalyticsSvgLinePath,
+              getSeriesValue: (entry, bucket) => bucket?.[entry.key],
+              getXAxisLabel: (bucket) => {
+                const date = new Date(bucket?.timestamp);
+                return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(date);
+              },
+            });
+            const agentRuntimeDetailsSection = React.createElement("section", { className: "playground-environments-section", key: "agent-runtime-details" },
+              React.createElement("div", { className: "playground-environments-section-body" },
+                React.createElement("div", { className: "playground-tasks-detail-facts playground-database-summary-card" },
+                  React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-detail-facts-toggle" + (serverDetailsCollapsed ? " is-collapsed" : ""),
+                      onClick: () => setServerDetailsCollapsed((current) => !current),
+                      title: serverDetailsCollapsed ? "Expand details" : "Collapse details",
+                      "aria-label": serverDetailsCollapsed ? "Expand details" : "Collapse details",
+                      "aria-expanded": serverDetailsCollapsed ? "false" : "true",
+                    }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
+                  ),
+                  !serverDetailsCollapsed
+                    ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                        React.createElement("div", { className: "playground-database-overview" },
+                          React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+                            [
+                              renderAgentRuntimeAnalyticsKpi("Runs", String(totalRuns), "runs", "collections"),
+                              renderAgentRuntimeAnalyticsKpi("Completed", String(completedRuns), "completed", "success"),
+                              renderAgentRuntimeAnalyticsKpi("Failed", String(failedRuns), "failed", "errors"),
+                              renderAgentRuntimeAnalyticsKpi("Running", String(runningRuns), "running", "latency"),
+                              renderAgentRuntimeAnalyticsKpi("Cancelled", String(cancelledRuns), "cancelled", "deletes"),
+                            ]
+                          ),
+                          React.createElement("div", { className: "playground-database-overview-chart-grid" },
+                            React.createElement("div", { className: "playground-database-overview-chart-block" },
+                              renderAgentRuntimeTelemetryChart({
+                                series: [
+                                  { key: "runs", tone: "collections" },
+                                  { key: "completed", tone: "success" },
+                                ],
+                                emptyText: "No run creation data yet",
+                                ariaLabel: "Runs and completed runs over time",
+                              })
+                            ),
+                            React.createElement("div", { className: "playground-database-overview-chart-block" },
+                              renderAgentRuntimeTelemetryChart({
+                                series: [
+                                  { key: "running", tone: "latency" },
+                                  { key: "failed", tone: "errors" },
+                                  { key: "cancelled", tone: "deletes" },
+                                ],
+                                emptyText: "No run state changes yet",
+                                ariaLabel: "Running, failed, and cancelled runs over time",
+                              })
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-database-summary-divider" }),
+                        renderServerFactRow("ID", React.createElement("div", { className: "playground-tasks-detail-fact-button" }, draftServer.id || "Unsaved agent runtime")),
+                        renderServerFactRow("Endpoint", React.createElement("div", { className: "playground-tasks-detail-fact-button" }, draftServer.serviceUrl || "Created after save")),
+                        renderServerFactRow("Agent ID",
+                          React.createElement("input", {
+                            type: "text",
+                            className: "playground-environments-input",
+                            value: agentRuntimeConfig.agentId || "",
+                            placeholder: "agt_...",
+                            onChange: (event) => updateServerAgentRuntimeField("agentId", event.target.value),
+                            onBlur: () => {
+                              void commitDraftServerIfDirty();
+                            },
+                          })
+                        ),
+                        renderServerFactRow("Computer",
+                          renderServerDetailSelectControl({
+                            popoverId: "agent-runtime-environment",
+                            valueLabel: draftServer.sourceEnvironmentId
+                              ? (orderedEnvironments.find((environment) => environment.id === draftServer.sourceEnvironmentId)?.name || draftServer.sourceEnvironmentId)
+                              : "None",
+                            isEmpty: !draftServer.sourceEnvironmentId,
+                            children: [
+                              renderServerDetailSelectOptionRow({
+                                key: "agent-runtime-environment:none",
+                                label: "None",
+                                selected: !draftServer.sourceEnvironmentId,
+                                onClick: () => {
+                                  updateServerField("sourceEnvironmentId", null);
+                                  setServerDetailSelectPopover("");
+                                },
+                              }),
+                              ...orderedEnvironments.map((environment) =>
+                                renderServerDetailSelectOptionRow({
+                                  key: "agent-runtime-environment:" + environment.id,
+                                  label: environment.name || "Untitled Computer",
+                                  selected: draftServer.sourceEnvironmentId === environment.id,
+                                  onClick: () => {
+                                    updateServerField("sourceEnvironmentId", environment.id);
+                                    setServerDetailSelectPopover("");
+                                  },
+                                })
+                              ),
+                            ],
+                          })
+                        ),
+                        renderServerFactRow("Auth",
+                          renderServerDetailSelectControl({
+                            popoverId: "agent-runtime-auth-mode",
+                            valueLabel: draftServer.authMode === "private" ? "Private" : "Public",
+                            children: [
+                              renderServerDetailSelectOptionRow({
+                                key: "agent-runtime-auth:public",
+                                label: "Public",
+                                selected: draftServer.authMode !== "private",
+                                onClick: () => {
+                                  updateServerField("authMode", "public");
+                                  setServerDetailSelectPopover("");
+                                },
+                              }),
+                              renderServerDetailSelectOptionRow({
+                                key: "agent-runtime-auth:private",
+                                label: "Private",
+                                selected: draftServer.authMode === "private",
+                                onClick: () => {
+                                  updateServerField("authMode", "private");
+                                  setServerDetailSelectPopover("");
+                                },
+                              }),
+                            ],
+                          })
+                        ),
+                        renderServerFactRow("Execution",
+                          renderServerDetailSelectControl({
+                            popoverId: "agent-runtime-execution-mode",
+                            valueLabel: agentRuntimeConfig.executionMode === "sync" ? "Sync" : "Async",
+                            children: [
+                              renderServerDetailSelectOptionRow({
+                                key: "agent-runtime-mode:async",
+                                label: "Async",
+                                description: "Starts a background run and poll its status later.",
+                                selected: agentRuntimeConfig.executionMode !== "sync",
+                                onClick: () => {
+                                  updateServerAgentRuntimeField("executionMode", "async");
+                                  setServerDetailSelectPopover("");
+                                },
+                              }),
+                              renderServerDetailSelectOptionRow({
+                                key: "agent-runtime-mode:sync",
+                                label: "Sync",
+                                description: "Waits for the run to finish before returning.",
+                                selected: agentRuntimeConfig.executionMode === "sync",
+                                onClick: () => {
+                                  updateServerAgentRuntimeField("executionMode", "sync");
+                                  setServerDetailSelectPopover("");
+                                },
+                              }),
+                            ],
+                          })
+                        ),
+                        renderServerFactRow("Streaming",
+                          renderServerDetailSelectControl({
+                            popoverId: "agent-runtime-streaming",
+                            valueLabel: agentRuntimeConfig.streamingEnabled ? "Enabled" : "Disabled",
+                            children: [
+                              renderServerDetailSelectOptionRow({
+                                key: "agent-runtime-streaming:on",
+                                label: "Enabled",
+                                selected: agentRuntimeConfig.streamingEnabled !== false,
+                                onClick: () => {
+                                  updateServerAgentRuntimeField("streamingEnabled", true);
+                                  setServerDetailSelectPopover("");
+                                },
+                              }),
+                              renderServerDetailSelectOptionRow({
+                                key: "agent-runtime-streaming:off",
+                                label: "Disabled",
+                                selected: agentRuntimeConfig.streamingEnabled === false,
+                                onClick: () => {
+                                  updateServerAgentRuntimeField("streamingEnabled", false);
+                                  setServerDetailSelectPopover("");
+                                },
+                              }),
+                            ],
+                          })
+                        ),
+                        renderServerFactRow("Max Runtime",
+                          React.createElement("input", {
+                            type: "number",
+                            min: 30,
+                            step: 30,
+                            className: "playground-environments-input",
+                            value: String(agentRuntimeConfig.maxRuntimeSeconds || 1800),
+                            onChange: (event) => updateServerAgentRuntimeField("maxRuntimeSeconds", Math.max(30, Number(event.target.value || 1800) || 1800)),
+                            onBlur: () => {
+                              void commitDraftServerIfDirty();
+                            },
+                          })
+                        ),
+                        renderServerFactRow("Updated", React.createElement("div", { className: "playground-tasks-detail-fact-button" }, formatPlaygroundFileDate(draftServer.updatedAt)))
+                      )
+                    : null
+                )
+              )
+            );
+
+            const handleAgentRuntimeRunSubmit = async (event) => {
+              event.preventDefault();
+              const prompt = String(serverAgentRuntimeRunComposer.prompt || "").trim();
+              if (!prompt || !draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+                setServerAgentRuntimeRunComposer((current) => ({
+                  ...current,
+                  error: prompt ? "Save the agent runtime before starting a run." : "Prompt is required.",
+                }));
+                return;
+              }
+
+              setServerAgentRuntimeRunComposer((current) => ({
+                ...current,
+                error: "",
+                isSubmitting: true,
+              }));
+
+              try {
+                await createServerAgentRuntimeRun(draftServer.id, {
+                  title: String(serverAgentRuntimeRunComposer.title || "").trim(),
+                  prompt,
+                  mode: serverAgentRuntimeRunComposer.mode === "sync" ? "sync" : "async",
+                });
+                setServerAgentRuntimeRunComposer({
+                  open: false,
+                  title: "",
+                  prompt: "",
+                  mode: agentRuntimeConfig.executionMode === "sync" ? "sync" : "async",
+                  error: "",
+                  isSubmitting: false,
+                });
+              } catch (error) {
+                setServerAgentRuntimeRunComposer((current) => ({
+                  ...current,
+                  error: error instanceof Error ? error.message : "Failed to start run.",
+                  isSubmitting: false,
+                }));
+              }
+            };
+
+            const agentRuntimeRunComposerModal = serverAgentRuntimeRunComposer.open
+              ? React.createElement("div", {
+                  className: "playground-tasks-project-modal-backdrop",
+                  onClick: () => {
+                    if (!serverAgentRuntimeRunComposer.isSubmitting) {
+                      setServerAgentRuntimeRunComposer((current) => ({
+                        ...current,
+                        open: false,
+                        error: "",
+                      }));
+                    }
+                  },
+                },
+                  React.createElement("form", {
+                      className: "playground-tasks-project-modal playground-environment-composer-modal",
+                      onClick: (event) => event.stopPropagation(),
+                      onSubmit: (event) => void handleAgentRuntimeRunSubmit(event),
+                    },
+                    React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                        React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                          React.createElement(Bot, { width: 18, height: 18, strokeWidth: 1.9 })
+                        ),
+                        React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "New Run")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                        onClick: () => setServerAgentRuntimeRunComposer((current) => ({
+                          ...current,
+                          open: false,
+                          error: "",
+                        })),
+                        title: "Close",
+                        disabled: serverAgentRuntimeRunComposer.isSubmitting,
+                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                    ),
+                    React.createElement("div", { className: "playground-environment-composer-modal-body" },
+                      React.createElement("div", { className: "playground-environments-field-grid" },
+                        React.createElement("label", { className: "playground-environments-field" },
+                          React.createElement("span", { className: "playground-environments-field-label" }, "Title"),
+                          React.createElement("input", {
+                            type: "text",
+                            className: "playground-environments-input",
+                            value: serverAgentRuntimeRunComposer.title,
+                            onChange: (event) => setServerAgentRuntimeRunComposer((current) => ({
+                              ...current,
+                              title: event.target.value,
+                            })),
+                            placeholder: "Optional run title",
+                            disabled: serverAgentRuntimeRunComposer.isSubmitting,
+                          })
+                        ),
+                        React.createElement("label", { className: "playground-environments-field" },
+                          React.createElement("span", { className: "playground-environments-field-label" }, "Mode"),
+                          React.createElement("select", {
+                            className: "playground-environments-input",
+                            value: serverAgentRuntimeRunComposer.mode,
+                            onChange: (event) => setServerAgentRuntimeRunComposer((current) => ({
+                              ...current,
+                              mode: event.target.value === "sync" ? "sync" : "async",
+                            })),
+                            disabled: serverAgentRuntimeRunComposer.isSubmitting,
+                          },
+                            React.createElement("option", { value: "async" }, "Async"),
+                            React.createElement("option", { value: "sync" }, "Sync")
+                          )
+                        ),
+                        React.createElement("label", { className: "playground-environments-field playground-environments-field-span" },
+                          React.createElement("span", { className: "playground-environments-field-label" }, "Prompt"),
+                          React.createElement("textarea", {
+                            className: "playground-environments-input",
+                            value: serverAgentRuntimeRunComposer.prompt,
+                            onChange: (event) => setServerAgentRuntimeRunComposer((current) => ({
+                              ...current,
+                              prompt: event.target.value,
+                            })),
+                            placeholder: "Describe what the agent should do.",
+                            rows: 6,
+                            style: { minHeight: "120px", resize: "vertical" },
+                            disabled: serverAgentRuntimeRunComposer.isSubmitting,
+                          })
+                        )
+                      )
+                    ),
+                    serverAgentRuntimeRunComposer.error
+                      ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverAgentRuntimeRunComposer.error)
+                      : null,
+                    React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        onClick: () => setServerAgentRuntimeRunComposer((current) => ({
+                          ...current,
+                          open: false,
+                          error: "",
+                        })),
+                        disabled: serverAgentRuntimeRunComposer.isSubmitting,
+                      }, "Cancel"),
+                      React.createElement("button", {
+                        type: "submit",
+                        className: "playground-environments-action-button is-primary",
+                        disabled: serverAgentRuntimeRunComposer.isSubmitting || !String(serverAgentRuntimeRunComposer.prompt || "").trim(),
+                      }, serverAgentRuntimeRunComposer.isSubmitting ? "Starting..." : "Start Run")
+                    )
+                  )
+                )
+              : null;
+
+            const agentRuntimeRunsSection = React.createElement("section", { className: "playground-environments-section", key: "agent-runtime-runs" },
+              React.createElement("div", { className: "playground-environments-section-body" },
+                React.createElement("div", { className: "playground-auth-users-section-header" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Runs")
+                ),
+                React.createElement("div", { className: "playground-environments-editor-surface playground-auth-users-surface" },
+                  React.createElement("div", { className: "playground-auth-users-toolbar" },
+                    React.createElement("div", { className: "playground-database-browser-modal-hint" }, "Create an app-facing run and inspect its live thread-backed status here."),
+                    React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-auth-users-add-button",
+                        onClick: () => setServerAgentRuntimeRunComposer({
+                          open: true,
+                          title: "",
+                          prompt: "",
+                          mode: agentRuntimeConfig.executionMode === "sync" ? "sync" : "async",
+                          error: "",
+                          isSubmitting: false,
+                        }),
+                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                      },
+                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "New Run")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-auth-users-refresh-button",
+                        onClick: () => {
+                          if (draftServer.id) {
+                            void loadServerAgentRuntimeRuns(draftServer.id, { force: true });
+                          }
+                        },
+                        disabled: agentRuntimeRunsLoading || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                        title: "Refresh runs",
+                      }, React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    )
+                  ),
+                  serverAgentRuntimeRunsState.error
+                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverAgentRuntimeRunsState.error)
+                    : null,
+                  serverAgentRuntimeRunsState.message
+                    ? React.createElement("div", { className: "playground-environments-editor-notice" }, serverAgentRuntimeRunsState.message)
+                    : null,
+                  agentRuntimeRunsLoading
+                    ? React.createElement("div", { className: "playground-files-state" },
+                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                      )
+                    : agentRuntimeRuns.length > 0
+                      ? React.createElement("div", { className: "playground-auth-users-table-shell" },
+                          React.createElement("table", { className: "playground-auth-users-table" },
+                            React.createElement("thead", null,
+                              React.createElement("tr", null,
+                                React.createElement("th", null, "Prompt"),
+                                React.createElement("th", null, "Status"),
+                                React.createElement("th", null, "Mode"),
+                                React.createElement("th", null, "Started"),
+                                React.createElement("th", null, "Thread"),
+                                React.createElement("th", null, "")
+                              )
+                            ),
+                            React.createElement("tbody", null,
+                              agentRuntimeRuns.map((run) =>
+                                React.createElement("tr", { key: run.id || run.threadId || Math.random() },
+                                  React.createElement("td", { className: "playground-auth-users-cell is-identifier", title: run.title || run.input || "Untitled run" },
+                                    String(run.title || run.input || "Untitled run")
+                                  ),
+                                  React.createElement("td", { className: "playground-auth-users-cell" }, String(run.status || "unknown")),
+                                  React.createElement("td", { className: "playground-auth-users-cell" }, String(run.mode || "async")),
+                                  React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundFileDate(run.createdAt)),
+                                  React.createElement("td", { className: "playground-auth-users-cell is-uid", title: run.threadId || "—" }, run.threadId || "—"),
+                                  React.createElement("td", { className: "playground-auth-users-cell" },
+                                    run.status === "running" || run.status === "queued"
+                                      ? React.createElement("button", {
+                                          type: "button",
+                                          className: "playground-auth-users-refresh-button",
+                                          onClick: () => {
+                                            void cancelServerAgentRuntimeRun(draftServer.id, run.id);
+                                          },
+                                          title: "Cancel run",
+                                        }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
+                                      : null
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        )
+                      : React.createElement("div", { className: "playground-files-state" }, "No runs yet.")
+                )
+              )
+            );
+
+            return React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
+                serverMainTopbar,
+                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+                  serverSaveState.error
+                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
+                    : null,
+                  descriptionSection,
+                  agentRuntimeDetailsSection,
+                  agentRuntimeRunsSection
+                )
+              ),
+              agentRuntimeRunComposerModal
+            );
+          }
 
           if (isAuthServer) {
             const authUsers = Array.isArray(currentServerAuthUsers) ? currentServerAuthUsers : [];
@@ -40188,101 +41637,19 @@ const html = `<!doctype html>
             );
             const renderAuthTelemetryChart = (config) => {
               const buckets = Array.isArray(config?.buckets) ? config.buckets : [];
-              const series = Array.isArray(config?.series)
-                ? config.series.filter((entry) => entry && serverAuthAnalyticsVisibility[entry.key] !== false)
-                : [];
-              if (!series.length) {
-                return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
-              }
-
-              const svgWidth = 420;
-              const svgHeight = 178;
-              const marginTop = 14;
-              const marginRight = 10;
-              const marginBottom = 28;
-              const marginLeft = 30;
-              const plotWidth = svgWidth - marginLeft - marginRight;
-              const plotHeight = svgHeight - marginTop - marginBottom;
-              const baselineY = marginTop + plotHeight;
-              const slotWidth = plotWidth / Math.max(buckets.length - 1, 1);
-              const maxValue = Math.max(
-                1,
-                ...series.flatMap((entry) => buckets.map((bucket) => Math.max(0, Number(bucket?.[entry.key] || 0)))),
-              );
-              const labelStep = Math.max(1, Math.ceil(buckets.length / 6));
-              const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
-
-              return React.createElement("div", {
-                  className: "playground-database-overview-timeseries-card",
-                  "aria-label": config?.ariaLabel || "Auth telemetry chart",
-                },
-                React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
-                  React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
-                    React.createElement("svg", {
-                      className: "playground-database-overview-timeseries-svg",
-                      viewBox: "0 0 " + svgWidth + " " + svgHeight,
-                      preserveAspectRatio: "xMidYMid meet",
-                      role: "img",
-                      "aria-label": config?.ariaLabel || "Auth telemetry chart",
-                    },
-                      Array.from({ length: 4 }).map((_, index) => {
-                        const y = marginTop + (plotHeight / 3) * index;
-                        return React.createElement("line", {
-                          key: "grid:" + index,
-                          className: "playground-database-overview-timeseries-grid-line",
-                          x1: marginLeft,
-                          y1: y,
-                          x2: svgWidth - marginRight,
-                          y2: y,
-                        });
-                      }),
-                      yAxisValues.map((value, index) =>
-                        React.createElement("text", {
-                          key: "y-axis:" + index,
-                          x: 0,
-                          y: marginTop + (plotHeight / 2) * index + 4,
-                          className: "playground-database-overview-timeseries-axis-label",
-                        }, formatAuthTelemetryTotal(value))
-                      ),
-                      series.map((entry) => {
-                        const points = buckets.map((bucket, index) => ({
-                          x: marginLeft + slotWidth * index,
-                          y: baselineY - ((Math.max(0, Number(bucket?.[entry.key] || 0)) / maxValue) * plotHeight),
-                        }));
-                        const linePath = buildAuthAnalyticsSvgLinePath(points);
-                        const lastPoint = points[points.length - 1] || null;
-                        return React.createElement(React.Fragment, { key: "series:" + entry.key },
-                          linePath
-                            ? React.createElement("path", {
-                                d: linePath,
-                                className: "playground-database-overview-timeseries-line is-" + entry.tone,
-                              })
-                            : null,
-                          lastPoint
-                            ? React.createElement("circle", {
-                                cx: lastPoint.x,
-                                cy: lastPoint.y,
-                                r: "3.5",
-                                className: "playground-database-overview-timeseries-dot is-" + entry.tone,
-                              })
-                            : null
-                        );
-                      }),
-                      buckets.map((bucket, index) => (
-                        index % labelStep === 0 || index === buckets.length - 1
-                          ? React.createElement("text", {
-                              key: "label:" + index,
-                              x: marginLeft + slotWidth * index,
-                              y: svgHeight - 8,
-                              textAnchor: index === 0 ? "start" : index === buckets.length - 1 ? "end" : "middle",
-                              className: "playground-database-overview-timeseries-axis-label",
-                            }, formatAuthTelemetryHour(bucket?.timestamp))
-                          : null
-                      ))
-                    )
-                  )
-                )
-              );
+            const series = Array.isArray(config?.series)
+              ? config.series.filter((entry) => entry && serverAuthAnalyticsVisibility[entry.key] !== false)
+              : [];
+              return renderPlaygroundTelemetryTimeseriesChart({
+                ariaLabel: config?.ariaLabel || "Auth telemetry chart",
+                labels: buckets,
+                series,
+                emptyText: config?.emptyText || "Select a metric",
+                buildLinePath: buildAuthAnalyticsSvgLinePath,
+                getSeriesValue: (entry, bucket) => bucket?.[entry.key],
+                getXAxisLabel: (bucket) => formatAuthTelemetryHour(bucket?.timestamp),
+                formatAxisValue: (value) => formatAuthTelemetryTotal(value),
+              });
             };
             const renderAuthSummaryFact = (label, value) => React.createElement("div", {
                 className: "playground-tasks-detail-fact",
@@ -40490,7 +41857,8 @@ const html = `<!doctype html>
               ),
               serverBottomBar
             ),
-            serverDeploymentHelpModal
+            serverDeploymentHelpModal,
+            serverRuntimePreviewModal
           );
         }
 
@@ -40593,98 +41961,16 @@ const html = `<!doctype html>
             const series = Array.isArray(config?.series)
               ? config.series.filter((entry) => entry && databaseAnalyticsVisibility[entry.key] !== false)
               : [];
-            if (!series.length) {
-              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
-            }
-
-            const svgWidth = 420;
-            const svgHeight = 178;
-            const marginTop = 14;
-            const marginRight = 10;
-            const marginBottom = 28;
-            const marginLeft = 30;
-            const plotWidth = svgWidth - marginLeft - marginRight;
-            const plotHeight = svgHeight - marginTop - marginBottom;
-            const baselineY = marginTop + plotHeight;
-            const slotWidth = plotWidth / Math.max(buckets.length - 1, 1);
-            const maxValue = Math.max(
-              1,
-              ...series.flatMap((entry) => buckets.map((bucket) => Math.max(0, Number(bucket?.[entry.key] || 0)))),
-            );
-            const labelStep = Math.max(1, Math.ceil(buckets.length / 6));
-
-            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
-            return React.createElement("div", {
-                className: "playground-database-overview-timeseries-card",
-                "aria-label": config?.ariaLabel || "Database telemetry chart",
-              },
-              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
-                React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
-                  React.createElement("svg", {
-                    className: "playground-database-overview-timeseries-svg",
-                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
-                    preserveAspectRatio: "xMidYMid meet",
-                    role: "img",
-                    "aria-label": config?.ariaLabel || "Database telemetry chart",
-                  },
-                    Array.from({ length: 4 }).map((_, index) => {
-                      const y = marginTop + (plotHeight / 3) * index;
-                      return React.createElement("line", {
-                        key: "grid:" + index,
-                        className: "playground-database-overview-timeseries-grid-line",
-                        x1: marginLeft,
-                        y1: y,
-                        x2: svgWidth - marginRight,
-                        y2: y,
-                      });
-                    }),
-                    yAxisValues.map((value, index) =>
-                      React.createElement("text", {
-                        key: "y-axis:" + index,
-                        x: 0,
-                        y: marginTop + (plotHeight / 2) * index + 4,
-                        className: "playground-database-overview-timeseries-axis-label",
-                      }, formatDatabaseTelemetryTotal(value))
-                    ),
-                    series.map((entry) => {
-                      const points = buckets.map((bucket, index) => ({
-                        x: marginLeft + slotWidth * index,
-                        y: baselineY - ((Math.max(0, Number(bucket?.[entry.key] || 0)) / maxValue) * plotHeight),
-                      }));
-                      const linePath = buildDatabaseAnalyticsSvgLinePath(points);
-                      const lastPoint = points[points.length - 1] || null;
-                      return React.createElement(React.Fragment, { key: "series:" + entry.key },
-                        linePath
-                          ? React.createElement("path", {
-                              d: linePath,
-                              className: "playground-database-overview-timeseries-line is-" + entry.tone,
-                            })
-                          : null,
-                        lastPoint
-                          ? React.createElement("circle", {
-                              cx: lastPoint.x,
-                              cy: lastPoint.y,
-                              r: "3.5",
-                              className: "playground-database-overview-timeseries-dot is-" + entry.tone,
-                            })
-                          : null
-                      );
-                    }),
-                    buckets.map((bucket, index) => (
-                      index % labelStep === 0 || index === buckets.length - 1
-                        ? React.createElement("text", {
-                            key: "label:" + index,
-                            x: marginLeft + slotWidth * index,
-                            y: svgHeight - 8,
-                            textAnchor: index === 0 ? "start" : index === buckets.length - 1 ? "end" : "middle",
-                            className: "playground-database-overview-timeseries-axis-label",
-                          }, formatDatabaseTelemetryHour(bucket?.timestamp))
-                        : null
-                    ))
-                  )
-                )
-              )
-            );
+            return renderPlaygroundTelemetryTimeseriesChart({
+              ariaLabel: config?.ariaLabel || "Database telemetry chart",
+              labels: buckets,
+              series,
+              emptyText: config?.emptyText || "Select a metric",
+              buildLinePath: buildDatabaseAnalyticsSvgLinePath,
+              getSeriesValue: (entry, bucket) => bucket?.[entry.key],
+              getXAxisLabel: (bucket) => formatDatabaseTelemetryHour(bucket?.timestamp),
+              formatAxisValue: (value) => formatDatabaseTelemetryTotal(value),
+            });
           };
           const documentIsDirty = databaseDocumentEditorState.value !== databaseDocumentEditorState.initialValue;
           const parsedDocumentData = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
@@ -41619,99 +42905,16 @@ const html = `<!doctype html>
             const series = Array.isArray(config?.series)
               ? config.series.filter((entry) => entry && environmentAnalyticsVisibility[entry.key] !== false)
               : [];
-            if (!labels.length || !series.length) {
-              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
-            }
-
-            const svgWidth = 420;
-            const svgHeight = 178;
-            const marginTop = 14;
-            const marginRight = 10;
-            const marginBottom = 28;
-            const marginLeft = 30;
-            const plotWidth = svgWidth - marginLeft - marginRight;
-            const plotHeight = svgHeight - marginTop - marginBottom;
-            const baselineY = marginTop + plotHeight;
-            const slotWidth = plotWidth / Math.max(labels.length - 1, 1);
-            const xForIndex = (index) => labels.length === 1 ? marginLeft + plotWidth : marginLeft + slotWidth * index;
-            const maxValue = Math.max(
-              1,
-              ...series.flatMap((entry) => labels.map((_, index) => Math.max(0, Number(entry?.values?.[index] || 0)))),
-            );
-            const labelStep = Math.max(1, Math.ceil(labels.length / 6));
-            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
-
-            return React.createElement("div", {
-                className: "playground-database-overview-timeseries-card",
-                "aria-label": config?.ariaLabel || "Computer activity chart",
-              },
-              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
-                React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
-                  React.createElement("svg", {
-                    className: "playground-database-overview-timeseries-svg",
-                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
-                    preserveAspectRatio: "xMidYMid meet",
-                    role: "img",
-                    "aria-label": config?.ariaLabel || "Computer activity chart",
-                  },
-                    Array.from({ length: 4 }).map((_, index) => {
-                      const y = marginTop + (plotHeight / 3) * index;
-                      return React.createElement("line", {
-                        key: "grid:" + index,
-                        className: "playground-database-overview-timeseries-grid-line",
-                        x1: marginLeft,
-                        y1: y,
-                        x2: svgWidth - marginRight,
-                        y2: y,
-                      });
-                    }),
-                    yAxisValues.map((value, index) =>
-                      React.createElement("text", {
-                        key: "y-axis:" + index,
-                        x: 0,
-                        y: marginTop + (plotHeight / 2) * index + 4,
-                        className: "playground-database-overview-timeseries-axis-label",
-                      }, config?.formatAxisValue ? config.formatAxisValue(value) : String(value))
-                    ),
-                    series.map((entry) => {
-                      const points = labels.map((_, index) => ({
-                        x: xForIndex(index),
-                        y: baselineY - ((Math.max(0, Number(entry?.values?.[index] || 0)) / maxValue) * plotHeight),
-                      }));
-                      const linePath = buildEnvironmentAnalyticsSvgLinePath(points);
-                      const lastPoint = points[points.length - 1] || null;
-                      return React.createElement(React.Fragment, { key: "series:" + entry.key },
-                        linePath
-                          ? React.createElement("path", {
-                              d: linePath,
-                              className: "playground-database-overview-timeseries-line is-" + entry.tone,
-                            })
-                          : null,
-                        lastPoint
-                          ? React.createElement("circle", {
-                              cx: lastPoint.x,
-                              cy: lastPoint.y,
-                              r: "3.5",
-                              className: "playground-database-overview-timeseries-dot is-" + entry.tone,
-                            })
-                          : null
-                      );
-                    }),
-                    labels.map((label, index) => (
-                      index % labelStep === 0 || index === labels.length - 1
-                        ? React.createElement("text", {
-                            key: "label:" + index,
-                            x: xForIndex(index),
-                            y: svgHeight - 8,
-                            textAnchor: index === 0 ? "start" : index === labels.length - 1 ? "end" : "middle",
-                            className: "playground-database-overview-timeseries-axis-label",
-                          }, String(label || ""))
-                        : null
-                    ))
-                  )
-                )
-              )
-            );
+            return renderPlaygroundTelemetryTimeseriesChart({
+              ariaLabel: config?.ariaLabel || "Computer activity chart",
+              labels,
+              series,
+              emptyText: config?.emptyText || "Select a metric",
+              buildLinePath: buildEnvironmentAnalyticsSvgLinePath,
+              getSeriesValue: (entry, _label, index) => entry?.values?.[index],
+              getXAxisLabel: (label) => String(label || ""),
+              formatAxisValue: (value) => config?.formatAxisValue ? config.formatAxisValue(value) : String(value),
+            });
           };
           const environmentAnalyticsOverview = React.createElement("div", { className: "playground-database-overview" },
             React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
@@ -41838,9 +43041,6 @@ const html = `<!doctype html>
                       "aria-pressed": officeAppsEnabled ? "true" : "false",
                       title: officeAppsEnabled ? "Office apps enabled" : "Office apps disabled",
                     }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                  ),
-                  renderEnvironmentFactRow("Status",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, environmentStatusLabel)
                   )
                 )
               : null
@@ -42655,7 +43855,7 @@ const html = `<!doctype html>
                 React.createElement("div", { className: "playground-files-topbar" },
                   React.createElement("div", { className: "playground-environments-list-title" }, "Environments"),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-environments-search-shell" },
                       React.createElement("button", {
                         type: "button",
                         className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
@@ -42663,16 +43863,16 @@ const html = `<!doctype html>
                         title: currentSearchTitle,
                       }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
                       toolbarPopover === "search"
-                        ? React.createElement("div", { className: "playground-files-search-popover" },
-                            React.createElement("div", { className: "playground-files-search-popover-header" },
-                              React.createElement("div", { className: "playground-files-search-popover-title" }, currentSearchTitle),
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            React.createElement("div", { className: "playground-tasks-project-search-header" },
+                              React.createElement("div", { className: "playground-tasks-project-search-title" }, currentSearchTitle),
                               React.createElement("button", {
                                 type: "button",
-                                className: "playground-files-search-popover-close",
+                                className: "playground-tasks-project-search-close",
                                 onClick: () => setToolbarPopover(""),
                               }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
                             ),
-                            React.createElement("div", { className: "playground-files-search-popover-body" },
+                            React.createElement("div", { className: "playground-tasks-project-search-body" },
                               React.createElement("div", { className: "playground-files-search-field" },
                                 React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
                                 React.createElement("input", {
@@ -42703,6 +43903,8 @@ const html = `<!doctype html>
                                                     ? React.createElement(Database, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                     : canonicalizePlaygroundServerKind(item.kind) === "function"
                                                       ? React.createElement(FunctionSquare, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
+                                                      : canonicalizePlaygroundServerKind(item.kind) === "agent_runtime"
+                                                        ? React.createElement(Bot, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                       : canonicalizePlaygroundServerKind(item.kind) === "auth"
                                                         ? React.createElement(Users, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                         : React.createElement(Globe, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
@@ -42716,7 +43918,7 @@ const html = `<!doctype html>
                                       )
                                     )
                                   : React.createElement("div", { className: "playground-files-search-empty" }, currentSearchEmpty)
-                                : React.createElement("div", { className: "playground-files-search-empty" }, "Type a name or description to search.")
+                                : React.createElement("div", { className: "playground-tasks-project-search-hint" }, "Type a name or description to search.")
                             )
                           )
                         : null
@@ -42758,7 +43960,7 @@ const html = `<!doctype html>
                             const isDatabaseResource = resource.resourceType === "database";
                             const isActive = isDatabaseResource ? (!selectedServerId && selectedDatabaseId === resource.id) : selectedServerId === resource.id;
                             const normalizedKind = canonicalizePlaygroundServerKind(resource.kind);
-                            const serverListMetaLabel = normalizedKind === "web_app" || normalizedKind === "function" || normalizedKind === "database" || normalizedKind === "auth"
+                            const serverListMetaLabel = normalizedKind === "web_app" || normalizedKind === "function" || normalizedKind === "database" || normalizedKind === "auth" || normalizedKind === "agent_runtime"
                                 ? ""
                                 : String(resource.kind || "").replace(/_/g, " ");
                             return React.createElement("div", {
@@ -42774,6 +43976,8 @@ const html = `<!doctype html>
                                     ? React.createElement(Database, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                     : normalizedKind === "function"
                                       ? React.createElement(FunctionSquare, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                      : normalizedKind === "agent_runtime"
+                                        ? React.createElement(Bot, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                       : normalizedKind === "auth"
                                         ? React.createElement(Users, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                         : normalizedKind === "web_app"
@@ -42790,7 +43994,7 @@ const html = `<!doctype html>
                           })
                         : React.createElement("div", { className: "playground-environments-empty-state" },
                             React.createElement("div", { className: "playground-environments-empty-title" }, "No resources"),
-                            React.createElement("div", { className: "playground-environments-empty-copy" }, "Create your first web app, function, auth module, or database."),
+                            React.createElement("div", { className: "playground-environments-empty-copy" }, "Create your first web app, function, auth module, agent runtime, or database."),
                             React.createElement("button", {
                               type: "button",
                               className: "playground-environments-action-button is-primary",
@@ -42870,7 +44074,7 @@ const html = `<!doctype html>
                               )
                             : renderCurrentDatabaseEditor())
                         : React.createElement("div", { className: "playground-environments-detail-empty" },
-                            React.createElement("div", { className: "playground-files-state" }, "Select a web app, function, auth module, or database to configure it.")
+                            React.createElement("div", { className: "playground-files-state" }, "Select a web app, function, auth module, agent runtime, or database to configure it.")
                           )
                   )
                 : (isLoadingCurrentEnvironment && !draftEnvironment
@@ -43355,6 +44559,162 @@ const html = `<!doctype html>
               teamSubagentIds: nextIds,
             };
           });
+        }
+
+        function PlaygroundAgentTelemetryTimeseriesChart({
+          ariaLabel,
+          labels,
+          series,
+          emptyText,
+          buildLinePath,
+          getSeriesValue,
+          getXAxisLabel,
+          formatAxisValue,
+        }) {
+          const frameRef = useRef(null);
+          const [measuredWidth, setMeasuredWidth] = useState(0);
+
+          useLayoutEffect(() => {
+            const node = frameRef.current;
+            if (!node) {
+              return undefined;
+            }
+
+            const updateWidth = () => {
+              const nextWidth = Math.max(1, Math.round(node.clientWidth || 420));
+              setMeasuredWidth((current) => current === nextWidth ? current : nextWidth);
+            };
+
+            updateWidth();
+
+            if (typeof ResizeObserver === "undefined") {
+              window.addEventListener("resize", updateWidth);
+              return () => window.removeEventListener("resize", updateWidth);
+            }
+
+            const observer = new ResizeObserver(() => updateWidth());
+            observer.observe(node);
+            return () => observer.disconnect();
+          }, []);
+
+          const normalizedLabels = Array.isArray(labels) ? labels : [];
+          const normalizedSeries = Array.isArray(series) ? series.filter(Boolean) : [];
+          if (!normalizedLabels.length || !normalizedSeries.length) {
+            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "Select a metric");
+          }
+
+          const svgWidth = Math.max(1, Math.round(measuredWidth || 420));
+          const svgHeight = 178;
+          const marginTop = 14;
+          const marginRight = 10;
+          const marginBottom = 28;
+          const marginLeft = 30;
+          const plotWidth = svgWidth - marginLeft - marginRight;
+          const plotHeight = svgHeight - marginTop - marginBottom;
+          const baselineY = marginTop + plotHeight;
+          const readValue = typeof getSeriesValue === "function"
+            ? getSeriesValue
+            : (entry, _label, index) => entry?.values?.[index];
+          const renderXAxisLabel = typeof getXAxisLabel === "function"
+            ? getXAxisLabel
+            : (label) => String(label || "");
+          const renderYAxisLabel = typeof formatAxisValue === "function"
+            ? formatAxisValue
+            : (value) => String(value);
+          const maxValue = Math.max(
+            1,
+            ...normalizedSeries.flatMap((entry) =>
+              normalizedLabels.map((label, index) => Math.max(0, Number(readValue(entry, label, index) || 0)))
+            ),
+          );
+          const labelStep = Math.max(1, Math.ceil(normalizedLabels.length / 6));
+          const slotWidth = plotWidth / Math.max(normalizedLabels.length - 1, 1);
+          const xForIndex = (index) => normalizedLabels.length === 1
+            ? marginLeft + plotWidth
+            : marginLeft + slotWidth * index;
+          const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
+
+          return React.createElement("div", {
+              className: "playground-database-overview-timeseries-card",
+              "aria-label": ariaLabel || "Telemetry chart",
+            },
+            React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+              React.createElement("div", {
+                  ref: frameRef,
+                  className: "playground-database-overview-timeseries-frame",
+                  style: { height: "178px" },
+                },
+                React.createElement("svg", {
+                    className: "playground-database-overview-timeseries-svg",
+                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
+                    preserveAspectRatio: "none",
+                    role: "img",
+                    "aria-label": ariaLabel || "Telemetry chart",
+                  },
+                  Array.from({ length: 4 }).map((_, index) => {
+                    const y = marginTop + (plotHeight / 3) * index;
+                    return React.createElement("line", {
+                      key: "grid:" + index,
+                      className: "playground-database-overview-timeseries-grid-line",
+                      x1: marginLeft,
+                      y1: y,
+                      x2: svgWidth - marginRight,
+                      y2: y,
+                    });
+                  }),
+                  yAxisValues.map((value, index) =>
+                    React.createElement("text", {
+                      key: "y-axis:" + index,
+                      x: 0,
+                      y: marginTop + (plotHeight / 2) * index + 4,
+                      className: "playground-database-overview-timeseries-axis-label",
+                      fontSize: "10",
+                    }, renderYAxisLabel(value))
+                  ),
+                  normalizedSeries.map((entry) => {
+                    const points = normalizedLabels.map((label, index) => ({
+                      x: xForIndex(index),
+                      y: baselineY - ((Math.max(0, Number(readValue(entry, label, index) || 0)) / maxValue) * plotHeight),
+                    }));
+                    const linePath = typeof buildLinePath === "function" ? buildLinePath(points) : "";
+                    const lastPoint = points[points.length - 1] || null;
+                    return React.createElement(React.Fragment, { key: "series:" + entry.key },
+                      linePath
+                        ? React.createElement("path", {
+                            d: linePath,
+                            className: "playground-database-overview-timeseries-line is-" + entry.tone,
+                          })
+                        : null,
+                      lastPoint
+                        ? React.createElement("circle", {
+                            cx: lastPoint.x,
+                            cy: lastPoint.y,
+                            r: "3.5",
+                            className: "playground-database-overview-timeseries-dot is-" + entry.tone,
+                          })
+                        : null
+                    );
+                  }),
+                  normalizedLabels.map((label, index) => (
+                    index % labelStep === 0 || index === normalizedLabels.length - 1
+                      ? React.createElement("text", {
+                          key: "label:" + index,
+                          x: xForIndex(index),
+                          y: svgHeight - 8,
+                          textAnchor: index === 0 ? "start" : index === normalizedLabels.length - 1 ? "end" : "middle",
+                          className: "playground-database-overview-timeseries-axis-label",
+                          fontSize: "10",
+                        }, renderXAxisLabel(label, index))
+                      : null
+                  ))
+                )
+              )
+            )
+          );
+        }
+
+        function renderPlaygroundTelemetryTimeseriesChart(config) {
+          return React.createElement(PlaygroundAgentTelemetryTimeseriesChart, config);
         }
 
         const loadAgentDetails = useCallback(async (agentId) => {
@@ -44710,99 +46070,16 @@ const html = `<!doctype html>
             const series = Array.isArray(config?.series)
               ? config.series.filter((entry) => entry && agentAnalyticsVisibility[entry.key] !== false)
               : [];
-            if (!labels.length || !series.length) {
-              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
-            }
-
-            const svgWidth = 420;
-            const svgHeight = 178;
-            const marginTop = 14;
-            const marginRight = 10;
-            const marginBottom = 28;
-            const marginLeft = 30;
-            const plotWidth = svgWidth - marginLeft - marginRight;
-            const plotHeight = svgHeight - marginTop - marginBottom;
-            const baselineY = marginTop + plotHeight;
-            const slotWidth = plotWidth / Math.max(labels.length - 1, 1);
-            const xForIndex = (index) => labels.length === 1 ? marginLeft + plotWidth : marginLeft + slotWidth * index;
-            const maxValue = Math.max(
-              1,
-              ...series.flatMap((entry) => labels.map((_, index) => Math.max(0, Number(entry?.values?.[index] || 0)))),
-            );
-            const labelStep = Math.max(1, Math.ceil(labels.length / 6));
-            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
-
-            return React.createElement("div", {
-                className: "playground-database-overview-timeseries-card",
-                "aria-label": config?.ariaLabel || "Agent activity chart",
-              },
-              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
-                React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
-                  React.createElement("svg", {
-                    className: "playground-database-overview-timeseries-svg",
-                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
-                    preserveAspectRatio: "xMidYMid meet",
-                    role: "img",
-                    "aria-label": config?.ariaLabel || "Agent activity chart",
-                  },
-                    Array.from({ length: 4 }).map((_, index) => {
-                      const y = marginTop + (plotHeight / 3) * index;
-                      return React.createElement("line", {
-                        key: "grid:" + index,
-                        className: "playground-database-overview-timeseries-grid-line",
-                        x1: marginLeft,
-                        y1: y,
-                        x2: svgWidth - marginRight,
-                        y2: y,
-                      });
-                    }),
-                    yAxisValues.map((value, index) =>
-                      React.createElement("text", {
-                        key: "y-axis:" + index,
-                        x: 0,
-                        y: marginTop + (plotHeight / 2) * index + 4,
-                        className: "playground-database-overview-timeseries-axis-label",
-                      }, config?.formatAxisValue ? config.formatAxisValue(value) : String(value))
-                    ),
-                    series.map((entry) => {
-                      const points = labels.map((_, index) => ({
-                        x: xForIndex(index),
-                        y: baselineY - ((Math.max(0, Number(entry?.values?.[index] || 0)) / maxValue) * plotHeight),
-                      }));
-                      const linePath = buildAgentAnalyticsSvgLinePath(points);
-                      const lastPoint = points[points.length - 1] || null;
-                      return React.createElement(React.Fragment, { key: "series:" + entry.key },
-                        linePath
-                          ? React.createElement("path", {
-                              d: linePath,
-                              className: "playground-database-overview-timeseries-line is-" + entry.tone,
-                            })
-                          : null,
-                        lastPoint
-                          ? React.createElement("circle", {
-                              cx: lastPoint.x,
-                              cy: lastPoint.y,
-                              r: "3.5",
-                              className: "playground-database-overview-timeseries-dot is-" + entry.tone,
-                            })
-                          : null
-                      );
-                    }),
-                    labels.map((label, index) => (
-                      index % labelStep === 0 || index === labels.length - 1
-                        ? React.createElement("text", {
-                            key: "label:" + index,
-                            x: xForIndex(index),
-                            y: svgHeight - 8,
-                            textAnchor: index === 0 ? "start" : index === labels.length - 1 ? "end" : "middle",
-                            className: "playground-database-overview-timeseries-axis-label",
-                          }, String(label || ""))
-                        : null
-                    ))
-                  )
-                )
-              )
-            );
+            return renderPlaygroundTelemetryTimeseriesChart({
+              ariaLabel: config?.ariaLabel || "Agent activity chart",
+              labels,
+              series,
+              emptyText: config?.emptyText || "Select a metric",
+              buildLinePath: buildAgentAnalyticsSvgLinePath,
+              getSeriesValue: (entry, _label, index) => entry?.values?.[index],
+              getXAxisLabel: (label) => String(label || ""),
+              formatAxisValue: (value) => config?.formatAxisValue ? config.formatAxisValue(value) : String(value),
+            });
           };
           const agentAnalyticsOverview = React.createElement("div", { className: "playground-database-overview" },
             React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
@@ -44957,18 +46234,14 @@ const html = `<!doctype html>
                   renderAgentFactRow("Last Run",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftAgent.lastRunAt ? formatPlaygroundFileDate(draftAgent.lastRunAt) : "None")
                   ),
-                  renderAgentFactRow("Execution",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, isTeamAgent ? "Claude Code Subagents" : modelMeta.label)
-                  ),
-                  renderAgentFactRow(isTeamAgent ? "Orchestrator" : "Reasoning",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, isTeamAgent ? (selectedTeamOrchestrator?.name || "Not selected") : String(draftAgent.reasoningEffort || "").replace(/^./, (value) => value.toUpperCase()))
-                  ),
-                  renderAgentFactRow(isTeamAgent ? "Subagents" : "Binary",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, isTeamAgent ? String(selectedTeamSubagentIds.length) : (draftAgent.binary || "Claude Code CLI"))
-                  ),
-                  !isTeamAgent
-                    ? renderAgentFactRow("Skills",
-                        React.createElement("span", { className: "playground-environments-editor-fact-value" }, skillsSummary)
+                  isTeamAgent
+                    ? renderAgentFactRow("Orchestrator",
+                        React.createElement("span", { className: "playground-environments-editor-fact-value" }, selectedTeamOrchestrator?.name || "Not selected")
+                      )
+                    : null,
+                  isTeamAgent
+                    ? renderAgentFactRow("Subagents",
+                        React.createElement("span", { className: "playground-environments-editor-fact-value" }, String(selectedTeamSubagentIds.length))
                       )
                     : null
                 )
@@ -45359,7 +46632,7 @@ const html = `<!doctype html>
                 React.createElement("div", { className: "playground-files-topbar" },
                   React.createElement("div", { className: "playground-environments-list-title" }, "Agents"),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-environments-search-shell" },
                       React.createElement("button", {
                         type: "button",
                         className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
@@ -45367,16 +46640,16 @@ const html = `<!doctype html>
                         title: agentListMode === "teams" ? "Search teams" : "Search agents",
                       }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
                       toolbarPopover === "search"
-                        ? React.createElement("div", { className: "playground-files-search-popover" },
-                            React.createElement("div", { className: "playground-files-search-popover-header" },
-                              React.createElement("div", { className: "playground-files-search-popover-title" }, agentListMode === "teams" ? "Search Teams" : "Search Agents"),
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            React.createElement("div", { className: "playground-tasks-project-search-header" },
+                              React.createElement("div", { className: "playground-tasks-project-search-title" }, agentListMode === "teams" ? "Search Teams" : "Search Agents"),
                               React.createElement("button", {
                                 type: "button",
-                                className: "playground-files-search-popover-close",
+                                className: "playground-tasks-project-search-close",
                                 onClick: () => setToolbarPopover(""),
                               }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
                             ),
-                            React.createElement("div", { className: "playground-files-search-popover-body" },
+                            React.createElement("div", { className: "playground-tasks-project-search-body" },
                               React.createElement("div", { className: "playground-files-search-field" },
                                 React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
                                 React.createElement("input", {
@@ -45411,7 +46684,7 @@ const html = `<!doctype html>
                                           )
                                       )
                                     : React.createElement("div", { className: "playground-files-search-empty" }, agentListMode === "teams" ? "No matching teams found." : "No matching agents found.")
-                                : React.createElement("div", { className: "playground-files-search-empty" }, agentListMode === "teams" ? "Type a team name, description, or instruction to search." : "Type an agent name, description, or instruction to search.")
+                                : React.createElement("div", { className: "playground-tasks-project-search-hint" }, agentListMode === "teams" ? "Type a team name, description, or instruction to search." : "Type an agent name, description, or instruction to search.")
                             )
                           )
                         : null
@@ -45719,6 +46992,47 @@ const html = `<!doctype html>
             description: "Let the agent create, organize, and comment on planning tasks and projects.",
             icon: "list",
           },
+          app_platform: {
+            name: "App Platform",
+            description: "Create, connect, deploy, and debug web apps, functions, databases, and auth resources.",
+            icon: "server",
+            markdown: [
+              "# App Platform Skill",
+              "",
+              "This skill manages app-platform resources across web apps, functions, databases, and auth modules.",
+              "",
+              "## Usage",
+              "",
+              "Invoke this skill when the user needs to:",
+              "- Create a new web app, function, database, or auth resource",
+              "- Connect a web app or function to database or auth bindings",
+              "- Upload, edit, list, download, or delete server source files",
+              "- Deploy a resource and inspect its runtime configuration",
+              "- Read runtime context, logs, analytics, and diagnostics",
+              "- Manage auth users or database collections and documents",
+              "",
+              "## Process",
+              "",
+              "1. Inspect existing resource context before changing bindings or deploying.",
+              "2. Use the built-in \`app-platform.py\` helper instead of handwritten curl requests.",
+              "3. Prefer explicit create/connect/deploy steps over implicit assumptions.",
+              "4. When debugging, inspect context and logs before editing source files.",
+              "",
+              "## Configuration",
+              "",
+              "- **CLI path**: \`/workspace/.claude/skills/app-platform/scripts/app-platform.py\`",
+              "- **Authentication**: \`COMPUTER_AGENTS_API_KEY\` must be available in the runtime",
+              "- **Primary command groups**: \`resources\`, \`servers\`, \`bindings\`, \`files\`, \`deploy\`, \`logs\`, \`auth-users\`, and \`database\`",
+            ].join("\\n"),
+            codeFiles: [
+              {
+                id: "app-platform-main",
+                name: "app-platform.py",
+                content: "# App Platform runtime is managed by the platform.",
+                language: "python",
+              },
+            ],
+          },
           computer_agents: {
             name: "Computer Agents",
             description: "Inspect and manage agents, environments, skills, and threads from inside the run.",
@@ -45791,6 +47105,7 @@ const html = `<!doctype html>
           if (normalizedLower.startsWith("skill-pptx-")) return "pptx";
           if (normalizedLower.startsWith("skill-memory-")) return "memory";
           if (normalizedLower.startsWith("skill-task-management-")) return "task_management";
+          if (normalizedLower.startsWith("skill-app-platform-")) return "app_platform";
           if (normalizedLower.startsWith("skill-computer-agents-")) return "computer_agents";
 
           return normalizedLower;
@@ -46555,6 +47870,7 @@ const html = `<!doctype html>
           if (skill?.id === "pptx") return Layers;
           if (skill?.id === "memory") return Brain;
           if (skill?.id === "task_management") return ListTodo;
+          if (skill?.id === "app_platform") return Server;
           if (skill?.id === "computer_agents") return Cpu;
           return Layers;
         }
@@ -48414,7 +49730,7 @@ const html = `<!doctype html>
                 React.createElement("div", { className: "playground-files-topbar" },
                   React.createElement("div", { className: "playground-environments-list-title" }, "Skills"),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-environments-search-shell" },
                       React.createElement("button", {
                         type: "button",
                         className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
@@ -48422,16 +49738,16 @@ const html = `<!doctype html>
                         title: skillListMode === "custom" ? "Search skills" : "Search system skills",
                       }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
                       toolbarPopover === "search"
-                        ? React.createElement("div", { className: "playground-files-search-popover" },
-                            React.createElement("div", { className: "playground-files-search-popover-header" },
-                              React.createElement("div", { className: "playground-files-search-popover-title" }, skillListMode === "custom" ? "Search Skills" : "Search System Skills"),
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            React.createElement("div", { className: "playground-tasks-project-search-header" },
+                              React.createElement("div", { className: "playground-tasks-project-search-title" }, skillListMode === "custom" ? "Search Skills" : "Search System Skills"),
                               React.createElement("button", {
                                 type: "button",
-                                className: "playground-files-search-popover-close",
+                                className: "playground-tasks-project-search-close",
                                 onClick: () => setToolbarPopover(""),
                               }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
                             ),
-                            React.createElement("div", { className: "playground-files-search-popover-body" },
+                            React.createElement("div", { className: "playground-tasks-project-search-body" },
                               React.createElement("div", { className: "playground-files-search-field" },
                                 React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
                                 React.createElement("input", {
@@ -48464,7 +49780,7 @@ const html = `<!doctype html>
                                       )
                                     )
                                   : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "No matching skills found." : "No matching system skills found.")
-                                : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "Type a skill name or description to search." : "Type a system skill name or description to search.")
+                                : React.createElement("div", { className: "playground-tasks-project-search-hint" }, skillListMode === "custom" ? "Type a skill name or description to search." : "Type a system skill name or description to search.")
                             )
                           )
                         : null
@@ -49735,6 +51051,7 @@ const html = `<!doctype html>
           if (skill?.id === "pptx") return Layers;
           if (skill?.id === "memory") return Brain;
           if (skill?.id === "task_management") return ListTodo;
+          if (skill?.id === "app_platform") return Server;
           if (skill?.id === "computer_agents") return Cpu;
           return Layers;
         }
@@ -50029,6 +51346,7 @@ const html = `<!doctype html>
             pptx: "pptx",
             memory: "memory",
             task_management: "taskManagement",
+            app_platform: "appPlatform",
           };
           const payload = {};
           Object.entries(defaultSkillMap).forEach(([skillId, payloadKey]) => {
@@ -58078,7 +59396,6 @@ const html = `<!doctype html>
                   githubRepo: githubRepo || null,
                   enabledSkills: enabledSkillsPayload || null,
                   environmentId: launchEnvironmentId || "",
-                  executionStarted: true,
                 },
               });
             }
@@ -65190,6 +66507,7 @@ const html = `<!doctype html>
           { id: "pptx", name: "PowerPoint/PPTX", enabled: true },
           { id: "memory", name: "Memory", enabled: true },
           { id: "task_management", name: "Task Management", enabled: true },
+          { id: "app_platform", name: "App Platform", enabled: true },
           { id: "computer_agents", name: "Computer Agents", enabled: true }
         ];
         const SESSION_API_KEY_SENTINEL = "__runner_playground_session__";
@@ -65740,6 +67058,7 @@ const html = `<!doctype html>
             pptx: "pptx",
             memory: "memory",
             task_management: "taskManagement",
+            app_platform: "appPlatform",
           };
           const payload = {};
           Object.entries(defaultSkillMap).forEach(([skillId, payloadKey]) => {
@@ -65940,7 +67259,15 @@ const html = `<!doctype html>
             }
             setLatestInteractedProjectId(updatedTask.projectId || welcomeWidgetsState.projectId || latestInteractedProjectId || "");
             setThreadAgentSelectionOverride(null);
-            setPendingThreadRunRequest(null);
+            setPendingThreadRunRequest({
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              threadId: threadRecord.id,
+              prompt: launchPrompt,
+              attachments: launchAttachments,
+              githubRepo: githubRepo || null,
+              enabledSkills: enabledSkillsPayload || null,
+              environmentId: normalizedTask.environmentId || "",
+            });
             setActivePage("thread");
             setCurrentThreadId(threadRecord.id);
             setContentMode("chat");
@@ -69247,77 +70574,6 @@ const html = `<!doctype html>
           }
         }, [removeStatusIndicatorItem, updateThreadTaskPreviewStatus, upsertStatusIndicatorItem]);
 
-        const startThreadRunInBackground = useCallback(async function startThreadRunInBackground(threadId, taskRunRequest, taskPreview) {
-          const normalizedThreadId = typeof threadId === "string" ? threadId.trim() : "";
-          const normalizedPrompt = typeof taskRunRequest?.prompt === "string" ? taskRunRequest.prompt.trim() : "";
-          if (!normalizedThreadId || !normalizedPrompt) {
-            return;
-          }
-
-          try {
-            const response = await fetch(proxyBackendBase + "/threads/" + encodeURIComponent(normalizedThreadId) + "/messages", {
-              method: "POST",
-              headers: {
-                ...authRequestHeaders,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                content: normalizedPrompt,
-                attachments: Array.isArray(taskRunRequest?.attachments) ? taskRunRequest.attachments : [],
-                githubRepo: taskRunRequest?.githubRepo && typeof taskRunRequest.githubRepo === "object" ? taskRunRequest.githubRepo : undefined,
-                enabledSkills: taskRunRequest?.enabledSkills && typeof taskRunRequest.enabledSkills === "object" ? taskRunRequest.enabledSkills : undefined,
-              }),
-            });
-
-            if (!response.ok) {
-              const text = await response.text().catch(() => "");
-              let parsed = {};
-              try {
-                parsed = text ? JSON.parse(text) : {};
-              } catch {
-                parsed = { message: text };
-              }
-              throw new Error(parsed?.message || parsed?.error || "Failed to start thread execution.");
-            }
-
-            updateRealThreadStatus(normalizedThreadId, "running");
-            void refreshThreads();
-
-            const reader = response.body?.getReader ? response.body.getReader() : null;
-            if (reader) {
-              try {
-                while (true) {
-                  const { done } = await reader.read();
-                  if (done) {
-                    break;
-                  }
-                }
-              } finally {
-                reader.releaseLock();
-              }
-            } else {
-              await response.text().catch(() => "");
-            }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to start thread execution.";
-            if (taskPreview?.taskId) {
-              applyTaskRunState({
-                taskId: taskPreview.taskId,
-                projectId: taskPreview.projectId || "",
-                threadId: normalizedThreadId,
-                ticketNumber: taskPreview.ticketNumber || "",
-                title: taskPreview.title || "Untitled Task",
-                phase: "failed",
-                error: errorMessage,
-              });
-            }
-            console.error("Failed to launch background task thread run", error);
-          } finally {
-            void loadThreadGroundTruthStatus(normalizedThreadId);
-            void refreshThreads();
-          }
-        }, [applyTaskRunState, authRequestHeaders, loadThreadGroundTruthStatus, proxyBackendBase, refreshThreads, updateRealThreadStatus]);
-
         const syncCompletedTaskRun = useCallback(async function syncCompletedTaskRun(taskRunState) {
           const normalizedTaskId = typeof taskRunState?.taskId === "string" ? taskRunState.taskId.trim() : "";
           const normalizedThreadId = typeof taskRunState?.threadId === "string" ? taskRunState.threadId.trim() : "";
@@ -70145,6 +71401,129 @@ const html = `<!doctype html>
                     svgHeight: resolvedSvgHeight,
                   })
                 : children
+            )
+          );
+        }
+
+        function renderPlaygroundTelemetryTimeseriesChart({
+          ariaLabel,
+          labels,
+          series,
+          emptyText,
+          buildLinePath,
+          getSeriesValue,
+          getXAxisLabel,
+          formatAxisValue,
+        }) {
+          const normalizedLabels = Array.isArray(labels) ? labels : [];
+          const normalizedSeries = Array.isArray(series) ? series.filter(Boolean) : [];
+          if (!normalizedLabels.length || !normalizedSeries.length) {
+            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "Select a metric");
+          }
+
+          const chartHeight = 178;
+          const marginTop = 14;
+          const marginRight = 10;
+          const marginBottom = 28;
+          const marginLeft = 30;
+          const readValue = typeof getSeriesValue === "function"
+            ? getSeriesValue
+            : (entry, _label, index) => entry?.values?.[index];
+          const renderXAxisLabel = typeof getXAxisLabel === "function"
+            ? getXAxisLabel
+            : (label) => String(label || "");
+          const renderYAxisLabel = typeof formatAxisValue === "function"
+            ? formatAxisValue
+            : (value) => String(value);
+
+          const maxValue = Math.max(
+            1,
+            ...normalizedSeries.flatMap((entry) =>
+              normalizedLabels.map((label, index) => Math.max(0, Number(readValue(entry, label, index) || 0)))
+            ),
+          );
+          const labelStep = Math.max(1, Math.ceil(normalizedLabels.length / 6));
+
+          return React.createElement("div", {
+              className: "playground-database-overview-timeseries-card",
+              "aria-label": ariaLabel || "Telemetry chart",
+            },
+            React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+              React.createElement(PlaygroundSettingsResponsiveSvg, {
+                  frameClassName: "playground-database-overview-timeseries-frame",
+                  frameHeight: chartHeight,
+                  svgHeight: chartHeight,
+                  fallbackWidth: 420,
+                  ariaLabel: ariaLabel || "Telemetry chart",
+                }, ({ svgWidth, svgHeight }) => {
+                  const plotWidth = svgWidth - marginLeft - marginRight;
+                  const plotHeight = svgHeight - marginTop - marginBottom;
+                  const baselineY = marginTop + plotHeight;
+                  const slotWidth = plotWidth / Math.max(normalizedLabels.length - 1, 1);
+                  const xForIndex = (index) => normalizedLabels.length === 1
+                    ? marginLeft + plotWidth
+                    : marginLeft + slotWidth * index;
+                  const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
+
+                  return React.createElement(React.Fragment, null,
+                    Array.from({ length: 4 }).map((_, index) => {
+                      const y = marginTop + (plotHeight / 3) * index;
+                      return React.createElement("line", {
+                        key: "grid:" + index,
+                        className: "playground-database-overview-timeseries-grid-line",
+                        x1: marginLeft,
+                        y1: y,
+                        x2: svgWidth - marginRight,
+                        y2: y,
+                      });
+                    }),
+                    yAxisValues.map((value, index) =>
+                      React.createElement("text", {
+                        key: "y-axis:" + index,
+                        x: 0,
+                        y: marginTop + (plotHeight / 2) * index + 4,
+                        className: "playground-database-overview-timeseries-axis-label",
+                        fontSize: "10",
+                      }, renderYAxisLabel(value))
+                    ),
+                    normalizedSeries.map((entry) => {
+                      const points = normalizedLabels.map((label, index) => ({
+                        x: xForIndex(index),
+                        y: baselineY - ((Math.max(0, Number(readValue(entry, label, index) || 0)) / maxValue) * plotHeight),
+                      }));
+                      const linePath = typeof buildLinePath === "function" ? buildLinePath(points) : "";
+                      const lastPoint = points[points.length - 1] || null;
+                      return React.createElement(React.Fragment, { key: "series:" + entry.key },
+                        linePath
+                          ? React.createElement("path", {
+                              d: linePath,
+                              className: "playground-database-overview-timeseries-line is-" + entry.tone,
+                            })
+                          : null,
+                        lastPoint
+                          ? React.createElement("circle", {
+                              cx: lastPoint.x,
+                              cy: lastPoint.y,
+                              r: "3.5",
+                              className: "playground-database-overview-timeseries-dot is-" + entry.tone,
+                            })
+                          : null
+                      );
+                    }),
+                    normalizedLabels.map((label, index) => (
+                      index % labelStep === 0 || index === normalizedLabels.length - 1
+                        ? React.createElement("text", {
+                            key: "label:" + index,
+                            x: xForIndex(index),
+                            y: svgHeight - 8,
+                            textAnchor: index === 0 ? "start" : index === normalizedLabels.length - 1 ? "end" : "middle",
+                            className: "playground-database-overview-timeseries-axis-label",
+                            fontSize: "10",
+                          }, renderXAxisLabel(label, index))
+                        : null
+                    ))
+                  );
+                })
             )
           );
         }
@@ -72684,16 +74063,13 @@ const html = `<!doctype html>
           if (!selectedKnownThread) {
             return null;
           }
-          const metadata = selectedKnownThread?.metadata && typeof selectedKnownThread.metadata === "object" && !Array.isArray(selectedKnownThread.metadata)
-            ? selectedKnownThread.metadata
-            : null;
-          const runnerPlaygroundMetadata = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
-            ? metadata.runnerPlayground
-            : null;
-          const taskPreview = runnerPlaygroundMetadata?.taskPreview && typeof runnerPlaygroundMetadata.taskPreview === "object" && !Array.isArray(runnerPlaygroundMetadata.taskPreview)
-            ? runnerPlaygroundMetadata.taskPreview
-            : null;
-          return taskPreview?.taskId ? taskPreview : null;
+          return getThreadTaskPreview(selectedKnownThread);
+        }, [selectedKnownThread]);
+        const rawSelectedThreadMissionControlMetadata = useMemo(() => {
+          if (!selectedKnownThread) {
+            return null;
+          }
+          return getThreadMissionControlMetadata(selectedKnownThread);
         }, [selectedKnownThread]);
         const selectedThreadTaskPreview = useMemo(() => {
           if (!currentThreadId) {
@@ -72746,9 +74122,11 @@ const html = `<!doctype html>
           : null;
         const selectedThreadProjectId = typeof selectedThreadTaskPreview?.projectId === "string" && selectedThreadTaskPreview.projectId.trim()
           ? selectedThreadTaskPreview.projectId.trim()
+          : (typeof rawSelectedThreadMissionControlMetadata?.projectId === "string" && rawSelectedThreadMissionControlMetadata.projectId.trim()
+            ? rawSelectedThreadMissionControlMetadata.projectId.trim()
           : (typeof selectedKnownThread?.projectId === "string" && selectedKnownThread.projectId.trim()
             ? selectedKnownThread.projectId.trim()
-            : (typeof selectedThreadCachedProjectContext?.projectId === "string" ? selectedThreadCachedProjectContext.projectId.trim() : ""));
+            : (typeof selectedThreadCachedProjectContext?.projectId === "string" ? selectedThreadCachedProjectContext.projectId.trim() : "")));
         const cachedSelectedThreadProjectRecord = selectedThreadProjectId
           ? (threadProjectRecordsById[selectedThreadProjectId] || null)
           : null;
@@ -72777,6 +74155,27 @@ const html = `<!doctype html>
           const projectWallpaper = getPlaygroundProjectWallpaperConfig(selectedThreadProjectRecord, 0);
           return "linear-gradient(180deg, rgba(10, 10, 14, 0.52), rgba(10, 10, 14, 0.82)), url(" + projectWallpaper.url + ")";
         }, [selectedThreadProjectRecord]);
+        const selectedThreadMissionControlPreview = useMemo(() => {
+          if (!rawSelectedThreadMissionControlMetadata) {
+            return null;
+          }
+          const projectName = String(
+            selectedThreadProjectRecord?.name
+            || rawSelectedThreadMissionControlMetadata.projectName
+            || "Project"
+          ).trim() || "Project";
+          const projectIconConfig = getPlaygroundProjectIconConfig(
+            selectedThreadProjectRecord?.icon
+            || rawSelectedThreadMissionControlMetadata.projectIcon
+            || ""
+          );
+          const ProjectIcon = projectIconConfig.icon;
+          return {
+            prompt: String(rawSelectedThreadMissionControlMetadata.userPrompt || "").trim(),
+            projectName,
+            projectIcon: React.createElement(ProjectIcon, { strokeWidth: 1.8 }),
+          };
+        }, [rawSelectedThreadMissionControlMetadata, selectedThreadProjectRecord]);
         useEffect(() => {
           const normalizedThreadId = String(currentThreadId || "").trim();
           if (!normalizedThreadId || !rawSelectedThreadTaskPreview?.taskId) {
@@ -72798,6 +74197,7 @@ const html = `<!doctype html>
           const normalizedThreadId = String(currentThreadId || "").trim();
           const normalizedProjectId = String(
             selectedThreadTaskPreview?.projectId
+            || rawSelectedThreadMissionControlMetadata?.projectId
             || rawSelectedThreadTaskPreview?.projectId
             || selectedKnownThread?.projectId
             || ""
@@ -72807,6 +74207,7 @@ const html = `<!doctype html>
           }
           const nextProjectName = String(
             selectedThreadProjectRecord?.name
+            || rawSelectedThreadMissionControlMetadata?.projectName
             || selectedThreadTaskPreview?.projectName
             || rawSelectedThreadTaskPreview?.projectName
             || ""
@@ -72830,6 +74231,7 @@ const html = `<!doctype html>
           });
         }, [
           currentThreadId,
+          rawSelectedThreadMissionControlMetadata,
           rawSelectedThreadTaskPreview,
           selectedKnownThread,
           selectedThreadProjectRecord,
@@ -74354,16 +75756,25 @@ const html = `<!doctype html>
                               }
                               setThreadAgentSelectionOverride(null);
                               if (options?.taskRunRequest?.prompt) {
-                                setPendingThreadRunRequest(null);
-                                if (!options.taskRunRequest.executionStarted) {
-                                  void startThreadRunInBackground(threadId, options.taskRunRequest, options.taskPreview || null);
-                                } else {
+                                if (options.taskRunRequest.executionStarted) {
+                                  setPendingThreadRunRequest(null);
                                   void loadThreadGroundTruthStatus(threadId);
                                   void refreshThreads();
+                                } else {
+                                  setPendingThreadRunRequest({
+                                    token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                                    threadId,
+                                    prompt: options.taskRunRequest.prompt,
+                                    attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                                    githubRepo: options.taskRunRequest.githubRepo || null,
+                                    enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                    environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                  });
                                 }
-                                return;
+                              } else {
+                                setPendingThreadRunRequest(null);
                               }
-                              setPendingThreadRunRequest(null);
+                              setThreadTaskOpenRequest(null);
                               setActivePage("thread");
                               setCurrentThreadId(threadId);
                               setContentMode(options?.contentMode === "changes" ? "changes" : "chat");
@@ -74410,6 +75821,7 @@ const html = `<!doctype html>
                                     placeholder: "What would you like me to do?",
                                     emptyState: showInitialThreadWelcome ? renderInitialThreadWelcome() : undefined,
                                     threadTaskPreview: selectedThreadTaskPreview || undefined,
+                                    threadMissionControlPreview: selectedThreadMissionControlPreview || undefined,
                                     activeTaskPreviewId: threadTaskOpenRequest?.taskId || null,
                                     externalRunRequest: pendingThreadRunRequest && pendingThreadRunRequest.threadId === activeRunnerThreadId
                                       ? pendingThreadRunRequest
@@ -75297,13 +76709,6 @@ async function proxyTaskStartThread(req, res, taskId) {
     const githubRepo = body?.githubRepo && typeof body.githubRepo === "object" ? body.githubRepo : null;
     const taskPreview = body?.taskPreview && typeof body.taskPreview === "object" ? body.taskPreview : null;
     const threadTitle = String(body?.title || (taskPreview?.ticketNumber ? `${taskPreview.ticketNumber} ${taskPreview.title || taskRecord.title || "Task"}` : taskRecord.title || "Task")).trim();
-    const threadExecutionPayload = {
-      content: launchPrompt,
-      ...(Array.isArray(body?.attachments) ? { attachments: body.attachments } : {}),
-      ...(githubRepo ? { githubRepo } : {}),
-      ...(enabledSkills ? { enabledSkills } : {}),
-    };
-
     if (isPlaygroundHumanAssigneeId(requestedAgentId)) {
       return sendJson(res, 400, {
         error: "Human task cannot start thread",
@@ -75354,87 +76759,6 @@ async function proxyTaskStartThread(req, res, taskId) {
       },
     });
     const patchedThreadRecord = extractServerThreadRecord(patchedThreadPayload) || createdThreadRecord;
-
-    const startThreadExecution = async () => {
-      let upstream;
-
-      if (apiKey) {
-        upstream = await fetch(`${upstreamUrl}/threads/${encodeURIComponent(createdThreadRecord.id)}/messages`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": apiKey,
-          },
-          body: JSON.stringify(threadExecutionPayload),
-        });
-      } else {
-        upstream = await fetchAiosApi(req, `/api/threads/${encodeURIComponent(createdThreadRecord.id)}/messages`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            ...threadExecutionPayload,
-            task: threadExecutionPayload.content,
-          }),
-        });
-      }
-
-      if (!upstream.ok) {
-        const text = await upstream.text().catch(() => "");
-        let parsed = {};
-        try {
-          parsed = text ? JSON.parse(text) : {};
-        } catch {
-          parsed = { message: text };
-        }
-        throw new Error(parsed?.message || parsed?.error || "Failed to start task thread execution.");
-      }
-
-      const drainResponse = async () => {
-        const reader = upstream.body?.getReader ? upstream.body.getReader() : null;
-        if (reader) {
-          try {
-            while (true) {
-              const { done } = await reader.read();
-              if (done) {
-                break;
-              }
-            }
-          } finally {
-            reader.releaseLock();
-          }
-          return;
-        }
-        await upstream.arrayBuffer().catch(() => undefined);
-      };
-
-      void drainResponse().catch((error) => {
-        console.error("Task thread execution stream failed", error);
-      });
-    };
-
-    try {
-      await startThreadExecution();
-    } catch (error) {
-      try {
-        if (apiKey) {
-          await fetch(`${upstreamUrl}/threads/${encodeURIComponent(createdThreadRecord.id)}`, {
-            method: "DELETE",
-            headers: {
-              "X-API-Key": apiKey,
-            },
-          });
-        } else {
-          await fetchAiosCloud(req, `/threads/${encodeURIComponent(createdThreadRecord.id)}`, {
-            method: "DELETE",
-          });
-        }
-      } catch (cleanupError) {
-        console.warn("Failed to clean up task thread after launch error", cleanupError);
-      }
-      throw error;
-    }
 
     const nextLinkedThreadIds = Array.from(new Set(existingLinkedThreadIds.concat(createdThreadRecord.id)));
     const currentStatus = typeof taskRecord.status === "string" ? taskRecord.status.trim() : "";
@@ -75605,6 +76929,8 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId, 
           memory: "memory",
           taskManagement: "task_management",
           task_management: "task_management",
+          appPlatform: "app_platform",
+          app_platform: "app_platform",
           computerAgents: "computer_agents",
           computer_agents: "computer_agents",
         };
@@ -77507,6 +78833,36 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const serverContextMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/context$/);
+  if (req.method === "GET" && serverContextMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverContextMatch[1]))}/context`,
+    );
+    return;
+  }
+
+  const serverRuntimeConfigMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/runtime-config$/);
+  if (req.method === "GET" && serverRuntimeConfigMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverRuntimeConfigMatch[1]))}/runtime-config`,
+    );
+    return;
+  }
+
+  const serverRuntimeSdkMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/runtime-sdk\/([^/]+)$/);
+  if (req.method === "GET" && serverRuntimeSdkMatch) {
+    void proxyUpstreamBinaryGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverRuntimeSdkMatch[1]))}/runtime-sdk/${encodeURIComponent(decodeURIComponent(serverRuntimeSdkMatch[2]))}`,
+    );
+    return;
+  }
+
   const serverBindingTargetMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/bindings\/([^/]+)$/);
   if (req.method === "PUT" && serverBindingTargetMatch) {
     void proxyUpstreamJsonRequest(
@@ -77610,6 +78966,57 @@ const server = http.createServer((req, res) => {
       req,
       res,
       `/servers/${encodeURIComponent(decodeURIComponent(serverAuthUsersMatch[1]))}/auth-users`,
+      "POST",
+    );
+    return;
+  }
+
+  const serverRunsMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/runs$/);
+  if (req.method === "GET" && serverRunsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverRunsMatch[1]))}/runs`,
+    );
+    return;
+  }
+
+  if (req.method === "POST" && serverRunsMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverRunsMatch[1]))}/runs`,
+      "POST",
+    );
+    return;
+  }
+
+  const serverRunDetailMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/runs\/([^/]+)$/);
+  if (req.method === "GET" && serverRunDetailMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverRunDetailMatch[1]))}/runs/${encodeURIComponent(decodeURIComponent(serverRunDetailMatch[2]))}`,
+    );
+    return;
+  }
+
+  const serverRunEventsMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/runs\/([^/]+)\/events$/);
+  if (req.method === "GET" && serverRunEventsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverRunEventsMatch[1]))}/runs/${encodeURIComponent(decodeURIComponent(serverRunEventsMatch[2]))}/events`,
+    );
+    return;
+  }
+
+  const serverRunCancelMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/runs\/([^/]+)\/cancel$/);
+  if (req.method === "POST" && serverRunCancelMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverRunCancelMatch[1]))}/runs/${encodeURIComponent(decodeURIComponent(serverRunCancelMatch[2]))}/cancel`,
       "POST",
     );
     return;

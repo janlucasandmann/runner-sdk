@@ -722,6 +722,106 @@
   color: inherit;
 }
 
+.tb-runner-chat .tb-mission-control-preview-card {
+  min-width: min(100%, 360px);
+  cursor: default;
+}
+
+.tb-runner-chat .tb-mission-control-preview-card:hover {
+  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
+}
+
+.tb-runner-chat .tb-mission-control-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-mission-control-preview-title {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-mission-control-preview-copy {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.tb-runner-chat .tb-mission-control-preview-copy .tb-message-markdown-paragraph,
+.tb-runner-chat .tb-mission-control-preview-copy .tb-message-markdown-list,
+.tb-runner-chat .tb-mission-control-preview-copy .tb-message-markdown-heading {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.tb-runner-chat .tb-mission-control-preview-copy .tb-message-markdown-strong,
+.tb-runner-chat .tb-mission-control-preview-copy .tb-message-markdown-em,
+.tb-runner-chat .tb-mission-control-preview-copy .tb-message-markdown-inline-code,
+.tb-runner-chat .tb-mission-control-preview-copy .tb-message-markdown-link {
+  color: inherit;
+}
+
+.tb-runner-chat .tb-mission-control-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 12px;
+}
+
+.tb-runner-chat .tb-mission-control-preview-project {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-mission-control-preview-project-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.82);
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-mission-control-preview-project-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tb-runner-chat .tb-mission-control-preview-project-name {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
 .tb-runner-chat .tb-user-turn-actions {
   position: absolute;
   right: 0;

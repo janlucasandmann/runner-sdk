@@ -9,6 +9,7 @@ import {
   ChevronDown as LucideChevronDown,
   ChevronLeft as LucideChevronLeft,
   Route as LucideRoute,
+  Rocket as LucideRocket,
   Cloud as LucideCloud,
   Code as LucideCode,
   Cpu as LucideCpu,
@@ -204,6 +205,12 @@ interface RunnerTaskPreview {
   environmentId?: string;
   environmentName?: string;
   isDeleted?: boolean;
+}
+
+interface RunnerMissionControlPreview {
+  prompt?: string;
+  projectName?: string;
+  projectIcon?: ReactNode;
 }
 
 type RunnerTurnSummaryPreviewItem =
@@ -734,6 +741,7 @@ export interface RunnerChatProps {
   onDocumentPreviewOpenChange?: (isOpen: boolean) => void;
   onDeepResearchDetailOpenChange?: (isOpen: boolean) => void;
   threadTaskPreview?: RunnerTaskPreview | null;
+  threadMissionControlPreview?: RunnerMissionControlPreview | null;
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
   onResourcePreviewClick?: (resource: RunnerCreatedResourcePreview) => void;
@@ -1305,6 +1313,35 @@ function renderRunnerTaskPreviewCard(
         <span className="tb-task-preview-ticket">{taskPreview.ticketNumber}</span>
       </div>
     </button>
+  );
+}
+
+function renderRunnerMissionControlPreviewCard(preview: RunnerMissionControlPreview | null | undefined) {
+  const prompt = String(preview?.prompt || "").trim() || "Run mission control.";
+  const projectName = String(preview?.projectName || "").trim() || "Project";
+
+  return (
+    <div className="tb-task-preview-card tb-mission-control-preview-card" role="presentation">
+      <div className="tb-mission-control-preview-header">
+        <span className="tb-mission-control-preview-title">
+          <span>Mission Control</span>
+        </span>
+      </div>
+      <RunnerMarkdown
+        content={prompt}
+        className="tb-mission-control-preview-copy tb-message-markdown"
+        softBreaks
+        disallowHeadings
+      />
+      <div className="tb-mission-control-preview-footer">
+        <span className="tb-mission-control-preview-project">
+          <span className="tb-mission-control-preview-project-icon" aria-hidden="true">
+            {preview?.projectIcon || <LucideRocket strokeWidth={1.8} />}
+          </span>
+          <span className="tb-mission-control-preview-project-name">{projectName}</span>
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -2717,6 +2754,21 @@ async function generateThreadTitle(params: {
 }
 
 const environmentStartPromises = new Map<string, Promise<void>>();
+const environmentStartedRequestKeys = new Set<string>();
+
+function buildEnvironmentStartRequestKey(params: {
+  backendUrl: string;
+  environmentId: string;
+  agentId?: string;
+  enabledSkills?: Record<string, unknown> | null;
+}): string {
+  return JSON.stringify({
+    backendUrl: sanitizeBackendUrl(params.backendUrl),
+    environmentId: params.environmentId,
+    agentId: params.agentId || null,
+    enabledSkills: params.enabledSkills || null,
+  });
+}
 
 async function startEnvironment(params: {
   backendUrl: string;
@@ -2725,13 +2777,12 @@ async function startEnvironment(params: {
   environmentId: string;
   agentId?: string;
   enabledSkills?: Record<string, unknown> | null;
+  force?: boolean;
 }): Promise<void> {
-  const requestKey = JSON.stringify({
-    backendUrl: sanitizeBackendUrl(params.backendUrl),
-    environmentId: params.environmentId,
-    agentId: params.agentId || null,
-    enabledSkills: params.enabledSkills || null,
-  });
+  const requestKey = buildEnvironmentStartRequestKey(params);
+  if (!params.force && environmentStartedRequestKeys.has(requestKey)) {
+    return;
+  }
   const existingPromise = environmentStartPromises.get(requestKey);
   if (existingPromise) {
     return existingPromise;
@@ -2742,6 +2793,28 @@ async function startEnvironment(params: {
   const headers = new Headers(params.requestHeaders || {});
   headers.set("Content-Type", "application/json");
   headers.set("X-API-Key", params.apiKey);
+
+  if (!params.force) {
+    try {
+      const statusResponse = await fetch(
+        `${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/status`,
+        {
+          method: "GET",
+          headers,
+        }
+      );
+      if (statusResponse.ok) {
+        const statusPayload = await statusResponse.json().catch(() => ({}));
+        const normalizedStatus = String(statusPayload?.status || "").trim().toLowerCase();
+        if (normalizedStatus === "running") {
+          environmentStartedRequestKeys.add(requestKey);
+          return;
+        }
+      }
+    } catch {
+      // Ignore status probe failures and fall back to the start endpoint.
+    }
+  }
 
   const response = await fetch(`${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/start`, {
     method: "POST",
@@ -2754,8 +2827,10 @@ async function startEnvironment(params: {
 
   if (!response.ok) {
     const bodyText = await response.text().catch(() => "");
+    environmentStartedRequestKeys.delete(requestKey);
     throw new Error(bodyText || `Failed to start environment (${response.status})`);
   }
+  environmentStartedRequestKeys.add(requestKey);
   })().finally(() => {
     environmentStartPromises.delete(requestKey);
   });
@@ -5051,6 +5126,7 @@ export function RunnerChat({
   onDocumentPreviewOpenChange,
   onDeepResearchDetailOpenChange,
   threadTaskPreview = null,
+  threadMissionControlPreview = null,
   activeTaskPreviewId = null,
   onTaskPreviewClick,
   onResourcePreviewClick,
@@ -8144,6 +8220,7 @@ export function RunnerChat({
           requestHeaders,
           environmentId: targetEnvironmentId,
           ...(selectedAgentId ? { agentId: selectedAgentId } : {}),
+          force: true,
         });
         await prepareGithubRepositorySelection({
           backendUrl: normalizedBackendUrl,
@@ -10830,8 +10907,20 @@ export function RunnerChat({
         (turn.isInitialTurn || turnIndex === 0)
           ? threadTaskPreview
           : null;
+      const missionControlPreviewForTurn =
+        !taskPreviewForTurn &&
+        threadMissionControlPreview &&
+        !isBtwTurn &&
+        turn.presentation !== "context-action-notice" &&
+        (turn.isInitialTurn || turnIndex === 0)
+          ? threadMissionControlPreview
+          : null;
+      const hasSpecialPromptPreview = Boolean(taskPreviewForTurn || missionControlPreviewForTurn);
+      const specialPromptPreviewText = taskPreviewForTurn
+        ? `${taskPreviewForTurn.ticketNumber} ${taskPreviewForTurn.title}`
+        : (missionControlPreviewForTurn?.prompt || "Run mission control.");
       const promptPreview = buildRunnerThreadHistoryPreviewText(
-        normalizedPrompt || (taskPreviewForTurn ? `${taskPreviewForTurn.ticketNumber} ${taskPreviewForTurn.title}` : "")
+        hasSpecialPromptPreview ? specialPromptPreviewText : normalizedPrompt
       );
       const turnAgentLabel = turn.agentName || displayedAgentLabel || "Agent";
 
@@ -10876,7 +10965,7 @@ export function RunnerChat({
 
       return items;
     });
-  }, [displayedAgentLabel, threadTaskPreview, turns]);
+  }, [displayedAgentLabel, threadMissionControlPreview, threadTaskPreview, turns]);
   const threadHistoryUserMessageCount = useMemo(
     () => threadHistoryItems.reduce((count, item) => count + (item.role === "user" ? 1 : 0), 0),
     [threadHistoryItems]
@@ -12504,11 +12593,20 @@ export function RunnerChat({
                 (turn.isInitialTurn || turnIndex === 0)
                   ? threadTaskPreview
                   : null;
+              const missionControlPreviewForTurn =
+                !taskPreviewForTurn &&
+                threadMissionControlPreview &&
+                !isBtwTurn &&
+                turn.presentation !== "context-action-notice" &&
+                (turn.isInitialTurn || turnIndex === 0)
+                  ? threadMissionControlPreview
+                  : null;
+              const hasSpecialPromptPreview = Boolean(taskPreviewForTurn || missionControlPreviewForTurn);
               const isActionableTurn = isActionableUserTurn(turn);
               const isForkingTurn = forkingTurnId === turn.id;
-              const isEditablePromptTurn = canEditTurn && !taskPreviewForTurn;
-              const showTurnActions = isActionableTurn && !isEditingTurn && !taskPreviewForTurn;
-              const areTurnActionsDisabled = !canEditTurn || isForkingTurn || Boolean(taskPreviewForTurn);
+              const isEditablePromptTurn = canEditTurn && !hasSpecialPromptPreview;
+              const showTurnActions = isActionableTurn && !isEditingTurn && !hasSpecialPromptPreview;
+              const areTurnActionsDisabled = !canEditTurn || isForkingTurn || hasSpecialPromptPreview;
               const actionSummaryLog =
                 turn.presentation === "context-action-notice"
                   ? turn.logs.find((log) => log.eventType === "action_summary") || null
@@ -12665,7 +12763,7 @@ export function RunnerChat({
                 );
               }
 
-              if (taskPreviewForTurn && !isEditingTurn) {
+              if (hasSpecialPromptPreview && !isEditingTurn) {
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-user tb-turn-user-task-preview">
                     <div
@@ -12673,7 +12771,9 @@ export function RunnerChat({
                       className="tb-task-preview-turn-shell tb-thread-history-anchor"
                       style={promptStyle}
                     >
-                      {renderRunnerTaskPreviewCard(taskPreviewForTurn, { onClick: onTaskPreviewClick })}
+                      {taskPreviewForTurn
+                        ? renderRunnerTaskPreviewCard(taskPreviewForTurn, { onClick: onTaskPreviewClick })
+                        : renderRunnerMissionControlPreviewCard(missionControlPreviewForTurn)}
                     </div>
 
                     {!isQueuedTurn ? (
@@ -12807,6 +12907,8 @@ export function RunnerChat({
                         </>
                       ) : taskPreviewForTurn ? (
                         renderRunnerTaskPreviewCard(taskPreviewForTurn, { onClick: onTaskPreviewClick })
+                      ) : missionControlPreviewForTurn ? (
+                        renderRunnerMissionControlPreviewCard(missionControlPreviewForTurn)
                       ) : (
                         <RunnerMarkdown
                           content={stripSystemTags(turn.prompt)}
