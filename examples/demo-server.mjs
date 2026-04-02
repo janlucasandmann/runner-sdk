@@ -11408,6 +11408,221 @@ const html = `<!doctype html>
         font-size: 12px;
       }
 
+      .playground-auth-users-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .playground-auth-users-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 5px;
+      }
+
+      .playground-auth-users-search {
+        position: relative;
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-auth-users-search-icon {
+        position: absolute;
+        top: 50%;
+        left: 14px;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.42);
+        pointer-events: none;
+      }
+
+      .playground-auth-users-search-input {
+        width: 100%;
+        min-width: 0;
+        height: 30px;
+        padding: 0 14px 0 38px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        outline: none;
+      }
+
+      .playground-auth-users-search-input::placeholder {
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-auth-users-toolbar-actions {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-auth-users-add-button {
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.92);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.96);
+        color: #0f1115;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-auth-users-add-button:hover:not(:disabled) {
+        background: #ffffff;
+        border-color: #ffffff;
+        color: #0f1115;
+      }
+
+      .playground-auth-users-add-button:disabled {
+        opacity: 0.38;
+        cursor: default;
+      }
+
+      .playground-auth-users-refresh-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        padding: 0;
+        padding-right: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        cursor: pointer;
+        transition: color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-auth-users-refresh-button:hover:not(:disabled) {
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-auth-users-refresh-button:disabled {
+        opacity: 0.38;
+        cursor: default;
+      }
+
+      .playground-auth-users-table-shell {
+        overflow: visible;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-auth-users-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      .playground-auth-users-table th,
+      .playground-auth-users-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      .playground-auth-users-table th {
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.4;
+      }
+
+      .playground-auth-users-table td {
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-auth-users-table tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .playground-auth-users-table tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .playground-auth-users-cell {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-auth-users-cell.is-identifier,
+      .playground-auth-users-cell.is-uid {
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-auth-users-provider-list {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+        flex-wrap: wrap;
+      }
+
+      .playground-auth-users-provider-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 20px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: 0.02em;
+      }
+
+      .playground-auth-users-provider-pill.is-google {
+        background: rgba(113, 171, 255, 0.16);
+        color: rgba(190, 219, 255, 0.98);
+      }
+
+      .playground-auth-users-provider-pill.is-microsoft {
+        background: rgba(84, 214, 183, 0.16);
+        color: rgba(196, 253, 239, 0.98);
+      }
+
+      .playground-auth-users-provider-pill.is-email {
+        min-height: 0;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-auth-users-provider-pill.is-phone,
+      .playground-auth-users-provider-pill.is-github {
+        background: rgba(255, 122, 181, 0.16);
+        color: rgba(255, 213, 233, 0.98);
+      }
+
+      .playground-auth-users-provider-more {
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 10px;
+        line-height: 1;
+      }
+
       .playground-servers-analytics-summary,
       .playground-servers-analytics-page {
         display: flex;
@@ -19115,7 +19330,7 @@ const html = `<!doctype html>
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -20794,6 +21009,17 @@ const html = `<!doctype html>
 
       function formatPlaygroundRelativeTime(value) {
         return formatPlaygroundFileDate(value);
+      }
+
+      function formatPlaygroundExactDate(value) {
+        if (!value) return "—";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "—";
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }).format(date);
       }
 
       function formatPlaygroundFolderItemCount(entry) {
@@ -24892,6 +25118,11 @@ const html = `<!doctype html>
         return backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/files?" + params.toString();
       }
 
+      function buildPlaygroundEnvironmentAnalyticsUrl(backendUrl, environmentId) {
+        if (!backendUrl || !environmentId) return "";
+        return backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/analytics";
+      }
+
       function buildPlaygroundServerFilesListUrl(backendUrl, serverId, folderPath = "", depth = 1) {
         if (!backendUrl || !serverId) return "";
         const normalizedFolderPath = normalizeHistoryPath(folderPath);
@@ -24917,6 +25148,13 @@ const html = `<!doctype html>
       function buildPlaygroundServerAnalyticsUrl(backendUrl, serverId) {
         if (!backendUrl || !serverId) return "";
         return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/analytics";
+      }
+
+      function buildPlaygroundServerAuthUsersUrl(backendUrl, serverId, limit = 200) {
+        if (!backendUrl || !serverId) return "";
+        const params = new URLSearchParams();
+        params.set("limit", String(Math.max(1, Math.min(1000, Number(limit) || 200))));
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/auth-users?" + params.toString();
       }
 
       function buildPlaygroundServerLogsUrl(backendUrl, serverId, kind = "request", limit = 80) {
@@ -24959,6 +25197,7 @@ const html = `<!doctype html>
         const normalizedKind = String(kind || "").trim().toLowerCase();
         if (normalizedKind === "function") return "function";
         if (normalizedKind === "database") return "database";
+        if (normalizedKind === "auth") return "auth";
         return "web_app";
       }
 
@@ -24966,7 +25205,48 @@ const html = `<!doctype html>
         const normalizedKind = canonicalizePlaygroundServerKind(kind);
         if (normalizedKind === "function") return "Function";
         if (normalizedKind === "database") return "Database";
+        if (normalizedKind === "auth") return "Auth";
         return "Web App";
+      }
+
+      function formatPlaygroundAuthProviderLabel(providerId) {
+        const normalized = String(providerId || "").trim().toLowerCase();
+        if (!normalized) return "Unknown";
+        if (normalized === "google.com" || normalized === "google") return "Google";
+        if (normalized === "microsoft.com" || normalized === "microsoft") return "Microsoft";
+        if (normalized === "password" || normalized === "email") return "Email";
+        if (normalized === "phone" || normalized === "phone.com") return "Phone";
+        if (normalized === "github.com" || normalized === "github") return "GitHub";
+        return normalized.replace(/\.com$/g, "").replace(/[_-]+/g, " ").replace(/\b\w/g, (value) => value.toUpperCase());
+      }
+
+      function getPlaygroundAuthProviderTone(providerId) {
+        const normalized = String(providerId || "").trim().toLowerCase();
+        if (normalized === "google.com" || normalized === "google") return "google";
+        if (normalized === "microsoft.com" || normalized === "microsoft") return "microsoft";
+        if (normalized === "password" || normalized === "email") return "email";
+        if (normalized === "phone" || normalized === "phone.com") return "phone";
+        if (normalized === "github.com" || normalized === "github") return "github";
+        return "default";
+      }
+
+      function getPlaygroundAuthUserIdentifier(user) {
+        return String(user?.email || "").trim()
+          || String(user?.phoneNumber || "").trim()
+          || String(user?.displayName || "").trim()
+          || String(user?.uid || "").trim()
+          || "Unknown user";
+      }
+
+      function getPlaygroundAuthUserSearchText(user) {
+        const providers = Array.isArray(user?.providers) ? user.providers.join(" ") : "";
+        return [
+          user?.email || "",
+          user?.phoneNumber || "",
+          user?.displayName || "",
+          user?.uid || "",
+          providers,
+        ].join(" ").toLowerCase();
       }
 
       function formatPlaygroundServerLatency(value) {
@@ -24986,6 +25266,23 @@ const html = `<!doctype html>
           return "—";
         }
         return (Math.round(numericValue * 10) / 10).toFixed(1).replace(/\.0$/, "") + "%";
+      }
+
+      function formatPlaygroundExecutionDuration(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue) || numericValue < 0) {
+          return "—";
+        }
+        if (numericValue >= 60 * 60 * 1000) {
+          return (Math.round((numericValue / (60 * 60 * 1000)) * 10) / 10).toFixed(1).replace(/\.0$/, "") + "h";
+        }
+        if (numericValue >= 60 * 1000) {
+          return (Math.round((numericValue / (60 * 1000)) * 10) / 10).toFixed(1).replace(/\.0$/, "") + "m";
+        }
+        if (numericValue >= 1000) {
+          return (Math.round((numericValue / 1000) * 10) / 10).toFixed(1).replace(/\.0$/, "") + "s";
+        }
+        return Math.round(numericValue) + "ms";
       }
 
       function formatPlaygroundServerLogKindLabel(kind) {
@@ -31417,6 +31714,7 @@ const html = `<!doctype html>
           });
           return next;
         });
+        const [environmentAnalyticsById, setEnvironmentAnalyticsById] = useState({});
         const [servers, setServers] = useState([]);
         const [databases, setDatabases] = useState([]);
         const [serverDetailsById, setServerDetailsById] = useState({});
@@ -31424,6 +31722,7 @@ const html = `<!doctype html>
         const [serverFilesById, setServerFilesById] = useState({});
         const [serverAnalyticsById, setServerAnalyticsById] = useState({});
         const [serverLogsById, setServerLogsById] = useState({});
+        const [serverAuthUsersById, setServerAuthUsersById] = useState({});
         const [databaseAnalyticsById, setDatabaseAnalyticsById] = useState({});
         const [draftEnvironment, setDraftEnvironment] = useState(null);
         const [draftServer, setDraftServer] = useState(null);
@@ -31431,9 +31730,11 @@ const html = `<!doctype html>
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [loadingEnvironmentId, setLoadingEnvironmentId] = useState("");
+        const [loadingEnvironmentAnalyticsId, setLoadingEnvironmentAnalyticsId] = useState("");
         const [loadingServerId, setLoadingServerId] = useState("");
         const [loadingDatabaseId, setLoadingDatabaseId] = useState("");
         const [loadingServerAnalyticsId, setLoadingServerAnalyticsId] = useState("");
+        const [loadingServerAuthUsersId, setLoadingServerAuthUsersId] = useState("");
         const [loadingDatabaseAnalyticsId, setLoadingDatabaseAnalyticsId] = useState("");
         const [saveState, setSaveState] = useState({
           isSaving: false,
@@ -31454,6 +31755,12 @@ const html = `<!doctype html>
         const [isServerDescriptionEditing, setIsServerDescriptionEditing] = useState(false);
         const [isDatabaseDescriptionEditing, setIsDatabaseDescriptionEditing] = useState(false);
         const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
+        const [environmentAnalyticsVisibility, setEnvironmentAnalyticsVisibility] = useState({
+          requests: true,
+          success: true,
+          latency: true,
+          errors: true,
+        });
         const [serverDetailsCollapsed, setServerDetailsCollapsed] = useState(false);
         const [databaseDetailsCollapsed, setDatabaseDetailsCollapsed] = useState(false);
         const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
@@ -31488,6 +31795,7 @@ const html = `<!doctype html>
         const [isServerComposerDescriptionEditing, setIsServerComposerDescriptionEditing] = useState(false);
         const [environmentComposerRuntimePopover, setEnvironmentComposerRuntimePopover] = useState("");
         const [environmentListActionMenuState, setEnvironmentListActionMenuState] = useState(null);
+        const [environmentAnalyticsErrorById, setEnvironmentAnalyticsErrorById] = useState({});
         const [serverListLoading, setServerListLoading] = useState(false);
         const [databaseListLoading, setDatabaseListLoading] = useState(false);
         const [loadingServerFilesId, setLoadingServerFilesId] = useState("");
@@ -31523,6 +31831,25 @@ const html = `<!doctype html>
           kind: "request",
           loadingKey: "",
           error: "",
+        });
+        const [serverAuthUsersState, setServerAuthUsersState] = useState({
+          error: "",
+        });
+        const [serverAuthSearchQuery, setServerAuthSearchQuery] = useState("");
+        const [serverAuthUserComposerState, setServerAuthUserComposerState] = useState({
+          open: false,
+          email: "",
+          password: "",
+          displayName: "",
+          error: "",
+          isSaving: false,
+        });
+        const [serverAuthAnalyticsVisibility, setServerAuthAnalyticsVisibility] = useState({
+          users: true,
+          verified: true,
+          signins: true,
+          email: true,
+          external: true,
         });
         const [serverAnalyticsVisibility, setServerAnalyticsVisibility] = useState({
           requests: true,
@@ -31658,6 +31985,28 @@ const html = `<!doctype html>
           }
           return serverLogsById[selectedServerId] || {};
         }, [selectedServerId, serverLogsById]);
+
+        const currentServerAuthUsers = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+          return Array.isArray(serverAuthUsersById[selectedServerId]?.users) ? serverAuthUsersById[selectedServerId].users : [];
+        }, [selectedServerId, serverAuthUsersById]);
+
+        const currentServerAuthProjectId = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return "";
+          }
+          return typeof serverAuthUsersById[selectedServerId]?.projectId === "string" ? serverAuthUsersById[selectedServerId].projectId : "";
+        }, [selectedServerId, serverAuthUsersById]);
+
+        const filteredServerAuthUsers = useMemo(() => {
+          const query = String(serverAuthSearchQuery || "").trim().toLowerCase();
+          if (!query) {
+            return currentServerAuthUsers;
+          }
+          return currentServerAuthUsers.filter((user) => getPlaygroundAuthUserSearchText(user).includes(query));
+        }, [currentServerAuthUsers, serverAuthSearchQuery]);
 
         const selectedServerSnapshot = useMemo(() => {
           if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
@@ -31881,6 +32230,22 @@ const html = `<!doctype html>
           setServerRenameValue("");
           setServerRenameError("");
           setServerDetailSelectPopover("");
+          setServerAuthSearchQuery("");
+          setServerAuthUserComposerState({
+            open: false,
+            email: "",
+            password: "",
+            displayName: "",
+            error: "",
+            isSaving: false,
+          });
+          setServerAuthAnalyticsVisibility({
+            users: true,
+            verified: true,
+            signins: true,
+            email: true,
+            external: true,
+          });
           setIsServerFileDragging(false);
           setServerSaveState({
             isSaving: false,
@@ -32227,6 +32592,61 @@ const html = `<!doctype html>
           }
         }, [backendUrl, requestHeaders, selectedEnvironmentId]);
 
+        const loadEnvironmentAnalytics = useCallback(async (environmentId, options = {}) => {
+          const normalizedEnvironmentId = String(environmentId || "").trim();
+          if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            return null;
+          }
+
+          const force = options?.force === true;
+          if (!force && environmentAnalyticsById[normalizedEnvironmentId]) {
+            return environmentAnalyticsById[normalizedEnvironmentId];
+          }
+
+          setLoadingEnvironmentAnalyticsId(normalizedEnvironmentId);
+          setEnvironmentAnalyticsErrorById((current) => {
+            if (!current[normalizedEnvironmentId]) {
+              return current;
+            }
+            const next = { ...current };
+            delete next[normalizedEnvironmentId];
+            return next;
+          });
+
+          try {
+            const response = await fetch(
+              buildPlaygroundEnvironmentAnalyticsUrl(backendUrl, normalizedEnvironmentId),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load analytics.");
+            }
+
+            const normalizedRecord = {
+              ...data,
+              loadedAt: new Date().toISOString(),
+            };
+            setEnvironmentAnalyticsById((current) => ({
+              ...current,
+              [normalizedEnvironmentId]: normalizedRecord,
+            }));
+            return normalizedRecord;
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to load analytics.";
+            setEnvironmentAnalyticsErrorById((current) => ({
+              ...current,
+              [normalizedEnvironmentId]: errorMessage,
+            }));
+            return null;
+          } finally {
+            setLoadingEnvironmentAnalyticsId((current) => current === normalizedEnvironmentId ? "" : current);
+          }
+        }, [backendUrl, environmentAnalyticsById, requestHeaders]);
+
         const loadAvailableRuntimeOptions = useCallback(async () => {
           try {
             const response = await fetch(backendUrl + "/environments/runtimes/available", {
@@ -32479,6 +32899,59 @@ const html = `<!doctype html>
             setLoadingServerAnalyticsId((current) => current === normalizedServerId ? "" : current);
           }
         }, [backendUrl, requestHeaders, serverAnalyticsById]);
+
+        const loadServerAuthUsers = useCallback(async (serverId, options = {}) => {
+          const normalizedServerId = String(serverId || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+
+          const force = options?.force === true;
+          const existingUsers = serverAuthUsersById[normalizedServerId]?.users;
+          if (!force && Array.isArray(existingUsers)) {
+            return existingUsers;
+          }
+
+          setLoadingServerAuthUsersId(normalizedServerId);
+          try {
+            const response = await fetch(
+              buildPlaygroundServerAuthUsersUrl(backendUrl, normalizedServerId, options?.limit || 200),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load auth users.");
+            }
+
+            const users = Array.isArray(data?.users) ? data.users : [];
+            const record = {
+              users,
+              projectId: typeof data?.projectId === "string" ? data.projectId : "",
+              nextPageToken: typeof data?.nextPageToken === "string" ? data.nextPageToken : "",
+              loadedAt: new Date().toISOString(),
+            };
+            setServerAuthUsersById((current) => ({
+              ...current,
+              [normalizedServerId]: record,
+            }));
+            setServerAuthUsersState({
+              error: "",
+            });
+            return users;
+          } catch (error) {
+            if (selectedServerIdRef.current === normalizedServerId) {
+              setServerAuthUsersState({
+                error: error instanceof Error ? error.message : "Failed to load auth users.",
+              });
+            }
+            return [];
+          } finally {
+            setLoadingServerAuthUsersId((current) => current === normalizedServerId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders, serverAuthUsersById]);
 
         const loadDatabaseAnalytics = useCallback(async (databaseId, options = {}) => {
           const normalizedDatabaseId = String(databaseId || "").trim();
@@ -33148,6 +33621,19 @@ const html = `<!doctype html>
         }, [loadEnvironmentRuntimeStatus, selectedEnvironmentId]);
 
         useEffect(() => {
+          if (resourceMode !== "computers") {
+            return;
+          }
+          if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+            return;
+          }
+          if (environmentAnalyticsById[selectedEnvironmentId]) {
+            return;
+          }
+          void loadEnvironmentAnalytics(selectedEnvironmentId);
+        }, [environmentAnalyticsById, loadEnvironmentAnalytics, resourceMode, selectedEnvironmentId]);
+
+        useEffect(() => {
           if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
             environmentSeededSelectionRef.current = selectedEnvironmentId;
             if (selectedEnvironmentId !== PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
@@ -33198,8 +33684,27 @@ const html = `<!doctype html>
           setServerDetailsCollapsed(false);
           setDraftServer(seedServer ? normalizePlaygroundServerRecord(seedServer) : null);
           void loadServerDetails(selectedServerId);
-          void loadServerFiles(selectedServerId);
+          if (canonicalizePlaygroundServerKind(seedServer?.kind) !== "auth") {
+            void loadServerFiles(selectedServerId);
+          }
         }, [loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers") {
+            return;
+          }
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
+          if (!activeServer?.id || canonicalizePlaygroundServerKind(activeServer.kind) !== "auth") {
+            return;
+          }
+          if (serverAuthUsersById[selectedServerId]?.users) {
+            return;
+          }
+          void loadServerAuthUsers(selectedServerId);
+        }, [draftServer, loadServerAuthUsers, resourceMode, selectedServerId, selectedServerSnapshot, serverAuthUsersById]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -33336,6 +33841,21 @@ const html = `<!doctype html>
           setToolbarPopover("");
           setSearchPopupQuery("");
         }, [resourceMode]);
+
+        useEffect(() => {
+          setServerAuthSearchQuery("");
+          setServerAuthUserComposerState({
+            open: false,
+            email: "",
+            password: "",
+            displayName: "",
+            error: "",
+            isSaving: false,
+          });
+          setServerAuthUsersState({
+            error: "",
+          });
+        }, [selectedServerId]);
 
         useEffect(() => {
           if (!environmentRuntimePopover) return undefined;
@@ -34875,6 +35395,105 @@ const html = `<!doctype html>
             );
         }
 
+        function renderServerAuthUserComposerModal() {
+          if (!serverAuthUserComposerState.open) {
+            return null;
+          }
+
+          return React.createElement("div", {
+              className: "playground-tasks-project-modal-backdrop",
+              onClick: () => {
+                if (!serverAuthUserComposerState.isSaving) {
+                  closeServerAuthUserComposer();
+                }
+              },
+            },
+              React.createElement("form", {
+                  className: "playground-tasks-project-modal playground-database-browser-modal",
+                  onClick: (event) => event.stopPropagation(),
+                  onSubmit: (event) => void handleSubmitServerAuthUserComposer(event),
+                },
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-database-browser-modal-title-row" },
+                    React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                      React.createElement(User, { width: 16, height: 16, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("div", { className: "playground-database-browser-modal-title" }, "Add User")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: closeServerAuthUserComposer,
+                    title: "Close",
+                    disabled: serverAuthUserComposerState.isSaving,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-database-browser-modal-copy" }, "Create a new email/password user inside this auth module."),
+                React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
+                  React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Email"),
+                    React.createElement("input", {
+                      type: "email",
+                      className: "playground-environments-input",
+                      value: serverAuthUserComposerState.email,
+                      onChange: (event) => setServerAuthUserComposerState((current) => ({
+                        ...current,
+                        email: event.target.value,
+                        error: "",
+                      })),
+                      placeholder: "name@example.com",
+                      autoFocus: true,
+                    })
+                  ),
+                  React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Password"),
+                    React.createElement("input", {
+                      type: "password",
+                      className: "playground-environments-input",
+                      value: serverAuthUserComposerState.password,
+                      onChange: (event) => setServerAuthUserComposerState((current) => ({
+                        ...current,
+                        password: event.target.value,
+                        error: "",
+                      })),
+                      placeholder: "At least 6 characters",
+                    })
+                  ),
+                  React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Display Name"),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-environments-input",
+                      value: serverAuthUserComposerState.displayName,
+                      onChange: (event) => setServerAuthUserComposerState((current) => ({
+                        ...current,
+                        displayName: event.target.value,
+                        error: "",
+                      })),
+                      placeholder: "Optional",
+                    })
+                  )
+                ),
+                serverAuthUserComposerState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverAuthUserComposerState.error)
+                  : null,
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: closeServerAuthUserComposer,
+                    disabled: serverAuthUserComposerState.isSaving,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: serverAuthUserComposerState.isSaving,
+                  }, serverAuthUserComposerState.isSaving ? "Creating..." : "Create User")
+                )
+              )
+            );
+        }
+
         async function handleDatabaseSave() {
           if (!draftDatabase) {
             return;
@@ -35086,6 +35705,90 @@ const html = `<!doctype html>
               error: error instanceof Error ? error.message : "Failed to delete server.",
               message: "",
             });
+          }
+        }
+
+        function closeServerAuthUserComposer() {
+          setServerAuthUserComposerState({
+            open: false,
+            email: "",
+            password: "",
+            displayName: "",
+            error: "",
+            isSaving: false,
+          });
+        }
+
+        function openServerAuthUserComposer() {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          setServerAuthUserComposerState({
+            open: true,
+            email: "",
+            password: "",
+            displayName: "",
+            error: "",
+            isSaving: false,
+          });
+        }
+
+        async function handleSubmitServerAuthUserComposer(event) {
+          event.preventDefault();
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+
+          const email = String(serverAuthUserComposerState.email || "").trim();
+          const password = String(serverAuthUserComposerState.password || "");
+          const displayName = String(serverAuthUserComposerState.displayName || "").trim();
+
+          if (!email) {
+            setServerAuthUserComposerState((current) => ({
+              ...current,
+              error: "Email is required.",
+            }));
+            return;
+          }
+          if (password.length < 6) {
+            setServerAuthUserComposerState((current) => ({
+              ...current,
+              error: "Password must be at least 6 characters.",
+            }));
+            return;
+          }
+
+          setServerAuthUserComposerState((current) => ({
+            ...current,
+            isSaving: true,
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/auth-users", {
+              method: "POST",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email,
+                password,
+                displayName,
+              }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create user.");
+            }
+            closeServerAuthUserComposer();
+            await loadServerAuthUsers(draftServer.id, { force: true });
+          } catch (error) {
+            setServerAuthUserComposerState((current) => ({
+              ...current,
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to create user.",
+            }));
           }
         }
 
@@ -37688,9 +38391,12 @@ const html = `<!doctype html>
           const composerDraft = serverComposerDraft || buildPlaygroundDefaultServerDraft();
           const composerKind = canonicalizePlaygroundServerKind(composerDraft.kind);
           const isDatabaseComposer = composerKind === "database";
-          const composerNamePlaceholder = isDatabaseComposer ? "Database name" : "Server name";
+          const isAuthComposer = composerKind === "auth";
+          const composerNamePlaceholder = isDatabaseComposer ? "Database name" : isAuthComposer ? "Auth name" : "Server name";
           const composerDescriptionPlaceholder = isDatabaseComposer
             ? "Describe what this database will store."
+            : isAuthComposer
+              ? "Describe how this auth module will be used."
             : "Describe what this server will publish.";
 
           return React.createElement("div", {
@@ -37715,6 +38421,8 @@ const html = `<!doctype html>
                     },
                       isDatabaseComposer
                         ? React.createElement(Database, { width: 18, height: 18, strokeWidth: 1.9 })
+                        : isAuthComposer
+                          ? React.createElement(Shield, { width: 18, height: 18, strokeWidth: 1.9 })
                         : React.createElement(Server, { width: 18, height: 18, strokeWidth: 1.9 })
                     ),
                     React.createElement("input", {
@@ -37780,7 +38488,8 @@ const html = `<!doctype html>
                         },
                           React.createElement("option", { value: "web_app" }, "Web App"),
                           React.createElement("option", { value: "function" }, "Function"),
-                          React.createElement("option", { value: "database" }, "Database")
+                          React.createElement("option", { value: "database" }, "Database"),
+                          React.createElement("option", { value: "auth" }, "Auth")
                         )
                       ),
                       isDatabaseComposer
@@ -37795,19 +38504,28 @@ const html = `<!doctype html>
                               placeholder: "eur3",
                             })
                           )
-                        : React.createElement("label", { className: "playground-environments-field" },
-                            React.createElement("span", { className: "playground-environments-field-label" }, "Auth"),
-                            React.createElement("select", {
-                              className: "playground-environments-input",
-                              value: composerDraft.authMode,
-                              disabled: serverComposerSaveState.isSaving,
-                              onChange: (event) => updateServerComposerField("authMode", event.target.value),
-                            },
-                              React.createElement("option", { value: "public" }, "Public"),
-                              React.createElement("option", { value: "private" }, "Private")
+                        : !isAuthComposer
+                          ? React.createElement("label", { className: "playground-environments-field" },
+                              React.createElement("span", { className: "playground-environments-field-label" }, "Auth"),
+                              React.createElement("select", {
+                                className: "playground-environments-input",
+                                value: composerDraft.authMode,
+                                disabled: serverComposerSaveState.isSaving,
+                                onChange: (event) => updateServerComposerField("authMode", event.target.value),
+                              },
+                                React.createElement("option", { value: "public" }, "Public"),
+                                React.createElement("option", { value: "private" }, "Private")
+                              )
                             )
-                          ),
+                          : null,
+                      isAuthComposer
+                        ? React.createElement("div", { className: "playground-environments-field playground-environments-field-span" },
+                            React.createElement("span", { className: "playground-environments-field-label" }, "Providers"),
+                            React.createElement("div", { className: "playground-database-browser-modal-hint" }, "Email/password users are supported first. Additional providers can be added next.")
+                          )
+                        : null,
                       !isDatabaseComposer
+                        && !isAuthComposer
                         ? React.createElement("label", { className: "playground-environments-field" },
                             React.createElement("span", { className: "playground-environments-field-label" }, "Runtime"),
                             React.createElement("input", {
@@ -37821,6 +38539,7 @@ const html = `<!doctype html>
                           )
                         : null,
                       !isDatabaseComposer
+                        && !isAuthComposer
                         ? React.createElement("label", { className: "playground-environments-field" },
                             React.createElement("span", { className: "playground-environments-field-label" }, "Region"),
                             React.createElement("input", {
@@ -37836,6 +38555,7 @@ const html = `<!doctype html>
                     )
                   ),
                   !isDatabaseComposer
+                    && !isAuthComposer
                     ? React.createElement("div", { className: "playground-environments-editor-surface" },
                     React.createElement("div", { className: "playground-tasks-detail-section-header" },
                       React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Database")
@@ -37938,7 +38658,9 @@ const html = `<!doctype html>
             );
           }
 
-          const isFunctionServer = canonicalizePlaygroundServerKind(draftServer.kind) === "function";
+          const normalizedServerKind = canonicalizePlaygroundServerKind(draftServer.kind);
+          const isFunctionServer = normalizedServerKind === "function";
+          const isAuthServer = normalizedServerKind === "auth";
           const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
           const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
@@ -39318,7 +40040,7 @@ const html = `<!doctype html>
             )
           );
 
-          if (serverAnalyticsView === "analytics") {
+          if (!isAuthServer && serverAnalyticsView === "analytics") {
             return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
                 React.createElement("div", { className: "playground-environments-editor-navbar-title" },
@@ -39476,20 +40198,22 @@ const html = `<!doctype html>
                               React.createElement("span", null, "Rename")
                             )
                           ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              setServerActionsPopoverOpen(false);
-                              void handleDeployServer();
-                            },
-                            disabled: serverDeploymentState.isDeploying,
-                          },
-                            React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
-                            )
-                          ),
+                          !isAuthServer
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row",
+                                onClick: () => {
+                                  setServerActionsPopoverOpen(false);
+                                  void handleDeployServer();
+                                },
+                                disabled: serverDeploymentState.isDeploying,
+                              },
+                                React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                  React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
+                                )
+                              )
+                            : null,
                           React.createElement("button", {
                             type: "button",
                             className: "tb-popup-row",
@@ -39509,6 +40233,394 @@ const html = `<!doctype html>
                 : null,
             )
           );
+
+          if (isAuthServer) {
+            const authUsers = Array.isArray(currentServerAuthUsers) ? currentServerAuthUsers : [];
+            const authUsersLoading = loadingServerAuthUsersId === draftServer.id;
+            const totalUsers = authUsers.length;
+            const verifiedUsers = authUsers.filter((user) => user?.emailVerified === true).length;
+            const signedInUsers = authUsers.filter((user) => Boolean(user?.lastLoginAt)).length;
+            const emailUsers = authUsers.filter((user) => {
+              const providers = Array.isArray(user?.providers) ? user.providers : [];
+              return providers.includes("password") || providers.includes("email");
+            }).length;
+            const externalUsers = authUsers.filter((user) => {
+              const providers = Array.isArray(user?.providers) ? user.providers : [];
+              return providers.some((providerId) => !["password", "email"].includes(String(providerId || "").trim().toLowerCase()));
+            }).length;
+            const buildZeroAuthBuckets = (count = 8) => {
+              const anchor = new Date();
+              anchor.setMinutes(0, 0, 0);
+              return Array.from({ length: count }, (_, index) => {
+                const date = new Date(anchor);
+                date.setHours(anchor.getHours() - (count - 1 - index));
+                return {
+                  timestamp: date.toISOString(),
+                  users: 0,
+                  verified: 0,
+                  signins: 0,
+                  email: 0,
+                  external: 0,
+                };
+              });
+            };
+            const authBuckets = buildZeroAuthBuckets(8);
+            const getAuthBucketIndex = (value) => {
+              const date = new Date(value);
+              if (Number.isNaN(date.getTime())) {
+                return -1;
+              }
+              const hourDate = new Date(date);
+              hourDate.setMinutes(0, 0, 0);
+              return authBuckets.findIndex((bucket) => bucket.timestamp === hourDate.toISOString());
+            };
+            authUsers.forEach((user) => {
+              const createdIndex = getAuthBucketIndex(user?.createdAt);
+              const providers = Array.isArray(user?.providers) ? user.providers.map((value) => String(value || "").trim().toLowerCase()).filter(Boolean) : [];
+              const hasEmailProvider = providers.includes("password") || providers.includes("email");
+              const hasExternalProvider = providers.some((providerId) => !["password", "email"].includes(providerId));
+              if (createdIndex >= 0) {
+                authBuckets[createdIndex].users += 1;
+                if (user?.emailVerified === true) {
+                  authBuckets[createdIndex].verified += 1;
+                }
+                if (hasEmailProvider) {
+                  authBuckets[createdIndex].email += 1;
+                }
+                if (hasExternalProvider) {
+                  authBuckets[createdIndex].external += 1;
+                }
+              }
+              const signedInIndex = getAuthBucketIndex(user?.lastLoginAt);
+              if (signedInIndex >= 0) {
+                authBuckets[signedInIndex].signins += 1;
+              }
+            });
+            const formatAuthTelemetryTotal = (value) => new Intl.NumberFormat("en-US").format(Math.max(0, Number(value || 0)) || 0);
+            const formatAuthTelemetryHour = (timestamp) => {
+              const date = new Date(timestamp);
+              if (Number.isNaN(date.getTime())) {
+                return "";
+              }
+              return new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(date);
+            };
+            const buildAuthAnalyticsSvgLinePath = (points) => {
+              if (!Array.isArray(points) || points.length === 0) {
+                return "";
+              }
+              return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
+            };
+            const renderAuthAnalyticsKpi = (label, value, key, tone) => React.createElement("div", {
+                className: "playground-servers-analytics-kpi",
+                key,
+              },
+              React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-database-overview-kpi-label"
+                    + (tone ? " is-" + tone : "")
+                    + (serverAuthAnalyticsVisibility[key] === false ? " is-inactive" : ""),
+                  onClick: () => {
+                    setServerAuthAnalyticsVisibility((current) => ({
+                      ...current,
+                      [key]: current[key] === false,
+                    }));
+                  },
+                  "aria-pressed": serverAuthAnalyticsVisibility[key] === false ? "false" : "true",
+                },
+                React.createElement("span", { className: "playground-database-overview-kpi-check" },
+                  React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
+                ),
+                React.createElement("span", null, label)
+              )
+            );
+            const renderAuthTelemetryChart = (config) => {
+              const buckets = Array.isArray(config?.buckets) ? config.buckets : [];
+              const series = Array.isArray(config?.series)
+                ? config.series.filter((entry) => entry && serverAuthAnalyticsVisibility[entry.key] !== false)
+                : [];
+              if (!series.length) {
+                return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
+              }
+
+              const svgWidth = 420;
+              const svgHeight = 178;
+              const marginTop = 14;
+              const marginRight = 10;
+              const marginBottom = 28;
+              const marginLeft = 30;
+              const plotWidth = svgWidth - marginLeft - marginRight;
+              const plotHeight = svgHeight - marginTop - marginBottom;
+              const baselineY = marginTop + plotHeight;
+              const slotWidth = plotWidth / Math.max(buckets.length - 1, 1);
+              const maxValue = Math.max(
+                1,
+                ...series.flatMap((entry) => buckets.map((bucket) => Math.max(0, Number(bucket?.[entry.key] || 0)))),
+              );
+              const labelStep = Math.max(1, Math.ceil(buckets.length / 6));
+              const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
+
+              return React.createElement("div", {
+                  className: "playground-database-overview-timeseries-card",
+                  "aria-label": config?.ariaLabel || "Auth telemetry chart",
+                },
+                React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+                  React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
+                    React.createElement("svg", {
+                      className: "playground-database-overview-timeseries-svg",
+                      viewBox: "0 0 " + svgWidth + " " + svgHeight,
+                      preserveAspectRatio: "xMidYMid meet",
+                      role: "img",
+                      "aria-label": config?.ariaLabel || "Auth telemetry chart",
+                    },
+                      Array.from({ length: 4 }).map((_, index) => {
+                        const y = marginTop + (plotHeight / 3) * index;
+                        return React.createElement("line", {
+                          key: "grid:" + index,
+                          className: "playground-database-overview-timeseries-grid-line",
+                          x1: marginLeft,
+                          y1: y,
+                          x2: svgWidth - marginRight,
+                          y2: y,
+                        });
+                      }),
+                      yAxisValues.map((value, index) =>
+                        React.createElement("text", {
+                          key: "y-axis:" + index,
+                          x: 0,
+                          y: marginTop + (plotHeight / 2) * index + 4,
+                          className: "playground-database-overview-timeseries-axis-label",
+                        }, formatAuthTelemetryTotal(value))
+                      ),
+                      series.map((entry) => {
+                        const points = buckets.map((bucket, index) => ({
+                          x: marginLeft + slotWidth * index,
+                          y: baselineY - ((Math.max(0, Number(bucket?.[entry.key] || 0)) / maxValue) * plotHeight),
+                        }));
+                        const linePath = buildAuthAnalyticsSvgLinePath(points);
+                        const lastPoint = points[points.length - 1] || null;
+                        return React.createElement(React.Fragment, { key: "series:" + entry.key },
+                          linePath
+                            ? React.createElement("path", {
+                                d: linePath,
+                                className: "playground-database-overview-timeseries-line is-" + entry.tone,
+                              })
+                            : null,
+                          lastPoint
+                            ? React.createElement("circle", {
+                                cx: lastPoint.x,
+                                cy: lastPoint.y,
+                                r: "3.5",
+                                className: "playground-database-overview-timeseries-dot is-" + entry.tone,
+                              })
+                            : null
+                        );
+                      }),
+                      buckets.map((bucket, index) => (
+                        index % labelStep === 0 || index === buckets.length - 1
+                          ? React.createElement("text", {
+                              key: "label:" + index,
+                              x: marginLeft + slotWidth * index,
+                              y: svgHeight - 8,
+                              textAnchor: index === 0 ? "start" : index === buckets.length - 1 ? "end" : "middle",
+                              className: "playground-database-overview-timeseries-axis-label",
+                            }, formatAuthTelemetryHour(bucket?.timestamp))
+                          : null
+                      ))
+                    )
+                  )
+                )
+              );
+            };
+            const renderAuthSummaryFact = (label, value) => React.createElement("div", {
+                className: "playground-tasks-detail-fact",
+                key: label,
+              },
+              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
+              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                React.createElement("div", { className: "playground-tasks-detail-fact-button" }, value)
+              )
+            );
+            const renderAuthProviderPill = (providerId) => {
+              const tone = getPlaygroundAuthProviderTone(providerId);
+              const label = formatPlaygroundAuthProviderLabel(providerId);
+              return React.createElement("span", {
+                  key: providerId,
+                  className: "playground-auth-users-provider-pill is-" + tone,
+                  title: label,
+                  "aria-label": label,
+                },
+                tone === "email"
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement(Mail, { width: 11, height: 11, strokeWidth: 2 }),
+                      React.createElement("span", null, label)
+                    )
+                  : label
+              );
+            };
+
+            const authDetailsSection = React.createElement("section", { className: "playground-environments-section", key: "auth-details" },
+              React.createElement("div", { className: "playground-environments-section-body" },
+                React.createElement("div", { className: "playground-tasks-detail-facts playground-database-summary-card" },
+                  React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-detail-facts-toggle" + (serverDetailsCollapsed ? " is-collapsed" : ""),
+                      onClick: () => setServerDetailsCollapsed((current) => !current),
+                      title: serverDetailsCollapsed ? "Expand details" : "Collapse details",
+                      "aria-label": serverDetailsCollapsed ? "Expand details" : "Collapse details",
+                      "aria-expanded": serverDetailsCollapsed ? "false" : "true",
+                    }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
+                  ),
+                  !serverDetailsCollapsed
+                    ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                        React.createElement("div", { className: "playground-database-overview" },
+                          React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+                            [
+                              renderAuthAnalyticsKpi("Users", formatAuthTelemetryTotal(totalUsers), "users", "collections"),
+                              renderAuthAnalyticsKpi("Verified", formatAuthTelemetryTotal(verifiedUsers), "verified", "success"),
+                              renderAuthAnalyticsKpi("Sign-ins", formatAuthTelemetryTotal(signedInUsers), "signins", "reads"),
+                              renderAuthAnalyticsKpi("Email", formatAuthTelemetryTotal(emailUsers), "email", "writes"),
+                              renderAuthAnalyticsKpi("External", formatAuthTelemetryTotal(externalUsers), "external", "deletes"),
+                            ]
+                          ),
+                          React.createElement("div", { className: "playground-database-overview-chart-grid" },
+                            React.createElement("div", { className: "playground-database-overview-chart-block" },
+                              renderAuthTelemetryChart({
+                                buckets: authBuckets,
+                                series: [
+                                  { key: "users", tone: "collections" },
+                                  { key: "verified", tone: "success" },
+                                ],
+                                emptyText: "No user creation data yet",
+                                ariaLabel: "Users and verified users over time",
+                              })
+                            ),
+                            React.createElement("div", { className: "playground-database-overview-chart-block" },
+                              renderAuthTelemetryChart({
+                                buckets: authBuckets,
+                                series: [
+                                  { key: "signins", tone: "reads" },
+                                  { key: "email", tone: "writes" },
+                                  { key: "external", tone: "deletes" },
+                                ],
+                                emptyText: "No sign-in data yet",
+                                ariaLabel: "Sign-ins and provider usage over time",
+                              })
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-database-summary-divider" }),
+                        renderAuthSummaryFact("ID", draftServer.id || "Unsaved auth module"),
+                        renderAuthSummaryFact("Updated", formatPlaygroundFileDate(draftServer.updatedAt))
+                      )
+                    : null
+                )
+              )
+            );
+
+            const authUsersSection = React.createElement("section", { className: "playground-environments-section", key: "auth-users" },
+              React.createElement("div", { className: "playground-environments-section-body" },
+                React.createElement("div", { className: "playground-auth-users-section-header" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Users")
+                ),
+                React.createElement("div", { className: "playground-environments-editor-surface" },
+                  React.createElement("div", { className: "playground-auth-users-toolbar" },
+                    React.createElement("label", { className: "playground-auth-users-search" },
+                      React.createElement(Search, { className: "playground-auth-users-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-auth-users-search-input",
+                        value: serverAuthSearchQuery,
+                        onChange: (event) => setServerAuthSearchQuery(event.target.value),
+                        placeholder: "Search by email address, phone number, or user UID",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-auth-users-add-button",
+                        onClick: openServerAuthUserComposer,
+                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                      },
+                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Add User")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-auth-users-refresh-button",
+                        onClick: () => {
+                          if (draftServer.id) {
+                            void loadServerAuthUsers(draftServer.id, { force: true });
+                          }
+                        },
+                        disabled: authUsersLoading || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                        title: "Refresh users",
+                      }, React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    )
+                  ),
+                  serverAuthUsersState.error
+                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverAuthUsersState.error)
+                    : null,
+                  authUsersLoading
+                    ? React.createElement("div", { className: "playground-files-state" },
+                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                      )
+                    : filteredServerAuthUsers.length > 0
+                      ? React.createElement("div", { className: "playground-auth-users-table-shell" },
+                          React.createElement("table", { className: "playground-auth-users-table" },
+                            React.createElement("thead", null,
+                              React.createElement("tr", null,
+                                React.createElement("th", null, "Identifier"),
+                                React.createElement("th", null, "Provider"),
+                                React.createElement("th", null, "Created"),
+                                React.createElement("th", null, "Signed In"),
+                                React.createElement("th", null, "User UID")
+                              )
+                            ),
+                            React.createElement("tbody", null,
+                              filteredServerAuthUsers.map((user) => {
+                                const providerIds = Array.isArray(user?.providers) && user.providers.length > 0 ? user.providers : (user?.email ? ["password"] : []);
+                                return React.createElement("tr", { key: user.uid || getPlaygroundAuthUserIdentifier(user) },
+                                  React.createElement("td", { className: "playground-auth-users-cell is-identifier", title: getPlaygroundAuthUserIdentifier(user) },
+                                    getPlaygroundAuthUserIdentifier(user)
+                                  ),
+                                  React.createElement("td", { className: "playground-auth-users-cell" },
+                                    React.createElement("div", { className: "playground-auth-users-provider-list" },
+                                      providerIds.slice(0, 2).map((providerId) => renderAuthProviderPill(providerId)),
+                                      providerIds.length > 2
+                                        ? React.createElement("span", { className: "playground-auth-users-provider-more" }, "+" + String(providerIds.length - 2))
+                                        : null
+                                    )
+                                  ),
+                                  React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundExactDate(user?.createdAt)),
+                                  React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundExactDate(user?.lastLoginAt)),
+                                  React.createElement("td", { className: "playground-auth-users-cell is-uid", title: user?.uid || "—" }, user?.uid || "—")
+                                );
+                              })
+                            )
+                          )
+                        )
+                      : React.createElement("div", { className: "playground-files-state" },
+                          serverAuthSearchQuery.trim() ? "No matching users found." : "No users yet."
+                        )
+                )
+              )
+            );
+
+            return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
+              serverMainTopbar,
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+                serverSaveState.error
+                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
+                  : null,
+                descriptionSection,
+                authDetailsSection,
+                authUsersSection
+              )
+            );
+          }
 
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
@@ -40564,9 +41676,247 @@ const html = `<!doctype html>
               : "Custom";
           const officeAppsEnabled = draftEnvironment.officeAppsEnabled === true;
           const isEnvironmentDescriptionLocked = Boolean(draftEnvironment.isDefault);
+          const shouldShowEnvironmentAnalytics = Boolean(
+            draftEnvironment.id && draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
+          );
+          const activeEnvironmentAnalytics = draftEnvironment.id ? environmentAnalyticsById[draftEnvironment.id] || null : null;
+          const activeEnvironmentAnalyticsSummary = activeEnvironmentAnalytics?.summary || null;
+          const activeEnvironmentActivityBuckets = Array.isArray(activeEnvironmentAnalytics?.charts?.activity24h)
+            ? activeEnvironmentAnalytics.charts.activity24h
+            : [];
+          const activeEnvironmentStatusBuckets = Array.isArray(activeEnvironmentAnalytics?.charts?.status24h)
+            ? activeEnvironmentAnalytics.charts.status24h
+            : [];
+          const isEnvironmentAnalyticsLoading = loadingEnvironmentAnalyticsId === draftEnvironment.id;
+          const environmentAnalyticsError = draftEnvironment.id ? environmentAnalyticsErrorById[draftEnvironment.id] || "" : "";
+          const buildZeroEnvironmentTelemetryBuckets = (count = 8) => {
+            const anchor = new Date();
+            anchor.setMinutes(0, 0, 0);
+            return Array.from({ length: count }, (_, index) => {
+              const date = new Date(anchor);
+              date.setHours(anchor.getHours() - (count - 1 - index));
+              return {
+                bucketStart: date.toISOString(),
+                label: String(date.getHours()).padStart(2, "0") + ":00",
+                total: 0,
+                completed: 0,
+                failed: 0,
+                cancelled: 0,
+                successRate: 0,
+                p95RuntimeMs: 0,
+              };
+            });
+          };
+          const buildEnvironmentAnalyticsSvgLinePath = (points) => {
+            if (!Array.isArray(points) || points.length === 0) {
+              return "";
+            }
+            return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
+          };
+          const resolvedEnvironmentActivityBuckets = activeEnvironmentActivityBuckets.length > 0
+            ? activeEnvironmentActivityBuckets
+            : buildZeroEnvironmentTelemetryBuckets(8);
+          const resolvedEnvironmentStatusBuckets = activeEnvironmentStatusBuckets.length > 0
+            ? activeEnvironmentStatusBuckets
+            : buildZeroEnvironmentTelemetryBuckets(8);
+          const activeEnvironmentActivityLabels = resolvedEnvironmentActivityBuckets.map((bucket) => bucket?.label || "");
+          const activeEnvironmentActivityCounts = resolvedEnvironmentActivityBuckets.map((bucket) => Number(bucket?.total || 0));
+          const activeEnvironmentActivityErrors = resolvedEnvironmentActivityBuckets.map((bucket) => Number(bucket?.failed || 0) + Number(bucket?.cancelled || 0));
+          const activeEnvironmentStatusSuccess = resolvedEnvironmentStatusBuckets.map((bucket) => Number(bucket?.successRate || 0));
+          const activeEnvironmentStatusRuntime = resolvedEnvironmentStatusBuckets.map((bucket) => Number(bucket?.p95RuntimeMs || 0));
+          const resolvedEnvironmentAnalyticsSummary = activeEnvironmentAnalyticsSummary || {
+            totalRuns24h: 0,
+            successRate24h: 0,
+            failedRuns24h: 0,
+            cancelledRuns24h: 0,
+            p95RuntimeMs: 0,
+          };
           const renderEnvironmentFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+          );
+          const renderEnvironmentAnalyticsKpi = (label, value, tone) => React.createElement("div", {
+              className: "playground-servers-analytics-kpi",
+              key: label,
+            },
+            React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
+            React.createElement("button", {
+                type: "button",
+                className: "playground-database-overview-kpi-label"
+                  + (tone ? " is-" + tone : "")
+                  + (tone && environmentAnalyticsVisibility[tone] === false ? " is-inactive" : ""),
+                onClick: () => {
+                  if (!tone) {
+                    return;
+                  }
+                  setEnvironmentAnalyticsVisibility((current) => ({
+                    ...current,
+                    [tone]: current[tone] === false,
+                  }));
+                },
+                "aria-pressed": tone ? (environmentAnalyticsVisibility[tone] === false ? "false" : "true") : "true",
+              },
+              React.createElement("span", { className: "playground-database-overview-kpi-check" },
+                React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
+              ),
+              React.createElement("span", null, label)
+            )
+          );
+          const renderEnvironmentTelemetryChart = (config) => {
+            const labels = Array.isArray(config?.labels) ? config.labels : [];
+            const series = Array.isArray(config?.series)
+              ? config.series.filter((entry) => entry && environmentAnalyticsVisibility[entry.key] !== false)
+              : [];
+            if (!labels.length || !series.length) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
+            }
+
+            const svgWidth = 420;
+            const svgHeight = 178;
+            const marginTop = 14;
+            const marginRight = 10;
+            const marginBottom = 28;
+            const marginLeft = 30;
+            const plotWidth = svgWidth - marginLeft - marginRight;
+            const plotHeight = svgHeight - marginTop - marginBottom;
+            const baselineY = marginTop + plotHeight;
+            const slotWidth = plotWidth / Math.max(labels.length - 1, 1);
+            const xForIndex = (index) => labels.length === 1 ? marginLeft + plotWidth : marginLeft + slotWidth * index;
+            const maxValue = Math.max(
+              1,
+              ...series.flatMap((entry) => labels.map((_, index) => Math.max(0, Number(entry?.values?.[index] || 0)))),
+            );
+            const labelStep = Math.max(1, Math.ceil(labels.length / 6));
+            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
+
+            return React.createElement("div", {
+                className: "playground-database-overview-timeseries-card",
+                "aria-label": config?.ariaLabel || "Computer activity chart",
+              },
+              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+                React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
+                  React.createElement("svg", {
+                    className: "playground-database-overview-timeseries-svg",
+                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
+                    preserveAspectRatio: "xMidYMid meet",
+                    role: "img",
+                    "aria-label": config?.ariaLabel || "Computer activity chart",
+                  },
+                    Array.from({ length: 4 }).map((_, index) => {
+                      const y = marginTop + (plotHeight / 3) * index;
+                      return React.createElement("line", {
+                        key: "grid:" + index,
+                        className: "playground-database-overview-timeseries-grid-line",
+                        x1: marginLeft,
+                        y1: y,
+                        x2: svgWidth - marginRight,
+                        y2: y,
+                      });
+                    }),
+                    yAxisValues.map((value, index) =>
+                      React.createElement("text", {
+                        key: "y-axis:" + index,
+                        x: 0,
+                        y: marginTop + (plotHeight / 2) * index + 4,
+                        className: "playground-database-overview-timeseries-axis-label",
+                      }, config?.formatAxisValue ? config.formatAxisValue(value) : String(value))
+                    ),
+                    series.map((entry) => {
+                      const points = labels.map((_, index) => ({
+                        x: xForIndex(index),
+                        y: baselineY - ((Math.max(0, Number(entry?.values?.[index] || 0)) / maxValue) * plotHeight),
+                      }));
+                      const linePath = buildEnvironmentAnalyticsSvgLinePath(points);
+                      const lastPoint = points[points.length - 1] || null;
+                      return React.createElement(React.Fragment, { key: "series:" + entry.key },
+                        linePath
+                          ? React.createElement("path", {
+                              d: linePath,
+                              className: "playground-database-overview-timeseries-line is-" + entry.tone,
+                            })
+                          : null,
+                        lastPoint
+                          ? React.createElement("circle", {
+                              cx: lastPoint.x,
+                              cy: lastPoint.y,
+                              r: "3.5",
+                              className: "playground-database-overview-timeseries-dot is-" + entry.tone,
+                            })
+                          : null
+                      );
+                    }),
+                    labels.map((label, index) => (
+                      index % labelStep === 0 || index === labels.length - 1
+                        ? React.createElement("text", {
+                            key: "label:" + index,
+                            x: xForIndex(index),
+                            y: svgHeight - 8,
+                            textAnchor: index === 0 ? "start" : index === labels.length - 1 ? "end" : "middle",
+                            className: "playground-database-overview-timeseries-axis-label",
+                          }, String(label || ""))
+                        : null
+                    ))
+                  )
+                )
+              )
+            );
+          };
+          const environmentAnalyticsOverview = React.createElement("div", { className: "playground-database-overview" },
+            React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+              [
+                renderEnvironmentAnalyticsKpi("Runs (24h)", String(resolvedEnvironmentAnalyticsSummary.totalRuns24h || 0), "requests"),
+                renderEnvironmentAnalyticsKpi("Success rate", formatPlaygroundServerRate(resolvedEnvironmentAnalyticsSummary.successRate24h), "success"),
+                renderEnvironmentAnalyticsKpi("P95 runtime", formatPlaygroundExecutionDuration(resolvedEnvironmentAnalyticsSummary.p95RuntimeMs), "latency"),
+                renderEnvironmentAnalyticsKpi("Failed / Cancelled", String(Number(resolvedEnvironmentAnalyticsSummary.failedRuns24h || 0) + Number(resolvedEnvironmentAnalyticsSummary.cancelledRuns24h || 0)), "errors"),
+              ]
+            ),
+            React.createElement("div", { className: "playground-database-overview-chart-grid" },
+              React.createElement("div", { className: "playground-database-overview-chart-block" },
+                renderEnvironmentTelemetryChart({
+                  labels: activeEnvironmentActivityLabels,
+                  series: [
+                    {
+                      key: "requests",
+                      tone: "requests",
+                      values: activeEnvironmentActivityCounts,
+                    },
+                    {
+                      key: "errors",
+                      tone: "errors",
+                      values: activeEnvironmentActivityErrors,
+                    },
+                  ],
+                  emptyText: "No computer activity yet",
+                  ariaLabel: "Computer runs and failed runs over time",
+                })
+              ),
+              React.createElement("div", { className: "playground-database-overview-chart-block" },
+                renderEnvironmentTelemetryChart({
+                  labels: resolvedEnvironmentStatusBuckets.map((bucket) => bucket?.label || ""),
+                  series: [
+                    {
+                      key: "success",
+                      tone: "success",
+                      values: activeEnvironmentStatusSuccess,
+                    },
+                    {
+                      key: "latency",
+                      tone: "latency",
+                      values: activeEnvironmentStatusRuntime,
+                    },
+                  ],
+                  emptyText: "No runtime data yet",
+                  ariaLabel: "Computer success rate and runtime over time",
+                  formatAxisValue: (value) => {
+                    const numericValue = Number(value);
+                    if (!Number.isFinite(numericValue) || numericValue <= 0) {
+                      return "0";
+                    }
+                    return formatPlaygroundExecutionDuration(numericValue);
+                  },
+                })
+              )
+            )
           );
           const environmentFactsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
             React.createElement("div", { className: "playground-tasks-detail-facts-header" },
@@ -40582,6 +41932,19 @@ const html = `<!doctype html>
             ),
             !environmentDetailsCollapsed
               ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  shouldShowEnvironmentAnalytics
+                    ? React.createElement(React.Fragment, null,
+                        environmentAnalyticsError
+                          ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentAnalyticsError)
+                          : null,
+                        isEnvironmentAnalyticsLoading && !activeEnvironmentAnalytics
+                          ? React.createElement("div", { className: "playground-files-state" },
+                              React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                            )
+                          : environmentAnalyticsOverview,
+                        React.createElement("div", { className: "playground-database-summary-divider" })
+                      )
+                    : null,
                   renderEnvironmentFactRow("ID",
                     React.createElement("span", {
                       className: "playground-environments-editor-fact-value is-id",
@@ -41488,7 +42851,9 @@ const html = `<!doctype html>
                                                     ? React.createElement(Database, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                     : canonicalizePlaygroundServerKind(item.kind) === "function"
                                                       ? React.createElement(FunctionSquare, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
-                                                      : React.createElement(Globe, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
+                                                      : canonicalizePlaygroundServerKind(item.kind) === "auth"
+                                                        ? React.createElement(Users, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
+                                                        : React.createElement(Globe, { className: "playground-files-entry-icon", strokeWidth: 1.8 })
                                                 )
                                               : React.createElement(HardDrive, { className: "playground-files-entry-icon", strokeWidth: 1.8 }),
                                             React.createElement("div", { className: "playground-files-search-result-copy" },
@@ -41541,7 +42906,7 @@ const html = `<!doctype html>
                             const isDatabaseResource = resource.resourceType === "database";
                             const isActive = isDatabaseResource ? (!selectedServerId && selectedDatabaseId === resource.id) : selectedServerId === resource.id;
                             const normalizedKind = canonicalizePlaygroundServerKind(resource.kind);
-                            const serverListMetaLabel = normalizedKind === "web_app" || normalizedKind === "function" || normalizedKind === "database"
+                            const serverListMetaLabel = normalizedKind === "web_app" || normalizedKind === "function" || normalizedKind === "database" || normalizedKind === "auth"
                                 ? ""
                                 : String(resource.kind || "").replace(/_/g, " ");
                             return React.createElement("div", {
@@ -41556,10 +42921,12 @@ const html = `<!doctype html>
                                   isDatabaseResource
                                     ? React.createElement(Database, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
                                     : normalizedKind === "function"
-                                    ? React.createElement(FunctionSquare, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
-                                    : normalizedKind === "web_app"
-                                      ? React.createElement(Globe, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
-                                      : React.createElement(Server, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
+                                      ? React.createElement(FunctionSquare, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                      : normalizedKind === "auth"
+                                        ? React.createElement(Users, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                        : normalizedKind === "web_app"
+                                          ? React.createElement(Globe, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                          : React.createElement(Server, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
                                   React.createElement("div", { className: "playground-environments-list-item-copy" },
                                     React.createElement("div", { className: "playground-environments-list-item-title" }, resource.name || "Untitled Resource"),
                                     serverListMetaLabel
@@ -41571,7 +42938,7 @@ const html = `<!doctype html>
                           })
                         : React.createElement("div", { className: "playground-environments-empty-state" },
                             React.createElement("div", { className: "playground-environments-empty-title" }, "No resources"),
-                            React.createElement("div", { className: "playground-environments-empty-copy" }, "Create your first web app, function, or database."),
+                            React.createElement("div", { className: "playground-environments-empty-copy" }, "Create your first web app, function, auth module, or database."),
                             React.createElement("button", {
                               type: "button",
                               className: "playground-environments-action-button is-primary",
@@ -41651,7 +43018,7 @@ const html = `<!doctype html>
                               )
                             : renderCurrentDatabaseEditor())
                         : React.createElement("div", { className: "playground-environments-detail-empty" },
-                            React.createElement("div", { className: "playground-files-state" }, "Select a web app, function, or database to configure it.")
+                            React.createElement("div", { className: "playground-files-state" }, "Select a web app, function, auth module, or database to configure it.")
                           )
                   )
                 : (isLoadingCurrentEnvironment && !draftEnvironment
@@ -41664,6 +43031,7 @@ const html = `<!doctype html>
           renderEnvironmentListActionMenu(),
           renderEnvironmentRenameModal(),
           renderServerRenameModal(),
+          renderServerAuthUserComposerModal(),
           renderEnvironmentComposerDialog(),
           renderServerComposerDialog()
         );
@@ -76025,6 +77393,26 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const serverAuthUsersMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/auth-users$/);
+  if (req.method === "GET" && serverAuthUsersMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverAuthUsersMatch[1]))}/auth-users`,
+    );
+    return;
+  }
+
+  if (req.method === "POST" && serverAuthUsersMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverAuthUsersMatch[1]))}/auth-users`,
+      "POST",
+    );
+    return;
+  }
+
   const serverInvokeMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/invoke$/);
   if (req.method === "POST" && serverInvokeMatch) {
     void proxyUpstreamJsonRequest(
@@ -76483,6 +77871,16 @@ const server = http.createServer((req, res) => {
       req,
       res,
       `/environments/${encodeURIComponent(decodeURIComponent(environmentStatusMatch[1]))}/status`,
+    );
+    return;
+  }
+
+  const environmentAnalyticsMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/analytics$/);
+  if (req.method === "GET" && environmentAnalyticsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentAnalyticsMatch[1]))}/analytics`,
     );
     return;
   }
