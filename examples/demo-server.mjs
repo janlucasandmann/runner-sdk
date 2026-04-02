@@ -10935,6 +10935,16 @@ const html = `<!doctype html>
         background: rgba(255, 255, 255, 0.03);
       }
 
+      .playground-environments-connections-section {
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+      }
+
+      .playground-environments-connections-title {
+        margin: 0;
+      }
+
       .playground-database-browser-selector-row {
         display: flex;
         align-items: center;
@@ -25123,6 +25133,11 @@ const html = `<!doctype html>
         return backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/analytics";
       }
 
+      function buildPlaygroundAgentAnalyticsUrl(backendUrl, agentId) {
+        if (!backendUrl || !agentId) return "";
+        return backendUrl + "/agents/" + encodeURIComponent(agentId) + "/analytics";
+      }
+
       function buildPlaygroundServerFilesListUrl(backendUrl, serverId, folderPath = "", depth = 1) {
         if (!backendUrl || !serverId) return "";
         const normalizedFolderPath = normalizeHistoryPath(folderPath);
@@ -25148,6 +25163,16 @@ const html = `<!doctype html>
       function buildPlaygroundServerAnalyticsUrl(backendUrl, serverId) {
         if (!backendUrl || !serverId) return "";
         return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/analytics";
+      }
+
+      function buildPlaygroundServerBindingsUrl(backendUrl, serverId) {
+        if (!backendUrl || !serverId) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/bindings";
+      }
+
+      function buildPlaygroundServerBindingTargetUrl(backendUrl, serverId, targetType) {
+        if (!backendUrl || !serverId || !targetType) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/bindings/" + encodeURIComponent(targetType);
       }
 
       function buildPlaygroundServerAuthUsersUrl(backendUrl, serverId, limit = 200) {
@@ -25207,6 +25232,39 @@ const html = `<!doctype html>
         if (normalizedKind === "database") return "Database";
         if (normalizedKind === "auth") return "Auth";
         return "Web App";
+      }
+
+      function normalizePlaygroundServerBindingRecord(binding) {
+        if (!binding || typeof binding !== "object") {
+          return null;
+        }
+        const targetType = String(binding.targetType || "").trim().toLowerCase();
+        if (!["database", "auth"].includes(targetType)) {
+          return null;
+        }
+        const resource = binding.resource && typeof binding.resource === "object" && !Array.isArray(binding.resource)
+          ? binding.resource
+          : null;
+        return {
+          id: typeof binding.id === "string" ? binding.id : "",
+          serverId: typeof binding.serverId === "string" ? binding.serverId : "",
+          targetType,
+          targetId: typeof binding.targetId === "string" ? binding.targetId : "",
+          alias: typeof binding.alias === "string" ? binding.alias : "",
+          accessMode: typeof binding.accessMode === "string" ? binding.accessMode : "default",
+          metadata: binding.metadata && typeof binding.metadata === "object" && !Array.isArray(binding.metadata) ? binding.metadata : null,
+          createdAt: typeof binding.createdAt === "string" ? binding.createdAt : "",
+          updatedAt: typeof binding.updatedAt === "string" ? binding.updatedAt : "",
+          resource: resource
+            ? {
+                id: typeof resource.id === "string" ? resource.id : "",
+                name: typeof resource.name === "string" ? resource.name : "",
+                kind: canonicalizePlaygroundServerKind(resource.kind),
+                location: typeof resource.location === "string" ? resource.location : "",
+                status: typeof resource.status === "string" ? resource.status : "",
+              }
+            : null,
+        };
       }
 
       function formatPlaygroundAuthProviderLabel(providerId) {
@@ -31718,6 +31776,7 @@ const html = `<!doctype html>
         const [servers, setServers] = useState([]);
         const [databases, setDatabases] = useState([]);
         const [serverDetailsById, setServerDetailsById] = useState({});
+        const [serverBindingsById, setServerBindingsById] = useState({});
         const [databaseDetailsById, setDatabaseDetailsById] = useState({});
         const [serverFilesById, setServerFilesById] = useState({});
         const [serverAnalyticsById, setServerAnalyticsById] = useState({});
@@ -31734,6 +31793,7 @@ const html = `<!doctype html>
         const [loadingServerId, setLoadingServerId] = useState("");
         const [loadingDatabaseId, setLoadingDatabaseId] = useState("");
         const [loadingServerAnalyticsId, setLoadingServerAnalyticsId] = useState("");
+        const [loadingServerBindingsId, setLoadingServerBindingsId] = useState("");
         const [loadingServerAuthUsersId, setLoadingServerAuthUsersId] = useState("");
         const [loadingDatabaseAnalyticsId, setLoadingDatabaseAnalyticsId] = useState("");
         const [saveState, setSaveState] = useState({
@@ -31745,6 +31805,10 @@ const html = `<!doctype html>
           isSaving: false,
           error: "",
           message: "",
+        });
+        const [serverBindingState, setServerBindingState] = useState({
+          savingKey: "",
+          error: "",
         });
         const [databaseSaveState, setDatabaseSaveState] = useState({
           isSaving: false,
@@ -31985,6 +32049,13 @@ const html = `<!doctype html>
           }
           return serverLogsById[selectedServerId] || {};
         }, [selectedServerId, serverLogsById]);
+
+        const currentServerBindings = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+          return Array.isArray(serverBindingsById[selectedServerId]) ? serverBindingsById[selectedServerId] : [];
+        }, [selectedServerId, serverBindingsById]);
 
         const currentServerAuthUsers = useMemo(() => {
           if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
@@ -33064,6 +33135,47 @@ const html = `<!doctype html>
           }
         }, [backendUrl, requestHeaders, serverLogsById]);
 
+        const loadServerBindings = useCallback(async (serverId, options = {}) => {
+          const normalizedServerId = String(serverId || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+
+          setLoadingServerBindingsId(normalizedServerId);
+          setServerBindingState((current) => ({
+            ...current,
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(buildPlaygroundServerBindingsUrl(backendUrl, normalizedServerId), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load connections.");
+            }
+
+            const bindings = Array.isArray(data?.bindings)
+              ? data.bindings.map(normalizePlaygroundServerBindingRecord).filter(Boolean)
+              : [];
+            setServerBindingsById((current) => ({
+              ...current,
+              [normalizedServerId]: bindings,
+            }));
+            return bindings;
+          } catch (error) {
+            setServerBindingState((current) => ({
+              ...current,
+              error: error instanceof Error ? error.message : "Failed to load connections.",
+            }));
+            return [];
+          } finally {
+            setLoadingServerBindingsId((current) => current === normalizedServerId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders]);
+
         const loadDatabases = useCallback(async (options = {}) => {
           setHasLoadedDatabases(true);
           setDatabaseListLoading(true);
@@ -33687,7 +33799,8 @@ const html = `<!doctype html>
           if (canonicalizePlaygroundServerKind(seedServer?.kind) !== "auth") {
             void loadServerFiles(selectedServerId);
           }
-        }, [loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
+          void loadServerBindings(selectedServerId);
+        }, [loadServerBindings, loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -33783,22 +33896,6 @@ const html = `<!doctype html>
           }
           void loadDatabases();
         }, [databaseListLoading, hasLoadedDatabases, loadDatabases, resourceMode]);
-
-        useEffect(() => {
-          if (resourceMode !== "servers" || !selectedServerId) {
-            return;
-          }
-          const linkedDatabaseId = String(draftServer?.databaseId || "").trim();
-          if (!linkedDatabaseId) {
-            if (selectedDatabaseId) {
-              setSelectedDatabaseId("");
-            }
-            return;
-          }
-          if (selectedDatabaseId !== linkedDatabaseId) {
-            setSelectedDatabaseId(linkedDatabaseId);
-          }
-        }, [draftServer?.databaseId, resourceMode, selectedDatabaseId]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -34517,6 +34614,10 @@ const html = `<!doctype html>
           setToolbarPopover("");
           setSearchPopupQuery("");
           setServerActionsPopoverOpen(false);
+          setServerBindingState({
+            savingKey: "",
+            error: "",
+          });
           setSelectedDatabaseId("");
           setDraftDatabase(null);
           setSelectedServerId(serverId);
@@ -34804,6 +34905,166 @@ const html = `<!doctype html>
           }));
         }
 
+        function getCurrentServerBindingByType(targetType) {
+          return currentServerBindings.find((binding) => binding.targetType === targetType) || null;
+        }
+
+        async function upsertServerConnection(targetType, targetId) {
+          const normalizedServerId = String(draftServer?.id || "").trim();
+          const normalizedTargetType = String(targetType || "").trim().toLowerCase();
+          const normalizedTargetId = String(targetId || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID || !normalizedTargetId) {
+            return null;
+          }
+
+          const savingKey = normalizedTargetType + ":" + normalizedTargetId;
+          setServerBindingState({
+            savingKey,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerBindingTargetUrl(backendUrl, normalizedServerId, normalizedTargetType),
+              {
+                method: "PUT",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  targetId: normalizedTargetId,
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to save connection.");
+            }
+            const bindings = Array.isArray(data?.bindings)
+              ? data.bindings.map(normalizePlaygroundServerBindingRecord).filter(Boolean)
+              : [];
+            setServerBindingsById((current) => ({
+              ...current,
+              [normalizedServerId]: bindings,
+            }));
+            setServerBindingState({
+              savingKey: "",
+              error: "",
+            });
+            return bindings.find((binding) => binding.targetType === normalizedTargetType) || null;
+          } catch (error) {
+            setServerBindingState({
+              savingKey: "",
+              error: error instanceof Error ? error.message : "Failed to save connection.",
+            });
+            return null;
+          }
+        }
+
+        async function removeServerConnection(targetType) {
+          const normalizedServerId = String(draftServer?.id || "").trim();
+          const normalizedTargetType = String(targetType || "").trim().toLowerCase();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return false;
+          }
+
+          setServerBindingState({
+            savingKey: normalizedTargetType,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerBindingTargetUrl(backendUrl, normalizedServerId, normalizedTargetType),
+              {
+                method: "DELETE",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to remove connection.");
+            }
+            const bindings = Array.isArray(data?.bindings)
+              ? data.bindings.map(normalizePlaygroundServerBindingRecord).filter(Boolean)
+              : [];
+            setServerBindingsById((current) => ({
+              ...current,
+              [normalizedServerId]: bindings,
+            }));
+            setServerBindingState({
+              savingKey: "",
+              error: "",
+            });
+            return true;
+          } catch (error) {
+            setServerBindingState({
+              savingKey: "",
+              error: error instanceof Error ? error.message : "Failed to remove connection.",
+            });
+            return false;
+          }
+        }
+
+        async function createAndConnectDatabase() {
+          setServerBindingState({
+            savingKey: "database:create",
+            error: "",
+          });
+          try {
+            const normalizedServer = normalizePlaygroundServerRecord(draftServer);
+            const nextDatabase = await persistDatabaseRecord(normalizePlaygroundDatabaseRecord({
+              ...buildPlaygroundDefaultDatabaseDraft(),
+              projectId: normalizedServer.projectId,
+              name: (String(normalizedServer.name || "").trim() || "New Server") + " Database",
+              description: "Connected to " + (String(normalizedServer.name || "").trim() || "this server") + ".",
+              location: "eur3",
+            }));
+            if (!nextDatabase?.id) {
+              throw new Error("Database creation failed.");
+            }
+            upsertLocalDatabaseRecord(nextDatabase);
+            await upsertServerConnection("database", nextDatabase.id);
+            return nextDatabase;
+          } catch (error) {
+            setServerBindingState({
+              savingKey: "",
+              error: error instanceof Error ? error.message : "Failed to create database connection.",
+            });
+            return null;
+          }
+        }
+
+        async function createAndConnectAuth() {
+          setServerBindingState({
+            savingKey: "auth:create",
+            error: "",
+          });
+          try {
+            const normalizedServer = normalizePlaygroundServerRecord(draftServer);
+            const nextAuth = await persistServerRecord(normalizePlaygroundServerRecord({
+              ...buildPlaygroundDefaultServerDraft(),
+              projectId: normalizedServer.projectId,
+              name: (String(normalizedServer.name || "").trim() || "New Server") + " Auth",
+              description: "Authentication for " + (String(normalizedServer.name || "").trim() || "this server") + ".",
+              kind: "auth",
+            }));
+            if (!nextAuth?.id) {
+              throw new Error("Auth module creation failed.");
+            }
+            upsertLocalServerRecord(nextAuth);
+            await upsertServerConnection("auth", nextAuth.id);
+            return nextAuth;
+          } catch (error) {
+            setServerBindingState({
+              savingKey: "",
+              error: error instanceof Error ? error.message : "Failed to create auth connection.",
+            });
+            return null;
+          }
+        }
+
         function buildSanitizedEnvironmentPayload(environment) {
           const runtimes = Object.fromEntries(
             Object.entries(environment?.runtimes || {}).filter(([, value]) => typeof value === "string" && value.trim())
@@ -34890,7 +35151,16 @@ const html = `<!doctype html>
           };
         }
 
-        function buildSanitizedServerPayload(server) {
+      function buildSanitizedServerPayload(server) {
+          const metadata = server?.metadata && typeof server.metadata === "object" && !Array.isArray(server.metadata)
+            ? JSON.parse(JSON.stringify(server.metadata))
+            : null;
+          if (metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)) {
+            delete metadata.runnerPlayground.database;
+            if (Object.keys(metadata.runnerPlayground).length === 0) {
+              delete metadata.runnerPlayground;
+            }
+          }
           return {
             name: String(server?.name || "").trim() || "Untitled Server",
             description: typeof server?.description === "string" ? server.description : "",
@@ -34908,7 +35178,7 @@ const html = `<!doctype html>
             imageUrl: typeof server?.imageUrl === "string" && server.imageUrl.trim() ? server.imageUrl.trim() : null,
             status: ["draft", "deploying", "deployed", "failed", "inactive"].includes(server?.status) ? server.status : "draft",
             lastDeployedAt: typeof server?.lastDeployedAt === "string" && server.lastDeployedAt.trim() ? server.lastDeployedAt.trim() : null,
-            metadata: buildPlaygroundServerMetadata(server),
+            metadata: metadata && Object.keys(metadata).length > 0 ? metadata : null,
           };
         }
 
@@ -35168,47 +35438,6 @@ const html = `<!doctype html>
           }));
         }
 
-        async function resolveServerDatabaseDraft(serverRecord, options = {}) {
-          const normalizedServer = normalizePlaygroundServerRecord(serverRecord);
-          const databaseBinding = getPlaygroundServerDatabaseBinding(normalizedServer);
-
-          if (databaseBinding.mode === "none") {
-            return {
-              server: clearPlaygroundServerDatabaseBinding(normalizedServer),
-              createdDatabase: null,
-            };
-          }
-
-          if (databaseBinding.mode === "existing" && databaseBinding.id) {
-            const existingDatabase = databaseDetailsById[databaseBinding.id]
-              || databases.find((database) => database.id === databaseBinding.id)
-              || null;
-            return {
-              server: existingDatabase
-                ? buildPlaygroundServerWithLinkedDatabase(normalizedServer, existingDatabase, "existing")
-                : normalizedServer,
-              createdDatabase: null,
-            };
-          }
-
-          const nextDatabaseDraft = normalizePlaygroundDatabaseRecord({
-            ...buildPlaygroundDefaultDatabaseDraft(),
-            projectId: normalizedServer.projectId,
-            name: databaseBinding.name || (String(normalizedServer.name || "").trim() ? String(normalizedServer.name || "").trim() + " Database" : "New Database"),
-            description: databaseBinding.description || "",
-            location: databaseBinding.location || "eur3",
-          });
-          const savedDatabase = await persistDatabaseRecord(nextDatabaseDraft);
-          if (!savedDatabase) {
-            throw new Error("Database creation failed.");
-          }
-          upsertLocalDatabaseRecord(savedDatabase);
-          return {
-            server: buildPlaygroundServerWithLinkedDatabase(normalizedServer, savedDatabase, "existing"),
-            createdDatabase: savedDatabase,
-          };
-        }
-
         async function handleServerSave() {
           if (!draftServer) {
             return null;
@@ -35220,14 +35449,8 @@ const html = `<!doctype html>
             message: "",
           });
 
-          let createdDatabase = null;
           try {
-            let serverDraftToPersist = normalizePlaygroundServerRecord(draftServer);
-            const resolved = await resolveServerDatabaseDraft(serverDraftToPersist);
-            serverDraftToPersist = resolved.server;
-            createdDatabase = resolved.createdDatabase;
-
-            const savedServer = await persistServerRecord(serverDraftToPersist);
+            const savedServer = await persistServerRecord(normalizePlaygroundServerRecord(draftServer));
             if (!savedServer) {
               throw new Error("Server save failed.");
             }
@@ -35236,9 +35459,6 @@ const html = `<!doctype html>
             upsertLocalServerRecord(savedServer);
             setSelectedServerId(savedServer.id);
             setDraftServer(savedServer);
-            if (savedServer.databaseId) {
-              setSelectedDatabaseId(savedServer.databaseId);
-            }
             setServerSaveState({
               isSaving: false,
               error: "",
@@ -35246,14 +35466,6 @@ const html = `<!doctype html>
             });
             return savedServer;
           } catch (error) {
-            if (createdDatabase?.id) {
-              try {
-                await fetch(backendUrl + "/databases/" + encodeURIComponent(createdDatabase.id), {
-                  method: "DELETE",
-                  headers: requestHeaders,
-                });
-              } catch {}
-            }
             setServerSaveState({
               isSaving: false,
               error: error instanceof Error ? error.message : "Failed to save server.",
@@ -35318,17 +35530,13 @@ const html = `<!doctype html>
               ...draftServer,
               name: nextName,
             });
-            const resolved = await resolveServerDatabaseDraft(renamedServer);
-            const savedServer = await persistServerRecord(resolved.server);
+            const savedServer = await persistServerRecord(renamedServer);
             if (!savedServer) {
               throw new Error("Server save failed.");
             }
             upsertLocalServerRecord(savedServer);
             setSelectedServerId(savedServer.id);
             setDraftServer(savedServer);
-            if (savedServer.databaseId) {
-              setSelectedDatabaseId(savedServer.databaseId);
-            }
             setServerSaveState({
               isSaving: false,
               error: "",
@@ -35514,9 +35722,6 @@ const html = `<!doctype html>
             upsertLocalDatabaseRecord(savedDatabase);
             setSelectedDatabaseId(savedDatabase.id);
             setDraftDatabase(savedDatabase);
-            if (draftServer?.databaseId === savedDatabase.id) {
-              setDraftServer((current) => buildPlaygroundServerWithLinkedDatabase(current || draftServer, savedDatabase, "existing"));
-            }
             setDatabaseSaveState({
               isSaving: false,
               error: "",
@@ -35690,6 +35895,18 @@ const html = `<!doctype html>
               delete next[serverId];
               return next;
             });
+            setServerBindingsById((current) => {
+              const next = { ...current };
+              delete next[serverId];
+              return Object.fromEntries(
+                Object.entries(next).map(([bindingServerId, bindings]) => [
+                  bindingServerId,
+                  Array.isArray(bindings)
+                    ? bindings.filter((binding) => !(binding.targetType === "auth" && binding.targetId === serverId))
+                    : [],
+                ])
+              );
+            });
             if (selectedServerIdRef.current === serverId) {
               setSelectedServerId(nextServers[0]?.id || "");
               setDraftServer(null);
@@ -35832,23 +36049,14 @@ const html = `<!doctype html>
               setSelectedDatabaseId("");
               setDraftDatabase(null);
             }
-            if (draftServer?.databaseId === databaseId) {
-              const clearedServer = clearPlaygroundServerDatabaseBinding(draftServer);
-              setDraftServer(clearedServer);
-              if (clearedServer.id && clearedServer.id !== PLAYGROUND_SERVER_DRAFT_ID) {
-                try {
-                  const savedServer = await persistServerRecord(clearedServer);
-                  setServers((current) => current.map((server) => server.id === savedServer.id ? savedServer : server));
-                  setServerDetailsById((current) => ({
-                    ...current,
-                    [savedServer.id]: savedServer,
-                  }));
-                  setDraftServer(savedServer);
-                } catch (persistError) {
-                  console.error("Failed to clear deleted database binding from server", persistError);
-                }
-              }
-            }
+            setServerBindingsById((current) => Object.fromEntries(
+              Object.entries(current).map(([serverId, bindings]) => [
+                serverId,
+                Array.isArray(bindings)
+                  ? bindings.filter((binding) => !(binding.targetType === "database" && binding.targetId === databaseId))
+                  : [],
+              ])
+            ));
             setDatabaseSaveState({
               isSaving: false,
               error: "",
@@ -36866,7 +37074,6 @@ const html = `<!doctype html>
             error: "",
           });
 
-          let createdDatabase = null;
           try {
             if (canonicalizePlaygroundServerKind(composerDraft.kind) === "database") {
               const savedDatabase = await persistDatabaseRecord(normalizePlaygroundDatabaseRecord({
@@ -36886,12 +37093,7 @@ const html = `<!doctype html>
               return;
             }
 
-            let serverDraftToPersist = normalizePlaygroundServerRecord(composerDraft);
-            const resolved = await resolveServerDatabaseDraft(serverDraftToPersist);
-            serverDraftToPersist = resolved.server;
-            createdDatabase = resolved.createdDatabase;
-
-            const savedServer = await persistServerRecord(serverDraftToPersist);
+            const savedServer = await persistServerRecord(normalizePlaygroundServerRecord(composerDraft));
             if (!savedServer) {
               throw new Error("Server creation failed.");
             }
@@ -36901,19 +37103,10 @@ const html = `<!doctype html>
               ...current,
               [savedServer.id]: savedServer,
             }));
-            setSelectedDatabaseId(savedServer.databaseId || "");
             setSelectedServerId(savedServer.id);
             setDraftServer(savedServer);
             closeServerComposer();
           } catch (error) {
-            if (createdDatabase?.id) {
-              try {
-                await fetch(backendUrl + "/databases/" + encodeURIComponent(createdDatabase.id), {
-                  method: "DELETE",
-                  headers: requestHeaders,
-                });
-              } catch {}
-            }
             setServerComposerSaveState({
               isSaving: false,
               error: error instanceof Error ? error.message : "Failed to create server.",
@@ -36939,8 +37132,6 @@ const html = `<!doctype html>
               });
 
               try {
-                const resolved = await resolveServerDatabaseDraft(nextServerToSave);
-                nextServerToSave = resolved.server;
                 const savedServer = await persistServerRecord(nextServerToSave);
                 if (!savedServer) {
                   throw new Error("Server save failed.");
@@ -38553,83 +38744,7 @@ const html = `<!doctype html>
                           )
                         : null
                     )
-                  ),
-                  !isDatabaseComposer
-                    && !isAuthComposer
-                    ? React.createElement("div", { className: "playground-environments-editor-surface" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Database")
-                    ),
-                    React.createElement("div", { className: "playground-environments-field-grid" },
-                      React.createElement("label", { className: "playground-environments-field" },
-                        React.createElement("span", { className: "playground-environments-field-label" }, "Database Setup"),
-                        React.createElement("select", {
-                          className: "playground-environments-input",
-                          value: composerDraft.databaseMode || "none",
-                          disabled: serverComposerSaveState.isSaving,
-                          onChange: (event) => updateServerDatabaseMode(event.target.value, "composer"),
-                        },
-                          React.createElement("option", { value: "none" }, "None"),
-                          React.createElement("option", { value: "create" }, "Create New Database"),
-                          React.createElement("option", { value: "existing" }, "Use Existing Database")
-                        )
-                      ),
-                      composerDraft.databaseMode === "existing"
-                        ? React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
-                            React.createElement("span", { className: "playground-environments-field-label" }, "Database"),
-                            React.createElement("select", {
-                              className: "playground-environments-input",
-                              value: composerDraft.databaseId || "",
-                              disabled: serverComposerSaveState.isSaving,
-                              onChange: (event) => applyDatabaseSelectionToServerDraft(event.target.value, "composer"),
-                            },
-                              React.createElement("option", { value: "" }, databaseListLoading ? "Loading databases..." : "Select database"),
-                              orderedDatabases.map((database) =>
-                                React.createElement("option", { key: database.id, value: database.id }, database.name || "Untitled Database")
-                              )
-                            )
-                          )
-                        : null,
-                      composerDraft.databaseMode === "create"
-                        ? React.createElement(React.Fragment, null,
-                            React.createElement("label", { className: "playground-environments-field" },
-                              React.createElement("span", { className: "playground-environments-field-label" }, "Database Name"),
-                              React.createElement("input", {
-                                type: "text",
-                                className: "playground-environments-input",
-                                value: composerDraft.databaseName || "",
-                                disabled: serverComposerSaveState.isSaving,
-                                onChange: (event) => updateServerDatabaseField("databaseName", event.target.value, "composer"),
-                                placeholder: "App Database",
-                              })
-                            ),
-                            React.createElement("label", { className: "playground-environments-field" },
-                              React.createElement("span", { className: "playground-environments-field-label" }, "Location"),
-                              React.createElement("input", {
-                                type: "text",
-                                className: "playground-environments-input",
-                                value: composerDraft.databaseLocation || "eur3",
-                                disabled: serverComposerSaveState.isSaving,
-                                onChange: (event) => updateServerDatabaseField("databaseLocation", event.target.value, "composer"),
-                                placeholder: "eur3",
-                              })
-                            ),
-                            React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
-                              React.createElement("span", { className: "playground-environments-field-label" }, "Database Description"),
-                              React.createElement("textarea", {
-                                className: "playground-environments-input playground-environments-textarea",
-                                value: composerDraft.databaseDescription || "",
-                                rows: 3,
-                                disabled: serverComposerSaveState.isSaving,
-                                onChange: (event) => updateServerDatabaseField("databaseDescription", event.target.value, "composer"),
-                                placeholder: "Store app data, users, content, and other Firestore documents here.",
-                              })
-                            )
-                          )
-                        : null
-                    )
                   )
-                    : null
                 ),
                 serverComposerSaveState.error
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverComposerSaveState.error)
@@ -38654,7 +38769,7 @@ const html = `<!doctype html>
         function renderCurrentServerEditor() {
           if (!draftServer) {
             return React.createElement("div", { className: "playground-environments-detail-empty" },
-              React.createElement("div", { className: "playground-files-state" }, "Select a server to configure its runtime, source, and publish settings.")
+              React.createElement("div", { className: "playground-files-state" }, "Select a server to configure its runtime, connections, and deployment settings.")
             );
           }
 
@@ -39163,379 +39278,115 @@ const html = `<!doctype html>
               : null
           );
 
-          const sourceSection = React.createElement("div", { className: "playground-environments-editor-surface" },
-            React.createElement("div", { className: "playground-environments-field-grid" },
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Source Type"),
-                React.createElement("select", {
-                  className: "playground-environments-input",
-                  value: draftServer.sourceType || "manual",
-                  onChange: (event) => updateServerField("sourceType", event.target.value),
-                },
-                  React.createElement("option", { value: "manual" }, "Manual"),
-                  React.createElement("option", { value: "computer" }, "Computer"),
-                  React.createElement("option", { value: "git" }, "Git")
-                )
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Source Computer"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: draftServer.sourceEnvironmentId || "",
-                  onChange: (event) => updateServerField("sourceEnvironmentId", event.target.value),
-                  placeholder: "env_...",
-                })
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Source Path"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: draftServer.sourcePath || "",
-                  onChange: (event) => updateServerField("sourcePath", event.target.value),
-                  placeholder: "/workspace/app",
-                })
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Region"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: draftServer.region || "",
-                  onChange: (event) => updateServerField("region", event.target.value),
-                  placeholder: "europe-west1",
-                })
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Runtime"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-environments-input",
-                  value: draftServer.runtime || "",
-                  onChange: (event) => updateServerField("runtime", event.target.value),
-                  placeholder: "nodejs22",
-                })
-              ),
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Auth"),
-                React.createElement("select", {
-                  className: "playground-environments-input",
-                  value: draftServer.authMode || "public",
-                  onChange: (event) => updateServerField("authMode", event.target.value),
-                },
-                  React.createElement("option", { value: "public" }, "Public"),
-                  React.createElement("option", { value: "private" }, "Private")
-                )
-              )
-            )
+          const isConnectableServer = normalizedServerKind === "function" || normalizedServerKind === "web_app";
+          const activeDatabaseBinding = getCurrentServerBindingByType("database");
+          const activeAuthBinding = getCurrentServerBindingByType("auth");
+          const availableAuthModules = orderedServers.filter((server) =>
+            canonicalizePlaygroundServerKind(server.kind) === "auth" && server.id !== draftServer.id
           );
+          const isSavingDatabaseConnection = serverBindingState.savingKey.startsWith("database");
+          const isSavingAuthConnection = serverBindingState.savingKey.startsWith("auth");
 
-          const linkedServerDatabaseId = String(draftServer.databaseId || "").trim();
-          const linkedServerDatabaseMode = ["none", "existing", "create"].includes(draftServer.databaseMode) ? draftServer.databaseMode : (linkedServerDatabaseId ? "existing" : "none");
-          const collectionLoading = loadingDatabaseCollectionsId === linkedServerDatabaseId;
-          const documentsLoading = loadingDatabaseDocumentsKey === (linkedServerDatabaseId + ":" + selectedDatabaseCollectionId);
-          const selectedCollection = currentDatabaseCollection;
-          const selectedDocument = currentDatabaseDocuments.find((document) => document.id === selectedDatabaseDocumentId) || null;
-          const collectionStats = currentDatabaseCollections.reduce((sum, collection) => sum + Number(collection?.documentCount || 0), 0);
-          const documentIsDirty = databaseDocumentEditorState.value !== databaseDocumentEditorState.initialValue;
-
-          const databaseBindingSection = React.createElement("div", { className: "playground-environments-editor-surface" },
-            React.createElement("div", { className: "playground-environments-field-grid" },
-              React.createElement("label", { className: "playground-environments-field" },
-                React.createElement("span", { className: "playground-environments-field-label" }, "Database Setup"),
-                React.createElement("select", {
-                  className: "playground-environments-input",
-                  value: linkedServerDatabaseMode,
-                  onChange: (event) => updateServerDatabaseMode(event.target.value),
-                },
-                  React.createElement("option", { value: "none" }, "None"),
-                  React.createElement("option", { value: "create" }, "Create New Database"),
-                  React.createElement("option", { value: "existing" }, "Use Existing Database")
-                )
-              ),
-              linkedServerDatabaseMode === "existing"
-                ? React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
-                    React.createElement("span", { className: "playground-environments-field-label" }, "Database"),
-                    React.createElement("select", {
-                      className: "playground-environments-input",
-                      value: linkedServerDatabaseId,
-                      onChange: (event) => applyDatabaseSelectionToServerDraft(event.target.value),
-                    },
-                      React.createElement("option", { value: "" }, databaseListLoading ? "Loading databases..." : "Select database"),
-                      orderedDatabases.map((database) =>
-                        React.createElement("option", { key: database.id, value: database.id }, database.name || "Untitled Database")
-                      )
-                    )
-                  )
-                : null,
-              linkedServerDatabaseMode === "create"
-                ? React.createElement(React.Fragment, null,
-                    React.createElement("label", { className: "playground-environments-field" },
-                      React.createElement("span", { className: "playground-environments-field-label" }, "Database Name"),
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-environments-input",
-                        value: draftServer.databaseName || "",
-                        onChange: (event) => updateServerDatabaseField("databaseName", event.target.value),
-                        placeholder: "App Database",
+          const connectionsSection = isConnectableServer
+            ? React.createElement("div", { className: "playground-environments-connections-section" },
+                React.createElement("div", {
+                  className: "playground-tasks-detail-section-title playground-environments-connections-title",
+                }, "Connections"),
+                React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
+                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                    renderServerFactRow("Database",
+                      renderServerDetailSelectControl({
+                        popoverId: "server-connection-database",
+                        valueLabel: isSavingDatabaseConnection
+                          ? "Connecting..."
+                          : (activeDatabaseBinding?.resource?.name || activeDatabaseBinding?.targetId || "None"),
+                        isEmpty: !activeDatabaseBinding,
+                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSavingDatabaseConnection,
+                        children: [
+                          renderServerDetailSelectOptionRow({
+                            key: "database:none",
+                            label: "None",
+                            selected: !activeDatabaseBinding,
+                            onClick: () => {
+                              setServerDetailSelectPopover("");
+                              void removeServerConnection("database");
+                            },
+                          }),
+                          ...orderedDatabases.map((database) =>
+                            renderServerDetailSelectOptionRow({
+                              key: "database:" + database.id,
+                              label: database.name || "Untitled Database",
+                              description: database.location || "Firestore",
+                              selected: activeDatabaseBinding?.targetId === database.id,
+                              onClick: () => {
+                                setServerDetailSelectPopover("");
+                                void upsertServerConnection("database", database.id);
+                              },
+                            })
+                          ),
+                          renderServerDetailSelectOptionRow({
+                            key: "database:create",
+                            label: "Create And Connect New",
+                            description: "Creates a new Firestore database for this app.",
+                            selected: false,
+                            onClick: () => {
+                              setServerDetailSelectPopover("");
+                              void createAndConnectDatabase();
+                            },
+                          }),
+                        ],
                       })
                     ),
-                    React.createElement("label", { className: "playground-environments-field" },
-                      React.createElement("span", { className: "playground-environments-field-label" }, "Location"),
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-environments-input",
-                        value: draftServer.databaseLocation || "eur3",
-                        onChange: (event) => updateServerDatabaseField("databaseLocation", event.target.value),
-                        placeholder: "eur3",
+                    renderServerFactRow("Auth",
+                      renderServerDetailSelectControl({
+                        popoverId: "server-connection-auth",
+                        valueLabel: isSavingAuthConnection
+                          ? "Connecting..."
+                          : (activeAuthBinding?.resource?.name || activeAuthBinding?.targetId || "None"),
+                        isEmpty: !activeAuthBinding,
+                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSavingAuthConnection,
+                        children: [
+                          renderServerDetailSelectOptionRow({
+                            key: "auth:none",
+                            label: "None",
+                            selected: !activeAuthBinding,
+                            onClick: () => {
+                              setServerDetailSelectPopover("");
+                              void removeServerConnection("auth");
+                            },
+                          }),
+                          ...availableAuthModules.map((server) =>
+                            renderServerDetailSelectOptionRow({
+                              key: "auth:" + server.id,
+                              label: server.name || "Untitled Auth",
+                              description: "Auth module",
+                              selected: activeAuthBinding?.targetId === server.id,
+                              onClick: () => {
+                                setServerDetailSelectPopover("");
+                                void upsertServerConnection("auth", server.id);
+                              },
+                            })
+                          ),
+                          renderServerDetailSelectOptionRow({
+                            key: "auth:create",
+                            label: "Create And Connect New",
+                            description: "Creates a dedicated auth module for this app.",
+                            selected: false,
+                            onClick: () => {
+                              setServerDetailSelectPopover("");
+                              void createAndConnectAuth();
+                            },
+                          }),
+                        ],
                       })
                     ),
-                    React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
-                      React.createElement("span", { className: "playground-environments-field-label" }, "Database Description"),
-                      React.createElement("textarea", {
-                        className: "playground-environments-input playground-environments-textarea",
-                        value: draftServer.databaseDescription || "",
-                        rows: 3,
-                        onChange: (event) => updateServerDatabaseField("databaseDescription", event.target.value),
-                        placeholder: "Store Firestore documents for this deployed app here.",
-                      })
-                    )
-                  )
-                : null
-            ),
-            linkedServerDatabaseMode === "none"
-              ? React.createElement("div", { className: "playground-servers-source-files-copy" }, "Attach a Firestore-backed database if this server needs persistent application data.")
-              : linkedServerDatabaseMode === "create"
-                ? React.createElement("div", { className: "playground-servers-source-files-copy" }, "The database will be created and linked when you save the server.")
-                : !linkedServerDatabaseId
-                  ? React.createElement("div", { className: "playground-servers-source-files-copy" }, "Choose an existing database to link it to this server.")
-                  : React.createElement("div", { className: "playground-servers-source-files-copy" }, "This server is linked to a Firestore-backed database.")
-          );
-
-          const linkedDatabaseDetailsSection = !draftDatabase
-            ? React.createElement("div", { className: "playground-files-state" },
-                linkedServerDatabaseMode === "create"
-                  ? "Save the server to create and open the linked database."
-                  : linkedServerDatabaseMode === "existing"
-                    ? "Select a linked database to browse its collections and documents."
-                    : "No database linked."
-              )
-            : React.createElement("div", { className: "playground-environments-editor-surface" },
-                React.createElement("div", { className: "playground-environments-field-grid" },
-                  React.createElement("label", { className: "playground-environments-field" },
-                    React.createElement("span", { className: "playground-environments-field-label" }, "Name"),
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-environments-input",
-                      value: draftDatabase.name || "",
-                      onChange: (event) => updateDatabaseField("name", event.target.value),
-                      placeholder: "Database",
-                    })
-                  ),
-                  React.createElement("label", { className: "playground-environments-field" },
-                    React.createElement("span", { className: "playground-environments-field-label" }, "Location"),
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-environments-input",
-                      value: draftDatabase.location || "",
-                      onChange: (event) => updateDatabaseField("location", event.target.value),
-                      placeholder: "eur3",
-                    })
-                  ),
-                  React.createElement("label", { className: "playground-environments-field playground-environments-field--full" },
-                    React.createElement("span", { className: "playground-environments-field-label" }, "Description"),
-                    React.createElement("textarea", {
-                      className: "playground-environments-input playground-environments-textarea",
-                      value: draftDatabase.description || "",
-                      rows: 3,
-                      onChange: (event) => updateDatabaseField("description", event.target.value),
-                      placeholder: "What kind of app data should live here?",
-                    })
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-details-grid" },
-                  React.createElement("div", { className: "playground-tasks-detail-fact" },
-                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Provider"),
-                    React.createElement("div", { className: "playground-tasks-detail-fact-value" }, "Firestore")
-                  ),
-                  React.createElement("div", { className: "playground-tasks-detail-fact" },
-                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Collections"),
-                    React.createElement("div", { className: "playground-tasks-detail-fact-value" }, String(currentDatabaseCollections.length))
-                  ),
-                  React.createElement("div", { className: "playground-tasks-detail-fact" },
-                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Documents"),
-                    React.createElement("div", { className: "playground-tasks-detail-fact-value" }, String(collectionStats))
-                  )
-                )
-              );
-
-          const linkedDatabaseCollectionsSection = !draftDatabase
-            ? null
-            : React.createElement("div", { className: "playground-environments-editor-surface playground-servers-source-files-section" },
-                React.createElement("div", { className: "playground-servers-source-files-header" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Collections"),
-                  React.createElement("div", { className: "playground-servers-source-files-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      onClick: () => void handleCreateDatabaseCollection(),
-                    },
-                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "New Collection")
-                    )
-                  )
-                ),
-                collectionLoading
-                  ? React.createElement("div", { className: "playground-files-state" },
-                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                    )
-                  : currentDatabaseCollections.length > 0
-                    ? React.createElement("div", { className: "playground-servers-source-files-list" },
-                        currentDatabaseCollections.map((collection) =>
-                          React.createElement("div", {
-                              key: collection.id,
-                              className: "playground-servers-source-file-row" + (selectedDatabaseCollectionId === collection.id ? " is-active" : ""),
-                            },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-servers-source-file-main",
-                              onClick: () => setSelectedDatabaseCollectionId(collection.id),
-                            },
-                              React.createElement(Database, { className: "playground-files-entry-icon", strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-servers-source-file-copy" },
-                                React.createElement("div", { className: "playground-servers-source-file-name" }, collection.name || "Collection"),
-                                React.createElement("div", { className: "playground-servers-source-file-meta" }, String(collection.documentCount || 0) + " documents")
-                              )
-                            ),
-                            React.createElement("div", { className: "playground-servers-source-file-actions" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-environments-action-button",
-                                onClick: () => void handleDeleteDatabaseCollection(collection.id),
-                              },
-                                React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("span", null, "Delete")
-                              )
-                            )
-                          )
-                        )
-                      )
-                    : React.createElement("div", { className: "playground-files-state" }, "No collections yet.")
-              );
-
-          const linkedDatabaseDocumentsSection = !draftDatabase
-            ? null
-            : React.createElement("div", { className: "playground-environments-editor-surface playground-servers-source-files-section" },
-                React.createElement("div", { className: "playground-servers-source-files-header" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, selectedCollection ? (selectedCollection.name + " Documents") : "Documents"),
-                  selectedDatabaseCollectionId
-                    ? React.createElement("div", { className: "playground-servers-source-files-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: () => void handleCreateDatabaseDocument(),
-                        },
-                          React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "New Document")
-                        )
-                      )
-                    : null
-                ),
-                !selectedCollection
-                  ? React.createElement("div", { className: "playground-files-state" }, "Select a collection to browse its documents.")
-                  : documentsLoading
-                    ? React.createElement("div", { className: "playground-files-state" },
-                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                      )
-                    : currentDatabaseDocuments.length > 0
-                      ? React.createElement("div", { className: "playground-servers-source-files-list" },
-                          currentDatabaseDocuments.map((document) =>
-                            React.createElement("div", {
-                                key: document.id,
-                                className: "playground-servers-source-file-row" + (selectedDatabaseDocumentId === document.id ? " is-active" : ""),
-                              },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-servers-source-file-main",
-                                onClick: () => handleSelectDatabaseDocument(document),
-                              },
-                                React.createElement(FileText, { className: "playground-files-entry-icon", strokeWidth: 1.8 }),
-                                React.createElement("div", { className: "playground-servers-source-file-copy" },
-                                  React.createElement("div", { className: "playground-servers-source-file-name" }, document.id || "Document"),
-                                  React.createElement("div", { className: "playground-servers-source-file-meta" }, formatPlaygroundRelativeTime(document.updatedAt))
-                                )
-                              ),
-                              React.createElement("div", { className: "playground-servers-source-file-actions" },
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-environments-action-button",
-                                  onClick: () => void handleDeleteDatabaseDocument(document.id),
-                                },
-                                  React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                  React.createElement("span", null, "Delete")
-                                )
-                              )
-                            )
-                          )
-                        )
-                      : React.createElement("div", { className: "playground-files-state" }, "No documents in this collection yet.")
-              );
-
-          const linkedDatabaseEditorSection = !draftDatabase
-            ? null
-            : React.createElement("div", { className: "playground-environments-editor-surface playground-servers-source-editor" },
-                React.createElement("div", { className: "playground-code-preview-toolbar" },
-                  React.createElement("div", { className: "playground-code-preview-toolbar-group" },
-                    React.createElement("span", { className: "playground-code-preview-badge" }, selectedDocument ? selectedDocument.id : "JSON"),
-                    documentIsDirty
-                      ? React.createElement("span", { className: "playground-code-preview-badge" }, "Unsaved")
+                    serverBindingState.error
+                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverBindingState.error)
                       : null
-                  ),
-                  React.createElement("div", { className: "playground-code-preview-toolbar-group is-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-code-preview-toolbar-button",
-                      onClick: () => setDatabaseDocumentEditorState((current) => ({
-                        ...current,
-                        value: current.initialValue,
-                        saveError: "",
-                        saveMessage: "",
-                      })),
-                      disabled: !documentIsDirty || databaseDocumentEditorState.isSaving,
-                    },
-                      React.createElement(RotateCcw, { width: 12, height: 12, strokeWidth: 1.9 }),
-                      React.createElement("span", null, "Revert")
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-code-preview-toolbar-button is-primary",
-                      onClick: () => void handleSaveDatabaseDocument(),
-                      disabled: !selectedDocument || databaseDocumentEditorState.isSaving,
-                    },
-                      React.createElement(HardDrive, { width: 12, height: 12, strokeWidth: 1.9 }),
-                      React.createElement("span", null, databaseDocumentEditorState.isSaving ? "Saving..." : "Save")
-                    )
                   )
-                ),
-                databaseDocumentEditorState.error
-                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseDocumentEditorState.error)
-                  : null,
-                databaseDocumentEditorState.saveError
-                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseDocumentEditorState.saveError)
-                  : databaseDocumentEditorState.saveMessage
-                    ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, databaseDocumentEditorState.saveMessage)
-                    : null,
-                React.createElement("div", { className: "playground-code-preview-editor-shell playground-servers-source-editor-shell" },
-                  React.createElement("textarea", {
-                    className: "playground-code-preview-textarea playground-servers-source-editor-textarea",
-                    value: databaseDocumentEditorState.value,
-                    onChange: (event) => handleDatabaseDocumentEditorChange(event.target.value),
-                    spellCheck: false,
-                    wrap: "off",
-                  })
                 )
-              );
+              )
+            : null;
 
           const isLoadingCurrentServerFiles = loadingServerFilesId === draftServer.id;
           const serverFileEditorIsDirty = serverFileEditorState.status === "ready" && serverFileEditorState.value !== serverFileEditorState.initialValue;
@@ -40148,6 +39999,7 @@ const html = `<!doctype html>
               : null,
             descriptionSection,
             factsSection,
+            connectionsSection,
             sourceFilesSection
           );
 
@@ -43070,9 +42922,18 @@ const html = `<!doctype html>
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [loadingAgentId, setLoadingAgentId] = useState("");
+        const [loadingAgentAnalyticsId, setLoadingAgentAnalyticsId] = useState("");
         const [agentListMode, setAgentListMode] = useState(() => {
           const initialSelectedAgent = agents.find((agent) => agent?.id === initialAgentId) || null;
           return getPlaygroundAgentListMode(initialSelectedAgent);
+        });
+        const [agentAnalyticsById, setAgentAnalyticsById] = useState({});
+        const [agentAnalyticsErrorById, setAgentAnalyticsErrorById] = useState({});
+        const [agentAnalyticsVisibility, setAgentAnalyticsVisibility] = useState({
+          requests: true,
+          success: true,
+          latency: true,
+          errors: true,
         });
         const [saveState, setSaveState] = useState({
           isSaving: false,
@@ -43536,6 +43397,57 @@ const html = `<!doctype html>
           }
         }, [backendUrl, requestHeaders, selectedAgentId]);
 
+        const loadAgentAnalytics = useCallback(async (agentId, options = {}) => {
+          const normalizedAgentId = String(agentId || "").trim();
+          if (!normalizedAgentId || normalizedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+            return null;
+          }
+
+          const force = Boolean(options?.force);
+          if (!force && agentAnalyticsById[normalizedAgentId]) {
+            return agentAnalyticsById[normalizedAgentId];
+          }
+
+          setLoadingAgentAnalyticsId(normalizedAgentId);
+          setAgentAnalyticsErrorById((current) => {
+            if (!current[normalizedAgentId]) {
+              return current;
+            }
+            return {
+              ...current,
+              [normalizedAgentId]: "",
+            };
+          });
+
+          try {
+            const response = await fetch(
+              buildPlaygroundAgentAnalyticsUrl(backendUrl, normalizedAgentId),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load analytics.");
+            }
+            setAgentAnalyticsById((current) => ({
+              ...current,
+              [normalizedAgentId]: data,
+            }));
+            return data;
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to load analytics.";
+            setAgentAnalyticsErrorById((current) => ({
+              ...current,
+              [normalizedAgentId]: errorMessage,
+            }));
+            return null;
+          } finally {
+            setLoadingAgentAnalyticsId((current) => current === normalizedAgentId ? "" : current);
+          }
+        }, [agentAnalyticsById, backendUrl, requestHeaders]);
+
         useEffect(() => {
           setAgentDetailsById((current) => {
             const next = {};
@@ -43645,6 +43557,16 @@ const html = `<!doctype html>
           setDraftAgent(seedAgent ? normalizePlaygroundAgentRecord(seedAgent) : null);
           void loadAgentDetails(selectedAgentId);
         }, [loadAgentDetails, orderedAgents, selectedAgentId]);
+
+        useEffect(() => {
+          if (!selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+            return;
+          }
+          if (agentAnalyticsById[selectedAgentId]) {
+            return;
+          }
+          void loadAgentAnalytics(selectedAgentId);
+        }, [agentAnalyticsById, loadAgentAnalytics, selectedAgentId]);
 
         useEffect(() => {
           if (!agentActionsPopoverOpen) {
@@ -44696,9 +44618,248 @@ const html = `<!doctype html>
                 .map((skillId) => PLAYGROUND_AGENT_SKILL_OPTIONS.find((option) => option.id === skillId)?.label || skillId)
                 .join(", ")
             : "No extra skills";
+          const shouldShowAgentAnalytics = Boolean(
+            draftAgent.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
+          );
+          const activeAgentAnalytics = draftAgent.id ? agentAnalyticsById[draftAgent.id] || null : null;
+          const activeAgentAnalyticsSummary = activeAgentAnalytics?.summary || null;
+          const activeAgentActivityBuckets = Array.isArray(activeAgentAnalytics?.charts?.activity24h)
+            ? activeAgentAnalytics.charts.activity24h
+            : [];
+          const activeAgentStatusBuckets = Array.isArray(activeAgentAnalytics?.charts?.status24h)
+            ? activeAgentAnalytics.charts.status24h
+            : [];
+          const isAgentAnalyticsLoading = loadingAgentAnalyticsId === draftAgent.id;
+          const agentAnalyticsError = draftAgent.id ? agentAnalyticsErrorById[draftAgent.id] || "" : "";
+          const analyticsSubjectLabel = isTeamAgent ? "team" : "agent";
+          const buildZeroAgentTelemetryBuckets = (count = 8) => {
+            const anchor = new Date();
+            anchor.setMinutes(0, 0, 0);
+            return Array.from({ length: count }, (_, index) => {
+              const date = new Date(anchor);
+              date.setHours(anchor.getHours() - (count - 1 - index));
+              return {
+                bucketStart: date.toISOString(),
+                label: String(date.getHours()).padStart(2, "0") + ":00",
+                total: 0,
+                completed: 0,
+                failed: 0,
+                cancelled: 0,
+                successRate: 0,
+                p95RuntimeMs: 0,
+              };
+            });
+          };
+          const buildAgentAnalyticsSvgLinePath = (points) => {
+            if (!Array.isArray(points) || points.length === 0) {
+              return "";
+            }
+            return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
+          };
+          const resolvedAgentActivityBuckets = activeAgentActivityBuckets.length > 0
+            ? activeAgentActivityBuckets
+            : buildZeroAgentTelemetryBuckets(8);
+          const resolvedAgentStatusBuckets = activeAgentStatusBuckets.length > 0
+            ? activeAgentStatusBuckets
+            : buildZeroAgentTelemetryBuckets(8);
+          const agentActivityLabels = resolvedAgentActivityBuckets.map((bucket) => bucket?.label || "");
+          const agentActivityCounts = resolvedAgentActivityBuckets.map((bucket) => Number(bucket?.total || 0));
+          const agentActivityErrors = resolvedAgentActivityBuckets.map((bucket) => Number(bucket?.failed || 0) + Number(bucket?.cancelled || 0));
+          const agentStatusSuccess = resolvedAgentStatusBuckets.map((bucket) => Number(bucket?.successRate || 0));
+          const agentStatusRuntime = resolvedAgentStatusBuckets.map((bucket) => Number(bucket?.p95RuntimeMs || 0));
+          const resolvedAgentAnalyticsSummary = activeAgentAnalyticsSummary || {
+            totalRuns24h: 0,
+            successRate24h: 0,
+            failedRuns24h: 0,
+            cancelledRuns24h: 0,
+            p95RuntimeMs: 0,
+          };
           const renderAgentFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+          );
+          const renderAgentAnalyticsKpi = (label, value, tone) => React.createElement("div", {
+              className: "playground-servers-analytics-kpi",
+              key: label,
+            },
+            React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
+            React.createElement("button", {
+                type: "button",
+                className: "playground-database-overview-kpi-label"
+                  + (tone ? " is-" + tone : "")
+                  + (tone && agentAnalyticsVisibility[tone] === false ? " is-inactive" : ""),
+                onClick: () => {
+                  if (!tone) {
+                    return;
+                  }
+                  setAgentAnalyticsVisibility((current) => ({
+                    ...current,
+                    [tone]: current[tone] === false,
+                  }));
+                },
+                "aria-pressed": tone ? (agentAnalyticsVisibility[tone] === false ? "false" : "true") : "true",
+              },
+              React.createElement("span", { className: "playground-database-overview-kpi-check" },
+                React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
+              ),
+              React.createElement("span", null, label)
+            )
+          );
+          const renderAgentTelemetryChart = (config) => {
+            const labels = Array.isArray(config?.labels) ? config.labels : [];
+            const series = Array.isArray(config?.series)
+              ? config.series.filter((entry) => entry && agentAnalyticsVisibility[entry.key] !== false)
+              : [];
+            if (!labels.length || !series.length) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "Select a metric");
+            }
+
+            const svgWidth = 420;
+            const svgHeight = 178;
+            const marginTop = 14;
+            const marginRight = 10;
+            const marginBottom = 28;
+            const marginLeft = 30;
+            const plotWidth = svgWidth - marginLeft - marginRight;
+            const plotHeight = svgHeight - marginTop - marginBottom;
+            const baselineY = marginTop + plotHeight;
+            const slotWidth = plotWidth / Math.max(labels.length - 1, 1);
+            const xForIndex = (index) => labels.length === 1 ? marginLeft + plotWidth : marginLeft + slotWidth * index;
+            const maxValue = Math.max(
+              1,
+              ...series.flatMap((entry) => labels.map((_, index) => Math.max(0, Number(entry?.values?.[index] || 0)))),
+            );
+            const labelStep = Math.max(1, Math.ceil(labels.length / 6));
+            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
+
+            return React.createElement("div", {
+                className: "playground-database-overview-timeseries-card",
+                "aria-label": config?.ariaLabel || "Agent activity chart",
+              },
+              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+                React.createElement("div", { className: "playground-database-overview-timeseries-frame" },
+                  React.createElement("svg", {
+                    className: "playground-database-overview-timeseries-svg",
+                    viewBox: "0 0 " + svgWidth + " " + svgHeight,
+                    preserveAspectRatio: "xMidYMid meet",
+                    role: "img",
+                    "aria-label": config?.ariaLabel || "Agent activity chart",
+                  },
+                    Array.from({ length: 4 }).map((_, index) => {
+                      const y = marginTop + (plotHeight / 3) * index;
+                      return React.createElement("line", {
+                        key: "grid:" + index,
+                        className: "playground-database-overview-timeseries-grid-line",
+                        x1: marginLeft,
+                        y1: y,
+                        x2: svgWidth - marginRight,
+                        y2: y,
+                      });
+                    }),
+                    yAxisValues.map((value, index) =>
+                      React.createElement("text", {
+                        key: "y-axis:" + index,
+                        x: 0,
+                        y: marginTop + (plotHeight / 2) * index + 4,
+                        className: "playground-database-overview-timeseries-axis-label",
+                      }, config?.formatAxisValue ? config.formatAxisValue(value) : String(value))
+                    ),
+                    series.map((entry) => {
+                      const points = labels.map((_, index) => ({
+                        x: xForIndex(index),
+                        y: baselineY - ((Math.max(0, Number(entry?.values?.[index] || 0)) / maxValue) * plotHeight),
+                      }));
+                      const linePath = buildAgentAnalyticsSvgLinePath(points);
+                      const lastPoint = points[points.length - 1] || null;
+                      return React.createElement(React.Fragment, { key: "series:" + entry.key },
+                        linePath
+                          ? React.createElement("path", {
+                              d: linePath,
+                              className: "playground-database-overview-timeseries-line is-" + entry.tone,
+                            })
+                          : null,
+                        lastPoint
+                          ? React.createElement("circle", {
+                              cx: lastPoint.x,
+                              cy: lastPoint.y,
+                              r: "3.5",
+                              className: "playground-database-overview-timeseries-dot is-" + entry.tone,
+                            })
+                          : null
+                      );
+                    }),
+                    labels.map((label, index) => (
+                      index % labelStep === 0 || index === labels.length - 1
+                        ? React.createElement("text", {
+                            key: "label:" + index,
+                            x: xForIndex(index),
+                            y: svgHeight - 8,
+                            textAnchor: index === 0 ? "start" : index === labels.length - 1 ? "end" : "middle",
+                            className: "playground-database-overview-timeseries-axis-label",
+                          }, String(label || ""))
+                        : null
+                    ))
+                  )
+                )
+              )
+            );
+          };
+          const agentAnalyticsOverview = React.createElement("div", { className: "playground-database-overview" },
+            React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+              [
+                renderAgentAnalyticsKpi("Runs (24h)", String(resolvedAgentAnalyticsSummary.totalRuns24h || 0), "requests"),
+                renderAgentAnalyticsKpi("Success rate", formatPlaygroundServerRate(resolvedAgentAnalyticsSummary.successRate24h), "success"),
+                renderAgentAnalyticsKpi("P95 runtime", formatPlaygroundExecutionDuration(resolvedAgentAnalyticsSummary.p95RuntimeMs), "latency"),
+                renderAgentAnalyticsKpi("Failed / Cancelled", String(Number(resolvedAgentAnalyticsSummary.failedRuns24h || 0) + Number(resolvedAgentAnalyticsSummary.cancelledRuns24h || 0)), "errors"),
+              ]
+            ),
+            React.createElement("div", { className: "playground-database-overview-chart-grid" },
+              React.createElement("div", { className: "playground-database-overview-chart-block" },
+                renderAgentTelemetryChart({
+                  labels: agentActivityLabels,
+                  series: [
+                    {
+                      key: "requests",
+                      tone: "requests",
+                      values: agentActivityCounts,
+                    },
+                    {
+                      key: "errors",
+                      tone: "errors",
+                      values: agentActivityErrors,
+                    },
+                  ],
+                  emptyText: "No " + analyticsSubjectLabel + " activity yet",
+                  ariaLabel: (isTeamAgent ? "Team" : "Agent") + " runs and failed runs over time",
+                })
+              ),
+              React.createElement("div", { className: "playground-database-overview-chart-block" },
+                renderAgentTelemetryChart({
+                  labels: resolvedAgentStatusBuckets.map((bucket) => bucket?.label || ""),
+                  series: [
+                    {
+                      key: "success",
+                      tone: "success",
+                      values: agentStatusSuccess,
+                    },
+                    {
+                      key: "latency",
+                      tone: "latency",
+                      values: agentStatusRuntime,
+                    },
+                  ],
+                  emptyText: "No runtime data yet",
+                  ariaLabel: (isTeamAgent ? "Team" : "Agent") + " success rate and runtime over time",
+                  formatAxisValue: (value) => {
+                    const numericValue = Number(value);
+                    if (!Number.isFinite(numericValue) || numericValue <= 0) {
+                      return "0";
+                    }
+                    return formatPlaygroundExecutionDuration(numericValue);
+                  },
+                })
+              )
+            )
           );
 
           const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
@@ -44774,6 +44935,16 @@ const html = `<!doctype html>
             ),
             !agentDetailsCollapsed
               ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  shouldShowAgentAnalytics
+                    ? React.createElement(React.Fragment, null,
+                        agentAnalyticsError
+                          ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, agentAnalyticsError)
+                          : null,
+                        isAgentAnalyticsLoading && !activeAgentAnalytics
+                          ? React.createElement("div", { className: "playground-files-state" }, "Loading activity...")
+                          : agentAnalyticsOverview
+                      )
+                    : null,
                   renderAgentFactRow("Status",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftAgent.isActive ? "Active" : "Inactive")
                   ),
@@ -77326,6 +77497,37 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const serverBindingsMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/bindings$/);
+  if (req.method === "GET" && serverBindingsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverBindingsMatch[1]))}/bindings`,
+    );
+    return;
+  }
+
+  const serverBindingTargetMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/bindings\/([^/]+)$/);
+  if (req.method === "PUT" && serverBindingTargetMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverBindingTargetMatch[1]))}/bindings/${encodeURIComponent(decodeURIComponent(serverBindingTargetMatch[2]))}`,
+      "PUT",
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && serverBindingTargetMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverBindingTargetMatch[1]))}/bindings/${encodeURIComponent(decodeURIComponent(serverBindingTargetMatch[2]))}`,
+      "DELETE",
+    );
+    return;
+  }
+
   const databaseDetailMatch = url.pathname.match(/^\/api\/real\/databases\/([^/]+)$/);
   if (req.method === "GET" && databaseDetailMatch) {
     void proxyUpstreamGet(req, res, `/databases/${encodeURIComponent(decodeURIComponent(databaseDetailMatch[1]))}`);
@@ -77756,6 +77958,12 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/real/skills") {
     void proxyUpstreamGet(req, res, "/v1/skills");
+    return;
+  }
+
+  const agentAnalyticsMatch = url.pathname.match(/^\/api\/real\/agents\/([^/]+)\/analytics$/);
+  if (req.method === "GET" && agentAnalyticsMatch) {
+    void proxyUpstreamGet(req, res, `/agents/${encodeURIComponent(decodeURIComponent(agentAnalyticsMatch[1]))}/analytics`);
     return;
   }
 
