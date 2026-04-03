@@ -202,6 +202,7 @@ interface RunnerTaskPreview {
   taskType?: string;
   assigneeAgentId?: string;
   assigneeName?: string;
+  assigneePhotoUrl?: string;
   environmentId?: string;
   environmentName?: string;
   isDeleted?: boolean;
@@ -1258,12 +1259,19 @@ function renderRunnerTaskPreviewAssigneeAvatar(taskPreview: RunnerTaskPreview) {
   if (!assigneeName) {
     return null;
   }
+  const assigneePhotoUrl = String(taskPreview?.assigneePhotoUrl || "").trim();
 
   return (
     <span className="tb-task-preview-assignee-avatar" aria-hidden="true" title={assigneeName}>
-      <span className="tb-task-preview-assignee-avatar-fallback">
-        {assigneeName.charAt(0).toUpperCase()}
-      </span>
+      {assigneePhotoUrl
+        ? <img
+            className="tb-task-preview-assignee-avatar-image"
+            src={assigneePhotoUrl}
+            alt={assigneeName.charAt(0).toUpperCase()}
+          />
+        : <span className="tb-task-preview-assignee-avatar-fallback">
+            {assigneeName.charAt(0).toUpperCase()}
+          </span>}
     </span>
   );
 }

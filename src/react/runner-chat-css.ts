@@ -1219,7 +1219,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-task-preview-card-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
@@ -1235,6 +1235,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   justify-content: center;
   overflow: hidden;
   flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-task-preview-assignee-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .tb-runner-chat .tb-task-preview-assignee-avatar-fallback {

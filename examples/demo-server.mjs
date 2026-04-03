@@ -18404,7 +18404,7 @@ const html = `<!doctype html>
       .playground-tasks-card-header,
       .playground-tasks-lane-card-header {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 12px;
       }
@@ -59642,11 +59642,17 @@ const html = `<!doctype html>
           );
         }
 
-        function renderAgentNameAvatar(name, className) {
+        function renderAgentNameAvatar(name, className, photoUrl = "") {
           const normalizedName = String(name || "").trim() || "Computer Agents";
           const avatarLetter = getTaskCommentAvatarLetter(normalizedName);
           return React.createElement("div", { className, title: normalizedName, "aria-hidden": "true" },
-            React.createElement("span", { className: className + "-fallback" }, avatarLetter)
+            canRenderAvatarImage(photoUrl)
+              ? React.createElement("img", {
+                  className: className + "-image",
+                  src: photoUrl,
+                  alt: avatarLetter,
+                })
+              : React.createElement("span", { className: className + "-fallback" }, avatarLetter)
           );
         }
 
@@ -59668,7 +59674,12 @@ const html = `<!doctype html>
                 : React.createElement("span", { className: className + "-fallback" }, currentUserInitials)
             );
           }
-          return renderAgentNameAvatar(assigneeName, className);
+          const normalizedAssigneeId = String(task?.assigneeAgentId || "").trim();
+          const assigneeAgent = normalizedAssigneeId ? (agentsById[normalizedAssigneeId] || null) : null;
+          const assigneePhotoUrl = assigneeAgent
+            ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(assigneeAgent))
+            : "";
+          return renderAgentNameAvatar(assigneeName, className, assigneePhotoUrl);
         }
 
         async function handleAddTaskComment() {
@@ -72498,12 +72509,26 @@ const html = `<!doctype html>
           const normalizedThreadId = String(threadId || existingPreview?.threadId || "").trim();
           const assigneeAgentId = normalizedTask.assigneeAgentId || "";
           const environmentId = normalizedTask.environmentId || "";
+          const assigneeAgent = assigneeAgentId
+            ? (
+              isPlaygroundHumanAssigneeId(assigneeAgentId)
+                ? null
+                : (runtimeAgents.find((agent) => agent.id === assigneeAgentId) || null)
+            )
+            : null;
           const assigneeName = assigneeAgentId
             ? (
               isPlaygroundHumanAssigneeId(assigneeAgentId)
                 ? "Me"
-                : runtimeAgents.find((agent) => agent.id === assigneeAgentId)?.name
+                : assigneeAgent?.name
                   || (existingPreview?.assigneeAgentId === assigneeAgentId ? existingPreview?.assigneeName || "" : "")
+            )
+            : "";
+          const assigneePhotoUrl = assigneeAgentId
+            ? (
+              isPlaygroundHumanAssigneeId(assigneeAgentId)
+                ? (canRenderAvatarImage(accountAvatarUrl) ? accountAvatarUrl : "")
+                : normalizeSessionPhotoUrl(assigneeAgent ? getPlaygroundAgentProfilePhotoUrl(assigneeAgent) : "")
             )
             : "";
           const environmentName = environmentId
@@ -72524,11 +72549,12 @@ const html = `<!doctype html>
             taskType: normalizePlaygroundTaskType(normalizedTask.taskType || existingPreview?.taskType),
             assigneeAgentId,
             assigneeName,
+            assigneePhotoUrl,
             environmentId,
             environmentName,
             isDeleted: false,
           };
-        }, [runtimeAgents, runtimeEnvironments]);
+        }, [accountAvatarUrl, runtimeAgents, runtimeEnvironments]);
         const mergeThreadTaskPreviewRecord = useCallback(function mergeThreadTaskPreviewRecord(basePreview, incomingPreview, threadId = "") {
           const base = basePreview && typeof basePreview === "object" ? basePreview : {};
           const incoming = incomingPreview && typeof incomingPreview === "object" ? incomingPreview : {};
@@ -72553,6 +72579,7 @@ const html = `<!doctype html>
             taskType: normalizePlaygroundTaskType(incoming.taskType || base.taskType),
             assigneeAgentId: String(incoming.assigneeAgentId || base.assigneeAgentId || "").trim(),
             assigneeName: String(incoming.assigneeName || base.assigneeName || "").trim(),
+            assigneePhotoUrl: String(incoming.assigneePhotoUrl || base.assigneePhotoUrl || "").trim(),
             environmentId: String(incoming.environmentId || base.environmentId || "").trim(),
             environmentName: String(incoming.environmentName || base.environmentName || "").trim(),
             isDeleted: Boolean(incoming.isDeleted || base.isDeleted),
@@ -76622,11 +76649,31 @@ const html = `<!doctype html>
             return null;
           }
           const overridePreview = threadTaskPreviewOverrides[currentThreadId];
-          if (overridePreview && typeof overridePreview === "object" && overridePreview.taskId) {
-            return overridePreview;
+          const basePreview = overridePreview && typeof overridePreview === "object" && overridePreview.taskId
+            ? overridePreview
+            : rawSelectedThreadTaskPreview;
+          if (!basePreview) {
+            return null;
           }
-          return rawSelectedThreadTaskPreview;
-        }, [currentThreadId, rawSelectedThreadTaskPreview, threadTaskPreviewOverrides]);
+          const normalizedAssigneeId = String(basePreview.assigneeAgentId || "").trim();
+          const assigneeAgent = normalizedAssigneeId && !isPlaygroundHumanAssigneeId(normalizedAssigneeId)
+            ? (runtimeAgents.find((agent) => agent.id === normalizedAssigneeId) || null)
+            : null;
+          const resolvedAssigneePhotoUrl = normalizedAssigneeId
+            ? (
+              isPlaygroundHumanAssigneeId(normalizedAssigneeId)
+                ? (canRenderAvatarImage(accountAvatarUrl) ? accountAvatarUrl : "")
+                : normalizeSessionPhotoUrl(assigneeAgent ? getPlaygroundAgentProfilePhotoUrl(assigneeAgent) : "")
+            )
+            : "";
+          if (resolvedAssigneePhotoUrl === String(basePreview.assigneePhotoUrl || "").trim()) {
+            return basePreview;
+          }
+          return {
+            ...basePreview,
+            assigneePhotoUrl: resolvedAssigneePhotoUrl,
+          };
+        }, [accountAvatarUrl, currentThreadId, rawSelectedThreadTaskPreview, runtimeAgents, threadTaskPreviewOverrides]);
         const selectedThreadAgentId = useMemo(() => {
           const explicitThreadAgentId = typeof selectedKnownThread?.agentId === "string"
             ? selectedKnownThread.agentId.trim()
