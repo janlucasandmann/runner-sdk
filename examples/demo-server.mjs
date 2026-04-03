@@ -10615,9 +10615,14 @@ const html = `<!doctype html>
       .playground-agents-profile-avatar .profile-editor-avatar-surface {
         position: relative;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+      }
+
+      .playground-agents-profile-avatar.profile-editor-avatar {
+        width: 115px;
+        height: 115px;
       }
 
       .playground-agents-profile-avatar .profile-editor-avatar-surface::before {
@@ -10655,7 +10660,7 @@ const html = `<!doctype html>
         width: 14px;
         height: 14px;
         flex: 0 0 auto;
-        color: rgba(255, 255, 255, 0.92);
+        color: rgba(255, 255, 255, 0.7);
       }
 
       .playground-agents-profile-email-field {
@@ -10664,12 +10669,93 @@ const html = `<!doctype html>
         border: 0;
         border-radius: 0;
         background: transparent;
-        color: rgba(255, 255, 255, 0.92);
+        color: rgba(255, 255, 255, 0.7);
         font-size: 12px;
         line-height: 1.35;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .playground-agents-profile-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 10px;
+      }
+
+      .playground-agents-profile-action-button {
+        position: relative;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-agents-profile-action-button:not(.is-primary)::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-agents-profile-action-button:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .playground-agents-profile-action-button:active {
+        transform: translateY(1px);
+      }
+
+      .playground-agents-profile-action-button.is-primary {
+        width: auto;
+        min-width: 160px;
+        padding: 0 22px;
+        background: #fff;
+        color: #0d0d0d;
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-agents-profile-action-button.is-primary:hover {
+        background: rgba(255, 255, 255, 0.94);
+        color: #000;
+      }
+
+      .playground-agents-profile-action-button svg {
+        flex: 0 0 auto;
+      }
+
+      .playground-agents-profile-action-button.is-primary svg {
+        fill: currentColor;
       }
 
       .playground-environments-editor-fact-value {
@@ -13156,8 +13242,9 @@ const html = `<!doctype html>
         position: relative;
         overflow: visible;
         border: 0;
-        border-radius: 8px;
+        border-radius: 15px;
         background: rgba(255, 255, 255, 0.05);
+        padding: 20px;
         backdrop-filter: blur(50px);
         -webkit-backdrop-filter: blur(50px);
       }
@@ -13167,7 +13254,7 @@ const html = `<!doctype html>
         pointer-events: none;
         position: absolute;
         inset: 0;
-        border-radius: 8px;
+        border-radius: 15px;
         padding: 1px;
         background: linear-gradient(
           -10deg,
@@ -13281,17 +13368,49 @@ const html = `<!doctype html>
       }
 
       .playground-agents-model-metrics.playground-agents-model-metrics-surface {
-        padding: 3px 10px 10px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
+        position: relative;
+        isolation: isolate;
+        padding: 20px;
+        border: 0;
+        border-radius: 20px;
         background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-agents-model-metrics.playground-agents-model-metrics-surface::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        border-radius: 20px;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-agents-model-metrics.playground-agents-model-metrics-surface > * {
+        position: relative;
+        z-index: 1;
       }
 
       .playground-agents-model-metric {
         min-height: 64px;
         display: flex;
         flex-direction: column;
-        justify-content: flex-end;
+        justify-content: center;
         align-items: flex-start;
         padding: 0;
         border: 0;
@@ -13312,7 +13431,7 @@ const html = `<!doctype html>
       }
 
       .playground-agents-model-metric.is-stack {
-        justify-content: flex-end;
+        justify-content: center;
       }
 
       .playground-agents-model-metric.is-stack .playground-agents-model-metric-value {
@@ -15203,6 +15322,7 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-detail-description {
+        margin-top: 22px;
         padding: 2px 0 0;
       }
 
@@ -20054,7 +20174,7 @@ const html = `<!doctype html>
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -46013,6 +46133,7 @@ const html = `<!doctype html>
         focusedAgentId = "",
         focusedAgentSelectionToken = "",
         onAgentMutated,
+        onStartThreadWithAgent,
       }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
@@ -46020,6 +46141,7 @@ const html = `<!doctype html>
         const agentDescriptionTextareaRef = useRef(null);
         const agentInstructionsTextareaRef = useRef(null);
         const agentComposerDescriptionTextareaRef = useRef(null);
+        const agentComposerInstructionsTextareaRef = useRef(null);
         const agentProfileImageInputRef = useRef(null);
         const agentActionsPopoverRef = useRef(null);
         const agentRenameInputRef = useRef(null);
@@ -46073,6 +46195,7 @@ const html = `<!doctype html>
           error: "",
         });
         const [isAgentComposerDescriptionEditing, setIsAgentComposerDescriptionEditing] = useState(false);
+        const [isAgentComposerInstructionsEditing, setIsAgentComposerInstructionsEditing] = useState(false);
         const [agentComposerModelPopover, setAgentComposerModelPopover] = useState("");
         const [agentListActionMenuState, setAgentListActionMenuState] = useState(null);
         const [collapsedAgentListSections, setCollapsedAgentListSections] = useState(() => ({
@@ -47019,6 +47142,13 @@ const html = `<!doctype html>
           resizeAgentDescriptionTextarea(agentComposerDescriptionTextareaRef.current);
         }, [agentComposerDraft?.description, agentComposerOpen]);
 
+        useLayoutEffect(() => {
+          if (!agentComposerOpen) {
+            return;
+          }
+          resizeAgentDescriptionTextarea(agentComposerInstructionsTextareaRef.current);
+        }, [agentComposerDraft?.instructions, agentComposerOpen]);
+
         useEffect(() => {
           const textarea = agentDescriptionTextareaRef.current;
           const detailMain = agentDetailMainRef.current;
@@ -47107,18 +47237,48 @@ const html = `<!doctype html>
           setAgentListMode(nextMode === "teams" ? "teams" : "agents");
         }
 
-        function openAgentComposer(kind = "single") {
+        function buildAgentComposerSeedDraft(kind, draftOverrides = null) {
+          const normalizedKind = kind === "team" ? "team" : "single";
+          const seedDraft = normalizePlaygroundAgentRecord({
+            ...buildPlaygroundDefaultAgentDraft(normalizedKind),
+            ...(draftOverrides && typeof draftOverrides === "object" ? draftOverrides : {}),
+            id: PLAYGROUND_AGENT_DRAFT_ID,
+            agentType: normalizedKind,
+            isActive: true,
+            isDefault: false,
+            isSystem: false,
+          });
+
+          if (normalizedKind === "team") {
+            return {
+              ...seedDraft,
+              teamExecutionMode: PLAYGROUND_AGENT_TEAM_EXECUTION_MODE,
+              teamSubagentIds: dedupePlaygroundAgentIds(seedDraft.teamSubagentIds).filter((value) => value !== String(seedDraft.teamOrchestratorAgentId || "").trim()),
+            };
+          }
+
+          return {
+            ...seedDraft,
+            teamOrchestratorAgentId: "",
+            teamSubagentIds: [],
+            teamExecutionMode: "",
+          };
+        }
+
+        function openAgentComposer(kind = "single", options = {}) {
+          const draftOverrides = options && typeof options === "object" ? options.draft : null;
           resetEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
           setAgentListActionMenuState(null);
           setAgentListMode(kind === "team" ? "teams" : "agents");
-          setAgentComposerDraft(buildPlaygroundDefaultAgentDraft(kind));
+          setAgentComposerDraft(buildAgentComposerSeedDraft(kind, draftOverrides));
           setAgentComposerSaveState({
             isSaving: false,
             error: "",
           });
           setIsAgentComposerDescriptionEditing(false);
+          setIsAgentComposerInstructionsEditing(false);
           setAgentComposerModelPopover("");
           setAgentComposerOpen(true);
         }
@@ -47134,6 +47294,7 @@ const html = `<!doctype html>
             error: "",
           });
           setIsAgentComposerDescriptionEditing(false);
+          setIsAgentComposerInstructionsEditing(false);
           setAgentComposerModelPopover("");
         }
 
@@ -47227,10 +47388,10 @@ const html = `<!doctype html>
           }));
         }
 
-        function applyAgentComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          updateAgentComposerField("description", nextValue);
+        function applyAgentComposerMarkdownSelection(field, textareaRef, nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateAgentComposerField(field, nextValue);
           window.requestAnimationFrame(() => {
-            const textarea = agentComposerDescriptionTextareaRef.current;
+            const textarea = textareaRef.current;
             if (!textarea) {
               return;
             }
@@ -47243,12 +47404,12 @@ const html = `<!doctype html>
           });
         }
 
-        function handleAgentComposerDescriptionFormat(formatType) {
-          const textarea = agentComposerDescriptionTextareaRef.current;
+        function handleAgentComposerMarkdownFormat(field, textareaRef, formatType) {
+          const textarea = textareaRef.current;
           if (!textarea) {
             return;
           }
-          const value = String(agentComposerDraft?.description || "");
+          const value = String(agentComposerDraft?.[field] || "");
           const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
           const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
           let edit = null;
@@ -47267,7 +47428,69 @@ const html = `<!doctype html>
             return;
           }
 
-          applyAgentComposerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+          applyAgentComposerMarkdownSelection(field, textareaRef, edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
+        function openForkedAgentComposer() {
+          if (!draftAgent) {
+            openAgentComposer("single");
+            return;
+          }
+
+          const normalizedCurrentAgent = normalizePlaygroundAgentRecord(draftAgent);
+          const sanitizedMetadata = buildPlaygroundAgentPersistedMetadata({
+            ...normalizedCurrentAgent,
+            agentType: "single",
+            teamOrchestratorAgentId: "",
+            teamSubagentIds: [],
+            teamExecutionMode: "",
+            isSystem: false,
+            isDefault: false,
+          });
+          openAgentComposer("single", {
+            draft: {
+              name: String(normalizedCurrentAgent.name || "").trim()
+                ? String(normalizedCurrentAgent.name || "").trim() + " Copy"
+                : "New Agent",
+              description: normalizedCurrentAgent.description || "",
+              instructions: normalizedCurrentAgent.instructions || "",
+              model: normalizedCurrentAgent.model || buildPlaygroundDefaultAgentDraft("single").model,
+              binary: normalizedCurrentAgent.binary || "Claude Code CLI",
+              reasoningEffort: normalizedCurrentAgent.reasoningEffort || "medium",
+              enabledSkills: isPlaygroundTeamAgent(normalizedCurrentAgent)
+                ? []
+                : (Array.isArray(normalizedCurrentAgent.enabledSkills) ? [...normalizedCurrentAgent.enabledSkills] : []),
+              deepResearchModel: normalizedCurrentAgent.deepResearchModel || buildPlaygroundDefaultAgentDraft("single").deepResearchModel,
+              metadata: sanitizedMetadata,
+            },
+          });
+        }
+
+        function openTeamComposerFromCurrentAgent() {
+          const normalizedCurrentAgent = draftAgent ? normalizePlaygroundAgentRecord(draftAgent) : null;
+          const preferredOrchestratorId = normalizedCurrentAgent
+            ? (
+                isPlaygroundTeamAgent(normalizedCurrentAgent)
+                  ? String(normalizedCurrentAgent.teamOrchestratorAgentId || "").trim()
+                  : String(normalizedCurrentAgent.id || "").trim()
+              )
+            : "";
+          openAgentComposer("team", {
+            draft: {
+              teamOrchestratorAgentId: preferredOrchestratorId,
+              model: preferredOrchestratorId && availableTeamMemberAgentsById[preferredOrchestratorId]?.model
+                ? availableTeamMemberAgentsById[preferredOrchestratorId].model
+                : buildPlaygroundDefaultAgentDraft("team").model,
+            },
+          });
+        }
+
+        function handleAgentProfileNewThread() {
+          const normalizedAgentId = String(draftAgent?.id || "").trim();
+          if (!normalizedAgentId || typeof onStartThreadWithAgent !== "function") {
+            return;
+          }
+          onStartThreadWithAgent(normalizedAgentId);
         }
 
         function openAgentRenameDialog(agent) {
@@ -47444,6 +47667,7 @@ const html = `<!doctype html>
               error: "",
             });
             setIsAgentComposerDescriptionEditing(false);
+            setIsAgentComposerInstructionsEditing(false);
             setAgentComposerModelPopover("");
             if (onAgentMutated) {
               await onAgentMutated();
@@ -47729,6 +47953,11 @@ const html = `<!doctype html>
           const composerDraft = agentComposerDraft || buildPlaygroundDefaultAgentDraft(agentListMode === "teams" ? "team" : "single");
           const isTeamComposer = composerDraft.agentType === "team";
           const selectedComposerModel = PLAYGROUND_AGENT_MODEL_OPTIONS.find((option) => option.id === (composerDraft.model || "claude-haiku-4-5")) || PLAYGROUND_AGENT_MODEL_OPTIONS[0];
+          const composerReasoningOptions = ["minimal", "low", "medium", "high"].map((value) => ({
+            id: value,
+            label: value.replace(/^./, (letter) => letter.toUpperCase()),
+          }));
+          const selectedComposerReasoningOption = composerReasoningOptions.find((option) => option.id === (composerDraft.reasoningEffort || "medium")) || composerReasoningOptions[2];
           const composerSelectedSubagentIds = dedupePlaygroundAgentIds(composerDraft.teamSubagentIds).filter((value) => value !== String(composerDraft.teamOrchestratorAgentId || "").trim());
           const hasRequiredTeamSelection = !isTeamComposer || (String(composerDraft.teamOrchestratorAgentId || "").trim() && composerSelectedSubagentIds.length > 0);
 
@@ -47791,7 +48020,7 @@ const html = `<!doctype html>
                             "aria-label": action.label,
                             disabled: agentComposerSaveState.isSaving,
                             onMouseDown: (event) => event.preventDefault(),
-                            onClick: () => handleAgentComposerDescriptionFormat(action.id),
+                            onClick: () => handleAgentComposerMarkdownFormat("description", agentComposerDescriptionTextareaRef, action.id),
                           }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
                         )
                       )
@@ -47923,9 +48152,104 @@ const html = `<!doctype html>
                                   : null
                               )
                             )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Reasoning Effort"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("div", {
+                                  className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (agentComposerModelPopover === "reasoning" ? " is-open" : ""),
+                                  ref: agentComposerModelPopover === "reasoning" ? agentComposerModelPopoverRef : null,
+                                },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environments-runtime-value-button playground-tasks-detail-select-trigger" + (agentComposerModelPopover === "reasoning" ? " is-active" : ""),
+                                  onClick: () => setAgentComposerModelPopover((current) => current === "reasoning" ? "" : "reasoning"),
+                                  disabled: agentComposerSaveState.isSaving,
+                                },
+                                  React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedComposerReasoningOption.label || "Medium"),
+                                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
+                                ),
+                                agentComposerModelPopover === "reasoning"
+                                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                      composerReasoningOptions.map((option) =>
+                                        React.createElement("button", {
+                                            key: option.id,
+                                            type: "button",
+                                            className: "tb-popup-row tb-popup-row-select" + ((composerDraft.reasoningEffort || "medium") === option.id ? " selected" : ""),
+                                            onClick: () => {
+                                              updateAgentComposerField("reasoningEffort", option.id);
+                                              setAgentComposerModelPopover("");
+                                            },
+                                          },
+                                          React.createElement("span", { className: "tb-popup-check-slot" },
+                                            (composerDraft.reasoningEffort || "medium") === option.id
+                                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                              : null
+                                          ),
+                                          React.createElement("span", null, option.label)
+                                        )
+                                      )
+                                    )
+                                  : null
+                              )
+                            )
                           )
                         )
+                      ),
+                  React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, isTeamComposer ? "Team Instructions" : "Instructions"),
+                      React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                        [
+                          { id: "bold", label: "Bold", icon: Bold },
+                          { id: "italic", label: "Italic", icon: Italic },
+                          { id: "underline", label: "Underline", icon: Underline },
+                          { id: "list", label: "List", icon: List },
+                        ].map((action) =>
+                          React.createElement("button", {
+                            key: "instructions-" + action.id,
+                            type: "button",
+                            className: "playground-tasks-detail-format-button",
+                            title: action.label,
+                            "aria-label": action.label,
+                            disabled: agentComposerSaveState.isSaving,
+                            onMouseDown: (event) => event.preventDefault(),
+                            onClick: () => handleAgentComposerMarkdownFormat("instructions", agentComposerInstructionsTextareaRef, action.id),
+                          }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                        )
                       )
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isAgentComposerInstructionsEditing ? " is-editing" : " is-preview") },
+                      !isAgentComposerInstructionsEditing
+                        ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                            String(composerDraft.instructions || "").trim()
+                              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                  content: composerDraft.instructions,
+                                  className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                })
+                              : React.createElement("div", {
+                                  className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                }, isTeamComposer ? "Add team instructions here." : "Add agent instructions here.")
+                          )
+                        : null,
+                      React.createElement("textarea", {
+                        ref: agentComposerInstructionsTextareaRef,
+                        className: "playground-tasks-detail-description-input " + (isAgentComposerInstructionsEditing ? "is-editing" : "is-preview"),
+                        rows: 1,
+                        placeholder: isAgentComposerInstructionsEditing
+                          ? (isTeamComposer ? "Add team instructions here." : "Add agent instructions here.")
+                          : "",
+                        value: composerDraft.instructions || "",
+                        disabled: agentComposerSaveState.isSaving,
+                        onFocus: () => setIsAgentComposerInstructionsEditing(true),
+                        onChange: (event) => {
+                          updateAgentComposerField("instructions", event.target.value);
+                          resizeAgentDescriptionTextarea(event.currentTarget);
+                        },
+                        onBlur: () => setIsAgentComposerInstructionsEditing(false),
+                      })
+                    )
+                  )
                 ),
                 agentComposerSaveState.error
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, agentComposerSaveState.error)
@@ -48291,8 +48615,125 @@ const html = `<!doctype html>
             React.createElement("div", { className: "playground-agents-profile-email-group" },
               React.createElement(Mail, { className: "playground-agents-profile-email-icon", strokeWidth: 1.8 }),
               React.createElement("div", { className: "playground-agents-profile-email-field" }, agentEmailAddress || "No email address available")
+            ),
+            React.createElement("div", { className: "playground-agents-profile-actions" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-agents-profile-action-button",
+                onClick: openForkedAgentComposer,
+                title: "Fork into a new agent",
+                "aria-label": "Fork into a new agent",
+              }, React.createElement(Split, { width: 14, height: 14, strokeWidth: 1.9 })),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-agents-profile-action-button is-primary",
+                onClick: handleAgentProfileNewThread,
+                title: "New Thread",
+                "aria-label": "New Thread",
+              }, React.createElement("span", null, "New Thread")),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-agents-profile-action-button",
+                onClick: openTeamComposerFromCurrentAgent,
+                title: "Create team from this agent",
+                "aria-label": "Create team from this agent",
+              }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
             )
           );
+
+          const agentModelDetailRows = isTeamAgent
+            ? React.createElement(React.Fragment, null,
+                renderAgentFactRow("Model",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, teamDerivedModelMeta?.label || "Select orchestrator first")
+                ),
+                renderAgentFactRow("Reasoning Effort",
+                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, String(selectedTeamOrchestrator?.reasoningEffort || "medium").replace(/^./, (value) => value.toUpperCase()))
+                )
+              )
+            : React.createElement(React.Fragment, null,
+                renderAgentFactRow("Model",
+                  React.createElement("div", {
+                      className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "model" ? " is-open" : ""),
+                      ref: agentModelPopover === "model" ? agentModelPopoverRef : null,
+                    },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-runtime-value-button",
+                      onClick: () => {
+                        if (isSystemAgent) return;
+                        setAgentModelPopover((current) => current === "model" ? "" : "model");
+                      },
+                      disabled: isSystemAgent,
+                    },
+                      React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedAgentModel?.label || "Select model"),
+                      React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                    ),
+                    agentModelPopover === "model"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          PLAYGROUND_AGENT_MODEL_OPTIONS.map((option) =>
+                            React.createElement("button", {
+                                key: option.id,
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select" + ((draftAgent.model || "claude-haiku-4-5") === option.id ? " selected" : ""),
+                                onClick: () => {
+                                  updateAgentField("model", option.id);
+                                  setAgentModelPopover("");
+                                },
+                              },
+                                React.createElement("span", { className: "tb-popup-check-slot" },
+                                  (draftAgent.model || "claude-haiku-4-5") === option.id
+                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                    : null
+                                ),
+                                React.createElement("span", null, option.label)
+                              )
+                          )
+                        )
+                      : null
+                  )
+                ),
+                renderAgentFactRow("Reasoning Effort",
+                  React.createElement("div", {
+                      className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "reasoning" ? " is-open" : ""),
+                      ref: agentModelPopover === "reasoning" ? agentModelPopoverRef : null,
+                    },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-runtime-value-button",
+                      onClick: () => {
+                        if (isSystemAgent) return;
+                        setAgentModelPopover((current) => current === "reasoning" ? "" : "reasoning");
+                      },
+                      disabled: isSystemAgent,
+                    },
+                      React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedReasoningOption?.label || "Medium"),
+                      React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                    ),
+                    agentModelPopover === "reasoning"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          reasoningOptions.map((option) =>
+                            React.createElement("button", {
+                                key: option.id,
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select" + ((draftAgent.reasoningEffort || "medium") === option.id ? " selected" : ""),
+                                onClick: () => {
+                                  updateAgentField("reasoningEffort", option.id);
+                                  setAgentModelPopover("");
+                                },
+                              },
+                                React.createElement("span", { className: "tb-popup-check-slot" },
+                                  (draftAgent.reasoningEffort || "medium") === option.id
+                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                    : null
+                                ),
+                                React.createElement("span", null, option.label)
+                              )
+                          )
+                        )
+                      : null
+                  )
+                )
+              );
 
           const agentFactsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
             React.createElement("div", { className: "playground-tasks-detail-facts-header" },
@@ -48318,17 +48759,12 @@ const html = `<!doctype html>
                           : agentAnalyticsOverview
                       )
                     : null,
-                  renderAgentFactRow("Status",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftAgent.isActive ? "Active" : "Inactive")
-                  ),
+                  agentModelDetailRows,
                   renderAgentFactRow("Created",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.createdAt))
                   ),
                   renderAgentFactRow("Updated",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftAgent.updatedAt))
-                  ),
-                  renderAgentFactRow("Last Run",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftAgent.lastRunAt ? formatPlaygroundFileDate(draftAgent.lastRunAt) : "None")
                   ),
                   isTeamAgent
                     ? renderAgentFactRow("Orchestrator",
@@ -48410,163 +48846,6 @@ const html = `<!doctype html>
                   : null
               )
             : null;
-
-          const modelSection = isTeamAgent
-            ? React.createElement("div", { className: "playground-environments-stack" },
-                React.createElement("div", { className: "playground-agents-model-hint" },
-                  React.createElement("div", { className: "playground-agents-model-hint-title" }, selectedTeamOrchestrator ? selectedTeamOrchestrator.name + " drives team execution" : "Choose an orchestrator to derive execution settings"),
-                  React.createElement("div", { className: "playground-agents-model-hint-copy" }, selectedTeamOrchestrator
-                    ? "The backend derives the runtime model and reasoning behavior from the selected orchestrator agent."
-                    : "Once an orchestrator is selected, the team runtime will inherit its model and reasoning configuration."
-                  ),
-                  teamDerivedModelMeta
-                    ? React.createElement("div", { className: "playground-agents-model-metrics" },
-                        React.createElement("div", { className: "playground-agents-model-metric" },
-                          React.createElement("div", { className: "playground-agents-model-metric-label" }, "Model"),
-                          React.createElement("div", { className: "playground-agents-model-metric-value" }, teamDerivedModelMeta.label)
-                        ),
-                        React.createElement("div", { className: "playground-agents-model-metric" },
-                          React.createElement("div", { className: "playground-agents-model-metric-label" }, "Reasoning"),
-                          React.createElement("div", { className: "playground-agents-model-metric-value" }, String(selectedTeamOrchestrator?.reasoningEffort || "medium").replace(/^./, (value) => value.toUpperCase()))
-                        ),
-                        React.createElement("div", { className: "playground-agents-model-metric" },
-                          React.createElement("div", { className: "playground-agents-model-metric-label" }, "Binary"),
-                          React.createElement("div", { className: "playground-agents-model-metric-value" }, selectedTeamOrchestrator?.binary || "Claude Code CLI")
-                        )
-                      )
-                    : null
-                )
-              )
-            : React.createElement("div", { className: "playground-environments-stack" },
-                React.createElement("div", { className: "playground-agents-model-panel" },
-                  React.createElement("div", { className: "playground-agents-model-header" },
-                    React.createElement("div", { className: "playground-agents-model-select-row" },
-                      React.createElement("span", { className: "playground-agents-model-select-label" }, "Model"),
-                      React.createElement("div", {
-                          className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "model" ? " is-open" : ""),
-                          ref: agentModelPopover === "model" ? agentModelPopoverRef : null,
-                        },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-runtime-value-button",
-                          onClick: () => {
-                            if (isSystemAgent) return;
-                            setAgentModelPopover((current) => current === "model" ? "" : "model");
-                          },
-                          disabled: isSystemAgent,
-                        },
-                          React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedAgentModel?.label || "Select model"),
-                          React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                        ),
-                        agentModelPopover === "model"
-                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                              PLAYGROUND_AGENT_MODEL_OPTIONS.map((option) =>
-                                React.createElement("button", {
-                                    key: option.id,
-                                    type: "button",
-                                    className: "tb-popup-row tb-popup-row-select" + ((draftAgent.model || "claude-haiku-4-5") === option.id ? " selected" : ""),
-                                    onClick: () => {
-                                      updateAgentField("model", option.id);
-                                      setAgentModelPopover("");
-                                    },
-                                  },
-                                    React.createElement("span", { className: "tb-popup-check-slot" },
-                                      (draftAgent.model || "claude-haiku-4-5") === option.id
-                                        ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                        : null
-                                    ),
-                                    React.createElement("span", null, option.label)
-                                  )
-                              )
-                            )
-                          : null
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-agents-model-select-row" },
-                      React.createElement("span", { className: "playground-agents-model-select-label" }, "Reasoning Effort"),
-                      React.createElement("div", {
-                          className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup" + (agentModelPopover === "reasoning" ? " is-open" : ""),
-                          ref: agentModelPopover === "reasoning" ? agentModelPopoverRef : null,
-                        },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-runtime-value-button",
-                          onClick: () => {
-                            if (isSystemAgent) return;
-                            setAgentModelPopover((current) => current === "reasoning" ? "" : "reasoning");
-                          },
-                          disabled: isSystemAgent,
-                        },
-                          React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedReasoningOption?.label || "Medium"),
-                          React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                        ),
-                        agentModelPopover === "reasoning"
-                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                              reasoningOptions.map((option) =>
-                                React.createElement("button", {
-                                    key: option.id,
-                                    type: "button",
-                                    className: "tb-popup-row tb-popup-row-select" + ((draftAgent.reasoningEffort || "medium") === option.id ? " selected" : ""),
-                                    onClick: () => {
-                                      updateAgentField("reasoningEffort", option.id);
-                                      setAgentModelPopover("");
-                                    },
-                                  },
-                                    React.createElement("span", { className: "tb-popup-check-slot" },
-                                      (draftAgent.reasoningEffort || "medium") === option.id
-                                        ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                        : null
-                                    ),
-                                    React.createElement("span", null, option.label)
-                                  )
-                              )
-                            )
-                          : null
-                      )
-                    ),
-                    enabledSkills.includes("deep_research")
-                      ? React.createElement("label", { className: "playground-environments-field playground-environments-field-span" },
-                          React.createElement("span", { className: "playground-environments-field-label" }, "Deep Research Model"),
-                          React.createElement("select", {
-                            className: "playground-environments-select",
-                            value: draftAgent.deepResearchModel || "gemini-3-flash-preview",
-                            onChange: (event) => updateAgentField("deepResearchModel", event.target.value),
-                            disabled: isSystemAgent,
-                          },
-                            PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS.map((option) =>
-                              React.createElement("option", { key: option.id, value: option.id }, option.label)
-                            )
-                          )
-                        )
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-agents-model-metrics playground-agents-model-metrics-surface" },
-                    React.createElement("div", { className: "playground-agents-model-metric playground-agents-intelligence-metric" },
-                      React.createElement("div", { className: "playground-agents-intelligence-bulbs" },
-                        [1, 2, 3, 4].map((level) =>
-                          React.createElement(Lightbulb, {
-                            key: level,
-                            className: "playground-agents-intelligence-bulb" + (level <= getPlaygroundAgentIntelligenceLevel(modelMeta.intelligence) ? " is-active" : ""),
-                            strokeWidth: 1.5,
-                          })
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-agents-intelligence-copy" },
-                        modelMeta.intelligence,
-                        React.createElement("span", null, " Intelligence")
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-agents-model-metric is-stack" },
-                      React.createElement("div", { className: "playground-agents-model-metric-value" }, modelMeta.contextWindow),
-                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Context Window")
-                    ),
-                    React.createElement("div", { className: "playground-agents-model-metric is-stack" },
-                      React.createElement("div", { className: "playground-agents-model-metric-value" }, modelMeta.speed),
-                      React.createElement("div", { className: "playground-agents-model-metric-label" }, "Speed")
-                    )
-                  )
-                )
-              );
 
           const instructionsSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
             React.createElement("div", { className: "playground-tasks-detail-section-header" },
@@ -48683,7 +48962,6 @@ const html = `<!doctype html>
               isTeamAgent
                 ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
                 : null,
-              renderEditorSection("model", "Model Configuration", "", modelSection, null, false),
               instructionsSection
             )
           );
@@ -77794,6 +78072,13 @@ const html = `<!doctype html>
                               focusedAgentSelectionToken: agentPageSelectionRequest?.token || "",
                               onAgentMutated: async () => {
                                 await refreshAgents();
+                              },
+                              onStartThreadWithAgent: (agentId) => {
+                                const normalizedAgentId = String(agentId || "").trim();
+                                if (normalizedAgentId) {
+                                  setPreferredAgentId(normalizedAgentId);
+                                }
+                                handleNewThread();
                               },
                             })
                           : renderAuthGate()
