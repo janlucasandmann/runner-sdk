@@ -46649,22 +46649,101 @@ const html = `<!doctype html>
           });
         }
 
+        function buildAgentProfilePhotoDraft(agent, nextPhotoUrl) {
+          const normalizedAgent = normalizePlaygroundAgentRecord(agent || selectedAgentSnapshot || buildPlaygroundDefaultAgentDraft());
+          const nextMetadata = normalizedAgent?.metadata && typeof normalizedAgent.metadata === "object" && !Array.isArray(normalizedAgent.metadata)
+            ? { ...normalizedAgent.metadata }
+            : {};
+          const nextProfile = getPlaygroundAgentProfileMetadata(nextMetadata) || {};
+
+          if (nextPhotoUrl) {
+            nextProfile.photoURL = nextPhotoUrl;
+          } else {
+            delete nextProfile.photoURL;
+            delete nextProfile.photoUrl;
+          }
+
+          if (Object.keys(nextProfile).length > 0) {
+            nextMetadata.profile = nextProfile;
+          } else {
+            delete nextMetadata.profile;
+          }
+
+          return {
+            ...normalizedAgent,
+            metadata: Object.keys(nextMetadata).length > 0 ? nextMetadata : null,
+          };
+        }
+
+        async function persistAgentProfilePhotoSelection(nextPhotoUrl) {
+          if (!draftAgent || isSystemAgent) {
+            return;
+          }
+
+          const nextAgent = buildAgentProfilePhotoDraft(draftAgent, nextPhotoUrl);
+          setAgentProfileAvatarBroken(false);
+          setAgentProfileAvatarPickerOpen(false);
+
+          if (!nextAgent?.id || nextAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+            updateAgentProfilePhotoUrl(nextPhotoUrl);
+            return;
+          }
+
+          setDraftAgent(nextAgent);
+          setAgentDetailsById((current) => ({
+            ...current,
+            [nextAgent.id]: nextAgent,
+          }));
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const savedAgent = await persistAgentRecord(nextAgent);
+            editorDirtyRef.current = false;
+            setAgentDetailsById((current) => ({
+              ...current,
+              [savedAgent.id]: savedAgent,
+            }));
+            setAgentListMode(getPlaygroundAgentListMode(savedAgent));
+            setSelectedAgentId(savedAgent.id);
+            setDraftAgent(savedAgent);
+            setSaveState({
+              isSaving: false,
+              error: "",
+              message: "Saved",
+            });
+            if (onAgentMutated) {
+              await onAgentMutated();
+            }
+          } catch (error) {
+            setAgentDetailsById((current) => ({
+              ...current,
+              [draftAgent.id]: draftAgent,
+            }));
+            setDraftAgent(draftAgent);
+            setSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to save agent.",
+              message: "",
+            });
+          }
+        }
+
         function handleAgentProfilePhotoSelection(nextPhotoUrl) {
           if (isSystemAgent || !nextPhotoUrl) {
             return;
           }
-          setAgentProfileAvatarBroken(false);
-          setAgentProfileAvatarPickerOpen(false);
-          updateAgentProfilePhotoUrl(nextPhotoUrl);
+          void persistAgentProfilePhotoSelection(nextPhotoUrl);
         }
 
         function handleAgentProfilePhotoRemove() {
           if (isSystemAgent) {
             return;
           }
-          setAgentProfileAvatarBroken(false);
-          setAgentProfileAvatarPickerOpen(false);
-          updateAgentProfilePhotoUrl("");
+          void persistAgentProfilePhotoSelection("");
         }
 
         function toggleToolbarPopover(nextValue) {
