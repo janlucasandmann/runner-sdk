@@ -10769,9 +10769,9 @@ const html = `<!doctype html>
         position: absolute;
         right: -10px;
         top: 40px;
-        width: 174px;
+        width: 256px;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
         padding: 12px;
       }
@@ -22013,12 +22013,14 @@ const html = `<!doctype html>
       const PLAYGROUND_AGENT_TEAM_EXECUTION_MODE = "claude_subagents_v1";
       const PLAYGROUND_AGENT_EMAIL_DOMAIN = "agent.computer-agents.com";
       const PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS = [
-        { id: "assistantastro", label: "Assistant Astro", url: "/img/agent-profile-pics/assistantastro.png" },
-        { id: "devastro", label: "Developer Astro", url: "/img/agent-profile-pics/devastro.png" },
-        { id: "researchastro", label: "Research Astro", url: "/img/agent-profile-pics/researchastro.png" },
-        { id: "astro", label: "Astro", url: "/img/agent-profile-pics/astro.png" },
+        { id: "assistantastro", label: "Assistant Astro", url: "/img/agent-profile-pics/assistantastro-1.webp" },
+        { id: "devastro", label: "Developer Astro", url: "/img/agent-profile-pics/devastro.webp" },
+        { id: "researchastro", label: "Research Astro", url: "/img/agent-profile-pics/researchastro.webp" },
+        { id: "blueastro", label: "Blue Astro", url: "/img/agent-profile-pics/blueastro.webp" },
+        { id: "orangeastro", label: "Orange Astro", url: "/img/agent-profile-pics/orangeastro.webp" },
+        { id: "suitastro", label: "Suit Astro", url: "/img/agent-profile-pics/suitastro.webp" },
       ];
-      const PLAYGROUND_AGENTS_SHELL_BACKGROUND = "linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,1) 48%, rgba(0, 0, 0, 1) 100%), url(/img/agent-profile-pics/starbg.png)";
+      const PLAYGROUND_AGENTS_SHELL_BACKGROUND = "linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,1) 48%, rgba(0, 0, 0, 1) 100%), url(/img/agent-profile-pics/starbg.jpeg)";
       const PLAYGROUND_AGENT_SKILL_OPTIONS = [
         {
           id: "deep_research",
@@ -22253,22 +22255,22 @@ const html = `<!doctype html>
         }
 
         if (isPlaygroundDeveloperAgent(agent)) {
-          return "/img/agent-profile-pics/devastro.png";
+          return "/img/agent-profile-pics/devastro.webp";
         }
 
         if (isPlaygroundResearcherAgent(agent)) {
-          return "/img/agent-profile-pics/researchastro.png";
+          return "/img/agent-profile-pics/researchastro.webp";
         }
 
         if (isPlaygroundAssistantAgent(agent)) {
-          return "/img/agent-profile-pics/assistantastro.png";
+          return "/img/agent-profile-pics/assistantastro-1.webp";
         }
 
         if (isPlaygroundDefaultNamedAgent(agent)) {
-          return "/img/agent-profile-pics/assistantastro.png";
+          return "/img/agent-profile-pics/assistantastro-1.webp";
         }
 
-        return "/img/agent-profile-pics/assistantastro.png";
+        return "/img/agent-profile-pics/assistantastro-1.webp";
       }
 
       function buildPlaygroundAgentProfileMetadata(agent) {
@@ -48728,14 +48730,6 @@ const html = `<!doctype html>
                       })
                     : React.createElement("span", { className: "profile-editor-avatar-fallback" }, getAccountInitials(draftAgent.name || (isTeamAgent ? "Team" : "Agent")))
                 ),
-                !isSystemAgent && hasExplicitAgentProfilePhoto
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "profile-editor-avatar-remove",
-                      onClick: handleAgentProfilePhotoRemove,
-                      "aria-label": "Remove agent profile picture",
-                    }, React.createElement(Minus, { className: "profile-editor-camera-icon", strokeWidth: 1.9 }))
-                  : null,
                 !isSystemAgent
                   ? React.createElement("div", {
                       className: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell" + (agentProfileAvatarPickerOpen ? " is-open" : ""),
