@@ -666,7 +666,7 @@ const html = `<!doctype html>
       .sidebar-rail-logo-button {
         width: 34px;
         height: 34px;
-        margin-left: 0;
+        margin-left: 2px;
       }
 
       .sidebar-rail-logo-button {
@@ -9566,7 +9566,7 @@ const html = `<!doctype html>
       }
 
       .playground-environments-page:not(.playground-agents-page) {
-        --playground-environments-nav-top-offset: 7px;
+        --playground-environments-nav-top-offset: 10px;
         --playground-environments-nav-row-height: 30px;
         --playground-environments-list-title-size: 14px;
         --playground-environments-detail-title-size: 20px;
@@ -13054,7 +13054,7 @@ const html = `<!doctype html>
         height: 100%;
         min-height: 0;
         background: transparent;
-        --playground-environments-nav-top-offset: 7px;
+        --playground-environments-nav-top-offset: 10px;
         --playground-environments-nav-row-height: 30px;
         --playground-environments-list-title-size: 14px;
         --playground-environments-detail-title-size: 20px;
@@ -76772,7 +76772,7 @@ const html = `<!doctype html>
         }, [activePage]);
 
         useEffect(() => {
-          if (activePage === "settings") {
+          if (activePage === "settings" || activePage === "agents") {
             setSidebarOpen(false);
           }
         }, [activePage]);
