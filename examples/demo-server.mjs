@@ -417,12 +417,14 @@ const html = `<!doctype html>
         transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      .playground-shell.is-projects-page .playground-sidebar:not(.is-collapsed) {
+      .playground-shell.is-projects-page .playground-sidebar:not(.is-collapsed),
+      .playground-shell.is-agents-page .playground-sidebar:not(.is-collapsed) {
         backdrop-filter: blur(50px);
         -webkit-backdrop-filter: blur(50px);
       }
 
-      .playground-shell.is-projects-page .playground-sidebar.is-collapsed {
+      .playground-shell.is-projects-page .playground-sidebar.is-collapsed,
+      .playground-shell.is-agents-page .playground-sidebar.is-collapsed {
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
       }
@@ -645,14 +647,14 @@ const html = `<!doctype html>
 
       .sidebar-rail-logo-button,
       .sidebar-rail-button {
-        width: 30px;
-        height: 30px;
+        width: 34px;
+        height: 34px;
         margin-left: 4px;
         padding: 0;
         border: 0;
         border-radius: 10px;
         background: transparent;
-        color: rgba(255, 255, 255, 0.76);
+        color: rgba(255, 255, 255, 0.92);
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -662,9 +664,13 @@ const html = `<!doctype html>
       }
 
       .sidebar-rail-logo-button {
-        width: 30px;
-        height: 30px;
+        width: 34px;
+        height: 34px;
         margin-left: 0;
+      }
+
+      .sidebar-rail-logo-button {
+        color: rgba(255, 255, 255, 0.76);
       }
 
       .sidebar-rail-logo-button {
@@ -736,8 +742,8 @@ const html = `<!doctype html>
       }
 
       .sidebar-rail-account {
-        width: 30px;
-        height: 30px;
+        width: 34px;
+        height: 34px;
         margin-top: auto;
         margin-bottom: 10px;
         margin-left: 4px;
@@ -745,7 +751,7 @@ const html = `<!doctype html>
         border: 0;
         border-radius: 10px;
         background: transparent;
-        color: rgba(255, 255, 255, 0.76);
+        color: rgba(255, 255, 255, 0.92);
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -779,11 +785,11 @@ const html = `<!doctype html>
       .sidebar-action-button,
       .sidebar-settings-button {
         width: 100%;
-        min-height: 30px;
+        min-height: 34px;
         display: flex;
         align-items: center;
         gap: 14px;
-        padding: 8px 12px;
+        padding: 10px 12px;
         border: 0;
         border-radius: 10px;
         background: transparent;
@@ -1061,8 +1067,15 @@ const html = `<!doctype html>
         width: 14px;
         height: 14px;
         flex-shrink: 0;
+        margin-right: 2px;
         color: rgba(255, 255, 255, 0.7);
         transition: transform 160ms ease, color 160ms ease;
+      }
+
+      .sidebar-action-icon,
+      .sidebar-search-trigger-icon,
+      .sidebar-rail-icon {
+        stroke-width: 1.5;
       }
 
       .sidebar-thread-section-header.is-collapsed .sidebar-thread-section-chevron {
@@ -10600,7 +10613,33 @@ const html = `<!doctype html>
       }
 
       .playground-agents-profile-avatar .profile-editor-avatar-surface {
-        background: rgba(255, 255, 255, 0.14);
+        position: relative;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+
+      .playground-agents-profile-avatar .profile-editor-avatar-surface::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-agents-profile-email-group {
@@ -12998,6 +13037,7 @@ const html = `<!doctype html>
         font-size: 12px;
         font-weight: 500;
         line-height: 1.2;
+        color: rgba(255, 255, 255, 0.7);
       }
 
       .playground-agents-page .playground-environments-list-item-meta {
@@ -13007,6 +13047,30 @@ const html = `<!doctype html>
       .playground-agents-page .playground-environments-list-item-icon {
         width: 14px;
         height: 14px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-agents-page .playground-environments-list-item.is-active .playground-environments-list-item-title,
+      .playground-agents-page .playground-environments-list-item.is-active .playground-environments-list-item-icon {
+        color: rgba(255, 255, 255, 1);
+      }
+
+      .playground-agents-list-section {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-agents-list-section.is-system {
+        margin-top: 10px;
+      }
+
+      .playground-agents-list-section + .playground-agents-list-section {
+        margin-top: 10px;
+      }
+
+      .playground-agents-page .sidebar-thread-section-chevron {
+        margin-right: 1px;
       }
 
       .playground-agents-page .playground-environments-detail-scroll {
@@ -13086,6 +13150,38 @@ const html = `<!doctype html>
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-agents-page .playground-tasks-detail-facts {
+        position: relative;
+        overflow: visible;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-agents-page .playground-tasks-detail-facts::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: 8px;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-agents-page .playground-agents-model-hint,
@@ -21746,6 +21842,7 @@ const html = `<!doctype html>
       ];
       const PLAYGROUND_AGENT_TEAM_EXECUTION_MODE = "claude_subagents_v1";
       const PLAYGROUND_AGENT_EMAIL_DOMAIN = "agent.computer-agents.com";
+      const PLAYGROUND_AGENTS_SHELL_BACKGROUND = "linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,1) 48%, rgba(0, 0, 0, 1) 100%), url(/img/agent-profile-pics/starbg.png)";
       const PLAYGROUND_AGENT_SKILL_OPTIONS = [
         {
           id: "deep_research",
@@ -21980,19 +22077,19 @@ const html = `<!doctype html>
         }
 
         if (isPlaygroundDeveloperAgent(agent)) {
-          return "/img/agent-profile-pics/dev.png";
+          return "/img/agent-profile-pics/devastro.png";
         }
 
         if (isPlaygroundResearcherAgent(agent)) {
-          return "/img/agent-profile-pics/researcher.png";
+          return "/img/agent-profile-pics/researchastro.png";
         }
 
         if (isPlaygroundAssistantAgent(agent)) {
-          return "/img/agent-profile-pics/assistant.png";
+          return "/img/agent-profile-pics/assistantastro.png";
         }
 
         if (isPlaygroundDefaultNamedAgent(agent)) {
-          return "/img/agent-profile-pics/default.png";
+          return "/img/agent-profile-pics/astro.png";
         }
 
         return "";
@@ -45978,6 +46075,10 @@ const html = `<!doctype html>
         const [isAgentComposerDescriptionEditing, setIsAgentComposerDescriptionEditing] = useState(false);
         const [agentComposerModelPopover, setAgentComposerModelPopover] = useState("");
         const [agentListActionMenuState, setAgentListActionMenuState] = useState(null);
+        const [collapsedAgentListSections, setCollapsedAgentListSections] = useState(() => ({
+          system: false,
+          custom: false,
+        }));
         const [expandedSections, setExpandedSections] = useState(() => new Set(["team", "model", "instructions"]));
 
         const orderedAgents = useMemo(() => {
@@ -46092,6 +46193,34 @@ const html = `<!doctype html>
 
           return items;
         }, [agentListMode, filteredOrderedAgents, selectedAgentListPreview, selectedAgentListPreviewMode]);
+
+        const groupedDisplayAgents = useMemo(() => {
+          const systemItems = [];
+          const customItems = [];
+          displayAgents.forEach((agent) => {
+            if (agent?.isDefault || agent?.isSystem) {
+              systemItems.push(agent);
+            } else {
+              customItems.push(agent);
+            }
+          });
+          const sections = [];
+          if (systemItems.length > 0) {
+            sections.push({
+              key: "system",
+              title: agentListMode === "teams" ? "System Teams" : "System Agents",
+              items: systemItems,
+            });
+          }
+          if (customItems.length > 0) {
+            sections.push({
+              key: "custom",
+              title: agentListMode === "teams" ? "Custom Teams" : "Custom Agents",
+              items: customItems,
+            });
+          }
+          return sections;
+        }, [agentListMode, displayAgents]);
 
         const searchResults = useMemo(() => {
           const query = searchPopupQuery.trim().toLowerCase();
@@ -48665,53 +48794,61 @@ const html = `<!doctype html>
               ),
               React.createElement("div", { className: "playground-environments-list-body" },
                 displayAgents.length > 0
-                  ? displayAgents.map((agent) => {
-                      const teamMetadata = getPlaygroundAgentTeamMetadata(agent.metadata);
-                      const isTeamListItem = agent?.agentType === "team" || Boolean(teamMetadata);
-                      const isActive = selectedAgentId === agent.id;
-                      const hasActions = !agent.isDefault && !agent.isSystem;
-                      const isMenuOpen = agentListActionMenuState?.agentId === agent.id;
-                      const badgeLabel = agent.isDefault
-                        ? "Default"
-                        : agent.isSystem
-                          ? "System"
-                          : isTeamListItem
-                            ? "Team"
-                            : "";
-                      return React.createElement("div", {
-                          key: agent.id,
-                          className: "playground-environments-list-item-row" + (isActive ? " is-active" : ""),
+                  ? groupedDisplayAgents.map((section) =>
+                      React.createElement("div", { key: section.key, className: "playground-agents-list-section" + (section.key === "system" ? " is-system" : "") },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "sidebar-thread-section-header" + (collapsedAgentListSections[section.key] ? " is-collapsed" : ""),
+                          onClick: () => setCollapsedAgentListSections((current) => ({
+                            ...current,
+                            [section.key]: !current[section.key],
+                          })),
+                          "aria-expanded": collapsedAgentListSections[section.key] ? "false" : "true",
                         },
-                          React.createElement("button", {
-                              type: "button",
-                              className: "playground-environments-list-item" + (isActive ? " is-active" : "") + (hasActions ? " has-actions" : ""),
-                              onClick: () => handleAgentSelect(agent.id),
-                            },
-                              isTeamListItem
-                                ? React.createElement(Layers, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
-                                : React.createElement(Bot, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-environments-list-item-copy" },
-                                React.createElement("div", { className: "playground-environments-list-item-title" }, agent.id === PLAYGROUND_AGENT_DRAFT_ID ? (draftAgent?.name || (draftAgent?.agentType === "team" ? "New Team" : "New Agent")) : (agent.name || "Untitled Agent"))
-                              ),
-                              badgeLabel && !hasActions
-                                ? React.createElement("span", { className: "playground-environments-badge" }, badgeLabel)
-                                : null
-                            ),
-                          hasActions
-                            ? React.createElement("div", { className: "playground-environments-list-item-side" },
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-environments-list-item-menu-button" + (isMenuOpen ? " is-open" : ""),
-                                  onClick: (event) => openAgentListActionMenu(event, agent),
-                                  "aria-label": "Agent actions",
-                                  "aria-expanded": isMenuOpen ? "true" : "false",
+                          React.createElement("div", { className: "sidebar-thread-section-title" }, section.title),
+                          React.createElement(ChevronDown, { className: "sidebar-thread-section-chevron", strokeWidth: 1.8 })
+                        ),
+                        !collapsedAgentListSections[section.key]
+                          ? section.items.map((agent) => {
+                              const teamMetadata = getPlaygroundAgentTeamMetadata(agent.metadata);
+                              const isTeamListItem = agent?.agentType === "team" || Boolean(teamMetadata);
+                              const isActive = selectedAgentId === agent.id;
+                              const hasActions = !agent.isDefault && !agent.isSystem;
+                              const isMenuOpen = agentListActionMenuState?.agentId === agent.id;
+                              return React.createElement("div", {
+                                  key: agent.id,
+                                  className: "playground-environments-list-item-row" + (isActive ? " is-active" : ""),
                                 },
-                                  React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })
-                                )
-                              )
-                            : null
-                        );
-                    })
+                                  React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-environments-list-item" + (isActive ? " is-active" : "") + (hasActions ? " has-actions" : ""),
+                                      onClick: () => handleAgentSelect(agent.id),
+                                    },
+                                      isTeamListItem
+                                        ? React.createElement(Layers, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 })
+                                        : React.createElement(Bot, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
+                                      React.createElement("div", { className: "playground-environments-list-item-copy" },
+                                        React.createElement("div", { className: "playground-environments-list-item-title" }, agent.id === PLAYGROUND_AGENT_DRAFT_ID ? (draftAgent?.name || (draftAgent?.agentType === "team" ? "New Team" : "New Agent")) : (agent.name || "Untitled Agent"))
+                                      )
+                                    ),
+                                  hasActions
+                                    ? React.createElement("div", { className: "playground-environments-list-item-side" },
+                                        React.createElement("button", {
+                                          type: "button",
+                                          className: "playground-environments-list-item-menu-button" + (isMenuOpen ? " is-open" : ""),
+                                          onClick: (event) => openAgentListActionMenu(event, agent),
+                                          "aria-label": "Agent actions",
+                                          "aria-expanded": isMenuOpen ? "true" : "false",
+                                        },
+                                          React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })
+                                        )
+                                      )
+                                    : null
+                                );
+                            })
+                          : null
+                      )
+                    )
                   : React.createElement("div", { className: "playground-environments-empty-state" },
                       React.createElement("div", { className: "playground-environments-empty-title" }, agentListMode === "teams" ? "No teams" : "No agents"),
                       React.createElement("div", { className: "playground-environments-empty-copy" }, agentListMode === "teams"
@@ -76203,6 +76340,7 @@ const html = `<!doctype html>
         }, [selectedKnownThread]);
         const isProjectThreadPage = activePage === "thread" && Boolean(selectedThreadProjectId);
         const isProjectShellContext = activePage === "tasks" || isProjectThreadPage;
+        const isAgentShellContext = activePage === "agents";
 
         useEffect(() => {
           if (activePage !== "thread" || !hasRealAccess || !selectedThreadProjectId || cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
@@ -76253,9 +76391,14 @@ const html = `<!doctype html>
           }
           const rootStyle = document.documentElement.style;
           const fallbackBackground = "linear-gradient(to top, #000000 0%, #111111 100%)";
+          const nextBackground = activePage === "thread"
+            ? (selectedThreadShellBackground || fallbackBackground)
+            : activePage === "agents"
+              ? PLAYGROUND_AGENTS_SHELL_BACKGROUND
+              : fallbackBackground;
           rootStyle.setProperty(
             "--playground-app-bg",
-            activePage === "thread" ? (selectedThreadShellBackground || fallbackBackground) : fallbackBackground
+            nextBackground
           );
           return () => {
             rootStyle.setProperty("--playground-app-bg", fallbackBackground);
@@ -77454,7 +77597,7 @@ const html = `<!doctype html>
                   )
                 )
               : null,
-            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") + (isProjectThreadPage ? " is-project-thread-page" : "") + (showInitialThreadWelcome ? " is-initial-thread-page" : "") },
+            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") + (isAgentShellContext ? " is-agents-page" : "") + (isProjectThreadPage ? " is-project-thread-page" : "") + (showInitialThreadWelcome ? " is-initial-thread-page" : "") },
               React.createElement("aside", { className: "playground-sidebar" + (sidebarOpen ? "" : " is-collapsed") },
                 React.createElement("div", {
                   className: "playground-sidebar-panel",
