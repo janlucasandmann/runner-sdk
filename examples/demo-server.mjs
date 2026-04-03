@@ -10138,12 +10138,41 @@ const html = `<!doctype html>
         gap: 18px;
       }
 
+      .playground-environments-home-hero-title {
+        position: relative;
+        z-index: 1;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        max-width: 720px;
+        font-size: 24px;
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-environments-home-navbar.playground-content-nav {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-height: var(--playground-environments-nav-row-height);
+        gap: 0;
+        padding: 10px 0 8px;
+        background: transparent;
+      }
+
+      .playground-environments-home-navbar .playground-content-nav-right {
+        margin-right: -20px;
+      }
+
       .playground-environments-home-hero {
         position: relative;
         overflow: hidden;
         min-height: 260px;
         margin: calc(-1 * var(--playground-environments-nav-top-offset)) -18px 0;
-        padding: 34px 34px 82px;
+        padding: 0 34px 28px;
         border: 0;
         border-radius: 0;
         background: transparent;
@@ -10173,21 +10202,10 @@ const html = `<!doctype html>
         pointer-events: none;
       }
 
-      .playground-environments-home-hero-title {
-        position: relative;
-        z-index: 1;
-        max-width: 720px;
-        font-size: 36px;
-        line-height: 1.05;
-        font-weight: 500;
-        letter-spacing: -0.03em;
-        color: rgba(255, 255, 255, 0.98);
-      }
-
       .playground-environments-home-hero-copy {
         position: relative;
         z-index: 1;
-        margin-top: 14px;
+        margin-top: 0;
         max-width: 760px;
         font-size: 14px;
         line-height: 1.6;
@@ -10238,40 +10256,75 @@ const html = `<!doctype html>
       }
 
       .playground-environments-home-metrics {
-        margin-top: 2px;
+        position: relative;
+        z-index: 1;
+        margin-top: 0;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
       }
 
-      .playground-environments-home-metric {
-        min-width: 0;
-        padding: 14px 14px 13px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 18px;
-        background: rgba(12, 14, 18, 0.38);
+      .playground-environments-home-metrics .playground-tasks-detail-facts {
+        min-height: 100%;
       }
 
-      .playground-environments-home-metric-value {
-        font-size: 26px;
-        line-height: 1;
-        font-weight: 600;
-        letter-spacing: -0.02em;
-        color: rgba(255, 255, 255, 0.98);
+      .playground-environments-home-metrics .playground-tasks-detail-facts-body {
+        gap: 0;
       }
 
-      .playground-environments-home-metric-label {
-        margin-top: 10px;
-        font-size: 11px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.92);
+      .playground-environments-home-metrics .playground-database-overview {
+        height: 100%;
       }
 
-      .playground-environments-home-metric-copy {
-        margin-top: 5px;
-        font-size: 11px;
-        line-height: 1.45;
-        color: rgba(255, 255, 255, 0.48);
+      .playground-database-overview-timeseries-bar {
+        rx: 8px;
+        ry: 8px;
+      }
+
+      .playground-database-overview-kpi-label.is-computers .playground-database-overview-kpi-check,
+      .playground-database-overview-timeseries-bar.is-computers {
+        background: #5b8cff;
+        fill: #5b8cff;
+      }
+
+      .playground-database-overview-kpi-label.is-webapps .playground-database-overview-kpi-check,
+      .playground-database-overview-timeseries-bar.is-webapps {
+        background: #8f7cff;
+        fill: #8f7cff;
+      }
+
+      .playground-database-overview-kpi-label.is-functions .playground-database-overview-kpi-check,
+      .playground-database-overview-timeseries-bar.is-functions {
+        background: #ffb01f;
+        fill: #ffb01f;
+      }
+
+      .playground-database-overview-kpi-label.is-managed .playground-database-overview-kpi-check,
+      .playground-database-overview-timeseries-bar.is-managed {
+        background: #ff5aa0;
+        fill: #ff5aa0;
+      }
+
+      .playground-database-overview-kpi-label.is-resources .playground-database-overview-kpi-check {
+        background: #b59bff;
+      }
+
+      .playground-database-overview-timeseries-line.is-computers {
+        stroke: #5b8cff;
+      }
+
+      .playground-database-overview-timeseries-dot.is-computers {
+        fill: #5b8cff;
+        stroke: #5b8cff;
+      }
+
+      .playground-database-overview-timeseries-line.is-resources {
+        stroke: #b59bff;
+      }
+
+      .playground-database-overview-timeseries-dot.is-resources {
+        fill: #b59bff;
+        stroke: #b59bff;
       }
 
       .playground-environments-home-card-grid {
@@ -32915,6 +32968,7 @@ const html = `<!doctype html>
         const environmentGuiImageRef = useRef(null);
         const environmentGuiClickTimerRef = useRef(null);
         const environmentGuiScrollTimerRef = useRef(null);
+        const environmentsHomeCreatePopoverRef = useRef(null);
         const environmentRuntimePopoverRef = useRef(null);
         const environmentComposerRuntimePopoverRef = useRef(null);
         const environmentActionsPopoverRef = useRef(null);
@@ -33032,6 +33086,7 @@ const html = `<!doctype html>
         const [serverDetailsCollapsed, setServerDetailsCollapsed] = useState(false);
         const [databaseDetailsCollapsed, setDatabaseDetailsCollapsed] = useState(false);
         const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
+        const [environmentsHomeCreatePopoverOpen, setEnvironmentsHomeCreatePopoverOpen] = useState(false);
         const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
@@ -35748,6 +35803,31 @@ const html = `<!doctype html>
         }, [environmentComposerRuntimePopover]);
 
         useEffect(() => {
+          if (!environmentsHomeCreatePopoverOpen) return undefined;
+
+          function handleEnvironmentsHomeCreatePopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !environmentsHomeCreatePopoverRef.current || environmentsHomeCreatePopoverRef.current.contains(target)) {
+              return;
+            }
+            setEnvironmentsHomeCreatePopoverOpen(false);
+          }
+
+          function handleEnvironmentsHomeCreatePopoverEscape(event) {
+            if (event.key === "Escape") {
+              setEnvironmentsHomeCreatePopoverOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleEnvironmentsHomeCreatePopoverPointerDown);
+          window.addEventListener("keydown", handleEnvironmentsHomeCreatePopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleEnvironmentsHomeCreatePopoverPointerDown);
+            window.removeEventListener("keydown", handleEnvironmentsHomeCreatePopoverEscape);
+          };
+        }, [environmentsHomeCreatePopoverOpen]);
+
+        useEffect(() => {
           if (!environmentActionsPopoverOpen) return undefined;
 
           function handleEnvironmentActionsPopoverPointerDown(event) {
@@ -36293,6 +36373,7 @@ const html = `<!doctype html>
           commitDraftEnvironmentIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setEnvironmentsHomeCreatePopoverOpen(false);
           setEnvironmentListActionMenuState(null);
           setIsHomeViewActive(false);
           setSelectedEnvironmentId(environmentId);
@@ -36303,6 +36384,7 @@ const html = `<!doctype html>
           resetEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setEnvironmentsHomeCreatePopoverOpen(false);
           setEnvironmentListActionMenuState(null);
           setIsHomeViewActive(false);
           setEnvironmentComposerSaveState({
@@ -36358,6 +36440,7 @@ const html = `<!doctype html>
           void commitDraftServerIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setEnvironmentsHomeCreatePopoverOpen(false);
           setServerActionsPopoverOpen(false);
           setServerBindingState({
             savingKey: "",
@@ -36373,6 +36456,7 @@ const html = `<!doctype html>
           void commitDraftServerIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setEnvironmentsHomeCreatePopoverOpen(false);
           setServerActionsPopoverOpen(false);
           setDatabaseActionsPopoverOpen(false);
           setIsHomeViewActive(false);
@@ -36450,6 +36534,7 @@ const html = `<!doctype html>
           resetServerEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setEnvironmentsHomeCreatePopoverOpen(false);
           setIsHomeViewActive(false);
           setServerComposerSaveState({
             isSaving: false,
@@ -36487,6 +36572,7 @@ const html = `<!doctype html>
           resetServerEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setEnvironmentsHomeCreatePopoverOpen(false);
           setResourceMode("servers");
           setIsHomeViewActive(false);
           setServerComposerSaveState({
@@ -36507,6 +36593,7 @@ const html = `<!doctype html>
           void commitDraftServerIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
+          setEnvironmentsHomeCreatePopoverOpen(false);
           setEnvironmentListActionMenuState(null);
           setEnvironmentActionsPopoverOpen(false);
           setServerActionsPopoverOpen(false);
@@ -45717,15 +45804,6 @@ const html = `<!doctype html>
         }
 
         function renderEnvironmentsHome() {
-          const renderHomeMetric = (label, value, copy) => React.createElement("div", {
-              className: "playground-environments-home-metric",
-              key: label,
-            },
-            React.createElement("div", { className: "playground-environments-home-metric-value" }, value),
-            React.createElement("div", { className: "playground-environments-home-metric-label" }, label),
-            React.createElement("div", { className: "playground-environments-home-metric-copy" }, copy)
-          );
-
           const renderHomeResourceIcon = (item, className) => {
             if (item?.resourceType === "computer") {
               return React.createElement(HardDrive, { className, strokeWidth: 1.8 });
@@ -45781,6 +45859,217 @@ const html = `<!doctype html>
             handleServerSelect(item.id);
           };
 
+          const buildHomeUsageLinePath = (points) => {
+            if (!Array.isArray(points) || points.length === 0) {
+              return "";
+            }
+            return points
+              .map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2))
+              .join(" ");
+          };
+
+          const renderHomeAnalyticsKpi = (label, value, tone, key = label) => React.createElement("div", {
+              className: "playground-servers-analytics-kpi",
+              key,
+            },
+            React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
+            React.createElement("span", {
+                className: "playground-database-overview-kpi-label is-static" + (tone ? " is-" + tone : ""),
+              },
+              React.createElement("span", { className: "playground-database-overview-kpi-check" },
+                React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
+              ),
+              React.createElement("span", null, label)
+            )
+          );
+
+          function EnvironmentsHomeResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
+            const frameRef = useRef(null);
+            const [measuredWidth, setMeasuredWidth] = useState(0);
+
+            useLayoutEffect(() => {
+              const node = frameRef.current;
+              if (!node) {
+                return undefined;
+              }
+
+              const updateWidth = () => {
+                const nextWidth = Math.max(1, Math.round(node.clientWidth || fallbackWidth));
+                setMeasuredWidth((current) => current === nextWidth ? current : nextWidth);
+              };
+
+              updateWidth();
+
+              if (typeof ResizeObserver === "undefined") {
+                window.addEventListener("resize", updateWidth);
+                return () => window.removeEventListener("resize", updateWidth);
+              }
+
+              const observer = new ResizeObserver(() => updateWidth());
+              observer.observe(node);
+              return () => observer.disconnect();
+            }, [fallbackWidth]);
+
+            const resolvedSvgWidth = Math.max(1, Math.round(measuredWidth || fallbackWidth));
+            const resolvedSvgHeight = Math.max(1, Math.round(svgHeight || frameHeight || 208));
+
+            return React.createElement("div", {
+                ref: frameRef,
+                className: frameClassName,
+                style: frameHeight ? { height: String(frameHeight) + "px" } : undefined,
+              },
+              React.createElement("svg", {
+                className: "playground-settings-usage-chart-svg",
+                viewBox: "0 0 " + resolvedSvgWidth + " " + resolvedSvgHeight,
+                preserveAspectRatio: "none",
+                role: "img",
+                "aria-label": ariaLabel || "Usage chart",
+              },
+                typeof children === "function"
+                  ? children({
+                      svgWidth: resolvedSvgWidth,
+                      svgHeight: resolvedSvgHeight,
+                    })
+                  : children
+              )
+            );
+          }
+
+          const renderHomeBarChart = ({ ariaLabel, labels, values, tones, emptyText, formatAxisValue }) => {
+            const normalizedLabels = Array.isArray(labels) ? labels : [];
+            const normalizedValues = Array.isArray(values) ? values.map((value) => Math.max(0, Number(value || 0))) : [];
+            if (!normalizedLabels.length || normalizedLabels.length !== normalizedValues.length) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No resource data yet");
+            }
+
+            const chartHeight = 178;
+            const marginTop = 14;
+            const marginRight = 10;
+            const marginBottom = 28;
+            const marginLeft = 30;
+            const maxValue = Math.max(1, ...normalizedValues);
+            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
+            const renderYAxisLabel = typeof formatAxisValue === "function"
+              ? formatAxisValue
+              : (value) => String(value);
+
+            return React.createElement("div", {
+                className: "playground-database-overview-timeseries-card",
+                "aria-label": ariaLabel || "Environment overview chart",
+              },
+              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+                React.createElement(EnvironmentsHomeResponsiveSvg, {
+                    frameClassName: "playground-database-overview-timeseries-frame",
+                    frameHeight: chartHeight,
+                    svgHeight: chartHeight,
+                    fallbackWidth: 420,
+                    ariaLabel: ariaLabel || "Environment overview chart",
+                  }, ({ svgWidth, svgHeight }) => {
+                    const plotWidth = svgWidth - marginLeft - marginRight;
+                    const plotHeight = svgHeight - marginTop - marginBottom;
+                    const baselineY = marginTop + plotHeight;
+                    const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
+                    const barWidth = Math.min(44, Math.max(16, slotWidth * 0.42));
+
+                    return React.createElement(React.Fragment, null,
+                      Array.from({ length: 4 }).map((_, index) => {
+                        const y = marginTop + (plotHeight / 3) * index;
+                        return React.createElement("line", {
+                          key: "grid:" + index,
+                          className: "playground-database-overview-timeseries-grid-line",
+                          x1: marginLeft,
+                          y1: y,
+                          x2: svgWidth - marginRight,
+                          y2: y,
+                        });
+                      }),
+                      yAxisValues.map((value, index) =>
+                        React.createElement("text", {
+                          key: "y-axis:" + index,
+                          x: 0,
+                          y: marginTop + (plotHeight / 2) * index + 4,
+                          className: "playground-database-overview-timeseries-axis-label",
+                          fontSize: "10",
+                        }, renderYAxisLabel(value))
+                      ),
+                      normalizedLabels.map((label, index) => {
+                        const x = marginLeft + slotWidth * index + ((slotWidth - barWidth) / 2);
+                        const barHeight = (normalizedValues[index] / maxValue) * plotHeight;
+                        const y = baselineY - barHeight;
+                        return React.createElement("rect", {
+                          key: "bar:" + index,
+                          x,
+                          y,
+                          width: barWidth,
+                          height: Math.max(2, barHeight),
+                          rx: "8",
+                          ry: "8",
+                          className: "playground-database-overview-timeseries-bar is-" + (tones?.[index] || "requests"),
+                        });
+                      }),
+                      normalizedLabels.map((label, index) =>
+                        React.createElement("text", {
+                          key: "label:" + index,
+                          x: marginLeft + slotWidth * index + (slotWidth / 2),
+                          y: svgHeight - 8,
+                          textAnchor: "middle",
+                          className: "playground-database-overview-timeseries-axis-label",
+                          fontSize: "10",
+                        }, String(label || ""))
+                      )
+                    );
+                  })
+              )
+            );
+          };
+
+          const homeActivityFormatter = new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+          });
+          const homeActivityBuckets = Array.from({ length: 8 }, (_, index) => {
+            const date = new Date();
+            date.setHours(0, 0, 0, 0);
+            date.setDate(date.getDate() - (7 - index));
+            return {
+              key: date.toISOString().slice(0, 10),
+              label: homeActivityFormatter.format(date),
+              date,
+            };
+          });
+          const buildHomeActivitySeries = (items) => {
+            const countsByDay = new Map(homeActivityBuckets.map((bucket) => [bucket.key, 0]));
+            (Array.isArray(items) ? items : []).forEach((item) => {
+              const timestamp = new Date(item?.updatedAt || item?.createdAt || "").getTime();
+              if (!Number.isFinite(timestamp) || timestamp <= 0) {
+                return;
+              }
+              const day = new Date(timestamp);
+              day.setHours(0, 0, 0, 0);
+              const key = day.toISOString().slice(0, 10);
+              if (!countsByDay.has(key)) {
+                return;
+              }
+              countsByDay.set(key, Number(countsByDay.get(key) || 0) + 1);
+            });
+            return homeActivityBuckets.map((bucket) => Number(countsByDay.get(bucket.key) || 0));
+          };
+
+          const homeComputerUsage = buildHomeActivitySeries(orderedEnvironments);
+          const homeResourceUsage = buildHomeActivitySeries([...orderedServers, ...orderedDatabases]);
+          const totalComputerUsage = homeComputerUsage.reduce((sum, value) => sum + value, 0);
+          const totalResourceUsage = homeResourceUsage.reduce((sum, value) => sum + value, 0);
+          const peakComputerUsage = Math.max(0, ...homeComputerUsage);
+          const peakResourceUsage = Math.max(0, ...homeResourceUsage);
+          const resourceBreakdownLabels = ["Computers", "Web Apps", "Functions", "Managed"];
+          const resourceBreakdownValues = [
+            environmentsHomeSummary.computers,
+            environmentsHomeSummary.webApps,
+            environmentsHomeSummary.functions,
+            environmentsHomeSummary.managedResources,
+          ];
+          const resourceBreakdownTones = ["computers", "webapps", "functions", "managed"];
+
           const capabilityCards = [
             {
               id: "computers",
@@ -45819,50 +46108,133 @@ const html = `<!doctype html>
 
           return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll" },
             React.createElement("section", { className: "playground-environments-home-hero" },
-              React.createElement("div", { className: "playground-environments-home-hero-title" }, "Environments"),
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-environments-home-navbar" },
+                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+                  React.createElement("div", {
+                      className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                      ref: environmentsHomeCreatePopoverRef,
+                    },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain" + (environmentsHomeCreatePopoverOpen ? " is-active" : ""),
+                      onClick: () => setEnvironmentsHomeCreatePopoverOpen((current) => !current),
+                      title: "Create",
+                      "aria-label": "Create",
+                      "aria-expanded": environmentsHomeCreatePopoverOpen ? "true" : "false",
+                    }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
+                    environmentsHomeCreatePopoverOpen
+                      ? React.createElement("div", {
+                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                          onClick: (event) => event.stopPropagation(),
+                        },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setResourceMode("computers");
+                              openEnvironmentComposer();
+                            },
+                          },
+                            React.createElement(HardDrive, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "New Computer")
+                            )
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setResourceMode("servers");
+                              openServerComposer();
+                            },
+                          },
+                            React.createElement(Globe, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "New Resource")
+                            )
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              openAiChatAppComposer();
+                            },
+                          },
+                            React.createElement(Bot, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "AI Chat App")
+                            )
+                          )
+                        )
+                      : null
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
               React.createElement("div", { className: "playground-environments-home-hero-copy" },
                 "Create durable computers, publish web apps and functions, connect databases and auth, and power products with agent runtimes. Environments brings your full AI application stack together in one workspace."
-              ),
-              React.createElement("div", { className: "playground-environments-home-hero-actions" },
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-home-action-button is-primary",
-                    onClick: () => {
-                      setResourceMode("computers");
-                      openEnvironmentComposer();
-                    },
-                  },
-                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
-                  React.createElement("span", null, "New Computer")
-                ),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-home-action-button",
-                    onClick: () => {
-                      setResourceMode("servers");
-                      openServerComposer();
-                    },
-                  },
-                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
-                  React.createElement("span", null, "New Resource")
-                ),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-home-action-button",
-                    onClick: openAiChatAppComposer,
-                  },
-                  React.createElement(Bot, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "AI Chat App")
-                )
               )
             ),
             React.createElement("div", { className: "playground-environments-home-metrics" },
-              [
-                renderHomeMetric("Computers", String(environmentsHomeSummary.computers), "Workspaces for agents and source code"),
-                renderHomeMetric("Web Apps", String(environmentsHomeSummary.webApps), "Published frontends and full-stack apps"),
-                renderHomeMetric("Functions", String(environmentsHomeSummary.functions), "Cloud endpoints and automations"),
-                renderHomeMetric("Managed", String(environmentsHomeSummary.managedResources), "Databases, auth, and agent runtimes"),
-              ]
+              React.createElement("section", { className: "playground-tasks-detail-facts" },
+                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  React.createElement("div", { className: "playground-database-overview" },
+                    React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+                      [
+                        renderHomeAnalyticsKpi("Computers", String(environmentsHomeSummary.computers), "computers", "home-kpi-computers"),
+                        renderHomeAnalyticsKpi("Web Apps", String(environmentsHomeSummary.webApps), "webapps", "home-kpi-webapps"),
+                        renderHomeAnalyticsKpi("Functions", String(environmentsHomeSummary.functions), "functions", "home-kpi-functions"),
+                        renderHomeAnalyticsKpi("Managed", String(environmentsHomeSummary.managedResources), "managed", "home-kpi-managed"),
+                      ]
+                    ),
+                    React.createElement("div", { className: "playground-database-overview-chart-block" },
+                      renderHomeBarChart({
+                        ariaLabel: "Environment and resource counts",
+                        labels: resourceBreakdownLabels,
+                        values: resourceBreakdownValues,
+                        tones: resourceBreakdownTones,
+                        emptyText: "No environment data yet",
+                      })
+                    )
+                  )
+                )
+              ),
+              React.createElement("section", { className: "playground-tasks-detail-facts" },
+                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  React.createElement("div", { className: "playground-database-overview" },
+                    React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+                      [
+                        renderHomeAnalyticsKpi("Computer Usage", String(totalComputerUsage), "computers", "home-kpi-computer-usage"),
+                        renderHomeAnalyticsKpi("Resource Usage", String(totalResourceUsage), "resources", "home-kpi-resource-usage"),
+                        renderHomeAnalyticsKpi("Peak Computer Day", String(peakComputerUsage), "computers", "home-kpi-computer-peak"),
+                        renderHomeAnalyticsKpi("Peak Resource Day", String(peakResourceUsage), "resources", "home-kpi-resource-peak"),
+                      ]
+                    ),
+                    React.createElement("div", { className: "playground-database-overview-chart-block" },
+                      renderPlaygroundTelemetryTimeseriesChart({
+                        ariaLabel: "Overall environment activity",
+                        labels: homeActivityBuckets,
+                        series: [
+                          {
+                            key: "computers",
+                            tone: "computers",
+                            values: homeComputerUsage,
+                          },
+                          {
+                            key: "resources",
+                            tone: "resources",
+                            values: homeResourceUsage,
+                          },
+                        ],
+                        emptyText: "No usage data yet",
+                        buildLinePath: buildHomeUsageLinePath,
+                        getSeriesValue: (entry, _bucket, index) => entry?.values?.[index],
+                        getXAxisLabel: (bucket) => String(bucket?.label || ""),
+                      })
+                    )
+                  )
+                )
+              )
             ),
             React.createElement("div", { className: "playground-environments-home-card-grid" },
               capabilityCards.map((card) =>
