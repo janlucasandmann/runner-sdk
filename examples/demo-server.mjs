@@ -10758,6 +10758,56 @@ const html = `<!doctype html>
         fill: currentColor;
       }
 
+      .playground-agents-avatar-picker-shell.playground-tasks-toolbar-popup-shell {
+        position: absolute;
+        right: -4px;
+        bottom: -4px;
+        z-index: 4;
+      }
+
+      .playground-agents-avatar-picker-menu {
+        position: absolute;
+        right: -10px;
+        top: 40px;
+        width: 174px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .playground-agents-avatar-picker-option {
+        position: relative;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .playground-agents-avatar-picker-option-surface {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-agents-avatar-picker-option.is-selected .playground-agents-avatar-picker-option-surface::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 16px;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-agents-avatar-picker-option-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
       .playground-environments-editor-fact-value {
         max-width: 100%;
         margin-left: auto;
@@ -21962,6 +22012,12 @@ const html = `<!doctype html>
       ];
       const PLAYGROUND_AGENT_TEAM_EXECUTION_MODE = "claude_subagents_v1";
       const PLAYGROUND_AGENT_EMAIL_DOMAIN = "agent.computer-agents.com";
+      const PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS = [
+        { id: "assistantastro", label: "Assistant Astro", url: "/img/agent-profile-pics/assistantastro.png" },
+        { id: "devastro", label: "Developer Astro", url: "/img/agent-profile-pics/devastro.png" },
+        { id: "researchastro", label: "Research Astro", url: "/img/agent-profile-pics/researchastro.png" },
+        { id: "astro", label: "Astro", url: "/img/agent-profile-pics/astro.png" },
+      ];
       const PLAYGROUND_AGENTS_SHELL_BACKGROUND = "linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,1) 48%, rgba(0, 0, 0, 1) 100%), url(/img/agent-profile-pics/starbg.png)";
       const PLAYGROUND_AGENT_SKILL_OPTIONS = [
         {
@@ -22209,10 +22265,10 @@ const html = `<!doctype html>
         }
 
         if (isPlaygroundDefaultNamedAgent(agent)) {
-          return "/img/agent-profile-pics/astro.png";
+          return "/img/agent-profile-pics/assistantastro.png";
         }
 
-        return "";
+        return "/img/agent-profile-pics/assistantastro.png";
       }
 
       function buildPlaygroundAgentProfileMetadata(agent) {
@@ -46142,7 +46198,7 @@ const html = `<!doctype html>
         const agentInstructionsTextareaRef = useRef(null);
         const agentComposerDescriptionTextareaRef = useRef(null);
         const agentComposerInstructionsTextareaRef = useRef(null);
-        const agentProfileImageInputRef = useRef(null);
+        const agentProfileAvatarPickerRef = useRef(null);
         const agentActionsPopoverRef = useRef(null);
         const agentRenameInputRef = useRef(null);
         const agentModelPopoverRef = useRef(null);
@@ -46183,6 +46239,7 @@ const html = `<!doctype html>
         const [isAgentInstructionsEditing, setIsAgentInstructionsEditing] = useState(false);
         const [agentDetailsCollapsed, setAgentDetailsCollapsed] = useState(false);
         const [agentProfileAvatarBroken, setAgentProfileAvatarBroken] = useState(false);
+        const [agentProfileAvatarPickerOpen, setAgentProfileAvatarPickerOpen] = useState(false);
         const [agentActionsPopoverOpen, setAgentActionsPopoverOpen] = useState(false);
         const [agentRenameState, setAgentRenameState] = useState(null);
         const [agentRenameValue, setAgentRenameValue] = useState("");
@@ -46363,10 +46420,12 @@ const html = `<!doctype html>
         );
         const isSystemAgent = Boolean(draftAgent?.isSystem);
         const agentEmailAddress = draftAgent ? getPlaygroundAgentEmailAddress(draftAgent) : "";
+        const explicitAgentProfilePhotoUrl = draftAgent ? (getPlaygroundAgentProfileMetadata(draftAgent?.metadata)?.photoURL || "") : "";
         const rawAgentProfilePhotoUrl = draftAgent ? getPlaygroundAgentProfilePhotoUrl(draftAgent) : "";
         const agentProfilePhotoUrl = !agentProfileAvatarBroken && canRenderAvatarImage(rawAgentProfilePhotoUrl)
           ? rawAgentProfilePhotoUrl
           : "";
+        const hasExplicitAgentProfilePhoto = Boolean(explicitAgentProfilePhotoUrl);
         const normalizedFocusedAgentSelectionToken = String(focusedAgentSelectionToken || "").trim();
         const normalizedFocusedAgentId = String(focusedAgentId || "").trim();
         const hasPendingFocusedAgentSelection = Boolean(
@@ -46590,25 +46649,13 @@ const html = `<!doctype html>
           });
         }
 
-        async function handleAgentProfilePhotoSelection(event) {
-          const file = event?.target?.files?.[0];
-          if (event?.target) {
-            event.target.value = "";
-          }
-          if (!file || isSystemAgent) {
+        function handleAgentProfilePhotoSelection(nextPhotoUrl) {
+          if (isSystemAgent || !nextPhotoUrl) {
             return;
           }
-
-          try {
-            const nextPhotoUrl = await createProfilePhotoDataUrl(file);
-            setAgentProfileAvatarBroken(false);
-            updateAgentProfilePhotoUrl(nextPhotoUrl);
-          } catch (error) {
-            setSaveState((current) => ({
-              ...current,
-              error: error instanceof Error ? error.message : "Failed to prepare profile picture.",
-            }));
-          }
+          setAgentProfileAvatarBroken(false);
+          setAgentProfileAvatarPickerOpen(false);
+          updateAgentProfilePhotoUrl(nextPhotoUrl);
         }
 
         function handleAgentProfilePhotoRemove() {
@@ -46616,6 +46663,7 @@ const html = `<!doctype html>
             return;
           }
           setAgentProfileAvatarBroken(false);
+          setAgentProfileAvatarPickerOpen(false);
           updateAgentProfilePhotoUrl("");
         }
 
@@ -47064,7 +47112,35 @@ const html = `<!doctype html>
 
         useEffect(() => {
           setAgentProfileAvatarBroken(false);
+          setAgentProfileAvatarPickerOpen(false);
         }, [draftAgent?.id, rawAgentProfilePhotoUrl]);
+
+        useEffect(() => {
+          if (!agentProfileAvatarPickerOpen) {
+            return undefined;
+          }
+
+          function handleAgentAvatarPickerPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentProfileAvatarPickerRef.current || agentProfileAvatarPickerRef.current.contains(target)) {
+              return;
+            }
+            setAgentProfileAvatarPickerOpen(false);
+          }
+
+          function handleAgentAvatarPickerEscape(event) {
+            if (event.key === "Escape") {
+              setAgentProfileAvatarPickerOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleAgentAvatarPickerPointerDown);
+          window.addEventListener("keydown", handleAgentAvatarPickerEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleAgentAvatarPickerPointerDown);
+            window.removeEventListener("keydown", handleAgentAvatarPickerEscape);
+          };
+        }, [agentProfileAvatarPickerOpen]);
 
         useEffect(() => {
           if (!selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
@@ -48573,7 +48649,7 @@ const html = `<!doctype html>
                       })
                     : React.createElement("span", { className: "profile-editor-avatar-fallback" }, getAccountInitials(draftAgent.name || (isTeamAgent ? "Team" : "Agent")))
                 ),
-                !isSystemAgent && agentProfilePhotoUrl
+                !isSystemAgent && hasExplicitAgentProfilePhoto
                   ? React.createElement("button", {
                       type: "button",
                       className: "profile-editor-avatar-remove",
@@ -48582,20 +48658,42 @@ const html = `<!doctype html>
                     }, React.createElement(Minus, { className: "profile-editor-camera-icon", strokeWidth: 1.9 }))
                   : null,
                 !isSystemAgent
-                  ? React.createElement(React.Fragment, null,
+                  ? React.createElement("div", {
+                      className: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell" + (agentProfileAvatarPickerOpen ? " is-open" : ""),
+                      ref: agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : null,
+                    },
                       React.createElement("button", {
                         type: "button",
                         className: "profile-editor-avatar-trigger",
-                        onClick: () => agentProfileImageInputRef.current && agentProfileImageInputRef.current.click(),
-                        "aria-label": "Upload agent profile picture",
+                        onClick: () => setAgentProfileAvatarPickerOpen((current) => !current),
+                        "aria-label": "Choose agent profile picture",
+                        "aria-expanded": agentProfileAvatarPickerOpen ? "true" : "false",
                       }, React.createElement(Camera, { className: "profile-editor-camera-icon", strokeWidth: 1.9 })),
-                      React.createElement("input", {
-                        ref: agentProfileImageInputRef,
-                        className: "profile-editor-file-input",
-                        type: "file",
-                        accept: "image/*",
-                        onChange: handleAgentProfilePhotoSelection,
-                      })
+                      agentProfileAvatarPickerOpen
+                        ? React.createElement("div", {
+                            className: "tb-popup-menu playground-agents-avatar-picker-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                            onClick: (event) => event.stopPropagation(),
+                          },
+                            PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS.map((option) =>
+                              React.createElement("button", {
+                                  key: option.id,
+                                  type: "button",
+                                  className: "playground-agents-avatar-picker-option" + (agentProfilePhotoUrl === option.url ? " is-selected" : ""),
+                                  onClick: () => handleAgentProfilePhotoSelection(option.url),
+                                  title: option.label,
+                                  "aria-label": option.label,
+                                },
+                                React.createElement("div", { className: "playground-agents-avatar-picker-option-surface" },
+                                  React.createElement("img", {
+                                    className: "playground-agents-avatar-picker-option-image",
+                                    src: option.url,
+                                    alt: option.label,
+                                  })
+                                )
+                              )
+                            )
+                          )
+                        : null
                     )
                   : null
               )
