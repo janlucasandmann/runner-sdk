@@ -107,6 +107,25 @@ export function buildRunnerPreviewHeaders(requestHeaders: HeadersInit | undefine
   return headers;
 }
 
+function buildRunnerPreviewSyntheticDownloadUrl(
+  backendUrl?: string | null,
+  attachmentId?: string | null
+): string | undefined {
+  const normalizedAttachmentId = String(attachmentId || "").trim();
+  if (!normalizedAttachmentId) {
+    return undefined;
+  }
+
+  const syntheticMatch = normalizedAttachmentId.match(/^[^:]+:([^:]+):(\/workspace\/.+)$/);
+  if (!syntheticMatch) {
+    return undefined;
+  }
+
+  const environmentId = String(syntheticMatch[1] || "").trim();
+  const workspacePath = String(syntheticMatch[2] || "").trim();
+  return buildRunnerPreviewDownloadUrl(backendUrl, environmentId, workspacePath) || undefined;
+}
+
 export function resolveRunnerPreviewAssetUrl(
   url: string | undefined,
   backendUrl?: string | null,
@@ -134,6 +153,10 @@ export function resolveRunnerPreviewAssetUrl(
       return `${normalizedBackendUrl}/${normalizedUrl.replace(/^\.?\//, "")}`;
     }
     return normalizedUrl;
+  }
+  const syntheticDownloadUrl = buildRunnerPreviewSyntheticDownloadUrl(backendUrl, attachmentId);
+  if (syntheticDownloadUrl) {
+    return syntheticDownloadUrl;
   }
   if (backendUrl && attachmentId) {
     return `${sanitizeRunnerPreviewBackendUrl(backendUrl)}/attachments/${encodeURIComponent(String(attachmentId))}`;

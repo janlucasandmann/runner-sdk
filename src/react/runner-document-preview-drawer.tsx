@@ -93,10 +93,17 @@ export function RunnerDocumentPreviewDrawer({
     [attachment.id, attachment.previewUrl, attachment.url, backendUrl]
   );
   const resolvedDirectHtmlPreviewUrl = useMemo(
-    () => resolveRunnerPreviewAssetUrl(attachment.htmlPreviewUrl, backendUrl, attachment.id) || "",
+    () => {
+      if (typeof attachment.htmlPreviewUrl !== "string" || !attachment.htmlPreviewUrl.trim()) {
+        return "";
+      }
+      return resolveRunnerPreviewAssetUrl(attachment.htmlPreviewUrl, backendUrl, attachment.id) || "";
+    },
     [attachment.htmlPreviewUrl, attachment.id, backendUrl]
   );
-  const htmlIframeSandbox = attachment.htmlSandbox === null ? undefined : attachment.htmlSandbox ?? "";
+  const htmlIframeSandbox = attachment.htmlSandbox === null
+    ? undefined
+    : attachment.htmlSandbox ?? "allow-scripts allow-same-origin";
 
   useEffect(() => {
     mountRunnerChatStyles();

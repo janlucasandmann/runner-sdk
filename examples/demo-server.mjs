@@ -21,7 +21,7 @@ const html = `<!doctype html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Runner Playground</title>
+    <title>Agentic Compute Platform</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -33,6 +33,10 @@ const html = `<!doctype html>
         --border-subtle: rgba(255, 255, 255, 0.08);
         --text: #f3f6ff;
         --text-dim: rgba(243, 246, 255, 0.68);
+        --playground-chart-blue: #0C6FFF;
+        --playground-chart-green: #35E8BB;
+        --playground-chart-yellow: #FFE717;
+        --playground-chart-pink: #FB9CE5;
         --playground-app-bg:
           linear-gradient(to top, #000000 0%, #111111 100%);
       }
@@ -5078,7 +5082,7 @@ const html = `<!doctype html>
       }
 
       .playground-settings-page .playground-environments-list-header {
-        padding: 7px 12px 8px;
+        padding: 11px 12px 8px;
       }
 
       .playground-settings-page .playground-files-topbar {
@@ -5110,10 +5114,10 @@ const html = `<!doctype html>
 
       .playground-settings-nav-label {
         padding: 0 10px 4px;
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 400;
-        letter-spacing: 0.02em;
-        color: rgba(255, 255, 255, 0.38);
+        letter-spacing: 0;
+        color: rgba(255, 255, 255, 1);
       }
 
       .playground-settings-nav-item {
@@ -5125,6 +5129,7 @@ const html = `<!doctype html>
         min-height: 36px;
         padding: 8px 10px;
         border-radius: 10px;
+        color: rgba(255, 255, 255, 0.7);
       }
 
       .playground-settings-page .playground-environments-list-item-icon {
@@ -5139,10 +5144,20 @@ const html = `<!doctype html>
       .playground-settings-page .playground-environments-list-item-title {
         font-size: 12px;
         font-weight: 500;
+        color: rgba(255, 255, 255, 0.7);
       }
 
       .playground-settings-page .playground-environments-list-item-meta {
         display: none;
+      }
+
+      .playground-settings-page .playground-environments-list-item.is-active {
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-settings-page .playground-environments-list-item.is-active .playground-environments-list-item-title,
+      .playground-settings-page .playground-environments-list-item.is-active .playground-environments-list-item-icon {
+        color: rgba(255, 255, 255, 0.98);
       }
 
       .playground-settings-nav-item.is-danger:not(.is-active) {
@@ -10169,8 +10184,7 @@ const html = `<!doctype html>
 
       .playground-environments-home-hero {
         position: relative;
-        overflow: hidden;
-        min-height: 260px;
+        overflow: visible;
         margin: calc(-1 * var(--playground-environments-nav-top-offset)) -18px 0;
         padding: 0 34px 28px;
         border: 0;
@@ -10179,35 +10193,22 @@ const html = `<!doctype html>
       }
 
       .playground-environments-home-hero::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          linear-gradient(90deg, rgba(6, 8, 12, 0.78) 0%, rgba(8, 10, 16, 0.5) 38%, rgba(9, 11, 18, 0.18) 100%),
-          url("/img/bg/bg-abstract.avif") center top / cover no-repeat;
-        opacity: 0.98;
-        -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.96) 52%, rgba(0, 0, 0, 0) 100%);
-        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.96) 52%, rgba(0, 0, 0, 0) 100%);
-        pointer-events: none;
+        content: none;
       }
 
       .playground-environments-home-hero::after {
-        content: "";
-        position: absolute;
-        inset: 0 0 auto;
-        height: 100%;
-        background:
-          linear-gradient(180deg, rgba(5, 7, 12, 0.08) 0%, rgba(5, 7, 12, 0.02) 44%, rgba(5, 7, 12, 0) 100%),
-          radial-gradient(circle at top right, rgba(109, 138, 255, 0.22), transparent 30%);
-        pointer-events: none;
+        content: none;
       }
 
       .playground-environments-home-hero-copy {
         position: relative;
         z-index: 1;
-        margin-top: 0;
-        max-width: 760px;
-        font-size: 14px;
+        margin-top: 10px;
+        width: 100%;
+        padding-bottom: 22px;
+        max-width: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 12px;
         line-height: 1.6;
         color: rgba(255, 255, 255, 0.72);
       }
@@ -10258,7 +10259,8 @@ const html = `<!doctype html>
       .playground-environments-home-metrics {
         position: relative;
         z-index: 1;
-        margin-top: 0;
+        margin-top: 18px;
+        margin-bottom: 24px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
@@ -10266,6 +10268,10 @@ const html = `<!doctype html>
 
       .playground-environments-home-metrics .playground-tasks-detail-facts {
         min-height: 100%;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
       }
 
       .playground-environments-home-metrics .playground-tasks-detail-facts-body {
@@ -10283,48 +10289,48 @@ const html = `<!doctype html>
 
       .playground-database-overview-kpi-label.is-computers .playground-database-overview-kpi-check,
       .playground-database-overview-timeseries-bar.is-computers {
-        background: #5b8cff;
-        fill: #5b8cff;
+        background: var(--playground-chart-blue);
+        fill: var(--playground-chart-blue);
       }
 
       .playground-database-overview-kpi-label.is-webapps .playground-database-overview-kpi-check,
       .playground-database-overview-timeseries-bar.is-webapps {
-        background: #8f7cff;
-        fill: #8f7cff;
+        background: var(--playground-chart-green);
+        fill: var(--playground-chart-green);
       }
 
       .playground-database-overview-kpi-label.is-functions .playground-database-overview-kpi-check,
       .playground-database-overview-timeseries-bar.is-functions {
-        background: #ffb01f;
-        fill: #ffb01f;
+        background: var(--playground-chart-yellow);
+        fill: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-kpi-label.is-managed .playground-database-overview-kpi-check,
       .playground-database-overview-timeseries-bar.is-managed {
-        background: #ff5aa0;
-        fill: #ff5aa0;
+        background: var(--playground-chart-pink);
+        fill: var(--playground-chart-pink);
       }
 
       .playground-database-overview-kpi-label.is-resources .playground-database-overview-kpi-check {
-        background: #b59bff;
+        background: var(--playground-chart-green);
       }
 
       .playground-database-overview-timeseries-line.is-computers {
-        stroke: #5b8cff;
+        stroke: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-dot.is-computers {
-        fill: #5b8cff;
-        stroke: #5b8cff;
+        fill: var(--playground-chart-blue);
+        stroke: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-line.is-resources {
-        stroke: #b59bff;
+        stroke: var(--playground-chart-green);
       }
 
       .playground-database-overview-timeseries-dot.is-resources {
-        fill: #b59bff;
-        stroke: #b59bff;
+        fill: var(--playground-chart-green);
+        stroke: var(--playground-chart-green);
       }
 
       .playground-environments-home-card-grid {
@@ -11166,6 +11172,39 @@ const html = `<!doctype html>
         background: rgba(255, 255, 255, 0.05);
       }
 
+      .playground-computer-details-card {
+        position: relative;
+        overflow: visible;
+        border: 0;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 20px;
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-computer-details-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: 15px;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
       .playground-environments-field-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -11709,10 +11748,10 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 0;
-        padding: 0;
-        border-radius: 18px;
+        padding: 20px;
+        border-radius: 15px;
         overflow: hidden;
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .playground-environments-connections-section {
@@ -14196,13 +14235,39 @@ const html = `<!doctype html>
       }
 
       .playground-tasks-detail-facts {
+        position: relative;
+        overflow: visible;
         display: flex;
         flex-direction: column;
         gap: 4px;
         background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 5px 10px;
-        border-radius: 8px;
+        border: 0;
+        padding: 20px;
+        border-radius: 15px;
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-tasks-detail-facts::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: 15px;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-tasks-detail-facts .playground-tasks-detail-section-title {
@@ -14381,7 +14446,7 @@ const html = `<!doctype html>
       }
 
       .playground-database-summary-card {
-        padding: 10px 12px 12px;
+        padding: 20px;
       }
 
       .playground-database-summary-header {
@@ -14571,43 +14636,43 @@ const html = `<!doctype html>
       }
 
       .playground-database-overview-kpi-label.is-reads .playground-database-overview-kpi-check {
-        background: #5b8cff;
+        background: var(--playground-chart-blue);
       }
 
       .playground-database-overview-kpi-label.is-requests .playground-database-overview-kpi-check {
-        background: #5b8cff;
+        background: var(--playground-chart-blue);
       }
 
       .playground-database-overview-kpi-label.is-success .playground-database-overview-kpi-check {
-        background: #8f7cff;
+        background: var(--playground-chart-green);
       }
 
       .playground-database-overview-kpi-label.is-latency .playground-database-overview-kpi-check {
-        background: #ffb01f;
+        background: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-kpi-label.is-errors .playground-database-overview-kpi-check {
-        background: #ff5aa0;
+        background: var(--playground-chart-pink);
       }
 
       .playground-database-overview-kpi-label.is-failures .playground-database-overview-kpi-check {
-        background: #ffb01f;
+        background: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-kpi-label.is-writes .playground-database-overview-kpi-check {
-        background: #ffb01f;
+        background: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-kpi-label.is-deletes .playground-database-overview-kpi-check {
-        background: #ff5aa0;
+        background: var(--playground-chart-pink);
       }
 
       .playground-database-overview-kpi-label.is-collections .playground-database-overview-kpi-check {
-        background: #8f7cff;
+        background: var(--playground-chart-blue);
       }
 
       .playground-database-overview-kpi-label.is-documents .playground-database-overview-kpi-check {
-        background: #b59bff;
+        background: var(--playground-chart-green);
       }
 
       .playground-database-overview-timeseries-chart {
@@ -14649,104 +14714,104 @@ const html = `<!doctype html>
       }
 
       .playground-database-overview-timeseries-series.is-reads .playground-database-overview-timeseries-check {
-        background: #5b8cff;
+        background: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-line.is-reads {
-        stroke: #5b8cff;
+        stroke: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-line.is-requests {
-        stroke: #5b8cff;
+        stroke: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-dot.is-reads {
-        fill: #5b8cff;
-        stroke: #5b8cff;
+        fill: var(--playground-chart-blue);
+        stroke: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-dot.is-requests {
-        fill: #5b8cff;
-        stroke: #5b8cff;
+        fill: var(--playground-chart-blue);
+        stroke: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-series.is-writes .playground-database-overview-timeseries-check {
-        background: #ff9f0a;
+        background: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-timeseries-line.is-writes {
-        stroke: #ff9f0a;
+        stroke: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-timeseries-dot.is-writes {
-        fill: #ff9f0a;
-        stroke: #ff9f0a;
+        fill: var(--playground-chart-yellow);
+        stroke: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-timeseries-line.is-failures {
-        stroke: #ffb01f;
+        stroke: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-timeseries-dot.is-failures {
-        fill: #ffb01f;
-        stroke: #ffb01f;
+        fill: var(--playground-chart-yellow);
+        stroke: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-timeseries-line.is-success {
-        stroke: #8f7cff;
+        stroke: var(--playground-chart-green);
       }
 
       .playground-database-overview-timeseries-dot.is-success {
-        fill: #8f7cff;
-        stroke: #8f7cff;
+        fill: var(--playground-chart-green);
+        stroke: var(--playground-chart-green);
       }
 
       .playground-database-overview-timeseries-line.is-errors {
-        stroke: #ff5aa0;
+        stroke: var(--playground-chart-pink);
       }
 
       .playground-database-overview-timeseries-dot.is-errors {
-        fill: #ff5aa0;
-        stroke: #ff5aa0;
+        fill: var(--playground-chart-pink);
+        stroke: var(--playground-chart-pink);
       }
 
       .playground-database-overview-timeseries-series.is-deletes .playground-database-overview-timeseries-check {
-        background: #ff4d8d;
+        background: var(--playground-chart-pink);
       }
 
       .playground-database-overview-timeseries-line.is-deletes {
-        stroke: #ff4d8d;
+        stroke: var(--playground-chart-pink);
       }
 
       .playground-database-overview-timeseries-dot.is-deletes {
-        fill: #ff4d8d;
-        stroke: #ff4d8d;
+        fill: var(--playground-chart-pink);
+        stroke: var(--playground-chart-pink);
       }
 
       .playground-database-overview-timeseries-series.is-collections .playground-database-overview-timeseries-check {
-        background: #7c6eee;
+        background: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-line.is-collections {
-        stroke: #7c6eee;
+        stroke: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-dot.is-collections {
-        fill: #7c6eee;
-        stroke: #7c6eee;
+        fill: var(--playground-chart-blue);
+        stroke: var(--playground-chart-blue);
       }
 
       .playground-database-overview-timeseries-series.is-documents .playground-database-overview-timeseries-check {
-        background: #d5c4ff;
+        background: var(--playground-chart-green);
       }
 
       .playground-database-overview-timeseries-line.is-documents {
-        stroke: #d5c4ff;
+        stroke: var(--playground-chart-green);
       }
 
       .playground-database-overview-timeseries-dot.is-documents {
-        fill: #d5c4ff;
-        stroke: #d5c4ff;
+        fill: var(--playground-chart-green);
+        stroke: var(--playground-chart-green);
       }
 
       .playground-mission-control-run-button {
@@ -20449,33 +20514,66 @@ const html = `<!doctype html>
       };
       const SETTINGS_TIER_USAGE_ICONS = {
         free: Battery,
-        pro: BatteryLow,
-        scale: BatteryMedium,
-        max: BatteryFull,
+        individual: BatteryLow,
+        team: BatteryMedium,
+        enterprise: BatteryFull,
+      };
+      const SETTINGS_TIER_ALIAS_MAP = {
+        pro: "individual",
+        scale: "team",
+        max: "enterprise",
       };
       const SETTINGS_PLAN_CATALOG = [
         {
-          id: "pro",
-          name: "Pro",
-          monthlyPrice: 14,
-          computeTokens: 1000,
+          id: "individual",
+          name: "Individual",
+          monthlyPrice: 19.99,
+          billingLabel: "/ month",
+          computeTokens: 1500,
           highlighted: true,
-          description: "Great for frequent users. Boost your productivity with extra compute.",
+          description: "Personal access for builders who want premium models, agents, environments, and API access in one plan.",
         },
         {
-          id: "scale",
-          name: "Scale",
-          monthlyPrice: 49,
-          computeTokens: 2500,
-          description: "Flexible compute for growing needs. Ideal for professionals and small teams.",
-        },
-        {
-          id: "max",
-          name: "Max",
-          monthlyPrice: 99,
+          id: "team",
+          name: "Team",
+          monthlyPrice: 30,
+          billingLabel: "/ seat / month",
           computeTokens: 5000,
-          description: "Extended compute for productivity. Perfect for teams and heavy users.",
+          description: "Shared access for teams with bring-your-own model endpoints and usage-based infrastructure after included credits.",
         },
+        {
+          id: "enterprise",
+          name: "Enterprise",
+          monthlyPrice: 100,
+          billingLabel: "/ seat / month",
+          computeTokens: 15000,
+          description: "Enterprise-scale access with higher included usage, team operations, and room for advanced governance and self-hosting requirements.",
+        },
+      ];
+      const SETTINGS_PLATFORM_CONFIG_STORAGE_KEY = "runner_demo_settings_platform_config_v1";
+      const SETTINGS_DEFAULT_BILLING_PREFERENCES = {
+        usageBillingEnabled: false,
+        monthlyResourceSpendLimit: 200,
+        pauseOnLimit: true,
+        emailAlerts: true,
+      };
+      const SETTINGS_DEFAULT_INFERENCE_SETTINGS = {
+        enabled: false,
+        providerType: "openai-compatible",
+        baseUrl: "",
+        defaultModel: "",
+        availableModels: [],
+        apiKeyConfigured: false,
+        lastValidatedAt: "",
+        healthStatus: "idle",
+        lastError: "",
+      };
+      const SETTINGS_INFERENCE_PROVIDER_OPTIONS = [
+        { value: "openai-compatible", label: "OpenAI-Compatible" },
+        { value: "vllm", label: "vLLM" },
+        { value: "tgi", label: "Hugging Face TGI" },
+        { value: "ollama", label: "Ollama" },
+        { value: "custom", label: "Custom" },
       ];
       const SETTINGS_API_KEY_SCOPE_PRESETS = {
         full: {
@@ -20993,14 +21091,23 @@ const html = `<!doctype html>
         return RUNNER_WELCOME_GREETING_TEMPLATES[templateIndex].replace("<name>", greetingName);
       }
 
+      function normalizeSettingsTierId(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (!normalized) return "";
+        if (normalized === "free" || normalized === "individual" || normalized === "team" || normalized === "enterprise") {
+          return normalized;
+        }
+        return SETTINGS_TIER_ALIAS_MAP[normalized] || "";
+      }
+
       function formatSubscriptionTier(value) {
-        switch (String(value || "").trim().toLowerCase()) {
-          case "pro":
-            return "Pro";
-          case "scale":
-            return "Scale";
-          case "max":
-            return "Max";
+        switch (normalizeSettingsTierId(value)) {
+          case "individual":
+            return "Individual";
+          case "team":
+            return "Team";
+          case "enterprise":
+            return "Enterprise";
           case "free":
             return "Free";
           default:
@@ -21073,14 +21180,15 @@ const html = `<!doctype html>
       }
 
       function getSettingsPlanFeatures(tierId, computeTokens) {
-        const usageIcon = SETTINGS_TIER_USAGE_ICONS[tierId] || Coins;
+        const normalizedTierId = normalizeSettingsTierId(tierId) || "free";
+        const usageIcon = SETTINGS_TIER_USAGE_ICONS[normalizedTierId] || Coins;
         const usageMultiplier = Math.round(computeTokens / 150);
-        const usageText = tierId === "free"
+        const usageText = normalizedTierId === "free"
           ? computeTokens + " Compute Tokens included"
           : usageMultiplier + "x Usage (" + (computeTokens >= 1000
             ? String((computeTokens / 1000).toFixed(1)).replace(".0", "") + "k"
             : computeTokens) + " CT)";
-        const isPaidTier = tierId !== "free";
+        const isPaidTier = normalizedTierId !== "free";
         const features = [
           { text: usageText, icon: usageIcon },
         ];
@@ -21088,6 +21196,12 @@ const html = `<!doctype html>
         if (isPaidTier) {
           features.push({ text: "Access to premium models", icon: Telescope });
           features.push({ text: "Create your own Agents", icon: User });
+        }
+
+        if (normalizedTierId === "team" || normalizedTierId === "enterprise") {
+          features.push({ text: "Bring your own inference endpoint", icon: HardDrive });
+          features.push({ text: "Usage-based resources after included credits", icon: Coins });
+          features.push({ text: "Shared workspaces and resources", icon: LibraryBig });
         }
 
         features.push(
@@ -21100,19 +21214,18 @@ const html = `<!doctype html>
           { text: "API Access", icon: Code }
         );
 
-        if (tierId === "max") {
-          features.push({ text: "Run on your own hardware", icon: HardDrive });
+        if (normalizedTierId === "enterprise") {
+          features.push({ text: "Advanced governance and priority support", icon: Sparkles });
         }
 
         return features;
       }
 
       function getSettingsTierLogoUrl(value) {
-        const tierId = String(value || "").trim().toLowerCase();
-        if (tierId === "pro" || tierId === "scale" || tierId === "max") {
-          return "/img/logos/" + tierId + "icon.png";
-        }
-
+        const tierId = normalizeSettingsTierId(value);
+        if (tierId === "individual") return "/img/logos/proicon.png";
+        if (tierId === "team") return "/img/logos/scaleicon.png";
+        if (tierId === "enterprise") return "/img/logos/maxicon.png";
         return "/img/logos/settingsicon.png";
       }
 
@@ -21137,6 +21250,93 @@ const html = `<!doctype html>
           },
           byDay: [],
         };
+      }
+
+      function normalizeSettingsSpendLimit(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+          return SETTINGS_DEFAULT_BILLING_PREFERENCES.monthlyResourceSpendLimit;
+        }
+        return Math.max(0, Math.min(50000, Math.round(numericValue)));
+      }
+
+      function normalizeDemoSettingsBillingPreferences(value) {
+        const source = value && typeof value === "object" ? value : {};
+        return {
+          usageBillingEnabled: Boolean(source.usageBillingEnabled),
+          monthlyResourceSpendLimit: normalizeSettingsSpendLimit(source.monthlyResourceSpendLimit),
+          pauseOnLimit: Object.prototype.hasOwnProperty.call(source, "pauseOnLimit")
+            ? Boolean(source.pauseOnLimit)
+            : SETTINGS_DEFAULT_BILLING_PREFERENCES.pauseOnLimit,
+          emailAlerts: Object.prototype.hasOwnProperty.call(source, "emailAlerts")
+            ? Boolean(source.emailAlerts)
+            : SETTINGS_DEFAULT_BILLING_PREFERENCES.emailAlerts,
+        };
+      }
+
+      function normalizeDemoSettingsInferenceSettings(value) {
+        const source = value && typeof value === "object" ? value : {};
+        const providerType = typeof source.providerType === "string" && source.providerType.trim()
+          ? source.providerType.trim()
+          : SETTINGS_DEFAULT_INFERENCE_SETTINGS.providerType;
+        return {
+          enabled: Boolean(source.enabled),
+          providerType,
+          baseUrl: typeof source.baseUrl === "string" ? source.baseUrl.trim() : "",
+          defaultModel: typeof source.defaultModel === "string" ? source.defaultModel.trim() : "",
+          availableModels: Array.isArray(source.availableModels)
+            ? source.availableModels
+              .map((entry) => String(entry || "").trim())
+              .filter(Boolean)
+              .slice(0, 20)
+            : [],
+          apiKeyConfigured: Boolean(source.apiKeyConfigured),
+          lastValidatedAt: typeof source.lastValidatedAt === "string" ? source.lastValidatedAt.trim() : "",
+          healthStatus: source.healthStatus === "healthy" || source.healthStatus === "error"
+            ? source.healthStatus
+            : "idle",
+          lastError: typeof source.lastError === "string" ? source.lastError.trim() : "",
+        };
+      }
+
+      function readDemoSettingsPlatformConfig() {
+        try {
+          const raw = localStorage.getItem(SETTINGS_PLATFORM_CONFIG_STORAGE_KEY);
+          const parsed = raw ? JSON.parse(raw) : {};
+          const source = parsed && typeof parsed === "object" ? parsed : {};
+          return {
+            billing: normalizeDemoSettingsBillingPreferences(source.billing),
+            inference: normalizeDemoSettingsInferenceSettings(source.inference),
+          };
+        } catch {
+          return {
+            billing: normalizeDemoSettingsBillingPreferences(null),
+            inference: normalizeDemoSettingsInferenceSettings(null),
+          };
+        }
+      }
+
+      function writeDemoSettingsPlatformConfig(config) {
+        try {
+          localStorage.setItem(SETTINGS_PLATFORM_CONFIG_STORAGE_KEY, JSON.stringify({
+            billing: normalizeDemoSettingsBillingPreferences(config?.billing),
+            inference: normalizeDemoSettingsInferenceSettings(config?.inference),
+          }));
+        } catch {}
+      }
+
+      function buildDemoInferenceModelOptions(providerType, defaultModel) {
+        const normalizedDefaultModel = String(defaultModel || "").trim();
+        const presetModels = providerType === "vllm"
+          ? ["qwen2.5-coder-32b", "llama-3.3-70b-instruct"]
+          : providerType === "tgi"
+            ? ["mistral-small-3.1", "qwen2.5-72b-instruct"]
+            : providerType === "ollama"
+              ? ["llama3.3", "qwen2.5-coder:32b"]
+              : providerType === "custom"
+                ? ["primary-model"]
+                : ["gpt-oss-120b", "claude-compatible-primary"];
+        return Array.from(new Set([normalizedDefaultModel, ...presetModels].filter(Boolean))).slice(0, 12);
       }
 
       function formatSettingsDate(value) {
@@ -22074,6 +22274,7 @@ const html = `<!doctype html>
         { id: "suitastro", label: "Suit Astro", url: "/img/agent-profile-pics/suitastro.webp" },
       ];
       const PLAYGROUND_AGENTS_SHELL_BACKGROUND = "linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,1) 48%, rgba(0, 0, 0, 1) 100%), url(/img/agent-profile-pics/starbg.jpeg)";
+      const PLAYGROUND_ENVIRONMENTS_SHELL_BACKGROUND = "linear-gradient(180deg, rgba(5, 7, 12, 0.72) 0%, rgba(5, 7, 12, 0.9) 46%, rgba(0, 0, 0, 1) 100%), url(/img/bg/bg-abstract.avif)";
       const PLAYGROUND_AGENT_SKILL_OPTIONS = [
         {
           id: "deep_research",
@@ -22356,8 +22557,45 @@ const html = `<!doctype html>
         return getPlaygroundAgentListMode(actor);
       }
 
-      function getPlaygroundAgentModelMeta(modelId) {
-        return PLAYGROUND_AGENT_MODEL_OPTIONS.find((option) => option.id === modelId) || PLAYGROUND_AGENT_MODEL_OPTIONS[2];
+      function buildPlaygroundFallbackAgentModelMeta(modelId) {
+        const raw = String(modelId || "").trim();
+        if (raw.toLowerCase().startsWith("external:")) {
+          const parts = raw.split(":");
+          const encodedModelId = parts.slice(2).join(":");
+          let decodedModelId = encodedModelId;
+          try {
+            decodedModelId = decodeURIComponent(encodedModelId);
+          } catch {}
+          return {
+            id: raw,
+            label: decodedModelId || "External Model",
+            description: "Workspace-managed external model",
+            intelligence: "Custom",
+            contextWindow: "Custom",
+            speed: "Custom",
+            source: "external",
+          };
+        }
+        return {
+          id: raw || "claude-haiku-4-5",
+          label: raw || "Claude Haiku 4.5",
+          description: "Selected model",
+          intelligence: "Good",
+          contextWindow: "Custom",
+          speed: "Custom",
+          source: "managed",
+        };
+      }
+
+      function getPlaygroundAgentModelMeta(modelId, options) {
+        const candidateOptions = Array.isArray(options) && options.length > 0
+          ? options
+          : PLAYGROUND_AGENT_MODEL_OPTIONS;
+        const matched = candidateOptions.find((option) => option.id === modelId);
+        if (matched) {
+          return matched;
+        }
+        return buildPlaygroundFallbackAgentModelMeta(modelId);
       }
 
       function getPlaygroundAgentIntelligenceLevel(label) {
@@ -26295,6 +26533,11 @@ const html = `<!doctype html>
       function buildPlaygroundEnvironmentAnalyticsUrl(backendUrl, environmentId) {
         if (!backendUrl || !environmentId) return "";
         return backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/analytics";
+      }
+
+      function buildPlaygroundEnvironmentHomeAnalyticsUrl(backendUrl) {
+        if (!backendUrl) return "";
+        return backendUrl + "/environments/analytics/overview";
       }
 
       function buildPlaygroundAgentAnalyticsUrl(backendUrl, agentId) {
@@ -33008,6 +33251,7 @@ const html = `<!doctype html>
           return next;
         });
         const [environmentAnalyticsById, setEnvironmentAnalyticsById] = useState({});
+        const [environmentHomeAnalytics, setEnvironmentHomeAnalytics] = useState(null);
         const [servers, setServers] = useState([]);
         const [databases, setDatabases] = useState([]);
         const [serverDetailsById, setServerDetailsById] = useState({});
@@ -33028,6 +33272,7 @@ const html = `<!doctype html>
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [loadingEnvironmentId, setLoadingEnvironmentId] = useState("");
         const [loadingEnvironmentAnalyticsId, setLoadingEnvironmentAnalyticsId] = useState("");
+        const [environmentHomeAnalyticsLoading, setEnvironmentHomeAnalyticsLoading] = useState(false);
         const [loadingServerId, setLoadingServerId] = useState("");
         const [loadingDatabaseId, setLoadingDatabaseId] = useState("");
         const [loadingServerAnalyticsId, setLoadingServerAnalyticsId] = useState("");
@@ -33134,6 +33379,7 @@ const html = `<!doctype html>
         const [environmentComposerRuntimePopover, setEnvironmentComposerRuntimePopover] = useState("");
         const [environmentListActionMenuState, setEnvironmentListActionMenuState] = useState(null);
         const [environmentAnalyticsErrorById, setEnvironmentAnalyticsErrorById] = useState({});
+        const [environmentHomeAnalyticsError, setEnvironmentHomeAnalyticsError] = useState("");
         const [serverListLoading, setServerListLoading] = useState(false);
         const [databaseListLoading, setDatabaseListLoading] = useState(false);
         const [loadingServerFilesId, setLoadingServerFilesId] = useState("");
@@ -34237,6 +34483,41 @@ const html = `<!doctype html>
             setLoadingEnvironmentAnalyticsId((current) => current === normalizedEnvironmentId ? "" : current);
           }
         }, [backendUrl, environmentAnalyticsById, requestHeaders]);
+
+        const loadEnvironmentHomeAnalytics = useCallback(async (options = {}) => {
+          const force = options?.force === true;
+          if (!force && environmentHomeAnalytics) {
+            return environmentHomeAnalytics;
+          }
+
+          setEnvironmentHomeAnalyticsLoading(true);
+          setEnvironmentHomeAnalyticsError("");
+
+          try {
+            const response = await fetch(
+              buildPlaygroundEnvironmentHomeAnalyticsUrl(backendUrl),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load overview analytics.");
+            }
+            const normalizedRecord = {
+              ...data,
+              loadedAt: new Date().toISOString(),
+            };
+            setEnvironmentHomeAnalytics(normalizedRecord);
+            return normalizedRecord;
+          } catch (error) {
+            setEnvironmentHomeAnalyticsError(error instanceof Error ? error.message : "Failed to load overview analytics.");
+            return null;
+          } finally {
+            setEnvironmentHomeAnalyticsLoading(false);
+          }
+        }, [backendUrl, environmentHomeAnalytics, requestHeaders]);
 
         const loadAvailableRuntimeOptions = useCallback(async () => {
           try {
@@ -35453,6 +35734,13 @@ const html = `<!doctype html>
           }
           void loadEnvironmentAnalytics(selectedEnvironmentId);
         }, [environmentAnalyticsById, loadEnvironmentAnalytics, resourceMode, selectedEnvironmentId]);
+
+        useEffect(() => {
+          if (environmentHomeAnalytics || environmentHomeAnalyticsLoading) {
+            return;
+          }
+          void loadEnvironmentHomeAnalytics();
+        }, [environmentHomeAnalytics, environmentHomeAnalyticsLoading, loadEnvironmentHomeAnalytics]);
 
         useEffect(() => {
           if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
@@ -41784,59 +42072,6 @@ const html = `<!doctype html>
               )
             : null;
 
-          const runtimeSection = isConnectableServer
-            ? React.createElement("div", { className: "playground-environments-connections-section" },
-                React.createElement("div", {
-                  className: "playground-tasks-detail-section-title playground-environments-connections-title",
-                }, "Runtime"),
-                React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
-                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                    renderServerFactRow("Status",
-                      React.createElement("span", { className: "playground-environments-editor-fact-value" },
-                        !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
-                          ? "Unsaved"
-                          : activeServerRuntimeDiagnostics?.ready
-                            ? "Ready"
-                            : "Deploy Required"
-                      )
-                    ),
-                    renderServerFactRow("Manifest",
-                      activeServerRuntimeManifestUrl
-                        ? React.createElement("button", {
-                            type: "button",
-                            className: "playground-tasks-detail-fact-button",
-                            onClick: () => window.open(activeServerRuntimeManifestUrl, "_blank", "noopener,noreferrer"),
-                            title: activeServerRuntimeManifestUrl,
-                          }, activeServerRuntimeManifestUrl)
-                        : React.createElement("div", { className: "playground-tasks-detail-fact-button is-empty" }, "Not published yet")
-                    ),
-                    renderServerFactRow("Runtime Config", renderRuntimePreviewButton("Preview JSON", "config")),
-                    renderServerFactRow("Browser SDK", renderRuntimePreviewButton("Preview Module", "browser")),
-                    renderServerFactRow("Server SDK", renderRuntimePreviewButton("Preview Module", "server")),
-                    isLoadingServerRuntimeContext
-                      ? React.createElement("div", { className: "playground-environments-muted playground-environments-editor-notice" }, "Loading runtime diagnostics...")
-                      : null,
-                    serverRuntimeState.error
-                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverRuntimeState.error)
-                      : null,
-                    activeServerRuntimeWarnings.length > 0
-                      ? React.createElement("div", { className: "playground-servers-runtime-warning-list" },
-                          activeServerRuntimeWarnings.map((warning) =>
-                            React.createElement("div", {
-                              key: String(warning.code || warning.message),
-                              className: (warning.level === "warning"
-                                ? "playground-environments-error"
-                                : "playground-environments-muted")
-                                + " playground-environments-editor-notice",
-                            }, warning.message)
-                          )
-                        )
-                      : null
-                  )
-                )
-              )
-            : null;
-
           const isLoadingCurrentServerFiles = loadingServerFilesId === draftServer.id;
           const serverFileEditorIsDirty = serverFileEditorState.status === "ready" && serverFileEditorState.value !== serverFileEditorState.initialValue;
           const serverFileEditorStatusClassName = serverFileEditorState.saveError
@@ -42501,7 +42736,6 @@ const html = `<!doctype html>
             descriptionSection,
             factsSection,
             connectionsSection,
-            runtimeSection,
             sourceFilesSection
           );
 
@@ -43402,7 +43636,7 @@ const html = `<!doctype html>
 
             const agentRuntimeRunsSection = React.createElement("section", { className: "playground-environments-section", key: "agent-runtime-runs" },
               React.createElement("div", { className: "playground-environments-section-body" },
-                React.createElement("div", { className: "playground-environments-editor-surface playground-auth-users-surface" },
+                React.createElement("div", { className: "playground-tasks-detail-facts playground-auth-users-surface" },
                   React.createElement("div", { className: "playground-auth-users-toolbar" },
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Threads"),
                     React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
@@ -44271,7 +44505,7 @@ const html = `<!doctype html>
             );
           }
 
-          const databaseBrowserSection = React.createElement("div", { className: "playground-environments-editor-surface playground-database-browser-surface" },
+          const databaseBrowserSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-database-browser-surface" },
             renderDatabaseSelectorRow({
               label: "Collection",
               count: currentDatabaseCollections.length,
@@ -44941,7 +45175,7 @@ const html = `<!doctype html>
               )
             )
           );
-          const environmentFactsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
+          const environmentFactsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-computer-details-card" },
             React.createElement("div", { className: "playground-tasks-detail-facts-header" },
               React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
               React.createElement("button", {
@@ -46024,43 +46258,38 @@ const html = `<!doctype html>
           };
 
           const homeActivityFormatter = new Intl.DateTimeFormat("en-US", {
-            month: "short",
-            day: "numeric",
+            hour: "numeric",
           });
-          const homeActivityBuckets = Array.from({ length: 8 }, (_, index) => {
+          const homeActivityBuckets = Array.from({ length: 24 }, (_, index) => {
             const date = new Date();
-            date.setHours(0, 0, 0, 0);
-            date.setDate(date.getDate() - (7 - index));
+            date.setMinutes(0, 0, 0);
+            date.setHours(date.getHours() - (23 - index));
             return {
               key: date.toISOString().slice(0, 10),
+              hourKey: date.toISOString().slice(0, 13),
               label: homeActivityFormatter.format(date),
               date,
             };
           });
-          const buildHomeActivitySeries = (items) => {
-            const countsByDay = new Map(homeActivityBuckets.map((bucket) => [bucket.key, 0]));
-            (Array.isArray(items) ? items : []).forEach((item) => {
-              const timestamp = new Date(item?.updatedAt || item?.createdAt || "").getTime();
-              if (!Number.isFinite(timestamp) || timestamp <= 0) {
-                return;
-              }
-              const day = new Date(timestamp);
-              day.setHours(0, 0, 0, 0);
-              const key = day.toISOString().slice(0, 10);
-              if (!countsByDay.has(key)) {
-                return;
-              }
-              countsByDay.set(key, Number(countsByDay.get(key) || 0) + 1);
-            });
-            return homeActivityBuckets.map((bucket) => Number(countsByDay.get(bucket.key) || 0));
-          };
 
-          const homeComputerUsage = buildHomeActivitySeries(orderedEnvironments);
-          const homeResourceUsage = buildHomeActivitySeries([...orderedServers, ...orderedDatabases]);
-          const totalComputerUsage = homeComputerUsage.reduce((sum, value) => sum + value, 0);
-          const totalResourceUsage = homeResourceUsage.reduce((sum, value) => sum + value, 0);
-          const peakComputerUsage = Math.max(0, ...homeComputerUsage);
-          const peakResourceUsage = Math.max(0, ...homeResourceUsage);
+          const homeComputerUsageBuckets = Array.isArray(environmentHomeAnalytics?.charts?.computerRuntime24h)
+            ? environmentHomeAnalytics.charts.computerRuntime24h
+            : [];
+          const homeResourceUsageBuckets = Array.isArray(environmentHomeAnalytics?.charts?.resourceActiveMinutes24h)
+            ? environmentHomeAnalytics.charts.resourceActiveMinutes24h
+            : [];
+          const homeComputerUsage = homeComputerUsageBuckets.length > 0
+            ? homeComputerUsageBuckets.map((bucket) => Number(bucket?.activeMinutes || 0))
+            : homeActivityBuckets.map(() => 0);
+          const homeResourceUsage = homeResourceUsageBuckets.length > 0
+            ? homeResourceUsageBuckets.map((bucket) => Number(bucket?.activeMinutes || 0))
+            : homeActivityBuckets.map(() => 0);
+          const totalComputerUsage = typeof environmentHomeAnalytics?.summary?.totalActiveMinutes24h === "number"
+            ? Number(environmentHomeAnalytics.summary.totalActiveMinutes24h || 0)
+            : homeComputerUsage.reduce((sum, value) => sum + value, 0);
+          const totalResourceUsage = typeof environmentHomeAnalytics?.summary?.totalResourceActiveMinutes24h === "number"
+            ? Number(environmentHomeAnalytics.summary.totalResourceActiveMinutes24h || 0)
+            : homeResourceUsage.reduce((sum, value) => sum + value, 0);
           const resourceBreakdownLabels = ["Computers", "Web Apps", "Functions", "Managed"];
           const resourceBreakdownValues = [
             environmentsHomeSummary.computers,
@@ -46069,6 +46298,16 @@ const html = `<!doctype html>
             environmentsHomeSummary.managedResources,
           ];
           const resourceBreakdownTones = ["computers", "webapps", "functions", "managed"];
+          const formatHomeMinuteValue = (value) => {
+            const numericValue = Number(value || 0);
+            if (!Number.isFinite(numericValue) || numericValue <= 0) {
+              return "0 min";
+            }
+            const roundedValue = numericValue >= 10
+              ? Math.round(numericValue)
+              : Math.round(numericValue * 10) / 10;
+            return String(roundedValue) + " min";
+          };
 
           const capabilityCards = [
             {
@@ -46173,64 +46412,62 @@ const html = `<!doctype html>
               React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
               React.createElement("div", { className: "playground-environments-home-hero-copy" },
                 "Create durable computers, publish web apps and functions, connect databases and auth, and power products with agent runtimes. Environments brings your full AI application stack together in one workspace."
-              )
-            ),
-            React.createElement("div", { className: "playground-environments-home-metrics" },
-              React.createElement("section", { className: "playground-tasks-detail-facts" },
-                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                  React.createElement("div", { className: "playground-database-overview" },
-                    React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
-                      [
-                        renderHomeAnalyticsKpi("Computers", String(environmentsHomeSummary.computers), "computers", "home-kpi-computers"),
-                        renderHomeAnalyticsKpi("Web Apps", String(environmentsHomeSummary.webApps), "webapps", "home-kpi-webapps"),
-                        renderHomeAnalyticsKpi("Functions", String(environmentsHomeSummary.functions), "functions", "home-kpi-functions"),
-                        renderHomeAnalyticsKpi("Managed", String(environmentsHomeSummary.managedResources), "managed", "home-kpi-managed"),
-                      ]
-                    ),
-                    React.createElement("div", { className: "playground-database-overview-chart-block" },
-                      renderHomeBarChart({
-                        ariaLabel: "Environment and resource counts",
-                        labels: resourceBreakdownLabels,
-                        values: resourceBreakdownValues,
-                        tones: resourceBreakdownTones,
-                        emptyText: "No environment data yet",
-                      })
+              ),
+              React.createElement("div", { className: "playground-environments-home-metrics" },
+                React.createElement("section", { className: "playground-tasks-detail-facts" },
+                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                    React.createElement("div", { className: "playground-database-overview" },
+                      React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+                        [
+                          renderHomeAnalyticsKpi("Computers", String(environmentsHomeSummary.computers), "computers", "home-kpi-computers"),
+                          renderHomeAnalyticsKpi("Web Apps", String(environmentsHomeSummary.webApps), "webapps", "home-kpi-webapps"),
+                          renderHomeAnalyticsKpi("Functions", String(environmentsHomeSummary.functions), "functions", "home-kpi-functions"),
+                          renderHomeAnalyticsKpi("Managed", String(environmentsHomeSummary.managedResources), "managed", "home-kpi-managed"),
+                        ]
+                      ),
+                      React.createElement("div", { className: "playground-database-overview-chart-block" },
+                        renderHomeBarChart({
+                          ariaLabel: "Environment and resource counts",
+                          labels: resourceBreakdownLabels,
+                          values: resourceBreakdownValues,
+                          tones: resourceBreakdownTones,
+                          emptyText: "No environment data yet",
+                        })
+                      )
                     )
                   )
-                )
-              ),
-              React.createElement("section", { className: "playground-tasks-detail-facts" },
-                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                  React.createElement("div", { className: "playground-database-overview" },
-                    React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
-                      [
-                        renderHomeAnalyticsKpi("Computer Usage", String(totalComputerUsage), "computers", "home-kpi-computer-usage"),
-                        renderHomeAnalyticsKpi("Resource Usage", String(totalResourceUsage), "resources", "home-kpi-resource-usage"),
-                        renderHomeAnalyticsKpi("Peak Computer Day", String(peakComputerUsage), "computers", "home-kpi-computer-peak"),
-                        renderHomeAnalyticsKpi("Peak Resource Day", String(peakResourceUsage), "resources", "home-kpi-resource-peak"),
-                      ]
-                    ),
-                    React.createElement("div", { className: "playground-database-overview-chart-block" },
-                      renderPlaygroundTelemetryTimeseriesChart({
-                        ariaLabel: "Overall environment activity",
-                        labels: homeActivityBuckets,
-                        series: [
-                          {
-                            key: "computers",
-                            tone: "computers",
-                            values: homeComputerUsage,
-                          },
-                          {
-                            key: "resources",
-                            tone: "resources",
-                            values: homeResourceUsage,
-                          },
-                        ],
-                        emptyText: "No usage data yet",
-                        buildLinePath: buildHomeUsageLinePath,
-                        getSeriesValue: (entry, _bucket, index) => entry?.values?.[index],
-                        getXAxisLabel: (bucket) => String(bucket?.label || ""),
-                      })
+                ),
+                React.createElement("section", { className: "playground-tasks-detail-facts" },
+                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                    React.createElement("div", { className: "playground-database-overview" },
+                      React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
+                        [
+                          renderHomeAnalyticsKpi("Computer Active Minutes (24h)", formatHomeMinuteValue(totalComputerUsage), "computers", "home-kpi-computer-usage"),
+                          renderHomeAnalyticsKpi("Resource Active Minutes (24h)", formatHomeMinuteValue(totalResourceUsage), "resources", "home-kpi-resource-usage"),
+                        ]
+                      ),
+                      React.createElement("div", { className: "playground-database-overview-chart-block" },
+                        renderPlaygroundTelemetryTimeseriesChart({
+                          ariaLabel: "Overall environment activity",
+                          labels: homeActivityBuckets,
+                          series: [
+                            {
+                              key: "computers",
+                              tone: "computers",
+                              values: homeComputerUsage,
+                            },
+                            {
+                              key: "resources",
+                              tone: "resources",
+                              values: homeResourceUsage,
+                            },
+                          ],
+                          emptyText: "No usage data yet",
+                          buildLinePath: buildHomeUsageLinePath,
+                          getSeriesValue: (entry, _bucket, index) => entry?.values?.[index],
+                          getXAxisLabel: (bucket) => String(bucket?.label || ""),
+                        })
+                      )
                     )
                   )
                 )
@@ -46625,6 +46862,7 @@ const html = `<!doctype html>
           isSaving: false,
           error: "",
         });
+        const [agentModelOptions, setAgentModelOptions] = useState(() => PLAYGROUND_AGENT_MODEL_OPTIONS);
         const [isAgentComposerDescriptionEditing, setIsAgentComposerDescriptionEditing] = useState(false);
         const [isAgentComposerInstructionsEditing, setIsAgentComposerInstructionsEditing] = useState(false);
         const [agentComposerModelPopover, setAgentComposerModelPopover] = useState("");
@@ -46634,6 +46872,41 @@ const html = `<!doctype html>
           custom: false,
         }));
         const [expandedSections, setExpandedSections] = useState(() => new Set(["team", "model", "instructions"]));
+        const resolvedAgentModelOptions = useMemo(() => (
+          Array.isArray(agentModelOptions) && agentModelOptions.length > 0
+            ? agentModelOptions
+            : PLAYGROUND_AGENT_MODEL_OPTIONS
+        ), [agentModelOptions]);
+
+        const loadAgentModelCatalog = useCallback(async () => {
+          try {
+            const response = await fetch(backendUrl + "/agents/models", {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !Array.isArray(data?.models) || data.models.length === 0) {
+              setAgentModelOptions(PLAYGROUND_AGENT_MODEL_OPTIONS);
+              return;
+            }
+            const nextOptions = data.models
+              .map((entry) => ({
+                id: String(entry?.id || "").trim(),
+                label: String(entry?.label || entry?.id || "").trim(),
+                description: String(entry?.description || "").trim(),
+                intelligence: String(entry?.intelligence || "").trim() || "Custom",
+                contextWindow: String(entry?.contextWindow || "").trim() || "Custom",
+                speed: String(entry?.speed || "").trim() || "Custom",
+                source: String(entry?.source || "managed").trim(),
+                providerType: String(entry?.providerType || "").trim(),
+                locked: Boolean(entry?.locked),
+              }))
+              .filter((entry) => entry.id && entry.label);
+            setAgentModelOptions(nextOptions.length > 0 ? nextOptions : PLAYGROUND_AGENT_MODEL_OPTIONS);
+          } catch {
+            setAgentModelOptions(PLAYGROUND_AGENT_MODEL_OPTIONS);
+          }
+        }, [backendUrl, requestHeaders]);
 
         const orderedAgents = useMemo(() => {
           return [...agents].sort((left, right) => {
@@ -47606,6 +47879,10 @@ const html = `<!doctype html>
         }, [agentAnalyticsById, loadAgentAnalytics, selectedAgentId]);
 
         useEffect(() => {
+          void loadAgentModelCatalog();
+        }, [loadAgentModelCatalog]);
+
+        useEffect(() => {
           if (!agentActionsPopoverOpen) {
             return undefined;
           }
@@ -48083,7 +48360,7 @@ const html = `<!doctype html>
                 : typeof agent?.model === "string"
                   ? agent.model
                   : ""
-            ).id,
+            , resolvedAgentModelOptions).id,
             instructions: typeof agent?.instructions === "string" ? agent.instructions : "",
             binary: typeof orchestratorAgent?.binary === "string" && orchestratorAgent.binary.trim()
               ? orchestratorAgent.binary
@@ -48481,7 +48758,7 @@ const html = `<!doctype html>
 
           const composerDraft = agentComposerDraft || buildPlaygroundDefaultAgentDraft(agentListMode === "teams" ? "team" : "single");
           const isTeamComposer = composerDraft.agentType === "team";
-          const selectedComposerModel = PLAYGROUND_AGENT_MODEL_OPTIONS.find((option) => option.id === (composerDraft.model || "claude-haiku-4-5")) || PLAYGROUND_AGENT_MODEL_OPTIONS[0];
+          const selectedComposerModel = getPlaygroundAgentModelMeta((composerDraft.model || "claude-haiku-4-5"), resolvedAgentModelOptions);
           const composerReasoningOptions = ["minimal", "low", "medium", "high"].map((value) => ({
             id: value,
             label: value.replace(/^./, (letter) => letter.toUpperCase()),
@@ -48659,11 +48936,12 @@ const html = `<!doctype html>
                                 ),
                                 agentComposerModelPopover === "model"
                                   ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                      PLAYGROUND_AGENT_MODEL_OPTIONS.map((option) =>
+                                      resolvedAgentModelOptions.map((option) =>
                                         React.createElement("button", {
                                             key: option.id,
                                             type: "button",
                                             className: "tb-popup-row tb-popup-row-select" + ((composerDraft.model || "claude-haiku-4-5") === option.id ? " selected" : ""),
+                                            disabled: Boolean(option.locked),
                                             onClick: () => {
                                               updateAgentComposerField("model", option.id);
                                               setAgentComposerModelPopover("");
@@ -48674,7 +48952,7 @@ const html = `<!doctype html>
                                               ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
                                               : null
                                           ),
-                                          React.createElement("span", null, option.label)
+                                          React.createElement("span", null, option.label + (option.source === "external" ? " · External" : ""))
                                         )
                                       )
                                     )
@@ -48847,9 +49125,9 @@ const html = `<!doctype html>
             );
           }
 
-          const modelMeta = getPlaygroundAgentModelMeta(draftAgent.model);
+          const modelMeta = getPlaygroundAgentModelMeta(draftAgent.model, resolvedAgentModelOptions);
           const enabledSkills = Array.isArray(draftAgent.enabledSkills) ? draftAgent.enabledSkills : [];
-          const selectedAgentModel = PLAYGROUND_AGENT_MODEL_OPTIONS.find((option) => option.id === (draftAgent.model || "claude-haiku-4-5")) || PLAYGROUND_AGENT_MODEL_OPTIONS[0];
+          const selectedAgentModel = getPlaygroundAgentModelMeta((draftAgent.model || "claude-haiku-4-5"), resolvedAgentModelOptions);
           const reasoningOptions = ["minimal", "low", "medium", "high"].map((value) => ({
             id: value,
             label: value.charAt(0).toUpperCase() + value.slice(1),
@@ -48862,7 +49140,7 @@ const html = `<!doctype html>
           const selectedTeamSubagentIds = dedupePlaygroundAgentIds(draftAgent.teamSubagentIds)
             .filter((value) => value !== String(draftAgent.teamOrchestratorAgentId || "").trim());
           const teamDerivedModelMeta = selectedTeamOrchestrator
-            ? getPlaygroundAgentModelMeta(selectedTeamOrchestrator.model)
+            ? getPlaygroundAgentModelMeta(selectedTeamOrchestrator.model, resolvedAgentModelOptions)
             : null;
           const skillsSummary = enabledSkills.length > 0
             ? enabledSkills
@@ -49213,11 +49491,12 @@ const html = `<!doctype html>
                     ),
                     agentModelPopover === "model"
                       ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          PLAYGROUND_AGENT_MODEL_OPTIONS.map((option) =>
+                          resolvedAgentModelOptions.map((option) =>
                             React.createElement("button", {
                                 key: option.id,
                                 type: "button",
                                 className: "tb-popup-row tb-popup-row-select" + ((draftAgent.model || "claude-haiku-4-5") === option.id ? " selected" : ""),
+                                disabled: isSystemAgent || Boolean(option.locked),
                                 onClick: () => {
                                   updateAgentField("model", option.id);
                                   setAgentModelPopover("");
@@ -49228,7 +49507,7 @@ const html = `<!doctype html>
                                     ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
                                     : null
                                 ),
-                                React.createElement("span", null, option.label)
+                                React.createElement("span", null, option.label + (option.source === "external" ? " · External" : ""))
                               )
                           )
                         )
@@ -68780,7 +69059,7 @@ const html = `<!doctype html>
         currentPlanId,
         onClose,
         onSignIn,
-        onUpgradeToPro,
+        onUpgradeToIndividual,
       }) {
         const savedState = useMemo(() => readPlaygroundOnboardingState(), []);
         const initialStepIndex = Number.isFinite(savedState?.stepIndex)
@@ -68788,10 +69067,10 @@ const html = `<!doctype html>
           : 0;
         const [stepIndex, setStepIndex] = useState(initialStepIndex);
         const totalSteps = 5;
-        const stepLabels = ["Agents", "Environments", "Skills", "Projects", "Pro"];
-        const normalizedPlanId = String(currentPlanId || "free").trim().toLowerCase() || "free";
-        const isOnProPlan = normalizedPlanId === "pro";
-        const proPlan = SETTINGS_PLAN_CATALOG.find((plan) => plan.id === "pro") || SETTINGS_PLAN_CATALOG[0];
+        const stepLabels = ["Agents", "Environments", "Skills", "Projects", "Individual"];
+        const normalizedPlanId = normalizeSettingsTierId(currentPlanId) || "free";
+        const isOnPaidPlan = normalizedPlanId !== "free";
+        const individualPlan = SETTINGS_PLAN_CATALOG.find((plan) => plan.id === "individual") || SETTINGS_PLAN_CATALOG[0];
         const buildSnapshot = useCallback((nextStepIndex = stepIndex) => ({
           stepIndex: nextStepIndex,
         }), [stepIndex]);
@@ -68891,13 +69170,13 @@ const html = `<!doctype html>
                 onClick: (event) => event.stopPropagation(),
               },
                 React.createElement("div", { className: "playground-onboarding-title-wrap" },
-                  React.createElement("div", { className: "playground-onboarding-kicker" }, "Runner Playground"),
+                  React.createElement("div", { className: "playground-onboarding-kicker" }, "Agentic Compute Platform"),
                   React.createElement("h2", { className: "playground-onboarding-auth-title" },
                     "Sign in to continue setup"
                   )
                 ),
                 React.createElement("p", { className: "playground-onboarding-auth-copy" },
-                  "The runner onboarding uses your real Computer Agents account, environments, connectors, and API keys. Sign in first, then reopen the playground with showOnboarding=true to test the full flow."
+                  "The onboarding uses your real Agentic Compute Platform account, environments, connectors, and API keys. Sign in first, then reopen with showOnboarding=true to test the full flow."
                 ),
                 React.createElement("div", { className: "playground-onboarding-footer" },
                   React.createElement("button", {
@@ -68930,7 +69209,7 @@ const html = `<!doctype html>
               })
             ),
             title: "Meet your agents",
-            copy: "Agents are the operators of Computer Agents. Each one has its own model, instructions, and execution style, so you can keep specialists for research, coding, design, or any repeatable workflow.",
+            copy: "Agents are the operators of Agentic Compute Platform. Each one has its own model, instructions, and execution style, so you can keep specialists for research, coding, design, or any repeatable workflow.",
             actionLabel: "Continue",
             details: [
               {
@@ -69039,20 +69318,20 @@ const html = `<!doctype html>
               },
               {
                 title: "Built for ongoing ops",
-                copy: "This is the part that turns the runner playground into the main Computer Agents product, not just a demo chat surface.",
+                copy: "This is the part that turns the platform into the main Agentic Compute Platform product, not just a demo chat surface.",
               },
             ],
           },
           {
-            key: "pro",
+            key: "individual",
             visual: React.createElement("div", { className: "playground-onboarding-concept-visual is-surface" },
               React.createElement(Sparkles, { className: "playground-onboarding-concept-icon", strokeWidth: 1.75 })
             ),
-            title: isOnProPlan ? "You’re already on Pro" : "Upgrade to Pro when you want more headroom",
-            copy: isOnProPlan
+            title: isOnPaidPlan ? "You already have a paid plan" : "Upgrade when you want more headroom",
+            copy: isOnPaidPlan
               ? "Your account already has the upgraded plan, so you’re ready to use the full platform without changing anything."
-              : "Pro is the clean next step once you start using Computer Agents as your main workspace. It gives you more compute and room to run the platform more seriously.",
-            actionLabel: isOnProPlan ? "Enter playground" : "Upgrade to Pro",
+              : "Individual is the clean next step once you start using Agentic Compute Platform as your main workspace. It gives you more compute and room to run the platform more seriously.",
+            actionLabel: isOnPaidPlan ? "Enter playground" : "Upgrade to Individual",
             details: [],
           },
         ];
@@ -69069,7 +69348,7 @@ const html = `<!doctype html>
               React.createElement("div", { className: "playground-onboarding-header" },
                 React.createElement("div", { className: "playground-onboarding-header-copy" },
                   React.createElement("div", { className: "playground-onboarding-title-wrap" },
-                    React.createElement("div", { className: "playground-onboarding-kicker" }, "Runner Playground"),
+                    React.createElement("div", { className: "playground-onboarding-kicker" }, "Agentic Compute Platform"),
                     React.createElement("h2", { className: "playground-onboarding-title" }, "Set up your runner workspace")
                   ),
                   React.createElement("div", { className: "playground-onboarding-step-meta" },
@@ -69101,13 +69380,13 @@ const html = `<!doctype html>
                   stepIndex === totalSteps - 1
                     ? React.createElement("div", { className: "playground-onboarding-plan-panel" },
                         React.createElement("div", { className: "playground-onboarding-sdk-card" },
-                          React.createElement("div", { className: "playground-onboarding-sdk-title" }, proPlan.name + " Plan"),
+                          React.createElement("div", { className: "playground-onboarding-sdk-title" }, individualPlan.name + " Plan"),
                           React.createElement("div", { className: "playground-onboarding-plan-price" },
-                            "$" + proPlan.monthlyPrice
+                            "$" + individualPlan.monthlyPrice
                           ),
                           React.createElement("div", { className: "playground-onboarding-plan-price-copy" }, "per month"),
                           React.createElement("p", { className: "playground-onboarding-sdk-note" },
-                            proPlan.description || "Great for frequent users who want more compute and room to scale."
+                            individualPlan.description || "Personal access with more compute and room to scale."
                           )
                         ),
                         React.createElement("div", { className: "playground-onboarding-sdk-card" },
@@ -69142,16 +69421,16 @@ const html = `<!doctype html>
                   renderFooter(
                     stepIndex === totalSteps - 1
                       ? {
-                          primaryLabel: isOnProPlan ? "Enter playground" : "Upgrade to Pro",
-                          onPrimary: isOnProPlan
+                          primaryLabel: isOnPaidPlan ? "Enter playground" : "Upgrade to Individual",
+                          onPrimary: isOnPaidPlan
                             ? handleClose
                             : () => {
-                                if (typeof onUpgradeToPro === "function") {
-                                  void Promise.resolve(onUpgradeToPro());
+                                if (typeof onUpgradeToIndividual === "function") {
+                                  void Promise.resolve(onUpgradeToIndividual());
                                 }
                               },
-                          secondaryLabel: isOnProPlan ? "" : "Skip for now",
-                          onSecondary: isOnProPlan ? null : handleClose,
+                          secondaryLabel: isOnPaidPlan ? "" : "Skip for now",
+                          onSecondary: isOnPaidPlan ? null : handleClose,
                         }
                       : {
                           primaryLabel: currentPage.actionLabel,
@@ -69341,6 +69620,14 @@ const html = `<!doctype html>
         const [settingsInvoicesLoading, setSettingsInvoicesLoading] = useState(false);
         const [settingsBillingError, setSettingsBillingError] = useState("");
         const [settingsBillingSuccess, setSettingsBillingSuccess] = useState("");
+        const [settingsPlatformConfigError, setSettingsPlatformConfigError] = useState("");
+        const [settingsPlatformConfigSuccess, setSettingsPlatformConfigSuccess] = useState("");
+        const [settingsPlatformConfigSaving, setSettingsPlatformConfigSaving] = useState(false);
+        const [settingsPlatformConfigTesting, setSettingsPlatformConfigTesting] = useState(false);
+        const [settingsBillingPreferences, setSettingsBillingPreferences] = useState(() => readDemoSettingsPlatformConfig().billing);
+        const [settingsInferenceSettings, setSettingsInferenceSettings] = useState(() => readDemoSettingsPlatformConfig().inference);
+        const [settingsInferenceApiKeyInput, setSettingsInferenceApiKeyInput] = useState("");
+        const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);
         const [settingsCheckoutLoading, setSettingsCheckoutLoading] = useState(false);
         const [settingsSubscriptionActionId, setSettingsSubscriptionActionId] = useState("");
         const [settingsApiKeys, setSettingsApiKeys] = useState([]);
@@ -69433,7 +69720,7 @@ const html = `<!doctype html>
         const hasRealAccess = hasSessionAuth;
         const activeProjectId = projectId.trim() || sessionState.projectId || "";
         const settingsProjectRoutingId = activeProjectId || "__runner_playground__";
-        const accountName = formatAccountDisplayName(sessionState.displayName, sessionState.email || "", hasSessionAuth ? "Computer Agents" : "Sign in");
+        const accountName = formatAccountDisplayName(sessionState.displayName, sessionState.email || "", hasSessionAuth ? "Agentic Compute Platform" : "Sign in");
         const accountInitials = getAccountInitials(accountName);
         const accountEmail = sessionState.email || "";
         const accountTier = hasSessionAuth ? formatSubscriptionTier(sessionState.subscriptionTier) : "Sign in";
@@ -71576,6 +71863,46 @@ const html = `<!doctype html>
           }
         }, [hasSessionAuth, settingsProjectRoutingId]);
 
+        const loadSettingsPlatformConfig = useCallback(async function loadSettingsPlatformConfig() {
+          if (!hasRealAccess) {
+            const localConfig = readDemoSettingsPlatformConfig();
+            setSettingsBillingPreferences(localConfig.billing);
+            setSettingsInferenceSettings(localConfig.inference);
+            return localConfig;
+          }
+
+          try {
+            const response = await fetch(proxyBackendBase + "/billing/preferences", {
+              method: "GET",
+              headers: authRequestHeaders,
+              cache: "no-store",
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load platform settings.");
+            }
+
+            const nextBillingPreferences = normalizeDemoSettingsBillingPreferences(data?.billing);
+            const nextInferenceSettings = normalizeDemoSettingsInferenceSettings(data?.inference);
+            setSettingsBillingPreferences(nextBillingPreferences);
+            setSettingsInferenceSettings(nextInferenceSettings);
+            writeDemoSettingsPlatformConfig({
+              billing: nextBillingPreferences,
+              inference: nextInferenceSettings,
+            });
+            return {
+              billing: nextBillingPreferences,
+              inference: nextInferenceSettings,
+            };
+          } catch (error) {
+            const localConfig = readDemoSettingsPlatformConfig();
+            setSettingsBillingPreferences(localConfig.billing);
+            setSettingsInferenceSettings(localConfig.inference);
+            setSettingsPlatformConfigError(error instanceof Error ? error.message : "Failed to load platform settings.");
+            return localConfig;
+          }
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase]);
+
         const loadSettingsInvoices = useCallback(async function loadSettingsInvoices() {
           if (!hasSessionAuth) {
             setSettingsInvoices([]);
@@ -72675,7 +73002,8 @@ const html = `<!doctype html>
             return;
           }
 
-          if (settingsSection === "costs-plans" || settingsSection === "costs-records") {
+          if (settingsSection === "costs-plans" || settingsSection === "costs-records" || settingsSection === "inference") {
+            void loadSettingsPlatformConfig();
             void loadSettingsBudgetStatus();
             void loadSettingsInvoices();
             if (settingsSection === "costs-plans") {
@@ -72705,6 +73033,7 @@ const html = `<!doctype html>
           loadSettingsApiKeys,
           loadSettingsBudgetStatus,
           loadSettingsInvoices,
+          loadSettingsPlatformConfig,
           loadSettingsTriggers,
           loadSettingsUsageData,
         ]);
@@ -72987,8 +73316,9 @@ const html = `<!doctype html>
             && typeof subscription?.tier === "string"
             && subscription.tier.trim()
           )?.tier;
-          return String(activeSubscriptionTier || settingsBudgetStatus?.tier || sessionState.subscriptionTier || "free").trim().toLowerCase() || "free";
+          return normalizeSettingsTierId(activeSubscriptionTier || settingsBudgetStatus?.tier || sessionState.subscriptionTier) || "free";
         }, [settingsBudgetStatus, sessionState.subscriptionTier, settingsSubscriptions]);
+        const settingsCanConfigureBusinessFeatures = settingsCurrentTierId === "team" || settingsCurrentTierId === "enterprise";
         const settingsPrimarySubscription = useMemo(() => {
           return settingsSubscriptions.find((subscription) =>
             ["active", "on_trial", "past_due"].includes(String(subscription?.status || "").toLowerCase()) && !subscription?.cancelled
@@ -74090,6 +74420,227 @@ const html = `<!doctype html>
             );
         }
 
+        const handleSettingsUsageBillingSave = useCallback(async () => {
+          if (!settingsCanConfigureBusinessFeatures) {
+            setSettingsPlatformConfigError("Upgrade to Team to configure usage billing.");
+            setSettingsPlatformConfigSuccess("");
+            return;
+          }
+
+          setSettingsPlatformConfigSaving(true);
+          setSettingsPlatformConfigError("");
+          setSettingsPlatformConfigSuccess("");
+          try {
+            const nextBillingPreferences = normalizeDemoSettingsBillingPreferences(settingsBillingPreferences);
+            if (hasRealAccess) {
+              const response = await fetch(proxyBackendBase + "/billing/preferences", {
+                method: "PATCH",
+                headers: {
+                  ...authRequestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(nextBillingPreferences),
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to save usage billing.");
+              }
+              setSettingsBillingPreferences(normalizeDemoSettingsBillingPreferences(data?.billing));
+              setSettingsInferenceSettings(normalizeDemoSettingsInferenceSettings(data?.inference));
+            } else {
+              await new Promise((resolve) => window.setTimeout(resolve, 180));
+              setSettingsBillingPreferences(nextBillingPreferences);
+              writeDemoSettingsPlatformConfig({
+                billing: nextBillingPreferences,
+                inference: settingsInferenceSettings,
+              });
+            }
+            setSettingsPlatformConfigSuccess(
+              nextBillingPreferences.usageBillingEnabled
+                ? "Usage billing enabled for resource overages."
+                : "Usage billing settings saved."
+            );
+          } catch (error) {
+            setSettingsPlatformConfigError(error instanceof Error ? error.message : "Failed to save usage billing.");
+          } finally {
+            setSettingsPlatformConfigSaving(false);
+          }
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, settingsBillingPreferences, settingsCanConfigureBusinessFeatures, settingsInferenceSettings]);
+
+        const handleSettingsInferenceConnectionTest = useCallback(async () => {
+          if (!settingsCanConfigureBusinessFeatures) {
+            setSettingsPlatformConfigError("Upgrade to Team to configure inference.");
+            setSettingsPlatformConfigSuccess("");
+            return;
+          }
+
+          const trimmedBaseUrl = String(settingsInferenceSettings.baseUrl || "").trim();
+          if (!trimmedBaseUrl) {
+            setSettingsPlatformConfigError("Enter an endpoint URL before testing the connection.");
+            setSettingsPlatformConfigSuccess("");
+            return;
+          }
+
+          try {
+            new URL(trimmedBaseUrl);
+          } catch {
+            setSettingsPlatformConfigError("Enter a valid inference endpoint URL.");
+            setSettingsPlatformConfigSuccess("");
+            return;
+          }
+
+          setSettingsPlatformConfigTesting(true);
+          setSettingsPlatformConfigError("");
+          setSettingsPlatformConfigSuccess("");
+          try {
+            let availableModels = [];
+            let checkedAt = new Date().toISOString();
+            if (hasRealAccess) {
+              const response = await fetch(proxyBackendBase + "/billing/inference/test", {
+                method: "POST",
+                headers: {
+                  ...authRequestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  inference: {
+                    providerType: settingsInferenceSettings.providerType,
+                    baseUrl: trimmedBaseUrl,
+                    apiKey: settingsInferenceApiKeyInput.trim() || undefined,
+                  },
+                }),
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Connection test failed.");
+              }
+              availableModels = Array.isArray(data?.availableModels) ? data.availableModels : [];
+              checkedAt = typeof data?.checkedAt === "string" && data.checkedAt ? data.checkedAt : checkedAt;
+            } else {
+              await new Promise((resolve) => window.setTimeout(resolve, 320));
+              availableModels = buildDemoInferenceModelOptions(
+                settingsInferenceSettings.providerType,
+                settingsInferenceSettings.defaultModel
+              );
+            }
+            setSettingsInferenceSettings((current) => ({
+              ...current,
+              availableModels,
+              apiKeyConfigured: settingsClearInferenceApiKey
+                ? Boolean(settingsInferenceApiKeyInput.trim())
+                : (current.apiKeyConfigured || Boolean(settingsInferenceApiKeyInput.trim())),
+              healthStatus: "healthy",
+              lastValidatedAt: checkedAt,
+              lastError: "",
+            }));
+            setSettingsPlatformConfigSuccess("Inference endpoint connected successfully.");
+          } catch (error) {
+            setSettingsInferenceSettings((current) => ({
+              ...current,
+              healthStatus: "error",
+              lastError: error instanceof Error ? error.message : "Connection test failed.",
+            }));
+            setSettingsPlatformConfigError(error instanceof Error ? error.message : "Connection test failed.");
+          } finally {
+            setSettingsPlatformConfigTesting(false);
+          }
+        }, [
+          settingsCanConfigureBusinessFeatures,
+          settingsClearInferenceApiKey,
+          settingsInferenceApiKeyInput,
+          settingsInferenceSettings.baseUrl,
+          settingsInferenceSettings.defaultModel,
+          settingsInferenceSettings.providerType,
+          authRequestHeaders,
+          hasRealAccess,
+          proxyBackendBase,
+        ]);
+
+        const handleSettingsInferenceSave = useCallback(async () => {
+          if (!settingsCanConfigureBusinessFeatures) {
+            setSettingsPlatformConfigError("Upgrade to Team to configure inference.");
+            setSettingsPlatformConfigSuccess("");
+            return;
+          }
+
+          const trimmedBaseUrl = String(settingsInferenceSettings.baseUrl || "").trim();
+          if (settingsInferenceSettings.enabled && !trimmedBaseUrl) {
+            setSettingsPlatformConfigError("Inference needs an endpoint URL before it can be enabled.");
+            setSettingsPlatformConfigSuccess("");
+            return;
+          }
+
+          setSettingsPlatformConfigSaving(true);
+          setSettingsPlatformConfigError("");
+          setSettingsPlatformConfigSuccess("");
+          try {
+            const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
+              ...settingsInferenceSettings,
+              baseUrl: trimmedBaseUrl,
+              apiKeyConfigured: settingsClearInferenceApiKey
+                ? false
+                : (settingsInferenceSettings.apiKeyConfigured || Boolean(settingsInferenceApiKeyInput.trim())),
+              lastError: settingsInferenceSettings.healthStatus === "error"
+                ? settingsInferenceSettings.lastError
+                : "",
+            });
+            if (hasRealAccess) {
+              const response = await fetch(proxyBackendBase + "/billing/preferences", {
+                method: "PATCH",
+                headers: {
+                  ...authRequestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  inference: {
+                    enabled: nextInferenceSettings.enabled,
+                    providerType: nextInferenceSettings.providerType,
+                    baseUrl: nextInferenceSettings.baseUrl,
+                    defaultModel: nextInferenceSettings.defaultModel,
+                    availableModels: nextInferenceSettings.availableModels,
+                    apiKey: settingsInferenceApiKeyInput.trim() || undefined,
+                    clearApiKey: settingsClearInferenceApiKey,
+                    lastValidatedAt: nextInferenceSettings.lastValidatedAt || null,
+                    healthStatus: nextInferenceSettings.healthStatus,
+                    lastError: nextInferenceSettings.lastError,
+                  },
+                }),
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to save inference settings.");
+              }
+              setSettingsBillingPreferences(normalizeDemoSettingsBillingPreferences(data?.billing));
+              setSettingsInferenceSettings(normalizeDemoSettingsInferenceSettings(data?.inference));
+            } else {
+              await new Promise((resolve) => window.setTimeout(resolve, 180));
+              setSettingsInferenceSettings(nextInferenceSettings);
+              writeDemoSettingsPlatformConfig({
+                billing: settingsBillingPreferences,
+                inference: nextInferenceSettings,
+              });
+            }
+            if (settingsClearInferenceApiKey) {
+              setSettingsInferenceApiKeyInput("");
+              setSettingsClearInferenceApiKey(false);
+            }
+            setSettingsPlatformConfigSuccess("Inference settings saved.");
+          } catch (error) {
+            setSettingsPlatformConfigError(error instanceof Error ? error.message : "Failed to save inference settings.");
+          } finally {
+            setSettingsPlatformConfigSaving(false);
+          }
+        }, [
+          settingsBillingPreferences,
+          settingsCanConfigureBusinessFeatures,
+          settingsClearInferenceApiKey,
+          settingsInferenceApiKeyInput,
+          settingsInferenceSettings,
+          authRequestHeaders,
+          hasRealAccess,
+          proxyBackendBase,
+        ]);
+
         function renderSettingsApiKeyCard(apiKeyRecord, options = {}) {
           const isManaged = !!options.managed;
           const createdBy = typeof apiKeyRecord?.metadata?.createdBy === "string"
@@ -74828,6 +75379,7 @@ const html = `<!doctype html>
               label: "Billing",
               items: [
                 { id: "costs-plans", icon: DollarSign, label: "Plans", meta: "Subscription and account defaults" },
+                { id: "inference", icon: HardDrive, label: "Inference", meta: "Bring-your-own model endpoints" },
                 { id: "costs-records", icon: ReceiptText, label: "Billing Records", meta: "Invoices and payment history" },
                 { id: "costs-overview", icon: LayoutGrid, label: "Usage Details", meta: "Live runner project state" },
               ],
@@ -74908,14 +75460,14 @@ const html = `<!doctype html>
                         renderSettingsBanner("success", settingsBillingSuccess),
                         React.createElement("div", { className: "playground-settings-plan-heading" },
                           React.createElement("div", { className: "playground-settings-plan-heading-title" }, "Choose Your Plan"),
-                          React.createElement("div", { className: "playground-settings-plan-heading-copy" }, "Affordable and adaptable pricing to suit your goals.")
+                          React.createElement("div", { className: "playground-settings-plan-heading-copy" }, "Simple access plans with included credits, then usage-based infrastructure for larger workloads.")
                         ),
                         settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "free"
                           ? React.createElement("div", { className: "playground-settings-plan-system-note" },
                               React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "IOS"),
                               React.createElement("div", null,
                                 React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription managed through iPhone or iPad"),
-                                React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, "To change or cancel your plan, open Computer Agents on your iPhone or iPad.")
+                                React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, "To change or cancel your plan, open Agentic Compute Platform on your iPhone or iPad.")
                               )
                             )
                           : null,
@@ -74925,12 +75477,12 @@ const html = `<!doctype html>
                             const isHighlighted = Boolean(plan.highlighted);
                             const planFeatures = getSettingsPlanFeatures(plan.id, Number(plan.computeTokens || 0));
                             const activeSubscription = settingsSubscriptions.find((subscription) =>
-                              subscription.tier === plan.id
+                              normalizeSettingsTierId(subscription.tier) === plan.id
                               && ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase())
                               && !subscription.cancelled
                             );
                             const cancelledSubscription = settingsSubscriptions.find((subscription) =>
-                              subscription.tier === plan.id
+                              normalizeSettingsTierId(subscription.tier) === plan.id
                               && subscription.cancelled
                               && subscription.endsAt
                               && new Date(subscription.endsAt) > new Date()
@@ -75003,7 +75555,7 @@ const html = `<!doctype html>
                                 },
                                   settingsCheckoutLoading
                                     ? React.createElement("span", null, "Loading...")
-                                    : (isHighlighted ? "Start Free Trial" : "Start with " + plan.name)
+                                    : "Start with " + plan.name
                                 );
                             }
 
@@ -75015,9 +75567,7 @@ const html = `<!doctype html>
                               },
                                 React.createElement("div", { className: "playground-settings-plan-card-header" },
                                   React.createElement("span", { className: "playground-settings-plan-card-title" }, plan.name),
-                                  isHighlighted && userTier === "free"
-                                    ? React.createElement("span", { className: "playground-settings-plan-card-badge is-trial" }, "14 Day Free Trial")
-                                    : isCurrentTier && cancelledSubscription
+                                  isCurrentTier && cancelledSubscription
                                       ? React.createElement("span", { className: "playground-settings-plan-card-badge is-cancelled" }, "Cancels " + formatSettingsDate(cancelledSubscription.endsAt))
                                       : isCurrentTier
                                         ? React.createElement("span", { className: "playground-settings-plan-card-badge" }, "Current Plan")
@@ -75025,7 +75575,7 @@ const html = `<!doctype html>
                                 ),
                                 React.createElement("div", { className: "playground-settings-plan-card-price" },
                                   "$" + plan.monthlyPrice,
-                                  React.createElement("span", { className: "playground-settings-plan-card-price-unit" }, " / month")
+                                  React.createElement("span", { className: "playground-settings-plan-card-price-unit" }, " " + (plan.billingLabel || "/ month"))
                                 ),
                                 React.createElement("div", { className: "playground-settings-plan-card-cta" }, actionContent),
                                 React.createElement("div", { className: "playground-settings-plan-card-description" }, plan.description),
@@ -75043,9 +75593,476 @@ const html = `<!doctype html>
                                 )
                               );
                           })
+                        ),
+                        React.createElement("div", {
+                          className: "playground-settings-detail-stack",
+                          style: { marginTop: "24px" },
+                        },
+                          renderSettingsBanner("error", settingsPlatformConfigError),
+                          renderSettingsBanner("success", settingsPlatformConfigSuccess),
+                          React.createElement("div", {
+                            className: "playground-settings-form-grid",
+                            style: { alignItems: "start" },
+                          },
+                            settingsCanConfigureBusinessFeatures
+                              ? renderSettingsNote(
+                                  "Usage Billing",
+                                  React.createElement(React.Fragment, null,
+                                    React.createElement("div", { style: { color: "rgba(255,255,255,0.68)" } },
+                                      "Use included monthly credits first, then continue paying only for the infrastructure you keep running."
+                                    ),
+                                    React.createElement("div", {
+                                      style: {
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: "12px",
+                                        marginTop: "2px",
+                                      },
+                                    },
+                                      React.createElement("div", {
+                                        style: {
+                                          fontSize: "12px",
+                                          fontWeight: "600",
+                                          color: "rgba(255,255,255,0.9)",
+                                        },
+                                      }, "Usage-based infrastructure"),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        onClick: () => setSettingsBillingPreferences((current) => ({
+                                          ...current,
+                                          usageBillingEnabled: !current.usageBillingEnabled,
+                                        })),
+                                        style: {
+                                          position: "relative",
+                                          width: "48px",
+                                          height: "28px",
+                                          borderRadius: "999px",
+                                          border: "1px solid rgba(255,255,255,0.12)",
+                                          background: settingsBillingPreferences.usageBillingEnabled ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.12)",
+                                          cursor: "pointer",
+                                          padding: 0,
+                                        },
+                                        "aria-pressed": settingsBillingPreferences.usageBillingEnabled,
+                                      },
+                                        React.createElement("span", {
+                                          style: {
+                                            position: "absolute",
+                                            top: "3px",
+                                            left: settingsBillingPreferences.usageBillingEnabled ? "23px" : "3px",
+                                            width: "20px",
+                                            height: "20px",
+                                            borderRadius: "999px",
+                                            background: settingsBillingPreferences.usageBillingEnabled ? "rgba(17,17,17,0.96)" : "rgba(255,255,255,0.92)",
+                                            transition: "left 160ms ease",
+                                          },
+                                        })
+                                      )
+                                    ),
+                                    React.createElement("div", {
+                                      className: "playground-settings-form-grid",
+                                      style: { marginTop: "4px" },
+                                    },
+                                      React.createElement("div", { className: "playground-settings-field" },
+                                        React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-usage-billing-limit" }, "Monthly Resource Spend Cap"),
+                                        React.createElement("input", {
+                                          id: "settings-usage-billing-limit",
+                                          type: "number",
+                                          min: "0",
+                                          step: "1",
+                                          className: "playground-settings-input",
+                                          value: settingsBillingPreferences.monthlyResourceSpendLimit,
+                                          onChange: (event) => setSettingsBillingPreferences((current) => ({
+                                            ...current,
+                                            monthlyResourceSpendLimit: normalizeSettingsSpendLimit(event.target.value),
+                                          })),
+                                          placeholder: "200",
+                                        })
+                                      ),
+                                      React.createElement("div", {
+                                        className: "playground-settings-field",
+                                        style: { justifyContent: "flex-end" },
+                                      },
+                                        React.createElement("div", {
+                                          style: {
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "10px",
+                                            paddingTop: "24px",
+                                          },
+                                        },
+                                          React.createElement("label", {
+                                            style: {
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: "8px",
+                                              fontSize: "12px",
+                                              color: "rgba(255,255,255,0.74)",
+                                            },
+                                          },
+                                            React.createElement("input", {
+                                              type: "checkbox",
+                                              checked: settingsBillingPreferences.pauseOnLimit,
+                                              onChange: (event) => setSettingsBillingPreferences((current) => ({
+                                                ...current,
+                                                pauseOnLimit: event.target.checked,
+                                              })),
+                                            }),
+                                            React.createElement("span", null, "Pause resources when the cap is reached")
+                                          ),
+                                          React.createElement("label", {
+                                            style: {
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: "8px",
+                                              fontSize: "12px",
+                                              color: "rgba(255,255,255,0.74)",
+                                            },
+                                          },
+                                            React.createElement("input", {
+                                              type: "checkbox",
+                                              checked: settingsBillingPreferences.emailAlerts,
+                                              onChange: (event) => setSettingsBillingPreferences((current) => ({
+                                                ...current,
+                                                emailAlerts: event.target.checked,
+                                              })),
+                                            }),
+                                            React.createElement("span", null, "Send email alerts before you hit the limit")
+                                          )
+                                        )
+                                      )
+                                    ),
+                                    React.createElement("div", {
+                                      style: {
+                                        fontSize: "12px",
+                                        color: "rgba(255,255,255,0.68)",
+                                      },
+                                    },
+                                      settingsBillingPreferences.usageBillingEnabled
+                                        ? "Usage billing is active. Resource spend stops at your cap unless you raise it."
+                                        : "Usage billing is off. Resources pause when included credits are exhausted."
+                                    )
+                                  ),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-settings-app-primary-button",
+                                    onClick: () => {
+                                      void handleSettingsUsageBillingSave();
+                                    },
+                                    disabled: settingsPlatformConfigSaving,
+                                  }, settingsPlatformConfigSaving ? "Saving..." : "Save Usage Billing")
+                                )
+                              : renderSettingsNote(
+                                  "Usage Billing",
+                                  React.createElement("div", { style: { color: "rgba(255,255,255,0.68)" } },
+                                    "Team and Enterprise unlock usage-based billing after included credits, plus bring-your-own inference infrastructure."
+                                  ),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-settings-app-primary-button",
+                                    onClick: () => {
+                                      void handleSettingsSubscribe("team");
+                                    },
+                                    disabled: settingsCheckoutLoading,
+                                  }, settingsCheckoutLoading ? "Loading..." : "Upgrade to Team")
+                                ),
+                            renderSettingsNote(
+                              "How Resource Billing Works",
+                              React.createElement("div", {
+                                style: {
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "8px",
+                                  color: "rgba(255,255,255,0.68)",
+                                },
+                              },
+                                React.createElement("div", null, "Included monthly credits cover managed model usage and baseline runtime."),
+                                React.createElement("div", null, "Usage billing adds pay-as-you-go servers, functions, containers, and future storage overages."),
+                                React.createElement("div", null, "Team and Enterprise also unlock your own OpenAI-compatible inference endpoints.")
+                              ),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-settings-app-secondary-button",
+                                onClick: () => setSettingsSection("inference"),
+                              }, "Configure Inference")
+                            )
+                          )
                         )
                       );
                     })()
+              );
+              break;
+            case "inference":
+              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+                renderSettingsDetailHeader(
+                  "Inference",
+                  "Connect your own OpenAI-compatible endpoint for self-hosted or customer-managed models."
+                ),
+                renderSettingsBanner("error", settingsPlatformConfigError),
+                renderSettingsBanner("success", settingsPlatformConfigSuccess),
+                !settingsCanConfigureBusinessFeatures
+                  ? renderSettingsNote(
+                      "Bring Your Own Inference",
+                      React.createElement("div", {
+                        style: {
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          color: "rgba(255,255,255,0.68)",
+                        },
+                      },
+                        React.createElement("div", null, "Inference endpoints are available on Team and Enterprise."),
+                        React.createElement("div", null, "Use them to route model traffic to your own OpenAI-compatible infrastructure instead of managed model billing.")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-settings-app-primary-button",
+                        onClick: () => {
+                          void handleSettingsSubscribe("team");
+                        },
+                        disabled: settingsCheckoutLoading,
+                      }, settingsCheckoutLoading ? "Loading..." : "Upgrade to Team")
+                    )
+                  : React.createElement("div", {
+                      className: "playground-settings-form-grid",
+                      style: {
+                        alignItems: "start",
+                        marginTop: "18px",
+                      },
+                    },
+                      renderSettingsNote(
+                        "Inference Endpoint",
+                        React.createElement(React.Fragment, null,
+                          React.createElement("div", { style: { color: "rgba(255,255,255,0.68)" } },
+                            "Store one shared endpoint for your workspace. Agents can route compatible workloads there once you connect it."
+                          ),
+                          React.createElement("div", {
+                            style: {
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: "12px",
+                              marginTop: "2px",
+                            },
+                          },
+                            React.createElement("div", {
+                              style: {
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                color: "rgba(255,255,255,0.9)",
+                              },
+                            }, "Enable external inference"),
+                            React.createElement("button", {
+                              type: "button",
+                              onClick: () => setSettingsInferenceSettings((current) => ({
+                                ...current,
+                                enabled: !current.enabled,
+                              })),
+                              style: {
+                                position: "relative",
+                                width: "48px",
+                                height: "28px",
+                                borderRadius: "999px",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                                background: settingsInferenceSettings.enabled ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.12)",
+                                cursor: "pointer",
+                                padding: 0,
+                              },
+                              "aria-pressed": settingsInferenceSettings.enabled,
+                            },
+                              React.createElement("span", {
+                                style: {
+                                  position: "absolute",
+                                  top: "3px",
+                                  left: settingsInferenceSettings.enabled ? "23px" : "3px",
+                                  width: "20px",
+                                  height: "20px",
+                                  borderRadius: "999px",
+                                  background: settingsInferenceSettings.enabled ? "rgba(17,17,17,0.96)" : "rgba(255,255,255,0.92)",
+                                  transition: "left 160ms ease",
+                                },
+                              })
+                            )
+                          ),
+                          React.createElement("div", {
+                            className: "playground-settings-form-grid",
+                            style: { marginTop: "4px" },
+                          },
+                            React.createElement("div", { className: "playground-settings-field" },
+                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-provider" }, "Provider"),
+                              React.createElement("select", {
+                                id: "settings-inference-provider",
+                                className: "playground-settings-select",
+                                value: settingsInferenceSettings.providerType,
+                                onChange: (event) => setSettingsInferenceSettings((current) => ({
+                                  ...current,
+                                  providerType: event.target.value,
+                                  availableModels: [],
+                                  healthStatus: "idle",
+                                  lastError: "",
+                                })),
+                              },
+                                SETTINGS_INFERENCE_PROVIDER_OPTIONS.map((option) =>
+                                  React.createElement("option", { key: option.value, value: option.value }, option.label)
+                                )
+                              )
+                            ),
+                            React.createElement("div", { className: "playground-settings-field" },
+                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-default-model" }, "Default Model"),
+                              React.createElement("input", {
+                                id: "settings-inference-default-model",
+                                type: "text",
+                                className: "playground-settings-input",
+                                value: settingsInferenceSettings.defaultModel,
+                                onChange: (event) => setSettingsInferenceSettings((current) => ({
+                                  ...current,
+                                  defaultModel: event.target.value,
+                                })),
+                                placeholder: "claude-sonnet-compatible",
+                              })
+                            ),
+                            React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
+                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-base-url" }, "Endpoint URL"),
+                              React.createElement("input", {
+                                id: "settings-inference-base-url",
+                                type: "url",
+                                className: "playground-settings-input",
+                                value: settingsInferenceSettings.baseUrl,
+                                onChange: (event) => setSettingsInferenceSettings((current) => ({
+                                  ...current,
+                                  baseUrl: event.target.value,
+                                })),
+                                placeholder: "https://models.example.com/v1",
+                              })
+                            ),
+                            React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
+                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-api-key" }, "API Key"),
+                              React.createElement("input", {
+                                id: "settings-inference-api-key",
+                                type: "password",
+                                className: "playground-settings-input",
+                                value: settingsInferenceApiKeyInput,
+                                onChange: (event) => {
+                                  setSettingsInferenceApiKeyInput(event.target.value);
+                                  setSettingsClearInferenceApiKey(false);
+                                },
+                                placeholder: settingsInferenceSettings.apiKeyConfigured && !settingsClearInferenceApiKey
+                                  ? "Saved API key is configured"
+                                  : "sk-...",
+                              }),
+                              settingsInferenceSettings.apiKeyConfigured && !settingsClearInferenceApiKey
+                                ? React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-settings-app-secondary-button",
+                                    style: { alignSelf: "flex-start", minHeight: "34px" },
+                                    onClick: () => {
+                                      setSettingsClearInferenceApiKey(true);
+                                      setSettingsInferenceApiKeyInput("");
+                                    },
+                                  }, "Remove Saved Key")
+                                : null
+                            )
+                          ),
+                          settingsInferenceSettings.availableModels.length > 0
+                            ? React.createElement("div", {
+                                style: {
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "8px",
+                                  marginTop: "4px",
+                                },
+                              },
+                                React.createElement("div", {
+                                  style: {
+                                    fontSize: "12px",
+                                    fontWeight: "600",
+                                    color: "rgba(255,255,255,0.9)",
+                                  },
+                                }, "Discovered Models"),
+                                React.createElement("div", { className: "playground-settings-choice-row" },
+                                  settingsInferenceSettings.availableModels.map((modelId) =>
+                                    React.createElement("button", {
+                                      key: modelId,
+                                      type: "button",
+                                      className: "playground-settings-choice-button"
+                                        + (settingsInferenceSettings.defaultModel === modelId ? " is-active" : ""),
+                                      onClick: () => setSettingsInferenceSettings((current) => ({
+                                        ...current,
+                                        defaultModel: modelId,
+                                      })),
+                                    }, modelId)
+                                  )
+                                )
+                              )
+                            : null
+                        ),
+                        React.createElement("div", { className: "playground-settings-actions" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-settings-app-secondary-button",
+                            onClick: () => {
+                              void handleSettingsInferenceConnectionTest();
+                            },
+                            disabled: settingsPlatformConfigTesting,
+                          }, settingsPlatformConfigTesting ? "Testing..." : "Test Connection"),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-settings-app-primary-button",
+                            onClick: () => {
+                              void handleSettingsInferenceSave();
+                            },
+                            disabled: settingsPlatformConfigSaving,
+                          }, settingsPlatformConfigSaving ? "Saving..." : "Save Inference")
+                        )
+                      ),
+                      renderSettingsNote(
+                        "Health & Routing",
+                        React.createElement("div", {
+                          style: {
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "10px",
+                            color: "rgba(255,255,255,0.68)",
+                          },
+                        },
+                          React.createElement("div", null,
+                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "Status: "),
+                            settingsInferenceSettings.healthStatus === "healthy"
+                              ? "Healthy"
+                              : settingsInferenceSettings.healthStatus === "error"
+                                ? "Needs attention"
+                                : "Not tested"
+                          ),
+                          renderSettingsInlineStatus(
+                            settingsInferenceSettings.healthStatus === "error" ? "error" : "success",
+                            settingsInferenceSettings.healthStatus === "healthy"
+                              ? (settingsInferenceSettings.lastValidatedAt
+                                  ? "Last checked " + new Date(settingsInferenceSettings.lastValidatedAt).toLocaleString()
+                                  : "Ready to route model traffic.")
+                              : settingsInferenceSettings.healthStatus === "error"
+                                ? (settingsInferenceSettings.lastError || "Connection test failed.")
+                                : "Point this at an OpenAI-compatible HTTPS endpoint such as vLLM, TGI, or a secured Ollama proxy."
+                          ),
+                          React.createElement("div", null,
+                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "Provider: "),
+                            (SETTINGS_INFERENCE_PROVIDER_OPTIONS.find((option) => option.value === settingsInferenceSettings.providerType)?.label
+                              || settingsInferenceSettings.providerType)
+                          ),
+                          React.createElement("div", null,
+                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "Default model: "),
+                            settingsInferenceSettings.defaultModel || "Not set"
+                          ),
+                          React.createElement("div", null,
+                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "API key: "),
+                            settingsClearInferenceApiKey
+                              ? "Will be removed on save"
+                              : settingsInferenceSettings.apiKeyConfigured || Boolean(settingsInferenceApiKeyInput.trim())
+                                ? "Configured"
+                                : "Not configured"
+                          )
+                        )
+                      )
+                    )
               );
               break;
             case "costs-records":
@@ -77261,6 +78278,8 @@ const html = `<!doctype html>
           const fallbackBackground = "linear-gradient(to top, #000000 0%, #111111 100%)";
           const nextBackground = activePage === "thread"
             ? (selectedThreadShellBackground || fallbackBackground)
+            : activePage === "environments"
+              ? PLAYGROUND_ENVIRONMENTS_SHELL_BACKGROUND
             : activePage === "agents"
               ? PLAYGROUND_AGENTS_SHELL_BACKGROUND
               : fallbackBackground;
@@ -78279,7 +79298,7 @@ const html = `<!doctype html>
               currentPlanId: settingsCurrentTierId,
               onClose: closePlaygroundOnboarding,
               onSignIn: handleSignInWithComputerAgents,
-              onUpgradeToPro: () => handleSettingsSubscribe("pro"),
+              onUpgradeToIndividual: () => handleSettingsSubscribe("individual"),
             })
           : null;
 
@@ -78318,9 +79337,9 @@ const html = `<!doctype html>
                     },
                       renderAccountAvatar("account-menu-avatar", "account-menu-avatar-image", accountInitials, accountAvatarUrl),
                       React.createElement("div", { className: "account-menu-account-copy" },
-                        React.createElement("div", { className: "account-menu-account-name" }, hasSessionAuth ? accountName : "Sign in with Computer Agents"),
+                        React.createElement("div", { className: "account-menu-account-name" }, hasSessionAuth ? accountName : "Sign in to Agentic Compute Platform"),
                         React.createElement("div", { className: "account-menu-account-email" },
-                          hasSessionAuth ? (accountEmail || "Connected account") : "Use your existing Computer Agents account"
+                          hasSessionAuth ? (accountEmail || "Connected account") : "Use your existing Agentic Compute Platform account"
                         )
                       ),
                       React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
@@ -78442,7 +79461,7 @@ const html = `<!doctype html>
                         }, profileDraft.email || "No email address available")
                       ),
                       React.createElement("div", { className: "profile-editor-hint" },
-                        "Your playground profile uses the same Computer Agents account details everywhere you sign in."
+                        "Your profile uses the same Agentic Compute Platform account details everywhere you sign in."
                       )
                     ),
                     profileSaveState.error
@@ -78685,7 +79704,7 @@ const html = `<!doctype html>
                             speechToTextUrl: speechToTextUrl || "",
                             computerAgents: demoComputerAgents,
                             skills: demoSkills,
-                            currentUserName: hasSessionAuth ? accountName : "Computer Agents",
+                            currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
                             currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                             canStartThreads: hasRealAccess,
                             taskRunStates: taskRunStates,
@@ -78955,7 +79974,7 @@ const html = `<!doctype html>
                               speechToTextUrl: speechToTextUrl || "",
                               computerAgents: demoComputerAgents,
                               skills: demoSkills,
-                              currentUserName: hasSessionAuth ? accountName : "Computer Agents",
+                              currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
                               currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                               canStartThreads: hasRealAccess,
                               taskRunStates: taskRunStates,
@@ -79281,7 +80300,7 @@ async function proxyCreateThread(req, res) {
     } else {
       return sendJson(res, 401, {
         error: "Unauthorized",
-        message: "Sign in with Computer Agents or provide an API key.",
+        message: "Sign in to Agentic Compute Platform or provide an API key.",
       });
     }
 
@@ -79348,7 +80367,7 @@ async function proxyThreadMessages(req, res, threadId) {
     } else {
       return sendJson(res, 401, {
         error: "Unauthorized",
-        message: "Sign in with Computer Agents or provide an API key.",
+        message: "Sign in to Agentic Compute Platform or provide an API key.",
       });
     }
 
@@ -79571,7 +80590,7 @@ async function proxyTaskStartThread(req, res, taskId) {
     if (!apiKey && !hasAiosSession(req)) {
       return sendJson(res, 401, {
         error: "Unauthorized",
-        message: "Sign in with Computer Agents or provide an API key.",
+        message: "Sign in to Agentic Compute Platform or provide an API key.",
       });
     }
 
@@ -79771,7 +80790,7 @@ async function proxyTaskBacklogCreateThread(req, res, projectId, releaseId = "")
     if (!apiKey && !hasAiosSession(req)) {
       return sendJson(res, 401, {
         error: "Unauthorized",
-        message: "Sign in with Computer Agents or provide an API key.",
+        message: "Sign in to Agentic Compute Platform or provide an API key.",
       });
     }
 
@@ -80031,6 +81050,379 @@ function sendTaskBacklogContextDetailsResponse(res, threadId) {
     },
     nativeError: "Thread context is unavailable for backlog task capture.",
   });
+}
+
+function parsePlaygroundOverviewDurationMs(value) {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
+    return value;
+  }
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return null;
+  }
+  const match = raw.match(/^(-?\d+(?:\.\d+)?)(ms|s|m|h)$/i);
+  if (!match) {
+    return null;
+  }
+  const magnitude = Number(match[1]);
+  if (!Number.isFinite(magnitude) || magnitude < 0) {
+    return null;
+  }
+  const unit = String(match[2] || "").toLowerCase();
+  if (unit === "ms") return magnitude;
+  if (unit === "s") return magnitude * 1000;
+  if (unit === "m") return magnitude * 60_000;
+  if (unit === "h") return magnitude * 60 * 60_000;
+  return null;
+}
+
+function resolvePlaygroundOverviewDurationMs(thread) {
+  const environmentMinutes = Number(thread?.environmentMinutes);
+  if (Number.isFinite(environmentMinutes) && environmentMinutes >= 0) {
+    return environmentMinutes * 60_000;
+  }
+
+  const directDurationMs = Number(thread?.durationMs);
+  if (Number.isFinite(directDurationMs) && directDurationMs >= 0) {
+    return directDurationMs;
+  }
+
+  const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+    ? thread.metadata
+    : null;
+  const metadataDurationMs = Number(metadata?.duration_ms);
+  if (Number.isFinite(metadataDurationMs) && metadataDurationMs >= 0) {
+    return metadataDurationMs;
+  }
+  const metadataDurationCamelMs = Number(metadata?.durationMs);
+  if (Number.isFinite(metadataDurationCamelMs) && metadataDurationCamelMs >= 0) {
+    return metadataDurationCamelMs;
+  }
+
+  const startedAtMs = Date.parse(String(thread?.startedAt || ""));
+  const completedAtMs = Date.parse(String(thread?.completedAt || ""));
+  if (Number.isFinite(startedAtMs) && Number.isFinite(completedAtMs) && completedAtMs >= startedAtMs) {
+    return completedAtMs - startedAtMs;
+  }
+
+  return parsePlaygroundOverviewDurationMs(thread?.duration);
+}
+
+function resolvePlaygroundOverviewTimestampMs(thread) {
+  const candidates = [
+    thread?.timestamp,
+    thread?.startedAt,
+    thread?.completedAt,
+    thread?.lastSignInAt,
+    thread?.updatedAt,
+    thread?.createdAt,
+  ];
+  for (const candidate of candidates) {
+    const timestampMs = Date.parse(String(candidate || ""));
+    if (Number.isFinite(timestampMs)) {
+      return timestampMs;
+    }
+  }
+  return null;
+}
+
+function normalizePlaygroundOverviewServerKind(kind) {
+  const normalizedKind = String(kind || "").trim().toLowerCase();
+  if (normalizedKind === "function") return "function";
+  if (normalizedKind === "auth") return "auth";
+  if (normalizedKind === "agent_runtime") return "agent_runtime";
+  return "web_app";
+}
+
+function extractPlaygroundOverviewItems(data, preferredKeys = []) {
+  const keys = [...preferredKeys, "data", "items", "servers", "databases", "users", "runs"];
+  for (const key of keys) {
+    if (Array.isArray(data?.[key])) {
+      return data[key];
+    }
+  }
+  return Array.isArray(data) ? data : [];
+}
+
+async function fetchUpstreamOverviewJson(req, upstreamPath) {
+  const upstreamUrl = parseUpstreamUrl(req, {});
+  const apiKey = readOptionalApiKey(req, {});
+
+  if (apiKey) {
+    const upstreamTarget = new URL(`${upstreamUrl}${upstreamPath}`);
+    const upstream = await fetch(upstreamTarget.toString(), {
+      method: "GET",
+      headers: {
+        "X-API-Key": apiKey,
+      },
+    });
+    const text = await upstream.text().catch(() => "");
+    let parsed = {};
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      parsed = { message: text };
+    }
+    return { status: upstream.status, data: parsed };
+  }
+
+  if (hasAiosSession(req)) {
+    const normalizedPath = upstreamPath.startsWith("/") ? upstreamPath : `/${upstreamPath}`;
+    const [pathname, queryString = ""] = normalizedPath.split("?");
+    const targetUrl = new URL(`${aiosOrigin}/api/playground/cloud${pathname}`);
+    targetUrl.search = queryString ? `?${queryString}` : "";
+    const upstream = await fetch(targetUrl.toString(), {
+      method: "GET",
+      headers: {
+        cookie: req.headers.cookie || "",
+        authorization: req.headers.authorization || "",
+      },
+    });
+    const text = await upstream.text().catch(() => "");
+    let parsed = {};
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      parsed = { message: text };
+    }
+    return { status: upstream.status, data: parsed };
+  }
+
+  return {
+    status: 401,
+    data: {
+      error: "Unauthorized",
+      message: "Sign in with Computer Agents or provide an API key.",
+    },
+  };
+}
+
+async function sendEnvironmentOverviewAnalytics(req, res) {
+  try {
+    const bucketCount = 24;
+    const now = new Date();
+    now.setMinutes(0, 0, 0);
+    const bucketStartMs = now.getTime() - ((bucketCount - 1) * 60 * 60 * 1000);
+    const createdAfter = new Date(bucketStartMs).toISOString();
+    const [
+      threadsResponse,
+      serversResponse,
+      databasesResponse,
+    ] = await Promise.all([
+      fetchUpstreamOverviewJson(req, `/threads?createdAfter=${encodeURIComponent(createdAfter)}&limit=2000`),
+      fetchUpstreamOverviewJson(req, "/servers"),
+      fetchUpstreamOverviewJson(req, "/databases"),
+    ]);
+
+    if (threadsResponse.status >= 400) {
+      return sendJson(res, threadsResponse.status, threadsResponse.data);
+    }
+
+    const threadItems = extractPlaygroundOverviewItems(threadsResponse.data, ["data"]);
+    const serverItems = serversResponse.status < 400
+      ? extractPlaygroundOverviewItems(serversResponse.data, ["servers", "data"])
+      : [];
+    const databaseItems = databasesResponse.status < 400
+      ? extractPlaygroundOverviewItems(databasesResponse.data, ["databases", "data"])
+      : [];
+    const computerBuckets = Array.from({ length: bucketCount }, (_, index) => {
+      const startMs = bucketStartMs + (index * 60 * 60 * 1000);
+      const startDate = new Date(startMs);
+      return {
+        bucketStart: startDate.toISOString(),
+        label: `${String(startDate.getHours()).padStart(2, "0")}:00`,
+        activeMinutes: 0,
+      };
+    });
+    const resourceBuckets = computerBuckets.map((bucket) => ({
+      ...bucket,
+      activeMinutes: 0,
+    }));
+    const bucketIndexByHourKey = new Map(
+      computerBuckets.map((bucket, index) => [String(bucket.bucketStart || "").slice(0, 13), index])
+    );
+
+    let totalActiveMinutes24h = 0;
+    let totalRuns24h = 0;
+    let totalResourceActiveMinutes24h = 0;
+
+    threadItems.forEach((thread) => {
+      if (!thread?.environmentId) {
+        return;
+      }
+      const timestampMs = resolvePlaygroundOverviewTimestampMs(thread);
+      if (timestampMs == null || timestampMs < bucketStartMs) {
+        return;
+      }
+      const normalizedBucketStartMs = bucketStartMs
+        + Math.floor((timestampMs - bucketStartMs) / (60 * 60 * 1000)) * 60 * 60 * 1000;
+      const bucketIndex = Math.floor((normalizedBucketStartMs - bucketStartMs) / (60 * 60 * 1000));
+      if (bucketIndex < 0 || bucketIndex >= computerBuckets.length) {
+        return;
+      }
+      totalRuns24h += 1;
+      const durationMs = resolvePlaygroundOverviewDurationMs(thread);
+      if (typeof durationMs === "number" && Number.isFinite(durationMs) && durationMs >= 0) {
+        const durationMinutes = durationMs / 60_000;
+        computerBuckets[bucketIndex].activeMinutes += durationMinutes;
+        totalActiveMinutes24h += durationMinutes;
+      }
+    });
+
+    await Promise.allSettled([
+      ...serverItems.map(async (server) => {
+        const serverId = String(server?.id || "").trim();
+        if (!serverId) {
+          return;
+        }
+        const normalizedKind = normalizePlaygroundOverviewServerKind(server?.kind);
+
+        if (normalizedKind === "agent_runtime") {
+          const response = await fetchUpstreamOverviewJson(req, `/servers/${encodeURIComponent(serverId)}/runs?limit=200`);
+          if (response.status >= 400) {
+            return;
+          }
+          const runs = extractPlaygroundOverviewItems(response.data, ["runs", "data"]);
+          runs.forEach((run) => {
+            const timestampMs = resolvePlaygroundOverviewTimestampMs(run);
+            if (timestampMs == null || timestampMs < bucketStartMs) {
+              return;
+            }
+            const normalizedBucketStartMs = bucketStartMs
+              + Math.floor((timestampMs - bucketStartMs) / (60 * 60 * 1000)) * 60 * 60 * 1000;
+            const bucketIndex = Math.floor((normalizedBucketStartMs - bucketStartMs) / (60 * 60 * 1000));
+            if (bucketIndex < 0 || bucketIndex >= resourceBuckets.length) {
+              return;
+            }
+            const durationMs = resolvePlaygroundOverviewDurationMs(run);
+            if (typeof durationMs === "number" && Number.isFinite(durationMs) && durationMs >= 0) {
+              const durationMinutes = durationMs / 60_000;
+              resourceBuckets[bucketIndex].activeMinutes += durationMinutes;
+              totalResourceActiveMinutes24h += durationMinutes;
+            }
+          });
+          return;
+        }
+
+        if (normalizedKind === "auth") {
+          const response = await fetchUpstreamOverviewJson(req, `/servers/${encodeURIComponent(serverId)}/auth-users?limit=1000`);
+          if (response.status >= 400) {
+            return;
+          }
+          const users = extractPlaygroundOverviewItems(response.data, ["users", "data"]);
+          const activeMinuteSets = resourceBuckets.map(() => new Set());
+          users.forEach((user) => {
+            [user?.createdAt, user?.lastSignInAt].forEach((candidate) => {
+              const timestampMs = Date.parse(String(candidate || ""));
+              if (!Number.isFinite(timestampMs) || timestampMs < bucketStartMs) {
+                return;
+              }
+              const hourKey = new Date(timestampMs).toISOString().slice(0, 13);
+              const bucketIndex = bucketIndexByHourKey.get(hourKey);
+              if (typeof bucketIndex !== "number") {
+                return;
+              }
+              activeMinuteSets[bucketIndex].add(Math.floor(timestampMs / 60_000));
+            });
+          });
+          activeMinuteSets.forEach((minuteSet, bucketIndex) => {
+            const activeMinutes = minuteSet.size;
+            if (activeMinutes <= 0) {
+              return;
+            }
+            resourceBuckets[bucketIndex].activeMinutes += activeMinutes;
+            totalResourceActiveMinutes24h += activeMinutes;
+          });
+          return;
+        }
+
+        const response = await fetchUpstreamOverviewJson(req, `/servers/${encodeURIComponent(serverId)}/analytics`);
+        if (response.status >= 400) {
+          return;
+        }
+        const trafficBuckets = Array.isArray(response.data?.charts?.traffic24h)
+          ? response.data.charts.traffic24h
+          : Array.isArray(response.data?.analytics?.charts?.traffic24h)
+            ? response.data.analytics.charts.traffic24h
+            : [];
+        trafficBuckets.forEach((entry) => {
+          const hourKey = String(entry?.bucketStart || entry?.timestamp || "").slice(0, 13);
+          const bucketIndex = bucketIndexByHourKey.get(hourKey);
+          if (typeof bucketIndex !== "number") {
+            return;
+          }
+          const exactActiveMinutes = Number(entry?.activeMinutes);
+          const fallbackActiveMinutes = Math.min(60, Math.max(0, Number(entry?.total || 0)));
+          const activeMinutes = Number.isFinite(exactActiveMinutes) && exactActiveMinutes >= 0
+            ? exactActiveMinutes
+            : fallbackActiveMinutes;
+          if (activeMinutes <= 0) {
+            return;
+          }
+          resourceBuckets[bucketIndex].activeMinutes += activeMinutes;
+          totalResourceActiveMinutes24h += activeMinutes;
+        });
+      }),
+      ...databaseItems.map(async (database) => {
+        const databaseId = String(database?.id || "").trim();
+        if (!databaseId) {
+          return;
+        }
+        const response = await fetchUpstreamOverviewJson(req, `/databases/${encodeURIComponent(databaseId)}/analytics`);
+        if (response.status >= 400) {
+          return;
+        }
+        const operationBuckets = Array.isArray(response.data?.analytics?.charts?.operations24h)
+          ? response.data.analytics.charts.operations24h
+          : Array.isArray(response.data?.charts?.operations24h)
+            ? response.data.charts.operations24h
+            : [];
+        operationBuckets.forEach((entry) => {
+          const hourKey = String(entry?.bucketStart || entry?.timestamp || "").slice(0, 13);
+          const bucketIndex = bucketIndexByHourKey.get(hourKey);
+          if (typeof bucketIndex !== "number") {
+            return;
+          }
+          const exactActiveMinutes = Number(entry?.activeMinutes);
+          const operationCount = Math.max(0, Number(entry?.reads || 0))
+            + Math.max(0, Number(entry?.writes || 0))
+            + Math.max(0, Number(entry?.deletes || 0));
+          const activeMinutes = Number.isFinite(exactActiveMinutes) && exactActiveMinutes >= 0
+            ? exactActiveMinutes
+            : Math.min(60, operationCount);
+          if (activeMinutes <= 0) {
+            return;
+          }
+          resourceBuckets[bucketIndex].activeMinutes += activeMinutes;
+          totalResourceActiveMinutes24h += activeMinutes;
+        });
+      }),
+    ]);
+
+    return sendJson(res, 200, {
+      available: true,
+      summary: {
+        totalActiveMinutes24h: Math.round(totalActiveMinutes24h * 10) / 10,
+        totalRuns24h,
+        totalResourceActiveMinutes24h: Math.round(totalResourceActiveMinutes24h * 10) / 10,
+      },
+      charts: {
+        computerRuntime24h: computerBuckets.map((bucket) => ({
+          ...bucket,
+          activeMinutes: Math.round(bucket.activeMinutes * 10) / 10,
+        })),
+        resourceActiveMinutes24h: resourceBuckets.map((bucket) => ({
+          ...bucket,
+          activeMinutes: Math.round(bucket.activeMinutes * 10) / 10,
+        })),
+      },
+    });
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to load environment overview analytics",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 async function proxyUpstreamGet(req, res, upstreamPath) {
@@ -82380,6 +83772,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/real/environments/default") {
     void proxyUpstreamGet(req, res, "/environments/default");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/environments/analytics/overview") {
+    void sendEnvironmentOverviewAnalytics(req, res);
     return;
   }
 
