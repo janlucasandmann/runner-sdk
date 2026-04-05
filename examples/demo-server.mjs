@@ -20455,6 +20455,7 @@ const html = `<!doctype html>
       const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
       const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
       const PLAYGROUND_AUTH_REDIRECT_STATE_KEY = "runner_demo_auth_redirect_v1";
+      const PLAYGROUND_AUTH_SESSION_MARKER_KEY = "runner_demo_auth_session_marker_v1";
       const PLAYGROUND_AGENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/agentsappicon.png")};
       const PLAYGROUND_BROWSER_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/browsericon.png")};
       const PLAYGROUND_FILES_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/filesicon.png")};
@@ -20805,6 +20806,28 @@ const html = `<!doctype html>
       function clearPlaygroundAuthRedirectState() {
         try {
           sessionStorage.removeItem(PLAYGROUND_AUTH_REDIRECT_STATE_KEY);
+        } catch {}
+      }
+
+      function readPlaygroundAuthSessionMarker() {
+        try {
+          const raw = sessionStorage.getItem(PLAYGROUND_AUTH_SESSION_MARKER_KEY);
+          const parsed = raw ? JSON.parse(raw) : null;
+          return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function writePlaygroundAuthSessionMarker(value) {
+        try {
+          sessionStorage.setItem(PLAYGROUND_AUTH_SESSION_MARKER_KEY, JSON.stringify(value || {}));
+        } catch {}
+      }
+
+      function clearPlaygroundAuthSessionMarker() {
+        try {
+          sessionStorage.removeItem(PLAYGROUND_AUTH_SESSION_MARKER_KEY);
         } catch {}
       }
 
@@ -21687,11 +21710,12 @@ const html = `<!doctype html>
           return null;
         }
 
-        return extractSessionIdentityFromPayload({
+        const identity = extractSessionIdentityFromPayload({
           email: user.email,
           emailVerified: user.emailVerified,
           user: {
             email: user.email,
+            uid: user.localId || user.userId || user.id || "",
             displayName: user.displayName,
             name: user.displayName,
             photoURL: user.photoURL || user.photoUrl,
@@ -21699,6 +21723,10 @@ const html = `<!doctype html>
             providerUserInfo: Array.isArray(user.providerUserInfo) ? user.providerUserInfo : [],
           },
         });
+        return {
+          ...identity,
+          userId: pickFirstSessionIdentityValue(user.localId, user.userId, user.id),
+        };
       }
 
       async function copyTextToClipboard(value) {
@@ -69844,6 +69872,8 @@ const html = `<!doctype html>
         const threadRenameInputRef = useRef(null);
         const threadNavMenuRef = useRef(null);
         const authRedirectStartedRef = useRef(false);
+        const hasAuthenticatedSessionThisMountRef = useRef(false);
+        const sessionBudgetSyncKeyRef = useRef("");
         const threadSubagentDetailHostRef = useCallback((node) => {
           setThreadSubagentDetailHost(node || null);
         }, []);
@@ -70076,6 +70106,8 @@ const html = `<!doctype html>
         }
 
         function handleSignOutFromComputerAgents() {
+          clearPlaygroundAuthRedirectState();
+          clearPlaygroundAuthSessionMarker();
           window.location.href = buildAiosLogoutUrl();
         }
 
@@ -70924,14 +70956,49 @@ const html = `<!doctype html>
             error: "",
           }));
 
+          let firebaseIdentity = null;
           try {
+            try {
+              firebaseIdentity = await lookupFirebaseSessionIdentity();
+            } catch {
+              firebaseIdentity = null;
+            }
+
+            if (firebaseIdentity) {
+              setSessionState((current) => ({
+                ...current,
+                status: "authenticated",
+                userId: firebaseIdentity.userId || current.userId || "",
+                email: firebaseIdentity.email || current.email || "",
+                projectId: current.projectId || "",
+                displayName: firebaseIdentity.displayName || current.displayName || "",
+                photoURL: firebaseIdentity.photoURL || current.photoURL || "",
+                emailVerified:
+                  typeof firebaseIdentity.emailVerified === "boolean"
+                    ? firebaseIdentity.emailVerified
+                    : current.emailVerified,
+                subscriptionTier: current.subscriptionTier || "free",
+                subscriptionStatus: current.subscriptionStatus || "",
+                error: "",
+              }));
+            }
+
             const { response, data } = await fetchJsonWithTimeout("/api/aios/user/profile", {
               method: "GET",
               credentials: "include",
               cache: "no-store",
-            }, 8000);
+            }, 20000);
 
             if (response.status === 401 || response.status === 403) {
+              if (firebaseIdentity) {
+                setSessionStreamingConfig({
+                  status: "idle",
+                  apiKey: "",
+                  backendUrl: "",
+                  error: "",
+                });
+                return;
+              }
               setSessionStreamingConfig({
                 status: "idle",
                 apiKey: "",
@@ -70954,6 +71021,15 @@ const html = `<!doctype html>
             }
 
             if (!response.ok) {
+              if (firebaseIdentity) {
+                setSessionStreamingConfig({
+                  status: "idle",
+                  apiKey: "",
+                  backendUrl: "",
+                  error: "",
+                });
+                return;
+              }
               setSessionStreamingConfig({
                 status: "error",
                 apiKey: "",
@@ -70976,13 +71052,6 @@ const html = `<!doctype html>
             }
 
             const payloadIdentity = extractSessionIdentityFromPayload(data);
-            let firebaseIdentity = null;
-            try {
-              firebaseIdentity = await lookupFirebaseSessionIdentity();
-            } catch {
-              firebaseIdentity = null;
-            }
-
             let nextStreamingConfig = {
               status: "error",
               apiKey: "",
@@ -70994,7 +71063,7 @@ const html = `<!doctype html>
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
-              }, 8000);
+              }, 15000);
 
               if (!streamingResponse.ok) {
                 throw new Error(streamingData?.message || streamingData?.error || "Failed to load runner access.");
@@ -71023,6 +71092,32 @@ const html = `<!doctype html>
 
             setSessionStreamingConfig(nextStreamingConfig);
 
+            let resolvedSubscriptionTier = typeof data.subscription?.tier === "string" ? data.subscription.tier : "free";
+            let resolvedSubscriptionStatus = typeof data.subscription?.status === "string" ? data.subscription.status : "";
+            try {
+              const budgetHeaders = {
+                ...(nextStreamingConfig.status === "ready" && nextStreamingConfig.apiKey
+                  ? { "X-API-Key": nextStreamingConfig.apiKey }
+                  : {}),
+                "X-Runner-Upstream-Url": resolvedUpstreamUrl,
+              };
+              const budgetResponse = await fetch(proxyBackendBase + "/billing/budget", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: budgetHeaders,
+              });
+              const budgetData = await budgetResponse.json().catch(() => ({}));
+              if (budgetResponse.ok) {
+                if (typeof budgetData?.tier === "string" && budgetData.tier.trim()) {
+                  resolvedSubscriptionTier = budgetData.tier.trim();
+                }
+                if (typeof budgetData?.subscriptionStatus === "string") {
+                  resolvedSubscriptionStatus = budgetData.subscriptionStatus;
+                }
+              }
+            } catch {}
+
             setSessionState({
               status: "authenticated",
               userId: typeof data.userId === "string" ? data.userId : "",
@@ -71034,16 +71129,46 @@ const html = `<!doctype html>
                 typeof firebaseIdentity?.emailVerified === "boolean"
                   ? firebaseIdentity.emailVerified
                   : (typeof payloadIdentity.emailVerified === "boolean" ? payloadIdentity.emailVerified : !!data.emailVerified),
-              subscriptionTier: typeof data.subscription?.tier === "string" ? data.subscription.tier : "free",
-              subscriptionStatus: typeof data.subscription?.status === "string" ? data.subscription.status : "",
+              subscriptionTier: resolvedSubscriptionTier,
+              subscriptionStatus: resolvedSubscriptionStatus,
               error: "",
             });
           } catch (error) {
+            const fallbackErrorMessage = error && typeof error === "object" && error.name === "AbortError"
+              ? "Session check timed out. Retry or sign in again."
+              : (error instanceof Error ? error.message : "Failed to load account session.");
+
+            if (firebaseIdentity) {
+              setSessionStreamingConfig({
+                status: "error",
+                apiKey: "",
+                backendUrl: "",
+                error: fallbackErrorMessage,
+              });
+              setSessionState((current) => ({
+                ...current,
+                status: "authenticated",
+                userId: firebaseIdentity.userId || current.userId || "",
+                email: firebaseIdentity.email || current.email || "",
+                projectId: current.projectId || "",
+                displayName: firebaseIdentity.displayName || current.displayName || "",
+                photoURL: firebaseIdentity.photoURL || current.photoURL || "",
+                emailVerified:
+                  typeof firebaseIdentity.emailVerified === "boolean"
+                    ? firebaseIdentity.emailVerified
+                    : current.emailVerified,
+                subscriptionTier: current.subscriptionTier || "free",
+                subscriptionStatus: current.subscriptionStatus || "",
+                error: "",
+              }));
+              return;
+            }
+
             setSessionStreamingConfig({
               status: "error",
               apiKey: "",
               backendUrl: "",
-              error: error instanceof Error ? error.message : "Failed to load runner access.",
+              error: fallbackErrorMessage,
             });
             setSessionState({
               status: "error",
@@ -71055,19 +71180,29 @@ const html = `<!doctype html>
               emailVerified: false,
               subscriptionTier: "free",
               subscriptionStatus: "",
-              error: error instanceof Error ? error.message : "Failed to load account session.",
+              error: fallbackErrorMessage,
             });
           }
         }, []);
 
         useEffect(() => {
           if (sessionState.status === "authenticated") {
+            hasAuthenticatedSessionThisMountRef.current = true;
             authRedirectStartedRef.current = false;
             clearPlaygroundAuthRedirectState();
+            writePlaygroundAuthSessionMarker({
+              authenticatedAt: Date.now(),
+              href: window.location.href,
+            });
             return;
           }
 
           if (sessionState.status === "loading") {
+            return;
+          }
+
+          if (sessionState.status === "error") {
+            authRedirectStartedRef.current = false;
             return;
           }
 
@@ -71095,6 +71230,23 @@ const html = `<!doctype html>
             }, 1200);
 
             return () => window.clearTimeout(retryTimer);
+          }
+
+          if (isRecentRedirect && attempts >= 5) {
+            authRedirectStartedRef.current = false;
+            clearPlaygroundAuthRedirectState();
+            return;
+          }
+
+          if (sessionState.status !== "unauthenticated") {
+            authRedirectStartedRef.current = false;
+            return;
+          }
+
+          if (!hasAuthenticatedSessionThisMountRef.current) {
+            authRedirectStartedRef.current = false;
+            clearPlaygroundAuthRedirectState();
+            return;
           }
 
           if (authRedirectStartedRef.current) {
@@ -72054,9 +72206,62 @@ const html = `<!doctype html>
 
           setSettingsBudgetLoading(true);
           try {
-            const response = await fetch("/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/budget", {
+            if (hasRealAccess) {
+              const realBudgetResponse = await fetch(proxyBackendBase + "/billing/budget", {
+                method: "GET",
+                headers: authRequestHeaders,
+                cache: "no-store",
+              });
+              const realBudgetData = await realBudgetResponse.json().catch(() => ({}));
+
+              if (realBudgetResponse.ok) {
+                setSettingsBudgetStatus(realBudgetData);
+                setSessionState((current) => ({
+                  ...current,
+                  subscriptionTier:
+                    typeof realBudgetData?.tier === "string" && realBudgetData.tier.trim()
+                      ? realBudgetData.tier.trim()
+                      : current.subscriptionTier,
+                  subscriptionStatus:
+                    typeof realBudgetData?.subscriptionStatus === "string"
+                      ? realBudgetData.subscriptionStatus
+                      : current.subscriptionStatus,
+                }));
+                return realBudgetData;
+              }
+            }
+
+            const fallbackResponse = await fetch("/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/budget", {
               method: "GET",
               credentials: "include",
+              cache: "no-store",
+            });
+            const fallbackData = await fallbackResponse.json().catch(() => ({}));
+
+            if (!fallbackResponse.ok) {
+              throw new Error(fallbackData?.message || fallbackData?.error || "Failed to load subscription details.");
+            }
+
+            setSettingsBudgetStatus(fallbackData);
+            return fallbackData;
+          } catch (error) {
+            setSettingsBudgetStatus(null);
+            setSettingsBillingError(error instanceof Error ? error.message : "Failed to load subscription details.");
+            return null;
+          } finally {
+            setSettingsBudgetLoading(false);
+          }
+        }, [authRequestHeaders, hasRealAccess, hasSessionAuth, proxyBackendBase, settingsProjectRoutingId]);
+
+        const refreshSessionBudgetStatus = useCallback(async function refreshSessionBudgetStatus() {
+          if (!hasRealAccess) {
+            return null;
+          }
+
+          try {
+            const response = await fetch(proxyBackendBase + "/billing/budget", {
+              method: "GET",
+              headers: authRequestHeaders,
               cache: "no-store",
             });
             const data = await response.json().catch(() => ({}));
@@ -72065,16 +72270,40 @@ const html = `<!doctype html>
               throw new Error(data?.message || data?.error || "Failed to load subscription details.");
             }
 
-            setSettingsBudgetStatus(data);
+            setSessionState((current) => {
+              const nextTier = typeof data?.tier === "string" && data.tier.trim()
+                ? data.tier.trim()
+                : current.subscriptionTier;
+              const nextStatus = typeof data?.subscriptionStatus === "string"
+                ? data.subscriptionStatus
+                : current.subscriptionStatus;
+
+              if (current.subscriptionTier === nextTier && current.subscriptionStatus === nextStatus) {
+                return current;
+              }
+
+              return {
+                ...current,
+                subscriptionTier: nextTier,
+                subscriptionStatus: nextStatus,
+              };
+            });
+
+            setSettingsBudgetStatus((current) => {
+              if (current && typeof current === "object") {
+                return {
+                  ...current,
+                  ...data,
+                };
+              }
+              return data;
+            });
+
             return data;
-          } catch (error) {
-            setSettingsBudgetStatus(null);
-            setSettingsBillingError(error instanceof Error ? error.message : "Failed to load subscription details.");
+          } catch {
             return null;
-          } finally {
-            setSettingsBudgetLoading(false);
           }
-        }, [hasSessionAuth, settingsProjectRoutingId]);
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase]);
 
         const loadSettingsPlatformConfig = useCallback(async function loadSettingsPlatformConfig() {
           if (!hasRealAccess) {
@@ -73055,6 +73284,35 @@ const html = `<!doctype html>
         useEffect(() => {
           void refreshSessionState();
         }, [refreshSessionState]);
+
+        useEffect(() => {
+          if (!hasRealAccess || sessionState.status !== "authenticated" || !sessionState.userId) {
+            if (sessionState.status !== "authenticated") {
+              sessionBudgetSyncKeyRef.current = "";
+            }
+            return;
+          }
+
+          const syncKey = [
+            sessionState.userId,
+            effectiveApiKey,
+            resolvedUpstreamUrl,
+          ].join(":");
+
+          if (sessionBudgetSyncKeyRef.current === syncKey) {
+            return;
+          }
+
+          sessionBudgetSyncKeyRef.current = syncKey;
+          void refreshSessionBudgetStatus();
+        }, [
+          effectiveApiKey,
+          hasRealAccess,
+          refreshSessionBudgetStatus,
+          resolvedUpstreamUrl,
+          sessionState.status,
+          sessionState.userId,
+        ]);
 
         useEffect(() => {
           const pendingIds = readPendingStatusIndicatorIds();
@@ -78705,11 +78963,38 @@ const html = `<!doctype html>
             });
           }
 
-          return React.createElement(PlaygroundAppLoadingScreen, {
-            label: sessionState.status === "error"
-              ? "Redirecting to sign in..."
-              : "Redirecting to sign in...",
-          });
+          return React.createElement("div", { className: "playground-onboarding-scrim" },
+            React.createElement("div", {
+              className: "playground-onboarding-auth-card",
+              onClick: (event) => event.stopPropagation(),
+            },
+              React.createElement("div", { className: "playground-onboarding-title-wrap" },
+                React.createElement("div", { className: "playground-onboarding-kicker" }, "Agentic Compute Platform"),
+                React.createElement("h2", { className: "playground-onboarding-auth-title" },
+                  sessionState.status === "error" ? "Could not restore your session" : "Sign in to continue"
+                )
+              ),
+              React.createElement("p", { className: "playground-onboarding-auth-copy" },
+                sessionState.status === "error"
+                  ? (sessionState.error || "The playground could not verify your current session. Retry or sign in again.")
+                  : "Sign in with your Agentic Compute Platform account to load your real threads, agents, environments, and attachments."
+              ),
+              React.createElement("div", { className: "playground-onboarding-footer" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-onboarding-button",
+                  onClick: () => {
+                    void refreshSessionState();
+                  },
+                }, "Retry"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-onboarding-button is-primary",
+                  onClick: handleSignInWithComputerAgents,
+                }, "Sign in")
+              )
+            )
+          );
         }
 
         function renderInitialThreadWelcome() {
