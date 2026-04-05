@@ -13383,12 +13383,17 @@ const html = `<!doctype html>
       .playground-agents-page .playground-tasks-detail-facts {
         position: relative;
         overflow: visible;
+        z-index: 4;
         border: 0;
         border-radius: 15px;
         background: rgba(255, 255, 255, 0.05);
         padding: 20px;
         backdrop-filter: blur(50px);
         -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-agents-page .playground-tasks-detail-facts.is-popover-open {
+        z-index: 220;
       }
 
       .playground-agents-page .playground-tasks-detail-facts::before {
@@ -13498,7 +13503,7 @@ const html = `<!doctype html>
 
       .playground-agents-model-select-popup.is-open,
       .playground-agents-model-select-popup.is-open .playground-tasks-toolbar-popup-menu {
-        z-index: 80;
+        z-index: 260;
       }
 
       .playground-agents-model-metrics {
@@ -20449,6 +20454,7 @@ const html = `<!doctype html>
       const PLAYGROUND_NOTION_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg";
       const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
       const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
+      const PLAYGROUND_AUTH_REDIRECT_STATE_KEY = "runner_demo_auth_redirect_v1";
       const PLAYGROUND_AGENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/agentsappicon.png")};
       const PLAYGROUND_BROWSER_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/browsericon.png")};
       const PLAYGROUND_FILES_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/filesicon.png")};
@@ -20777,6 +20783,28 @@ const html = `<!doctype html>
       function clearPlaygroundOnboardingState() {
         try {
           sessionStorage.removeItem(PLAYGROUND_ONBOARDING_STATE_KEY);
+        } catch {}
+      }
+
+      function readPlaygroundAuthRedirectState() {
+        try {
+          const raw = sessionStorage.getItem(PLAYGROUND_AUTH_REDIRECT_STATE_KEY);
+          const parsed = raw ? JSON.parse(raw) : null;
+          return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function writePlaygroundAuthRedirectState(value) {
+        try {
+          sessionStorage.setItem(PLAYGROUND_AUTH_REDIRECT_STATE_KEY, JSON.stringify(value || {}));
+        } catch {}
+      }
+
+      function clearPlaygroundAuthRedirectState() {
+        try {
+          sessionStorage.removeItem(PLAYGROUND_AUTH_REDIRECT_STATE_KEY);
         } catch {}
       }
 
@@ -21201,7 +21229,7 @@ const html = `<!doctype html>
         if (normalizedTierId === "team" || normalizedTierId === "enterprise") {
           features.push({ text: "Bring your own inference endpoint", icon: HardDrive });
           features.push({ text: "Usage-based resources after included credits", icon: Coins });
-          features.push({ text: "Shared workspaces and resources", icon: LibraryBig });
+          features.push({ text: "Shared workspaces and resources", icon: Layers });
         }
 
         features.push(
@@ -21445,6 +21473,34 @@ const html = `<!doctype html>
         return "https://identitytoolkit.googleapis.com/v1/" + pathname + "?key=" + encodeURIComponent(FIREBASE_WEB_API_KEY);
       }
 
+      async function fetchJsonWithTimeout(input, init = {}, timeoutMs = 8000) {
+        const controller = new AbortController();
+        const externalSignal = init?.signal;
+        const abortFromExternalSignal = () => controller.abort();
+        if (externalSignal) {
+          if (externalSignal.aborted) {
+            controller.abort();
+          } else {
+            externalSignal.addEventListener("abort", abortFromExternalSignal, { once: true });
+          }
+        }
+        const timeoutId = window.setTimeout(() => controller.abort(), Math.max(250, Number(timeoutMs) || 0));
+
+        try {
+          const response = await fetch(input, {
+            ...init,
+            signal: controller.signal,
+          });
+          const data = await response.json().catch(() => ({}));
+          return { response, data };
+        } finally {
+          window.clearTimeout(timeoutId);
+          if (externalSignal) {
+            externalSignal.removeEventListener("abort", abortFromExternalSignal);
+          }
+        }
+      }
+
       function normalizeSessionIdentityValue(value) {
         return String(value || "").replace(/\\s+/g, " ").trim();
       }
@@ -21613,7 +21669,7 @@ const html = `<!doctype html>
           return null;
         }
 
-        const response = await fetch(buildFirebaseRestUrl("accounts:lookup"), {
+        const { response, data } = await fetchJsonWithTimeout(buildFirebaseRestUrl("accounts:lookup"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -21621,8 +21677,7 @@ const html = `<!doctype html>
           body: JSON.stringify({
             idToken: sessionToken,
           }),
-        });
-        const data = await response.json().catch(() => ({}));
+        }, 3000);
         if (!response.ok) {
           return null;
         }
@@ -46804,6 +46859,10 @@ const html = `<!doctype html>
       }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
+        const selectedAgentIdRef = useRef(initialAgentId || "");
+        const agentAutosaveTimerRef = useRef(0);
+        const agentAutosaveQueuedRef = useRef(null);
+        const agentAutosaveInFlightRef = useRef(false);
         const agentDetailMainRef = useRef(null);
         const agentDescriptionTextareaRef = useRef(null);
         const agentInstructionsTextareaRef = useRef(null);
@@ -46877,6 +46936,84 @@ const html = `<!doctype html>
             ? agentModelOptions
             : PLAYGROUND_AGENT_MODEL_OPTIONS
         ), [agentModelOptions]);
+
+        async function flushQueuedAgentAutosave() {
+          if (agentAutosaveInFlightRef.current) {
+            return;
+          }
+
+          agentAutosaveInFlightRef.current = true;
+          try {
+            while (agentAutosaveQueuedRef.current) {
+              const nextAgentToSave = normalizePlaygroundAgentRecord(agentAutosaveQueuedRef.current);
+              agentAutosaveQueuedRef.current = null;
+
+              setSaveState({
+                isSaving: true,
+                error: "",
+                message: "",
+              });
+
+              try {
+                const savedAgent = await persistAgentRecord(nextAgentToSave);
+                const hasQueuedFollowUp = Boolean(agentAutosaveQueuedRef.current);
+                const shouldKeepAgentSelected =
+                  selectedAgentIdRef.current === nextAgentToSave.id
+                  || (!nextAgentToSave.id && selectedAgentIdRef.current === PLAYGROUND_AGENT_DRAFT_ID);
+
+                if (hasQueuedFollowUp && agentAutosaveQueuedRef.current) {
+                  agentAutosaveQueuedRef.current = normalizePlaygroundAgentRecord({
+                    ...agentAutosaveQueuedRef.current,
+                    id: savedAgent.id,
+                    userId: savedAgent.userId || agentAutosaveQueuedRef.current.userId,
+                    createdAt: savedAgent.createdAt || agentAutosaveQueuedRef.current.createdAt,
+                  });
+                }
+
+                editorDirtyRef.current = hasQueuedFollowUp;
+                setAgentDetailsById((current) => ({
+                  ...current,
+                  [savedAgent.id]: savedAgent,
+                }));
+                setAgentListMode(getPlaygroundAgentListMode(savedAgent));
+                if (shouldKeepAgentSelected) {
+                  setSelectedAgentId(savedAgent.id);
+                  setDraftAgent((current) => {
+                    if (hasQueuedFollowUp && current && current.id === savedAgent.id) {
+                      return normalizePlaygroundAgentRecord({
+                        ...savedAgent,
+                        ...current,
+                        id: savedAgent.id,
+                        userId: savedAgent.userId,
+                        createdAt: savedAgent.createdAt,
+                      });
+                    }
+                    return savedAgent;
+                  });
+                }
+
+                setSaveState({
+                  isSaving: false,
+                  error: "",
+                  message: "",
+                });
+                if (onAgentMutated) {
+                  await onAgentMutated();
+                }
+              } catch (error) {
+                editorDirtyRef.current = true;
+                setSaveState({
+                  isSaving: false,
+                  error: error instanceof Error ? error.message : "Failed to save agent.",
+                  message: "",
+                });
+                break;
+              }
+            }
+          } finally {
+            agentAutosaveInFlightRef.current = false;
+          }
+        }
 
         const loadAgentModelCatalog = useCallback(async () => {
           try {
@@ -47065,7 +47202,6 @@ const html = `<!doctype html>
           && selectedAgentId !== PLAYGROUND_AGENT_DRAFT_ID
           && loadingAgentId === selectedAgentId
         );
-        const isSystemAgent = Boolean(draftAgent?.isSystem);
         const agentEmailAddress = draftAgent ? getPlaygroundAgentEmailAddress(draftAgent) : "";
         const explicitAgentProfilePhotoUrl = draftAgent ? (getPlaygroundAgentProfileMetadata(draftAgent?.metadata)?.photoURL || "") : "";
         const rawAgentProfilePhotoUrl = draftAgent ? getPlaygroundAgentProfilePhotoUrl(draftAgent) : "";
@@ -47215,7 +47351,7 @@ const html = `<!doctype html>
 
         function handleAgentMarkdownFormat(field, textareaRef, formatType) {
           const textarea = textareaRef.current;
-          if (!textarea || !draftAgent || isSystemAgent) {
+          if (!textarea || !draftAgent) {
             return;
           }
           const value = String(draftAgent?.[field] || "");
@@ -47323,7 +47459,7 @@ const html = `<!doctype html>
         }
 
         async function persistAgentProfilePhotoSelection(nextPhotoUrl) {
-          if (!draftAgent || isSystemAgent) {
+          if (!draftAgent) {
             return;
           }
 
@@ -47380,16 +47516,13 @@ const html = `<!doctype html>
         }
 
         function handleAgentProfilePhotoSelection(nextPhotoUrl) {
-          if (isSystemAgent || !nextPhotoUrl) {
+          if (!nextPhotoUrl) {
             return;
           }
           void persistAgentProfilePhotoSelection(nextPhotoUrl);
         }
 
         function handleAgentProfilePhotoRemove() {
-          if (isSystemAgent) {
-            return;
-          }
           void persistAgentProfilePhotoSelection("");
         }
 
@@ -47741,6 +47874,10 @@ const html = `<!doctype html>
         }, [agents]);
 
         useEffect(() => {
+          selectedAgentIdRef.current = selectedAgentId || "";
+        }, [selectedAgentId]);
+
+        useEffect(() => {
           if (!normalizedFocusedAgentSelectionToken || !normalizedFocusedAgentId) {
             return;
           }
@@ -47835,6 +47972,32 @@ const html = `<!doctype html>
           setDraftAgent(seedAgent ? normalizePlaygroundAgentRecord(seedAgent) : null);
           void loadAgentDetails(selectedAgentId);
         }, [loadAgentDetails, orderedAgents, selectedAgentId]);
+
+        useEffect(() => {
+          if (!draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+            return;
+          }
+          if (!editorDirtyRef.current) {
+            return;
+          }
+
+          agentAutosaveQueuedRef.current = normalizePlaygroundAgentRecord(draftAgent);
+          if (agentAutosaveTimerRef.current) {
+            window.clearTimeout(agentAutosaveTimerRef.current);
+          }
+          agentAutosaveTimerRef.current = window.setTimeout(() => {
+            agentAutosaveTimerRef.current = 0;
+            void flushQueuedAgentAutosave();
+          }, 700);
+        }, [draftAgent]);
+
+        useEffect(() => {
+          return () => {
+            if (agentAutosaveTimerRef.current) {
+              window.clearTimeout(agentAutosaveTimerRef.current);
+            }
+          };
+        }, []);
 
         useEffect(() => {
           setAgentProfileAvatarBroken(false);
@@ -48030,6 +48193,14 @@ const html = `<!doctype html>
         }, [agentComposerModelPopover]);
 
         function handleAgentSelect(agentId) {
+          if (draftAgent?.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID && editorDirtyRef.current) {
+            agentAutosaveQueuedRef.current = normalizePlaygroundAgentRecord(draftAgent);
+            if (agentAutosaveTimerRef.current) {
+              window.clearTimeout(agentAutosaveTimerRef.current);
+              agentAutosaveTimerRef.current = 0;
+            }
+            void flushQueuedAgentAutosave();
+          }
           setToolbarPopover("");
           setSearchPopupQuery("");
           setAgentListActionMenuState(null);
@@ -48487,9 +48658,15 @@ const html = `<!doctype html>
         }
 
         async function handleSaveAgent() {
-          if (!draftAgent || isSystemAgent) {
+          if (!draftAgent) {
             return;
           }
+
+          if (agentAutosaveTimerRef.current) {
+            window.clearTimeout(agentAutosaveTimerRef.current);
+            agentAutosaveTimerRef.current = 0;
+          }
+          agentAutosaveQueuedRef.current = null;
 
           setSaveState({
             isSaving: true,
@@ -49324,7 +49501,6 @@ const html = `<!doctype html>
                     className: "playground-tasks-detail-format-button",
                     title: action.label,
                     "aria-label": action.label,
-                    disabled: isSystemAgent,
                     onMouseDown: (event) => event.preventDefault(),
                     onClick: () => handleAgentMarkdownFormat("description", agentDescriptionTextareaRef, action.id),
                   }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
@@ -49350,11 +49526,8 @@ const html = `<!doctype html>
                 rows: 1,
                 placeholder: isAgentDescriptionEditing ? "Add Description here" : "",
                 value: draftAgent.description || "",
-                readOnly: isSystemAgent,
                 onFocus: () => {
-                  if (!isSystemAgent) {
-                    setIsAgentDescriptionEditing(true);
-                  }
+                  setIsAgentDescriptionEditing(true);
                 },
                 onChange: (event) => {
                   updateAgentField("description", event.target.value);
@@ -49380,45 +49553,43 @@ const html = `<!doctype html>
                       })
                     : React.createElement("span", { className: "profile-editor-avatar-fallback" }, getAccountInitials(draftAgent.name || (isTeamAgent ? "Team" : "Agent")))
                 ),
-                !isSystemAgent
-                  ? React.createElement("div", {
-                      className: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell" + (agentProfileAvatarPickerOpen ? " is-open" : ""),
-                      ref: agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : null,
-                    },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "profile-editor-avatar-trigger",
-                        onClick: () => setAgentProfileAvatarPickerOpen((current) => !current),
-                        "aria-label": "Choose agent profile picture",
-                        "aria-expanded": agentProfileAvatarPickerOpen ? "true" : "false",
-                      }, React.createElement(Camera, { className: "profile-editor-camera-icon", strokeWidth: 1.9 })),
-                      agentProfileAvatarPickerOpen
-                        ? React.createElement("div", {
-                            className: "tb-popup-menu playground-agents-avatar-picker-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                            onClick: (event) => event.stopPropagation(),
-                          },
-                            PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "playground-agents-avatar-picker-option" + (agentProfilePhotoUrl === option.url ? " is-selected" : ""),
-                                  onClick: () => handleAgentProfilePhotoSelection(option.url),
-                                  title: option.label,
-                                  "aria-label": option.label,
-                                },
-                                React.createElement("div", { className: "playground-agents-avatar-picker-option-surface" },
-                                  React.createElement("img", {
-                                    className: "playground-agents-avatar-picker-option-image",
-                                    src: option.url,
-                                    alt: option.label,
-                                  })
-                                )
+                React.createElement("div", {
+                    className: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell" + (agentProfileAvatarPickerOpen ? " is-open" : ""),
+                    ref: agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : null,
+                  },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "profile-editor-avatar-trigger",
+                      onClick: () => setAgentProfileAvatarPickerOpen((current) => !current),
+                      "aria-label": "Choose agent profile picture",
+                      "aria-expanded": agentProfileAvatarPickerOpen ? "true" : "false",
+                    }, React.createElement(Camera, { className: "profile-editor-camera-icon", strokeWidth: 1.9 })),
+                    agentProfileAvatarPickerOpen
+                      ? React.createElement("div", {
+                          className: "tb-popup-menu playground-agents-avatar-picker-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                          onClick: (event) => event.stopPropagation(),
+                        },
+                          PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS.map((option) =>
+                            React.createElement("button", {
+                                key: option.id,
+                                type: "button",
+                                className: "playground-agents-avatar-picker-option" + (agentProfilePhotoUrl === option.url ? " is-selected" : ""),
+                                onClick: () => handleAgentProfilePhotoSelection(option.url),
+                                title: option.label,
+                                "aria-label": option.label,
+                              },
+                              React.createElement("div", { className: "playground-agents-avatar-picker-option-surface" },
+                                React.createElement("img", {
+                                  className: "playground-agents-avatar-picker-option-image",
+                                  src: option.url,
+                                  alt: option.label,
+                                })
                               )
                             )
                           )
-                        : null
-                    )
-                  : null
+                        )
+                      : null
+                  )
               )
             ),
             React.createElement("div", { className: "playground-agents-profile-name-wrap" },
@@ -49430,7 +49601,6 @@ const html = `<!doctype html>
                 "aria-label": isTeamAgent ? "Team name" : "Agent name",
                 title: draftAgent.name || (isTeamAgent ? "Team" : "Agent"),
                 onChange: (event) => updateAgentField("name", event.target.value),
-                disabled: isSystemAgent,
               })
             ),
             React.createElement("div", { className: "playground-agents-profile-email-group" },
@@ -49481,10 +49651,8 @@ const html = `<!doctype html>
                       type: "button",
                       className: "playground-environments-runtime-value-button",
                       onClick: () => {
-                        if (isSystemAgent) return;
                         setAgentModelPopover((current) => current === "model" ? "" : "model");
                       },
-                      disabled: isSystemAgent,
                     },
                       React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedAgentModel?.label || "Select model"),
                       React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
@@ -49496,7 +49664,7 @@ const html = `<!doctype html>
                                 key: option.id,
                                 type: "button",
                                 className: "tb-popup-row tb-popup-row-select" + ((draftAgent.model || "claude-haiku-4-5") === option.id ? " selected" : ""),
-                                disabled: isSystemAgent || Boolean(option.locked),
+                                disabled: Boolean(option.locked),
                                 onClick: () => {
                                   updateAgentField("model", option.id);
                                   setAgentModelPopover("");
@@ -49523,10 +49691,8 @@ const html = `<!doctype html>
                       type: "button",
                       className: "playground-environments-runtime-value-button",
                       onClick: () => {
-                        if (isSystemAgent) return;
                         setAgentModelPopover((current) => current === "reasoning" ? "" : "reasoning");
                       },
-                      disabled: isSystemAgent,
                     },
                       React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedReasoningOption?.label || "Medium"),
                       React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
@@ -49557,7 +49723,10 @@ const html = `<!doctype html>
                 )
               );
 
-          const agentFactsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts" },
+          const agentFactsSection = React.createElement("div", {
+              className: "playground-tasks-detail-facts playground-environments-editor-facts"
+                + (agentModelPopover ? " is-popover-open" : ""),
+            },
             React.createElement("div", { className: "playground-tasks-detail-facts-header" },
               React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
               React.createElement("button", {
@@ -49618,7 +49787,6 @@ const html = `<!doctype html>
                       className: "playground-environments-select",
                       value: draftAgent.teamOrchestratorAgentId || "",
                       onChange: (event) => updateTeamOrchestratorAgent(event.target.value),
-                      disabled: isSystemAgent,
                     },
                       React.createElement("option", { value: "" }, "Select orchestrator"),
                       availableTeamMemberAgents.map((agent) =>
@@ -49646,7 +49814,6 @@ const html = `<!doctype html>
                               type: "button",
                               className: "playground-agents-team-card" + (isSelected ? " is-selected" : ""),
                               onClick: () => toggleTeamSubagent(agent.id),
-                              disabled: isSystemAgent,
                             },
                               React.createElement("div", { className: "playground-agents-team-card-header" },
                                 React.createElement("div", { className: "playground-agents-team-card-title" }, agent.name || agent.id),
@@ -49685,7 +49852,6 @@ const html = `<!doctype html>
                     className: "playground-tasks-detail-format-button",
                     title: action.label,
                     "aria-label": action.label,
-                    disabled: isSystemAgent,
                     onMouseDown: (event) => event.preventDefault(),
                     onClick: () => handleAgentMarkdownFormat("instructions", agentInstructionsTextareaRef, action.id),
                   }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
@@ -49711,11 +49877,8 @@ const html = `<!doctype html>
                 rows: 1,
                 placeholder: isAgentInstructionsEditing ? (isTeamAgent ? "Add Team Instructions here" : "Add Instructions here") : "",
                 value: draftAgent.instructions || "",
-                readOnly: isSystemAgent,
                 onFocus: () => {
-                  if (!isSystemAgent) {
-                    setIsAgentInstructionsEditing(true);
-                  }
+                  setIsAgentInstructionsEditing(true);
                 },
                 onChange: (event) => {
                   updateAgentField("instructions", event.target.value);
@@ -69717,6 +69880,17 @@ const html = `<!doctype html>
           const manualApiKey = String(apiKey || "").trim();
           return manualApiKey || resolvedSessionApiKey || (hasSessionAuth ? SESSION_API_KEY_SENTINEL : "");
         }, [apiKey, hasSessionAuth, resolvedSessionApiKey]);
+        const resolvedUpstreamUrl = useMemo(() => {
+          const trimmed = String(upstreamUrl || "").trim();
+          return trimmed || ${JSON.stringify(defaultUpstreamOrigin)};
+        }, [upstreamUrl]);
+        const authRequestHeaders = useMemo(() => ({
+          ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
+          "X-Runner-Upstream-Url": resolvedUpstreamUrl,
+        }), [effectiveApiKey, resolvedUpstreamUrl]);
+        const requestHeaders = useMemo(() => {
+          return authRequestHeaders;
+        }, [authRequestHeaders]);
         const hasRealAccess = hasSessionAuth;
         const activeProjectId = projectId.trim() || sessionState.projectId || "";
         const settingsProjectRoutingId = activeProjectId || "__runner_playground__";
@@ -69887,6 +70061,11 @@ const html = `<!doctype html>
         }
 
         function handleSignInWithComputerAgents() {
+          writePlaygroundAuthRedirectState({
+            href: window.location.href,
+            startedAt: Date.now(),
+            attempts: 0,
+          });
           window.location.href = buildAiosLoginUrl();
         }
 
@@ -69978,20 +70157,6 @@ const html = `<!doctype html>
           setRealAgents([]);
           setRealEnvironments([]);
           setCurrentThreadId("");
-        }, [sessionState.status]);
-
-        useEffect(() => {
-          if (sessionState.status === "loading" || sessionState.status === "authenticated") {
-            authRedirectStartedRef.current = false;
-            return;
-          }
-
-          if (authRedirectStartedRef.current) {
-            return;
-          }
-
-          authRedirectStartedRef.current = true;
-          window.location.replace(buildAiosLoginUrl());
         }, [sessionState.status]);
 
         useEffect(() => {
@@ -70760,12 +70925,11 @@ const html = `<!doctype html>
           }));
 
           try {
-            const response = await fetch("/api/aios/user/profile", {
+            const { response, data } = await fetchJsonWithTimeout("/api/aios/user/profile", {
               method: "GET",
               credentials: "include",
               cache: "no-store",
-            });
-            const data = await response.json().catch(() => ({}));
+            }, 8000);
 
             if (response.status === 401 || response.status === 403) {
               setSessionStreamingConfig({
@@ -70826,12 +70990,11 @@ const html = `<!doctype html>
               error: "Failed to load runner access.",
             };
             try {
-              const streamingResponse = await fetch("/api/aios/user/streaming-key", {
+              const { response: streamingResponse, data: streamingData } = await fetchJsonWithTimeout("/api/aios/user/streaming-key", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
-              });
-              const streamingData = await streamingResponse.json().catch(() => ({}));
+              }, 8000);
 
               if (!streamingResponse.ok) {
                 throw new Error(streamingData?.message || streamingData?.error || "Failed to load runner access.");
@@ -70896,6 +71059,56 @@ const html = `<!doctype html>
             });
           }
         }, []);
+
+        useEffect(() => {
+          if (sessionState.status === "authenticated") {
+            authRedirectStartedRef.current = false;
+            clearPlaygroundAuthRedirectState();
+            return;
+          }
+
+          if (sessionState.status === "loading") {
+            return;
+          }
+
+          const redirectState = readPlaygroundAuthRedirectState();
+          const currentHref = window.location.href;
+          const startedAt = Number(redirectState?.startedAt || 0);
+          const attempts = Math.max(0, Number(redirectState?.attempts || 0));
+          const isRecentRedirect =
+            redirectState
+            && String(redirectState.href || "") === currentHref
+            && Number.isFinite(startedAt)
+            && Date.now() - startedAt < 20000;
+
+          if (isRecentRedirect && attempts < 5) {
+            authRedirectStartedRef.current = true;
+            writePlaygroundAuthRedirectState({
+              href: currentHref,
+              startedAt,
+              attempts: attempts + 1,
+            });
+
+            const retryTimer = window.setTimeout(() => {
+              authRedirectStartedRef.current = false;
+              void refreshSessionState();
+            }, 1200);
+
+            return () => window.clearTimeout(retryTimer);
+          }
+
+          if (authRedirectStartedRef.current) {
+            return;
+          }
+
+          authRedirectStartedRef.current = true;
+          writePlaygroundAuthRedirectState({
+            href: currentHref,
+            startedAt: Date.now(),
+            attempts: 0,
+          });
+          window.location.replace(buildAiosLoginUrl());
+        }, [refreshSessionState, sessionState.status]);
 
         async function refreshGithubStatus(options = {}) {
           const { clearPendingOnFailure = false } = options;
@@ -72778,11 +72991,6 @@ const html = `<!doctype html>
           }
         }
 
-        const resolvedUpstreamUrl = useMemo(() => {
-          const trimmed = String(upstreamUrl || "").trim();
-          return trimmed || ${JSON.stringify(defaultUpstreamOrigin)};
-        }, [upstreamUrl]);
-
         const handleFetchCustomSkills = useCallback(async function handleFetchCustomSkills() {
           const normalizeSkills = (items) => (items || [])
             .filter((skill) => !skill.isDefault && !skill.isSystem)
@@ -73166,13 +73374,6 @@ const html = `<!doctype html>
           }
         }), [githubStatus.connected, googleDriveStatus.connected, notionDatabases, notionStatus.connected, oneDriveStatus.connected]);
 
-        const authRequestHeaders = useMemo(() => ({
-          ...(effectiveApiKey ? { "X-API-Key": effectiveApiKey } : {}),
-          "X-Runner-Upstream-Url": resolvedUpstreamUrl,
-        }), [effectiveApiKey, resolvedUpstreamUrl]);
-        const requestHeaders = useMemo(() => {
-          return authRequestHeaders;
-        }, [authRequestHeaders]);
         const runtimeEnvironments = useMemo(() => {
           if (hasRealAccess) {
             return realEnvironments;
@@ -83479,8 +83680,33 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && url.pathname === "/api/real/agents/models") {
+    void proxyUpstreamGet(req, res, "/agents/models");
+    return;
+  }
+
   if (req.method === "POST" && url.pathname === "/api/real/agents") {
     void proxyUpstreamJsonRequest(req, res, "/agents", "POST");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/billing/budget") {
+    void proxyUpstreamGet(req, res, "/billing/budget");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/billing/preferences") {
+    void proxyUpstreamGet(req, res, "/billing/preferences");
+    return;
+  }
+
+  if (req.method === "PATCH" && url.pathname === "/api/real/billing/preferences") {
+    void proxyUpstreamJsonRequest(req, res, "/billing/preferences", "PATCH");
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/real/billing/inference/test") {
+    void proxyUpstreamJsonRequest(req, res, "/billing/inference/test", "POST");
     return;
   }
 
