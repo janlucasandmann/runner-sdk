@@ -13,6 +13,7 @@ const noVncNextRoot = path.join(packageRoot, "node_modules", "novnc-next");
 const aiosPublicRoot = path.resolve(packageRoot, "..", "..", "web", "hosting", "public");
 const port = Number(process.env.PORT || 4177);
 const aiosOrigin = (process.env.AIOS_APP_ORIGIN || "http://localhost:3000").replace(/\/+$/, "");
+const platformOrigin = (process.env.PLATFORM_APP_ORIGIN || process.env.NEXT_PUBLIC_PLATFORM_APP_URL || `http://localhost:${port}`).replace(/\/+$/, "");
 const defaultUpstreamOrigin = (process.env.RUNNER_UPSTREAM_ORIGIN || "https://api.computer-agents.com").replace(/\/+$/, "");
 const localVncProxyWss = new WebSocketServer({ noServer: true, perMessageDeflate: false });
 
@@ -16937,6 +16938,31 @@ const html = `<!doctype html>
         padding-right: 2px;
       }
 
+      .playground-settings-trigger-composer-modal {
+        width: min(560px, 100%);
+      }
+
+      .playground-settings-trigger-composer-modal .playground-agent-composer-modal-body {
+        gap: 18px;
+        padding-top: 4px;
+      }
+
+      .playground-settings-trigger-composer-modal .playground-tasks-project-modal-field {
+        gap: 12px;
+      }
+
+      .playground-settings-trigger-composer-modal .playground-settings-toggle-group {
+        gap: 12px;
+      }
+
+      .playground-settings-trigger-composer-modal .playground-settings-toggle-pill {
+        min-height: 36px;
+      }
+
+      .playground-settings-trigger-composer-modal .playground-settings-trigger-composer-textarea {
+        min-height: 110px;
+      }
+
       .playground-skill-composer-modal {
         width: min(560px, 100%);
       }
@@ -20347,6 +20373,8 @@ const html = `<!doctype html>
       import rehypeRaw from "rehype-raw";
       import remarkGfm from "remark-gfm";
       import { visit as unistVisit } from "unist-util-visit";
+      import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
+      import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
       import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
@@ -20465,6 +20493,11 @@ const html = `<!doctype html>
       const PLAYGROUND_FOLDER_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/folder.png")};
       const PLAYGROUND_TEXT_FILE_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/txtfile.png")};
       const FIREBASE_WEB_API_KEY = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC_aSR8bjU02Kb1ROYUA7Yki_2Fogvs6-o")};
+      const FIREBASE_AUTH_DOMAIN = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "testbaseai.firebaseapp.com")};
+      const FIREBASE_PROJECT_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "testbaseai")};
+      const FIREBASE_STORAGE_BUCKET = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "testbaseai.firebasestorage.app")};
+      const FIREBASE_MESSAGING_SENDER_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "65067873832")};
+      const FIREBASE_APP_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:65067873832:web:15722955fece43cdf9671d")};
       const SEARCH_THREAD_FETCH_LIMIT = 200;
       const SETTINGS_CT_PER_DOLLAR = 100;
       const SETTINGS_SOURCE_CHANNELS = {
@@ -20512,6 +20545,9 @@ const html = `<!doctype html>
         integrations: "Integrations",
         unattributed: "Unattributed",
       };
+      const PLAYGROUND_FIREBASE_APP_NAME = "runner-platform-auth";
+      let playgroundFirebaseAuthInstance = null;
+      let playgroundFirebaseAuthReadyPromise = null;
       const SETTINGS_CHANNEL_COLORS = {
         native: "rgb(143,196,255)",
         web: "rgb(255,255,255)",
@@ -21494,6 +21530,84 @@ const html = `<!doctype html>
 
       function buildFirebaseRestUrl(pathname) {
         return "https://identitytoolkit.googleapis.com/v1/" + pathname + "?key=" + encodeURIComponent(FIREBASE_WEB_API_KEY);
+      }
+
+      function getFirebaseSessionCookieDomain() {
+        if (typeof window === "undefined") {
+          return "";
+        }
+        const hostname = String(window.location.hostname || "").trim();
+        if (!hostname || hostname === "localhost" || hostname === "127.0.0.1") {
+          return "";
+        }
+        const parts = hostname.split(".").filter(Boolean);
+        if (parts.length < 2) {
+          return "";
+        }
+        return "." + parts.slice(-2).join(".");
+      }
+
+      function writeFirebaseSessionCookie(token) {
+        if (typeof document === "undefined") {
+          return;
+        }
+        const normalizedToken = typeof token === "string" ? token.trim() : "";
+        const secure = typeof window !== "undefined" ? window.location.protocol === "https:" : true;
+        const maxAge = 7 * 24 * 60 * 60;
+        const baseCookie = "__session=" + encodeURIComponent(normalizedToken)
+          + "; Path=/; Max-Age=" + maxAge
+          + "; SameSite=Lax"
+          + (secure ? "; Secure" : "");
+        const domain = getFirebaseSessionCookieDomain();
+        document.cookie = baseCookie + (domain ? "; Domain=" + domain : "");
+      }
+
+      function clearFirebaseSessionCookie() {
+        if (typeof document === "undefined") {
+          return;
+        }
+        const secure = typeof window !== "undefined" ? window.location.protocol === "https:" : true;
+        const expiredCookie = "__session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"
+          + (secure ? "; Secure" : "");
+        const domain = getFirebaseSessionCookieDomain();
+        document.cookie = expiredCookie;
+        if (domain) {
+          document.cookie = expiredCookie + "; Domain=" + domain;
+        }
+      }
+
+      function getPlaygroundFirebaseAuth() {
+        if (!FIREBASE_WEB_API_KEY || !FIREBASE_AUTH_DOMAIN || !FIREBASE_PROJECT_ID) {
+          return null;
+        }
+        if (playgroundFirebaseAuthInstance) {
+          return playgroundFirebaseAuthInstance;
+        }
+
+        const firebaseConfig = {
+          apiKey: FIREBASE_WEB_API_KEY,
+          authDomain: FIREBASE_AUTH_DOMAIN,
+          projectId: FIREBASE_PROJECT_ID,
+          storageBucket: FIREBASE_STORAGE_BUCKET,
+          messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
+          appId: FIREBASE_APP_ID,
+        };
+        const existingApp = getApps().find((app) => app.name === PLAYGROUND_FIREBASE_APP_NAME);
+        const firebaseApp = existingApp || initializeApp(firebaseConfig, PLAYGROUND_FIREBASE_APP_NAME);
+        playgroundFirebaseAuthInstance = getAuth(firebaseApp);
+        return playgroundFirebaseAuthInstance;
+      }
+
+      async function ensurePlaygroundFirebaseAuth() {
+        const auth = getPlaygroundFirebaseAuth();
+        if (!auth) {
+          return null;
+        }
+        if (!playgroundFirebaseAuthReadyPromise) {
+          playgroundFirebaseAuthReadyPromise = setPersistence(auth, browserLocalPersistence).catch(() => {});
+        }
+        await playgroundFirebaseAuthReadyPromise;
+        return auth;
       }
 
       async function fetchJsonWithTimeout(input, init = {}, timeoutMs = 8000) {
@@ -69693,6 +69807,12 @@ const html = `<!doctype html>
           subscriptionStatus: "",
           error: "",
         });
+        const [platformAuthForm, setPlatformAuthForm] = useState({
+          email: "",
+          password: "",
+        });
+        const [platformAuthBusy, setPlatformAuthBusy] = useState("");
+        const [platformAuthError, setPlatformAuthError] = useState("");
         const [profileDraft, setProfileDraft] = useState({
           displayName: "",
           email: "",
@@ -69868,6 +69988,7 @@ const html = `<!doctype html>
         const [settingsDeleteLoading, setSettingsDeleteLoading] = useState(false);
         const [settingsDeleteError, setSettingsDeleteError] = useState("");
         const profileImageInputRef = useRef(null);
+        const authGateEmailInputRef = useRef(null);
         const threadSearchInputRef = useRef(null);
         const threadRenameInputRef = useRef(null);
         const threadNavMenuRef = useRef(null);
@@ -70091,12 +70212,12 @@ const html = `<!doctype html>
         }
 
         function handleSignInWithComputerAgents() {
-          writePlaygroundAuthRedirectState({
-            href: window.location.href,
-            startedAt: Date.now(),
-            attempts: 0,
+          setPlatformAuthError("");
+          window.requestAnimationFrame(() => {
+            if (authGateEmailInputRef.current) {
+              authGateEmailInputRef.current.focus();
+            }
           });
-          window.location.href = buildAiosLoginUrl();
         }
 
         function buildAiosLogoutUrl() {
@@ -70105,10 +70226,38 @@ const html = `<!doctype html>
           return logoutUrl.toString();
         }
 
-        function handleSignOutFromComputerAgents() {
+        async function handleSignOutFromComputerAgents() {
           clearPlaygroundAuthRedirectState();
           clearPlaygroundAuthSessionMarker();
-          window.location.href = buildAiosLogoutUrl();
+          setPlatformAuthBusy("signout");
+          setPlatformAuthError("");
+          try {
+            const auth = await ensurePlaygroundFirebaseAuth();
+            if (auth) {
+              await signOutFirebaseAuth(auth).catch(() => {});
+            }
+          } finally {
+            clearFirebaseSessionCookie();
+            setSessionStreamingConfig({
+              status: "idle",
+              apiKey: "",
+              backendUrl: "",
+              error: "",
+            });
+            setSessionState({
+              status: "unauthenticated",
+              userId: "",
+              email: "",
+              projectId: "",
+              displayName: "",
+              photoURL: "",
+              emailVerified: false,
+              subscriptionTier: "free",
+              subscriptionStatus: "",
+              error: "",
+            });
+            setPlatformAuthBusy("");
+          }
         }
 
         function closePlaygroundOnboarding() {
@@ -70189,6 +70338,18 @@ const html = `<!doctype html>
           setRealAgents([]);
           setRealEnvironments([]);
           setCurrentThreadId("");
+        }, [sessionState.status]);
+
+        useEffect(() => {
+          if (sessionState.status !== "authenticated") {
+            return;
+          }
+          setPlatformAuthBusy("");
+          setPlatformAuthError("");
+          setPlatformAuthForm((current) => ({
+            ...current,
+            password: "",
+          }));
         }, [sessionState.status]);
 
         useEffect(() => {
@@ -70747,7 +70908,7 @@ const html = `<!doctype html>
         }
 
         function openAiosAppPage() {
-          window.open(${JSON.stringify(aiosOrigin + "/app")}, "_blank", "noopener,noreferrer");
+          window.open(${JSON.stringify(platformOrigin)}, "_blank", "noopener,noreferrer");
         }
 
         function buildProfileDraftFromSession() {
@@ -71249,18 +71410,112 @@ const html = `<!doctype html>
             return;
           }
 
-          if (authRedirectStartedRef.current) {
+          authRedirectStartedRef.current = false;
+          clearPlaygroundAuthRedirectState();
+        }, [refreshSessionState, sessionState.status]);
+
+        useEffect(() => {
+          let disposed = false;
+          let unsubscribe = () => {};
+
+          void (async () => {
+            const auth = await ensurePlaygroundFirebaseAuth();
+            if (!auth || disposed) {
+              return;
+            }
+
+            unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
+              if (disposed) {
+                return;
+              }
+              if (!currentUser) {
+                clearFirebaseSessionCookie();
+                return;
+              }
+              try {
+                const idToken = await currentUser.getIdToken();
+                if (!disposed && idToken) {
+                  writeFirebaseSessionCookie(idToken);
+                }
+              } catch {}
+            });
+          })();
+
+          return () => {
+            disposed = true;
+            unsubscribe();
+          };
+        }, []);
+
+        async function handlePlatformEmailSignIn(event) {
+          if (event?.preventDefault) {
+            event.preventDefault();
+          }
+          const email = String(platformAuthForm.email || "").trim();
+          const password = String(platformAuthForm.password || "");
+          if (!email || !password) {
+            setPlatformAuthError("Email and password are required.");
             return;
           }
 
-          authRedirectStartedRef.current = true;
-          writePlaygroundAuthRedirectState({
-            href: currentHref,
-            startedAt: Date.now(),
-            attempts: 0,
-          });
-          window.location.replace(buildAiosLoginUrl());
-        }, [refreshSessionState, sessionState.status]);
+          setPlatformAuthBusy("password");
+          setPlatformAuthError("");
+          try {
+            const auth = await ensurePlaygroundFirebaseAuth();
+            if (!auth) {
+              throw new Error("Firebase authentication is not configured for this environment.");
+            }
+            const result = await signInWithEmailAndPassword(auth, email, password);
+            const idToken = await result.user.getIdToken(true);
+            writeFirebaseSessionCookie(idToken);
+            clearPlaygroundAuthRedirectState();
+            writePlaygroundAuthSessionMarker({
+              authenticatedAt: Date.now(),
+              href: window.location.href,
+            });
+            await refreshSessionState();
+          } catch (error) {
+            const fallbackMessage = error instanceof Error ? error.message : "Failed to sign in.";
+            const mappedMessage = mapFirebaseAuthErrorMessage(error?.code || error?.message, fallbackMessage);
+            setPlatformAuthError(mappedMessage || fallbackMessage);
+          } finally {
+            setPlatformAuthBusy("");
+          }
+        }
+
+        async function handlePlatformGoogleSignIn() {
+          setPlatformAuthBusy("google");
+          setPlatformAuthError("");
+          try {
+            const auth = await ensurePlaygroundFirebaseAuth();
+            if (!auth) {
+              throw new Error("Firebase authentication is not configured for this environment.");
+            }
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const idToken = await result.user.getIdToken(true);
+            writeFirebaseSessionCookie(idToken);
+            clearPlaygroundAuthRedirectState();
+            writePlaygroundAuthSessionMarker({
+              authenticatedAt: Date.now(),
+              href: window.location.href,
+            });
+            await refreshSessionState();
+          } catch (error) {
+            const fallbackMessage = error instanceof Error ? error.message : "Failed to sign in with Google.";
+            const mappedMessage = mapFirebaseAuthErrorMessage(error?.code || error?.message, fallbackMessage);
+            if (
+              String(error?.code || "").includes("auth/unauthorized-domain")
+              || String(error?.message || "").includes("auth/unauthorized-domain")
+            ) {
+              setPlatformAuthError("Google sign-in is not enabled for platform.computer-agents.com yet. Add this domain to Firebase Auth authorized domains or sign in with email and password.");
+            } else {
+              setPlatformAuthError(mappedMessage || fallbackMessage);
+            }
+          } finally {
+            setPlatformAuthBusy("");
+          }
+        }
 
         async function refreshGithubStatus(options = {}) {
           const { clearPendingOnFailure = false } = options;
@@ -72184,6 +72439,21 @@ const html = `<!doctype html>
             filterRepo: "",
             filterBranch: "",
           });
+        }
+
+        function openSettingsTriggerComposer() {
+          resetSettingsTriggerForm();
+          setSettingsTriggersError("");
+          setSettingsCreatingTrigger(true);
+        }
+
+        function closeSettingsTriggerComposer() {
+          if (settingsTriggerSubmitting) {
+            return;
+          }
+          resetSettingsTriggerForm();
+          setSettingsTriggersError("");
+          setSettingsCreatingTrigger(false);
         }
 
         async function handleSettingsCopyField(value, fieldId) {
@@ -77306,7 +77576,213 @@ const html = `<!doctype html>
                 )
               );
               break;
-            case "webhooks":
+            case "webhooks": {
+              const canCreateSettingsTrigger = Boolean(
+                String(settingsTriggerForm.name || "").trim()
+                && String(settingsTriggerForm.event || "").trim()
+                && String(settingsTriggerForm.environmentId || "").trim()
+              );
+
+              const settingsTriggerComposerDialog = settingsCreatingTrigger
+                ? React.createElement("div", {
+                    className: "playground-tasks-project-modal-backdrop",
+                    onClick: closeSettingsTriggerComposer,
+                  },
+                    React.createElement("form", {
+                        className: "playground-tasks-project-modal playground-agent-composer-modal playground-environment-composer-modal playground-settings-trigger-composer-modal",
+                        onClick: (event) => event.stopPropagation(),
+                        onKeyDown: handleComposerSubmitShortcut,
+                        onSubmit: (event) => {
+                          event.preventDefault();
+                          void handleSettingsCreateTrigger();
+                        },
+                      },
+                      React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                        React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                          React.createElement("div", {
+                            className: "playground-tasks-project-modal-icon-trigger",
+                            "aria-hidden": "true",
+                          }, React.createElement(Webhook, { width: 18, height: 18, strokeWidth: 1.9 })),
+                          React.createElement("input", {
+                            className: "playground-tasks-project-modal-name-input",
+                            value: settingsTriggerForm.name,
+                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, name: event.target.value })),
+                            placeholder: "Webhook name",
+                            autoFocus: true,
+                            disabled: settingsTriggerSubmitting,
+                          })
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                          onClick: closeSettingsTriggerComposer,
+                          title: "Close",
+                          disabled: settingsTriggerSubmitting,
+                        }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                      ),
+                      React.createElement("div", { className: "playground-agent-composer-modal-body" },
+                        React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Source"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("select", {
+                                className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
+                                value: settingsTriggerForm.source,
+                                disabled: settingsTriggerSubmitting,
+                                onChange: (event) => setSettingsTriggerForm((current) => ({
+                                  ...current,
+                                  source: event.target.value,
+                                  event: event.target.value === "github" ? "push" : "",
+                                })),
+                              },
+                                SETTINGS_TRIGGER_SOURCE_OPTIONS.map((option) =>
+                                  React.createElement("option", { key: option.value, value: option.value }, option.label)
+                                )
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Event"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              settingsTriggerForm.source === "github"
+                                ? React.createElement("select", {
+                                    className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
+                                    value: settingsTriggerForm.event,
+                                    disabled: settingsTriggerSubmitting,
+                                    onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, event: event.target.value })),
+                                  },
+                                    SETTINGS_GITHUB_EVENTS.map((eventName) =>
+                                      React.createElement("option", { key: eventName, value: eventName }, eventName)
+                                    )
+                                  )
+                                : React.createElement("input", {
+                                    type: "text",
+                                    className: "playground-environments-input playground-tasks-detail-fact-select",
+                                    value: settingsTriggerForm.event,
+                                    disabled: settingsTriggerSubmitting,
+                                    onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, event: event.target.value })),
+                                    placeholder: "event_callback",
+                                  })
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Computer"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("select", {
+                                className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
+                                value: settingsTriggerForm.environmentId,
+                                disabled: settingsTriggerSubmitting,
+                                onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, environmentId: event.target.value })),
+                              },
+                                React.createElement("option", { value: "" }, "Select computer"),
+                                runtimeEnvironments.map((environment) =>
+                                  React.createElement("option", { key: environment.id, value: environment.id }, environment.name || environment.id)
+                                )
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Agent"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("select", {
+                                className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
+                                value: settingsTriggerForm.agentId,
+                                disabled: settingsTriggerSubmitting,
+                                onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, agentId: event.target.value })),
+                              },
+                                React.createElement("option", { value: "" }, "Default agent"),
+                                runtimeAgents.map((agent) =>
+                                  React.createElement("option", { key: agent.id, value: agent.id }, agent.name || agent.id)
+                                )
+                              )
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Action"),
+                          React.createElement("div", { className: "playground-settings-toggle-group" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-settings-toggle-pill" + (settingsTriggerForm.actionType === "message" ? " is-active" : ""),
+                              onClick: () => setSettingsTriggerForm((current) => ({ ...current, actionType: "message" })),
+                              disabled: settingsTriggerSubmitting,
+                            }, "Static message"),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-settings-toggle-pill" + (settingsTriggerForm.actionType === "template" ? " is-active" : ""),
+                              onClick: () => setSettingsTriggerForm((current) => ({ ...current, actionType: "template" })),
+                              disabled: settingsTriggerSubmitting,
+                            }, "Template"),
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, settingsTriggerForm.actionType === "template" ? "Template" : "Message"),
+                          React.createElement("textarea", {
+                            className: "playground-tasks-project-modal-textarea playground-settings-trigger-composer-textarea",
+                            value: settingsTriggerForm.actionType === "template" ? settingsTriggerForm.template : settingsTriggerForm.message,
+                            disabled: settingsTriggerSubmitting,
+                            onChange: (event) => setSettingsTriggerForm((current) => settingsTriggerForm.actionType === "template"
+                              ? { ...current, template: event.target.value }
+                              : { ...current, message: event.target.value }),
+                            placeholder: settingsTriggerForm.actionType === "template"
+                              ? "Handle this payload:\\n{{payload}}"
+                              : "Run tests and post a summary",
+                          })
+                        ),
+                        settingsTriggerForm.source === "github"
+                          ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                              React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Filters"),
+                              React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
+                                React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Repository Filter"),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                    React.createElement("input", {
+                                      type: "text",
+                                      className: "playground-environments-input playground-tasks-detail-fact-select",
+                                      value: settingsTriggerForm.filterRepo,
+                                      disabled: settingsTriggerSubmitting,
+                                      onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterRepo: event.target.value })),
+                                      placeholder: "org/repo",
+                                    })
+                                  )
+                                ),
+                                React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Branch Filter"),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                    React.createElement("input", {
+                                      type: "text",
+                                      className: "playground-environments-input playground-tasks-detail-fact-select",
+                                      value: settingsTriggerForm.filterBranch,
+                                      disabled: settingsTriggerSubmitting,
+                                      onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterBranch: event.target.value })),
+                                      placeholder: "main",
+                                    })
+                                  )
+                                )
+                              )
+                            )
+                          : null
+                      ),
+                      settingsTriggersError
+                        ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, settingsTriggersError)
+                        : null,
+                      React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button",
+                          onClick: closeSettingsTriggerComposer,
+                          disabled: settingsTriggerSubmitting,
+                        }, "Cancel"),
+                        React.createElement("button", {
+                          type: "submit",
+                          className: "playground-environments-action-button is-primary",
+                          disabled: settingsTriggerSubmitting || !canCreateSettingsTrigger,
+                        }, settingsTriggerSubmitting ? "Creating..." : "Create Webhook")
+                      )
+                    )
+                  )
+                : null;
+
               detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
                 renderSettingsDetailHeader(
                   "Webhooks",
@@ -77324,10 +77800,7 @@ const html = `<!doctype html>
                       : React.createElement("button", {
                           type: "button",
                           className: "playground-environments-action-button is-primary",
-                          onClick: () => {
-                            resetSettingsTriggerForm();
-                            setSettingsCreatingTrigger(true);
-                          },
+                          onClick: openSettingsTriggerComposer,
                         },
                           React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
                           React.createElement("span", null, "New Webhook")
@@ -77346,165 +77819,8 @@ const html = `<!doctype html>
                 ),
                 renderSettingsBanner("error", settingsTriggersError),
                 renderSettingsBanner("success", settingsTriggersSuccess),
-                settingsCreatingTrigger
-                  ? renderSettingsSectionCard(
-                      "New webhook trigger",
-                      "Define the event source, target environment, and agent action.",
-                      React.createElement("div", { className: "playground-settings-form-grid" },
-                        React.createElement("div", { className: "playground-settings-field" },
-                          React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-trigger-name" }, "Name"),
-                          React.createElement("input", {
-                            id: "settings-trigger-name",
-                            className: "playground-settings-input",
-                            value: settingsTriggerForm.name,
-                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, name: event.target.value })),
-                            placeholder: "Deploy on push",
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-settings-field" },
-                          React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-trigger-source" }, "Source"),
-                          React.createElement("select", {
-                            id: "settings-trigger-source",
-                            className: "playground-settings-select",
-                            value: settingsTriggerForm.source,
-                            onChange: (event) => setSettingsTriggerForm((current) => ({
-                              ...current,
-                              source: event.target.value,
-                              event: event.target.value === "github" ? "push" : "",
-                            })),
-                          },
-                            SETTINGS_TRIGGER_SOURCE_OPTIONS.map((option) =>
-                              React.createElement("option", { key: option.value, value: option.value }, option.label)
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-settings-field" },
-                          React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-trigger-event" }, "Event"),
-                          settingsTriggerForm.source === "github"
-                            ? React.createElement("select", {
-                                id: "settings-trigger-event",
-                                className: "playground-settings-select",
-                                value: settingsTriggerForm.event,
-                                onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, event: event.target.value })),
-                              },
-                                SETTINGS_GITHUB_EVENTS.map((eventName) =>
-                                  React.createElement("option", { key: eventName, value: eventName }, eventName)
-                                )
-                              )
-                            : React.createElement("input", {
-                                id: "settings-trigger-event",
-                                className: "playground-settings-input",
-                                value: settingsTriggerForm.event,
-                                onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, event: event.target.value })),
-                                placeholder: "event_callback",
-                              })
-                        ),
-                        React.createElement("div", { className: "playground-settings-field" },
-                          React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-trigger-environment" }, "Environment"),
-                          React.createElement("select", {
-                            id: "settings-trigger-environment",
-                            className: "playground-settings-select",
-                            value: settingsTriggerForm.environmentId,
-                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, environmentId: event.target.value })),
-                          },
-                            React.createElement("option", { value: "" }, "Select environment"),
-                            runtimeEnvironments.map((environment) =>
-                              React.createElement("option", { key: environment.id, value: environment.id }, environment.name || environment.id)
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-settings-field" },
-                          React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-trigger-agent" }, "Agent"),
-                          React.createElement("select", {
-                            id: "settings-trigger-agent",
-                            className: "playground-settings-select",
-                            value: settingsTriggerForm.agentId,
-                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, agentId: event.target.value })),
-                          },
-                            React.createElement("option", { value: "" }, "Default agent"),
-                            runtimeAgents.map((agent) =>
-                              React.createElement("option", { key: agent.id, value: agent.id }, agent.name || agent.id)
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-settings-field" },
-                          React.createElement("label", { className: "playground-settings-label" }, "Action"),
-                          React.createElement("div", { className: "playground-settings-toggle-group" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-toggle-pill" + (settingsTriggerForm.actionType === "message" ? " is-active" : ""),
-                              onClick: () => setSettingsTriggerForm((current) => ({ ...current, actionType: "message" })),
-                            }, "Static message"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-toggle-pill" + (settingsTriggerForm.actionType === "template" ? " is-active" : ""),
-                              onClick: () => setSettingsTriggerForm((current) => ({ ...current, actionType: "template" })),
-                            }, "Template")
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
-                          React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-trigger-prompt" }, settingsTriggerForm.actionType === "template" ? "Template" : "Message"),
-                          settingsTriggerForm.actionType === "template"
-                            ? React.createElement("textarea", {
-                                id: "settings-trigger-prompt",
-                                className: "playground-settings-textarea",
-                                value: settingsTriggerForm.template,
-                                onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, template: event.target.value })),
-                                placeholder: "Handle this payload:\\n{{payload}}",
-                              })
-                            : React.createElement("input", {
-                                id: "settings-trigger-prompt",
-                                className: "playground-settings-input",
-                                value: settingsTriggerForm.message,
-                                onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, message: event.target.value })),
-                                placeholder: "Run tests and post a summary",
-                              })
-                        ),
-                        settingsTriggerForm.source === "github"
-                          ? React.createElement(React.Fragment, null,
-                              React.createElement("div", { className: "playground-settings-field" },
-                                React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-trigger-repo" }, "Repository Filter"),
-                                React.createElement("input", {
-                                  id: "settings-trigger-repo",
-                                  className: "playground-settings-input",
-                                  value: settingsTriggerForm.filterRepo,
-                                  onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterRepo: event.target.value })),
-                                  placeholder: "org/repo",
-                                })
-                              ),
-                              React.createElement("div", { className: "playground-settings-field" },
-                                React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-trigger-branch" }, "Branch Filter"),
-                                React.createElement("input", {
-                                  id: "settings-trigger-branch",
-                                  className: "playground-settings-input",
-                                  value: settingsTriggerForm.filterBranch,
-                                  onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterBranch: event.target.value })),
-                                  placeholder: "main",
-                                })
-                              )
-                            )
-                          : null
-                      ),
-                      React.createElement("div", { className: "playground-settings-form-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button is-primary",
-                          disabled: settingsTriggerSubmitting,
-                          onClick: () => {
-                            void handleSettingsCreateTrigger();
-                          },
-                        }, React.createElement("span", null, settingsTriggerSubmitting ? "Creating..." : "Create Webhook")),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: () => {
-                            setSettingsCreatingTrigger(false);
-                          },
-                        }, React.createElement("span", null, "Cancel"))
-                      )
-                    )
-                  : settingsSelectedTrigger
-                    ? (() => {
+                settingsSelectedTrigger
+                  ? (() => {
                         const sourceMeta = getSettingsTriggerSourceMeta(settingsSelectedTrigger.source);
                         const TriggerIcon = sourceMeta.icon;
                         return React.createElement(React.Fragment, null,
@@ -77608,10 +77924,7 @@ const html = `<!doctype html>
                                 React.createElement("button", {
                                   type: "button",
                                   className: "playground-environments-action-button is-primary",
-                                  onClick: () => {
-                                    resetSettingsTriggerForm();
-                                    setSettingsCreatingTrigger(true);
-                                  },
+                                  onClick: openSettingsTriggerComposer,
                                 }, React.createElement("span", null, "Create Webhook"))
                               )
                             : React.createElement("div", { className: "playground-settings-listing" },
@@ -77643,9 +77956,11 @@ const html = `<!doctype html>
                                     );
                                 })
                               )
-                      )
+                      ),
+                settingsTriggerComposerDialog
               );
               break;
+            }
             case "api": {
               const apiKeysListContent = settingsApiKeysLoading
                 ? React.createElement("div", { className: "playground-settings-loading-state" },
@@ -78979,19 +79294,81 @@ const html = `<!doctype html>
                   ? (sessionState.error || "The playground could not verify your current session. Retry or sign in again.")
                   : "Sign in with your Agentic Compute Platform account to load your real threads, agents, environments, and attachments."
               ),
+              React.createElement("form", {
+                className: "playground-onboarding-form",
+                onSubmit: handlePlatformEmailSignIn,
+              },
+                React.createElement("div", { className: "playground-onboarding-field" },
+                  React.createElement("label", { className: "playground-onboarding-label", htmlFor: "platform-auth-email" }, "Email"),
+                  React.createElement("input", {
+                    id: "platform-auth-email",
+                    ref: authGateEmailInputRef,
+                    className: "playground-onboarding-input",
+                    type: "email",
+                    autoComplete: "email",
+                    value: platformAuthForm.email,
+                    onChange: (event) => {
+                      const nextValue = event.target.value;
+                      setPlatformAuthForm((current) => ({ ...current, email: nextValue }));
+                      if (platformAuthError) {
+                        setPlatformAuthError("");
+                      }
+                    },
+                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
+                    placeholder: "you@company.com",
+                  })
+                ),
+                React.createElement("div", { className: "playground-onboarding-field" },
+                  React.createElement("label", { className: "playground-onboarding-label", htmlFor: "platform-auth-password" }, "Password"),
+                  React.createElement("input", {
+                    id: "platform-auth-password",
+                    className: "playground-onboarding-input",
+                    type: "password",
+                    autoComplete: "current-password",
+                    value: platformAuthForm.password,
+                    onChange: (event) => {
+                      const nextValue = event.target.value;
+                      setPlatformAuthForm((current) => ({ ...current, password: nextValue }));
+                      if (platformAuthError) {
+                        setPlatformAuthError("");
+                      }
+                    },
+                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
+                    placeholder: "Enter your password",
+                  })
+                ),
+                platformAuthError
+                  ? React.createElement("div", { className: "playground-onboarding-status is-error" }, platformAuthError)
+                  : null,
+                React.createElement("div", { className: "playground-onboarding-footer" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-button",
+                    onClick: () => {
+                      void refreshSessionState();
+                    },
+                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
+                  }, "Retry"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-onboarding-button is-primary",
+                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
+                  }, platformAuthBusy === "password" ? "Signing in..." : "Sign in")
+                ),
+                React.createElement("div", { className: "playground-onboarding-footer" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-button",
+                    onClick: handlePlatformGoogleSignIn,
+                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
+                  }, platformAuthBusy === "google" ? "Opening Google..." : "Continue with Google")
+                )
+              ),
               React.createElement("div", { className: "playground-onboarding-footer" },
-                React.createElement("button", {
-                  type: "button",
+                React.createElement("a", {
                   className: "playground-onboarding-button",
-                  onClick: () => {
-                    void refreshSessionState();
-                  },
-                }, "Retry"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-onboarding-button is-primary",
-                  onClick: handleSignInWithComputerAgents,
-                }, "Sign in")
+                  href: buildAiosLoginUrl(),
+                }, "Open landing sign-in")
               )
             )
           );
@@ -80874,6 +81251,12 @@ async function proxyThreadMessages(req, res, threadId) {
       Connection: "keep-alive",
       "X-Accel-Buffering": "no",
     });
+    if (typeof res.flushHeaders === "function") {
+      res.flushHeaders();
+    }
+    if (res.socket) {
+      res.socket.setNoDelay(true);
+    }
 
     if (!upstream.body) {
       res.end();
@@ -80886,6 +81269,11 @@ async function proxyThreadMessages(req, res, threadId) {
       if (done) break;
       if (res.writableEnded || res.destroyed) break;
       res.write(Buffer.from(value));
+      if (typeof res.flush === "function") {
+        try {
+          res.flush();
+        } catch {}
+      }
     }
 
     res.end();
@@ -82223,6 +82611,12 @@ async function proxyUpstreamStreamRequest(req, res, upstreamPath, method) {
       Connection: "keep-alive",
       "X-Accel-Buffering": "no",
     });
+    if (typeof res.flushHeaders === "function") {
+      res.flushHeaders();
+    }
+    if (res.socket) {
+      res.socket.setNoDelay(true);
+    }
 
     const reader = upstream.body.getReader();
     while (true) {
@@ -82230,6 +82624,11 @@ async function proxyUpstreamStreamRequest(req, res, upstreamPath, method) {
       if (done) break;
       if (value) {
         res.write(Buffer.from(value));
+        if (typeof res.flush === "function") {
+          try {
+            res.flush();
+          } catch {}
+        }
       }
     }
     res.end();
