@@ -4842,6 +4842,64 @@ const html = `<!doctype html>
         gap: 18px;
       }
 
+      .playground-onboarding-auth-actions,
+      .playground-onboarding-auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-onboarding-auth-button {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .playground-onboarding-auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.38);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .playground-onboarding-auth-divider::before,
+      .playground-onboarding-auth-divider::after {
+        content: "";
+        flex: 1 1 auto;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-onboarding-auth-input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 13px;
+        outline: none;
+        transition: border-color 160ms ease, background-color 160ms ease;
+      }
+
+      .playground-onboarding-auth-input::placeholder {
+        color: rgba(255, 255, 255, 0.36);
+      }
+
+      .playground-onboarding-auth-input:focus {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-onboarding-auth-help {
+        margin: -2px 0 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
       .playground-onboarding-auth-title {
         margin: 0;
         font-size: 22px;
@@ -6882,6 +6940,16 @@ const html = `<!doctype html>
         flex-wrap: wrap;
         align-items: center;
         gap: 12px;
+      }
+
+      .playground-settings-model-entry-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-settings-model-entry-row .playground-settings-input {
+        flex: 1 1 auto;
       }
 
       .playground-settings-choice-button {
@@ -9622,7 +9690,7 @@ const html = `<!doctype html>
         position: relative;
         z-index: 2;
         background: transparent;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-right: 0;
       }
 
       .playground-environments-list-header {
@@ -9649,6 +9717,16 @@ const html = `<!doctype html>
         font-weight: 500;
         line-height: 1;
         letter-spacing: -0.01em;
+      }
+
+      .playground-environments-list-title-button {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        letter-spacing: inherit;
+        cursor: pointer;
       }
 
       .playground-environments-page:not(.playground-agents-page) .playground-files-topbar {
@@ -10170,12 +10248,24 @@ const html = `<!doctype html>
 
       .playground-environments-home-scroll {
         gap: 18px;
+        padding-bottom: 10px !important;
+      }
+
+      .playground-environments-home-content {
+        width: min(100%, 56rem);
+        max-width: 56rem;
+        margin: 0 auto;
+        min-height: 100%;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
       }
 
       .playground-environments-home-hero-title {
         position: relative;
         z-index: 1;
-        margin-top: 10px;
+        margin-top: 50px;
         margin-bottom: 5px;
         max-width: 720px;
         font-size: 24px;
@@ -10204,8 +10294,8 @@ const html = `<!doctype html>
       .playground-environments-home-hero {
         position: relative;
         overflow: visible;
-        margin: calc(-1 * var(--playground-environments-nav-top-offset)) -18px 0;
-        padding: 0 34px 28px;
+        margin: calc(-1 * var(--playground-environments-nav-top-offset)) 0 0;
+        padding: 0 0 28px;
         border: 0;
         border-radius: 0;
         background: transparent;
@@ -10279,7 +10369,7 @@ const html = `<!doctype html>
         position: relative;
         z-index: 1;
         margin-top: 18px;
-        margin-bottom: 24px;
+        margin-bottom: 16px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
@@ -10291,6 +10381,12 @@ const html = `<!doctype html>
         border: 0;
         border-radius: 0;
         background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .playground-environments-home-metrics .playground-tasks-detail-facts::before {
+        content: none;
       }
 
       .playground-environments-home-metrics .playground-tasks-detail-facts-body {
@@ -10364,21 +10460,31 @@ const html = `<!doctype html>
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 22px;
         background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         display: flex;
         flex-direction: column;
         gap: 12px;
+        cursor: pointer;
+        transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-environments-home-card:hover {
+        border-color: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateY(-1px);
+      }
+
+      .playground-environments-home-card.is-command-active {
+        border-color: rgba(12, 111, 255, 0.42);
+        background: rgba(12, 111, 255, 0.08);
       }
 
       .playground-environments-home-card-visual {
-        width: 58px;
-        height: 58px;
-        border-radius: 18px;
-        background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
-          rgba(255, 255, 255, 0.04);
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
+        align-self: flex-start;
         color: rgba(255, 255, 255, 0.94);
       }
 
@@ -10425,6 +10531,29 @@ const html = `<!doctype html>
       .playground-environments-home-card-button:hover {
         background: rgba(255, 255, 255, 0.09);
         color: #fff;
+      }
+
+      .playground-environments-home-card.is-command-active .playground-environments-home-card-button {
+        border-color: rgba(12, 111, 255, 0.42);
+        background: rgba(12, 111, 255, 0.18);
+        color: #fff;
+      }
+
+      .playground-environments-home-composer-shell,
+      .playground-tasks-backlog-composer-shell {
+        position: relative;
+        margin-top: auto;
+        padding: 0;
+        background: transparent;
+      }
+
+      .playground-environments-home-composer-host {
+        flex: 0 0 auto;
+        padding: 0 18px 10px;
+      }
+
+      .playground-environments-home-composer-shell .runner-inline-error {
+        margin-top: 12px;
       }
 
       .playground-environments-home-recent {
@@ -16895,6 +17024,11 @@ const html = `<!doctype html>
         background: transparent;
       }
 
+      .playground-environment-composer-modal .playground-environments-editor-surface .playground-tasks-detail-facts::before {
+        content: none;
+        display: none;
+      }
+
       .playground-environment-composer-modal .playground-environments-editor-surface .playground-tasks-detail-facts-body {
         gap: 12px;
       }
@@ -18440,18 +18574,11 @@ const html = `<!doctype html>
         margin-top: 14px;
       }
 
-      .playground-tasks-backlog-composer-shell {
-        position: sticky;
-        bottom: 0;
-        margin-top: auto;
-        padding: 8px 0 10px;
-        background: transparent;
-      }
-
       .playground-tasks-backlog-composer-shell.is-project-wallpaper-active .tb-runner-chat.playground-tasks-backlog-runner .task-input-box {
         --tb-task-input-base-bg: transparent;
       }
 
+      .tb-runner-chat.playground-environments-home-runner,
       .tb-runner-chat.playground-tasks-backlog-runner {
         width: 100%;
         min-width: 0;
@@ -18462,10 +18589,12 @@ const html = `<!doctype html>
         overflow: visible;
       }
 
+      .tb-runner-chat.playground-environments-home-runner .workinglogsbox,
       .tb-runner-chat.playground-tasks-backlog-runner .workinglogsbox {
         display: none !important;
       }
 
+      .tb-runner-chat.playground-environments-home-runner .tb-input-shell,
       .tb-runner-chat.playground-tasks-backlog-runner .tb-input-shell {
         position: static;
         right: auto;
@@ -18475,21 +18604,20 @@ const html = `<!doctype html>
         pointer-events: auto;
       }
 
+      .tb-runner-chat.playground-environments-home-runner .tb-input-width,
       .tb-runner-chat.playground-tasks-backlog-runner .tb-input-width {
         width: 100%;
         max-width: none;
       }
 
+      .tb-runner-chat.playground-environments-home-runner .embedded-runner-input,
       .tb-runner-chat.playground-tasks-backlog-runner .embedded-runner-input {
         width: 100%;
       }
 
+      .tb-runner-chat.playground-environments-home-runner .tb-context-indicator-anchor,
       .tb-runner-chat.playground-tasks-backlog-runner .tb-context-indicator-anchor {
         display: none;
-      }
-
-      .tb-runner-chat.playground-tasks-backlog-runner .runner-inline-error {
-        margin-top: 12px;
       }
 
       .playground-tasks-search {
@@ -21865,7 +21993,7 @@ const html = `<!doctype html>
             ? source.availableModels
               .map((entry) => String(entry || "").trim())
               .filter(Boolean)
-              .slice(0, 20)
+              .slice(0, 100)
             : [],
           apiKeyConfigured: Boolean(source.apiKeyConfigured),
           lastValidatedAt: typeof source.lastValidatedAt === "string" ? source.lastValidatedAt.trim() : "",
@@ -21874,6 +22002,27 @@ const html = `<!doctype html>
             : "idle",
           lastError: typeof source.lastError === "string" ? source.lastError.trim() : "",
         };
+      }
+
+      function mergeDemoInferenceModelLists(...lists) {
+        return Array.from(
+          new Set(
+            lists.flatMap((list) =>
+              (Array.isArray(list) ? list : [])
+                .map((entry) => String(entry || "").trim())
+                .filter(Boolean)
+            )
+          )
+        ).slice(0, 100);
+      }
+
+      function parseDemoInferenceModelInput(value) {
+        return mergeDemoInferenceModelLists(
+          String(value || "")
+            .split(/[\\n,]+/g)
+            .map((entry) => entry.trim())
+            .filter(Boolean)
+        );
       }
 
       function readDemoSettingsPlatformConfig() {
@@ -22090,10 +22239,14 @@ const html = `<!doctype html>
           messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
           appId: FIREBASE_APP_ID,
         };
-        const existingApp = getApps().find((app) => app.name === PLAYGROUND_FIREBASE_APP_NAME);
-        const firebaseApp = existingApp || initializeApp(firebaseConfig, PLAYGROUND_FIREBASE_APP_NAME);
-        playgroundFirebaseAuthInstance = getAuth(firebaseApp);
-        return playgroundFirebaseAuthInstance;
+        try {
+          const existingApp = getApps().find((app) => app.name === PLAYGROUND_FIREBASE_APP_NAME);
+          const firebaseApp = existingApp || initializeApp(firebaseConfig, PLAYGROUND_FIREBASE_APP_NAME);
+          playgroundFirebaseAuthInstance = getAuth(firebaseApp);
+          return playgroundFirebaseAuthInstance;
+        } catch {
+          return null;
+        }
       }
 
       async function ensurePlaygroundFirebaseAuth() {
@@ -23072,7 +23225,6 @@ const html = `<!doctype html>
         { id: "suitastro", label: "Suit Astro", url: "/img/agent-profile-pics/suitastro.webp" },
       ];
       const PLAYGROUND_AGENTS_SHELL_BACKGROUND = "linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,1) 48%, rgba(0, 0, 0, 1) 100%), url(/img/agent-profile-pics/starbg.jpeg)";
-      const PLAYGROUND_ENVIRONMENTS_SHELL_BACKGROUND = "linear-gradient(180deg, rgba(5, 7, 12, 0.72) 0%, rgba(5, 7, 12, 0.9) 46%, rgba(0, 0, 0, 1) 100%), url(/img/bg/bg-abstract.avif)";
       const PLAYGROUND_AGENT_SKILL_OPTIONS = [
         {
           id: "deep_research",
@@ -33988,7 +34140,27 @@ const html = `<!doctype html>
         event.currentTarget.requestSubmit();
       }
 
-      function PlaygroundEnvironmentsPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, navigationToken = 0, onEnvironmentMutated, onRequestSidebarCollapse }) {
+      function PlaygroundEnvironmentsPage({
+        backendUrl,
+        requestHeaders,
+        environments,
+        initialEnvironmentId,
+        navigationToken = 0,
+        onEnvironmentMutated,
+        onRequestSidebarCollapse,
+        apiKey = "",
+        fetchCustomSkills,
+        speechToTextUrl = "",
+        computerAgents = null,
+        agents = [],
+        skills = [],
+        preferredEnvironmentId = "",
+        preferredAgentId = "",
+        onPreferredAgentChange,
+        onPreferredEnvironmentChange,
+        onThreadRegistered,
+        onThreadOpen,
+      }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
         const environmentDetailMainRef = useRef(null);
@@ -34009,7 +34181,6 @@ const html = `<!doctype html>
         const environmentGuiImageRef = useRef(null);
         const environmentGuiClickTimerRef = useRef(null);
         const environmentGuiScrollTimerRef = useRef(null);
-        const environmentsHomeCreatePopoverRef = useRef(null);
         const environmentRuntimePopoverRef = useRef(null);
         const environmentComposerRuntimePopoverRef = useRef(null);
         const environmentActionsPopoverRef = useRef(null);
@@ -34035,6 +34206,7 @@ const html = `<!doctype html>
         const environmentSeededSelectionRef = useRef("");
         const serverSeededSelectionRef = useRef("");
         const databaseSeededSelectionRef = useRef("");
+        const serverResourceModeRefreshRef = useRef(false);
         const [resourceMode, setResourceMode] = useState("computers");
         const [isHomeViewActive, setIsHomeViewActive] = useState(true);
         const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(initialEnvironmentId || "");
@@ -34129,7 +34301,8 @@ const html = `<!doctype html>
         const [serverDetailsCollapsed, setServerDetailsCollapsed] = useState(false);
         const [databaseDetailsCollapsed, setDatabaseDetailsCollapsed] = useState(false);
         const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
-        const [environmentsHomeCreatePopoverOpen, setEnvironmentsHomeCreatePopoverOpen] = useState(false);
+        const [environmentsHomeResourceCommandRequest, setEnvironmentsHomeResourceCommandRequest] = useState(null);
+        const [environmentsHomeActiveResourceCommand, setEnvironmentsHomeActiveResourceCommand] = useState("");
         const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
@@ -35428,6 +35601,10 @@ const html = `<!doctype html>
 
             const nextServers = parsePlaygroundServerListResponse(data);
             setServers(nextServers);
+            setServerSaveState((current) => ({
+              ...current,
+              error: "",
+            }));
             setServerDetailsById((current) => {
               const next = { ...current };
               nextServers.forEach((server) => {
@@ -35972,6 +36149,10 @@ const html = `<!doctype html>
 
             const nextDatabases = parsePlaygroundDatabaseListResponse(data);
             setDatabases(nextDatabases);
+            setDatabaseSaveState((current) => ({
+              ...current,
+              error: "",
+            }));
             setDatabaseDetailsById((current) => {
               const next = { ...current };
               nextDatabases.forEach((database) => {
@@ -36722,6 +36903,23 @@ const html = `<!doctype html>
 
         useEffect(() => {
           if (resourceMode !== "servers") {
+            serverResourceModeRefreshRef.current = false;
+            return;
+          }
+          if (serverResourceModeRefreshRef.current) {
+            return;
+          }
+          serverResourceModeRefreshRef.current = true;
+          if (!serverListLoading) {
+            void loadServers();
+          }
+          if (!databaseListLoading) {
+            void loadDatabases();
+          }
+        }, [databaseListLoading, loadDatabases, loadServers, resourceMode, serverListLoading]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers") {
             return;
           }
           if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
@@ -36887,31 +37085,6 @@ const html = `<!doctype html>
             window.removeEventListener("keydown", handleEnvironmentComposerRuntimePopoverEscape);
           };
         }, [environmentComposerRuntimePopover]);
-
-        useEffect(() => {
-          if (!environmentsHomeCreatePopoverOpen) return undefined;
-
-          function handleEnvironmentsHomeCreatePopoverPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !environmentsHomeCreatePopoverRef.current || environmentsHomeCreatePopoverRef.current.contains(target)) {
-              return;
-            }
-            setEnvironmentsHomeCreatePopoverOpen(false);
-          }
-
-          function handleEnvironmentsHomeCreatePopoverEscape(event) {
-            if (event.key === "Escape") {
-              setEnvironmentsHomeCreatePopoverOpen(false);
-            }
-          }
-
-          document.addEventListener("mousedown", handleEnvironmentsHomeCreatePopoverPointerDown);
-          window.addEventListener("keydown", handleEnvironmentsHomeCreatePopoverEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleEnvironmentsHomeCreatePopoverPointerDown);
-            window.removeEventListener("keydown", handleEnvironmentsHomeCreatePopoverEscape);
-          };
-        }, [environmentsHomeCreatePopoverOpen]);
 
         useEffect(() => {
           if (!environmentActionsPopoverOpen) return undefined;
@@ -37459,7 +37632,6 @@ const html = `<!doctype html>
           commitDraftEnvironmentIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
-          setEnvironmentsHomeCreatePopoverOpen(false);
           setEnvironmentListActionMenuState(null);
           setIsHomeViewActive(false);
           setSelectedEnvironmentId(environmentId);
@@ -37470,7 +37642,6 @@ const html = `<!doctype html>
           resetEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
-          setEnvironmentsHomeCreatePopoverOpen(false);
           setEnvironmentListActionMenuState(null);
           setIsHomeViewActive(false);
           setEnvironmentComposerSaveState({
@@ -37526,7 +37697,6 @@ const html = `<!doctype html>
           void commitDraftServerIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
-          setEnvironmentsHomeCreatePopoverOpen(false);
           setServerActionsPopoverOpen(false);
           setServerBindingState({
             savingKey: "",
@@ -37542,7 +37712,6 @@ const html = `<!doctype html>
           void commitDraftServerIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
-          setEnvironmentsHomeCreatePopoverOpen(false);
           setServerActionsPopoverOpen(false);
           setDatabaseActionsPopoverOpen(false);
           setIsHomeViewActive(false);
@@ -37620,7 +37789,6 @@ const html = `<!doctype html>
           resetServerEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
-          setEnvironmentsHomeCreatePopoverOpen(false);
           setIsHomeViewActive(false);
           setServerComposerSaveState({
             isSaving: false,
@@ -37658,7 +37826,6 @@ const html = `<!doctype html>
           resetServerEditorAuxiliaryState();
           setToolbarPopover("");
           setSearchPopupQuery("");
-          setEnvironmentsHomeCreatePopoverOpen(false);
           setResourceMode("servers");
           setIsHomeViewActive(false);
           setServerComposerSaveState({
@@ -37674,12 +37841,55 @@ const html = `<!doctype html>
           setServerComposerOpen(true);
         }
 
+        function stageEnvironmentsHomeResourceCommand(commandType) {
+          const normalizedCommandType = String(commandType || "").trim().toLowerCase();
+          if (normalizedCommandType !== "computer" && normalizedCommandType !== "app" && normalizedCommandType !== "function") {
+            return;
+          }
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+          setEnvironmentsHomeActiveResourceCommand(normalizedCommandType);
+          setEnvironmentsHomeResourceCommandRequest({
+            type: normalizedCommandType,
+            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+          });
+        }
+
+        function buildEnvironmentsHomeResourceHiddenPrompt(commandType) {
+          if (commandType === "computer") {
+            return [
+              "The user is asking you to create a new ACP computer.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested computer instead of inventing IDs or writing raw API calls.",
+              "If essential details are missing, ask concise clarifying questions before creating anything. Focus on operating system, runtime, Dockerfile or base image, packages, GUI requirements, secrets, and integrations.",
+              "Once the request is specific enough, create the computer and clearly summarize what you configured."
+            ].join(" ");
+          }
+          if (commandType === "app") {
+            return [
+              "The user is asking you to create a new ACP web app resource.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested app.",
+              "If the specification is incomplete, ask concise clarifying questions before creating anything. Focus on framework, source or runtime choice, build and start behavior, environment variables, route or domain expectations, and any required bindings.",
+              "Once the request is specific enough, create the app resource and clearly summarize what you configured."
+            ].join(" ");
+          }
+          if (commandType === "function") {
+            return [
+              "The user is asking you to create a new ACP function resource.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested function.",
+              "If the specification is incomplete, ask concise clarifying questions before creating anything. Focus on runtime, trigger shape, request and response contract, dependencies, environment variables, and any required bindings.",
+              "Once the request is specific enough, create the function resource and clearly summarize what you configured."
+            ].join(" ");
+          }
+          return "";
+        }
+
         function showEnvironmentsHome() {
           commitDraftEnvironmentIfDirty();
           void commitDraftServerIfDirty();
           setToolbarPopover("");
           setSearchPopupQuery("");
-          setEnvironmentsHomeCreatePopoverOpen(false);
+          setEnvironmentsHomeActiveResourceCommand("");
+          setEnvironmentsHomeResourceCommandRequest(null);
           setEnvironmentListActionMenuState(null);
           setEnvironmentActionsPopoverOpen(false);
           setServerActionsPopoverOpen(false);
@@ -46835,6 +47045,16 @@ const html = `<!doctype html>
           );
         }
 
+        const handleEnvironmentsHomeThreadOpen = (threadId) => {
+          const normalizedThreadId = String(threadId || "").trim();
+          if (!normalizedThreadId || typeof onThreadOpen !== "function") {
+            return;
+          }
+          setEnvironmentsHomeActiveResourceCommand("");
+          setEnvironmentsHomeResourceCommandRequest(null);
+          onThreadOpen(normalizedThreadId);
+        };
+
         function renderEnvironmentsHome() {
           const renderHomeResourceIcon = (item, className) => {
             if (item?.resourceType === "computer") {
@@ -46872,23 +47092,6 @@ const html = `<!doctype html>
               return "Agent Runtime";
             }
             return "Web App";
-          };
-
-          const handleHomeRecentItemSelect = (item) => {
-            if (!item?.id) {
-              return;
-            }
-            if (item.resourceType === "computer") {
-              setResourceMode("computers");
-              handleEnvironmentSelect(item.id);
-              return;
-            }
-            setResourceMode("servers");
-            if (item.resourceType === "database" || item.kind === "database") {
-              handleDatabaseSelect(item.id);
-              return;
-            }
-            handleServerSelect(item.id);
           };
 
           const buildHomeUsageLinePath = (points) => {
@@ -47109,104 +47312,37 @@ const html = `<!doctype html>
 
           const capabilityCards = [
             {
-              id: "computers",
+              id: "computer",
+              command: "computer",
               title: "Computers",
-              copy: "Create durable workspaces with runtimes, packages, secrets, MCP servers, and live desktop access for your agents.",
+              copy: "Create durable computers with the right runtime, packages, GUI access, and toolchain for the job.",
               countLabel: environmentsHomeSummary.computers + " configured",
-              actionLabel: "New Computer",
+              actionLabel: "Use /computer",
               Icon: HardDrive,
-              onClick: () => {
-                setResourceMode("computers");
-                openEnvironmentComposer();
-              },
             },
             {
-              id: "apps",
-              title: "Web Apps & Functions",
-              copy: "Ship public apps and private cloud functions with source files, runtime config, deploys, logs, and connection-aware runtime context.",
-              countLabel: (environmentsHomeSummary.webApps + environmentsHomeSummary.functions) + " published surfaces",
-              actionLabel: "New Resource",
+              id: "app",
+              command: "app",
+              title: "Apps",
+              copy: "Create web apps with the right runtime, bindings, and deployment shape for the product you want to ship.",
+              countLabel: environmentsHomeSummary.webApps + " deployed",
+              actionLabel: "Use /app",
               Icon: Globe,
-              onClick: () => {
-                setResourceMode("servers");
-                openServerComposer();
-              },
             },
             {
-              id: "managed",
-              title: "Data, Auth & Agent Runtimes",
-              copy: "Connect Firestore-backed databases, scoped auth modules, and thread-backed agent runtimes to the apps you deploy here.",
-              countLabel: environmentsHomeSummary.managedResources + " managed resources",
-              actionLabel: "AI Chat App",
-              Icon: Bot,
-              onClick: openAiChatAppComposer,
+              id: "function",
+              command: "function",
+              title: "Functions",
+              copy: "Create functions with the right runtime, request contract, dependencies, and connected resources.",
+              countLabel: environmentsHomeSummary.functions + " deployed",
+              actionLabel: "Use /function",
+              Icon: FunctionSquare,
             },
           ];
 
           return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll" },
-            React.createElement("section", { className: "playground-environments-home-hero" },
-              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-environments-home-navbar" },
-                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                  React.createElement("div", {
-                      className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
-                      ref: environmentsHomeCreatePopoverRef,
-                    },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-header-icon-button is-plain" + (environmentsHomeCreatePopoverOpen ? " is-active" : ""),
-                      onClick: () => setEnvironmentsHomeCreatePopoverOpen((current) => !current),
-                      title: "Create",
-                      "aria-label": "Create",
-                      "aria-expanded": environmentsHomeCreatePopoverOpen ? "true" : "false",
-                    }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
-                    environmentsHomeCreatePopoverOpen
-                      ? React.createElement("div", {
-                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                          onClick: (event) => event.stopPropagation(),
-                        },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              setResourceMode("computers");
-                              openEnvironmentComposer();
-                            },
-                          },
-                            React.createElement(HardDrive, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "New Computer")
-                            )
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              setResourceMode("servers");
-                              openServerComposer();
-                            },
-                          },
-                            React.createElement(Globe, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "New Resource")
-                            )
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              openAiChatAppComposer();
-                            },
-                          },
-                            React.createElement(Bot, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "AI Chat App")
-                            )
-                          )
-                        )
-                      : null
-                  )
-                )
-              ),
+            React.createElement("div", { className: "playground-environments-home-content" },
+              React.createElement("section", { className: "playground-environments-home-hero" },
               React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
               React.createElement("div", { className: "playground-environments-home-hero-copy" },
                 "Create durable computers, publish web apps and functions, connect databases and auth, and power products with agent runtimes. Environments brings your full AI application stack together in one workspace."
@@ -47270,10 +47406,22 @@ const html = `<!doctype html>
                   )
                 )
               )
-            ),
-            React.createElement("div", { className: "playground-environments-home-card-grid" },
-              capabilityCards.map((card) =>
-                React.createElement("section", { className: "playground-environments-home-card", key: card.id },
+              ),
+              React.createElement("div", { className: "playground-environments-home-card-grid" },
+                capabilityCards.map((card) =>
+                  React.createElement("section", {
+                      className: "playground-environments-home-card" + (environmentsHomeActiveResourceCommand === card.command ? " is-command-active" : ""),
+                      key: card.id,
+                      role: "button",
+                      tabIndex: 0,
+                      onClick: () => stageEnvironmentsHomeResourceCommand(card.command),
+                      onKeyDown: (event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          stageEnvironmentsHomeResourceCommand(card.command);
+                        }
+                      },
+                    },
                   React.createElement("div", { className: "playground-environments-home-card-visual" },
                     React.createElement(card.Icon, { className: "playground-environments-home-card-icon", strokeWidth: 1.8 })
                   ),
@@ -47283,46 +47431,14 @@ const html = `<!doctype html>
                   React.createElement("button", {
                     type: "button",
                     className: "playground-environments-home-card-button",
-                    onClick: card.onClick,
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      stageEnvironmentsHomeResourceCommand(card.command);
+                    },
                   }, card.actionLabel)
+                  )
                 )
-              )
-            ),
-            React.createElement("section", { className: "playground-environments-home-recent" },
-              React.createElement("div", { className: "playground-environments-home-recent-header" },
-                React.createElement("div", { className: "playground-environments-home-recent-title" }, "Recent Resources"),
-                React.createElement("div", { className: "playground-environments-home-recent-copy" }, "Jump back into the latest computers, apps, and connected services.")
               ),
-              environmentsHomeRecentItems.length > 0
-                ? React.createElement("div", { className: "playground-environments-home-recent-list" },
-                    environmentsHomeRecentItems.map((item) =>
-                      React.createElement("button", {
-                          key: item.resourceType + ":" + item.id,
-                          type: "button",
-                          className: "playground-environments-home-recent-row",
-                          onClick: () => handleHomeRecentItemSelect(item),
-                        },
-                        React.createElement("div", { className: "playground-environments-home-recent-main" },
-                          React.createElement("span", { className: "playground-environments-home-recent-icon-shell" },
-                            renderHomeResourceIcon(item, "playground-environments-home-recent-icon")
-                          ),
-                          React.createElement("div", { className: "playground-environments-home-recent-copy-wrap" },
-                            React.createElement("div", { className: "playground-environments-home-recent-name" }, item.name),
-                            React.createElement("div", { className: "playground-environments-home-recent-subtitle" },
-                              item.description || getHomeResourceKindLabel(item)
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-environments-home-recent-meta" },
-                          React.createElement("span", { className: "playground-environments-home-recent-kind" }, getHomeResourceKindLabel(item)),
-                          React.createElement("span", { className: "playground-environments-home-recent-time" }, formatPlaygroundRelativeTime(item.updatedAt))
-                        )
-                      )
-                    )
-                  )
-                : React.createElement("div", { className: "playground-environments-home-recent-empty" },
-                    "Create your first computer or resource to start building here."
-                  )
             )
           );
         }
@@ -47346,7 +47462,11 @@ const html = `<!doctype html>
                     })
                   : null,
                 React.createElement("div", { className: "playground-files-topbar" },
-                  React.createElement("div", { className: "playground-environments-list-title" }, "Environments"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-list-title playground-environments-list-title-button",
+                    onClick: showEnvironmentsHome,
+                  }, "Environments"),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
                     React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-environments-search-shell" },
                       React.createElement("button", {
@@ -47579,6 +47699,76 @@ const html = `<!doctype html>
                         React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                       )
                     : renderCurrentEnvironmentEditor())
+              ,
+              shouldShowEnvironmentHome
+                ? React.createElement("div", { className: "playground-environments-home-composer-host" },
+                    React.createElement("div", { className: "playground-environments-home-content" },
+                      React.createElement("div", { className: "playground-environments-home-composer-shell" },
+                        React.createElement(RunnerChat, {
+                          key: "environments-home-resource-composer",
+                          className: "playground-environments-home-runner",
+                          backendUrl,
+                          apiKey,
+                          fetchCustomSkills,
+                          speechToTextUrl: speechToTextUrl || undefined,
+                          requestHeaders,
+                          appId: "runner-web-sdk-demo",
+                          inputMode: "computer-agents",
+                          computerAgents: computerAgents || undefined,
+                          environments: environments.map((environment) => ({
+                            ...environment,
+                            ...(preferredEnvironmentId && environment.id === preferredEnvironmentId ? { isDefault: true } : {}),
+                          })),
+                          agents: (Array.isArray(agents) ? agents : []).map((agent) => ({
+                            ...agent,
+                            ...(preferredAgentId && agent.id === preferredAgentId ? { isDefault: true } : {}),
+                          })),
+                          skills: Array.isArray(skills) ? skills : [],
+                          environmentId: preferredEnvironmentId || undefined,
+                          agentId: preferredAgentId || undefined,
+                          keepFocusOnSubmit: true,
+                          showUsageInStatus: false,
+                          placeholder: "Type /computer, /app, or /function and describe what you want to create",
+                          enableResourceCreationCommand: true,
+                          resourceCreationCommand: environmentsHomeResourceCommandRequest,
+                          resourceCreationCommandHiddenPrompt: buildEnvironmentsHomeResourceHiddenPrompt,
+                          onResourceCreationCommandChange: (commandType) => {
+                            setEnvironmentsHomeActiveResourceCommand(commandType || "");
+                          },
+                          onThreadIdChange: (threadId) => {
+                            const normalizedThreadId = String(threadId || "").trim();
+                            if (!normalizedThreadId || typeof onThreadRegistered !== "function") {
+                              return;
+                            }
+                            onThreadRegistered(normalizedThreadId);
+                          },
+                          onRunStart: handleEnvironmentsHomeThreadOpen,
+                          onRunFinish: (_result, threadId) => handleEnvironmentsHomeThreadOpen(threadId),
+                          onAgentChange: (nextAgentId) => {
+                            if (typeof onPreferredAgentChange === "function") {
+                              onPreferredAgentChange(String(nextAgentId || "").trim());
+                            }
+                          },
+                          onEnvironmentChange: (nextEnvironmentId) => {
+                            if (typeof onPreferredEnvironmentChange === "function") {
+                              onPreferredEnvironmentChange(String(nextEnvironmentId || "").trim());
+                            }
+                          },
+                          onDocumentPreviewOpenChange: (isOpen) => {
+                            if (isOpen && typeof onRequestSidebarCollapse === "function") {
+                              onRequestSidebarCollapse();
+                            }
+                          },
+                          onDeepResearchDetailOpenChange: (isOpen) => {
+                            if (isOpen && typeof onRequestSidebarCollapse === "function") {
+                              onRequestSidebarCollapse();
+                            }
+                          },
+                        })
+                      )
+                    )
+                  )
+                : null
             )
           ),
           renderEnvironmentListActionMenu(),
@@ -70550,6 +70740,7 @@ const html = `<!doctype html>
         const [settingsPlatformConfigTesting, setSettingsPlatformConfigTesting] = useState(false);
         const [settingsBillingPreferences, setSettingsBillingPreferences] = useState(() => readDemoSettingsPlatformConfig().billing);
         const [settingsInferenceSettings, setSettingsInferenceSettings] = useState(() => readDemoSettingsPlatformConfig().inference);
+        const [settingsInferenceModelInput, setSettingsInferenceModelInput] = useState("");
         const [settingsInferenceApiKeyInput, setSettingsInferenceApiKeyInput] = useState("");
         const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);
         const [settingsCheckoutLoading, setSettingsCheckoutLoading] = useState(false);
@@ -70878,37 +71069,43 @@ const html = `<!doctype html>
         }, [effectiveApiKey, hasRealAccess, latestInteractedProjectId, proxyBackendBase, showInitialThreadWelcome, upstreamUrl]);
 
         function buildAiosLoginUrl() {
-          let loginOrigin = ${JSON.stringify(aiosOrigin)};
-          try {
-            const currentUrl = new URL(window.location.href);
-            if (currentUrl.hostname === "platform.computer-agents.com") {
-              loginOrigin = currentUrl.origin;
-            }
-          } catch {}
-          const loginUrl = new URL("/login", loginOrigin);
+          const loginUrl = new URL("/login", ${JSON.stringify(aiosOrigin)});
           loginUrl.searchParams.set("redirect", window.location.href);
           return loginUrl.toString();
         }
 
+        function redirectToAiosLogin(options) {
+          const nextOptions = options && typeof options === "object" ? options : {};
+          const currentHref = window.location.href;
+          const redirectState = readPlaygroundAuthRedirectState();
+          const previousAttempts =
+            redirectState && String(redirectState.href || "") === currentHref
+              ? Math.max(0, Number(redirectState.attempts || 0))
+              : 0;
+          writePlaygroundAuthRedirectState({
+            href: currentHref,
+            startedAt: Date.now(),
+            attempts: previousAttempts + 1,
+          });
+          const loginUrl = buildAiosLoginUrl();
+          if (nextOptions.replace) {
+            window.location.replace(loginUrl);
+            return;
+          }
+          window.location.assign(loginUrl);
+        }
+
         function handleSignInWithComputerAgents() {
           setPlatformAuthError("");
-          window.requestAnimationFrame(() => {
-            if (authGateEmailInputRef.current) {
-              authGateEmailInputRef.current.focus();
-            }
-          });
+          if (!authRedirectStartedRef.current) {
+            authRedirectStartedRef.current = true;
+            redirectToAiosLogin({ replace: false });
+          }
         }
 
         function buildAiosLogoutUrl() {
-          let logoutOrigin = ${JSON.stringify(aiosOrigin)};
-          try {
-            const currentUrl = new URL(window.location.href);
-            if (currentUrl.hostname === "platform.computer-agents.com") {
-              logoutOrigin = currentUrl.origin;
-            }
-          } catch {}
-          const logoutUrl = new URL("/logout", logoutOrigin);
-          logoutUrl.searchParams.set("redirect", window.location.href);
+          const logoutUrl = new URL("/logout", ${JSON.stringify(aiosOrigin)});
+          logoutUrl.searchParams.set("redirect", buildAiosLoginUrl());
           return logoutUrl.toString();
         }
 
@@ -70943,6 +71140,7 @@ const html = `<!doctype html>
               error: "",
             });
             setPlatformAuthBusy("");
+            window.location.replace(buildAiosLogoutUrl());
           }
         }
 
@@ -72055,6 +72253,12 @@ const html = `<!doctype html>
         }, [isDemoMode]);
 
         useEffect(() => {
+          if (isDemoMode) {
+            authRedirectStartedRef.current = false;
+            clearPlaygroundAuthRedirectState();
+            return;
+          }
+
           if (sessionState.status === "authenticated") {
             hasAuthenticatedSessionThisMountRef.current = true;
             authRedirectStartedRef.current = false;
@@ -72070,57 +72274,14 @@ const html = `<!doctype html>
             return;
           }
 
-          if (sessionState.status === "error") {
-            authRedirectStartedRef.current = false;
-            return;
-          }
-
-          const redirectState = readPlaygroundAuthRedirectState();
-          const currentHref = window.location.href;
-          const startedAt = Number(redirectState?.startedAt || 0);
-          const attempts = Math.max(0, Number(redirectState?.attempts || 0));
-          const isRecentRedirect =
-            redirectState
-            && String(redirectState.href || "") === currentHref
-            && Number.isFinite(startedAt)
-            && Date.now() - startedAt < 20000;
-
-          if (isRecentRedirect && attempts < 5) {
+          if (
+            (sessionState.status === "unauthenticated" || sessionState.status === "error")
+            && !authRedirectStartedRef.current
+          ) {
             authRedirectStartedRef.current = true;
-            writePlaygroundAuthRedirectState({
-              href: currentHref,
-              startedAt,
-              attempts: attempts + 1,
-            });
-
-            const retryTimer = window.setTimeout(() => {
-              authRedirectStartedRef.current = false;
-              void refreshSessionState();
-            }, 1200);
-
-            return () => window.clearTimeout(retryTimer);
+            redirectToAiosLogin({ replace: true });
           }
-
-          if (isRecentRedirect && attempts >= 5) {
-            authRedirectStartedRef.current = false;
-            clearPlaygroundAuthRedirectState();
-            return;
-          }
-
-          if (sessionState.status !== "unauthenticated") {
-            authRedirectStartedRef.current = false;
-            return;
-          }
-
-          if (!hasAuthenticatedSessionThisMountRef.current) {
-            authRedirectStartedRef.current = false;
-            clearPlaygroundAuthRedirectState();
-            return;
-          }
-
-          authRedirectStartedRef.current = false;
-          clearPlaygroundAuthRedirectState();
-        }, [refreshSessionState, sessionState.status]);
+        }, [isDemoMode, sessionState.status]);
 
         useEffect(() => {
           if (isDemoMode) {
@@ -72448,7 +72609,7 @@ const html = `<!doctype html>
             });
 
             if (response.status === 401) {
-              window.location.href = buildAiosLoginUrl();
+              handleSignInWithComputerAgents();
               return;
             }
 
@@ -72505,7 +72666,7 @@ const html = `<!doctype html>
 
             if (response.status === 401) {
               clearPlaygroundIntegrationRedirectState();
-              window.location.href = buildAiosLoginUrl();
+              handleSignInWithComputerAgents();
               return;
             }
 
@@ -72557,7 +72718,7 @@ const html = `<!doctype html>
             });
 
             if (response.status === 401) {
-              window.location.href = buildAiosLoginUrl();
+              handleSignInWithComputerAgents();
               return;
             }
 
@@ -72606,7 +72767,7 @@ const html = `<!doctype html>
             });
 
             if (response.status === 401) {
-              window.location.href = buildAiosLoginUrl();
+              handleSignInWithComputerAgents();
               return;
             }
 
@@ -76262,9 +76423,13 @@ const html = `<!doctype html>
                 settingsInferenceSettings.defaultModel
               );
             }
+            const normalizedDiscoveredModels = mergeDemoInferenceModelLists(
+              availableModels,
+              settingsInferenceSettings.defaultModel ? [settingsInferenceSettings.defaultModel] : []
+            );
             setSettingsInferenceSettings((current) => ({
               ...current,
-              availableModels,
+              availableModels: mergeDemoInferenceModelLists(current.availableModels, normalizedDiscoveredModels),
               apiKeyConfigured: settingsClearInferenceApiKey
                 ? Boolean(settingsInferenceApiKeyInput.trim())
                 : (current.apiKeyConfigured || Boolean(settingsInferenceApiKeyInput.trim())),
@@ -76272,7 +76437,11 @@ const html = `<!doctype html>
               lastValidatedAt: checkedAt,
               lastError: "",
             }));
-            setSettingsPlatformConfigSuccess("Inference endpoint connected successfully.");
+            setSettingsPlatformConfigSuccess(
+              normalizedDiscoveredModels.length > 0
+                ? "Inference endpoint connected successfully. Discovered models were added to your list."
+                : "Inference endpoint connected successfully."
+            );
           } catch (error) {
             setSettingsInferenceSettings((current) => ({
               ...current,
@@ -76316,6 +76485,10 @@ const html = `<!doctype html>
             const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
               ...settingsInferenceSettings,
               baseUrl: trimmedBaseUrl,
+              availableModels: mergeDemoInferenceModelLists(
+                settingsInferenceSettings.availableModels,
+                settingsInferenceSettings.defaultModel ? [settingsInferenceSettings.defaultModel] : []
+              ),
               apiKeyConfigured: settingsClearInferenceApiKey
                 ? false
                 : (settingsInferenceSettings.apiKeyConfigured || Boolean(settingsInferenceApiKeyInput.trim())),
@@ -76379,6 +76552,31 @@ const html = `<!doctype html>
           hasRealAccess,
           proxyBackendBase,
         ]);
+
+        const handleSettingsInferenceAddModels = useCallback((rawValue) => {
+          const nextModels = parseDemoInferenceModelInput(rawValue);
+          if (nextModels.length === 0) {
+            return false;
+          }
+          setSettingsInferenceSettings((current) => ({
+            ...current,
+            availableModels: mergeDemoInferenceModelLists(current.availableModels, nextModels),
+          }));
+          setSettingsInferenceModelInput("");
+          return true;
+        }, []);
+
+        const handleSettingsInferenceRemoveModel = useCallback((modelId) => {
+          const normalizedModelId = String(modelId || "").trim();
+          if (!normalizedModelId) {
+            return;
+          }
+          setSettingsInferenceSettings((current) => ({
+            ...current,
+            availableModels: current.availableModels.filter((entry) => entry !== normalizedModelId),
+            defaultModel: current.defaultModel === normalizedModelId ? "" : current.defaultModel,
+          }));
+        }, []);
 
         function renderSettingsApiKeyCard(apiKeyRecord, options = {}) {
           const isManaged = !!options.managed;
@@ -77700,40 +77898,60 @@ const html = `<!doctype html>
                                     },
                                   }, "Remove Saved Key")
                                 : null
-                            )
-                          ),
-                          settingsInferenceSettings.availableModels.length > 0
-                            ? React.createElement("div", {
-                                style: {
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: "8px",
-                                  marginTop: "4px",
-                                },
-                              },
-                                React.createElement("div", {
-                                  style: {
-                                    fontSize: "12px",
-                                    fontWeight: "600",
-                                    color: "rgba(255,255,255,0.9)",
+                            ),
+                            React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
+                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-model-list-input" }, "Models"),
+                              React.createElement("div", { className: "playground-settings-card-copy" },
+                                "Add one or more model ids for this workspace. You can paste multiple names separated by commas or new lines."
+                              ),
+                              React.createElement("div", { className: "playground-settings-model-entry-row" },
+                                React.createElement("input", {
+                                  id: "settings-inference-model-list-input",
+                                  type: "text",
+                                  className: "playground-settings-input",
+                                  value: settingsInferenceModelInput,
+                                  onChange: (event) => setSettingsInferenceModelInput(event.target.value),
+                                  onKeyDown: (event) => {
+                                    if (event.key === "Enter" || event.key === ",") {
+                                      event.preventDefault();
+                                      handleSettingsInferenceAddModels(settingsInferenceModelInput);
+                                    }
                                   },
-                                }, "Discovered Models"),
-                                React.createElement("div", { className: "playground-settings-choice-row" },
-                                  settingsInferenceSettings.availableModels.map((modelId) =>
-                                    React.createElement("button", {
-                                      key: modelId,
-                                      type: "button",
-                                      className: "playground-settings-choice-button"
-                                        + (settingsInferenceSettings.defaultModel === modelId ? " is-active" : ""),
-                                      onClick: () => setSettingsInferenceSettings((current) => ({
-                                        ...current,
-                                        defaultModel: modelId,
-                                      })),
-                                    }, modelId)
+                                  placeholder: "gpt-5.4-mini, gpt-4.1-mini",
+                                }),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-settings-app-secondary-button",
+                                  onClick: () => {
+                                    handleSettingsInferenceAddModels(settingsInferenceModelInput);
+                                  },
+                                }, "Add Model")
+                              ),
+                              settingsInferenceSettings.availableModels.length > 0
+                                ? React.createElement("div", { className: "playground-tasks-skills-list" },
+                                    settingsInferenceSettings.availableModels.map((modelId) =>
+                                      React.createElement("div", {
+                                        key: modelId,
+                                        className: "playground-tasks-skill-pill",
+                                        title: modelId,
+                                      },
+                                        React.createElement("span", { className: "playground-tasks-skill-pill-label" }, modelId),
+                                        React.createElement("button", {
+                                          type: "button",
+                                          className: "playground-tasks-skill-pill-remove",
+                                          onClick: (event) => {
+                                            event.stopPropagation();
+                                            handleSettingsInferenceRemoveModel(modelId);
+                                          },
+                                          "aria-label": "Remove " + modelId,
+                                          title: "Remove " + modelId,
+                                        }, React.createElement(X, { width: 12, height: 12, strokeWidth: 1.9 }))
+                                      )
+                                    )
                                   )
-                                )
-                              )
-                            : null
+                                : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No models added yet.")
+                            )
+                          )
                         ),
                         React.createElement("div", { className: "playground-settings-actions" },
                           React.createElement("button", {
@@ -77790,6 +78008,12 @@ const html = `<!doctype html>
                           React.createElement("div", null,
                             React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "Default model: "),
                             settingsInferenceSettings.defaultModel || "Not set"
+                          ),
+                          React.createElement("div", null,
+                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "Configured models: "),
+                            settingsInferenceSettings.availableModels.length > 0
+                              ? String(settingsInferenceSettings.availableModels.length)
+                              : "None"
                           ),
                           React.createElement("div", null,
                             React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "API key: "),
@@ -80207,8 +80431,6 @@ const html = `<!doctype html>
           const fallbackBackground = "linear-gradient(to top, #000000 0%, #111111 100%)";
           const nextBackground = activePage === "thread"
             ? (selectedThreadShellBackground || fallbackBackground)
-            : activePage === "environments"
-              ? PLAYGROUND_ENVIRONMENTS_SHELL_BACKGROUND
             : activePage === "agents"
               ? PLAYGROUND_AGENTS_SHELL_BACKGROUND
               : fallbackBackground;
@@ -80429,106 +80651,20 @@ const html = `<!doctype html>
         const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen || isThreadPreviewDetailOpen;
 
         function renderAuthGate() {
-          if (sessionState.status === "loading") {
+          if (
+            sessionState.status === "loading"
+            || sessionState.status === "unauthenticated"
+            || sessionState.status === "error"
+          ) {
             return React.createElement(PlaygroundAppLoadingScreen, {
-              label: "Agentic Compute Platform",
+              label: sessionState.status === "loading"
+                ? "Agentic Compute Platform"
+                : "Redirecting to sign in...",
             });
           }
-
-          return React.createElement("div", { className: "playground-onboarding-scrim" },
-            React.createElement("div", {
-              className: "playground-onboarding-auth-card",
-              onClick: (event) => event.stopPropagation(),
-            },
-              React.createElement("div", { className: "playground-onboarding-title-wrap" },
-                React.createElement("div", { className: "playground-onboarding-kicker" }, "Agentic Compute Platform"),
-                React.createElement("h2", { className: "playground-onboarding-auth-title" },
-                  sessionState.status === "error" ? "Could not restore your session" : "Sign in to continue"
-                )
-              ),
-              React.createElement("p", { className: "playground-onboarding-auth-copy" },
-                sessionState.status === "error"
-                  ? (sessionState.error || "The playground could not verify your current session. Retry or sign in again.")
-                  : "Sign in with your Agentic Compute Platform account to load your real threads, agents, environments, and attachments."
-              ),
-              React.createElement("form", {
-                className: "playground-onboarding-form",
-                onSubmit: handlePlatformEmailSignIn,
-              },
-                React.createElement("div", { className: "playground-onboarding-field" },
-                  React.createElement("label", { className: "playground-onboarding-label", htmlFor: "platform-auth-email" }, "Email"),
-                  React.createElement("input", {
-                    id: "platform-auth-email",
-                    ref: authGateEmailInputRef,
-                    className: "playground-onboarding-input",
-                    type: "email",
-                    autoComplete: "email",
-                    value: platformAuthForm.email,
-                    onChange: (event) => {
-                      const nextValue = event.target.value;
-                      setPlatformAuthForm((current) => ({ ...current, email: nextValue }));
-                      if (platformAuthError) {
-                        setPlatformAuthError("");
-                      }
-                    },
-                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
-                    placeholder: "you@company.com",
-                  })
-                ),
-                React.createElement("div", { className: "playground-onboarding-field" },
-                  React.createElement("label", { className: "playground-onboarding-label", htmlFor: "platform-auth-password" }, "Password"),
-                  React.createElement("input", {
-                    id: "platform-auth-password",
-                    className: "playground-onboarding-input",
-                    type: "password",
-                    autoComplete: "current-password",
-                    value: platformAuthForm.password,
-                    onChange: (event) => {
-                      const nextValue = event.target.value;
-                      setPlatformAuthForm((current) => ({ ...current, password: nextValue }));
-                      if (platformAuthError) {
-                        setPlatformAuthError("");
-                      }
-                    },
-                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
-                    placeholder: "Enter your password",
-                  })
-                ),
-                platformAuthError
-                  ? React.createElement("div", { className: "playground-onboarding-status is-error" }, platformAuthError)
-                  : null,
-                React.createElement("div", { className: "playground-onboarding-footer" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-onboarding-button",
-                    onClick: () => {
-                      void refreshSessionState();
-                    },
-                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
-                  }, "Retry"),
-                  React.createElement("button", {
-                    type: "submit",
-                    className: "playground-onboarding-button is-primary",
-                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
-                  }, platformAuthBusy === "password" ? "Signing in..." : "Sign in")
-                ),
-                React.createElement("div", { className: "playground-onboarding-footer" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-onboarding-button",
-                    onClick: handlePlatformGoogleSignIn,
-                    disabled: platformAuthBusy === "password" || platformAuthBusy === "google",
-                  }, platformAuthBusy === "google" ? "Opening Google..." : "Continue with Google")
-                )
-              ),
-              React.createElement("div", { className: "playground-onboarding-footer" },
-                React.createElement("a", {
-                  className: "playground-onboarding-button",
-                  href: buildAiosLoginUrl(),
-                }, "Open landing sign-in")
-              )
-            )
-          );
+          return React.createElement(PlaygroundAppLoadingScreen, {
+            label: "Agentic Compute Platform",
+          });
         }
 
         function renderInitialThreadWelcome() {
@@ -81963,7 +82099,44 @@ const html = `<!doctype html>
                               requestHeaders,
                               environments: realEnvironments,
                               initialEnvironmentId: resolvedEnvironmentId || "",
+                              apiKey: effectiveApiKey,
+                              fetchCustomSkills: handleFetchCustomSkills,
+                              speechToTextUrl: speechToTextUrl || "",
+                              computerAgents: demoComputerAgents,
+                              agents: runtimeAgents,
+                              skills: demoSkills,
+                              preferredEnvironmentId: resolvedEnvironmentId || "",
+                              preferredAgentId: resolvedPreferredAgentId || "",
                               navigationToken: environmentsOpenToken,
+                              onPreferredAgentChange: (nextAgentId) => {
+                                setPreferredAgentId(String(nextAgentId || "").trim());
+                              },
+                              onPreferredEnvironmentChange: (nextEnvironmentId) => {
+                                setEnvironmentId(String(nextEnvironmentId || "").trim());
+                              },
+                              onThreadRegistered: (threadId) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                setCurrentThreadId(normalizedThreadId);
+                                void refreshThreads();
+                              },
+                              onThreadOpen: (threadId) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                setThreadAgentSelectionOverride(null);
+                                setPendingThreadRunRequest(null);
+                                setActivePage("thread");
+                                setCurrentThreadId(normalizedThreadId);
+                                setContentMode("chat");
+                                setThreadListMode("threads");
+                                setChangesNavigationTarget(null);
+                                setRunnerRenderKey((current) => current + 1);
+                                void refreshThreads();
+                              },
                               onEnvironmentMutated: async () => {
                                 await refreshEnvironments();
                               },
@@ -84346,11 +84519,45 @@ async function proxyAiosLatestBriefingHtml(req, res) {
 
 async function proxyPlaygroundCustomSkills(req, res) {
   try {
+    const normalizeSkillRecord = (skill) => {
+      if (!skill || typeof skill !== "object") {
+        return null;
+      }
+      const codeFiles = Array.isArray(skill.codeFiles)
+        ? skill.codeFiles
+        : Array.isArray(skill.files)
+          ? skill.files
+          : [];
+      return {
+        ...skill,
+        codeFiles: codeFiles
+          .filter((file) => file && typeof file === "object" && typeof file.name === "string" && file.name.trim())
+          .map((file) => ({
+            name: String(file.name || "").trim(),
+            content: typeof file.content === "string" ? file.content : "",
+            language: typeof file.language === "string" ? file.language : undefined,
+          })),
+        isCustom: true,
+      };
+    };
+    const mergeSkillLists = (...lists) => {
+      const merged = new Map();
+      lists.flat().forEach((skill) => {
+        const normalized = normalizeSkillRecord(skill);
+        if (!normalized?.id) {
+          return;
+        }
+        merged.set(normalized.id, normalized);
+      });
+      return Array.from(merged.values());
+    };
+
     const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
     let projectId = requestUrl.searchParams.get("projectId")?.trim() || "";
     const cookie = req.headers.cookie || "";
     const authorization = req.headers.authorization || "";
     const apiKey = normalizePlaygroundApiKey(readHeader(req, "x-api-key"));
+    let aiosSkills = [];
 
     if (!projectId && (cookie || authorization)) {
       const profileResponse = await fetch(`${aiosOrigin}/api/user/profile`, {
@@ -84389,13 +84596,16 @@ async function proxyPlaygroundCustomSkills(req, res) {
       }
 
       if (aiosResponse.ok) {
-        return sendJson(res, 200, {
-          skills: Array.isArray(aiosParsed?.skills) ? aiosParsed.skills : [],
-          source: "aios",
-        });
+        aiosSkills = Array.isArray(aiosParsed?.skills) ? aiosParsed.skills : [];
+        if (aiosSkills.length > 0 && !apiKey) {
+          return sendJson(res, 200, {
+            skills: mergeSkillLists(aiosSkills),
+            source: "aios",
+          });
+        }
       }
 
-      if (!isUnauthorizedHttpStatus(aiosResponse.status)) {
+      if (!aiosResponse.ok && !isUnauthorizedHttpStatus(aiosResponse.status)) {
         return sendJson(res, aiosResponse.status, aiosParsed);
       }
     }
@@ -84421,16 +84631,24 @@ async function proxyPlaygroundCustomSkills(req, res) {
     }
 
     if (!upstreamResponse.ok) {
+      if (aiosSkills.length > 0) {
+        return sendJson(res, 200, {
+          skills: mergeSkillLists(aiosSkills),
+          source: "aios",
+        });
+      }
       return sendJson(res, upstreamResponse.status, upstreamParsed);
     }
 
+    const backendSkills = Array.isArray(upstreamParsed?.data)
+      ? upstreamParsed.data
+      : Array.isArray(upstreamParsed?.skills)
+        ? upstreamParsed.skills
+        : [];
+
     return sendJson(res, 200, {
-      skills: Array.isArray(upstreamParsed?.data)
-        ? upstreamParsed.data
-        : Array.isArray(upstreamParsed?.skills)
-          ? upstreamParsed.skills
-          : [],
-      source: "backend",
+      skills: mergeSkillLists(aiosSkills, backendSkills),
+      source: aiosSkills.length > 0 ? "merged" : "backend",
     });
   } catch (error) {
     return sendJson(res, 502, {

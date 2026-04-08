@@ -171,6 +171,7 @@ interface PendingRunnerMessage {
   attachments: LocalAttachment[];
   quotedSelection?: RunnerQuotedSelection | null;
   backlogCommand?: StagedBacklogCommand | null;
+  resourceCreationCommand?: StagedResourceCreationCommand | null;
 }
 
 interface BaseStagedBacklogCommand {
@@ -187,6 +188,11 @@ interface StagedBacklogMissionControlCommand extends BaseStagedBacklogCommand {
 }
 
 type StagedBacklogCommand = StagedBacklogSubtaskCommand | StagedBacklogMissionControlCommand;
+type RunnerResourceCreationCommandType = "computer" | "app" | "function";
+
+interface StagedResourceCreationCommand extends BaseStagedBacklogCommand {
+  action: RunnerResourceCreationCommandType;
+}
 
 interface RunnerTaskPreview {
   taskId: string;
@@ -776,6 +782,14 @@ export interface RunnerChatProps {
     token: string | number;
     label?: string;
   } | null;
+  enableResourceCreationCommand?: boolean;
+  resourceCreationCommand?: {
+    type: RunnerResourceCreationCommandType;
+    token: string | number;
+    label?: string;
+  } | null;
+  resourceCreationCommandHiddenPrompt?: (commandType: RunnerResourceCreationCommandType) => string;
+  onResourceCreationCommandChange?: (commandType: RunnerResourceCreationCommandType | null) => void;
   onBacklogMissionControlSubmit?: (payload: {
     prompt: string;
     attachments: RunnerAttachment[];
@@ -1134,6 +1148,10 @@ function buildRunnerMissionControlLabel(): string {
   return "Mission Control";
 }
 
+function buildRunnerResourceCreationLabel(commandType: RunnerResourceCreationCommandType): string {
+  return `/${commandType}`;
+}
+
 function parseAutoStageBacklogSubtaskCommand(input: string): { ticketNumber: string; prompt: string } | null {
   const match = input.match(/^\/subtask\s+(\d{3})(?:\s+([\s\S]*))$/i);
   if (!match) {
@@ -1157,6 +1175,23 @@ function parseAutoStageBacklogMissionControlCommand(input: string): { prompt: st
 
   return {
     prompt: match[1] || "",
+  };
+}
+
+function parseAutoStageResourceCreationCommand(input: string): { action: RunnerResourceCreationCommandType; prompt: string } | null {
+  const match = input.match(/^\/(computer|app|function)(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return null;
+  }
+
+  const action = String(match[1] || "").trim().toLowerCase() as RunnerResourceCreationCommandType;
+  if (action !== "computer" && action !== "app" && action !== "function") {
+    return null;
+  }
+
+  return {
+    action,
+    prompt: match[2] || "",
   };
 }
 
@@ -5148,6 +5183,10 @@ export function RunnerChat({
   backlogSubtaskCommand = null,
   enableBacklogMissionControlCommand = false,
   backlogMissionControlCommand = null,
+  enableResourceCreationCommand = false,
+  resourceCreationCommand = null,
+  resourceCreationCommandHiddenPrompt,
+  onResourceCreationCommandChange,
   onBacklogMissionControlSubmit,
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
@@ -5282,6 +5321,7 @@ export function RunnerChat({
   const [recordingStartedAtMs, setRecordingStartedAtMs] = useState<number | null>(null);
   const [recordingElapsedSeconds, setRecordingElapsedSeconds] = useState(0);
   const [stagedThreadContextCommand, setStagedThreadContextCommand] = useState<RunnerChatThreadContextAction | null>(null);
+  const [stagedResourceCreationCommand, setStagedResourceCreationCommand] = useState<StagedResourceCreationCommand | null>(null);
   const [stagedBacklogSubtaskCommand, setStagedBacklogSubtaskCommand] = useState<StagedBacklogSubtaskCommand | null>(null);
   const [stagedBacklogMissionControlCommand, setStagedBacklogMissionControlCommand] = useState<StagedBacklogMissionControlCommand | null>(null);
   const [renderedMainPopup, setRenderedMainPopup] = useState<MainPopupRenderId | null>(null);
@@ -5329,6 +5369,7 @@ export function RunnerChat({
   const composerQuotedSelectionAnimationTimerRef = useRef<number | null>(null);
   const appliedBacklogSubtaskCommandTokenRef = useRef<string | number | null>(null);
   const appliedBacklogMissionControlCommandTokenRef = useRef<string | number | null>(null);
+  const appliedResourceCreationCommandTokenRef = useRef<string | number | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
   const stopRequestedThreadIdRef = useRef<string | null>(null);
   const visibleTimelineItemCountsRef = useRef<Record<string, number>>({});
@@ -5394,13 +5435,14 @@ export function RunnerChat({
   const trimmedInput = input.trim();
   const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
   const stagedThreadContextCommandLabel = stagedThreadContextCommand ? `/${stagedThreadContextCommand}` : "";
+  const stagedResourceCreationCommandLabel = stagedResourceCreationCommand?.label || "";
   const stagedBacklogCommand = stagedBacklogMissionControlCommand || stagedBacklogSubtaskCommand;
-  const stagedComposerLabel = stagedBacklogCommand?.label || stagedThreadContextCommandLabel;
-  const stagedComposerToneValue = stagedBacklogCommand ? "compact" : stagedThreadContextCommandToneValue;
-  const stagedComposerOffsetValue = stagedBacklogCommand
+  const stagedComposerLabel = stagedBacklogCommand?.label || stagedResourceCreationCommandLabel || stagedThreadContextCommandLabel;
+  const stagedComposerToneValue = stagedBacklogCommand || stagedResourceCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
+  const stagedComposerOffsetValue = stagedBacklogCommand || stagedResourceCreationCommand
     ? `${Math.max(120, Math.round(stagedComposerLabel.length * 7.5 + 22))}px`
     : stagedThreadContextCommandOffset(stagedThreadContextCommand);
-  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedBacklogCommand);
+  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedResourceCreationCommand || stagedBacklogCommand);
   const canRunStagedThreadContextCommand = stagedThreadContextCommand
     ? stagedThreadContextCommand === "btw"
       ? trimmedInput.length > 0
@@ -5836,6 +5878,7 @@ export function RunnerChat({
     setInput("");
     if (!options?.preserveStagedCommand) {
       setStagedThreadContextCommand(null);
+      setStagedResourceCreationCommand(null);
       setStagedBacklogSubtaskCommand(null);
       setStagedBacklogMissionControlCommand(null);
     }
@@ -6068,6 +6111,7 @@ export function RunnerChat({
 
   function setComposerDraft(prompt: string) {
     setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
     setInput(prompt);
     currentInputRef.current = prompt;
     speechBaseInputRef.current = prompt;
@@ -6075,6 +6119,7 @@ export function RunnerChat({
   }
 
   function stageThreadContextCommand(action: RunnerChatThreadContextAction, prompt = "") {
+    setStagedResourceCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedThreadContextCommand(action);
@@ -6091,6 +6136,7 @@ export function RunnerChat({
     }
     const nextPrompt = prompt === undefined ? currentInputRef.current : prompt;
     setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedBacklogSubtaskCommand({
       action: "subtask",
@@ -6105,10 +6151,25 @@ export function RunnerChat({
 
   function stageBacklogMissionControlCommand(prompt = "") {
     setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand({
       action: "mission_control",
       label: buildRunnerMissionControlLabel(),
+    });
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageResourceCreationCommand(action: RunnerResourceCreationCommandType, prompt = "") {
+    setStagedThreadContextCommand(null);
+    setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand(null);
+    setStagedResourceCreationCommand({
+      action,
+      label: buildRunnerResourceCreationLabel(action),
     });
     setInput(prompt);
     currentInputRef.current = prompt;
@@ -6948,6 +7009,7 @@ export function RunnerChat({
       quotedSelection?: RunnerQuotedSelection | null;
       environmentIdOverride?: string | null;
       backlogCommand?: StagedBacklogCommand | null;
+      resourceCreationCommand?: StagedResourceCreationCommand | null;
       resolvedAttachmentsOverride?: RunnerAttachment[] | null;
       githubRepoOverride?: {
         repoFullName: string;
@@ -6958,10 +7020,13 @@ export function RunnerChat({
     }
   ) {
     const hiddenSystemPromptText = hiddenSystemPrompt.trim();
+    const resourceCreationHiddenPromptText = options?.resourceCreationCommand
+      ? String(resourceCreationCommandHiddenPrompt?.(options.resourceCreationCommand.action) || "").trim()
+      : "";
     const executionTaskText =
-      hiddenSystemPromptText && taskText
-        ? `${hiddenSystemPromptText}\n\n${taskText}`
-        : hiddenSystemPromptText || taskText;
+      [hiddenSystemPromptText, resourceCreationHiddenPromptText, taskText]
+        .filter((part) => typeof part === "string" && part.trim().length > 0)
+        .join("\n\n");
     const hasResolvedThread = Boolean(options?.threadIdOverride || currentThreadId);
     const runEnvironmentId =
       options?.environmentIdOverride !== undefined
@@ -8059,6 +8124,25 @@ export function RunnerChat({
       textareaRef.current?.focus();
     });
   }, [backlogMissionControlCommand, enableBacklogMissionControlCommand]);
+
+  useEffect(() => {
+    if (!enableResourceCreationCommand || !resourceCreationCommand) {
+      return;
+    }
+    if (appliedResourceCreationCommandTokenRef.current === resourceCreationCommand.token) {
+      return;
+    }
+    appliedResourceCreationCommandTokenRef.current = resourceCreationCommand.token;
+    closeAllInputPopups();
+    stageResourceCreationCommand(resourceCreationCommand.type);
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }, [enableResourceCreationCommand, resourceCreationCommand]);
+
+  useEffect(() => {
+    onResourceCreationCommandChange?.(stagedResourceCreationCommand?.action || null);
+  }, [onResourceCreationCommandChange, stagedResourceCreationCommand]);
 
   useEffect(() => {
     return () => {
@@ -9754,6 +9838,7 @@ export function RunnerChat({
       const queuedTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
       const quotedSelection = composerQuotedSelection;
       const backlogCommand = stagedBacklogCommand;
+      const resourceCreationCommand = stagedResourceCreationCommand;
       if (stagedThreadContextCommand) {
         const stagedPrompt = textareaAllowsPromptAfterStagedCommand ? taskText : "";
         const shouldPreserveComposerState = stagedThreadContextCommand === "fork";
@@ -9847,6 +9932,7 @@ export function RunnerChat({
             attachments: attachmentEntries,
             quotedSelection,
             backlogCommand,
+            resourceCreationCommand,
           },
         ]);
         return;
@@ -9856,6 +9942,7 @@ export function RunnerChat({
       const execution = await executeThreadRun(taskText, attachmentEntries, {
         quotedSelection,
         backlogCommand,
+        resourceCreationCommand,
       });
       ensuredThreadId = execution.threadId;
     } catch (error) {
@@ -9889,6 +9976,7 @@ export function RunnerChat({
           turnId: nextQueuedMessage.turnId,
           quotedSelection: nextQueuedMessage.quotedSelection,
           backlogCommand: nextQueuedMessage.backlogCommand,
+          resourceCreationCommand: nextQueuedMessage.resourceCreationCommand,
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -9905,11 +9993,18 @@ export function RunnerChat({
 
   function handleInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
     const nextValue = event.target.value;
-    if (!stagedThreadContextCommand && !stagedBacklogCommand) {
+    if (!stagedThreadContextCommand && !stagedResourceCreationCommand && !stagedBacklogCommand) {
       const autoStageCommand = parseAutoStageThreadContextCommand(nextValue);
       if (autoStageCommand) {
         stageThreadContextCommand(autoStageCommand.action, autoStageCommand.prompt);
         return;
+      }
+      if (enableResourceCreationCommand) {
+        const autoStageResourceCreationCommand = parseAutoStageResourceCreationCommand(nextValue);
+        if (autoStageResourceCreationCommand) {
+          stageResourceCreationCommand(autoStageResourceCreationCommand.action, autoStageResourceCreationCommand.prompt);
+          return;
+        }
       }
       if (enableBacklogSubtaskCommand) {
         const autoStageBacklogSubtaskCommand = parseAutoStageBacklogSubtaskCommand(nextValue);
@@ -9938,6 +10033,11 @@ export function RunnerChat({
     if (event.key === "Backspace" && stagedThreadContextCommand && input.length === 0) {
       event.preventDefault();
       setStagedThreadContextCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedResourceCreationCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedResourceCreationCommand(null);
       return;
     }
     if (event.key === "Backspace" && stagedBacklogSubtaskCommand && input.length === 0) {
