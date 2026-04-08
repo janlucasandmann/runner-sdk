@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
+import { handleGithubApiRequest, isGithubApiRequestPath } from "./github-oauth-platform.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,11 +12,24 @@ const distRoot = path.join(packageRoot, "dist");
 const examplesRoot = path.join(packageRoot, "examples");
 const noVncNextRoot = path.join(packageRoot, "node_modules", "novnc-next");
 const aiosPublicRoot = path.resolve(packageRoot, "..", "..", "web", "hosting", "public");
+const aiosHostingRoot = path.resolve(packageRoot, "..", "..", "web", "hosting");
 const port = Number(process.env.PORT || 4177);
 const aiosOrigin = (process.env.AIOS_APP_ORIGIN || "http://localhost:3000").replace(/\/+$/, "");
 const platformOrigin = (process.env.PLATFORM_APP_ORIGIN || process.env.NEXT_PUBLIC_PLATFORM_APP_URL || `http://localhost:${port}`).replace(/\/+$/, "");
 const defaultUpstreamOrigin = (process.env.RUNNER_UPSTREAM_ORIGIN || "https://api.computer-agents.com").replace(/\/+$/, "");
 const localVncProxyWss = new WebSocketServer({ noServer: true, perMessageDeflate: false });
+const githubOauthEnvFileCandidates = [
+  path.join(aiosHostingRoot, ".env.local"),
+  path.join(aiosHostingRoot, ".env.production"),
+  path.join(aiosHostingRoot, ".env"),
+];
+const githubOauthAllowedOrigins = [
+  "https://computer-agents.com",
+  "https://platform.computer-agents.com",
+  "https://testbaseai.web.app",
+  "http://localhost:3000",
+  "http://localhost:4177",
+];
 
 const html = `<!doctype html>
 <html lang="en">
@@ -5119,6 +5133,10 @@ const html = `<!doctype html>
         font-weight: 400;
         letter-spacing: 0;
         color: rgba(255, 255, 255, 1);
+      }
+
+      .playground-settings-nav-group + .playground-settings-nav-group .playground-settings-nav-label {
+        margin-top: 10px;
       }
 
       .playground-settings-nav-item {
@@ -16963,6 +16981,13 @@ const html = `<!doctype html>
         min-height: 110px;
       }
 
+      .playground-settings-trigger-connect-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
       .playground-skill-composer-modal {
         width: min(560px, 100%);
       }
@@ -20062,6 +20087,348 @@ const html = `<!doctype html>
         overflow: hidden;
       }
 
+      .playground-demo-page,
+      .playground-demo-thread-shell,
+      .playground-demo-changes-shell {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: auto;
+        padding: 32px;
+        box-sizing: border-box;
+      }
+
+      .playground-demo-page {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+
+      .playground-demo-page-header {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 760px;
+      }
+
+      .playground-demo-page-kicker,
+      .playground-demo-thread-kicker {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-demo-page-title,
+      .playground-demo-thread-title {
+        margin: 0;
+        font-size: 32px;
+        line-height: 1.05;
+        font-weight: 500;
+        color: #fff;
+      }
+
+      .playground-demo-page-copy,
+      .playground-demo-thread-copy {
+        margin: 0;
+        max-width: 760px;
+        font-size: 15px;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-demo-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .playground-demo-card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.03);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.24);
+      }
+
+      .playground-demo-card-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-demo-card-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .playground-demo-card-title {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .playground-demo-card-copy {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .playground-demo-callout {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+      }
+
+      .playground-demo-callout-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-demo-callout-title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .playground-demo-callout-text {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .playground-demo-callout-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .playground-demo-action,
+      .playground-demo-action-secondary {
+        min-height: 36px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+      }
+
+      .playground-demo-action {
+        background: #fff;
+        color: #111;
+      }
+
+      .playground-demo-action-secondary {
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-demo-action:hover,
+      .playground-demo-action-secondary:hover {
+        transform: translateY(-1px);
+      }
+
+      .playground-demo-thread-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-demo-thread-header {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-demo-thread-badges {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .playground-demo-thread-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 28px;
+        padding: 0 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-demo-thread-badge.is-strong {
+        color: #fff;
+      }
+
+      .playground-demo-thread-badge svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      .playground-demo-thread-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-demo-thread-entry {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        overflow: hidden;
+      }
+
+      .playground-demo-thread-entry-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 18px 0;
+      }
+
+      .playground-demo-thread-entry-header svg {
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-demo-thread-entry-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.68);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .playground-demo-thread-entry-body {
+        padding: 10px 18px 16px;
+        font-size: 14px;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      .playground-demo-thread-entry.is-user .playground-demo-thread-entry-body,
+      .playground-demo-thread-entry.is-message .playground-demo-thread-entry-body {
+        color: #fff;
+      }
+
+      .playground-demo-thread-entry.is-tool .playground-demo-thread-entry-body {
+        font-family: "SFMono-Regular", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, monospace;
+        font-size: 13px;
+      }
+
+      .playground-demo-thread-composer {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        background: rgba(8, 8, 10, 0.72);
+      }
+
+      .playground-demo-thread-composer-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-demo-thread-composer-title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .playground-demo-thread-composer-text {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.64);
+      }
+
+      .playground-demo-changes-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-demo-change-entry {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .playground-demo-change-entry svg {
+        width: 15px;
+        height: 15px;
+        margin-top: 2px;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-demo-change-path {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .playground-demo-change-copy {
+        margin: 4px 0 0;
+        font-size: 13px;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, 0.64);
+      }
+
+      @media (max-width: 980px) {
+        .playground-demo-page,
+        .playground-demo-thread-shell,
+        .playground-demo-changes-shell {
+          padding: 18px;
+        }
+
+        .playground-demo-callout,
+        .playground-demo-thread-composer {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
       @media (max-width: 980px) {
         .playground-files-shell {
           grid-template-columns: minmax(0, 1fr);
@@ -20484,6 +20851,7 @@ const html = `<!doctype html>
       const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
       const PLAYGROUND_AUTH_REDIRECT_STATE_KEY = "runner_demo_auth_redirect_v1";
       const PLAYGROUND_AUTH_SESSION_MARKER_KEY = "runner_demo_auth_session_marker_v1";
+      const PLAYGROUND_INTEGRATION_REDIRECT_STATE_KEY = "runner_demo_integration_redirect_v1";
       const PLAYGROUND_AGENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/agentsappicon.png")};
       const PLAYGROUND_BROWSER_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/browsericon.png")};
       const PLAYGROUND_FILES_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/filesicon.png")};
@@ -20641,6 +21009,11 @@ const html = `<!doctype html>
         { value: "webhook", label: "Custom Webhook" },
       ];
       const SETTINGS_GITHUB_EVENTS = ["push", "pull_request", "issues", "issue_comment", "release", "create", "delete", "workflow_run"];
+      const SETTINGS_GITHUB_PULL_REQUEST_ACTION_EVENTS = ["pull_request", "issue_comment"];
+      const SETTINGS_TRIGGER_ACTION_OPTIONS = [
+        { value: "send_message", label: "Start thread" },
+        { value: "comment_pull_request", label: "Comment on pull request" },
+      ];
       const PLAYGROUND_CODE_EDITOR_THEME_NAME = "runner-playground-code-editor";
       const RUNNER_WELCOME_GREETING_TEMPLATES = [
         "Welcome back, <name>!",
@@ -20864,6 +21237,28 @@ const html = `<!doctype html>
       function clearPlaygroundAuthSessionMarker() {
         try {
           sessionStorage.removeItem(PLAYGROUND_AUTH_SESSION_MARKER_KEY);
+        } catch {}
+      }
+
+      function readPlaygroundIntegrationRedirectState() {
+        try {
+          const raw = sessionStorage.getItem(PLAYGROUND_INTEGRATION_REDIRECT_STATE_KEY);
+          const parsed = raw ? JSON.parse(raw) : null;
+          return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function writePlaygroundIntegrationRedirectState(value) {
+        try {
+          sessionStorage.setItem(PLAYGROUND_INTEGRATION_REDIRECT_STATE_KEY, JSON.stringify(value || {}));
+        } catch {}
+      }
+
+      function clearPlaygroundIntegrationRedirectState() {
+        try {
+          sessionStorage.removeItem(PLAYGROUND_INTEGRATION_REDIRECT_STATE_KEY);
         } catch {}
       }
 
@@ -21176,6 +21571,101 @@ const html = `<!doctype html>
         const greetingName = getWelcomeGreetingName(displayName, email);
         const templateIndex = Math.floor(Math.random() * RUNNER_WELCOME_GREETING_TEMPLATES.length);
         return RUNNER_WELCOME_GREETING_TEMPLATES[templateIndex].replace("<name>", greetingName);
+      }
+
+      function buildDemoWelcomeWidgetsState(referenceDate = new Date()) {
+        const demoNow = referenceDate instanceof Date ? new Date(referenceDate) : new Date(referenceDate || Date.now());
+        const todayAt = (hours, minutes = 0) => {
+          const date = new Date(demoNow);
+          date.setHours(hours, minutes, 0, 0);
+          return date.toISOString();
+        };
+        const createdAt = new Date(demoNow.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
+        const updatedAt = new Date(demoNow.getTime() - 35 * 60 * 1000).toISOString();
+        const projectId = "project_demo_crm";
+        const project = normalizePlaygroundProjectRecord({
+          id: projectId,
+          name: "CRM App",
+          description: "Demo customer workspace for the landing preview.",
+          icon: "layers",
+          wallpaperId: "gradient-orange",
+          color: "#f4b85f",
+          summary: {
+            tasksCount: 20,
+            openTasksCount: 20,
+            environmentsCount: 1,
+            threadsCount: 6,
+            activeThreadsCount: 2,
+          },
+          createdAt,
+          updatedAt,
+        });
+        const tasks = [
+          {
+            id: "task_demo_crm_foundation",
+            projectId,
+            title: "Backend & Database Foundation",
+            status: "in_progress",
+            priority: "medium",
+            createdAt,
+            updatedAt: new Date(demoNow.getTime() - 8 * 60 * 1000).toISOString(),
+          },
+          {
+            id: "task_demo_crm_perf",
+            projectId,
+            title: "Performance optimization and debugging",
+            status: "todo",
+            priority: "medium",
+            createdAt,
+            updatedAt: new Date(demoNow.getTime() - 18 * 60 * 1000).toISOString(),
+          },
+          {
+            id: "task_demo_crm_e2e",
+            projectId,
+            title: "End-to-end integration testing",
+            status: "todo",
+            priority: "medium",
+            createdAt,
+            updatedAt: new Date(demoNow.getTime() - 28 * 60 * 1000).toISOString(),
+          },
+          {
+            id: "task_demo_crm_leads",
+            projectId,
+            title: "Build lead details edit dialog",
+            status: "todo",
+            priority: "medium",
+            createdAt,
+            updatedAt: new Date(demoNow.getTime() - 42 * 60 * 1000).toISOString(),
+          },
+        ].map((task) => normalizePlaygroundTaskRecord(task));
+        const schedules = [
+          {
+            id: "schedule_demo_daily_briefing",
+            name: "Daily Briefing",
+            task: "Deliver the morning status briefing for the CRM workspace.",
+            projectId,
+            environmentName: "Default",
+            contextName: "Default",
+            metadata: {
+              projectId,
+              projectName: project.name,
+            },
+            scheduleType: "one-time",
+            scheduledTime: todayAt(8, 0),
+            enabled: true,
+            createdAt,
+            updatedAt,
+          },
+        ].map((schedule) => normalizePlaygroundScheduleRecord(schedule));
+
+        return {
+          status: "ready",
+          error: "",
+          projectId,
+          project,
+          tasks,
+          schedules,
+        };
       }
 
       function normalizeSettingsTierId(value) {
@@ -21500,6 +21990,14 @@ const html = `<!doctype html>
               icon: Webhook,
             };
         }
+      }
+
+      function getSettingsTriggerActionLabel(action) {
+        const actionType = String(action?.type || "").trim().toLowerCase();
+        if (actionType === "comment_pull_request") {
+          return "Comment on PR";
+        }
+        return "Start thread";
       }
 
       function mapFirebaseAuthErrorMessage(code, fallbackMessage) {
@@ -22170,6 +22668,100 @@ const html = `<!doctype html>
         { id: "demo_scheduled_review", title: "Review open playground polish tasks", messageCount: 1, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), nextRunAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), isScheduled: true }
       ];
 
+      const SEEDED_DEMO_THREAD_ID = DEMO_RECENT_THREADS[0]?.id || "demo_thread_sidebar";
+      const DEFAULT_DEMO_THREAD_ID = "";
+
+      const DEMO_THREAD_EXPERIENCE_MAP = {
+        demo_thread_sidebar: {
+          prompt: "Redesign the ACP sidebar so power users can scan activity faster without losing density.",
+          agent: "Efficient Agent",
+          model: "gpt-5.4-mini",
+          runtime: "claw",
+          environment: "Default",
+          summary: "I separated pinned, recent, and scheduled work, kept the collapsed rail fast, and made active runs more legible without sacrificing density.",
+          events: [
+            { kind: "user", title: "Prompt", body: "Redesign the ACP sidebar so power users can scan activity faster without losing density." },
+            { kind: "reasoning", title: "Planning", body: "Review the current information hierarchy, then rebalance the shell around fast scanning, pinned context, and active work." },
+            { kind: "tool", title: "bash", body: "rg -n \\\"sidebar-thread|sidebar-action|sidebar-rail\\\" examples/demo-server.mjs" },
+            { kind: "reasoning", title: "Refining layout", body: "Preserve the current rhythm, but pull pinned work forward, simplify meta labels, and sharpen the active state." },
+            { kind: "tool", title: "apply_patch", body: "Restructure the thread groups, strengthen selected states, and rebalance the right-side metadata." },
+            { kind: "message", title: "Result", body: "Pinned, recent, and scheduled work now read as separate layers, active runs stand out immediately, and the rail still stays compact." },
+          ],
+          changes: [
+            { path: "examples/demo-server.mjs", copy: "Rebalanced sidebar grouping and active-state treatment." },
+            { path: "examples/demo-server.mjs", copy: "Tightened thread metadata so status and recency compete less." },
+            { path: "examples/demo-server.mjs", copy: "Kept the collapsed rail behavior intact for fast switching." },
+          ],
+        },
+        demo_thread_settings: {
+          prompt: "Plan an enterprise settings flow for usage billing, BYOM inference, and seat-based team plans.",
+          agent: "Strategist Agent",
+          model: "gpt-5.4-mini",
+          runtime: "claw",
+          environment: "Default",
+          summary: "The plan unifies Individual, Team, and Enterprise, keeps product access on subscription, and meters infrastructure separately after included credits.",
+          events: [
+            { kind: "user", title: "Prompt", body: "Plan an enterprise settings flow for usage billing, BYOM inference, and seat-based team plans." },
+            { kind: "reasoning", title: "Framing", body: "Separate product entitlement from infrastructure billing, then place customer-hosted inference under Team and Enterprise." },
+            { kind: "tool", title: "notes", body: "Review current billing controls, workspace inference settings, and tier naming inside ACP." },
+            { kind: "reasoning", title: "Designing the flow", body: "Plans should govern entitlement. Inference settings should govern endpoint configuration. Usage billing should remain a separate safety control." },
+            { kind: "message", title: "Result", body: "Add Team and Enterprise inference controls, a monthly spend cap, and a dedicated Inference section for endpoint health, model discovery, and encrypted credentials." },
+          ],
+          changes: [
+            { path: "settings/plans", copy: "Added Team and Enterprise plan framing with usage billing." },
+            { path: "settings/inference", copy: "Defined BYOM endpoint inputs and connection testing." },
+          ],
+        },
+        demo_thread_context: {
+          prompt: "Design a thread context popup so users can attach files, repos, and previous work before starting a run.",
+          agent: "Assistant",
+          model: "gpt-5.4-mini",
+          runtime: "claw",
+          environment: "Default",
+          summary: "The popup stages context before execution, so threads start with the right files, repos, and historical references already attached.",
+          events: [
+            { kind: "user", title: "Prompt", body: "Design a thread context popup so users can attach files, repos, and previous work before starting a run." },
+            { kind: "reasoning", title: "Scope", body: "Keep the composer clean. Move context staging into a dedicated surface with visible chips and reusable presets." },
+            { kind: "tool", title: "bash", body: "rg -n \\\"context|attachment|slash command\\\" examples/demo-server.mjs" },
+            { kind: "message", title: "Result", body: "The popup groups repos, files, skills, and previous thread state so the run begins with deliberate context instead of ad-hoc prompts." },
+          ],
+          changes: [
+            { path: "threads/context", copy: "Defined staged context groups for repos, attachments, and prior runs." },
+            { path: "composer", copy: "Kept the thread composer focused by moving heavy context into a popup." },
+          ],
+        },
+      };
+
+      function getDemoThreadExperience(thread) {
+        const normalizedId = typeof thread?.id === "string" ? thread.id.trim() : "";
+        const mapped = normalizedId ? DEMO_THREAD_EXPERIENCE_MAP[normalizedId] : null;
+        if (mapped) {
+          return mapped;
+        }
+
+        const title = typeof thread?.title === "string" && thread.title.trim()
+          ? thread.title.trim()
+          : "Explore the Agentic Compute Platform demo";
+
+        return {
+          prompt: title,
+          agent: "Efficient Agent",
+          model: "gpt-5.4-mini",
+          runtime: "claw",
+          environment: "Default",
+          summary: "This seeded thread shows how ACP combines threads, agents, environments, and tool execution in one workspace.",
+          events: [
+            { kind: "user", title: "Prompt", body: title },
+            { kind: "reasoning", title: "Planning", body: "Review the workspace context, decide what to inspect first, and prepare the next tool action." },
+            { kind: "tool", title: "bash", body: "pwd" },
+            { kind: "message", title: "Result", body: "This demo thread is here to show the shell, logs, and orchestration flow before you sign in and run real work." },
+          ],
+          changes: [
+            { path: "workspace/demo", copy: "Seeded walkthrough content for the platform preview." },
+          ],
+        };
+      }
+
       function formatRelativeThreadTime(value) {
         if (!value) return "";
         const date = new Date(value);
@@ -22241,6 +22833,9 @@ const html = `<!doctype html>
           metadata,
           isPinned: Boolean(runnerPlaygroundMetadata.pinnedInSidebar),
           pinnedAt: typeof runnerPlaygroundMetadata.pinnedAt === "string" ? runnerPlaygroundMetadata.pinnedAt : "",
+          positive: typeof thread?.positive === "string" ? thread.positive : "",
+          negative: typeof thread?.negative === "string" ? thread.negative : "",
+          ageLabel: typeof thread?.ageLabel === "string" ? thread.ageLabel : "",
         };
       }
 
@@ -22334,6 +22929,12 @@ const html = `<!doctype html>
       function threadMetaLabel(thread) {
         if (thread.nextRunAt) {
           return "Scheduled";
+        }
+        if (typeof thread?.ageLabel === "string" && thread.ageLabel.trim()) {
+          return thread.ageLabel.trim();
+        }
+        if (!isRealThreadId(thread?.id) && thread?.createdAt) {
+          return formatRelativeThreadTime(thread.createdAt);
         }
         return "";
       }
@@ -69749,6 +70350,14 @@ const html = `<!doctype html>
       }
 
       function DemoApp() {
+        const isDemoMode = useMemo(() => {
+          try {
+            const pathname = String(window.location.pathname || "/").trim();
+            return pathname === "/demo" || pathname.startsWith("/demo/");
+          } catch {
+            return false;
+          }
+        }, []);
         const [sidebarOpen, setSidebarOpen] = useState(true);
         const [activePage, setActivePage] = useState("thread");
         const [environmentsOpenToken, setEnvironmentsOpenToken] = useState(0);
@@ -69781,7 +70390,7 @@ const html = `<!doctype html>
             return ${JSON.stringify(defaultUpstreamOrigin)};
           }
         });
-        const [apiKey, setApiKey] = useState(() => localStorage.getItem("runner_demo_api_key") || "");
+        const [apiKey, setApiKey] = useState(() => (isDemoMode ? "" : (localStorage.getItem("runner_demo_api_key") || "")));
         const [sessionStreamingConfig, setSessionStreamingConfig] = useState({
           status: "idle",
           apiKey: "",
@@ -69796,15 +70405,15 @@ const html = `<!doctype html>
           }
         });
         const [sessionState, setSessionState] = useState({
-          status: "loading",
+          status: isDemoMode ? "unauthenticated" : "loading",
           userId: "",
-          email: "",
+          email: isDemoMode ? "demo@computer-agents.com" : "",
           projectId: "",
-          displayName: "",
+          displayName: isDemoMode ? "ACP Demo Workspace" : "",
           photoURL: "",
           emailVerified: false,
-          subscriptionTier: "free",
-          subscriptionStatus: "",
+          subscriptionTier: isDemoMode ? "enterprise" : "free",
+          subscriptionStatus: isDemoMode ? "active" : "",
           error: "",
         });
         const [platformAuthForm, setPlatformAuthForm] = useState({
@@ -69841,7 +70450,7 @@ const html = `<!doctype html>
         });
         const [agentPageSelectionRequest, setAgentPageSelectionRequest] = useState(null);
         const [threadAgentSelectionOverride, setThreadAgentSelectionOverride] = useState(null);
-        const [currentThreadId, setCurrentThreadId] = useState("");
+        const [currentThreadId, setCurrentThreadId] = useState(() => (isDemoMode ? DEFAULT_DEMO_THREAD_ID : ""));
         const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
         const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
         const [threadProjectRecordsById, setThreadProjectRecordsById] = useState({});
@@ -69857,14 +70466,18 @@ const html = `<!doctype html>
           }
         });
         const [tasksPageNavigationRequest, setTasksPageNavigationRequest] = useState(null);
-        const [welcomeWidgetsState, setWelcomeWidgetsState] = useState({
-          status: "idle",
-          error: "",
-          projectId: "",
-          project: null,
-          tasks: [],
-          schedules: [],
-        });
+        const [welcomeWidgetsState, setWelcomeWidgetsState] = useState(() => (
+          isDemoMode
+            ? buildDemoWelcomeWidgetsState()
+            : {
+                status: "idle",
+                error: "",
+                projectId: "",
+                project: null,
+                tasks: [],
+                schedules: [],
+              }
+        ));
         const [welcomeWidgetBusyTaskIds, setWelcomeWidgetBusyTaskIds] = useState([]);
         const [welcomeWidgetPreviewAttachment, setWelcomeWidgetPreviewAttachment] = useState(null);
         const [threadTaskOpenRequest, setThreadTaskOpenRequest] = useState(null);
@@ -69968,12 +70581,15 @@ const html = `<!doctype html>
           event: "push",
           environmentId: "",
           agentId: "",
-          actionType: "message",
+          actionType: "send_message",
           message: "",
-          template: "",
           filterRepo: "",
           filterBranch: "",
         });
+        const [isSettingsTriggerPromptEditing, setIsSettingsTriggerPromptEditing] = useState(false);
+        const [settingsTriggerGithubRepos, setSettingsTriggerGithubRepos] = useState([]);
+        const [settingsTriggerGithubReposLoading, setSettingsTriggerGithubReposLoading] = useState(false);
+        const [settingsTriggerGithubReposError, setSettingsTriggerGithubReposError] = useState("");
         const [settingsPasswordForm, setSettingsPasswordForm] = useState({
           currentPassword: "",
           newPassword: "",
@@ -69988,6 +70604,7 @@ const html = `<!doctype html>
         const [settingsDeleteLoading, setSettingsDeleteLoading] = useState(false);
         const [settingsDeleteError, setSettingsDeleteError] = useState("");
         const profileImageInputRef = useRef(null);
+        const settingsTriggerPromptTextareaRef = useRef(null);
         const authGateEmailInputRef = useRef(null);
         const threadSearchInputRef = useRef(null);
         const threadRenameInputRef = useRef(null);
@@ -69995,6 +70612,7 @@ const html = `<!doctype html>
         const authRedirectStartedRef = useRef(false);
         const hasAuthenticatedSessionThisMountRef = useRef(false);
         const sessionBudgetSyncKeyRef = useRef("");
+        const demoReadyAnnouncedRef = useRef(false);
         const threadSubagentDetailHostRef = useCallback((node) => {
           setThreadSubagentDetailHost(node || null);
         }, []);
@@ -70026,11 +70644,15 @@ const html = `<!doctype html>
         ];
         const SESSION_API_KEY_SENTINEL = "__runner_playground_session__";
         const hasSessionAuth = sessionState.status === "authenticated";
+        const hasDemoAccess = isDemoMode;
         const resolvedSessionApiKey = typeof sessionStreamingConfig.apiKey === "string" ? sessionStreamingConfig.apiKey.trim() : "";
         const effectiveApiKey = useMemo(() => {
+          if (isDemoMode) {
+            return "";
+          }
           const manualApiKey = String(apiKey || "").trim();
           return manualApiKey || resolvedSessionApiKey || (hasSessionAuth ? SESSION_API_KEY_SENTINEL : "");
-        }, [apiKey, hasSessionAuth, resolvedSessionApiKey]);
+        }, [apiKey, hasSessionAuth, isDemoMode, resolvedSessionApiKey]);
         const resolvedUpstreamUrl = useMemo(() => {
           const trimmed = String(upstreamUrl || "").trim();
           return trimmed || ${JSON.stringify(defaultUpstreamOrigin)};
@@ -70042,23 +70664,34 @@ const html = `<!doctype html>
         const requestHeaders = useMemo(() => {
           return authRequestHeaders;
         }, [authRequestHeaders]);
-        const hasRealAccess = hasSessionAuth;
+        const hasRealAccess = !isDemoMode && hasSessionAuth;
+        const hasShellAccess = hasRealAccess || hasDemoAccess;
         const activeProjectId = projectId.trim() || sessionState.projectId || "";
         const settingsProjectRoutingId = activeProjectId || "__runner_playground__";
-        const accountName = formatAccountDisplayName(sessionState.displayName, sessionState.email || "", hasSessionAuth ? "Agentic Compute Platform" : "Sign in");
+        const accountName = hasSessionAuth
+          ? formatAccountDisplayName(sessionState.displayName, sessionState.email || "", "Agentic Compute Platform")
+          : hasDemoAccess
+            ? "Demo User"
+            : "Sign in";
         const accountInitials = getAccountInitials(accountName);
-        const accountEmail = sessionState.email || "";
-        const accountTier = hasSessionAuth ? formatSubscriptionTier(sessionState.subscriptionTier) : "Sign in";
-        const accountPlanLabel = hasSessionAuth ? accountTier + " Plan" : accountTier;
+        const accountEmail = hasSessionAuth ? (sessionState.email || "") : (hasDemoAccess ? "demo@computer-agents.com" : "");
+        const accountTier = hasDemoAccess
+          ? "Enterprise"
+          : hasShellAccess
+            ? formatSubscriptionTier(sessionState.subscriptionTier || "enterprise")
+            : "Sign in";
+        const accountPlanLabel = hasShellAccess ? accountTier + " Plan" : accountTier;
         const accountAvatarUrl = canRenderAvatarImage(sessionState.photoURL) ? sessionState.photoURL : "";
         const profileEditorAvatarUrl = canRenderAvatarImage(profileDraft.photoURL) && !profileEditorAvatarBroken
           ? String(profileDraft.photoURL || "").trim()
           : "";
         const initialThreadGreeting = useMemo(() => (
-          buildWelcomeGreeting(sessionState.displayName, sessionState.email || "")
-        ), [sessionState.displayName, sessionState.email]);
-        const initialThreadPlanLabel = hasSessionAuth ? accountTier + " Plan" : "";
-        const showInitialThreadWelcome = activePage === "thread" && hasRealAccess && !currentThreadId;
+          hasDemoAccess
+            ? "Welcome to ACP."
+            : buildWelcomeGreeting(sessionState.displayName, sessionState.email || "")
+        ), [hasDemoAccess, sessionState.displayName, sessionState.email]);
+        const initialThreadPlanLabel = hasShellAccess ? accountTier + " Plan" : "";
+        const showInitialThreadWelcome = activePage === "thread" && hasShellAccess && !currentThreadId;
         const welcomeWidgetProject = welcomeWidgetsState.project;
         const welcomeWidgetTicketNumbersById = useMemo(() => (
           buildPlaygroundTaskTicketNumberMap(welcomeWidgetsState.tasks)
@@ -70086,12 +70719,51 @@ const html = `<!doctype html>
         ), [welcomeWidgetCalendarEventDateKeys]);
 
         useEffect(() => {
+          if (!isDemoMode || !hasShellAccess || demoReadyAnnouncedRef.current) {
+            return;
+          }
+
+          demoReadyAnnouncedRef.current = true;
+          let frameIdA = 0;
+          let frameIdB = 0;
+
+          const announceReady = () => {
+            try {
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: "acp-demo-ready" }, "*");
+              }
+            } catch {}
+          };
+
+          frameIdA = window.requestAnimationFrame(() => {
+            frameIdB = window.requestAnimationFrame(announceReady);
+          });
+
+          return () => {
+            if (frameIdA) {
+              window.cancelAnimationFrame(frameIdA);
+            }
+            if (frameIdB) {
+              window.cancelAnimationFrame(frameIdB);
+            }
+          };
+        }, [hasShellAccess, isDemoMode]);
+
+        useEffect(() => {
           try {
             if (latestInteractedProjectId) {
               localStorage.setItem("runner_demo_tasks_last_project_id", latestInteractedProjectId);
             }
           } catch {}
         }, [latestInteractedProjectId]);
+
+        useEffect(() => {
+          if (!isDemoMode || !showInitialThreadWelcome) {
+            return;
+          }
+
+          setWelcomeWidgetsState(buildDemoWelcomeWidgetsState());
+        }, [isDemoMode, showInitialThreadWelcome]);
 
         useEffect(() => {
           if (!showInitialThreadWelcome || !hasRealAccess) {
@@ -70206,7 +70878,14 @@ const html = `<!doctype html>
         }, [effectiveApiKey, hasRealAccess, latestInteractedProjectId, proxyBackendBase, showInitialThreadWelcome, upstreamUrl]);
 
         function buildAiosLoginUrl() {
-          const loginUrl = new URL("/login", ${JSON.stringify(aiosOrigin)});
+          let loginOrigin = ${JSON.stringify(aiosOrigin)};
+          try {
+            const currentUrl = new URL(window.location.href);
+            if (currentUrl.hostname === "platform.computer-agents.com") {
+              loginOrigin = currentUrl.origin;
+            }
+          } catch {}
+          const loginUrl = new URL("/login", loginOrigin);
           loginUrl.searchParams.set("redirect", window.location.href);
           return loginUrl.toString();
         }
@@ -70221,7 +70900,14 @@ const html = `<!doctype html>
         }
 
         function buildAiosLogoutUrl() {
-          const logoutUrl = new URL("/logout", ${JSON.stringify(aiosOrigin)});
+          let logoutOrigin = ${JSON.stringify(aiosOrigin)};
+          try {
+            const currentUrl = new URL(window.location.href);
+            if (currentUrl.hostname === "platform.computer-agents.com") {
+              logoutOrigin = currentUrl.origin;
+            }
+          } catch {}
+          const logoutUrl = new URL("/logout", logoutOrigin);
           logoutUrl.searchParams.set("redirect", window.location.href);
           return logoutUrl.toString();
         }
@@ -70326,7 +71012,7 @@ const html = `<!doctype html>
         }, []);
 
         useEffect(() => {
-          if (sessionState.status !== "unauthenticated") {
+          if (isDemoMode || sessionState.status !== "unauthenticated") {
             return;
           }
 
@@ -70338,7 +71024,7 @@ const html = `<!doctype html>
           setRealAgents([]);
           setRealEnvironments([]);
           setCurrentThreadId("");
-        }, [sessionState.status]);
+        }, [isDemoMode, sessionState.status]);
 
         useEffect(() => {
           if (sessionState.status !== "authenticated") {
@@ -71106,6 +71792,28 @@ const html = `<!doctype html>
         }
 
         const refreshSessionState = useCallback(async function refreshSessionState() {
+          if (isDemoMode) {
+            setSessionStreamingConfig({
+              status: "idle",
+              apiKey: "",
+              backendUrl: "",
+              error: "",
+            });
+            setSessionState({
+              status: "unauthenticated",
+              userId: "",
+              email: "demo@computer-agents.com",
+              projectId: "",
+              displayName: "Demo User",
+              photoURL: "",
+              emailVerified: false,
+              subscriptionTier: "enterprise",
+              subscriptionStatus: "active",
+              error: "",
+            });
+            return;
+          }
+
           setSessionState((current) => ({
             ...current,
             status: "loading",
@@ -71344,7 +72052,7 @@ const html = `<!doctype html>
               error: fallbackErrorMessage,
             });
           }
-        }, []);
+        }, [isDemoMode]);
 
         useEffect(() => {
           if (sessionState.status === "authenticated") {
@@ -71415,6 +72123,20 @@ const html = `<!doctype html>
         }, [refreshSessionState, sessionState.status]);
 
         useEffect(() => {
+          if (isDemoMode) {
+            try {
+              localStorage.removeItem("runner_demo_api_key");
+            } catch {}
+            setSessionStreamingConfig({
+              status: "idle",
+              apiKey: "",
+              backendUrl: "",
+              error: "",
+            });
+            setApiKey("");
+            return;
+          }
+
           let disposed = false;
           let unsubscribe = () => {};
 
@@ -71445,7 +72167,7 @@ const html = `<!doctype html>
             disposed = true;
             unsubscribe();
           };
-        }, []);
+        }, [isDemoMode]);
 
         async function handlePlatformEmailSignIn(event) {
           if (event?.preventDefault) {
@@ -71763,6 +72485,13 @@ const html = `<!doctype html>
         async function handleGithubAuthConnect() {
           try {
             addPendingStatusIndicatorId("github");
+            writePlaygroundIntegrationRedirectState({
+              provider: "github",
+              savedAt: Date.now(),
+              activePage,
+              settingsSection,
+              reopenSettingsTriggerComposer: activePage === "settings" && settingsSection === "webhooks" && settingsCreatingTrigger,
+            });
             const response = await fetch("/api/aios/github/login", {
               method: "POST",
               headers: {
@@ -71775,12 +72504,14 @@ const html = `<!doctype html>
             });
 
             if (response.status === 401) {
+              clearPlaygroundIntegrationRedirectState();
               window.location.href = buildAiosLoginUrl();
               return;
             }
 
             if (!response.ok) {
               removePendingStatusIndicatorId("github");
+              clearPlaygroundIntegrationRedirectState();
               const data = await response.json().catch(() => ({}));
               console.error("GitHub login failed:", data.error || response.status);
               return;
@@ -71789,12 +72520,14 @@ const html = `<!doctype html>
             const data = await response.json();
             if (!data.authUrl) {
               removePendingStatusIndicatorId("github");
+              clearPlaygroundIntegrationRedirectState();
               console.error("GitHub auth URL is missing.");
               return;
             }
             window.location.href = data.authUrl;
           } catch (error) {
             removePendingStatusIndicatorId("github");
+            clearPlaygroundIntegrationRedirectState();
             console.error("Failed to initiate GitHub auth:", error);
           }
         }
@@ -72433,17 +73166,168 @@ const html = `<!doctype html>
             event: "push",
             environmentId: resolvedEnvironmentId || "",
             agentId: resolvedPreferredAgentId || "",
-            actionType: "message",
+            actionType: "send_message",
             message: "",
-            template: "",
             filterRepo: "",
             filterBranch: "",
           });
         }
 
+        function resizeSettingsTriggerPromptTextarea(textarea) {
+          if (!textarea) return;
+          const computedStyles = window.getComputedStyle(textarea);
+          const lineHeight = Number.parseFloat(computedStyles.lineHeight) || 21;
+          const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
+          const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
+          const borderTopWidth = Number.parseFloat(computedStyles.borderTopWidth) || 0;
+          const borderBottomWidth = Number.parseFloat(computedStyles.borderBottomWidth) || 0;
+          const singleLineHeight = Math.ceil(lineHeight + paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
+          textarea.style.height = "auto";
+          const nextHeight = String(textarea.value || "").trim()
+            ? Math.max(singleLineHeight, textarea.scrollHeight)
+            : singleLineHeight;
+          textarea.style.height = nextHeight + "px";
+        }
+
+        function buildSettingsMarkdownWrappedEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const selectedText = value.slice(safeStart, safeEnd);
+          if (safeStart !== safeEnd) {
+            if (
+              selectedText.startsWith(prefix)
+              && selectedText.endsWith(suffix)
+              && selectedText.length >= prefix.length + suffix.length
+            ) {
+              const unwrappedText = selectedText.slice(prefix.length, selectedText.length - suffix.length);
+              const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
+              return {
+                value: nextValue,
+                selectionStart: safeStart,
+                selectionEnd: safeStart + unwrappedText.length,
+              };
+            }
+
+            const surroundingPrefix = value.slice(Math.max(0, safeStart - prefix.length), safeStart);
+            const surroundingSuffix = value.slice(safeEnd, safeEnd + suffix.length);
+            if (surroundingPrefix === prefix && surroundingSuffix === suffix) {
+              const nextValue =
+                value.slice(0, safeStart - prefix.length)
+                + selectedText
+                + value.slice(safeEnd + suffix.length);
+              return {
+                value: nextValue,
+                selectionStart: safeStart - prefix.length,
+                selectionEnd: safeStart - prefix.length + selectedText.length,
+              };
+            }
+
+            const wrappedText = prefix + selectedText + suffix;
+            const nextValue = value.slice(0, safeStart) + wrappedText + value.slice(safeEnd);
+            return {
+              value: nextValue,
+              selectionStart: safeStart + prefix.length,
+              selectionEnd: safeStart + prefix.length + selectedText.length,
+            };
+          }
+
+          const insertedText = prefix + suffix;
+          const nextValue = value.slice(0, safeStart) + insertedText + value.slice(safeEnd);
+          return {
+            value: nextValue,
+            selectionStart: safeStart + prefix.length,
+            selectionEnd: safeStart + prefix.length,
+          };
+        }
+
+        function buildSettingsMarkdownListEdit(value, selectionStart, selectionEnd) {
+          const safeStart = Math.max(0, selectionStart);
+          const safeEnd = Math.max(safeStart, selectionEnd);
+          const lineStart = value.lastIndexOf("\\n", Math.max(0, safeStart - 1)) + 1;
+          let lineEnd = value.indexOf("\\n", safeEnd);
+          if (lineEnd === -1) {
+            lineEnd = value.length;
+          }
+          const block = value.slice(lineStart, lineEnd);
+          const lines = block.split("\\n");
+          const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+          const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => /^(\\s*)-\\s+/.test(line));
+          const nextLines = lines.map((line) => {
+            if (!line.trim()) {
+              return shouldRemoveList ? line : "- ";
+            }
+            if (shouldRemoveList) {
+              return line.replace(/^(\\s*)-\\s+/, "$1");
+            }
+            if (/^(\\s*)-\\s+/.test(line)) {
+              return line;
+            }
+            return line.replace(/^(\\s*)/, "$1- ");
+          });
+          const nextBlock = nextLines.join("\\n");
+          const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
+          const collapsedSelection = safeStart === safeEnd;
+          const nextCaretOffset = shouldRemoveList
+            ? Math.max(0, safeStart - lineStart - 2)
+            : safeStart - lineStart + 2;
+          return {
+            value: nextValue,
+            selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
+            selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
+          };
+        }
+
+        function updateSettingsTriggerPromptField(nextValue) {
+          setSettingsTriggerForm((current) => ({ ...current, message: nextValue }));
+        }
+
+        function applySettingsTriggerPromptSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+          updateSettingsTriggerPromptField(nextValue);
+          window.requestAnimationFrame(() => {
+            const textarea = settingsTriggerPromptTextareaRef.current;
+            if (!textarea) {
+              return;
+            }
+            const maxLength = nextValue.length;
+            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+            textarea.focus();
+            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+            resizeSettingsTriggerPromptTextarea(textarea);
+          });
+        }
+
+        function handleSettingsTriggerPromptMarkdownFormat(formatType) {
+          const textarea = settingsTriggerPromptTextareaRef.current;
+          if (!textarea) {
+            return;
+          }
+          const value = String(settingsTriggerForm.message || "");
+          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+          let edit = null;
+
+          if (formatType === "bold") {
+            edit = buildSettingsMarkdownWrappedEdit(value, selectionStart, selectionEnd, "**");
+          } else if (formatType === "italic") {
+            edit = buildSettingsMarkdownWrappedEdit(value, selectionStart, selectionEnd, "*");
+          } else if (formatType === "underline") {
+            edit = buildSettingsMarkdownWrappedEdit(value, selectionStart, selectionEnd, "++");
+          } else if (formatType === "list") {
+            edit = buildSettingsMarkdownListEdit(value, selectionStart, selectionEnd);
+          }
+
+          if (!edit) {
+            return;
+          }
+
+          applySettingsTriggerPromptSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+        }
+
         function openSettingsTriggerComposer() {
           resetSettingsTriggerForm();
           setSettingsTriggersError("");
+          setIsSettingsTriggerPromptEditing(false);
           setSettingsCreatingTrigger(true);
         }
 
@@ -72453,8 +73337,54 @@ const html = `<!doctype html>
           }
           resetSettingsTriggerForm();
           setSettingsTriggersError("");
+          setIsSettingsTriggerPromptEditing(false);
           setSettingsCreatingTrigger(false);
         }
+
+        const loadSettingsTriggerGithubRepos = useCallback(async function loadSettingsTriggerGithubRepos() {
+          if (!githubStatus.connected) {
+            setSettingsTriggerGithubRepos([]);
+            setSettingsTriggerGithubReposError("");
+            return [];
+          }
+
+          setSettingsTriggerGithubReposLoading(true);
+          setSettingsTriggerGithubReposError("");
+          try {
+            const response = await fetch("/api/aios/github/repos?per_page=100", {
+              method: "GET",
+              credentials: "include",
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              if (isUnauthorizedStatus(response.status)) {
+                setGithubStatus({ connected: false });
+              }
+              throw new Error(data?.error || "Failed to load GitHub repositories.");
+            }
+
+            const repos = Array.isArray(data?.repos)
+              ? data.repos
+                .map((repo) => ({
+                  id: String(repo?.full_name || repo?.name || ""),
+                  name: String(repo?.name || repo?.full_name || ""),
+                  fullName: String(repo?.full_name || repo?.name || ""),
+                  defaultBranch: String(repo?.default_branch || "").trim(),
+                }))
+                .filter((repo) => repo.id)
+                .sort((left, right) => left.fullName.localeCompare(right.fullName))
+              : [];
+
+            setSettingsTriggerGithubRepos(repos);
+            return repos;
+          } catch (error) {
+            setSettingsTriggerGithubRepos([]);
+            setSettingsTriggerGithubReposError(error instanceof Error ? error.message : "Failed to load GitHub repositories.");
+            return [];
+          } finally {
+            setSettingsTriggerGithubReposLoading(false);
+          }
+        }, [githubStatus.connected]);
 
         async function handleSettingsCopyField(value, fieldId) {
           const copied = await copyTextToClipboard(value);
@@ -73327,8 +74257,9 @@ const html = `<!doctype html>
           const triggerName = String(settingsTriggerForm.name || "").trim();
           const triggerEvent = String(settingsTriggerForm.event || "").trim();
           const environmentValue = String(settingsTriggerForm.environmentId || "").trim();
-          if (!triggerName || !triggerEvent || !environmentValue) {
-            setSettingsTriggersError("Name, event, and environment are required.");
+          const promptValue = String(settingsTriggerForm.message || "").trim();
+          if (!triggerName || !triggerEvent || !environmentValue || !promptValue) {
+            setSettingsTriggersError("Name, event, computer, and prompt are required.");
             return;
           }
 
@@ -73338,7 +74269,7 @@ const html = `<!doctype html>
             const filters = {};
             if (settingsTriggerForm.source === "github") {
               if (String(settingsTriggerForm.filterRepo || "").trim()) {
-                filters.repository = String(settingsTriggerForm.filterRepo || "").trim();
+                filters.repo = String(settingsTriggerForm.filterRepo || "").trim();
               }
               if (String(settingsTriggerForm.filterBranch || "").trim()) {
                 filters.branch = String(settingsTriggerForm.filterBranch || "").trim();
@@ -73346,12 +74277,11 @@ const html = `<!doctype html>
             }
 
             const action = {
-              type: "send_message",
+              type: settingsTriggerForm.actionType === "comment_pull_request" ? "comment_pull_request" : "send_message",
+              prompt: promptValue,
             };
-            if (settingsTriggerForm.actionType === "template" && String(settingsTriggerForm.template || "").trim()) {
-              action.template = String(settingsTriggerForm.template || "").trim();
-            } else if (String(settingsTriggerForm.message || "").trim()) {
-              action.message = String(settingsTriggerForm.message || "").trim();
+            if (settingsTriggerForm.actionType !== "comment_pull_request") {
+              action.message = promptValue;
             }
 
             const response = await fetch("/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/triggers", {
@@ -73552,8 +74482,11 @@ const html = `<!doctype html>
         }, [activeProjectId, effectiveApiKey, resolvedUpstreamUrl]);
 
         useEffect(() => {
+          if (isDemoMode) {
+            return;
+          }
           void refreshSessionState();
-        }, [refreshSessionState]);
+        }, [isDemoMode, refreshSessionState]);
 
         useEffect(() => {
           if (!hasRealAccess || sessionState.status !== "authenticated" || !sessionState.userId) {
@@ -73621,10 +74554,48 @@ const html = `<!doctype html>
         }, [githubStatus]);
 
         useEffect(() => {
+          const redirectState = readPlaygroundIntegrationRedirectState();
+          if (!redirectState || String(redirectState.provider || "") !== "github") {
+            return;
+          }
+
+          const savedAt = Number(redirectState.savedAt || 0);
+          if (!Number.isFinite(savedAt) || Date.now() - savedAt > 1000 * 60 * 20) {
+            clearPlaygroundIntegrationRedirectState();
+            return;
+          }
+
+          if (!githubStatus.connected) {
+            return;
+          }
+
+          const nextActivePage = typeof redirectState.activePage === "string" ? redirectState.activePage : "";
+          const nextSettingsSection = typeof redirectState.settingsSection === "string" ? redirectState.settingsSection : "";
+          const shouldReopenSettingsTriggerComposer = Boolean(redirectState.reopenSettingsTriggerComposer);
+
+          if (nextActivePage) {
+            setActivePage(nextActivePage);
+          }
+
+          if (nextActivePage === "settings" && nextSettingsSection) {
+            setSettingsSection(nextSettingsSection);
+          }
+
+          if (nextActivePage === "settings" && nextSettingsSection === "webhooks" && shouldReopenSettingsTriggerComposer) {
+            openSettingsTriggerComposer();
+          }
+
+          clearPlaygroundIntegrationRedirectState();
+        }, [githubStatus.connected]);
+
+        useEffect(() => {
+          if (isDemoMode) {
+            return;
+          }
           try {
             localStorage.setItem("runner_demo_api_key", apiKey);
           } catch {}
-        }, [apiKey]);
+        }, [apiKey, isDemoMode]);
 
         useEffect(() => {
           try {
@@ -73840,12 +74811,51 @@ const html = `<!doctype html>
             setSettingsCreatingTrigger(false);
             setSettingsSelectedTriggerId("");
             setSettingsShowTriggerSecret(false);
+            setIsSettingsTriggerPromptEditing(false);
           }
 
           if (settingsSection !== "api") {
             setSettingsApiKeyDialogOpen(false);
           }
         }, [settingsSection]);
+
+        useEffect(() => {
+          if (!settingsCreatingTrigger) {
+            return;
+          }
+          window.requestAnimationFrame(() => {
+            resizeSettingsTriggerPromptTextarea(settingsTriggerPromptTextareaRef.current);
+          });
+        }, [
+          settingsCreatingTrigger,
+          settingsTriggerForm.actionType,
+          settingsTriggerForm.message,
+        ]);
+
+        useEffect(() => {
+          if (!settingsCreatingTrigger || settingsTriggerForm.source !== "github") {
+            setSettingsTriggerGithubReposLoading(false);
+            setSettingsTriggerGithubReposError("");
+            if (!settingsCreatingTrigger) {
+              setSettingsTriggerGithubRepos([]);
+            }
+            return;
+          }
+
+          if (!githubStatus.connected) {
+            setSettingsTriggerGithubRepos([]);
+            setSettingsTriggerGithubReposLoading(false);
+            setSettingsTriggerGithubReposError("");
+            return;
+          }
+
+          void loadSettingsTriggerGithubRepos();
+        }, [
+          githubStatus.connected,
+          loadSettingsTriggerGithubRepos,
+          settingsCreatingTrigger,
+          settingsTriggerForm.source,
+        ]);
 
         useEffect(() => {
           setSettingsShowTriggerSecret(false);
@@ -74187,13 +75197,13 @@ const html = `<!doctype html>
         const handleShowMoreThreads = useCallback(async function handleShowMoreThreads() {
           const nextDisplayCount = threadDisplayCount + 10;
           setThreadDisplayCount(nextDisplayCount);
-          if (!hasRealAccess || isThreadsLoading) {
+          if (hasDemoAccess || !hasRealAccess || isThreadsLoading) {
             return;
           }
           if (realThreadsHasMore && realThreads.length < nextDisplayCount) {
             void refreshThreads(Math.max(20, nextDisplayCount + 10));
           }
-        }, [hasRealAccess, isThreadsLoading, realThreads.length, realThreadsHasMore, refreshThreads, threadDisplayCount]);
+        }, [hasDemoAccess, hasRealAccess, isThreadsLoading, realThreads.length, realThreadsHasMore, refreshThreads, threadDisplayCount]);
 
         const updateRealThreadStatus = useCallback(function updateRealThreadStatus(threadId, nextStatus) {
           const normalizedThreadId = String(threadId || "").trim();
@@ -77581,6 +78591,8 @@ const html = `<!doctype html>
                 String(settingsTriggerForm.name || "").trim()
                 && String(settingsTriggerForm.event || "").trim()
                 && String(settingsTriggerForm.environmentId || "").trim()
+                && String(settingsTriggerForm.message || "").trim()
+                && (settingsTriggerForm.source !== "github" || githubStatus.connected)
               );
 
               const settingsTriggerComposerDialog = settingsCreatingTrigger
@@ -77621,6 +78633,20 @@ const html = `<!doctype html>
                         }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                       ),
                       React.createElement("div", { className: "playground-agent-composer-modal-body" },
+                        React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: "4px" } },
+                          React.createElement("div", { className: "playground-environments-muted" }, "Need help setting up GitHub or webhook delivery?"),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-environments-action-button",
+                            onClick: () => {
+                              window.open(${JSON.stringify(aiosOrigin + "/developers/run-and-scale/webhooks")}, "_blank", "noopener,noreferrer");
+                            },
+                            disabled: settingsTriggerSubmitting,
+                          },
+                            React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("span", null, "Open Docs")
+                          )
+                        ),
                         React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
                             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Source"),
@@ -77633,6 +78659,9 @@ const html = `<!doctype html>
                                   ...current,
                                   source: event.target.value,
                                   event: event.target.value === "github" ? "push" : "",
+                                  actionType: event.target.value === "github"
+                                    ? current.actionType
+                                    : "send_message",
                                 })),
                               },
                                 SETTINGS_TRIGGER_SOURCE_OPTIONS.map((option) =>
@@ -77651,7 +78680,10 @@ const html = `<!doctype html>
                                     disabled: settingsTriggerSubmitting,
                                     onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, event: event.target.value })),
                                   },
-                                    SETTINGS_GITHUB_EVENTS.map((eventName) =>
+                                    (settingsTriggerForm.actionType === "comment_pull_request"
+                                      ? SETTINGS_GITHUB_PULL_REQUEST_ACTION_EVENTS
+                                      : SETTINGS_GITHUB_EVENTS
+                                    ).map((eventName) =>
                                       React.createElement("option", { key: eventName, value: eventName }, eventName)
                                     )
                                   )
@@ -77682,6 +78714,34 @@ const html = `<!doctype html>
                             )
                           ),
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
+                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Action"),
+                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                              React.createElement("select", {
+                                className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
+                                value: settingsTriggerForm.actionType,
+                                disabled: settingsTriggerSubmitting,
+                                onChange: (event) => setSettingsTriggerForm((current) => {
+                                  const nextActionType = event.target.value;
+                                  return {
+                                    ...current,
+                                    actionType: nextActionType,
+                                    event: current.source === "github"
+                                      && nextActionType === "comment_pull_request"
+                                      && !SETTINGS_GITHUB_PULL_REQUEST_ACTION_EVENTS.includes(String(current.event || ""))
+                                      ? "pull_request"
+                                      : current.event,
+                                  };
+                                }),
+                              },
+                                SETTINGS_TRIGGER_ACTION_OPTIONS
+                                  .filter((option) => settingsTriggerForm.source === "github" || option.value === "send_message")
+                                  .map((option) =>
+                                    React.createElement("option", { key: option.value, value: option.value }, option.label)
+                                  )
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-fact" },
                             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Agent"),
                             React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                               React.createElement("select", {
@@ -77698,68 +78758,139 @@ const html = `<!doctype html>
                             )
                           )
                         ),
-                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Action"),
-                          React.createElement("div", { className: "playground-settings-toggle-group" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-toggle-pill" + (settingsTriggerForm.actionType === "message" ? " is-active" : ""),
-                              onClick: () => setSettingsTriggerForm((current) => ({ ...current, actionType: "message" })),
+                        React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
+                          React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                            React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Prompt"),
+                            React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                              [
+                                { id: "bold", label: "Bold", icon: Bold },
+                                { id: "italic", label: "Italic", icon: Italic },
+                                { id: "underline", label: "Underline", icon: Underline },
+                                { id: "list", label: "List", icon: List },
+                              ].map((action) =>
+                                React.createElement("button", {
+                                  key: "settings-trigger-" + action.id,
+                                  type: "button",
+                                  className: "playground-tasks-detail-format-button",
+                                  title: action.label,
+                                  "aria-label": action.label,
+                                  disabled: settingsTriggerSubmitting,
+                                  onMouseDown: (event) => event.preventDefault(),
+                                  onClick: () => handleSettingsTriggerPromptMarkdownFormat(action.id),
+                                }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isSettingsTriggerPromptEditing ? " is-editing" : " is-preview") },
+                            !isSettingsTriggerPromptEditing
+                              ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                                  String(settingsTriggerForm.message || "").trim()
+                                    ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                        content: settingsTriggerForm.message,
+                                        className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                      })
+                                    : React.createElement("div", {
+                                        className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                      }, settingsTriggerForm.actionType === "comment_pull_request"
+                                        ? "Review the pull request changes and write a concise, helpful GitHub comment."
+                                        : "Pull the latest changes, inspect the webhook payload, and summarize what happened.")
+                                )
+                              : null,
+                            React.createElement("textarea", {
+                              ref: settingsTriggerPromptTextareaRef,
+                              className: "playground-tasks-detail-description-input " + (isSettingsTriggerPromptEditing ? "is-editing" : "is-preview"),
+                              rows: 1,
+                              placeholder: isSettingsTriggerPromptEditing
+                                ? (settingsTriggerForm.actionType === "comment_pull_request"
+                                  ? "Review the pull request changes and write a concise, helpful GitHub comment."
+                                  : "Pull the latest changes, inspect the webhook payload, and summarize what happened.")
+                                : "",
+                              value: settingsTriggerForm.message,
                               disabled: settingsTriggerSubmitting,
-                            }, "Static message"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-toggle-pill" + (settingsTriggerForm.actionType === "template" ? " is-active" : ""),
-                              onClick: () => setSettingsTriggerForm((current) => ({ ...current, actionType: "template" })),
-                              disabled: settingsTriggerSubmitting,
-                            }, "Template"),
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, settingsTriggerForm.actionType === "template" ? "Template" : "Message"),
-                          React.createElement("textarea", {
-                            className: "playground-tasks-project-modal-textarea playground-settings-trigger-composer-textarea",
-                            value: settingsTriggerForm.actionType === "template" ? settingsTriggerForm.template : settingsTriggerForm.message,
-                            disabled: settingsTriggerSubmitting,
-                            onChange: (event) => setSettingsTriggerForm((current) => settingsTriggerForm.actionType === "template"
-                              ? { ...current, template: event.target.value }
-                              : { ...current, message: event.target.value }),
-                            placeholder: settingsTriggerForm.actionType === "template"
-                              ? "Handle this payload:\\n{{payload}}"
-                              : "Run tests and post a summary",
-                          })
+                              onFocus: () => setIsSettingsTriggerPromptEditing(true),
+                              onChange: (event) => {
+                                updateSettingsTriggerPromptField(event.target.value);
+                                resizeSettingsTriggerPromptTextarea(event.currentTarget);
+                              },
+                              onBlur: () => setIsSettingsTriggerPromptEditing(false),
+                            })
+                          ),
+                          settingsTriggerForm.actionType === "comment_pull_request"
+                            ? React.createElement("div", { className: "playground-environments-muted", style: { marginTop: 8 } }, "The assistant response will be posted back to the matching GitHub pull request as a comment.")
+                            : null
                         ),
                         settingsTriggerForm.source === "github"
                           ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
                               React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Filters"),
-                              React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
-                                React.createElement("div", { className: "playground-tasks-detail-fact" },
-                                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Repository Filter"),
-                                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                    React.createElement("input", {
-                                      type: "text",
-                                      className: "playground-environments-input playground-tasks-detail-fact-select",
-                                      value: settingsTriggerForm.filterRepo,
+                              !githubStatus.connected
+                                ? React.createElement("div", { className: "playground-settings-trigger-connect-card" },
+                                    React.createElement("div", { className: "playground-environments-muted" }, "Connect GitHub to choose one of your repositories for this webhook."),
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-environments-action-button is-primary",
+                                      onClick: () => {
+                                        void handleGithubAuthConnect();
+                                      },
                                       disabled: settingsTriggerSubmitting,
-                                      onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterRepo: event.target.value })),
-                                      placeholder: "org/repo",
-                                    })
+                                    },
+                                      React.createElement("span", null, "Connect GitHub")
+                                    )
                                   )
-                                ),
-                                React.createElement("div", { className: "playground-tasks-detail-fact" },
-                                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Branch Filter"),
-                                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                    React.createElement("input", {
-                                      type: "text",
-                                      className: "playground-environments-input playground-tasks-detail-fact-select",
-                                      value: settingsTriggerForm.filterBranch,
-                                      disabled: settingsTriggerSubmitting,
-                                      onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterBranch: event.target.value })),
-                                      placeholder: "main",
-                                    })
+                                : React.createElement(React.Fragment, null,
+                                    React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: 8 } },
+                                      React.createElement("div", { className: "playground-environments-muted" }, "GitHub is connected. Choose a repository or log out of GitHub for this webhook."),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "playground-environments-action-button",
+                                        onClick: () => {
+                                          void handleGithubAuthDisconnect();
+                                        },
+                                        disabled: settingsTriggerSubmitting,
+                                      },
+                                        React.createElement("span", null, "Log out of GitHub")
+                                      )
+                                    ),
+                                    React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
+                                      React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                        React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Repository"),
+                                        React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                          React.createElement("select", {
+                                            className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
+                                            value: settingsTriggerForm.filterRepo,
+                                            disabled: settingsTriggerSubmitting || settingsTriggerGithubReposLoading,
+                                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterRepo: event.target.value })),
+                                          },
+                                            React.createElement("option", { value: "" },
+                                              settingsTriggerGithubReposLoading
+                                                ? "Loading repositories..."
+                                                : settingsTriggerGithubRepos.length === 0
+                                                  ? "No repositories found"
+                                                  : "Any connected repo"
+                                            ),
+                                            settingsTriggerGithubRepos.map((repo) =>
+                                              React.createElement("option", { key: repo.id, value: repo.fullName }, repo.fullName)
+                                            )
+                                          )
+                                        )
+                                      ),
+                                      React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                        React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Branch Filter"),
+                                        React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                          React.createElement("input", {
+                                            type: "text",
+                                            className: "playground-environments-input playground-tasks-detail-fact-select",
+                                            value: settingsTriggerForm.filterBranch,
+                                            disabled: settingsTriggerSubmitting,
+                                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterBranch: event.target.value })),
+                                            placeholder: "main",
+                                          })
+                                        )
+                                      ),
+                                      settingsTriggerGithubReposError
+                                        ? React.createElement("div", { className: "playground-environments-muted", style: { color: "#ffb0b0" } }, settingsTriggerGithubReposError)
+                                        : null
+                                    )
                                   )
-                                )
-                              )
                             )
                           : null
                       ),
@@ -77826,7 +78957,7 @@ const html = `<!doctype html>
                         return React.createElement(React.Fragment, null,
                           renderSettingsSectionCard(
                             settingsSelectedTrigger.name || "Webhook",
-                            sourceMeta.label + " trigger for " + (settingsSelectedTrigger.event || "event"),
+                            sourceMeta.label + " · " + (settingsSelectedTrigger.event || "event") + " · " + getSettingsTriggerActionLabel(settingsSelectedTrigger.action),
                             React.createElement("div", { className: "playground-settings-card-stack" },
                               React.createElement("div", { className: "playground-settings-inline-row" },
                                 React.createElement("div", { className: "playground-settings-inline-row-main" },
@@ -77945,7 +79076,7 @@ const html = `<!doctype html>
                                           React.createElement("div", null,
                                             React.createElement("div", { className: "playground-settings-emphasis" }, trigger.name || "Webhook"),
                                             React.createElement("div", { className: "playground-settings-muted-copy" },
-                                              sourceMeta.label + " · " + (trigger.event || "event") + (trigger.lastTriggeredAt ? " · " + formatSettingsDate(trigger.lastTriggeredAt) : "")
+                                              sourceMeta.label + " · " + (trigger.event || "event") + " · " + getSettingsTriggerActionLabel(trigger.action) + (trigger.lastTriggeredAt ? " · " + formatSettingsDate(trigger.lastTriggeredAt) : "")
                                             )
                                           )
                                         ),
@@ -78518,7 +79649,23 @@ const html = `<!doctype html>
           }
         }, [activePage, contentMode, currentThreadId]);
 
+        const demoThreadCatalog = useMemo(() => (
+          normalizeThreadList([
+            ...DEMO_PINNED_THREADS,
+            ...DEMO_RECENT_THREADS,
+            ...DEMO_SCHEDULED_THREADS,
+          ])
+        ), []);
+
         const baseThreadItems = useMemo(() => {
+          if (hasDemoAccess) {
+            if (!currentThreadId) {
+              return [];
+            }
+            const matchedDemoThread = demoThreadCatalog.find((thread) => thread.id === currentThreadId) || null;
+            return matchedDemoThread ? [matchedDemoThread] : [];
+          }
+
           if (!hasRealAccess) {
             return [];
           }
@@ -78542,7 +79689,7 @@ const html = `<!doctype html>
             }),
             ...threads,
           ];
-        }, [currentThreadId, hasRealAccess, realThreads]);
+        }, [currentThreadId, demoThreadCatalog, hasDemoAccess, hasRealAccess, realThreads]);
 
         const activeSidebarThreadId = useMemo(() => {
           return activePage === "thread" ? currentThreadId : "";
@@ -78667,6 +79814,10 @@ const html = `<!doctype html>
         }, [baseThreadItems, threadRenameState]);
 
         const pinnedThreadItems = useMemo(() => {
+          if (hasDemoAccess) {
+            return [];
+          }
+
           if (!hasRealAccess) {
             return [];
           }
@@ -78679,14 +79830,18 @@ const html = `<!doctype html>
               }
               return compareThreadsByRecent(left, right);
             });
-        }, [baseThreadItems, hasRealAccess]);
+        }, [baseThreadItems, hasDemoAccess, hasRealAccess]);
 
         const scheduledThreadItems = useMemo(() => {
+          if (hasDemoAccess) {
+            return [];
+          }
+
           if (hasRealAccess) {
             return realThreads.filter((thread) => thread.isScheduled);
           }
           return [];
-        }, [hasRealAccess, realThreads]);
+        }, [hasDemoAccess, hasRealAccess, realThreads]);
 
         const recentThreadItems = useMemo(() => {
           return baseThreadItems.filter((thread) => !thread.isPinned);
@@ -78778,13 +79933,13 @@ const html = `<!doctype html>
             return "Projects";
           }
           if (!hasRealAccess && !currentThreadId) {
-            return "Sign In Required";
+            return hasDemoAccess ? "ACP Demo" : "Sign In Required";
           }
           if (!currentThreadId) {
             return "New Thread";
           }
           return selectedKnownThread?.title || "Current thread";
-        }, [activePage, currentThreadId, hasRealAccess, selectedKnownThread]);
+        }, [activePage, currentThreadId, hasDemoAccess, hasRealAccess, selectedKnownThread]);
         const selectedThreadStartedLabel = useMemo(() => {
           const startedAt = typeof selectedKnownThread?.createdAt === "string" ? selectedKnownThread.createdAt.trim() : "";
           return startedAt ? formatPlaygroundFileDate(startedAt) : "Unknown";
@@ -79244,7 +80399,9 @@ const html = `<!doctype html>
           displayedThreadItems.length < visibleThreadItems.length || realThreadsHasMore;
         const sidebarEmptyStateCopy = isThreadsLoading
           ? "Loading threads…"
-          : !hasRealAccess
+          : hasDemoAccess
+            ? "Explore seeded demo threads."
+            : !hasRealAccess
             ? sessionState.status === "loading"
               ? "Checking your account..."
               : "Sign in to load your threads."
@@ -79605,6 +80762,274 @@ const html = `<!doctype html>
           );
         }
 
+        function renderDemoFeaturePage(pageId) {
+          const pageConfig = (() => {
+            switch (pageId) {
+              case "tasks":
+                return {
+                  title: "Projects",
+                  copy: "Plan releases, assign work to agents, and keep mission control close to the execution flow.",
+                  cards: [
+                    { icon: Rocket, title: "Mission Control", copy: "Turn rough ideas into strategy, backlog structure, and next-run guidance." },
+                    { icon: ListTodo, title: "Backlog", copy: "Track tickets, priorities, dependencies, and ownership without leaving ACP." },
+                    { icon: CalendarIcon, title: "Schedules", copy: "Automate recurring work, reviews, and follow-up threads." },
+                  ],
+                };
+              case "files":
+                return {
+                  title: "Files",
+                  copy: "Unify workspace files, connected sources, and generated assets in one browser.",
+                  cards: [
+                    { icon: FolderOpen, title: "Workspace", copy: "Browse source trees, generated outputs, and supporting artifacts." },
+                    { icon: Globe, title: "Connected Sources", copy: "Blend GitHub, Drive, Notion, and OneDrive into active work." },
+                    { icon: MessageSquare, title: "File Chat", copy: "Ask agents to inspect, summarize, or modify files with context." },
+                  ],
+                };
+              case "environments":
+                return {
+                  title: "Environments",
+                  copy: "Start computers, deploy resources, and keep runtime state attached to the work it supports.",
+                  cards: [
+                    { icon: HardDrive, title: "Computers", copy: "Give agents real runtimes for code, browsing, and execution." },
+                    { icon: Server, title: "Resources", copy: "Provision apps, functions, auth, and databases from the same shell." },
+                    { icon: Cpu, title: "Runtime Control", copy: "Track status, usage, and environment actions without leaving ACP." },
+                  ],
+                };
+              case "agents":
+                return {
+                  title: "Agents",
+                  copy: "Specialize instructions, models, skills, and environments for each role in the platform.",
+                  cards: [
+                    { icon: Bot, title: "Role-based setup", copy: "Keep research, coding, design, and ops behavior separate and reusable." },
+                    { icon: Sparkles, title: "Model routing", copy: "Blend managed models and BYOM endpoints under the same selector." },
+                    { icon: Layers, title: "Skill stacks", copy: "Attach the right tools and custom skills to each agent." },
+                  ],
+                };
+              case "skills":
+                return {
+                  title: "Skills",
+                  copy: "Package reusable capabilities so agents know how to operate inside your stack.",
+                  cards: [
+                    { icon: Layers, title: "System skills", copy: "Ship web search, PDF handling, task management, and app-platform workflows." },
+                    { icon: Wand2, title: "Custom skills", copy: "Define organization-specific instructions and reuse them across agents." },
+                    { icon: Shield, title: "Controlled access", copy: "Scope skills to the workspaces and agents that actually need them." },
+                  ],
+                };
+              default:
+                return {
+                  title: "Agentic Compute Platform Demo",
+                  copy: "This seeded walkthrough shows the ACP shell, workflow structure, and execution model without touching a live account.",
+                  cards: [
+                    { icon: Sparkles, title: "Threads", copy: "See how prompts, working logs, and outcomes stay together." },
+                    { icon: HardDrive, title: "Resources", copy: "Understand how ACP connects agents to infrastructure and files." },
+                    { icon: Bot, title: "Agents", copy: "Inspect how role, model, and skill configuration shape execution." },
+                  ],
+                };
+            }
+          })();
+
+          return React.createElement("div", { className: "playground-demo-page" },
+            React.createElement("div", { className: "playground-demo-page-header" },
+              React.createElement("div", { className: "playground-demo-page-kicker" }, "Interactive Demo"),
+              React.createElement("h2", { className: "playground-demo-page-title" }, pageConfig.title),
+              React.createElement("p", { className: "playground-demo-page-copy" }, pageConfig.copy)
+            ),
+            React.createElement("div", { className: "playground-demo-card-grid" },
+              pageConfig.cards.map((card) =>
+                React.createElement("div", { key: card.title, className: "playground-demo-card" },
+                  React.createElement("div", { className: "playground-demo-card-icon" },
+                    React.createElement(card.icon, { strokeWidth: 1.8 })
+                  ),
+                  React.createElement("div", null,
+                    React.createElement("h3", { className: "playground-demo-card-title" }, card.title),
+                    React.createElement("p", { className: "playground-demo-card-copy" }, card.copy)
+                  )
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-demo-callout" },
+              React.createElement("div", { className: "playground-demo-callout-copy" },
+                React.createElement("p", { className: "playground-demo-callout-title" }, "Demo mode is read-only"),
+                React.createElement("p", { className: "playground-demo-callout-text" }, "Use this walkthrough to understand the platform structure, then sign in to run real threads, configure agents, and connect live resources.")
+              ),
+              React.createElement("div", { className: "playground-demo-callout-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-demo-action",
+                  onClick: handleSignInWithComputerAgents,
+                }, "Sign in to continue"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-demo-action-secondary",
+                  onClick: () => {
+                    setActivePage("thread");
+                    setCurrentThreadId(SEEDED_DEMO_THREAD_ID);
+                    setContentMode("chat");
+                  },
+                }, "Open demo thread")
+              )
+            )
+          );
+        }
+
+        function renderDemoThreadChatSurface() {
+          if (!currentThreadId) {
+            return React.createElement("div", { className: "playground-demo-thread-shell" },
+              React.createElement("div", { className: "playground-demo-thread-header" },
+                React.createElement("div", { className: "playground-demo-thread-kicker" }, "ACP Demo"),
+                React.createElement("h2", { className: "playground-demo-thread-title" }, "Start with a clean workspace"),
+                React.createElement("p", { className: "playground-demo-thread-copy" }, "This demo opens the same way a fresh ACP workspace should feel: no existing chats in the sidebar, just a clean shell ready for agents, environments, files, and projects.")
+              ),
+              React.createElement("div", { className: "playground-demo-card-grid" },
+                [
+                  { icon: MessageSquare, title: "Thread-first work", copy: "Every run keeps prompts, actions, files, and outputs together." },
+                  { icon: Bot, title: "Agent-driven execution", copy: "Threads inherit instructions, models, skills, and environments." },
+                  { icon: HardDrive, title: "Runtime attached", copy: "Agents can work inside computers and connected resources instead of only chat." },
+                ].map((card) =>
+                  React.createElement("div", { key: card.title, className: "playground-demo-card" },
+                    React.createElement("div", { className: "playground-demo-card-icon" },
+                      React.createElement(card.icon, { strokeWidth: 1.8 })
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("h3", { className: "playground-demo-card-title" }, card.title),
+                      React.createElement("p", { className: "playground-demo-card-copy" }, card.copy)
+                    )
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-demo-thread-composer" },
+                React.createElement("div", { className: "playground-demo-thread-composer-copy" },
+                  React.createElement("p", { className: "playground-demo-thread-composer-title" }, "Fresh workspace preview"),
+                  React.createElement("p", { className: "playground-demo-thread-composer-text" }, "Use the sidebar to inspect the shell, or open one seeded demo thread when you want to see logs, tool calls, and output in context.")
+                ),
+                React.createElement("div", { className: "playground-demo-callout-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-demo-action-secondary",
+                    onClick: () => {
+                      setCurrentThreadId(SEEDED_DEMO_THREAD_ID);
+                      setContentMode("chat");
+                    },
+                  }, "Open demo thread"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-demo-action",
+                    onClick: handleSignInWithComputerAgents,
+                  }, "Sign in to run ACP")
+                )
+              )
+            );
+          }
+
+          const demoExperience = getDemoThreadExperience(selectedKnownThread);
+          const demoEvents = Array.isArray(demoExperience?.events) ? demoExperience.events : [];
+
+          return React.createElement("div", { className: "playground-demo-thread-shell" },
+            React.createElement("div", { className: "playground-demo-thread-header" },
+              React.createElement("div", { className: "playground-demo-thread-kicker" }, "Demo Thread"),
+              React.createElement("h2", { className: "playground-demo-thread-title" }, selectedThreadTitle || "Seeded ACP thread"),
+              React.createElement("p", { className: "playground-demo-thread-copy" }, demoExperience.summary),
+              React.createElement("div", { className: "playground-demo-thread-badges" },
+                React.createElement("div", { className: "playground-demo-thread-badge is-strong" },
+                  React.createElement(Bot, { strokeWidth: 1.8 }),
+                  React.createElement("span", null, demoExperience.agent)
+                ),
+                React.createElement("div", { className: "playground-demo-thread-badge" },
+                  React.createElement(Cpu, { strokeWidth: 1.8 }),
+                  React.createElement("span", null, demoExperience.model)
+                ),
+                React.createElement("div", { className: "playground-demo-thread-badge" },
+                  React.createElement(Sparkles, { strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Runtime: " + demoExperience.runtime)
+                ),
+                React.createElement("div", { className: "playground-demo-thread-badge" },
+                  React.createElement(HardDrive, { strokeWidth: 1.8 }),
+                  React.createElement("span", null, demoExperience.environment)
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-demo-thread-timeline" },
+              demoEvents.map((entry, index) => {
+                const Icon = entry.kind === "tool"
+                  ? Terminal
+                  : entry.kind === "message"
+                    ? MessageSquare
+                    : entry.kind === "user"
+                      ? ArrowUpRight
+                      : Sparkles;
+                return React.createElement("div", {
+                    key: entry.title + ":" + index,
+                    className: "playground-demo-thread-entry is-" + entry.kind,
+                  },
+                  React.createElement("div", { className: "playground-demo-thread-entry-header" },
+                    React.createElement(Icon, { strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "playground-demo-thread-entry-title" }, entry.title)
+                  ),
+                  React.createElement("div", { className: "playground-demo-thread-entry-body" },
+                    React.createElement(ReactMarkdown, {
+                      remarkPlugins: [remarkGfm, remarkPlaygroundSoftbreaksToBreaks],
+                      rehypePlugins: [rehypeRaw],
+                      components: playgroundMarkdownComponents,
+                    }, String(entry.body || ""))
+                  )
+                );
+              })
+            ),
+            React.createElement("div", { className: "playground-demo-thread-composer" },
+              React.createElement("div", { className: "playground-demo-thread-composer-copy" },
+                React.createElement("p", { className: "playground-demo-thread-composer-title" }, "Ready to try this on your own workspace?"),
+                React.createElement("p", { className: "playground-demo-thread-composer-text" }, "Sign in to create real threads, connect models, attach environments, and watch live tool output stream in.")
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-demo-action",
+                onClick: handleSignInWithComputerAgents,
+              }, "Sign in to continue")
+            )
+          );
+        }
+
+        function renderDemoThreadChangesSurface() {
+          const demoExperience = getDemoThreadExperience(selectedKnownThread);
+          const changes = Array.isArray(demoExperience?.changes) ? demoExperience.changes : [];
+          return React.createElement("div", { className: "playground-demo-changes-shell" },
+            React.createElement("div", { className: "playground-demo-page-header" },
+              React.createElement("div", { className: "playground-demo-page-kicker" }, "Demo Changes"),
+              React.createElement("h2", { className: "playground-demo-page-title" }, selectedThreadTitle || "Seeded change history"),
+              React.createElement("p", { className: "playground-demo-page-copy" }, "ACP normally streams real step history here. In demo mode, this surface previews how changes, files, and execution output stay attached to the thread.")
+            ),
+            React.createElement("div", { className: "playground-demo-changes-list" },
+              changes.map((entry, index) =>
+                React.createElement("div", { key: entry.path + ":" + index, className: "playground-demo-change-entry" },
+                  React.createElement(FileText, { strokeWidth: 1.8 }),
+                  React.createElement("div", null,
+                    React.createElement("p", { className: "playground-demo-change-path" }, entry.path),
+                    React.createElement("p", { className: "playground-demo-change-copy" }, entry.copy)
+                  )
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-demo-callout" },
+              React.createElement("div", { className: "playground-demo-callout-copy" },
+                React.createElement("p", { className: "playground-demo-callout-title" }, "Live runs keep much richer detail"),
+                React.createElement("p", { className: "playground-demo-callout-text" }, "Signed-in threads stream real tool starts, tool results, file diffs, and resource previews into this pane.")
+              ),
+              React.createElement("div", { className: "playground-demo-callout-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-demo-action-secondary",
+                  onClick: () => setContentMode("chat"),
+                }, "Back to thread"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-demo-action",
+                  onClick: handleSignInWithComputerAgents,
+                }, "Sign in to run live")
+              )
+            )
+          );
+        }
+
         function renderSidebarThreadRow(thread, options = {}) {
           try {
             const { pinned = false } = options;
@@ -79617,7 +81042,8 @@ const html = `<!doctype html>
             const safeThreadId = typeof safeThread.id === "string" && safeThread.id.trim() ? safeThread.id.trim() : generateId("thread");
             const isActive = activeSidebarThreadId === safeThreadId;
             const isRunning = String(safeThread?.status || "").trim().toLowerCase() === "running";
-            const isMenuOpen = threadActionMenuState?.threadId === safeThreadId;
+            const canManageThread = hasRealAccess && isRealThreadId(safeThreadId);
+            const isMenuOpen = canManageThread && threadActionMenuState?.threadId === safeThreadId;
             const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === safeThreadId;
             const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === safeThreadId;
             const threadProjectId = typeof taskPreview?.projectId === "string" && taskPreview.projectId.trim()
@@ -79667,18 +81093,20 @@ const html = `<!doctype html>
                     ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadMetaText)
                     : null
                 ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
-                  onClick: (event) => openThreadActionMenu(event, safeThreadId),
-                  "aria-label": "Thread actions",
-                  "aria-expanded": isMenuOpen ? "true" : "false",
-                  disabled: isDeleting || isPinMutating,
-                },
-                  isDeleting || isPinMutating
-                    ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
-                    : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
-                )
+                canManageThread
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
+                      onClick: (event) => openThreadActionMenu(event, safeThreadId),
+                      "aria-label": "Thread actions",
+                      "aria-expanded": isMenuOpen ? "true" : "false",
+                      disabled: isDeleting || isPinMutating,
+                    },
+                      isDeleting || isPinMutating
+                        ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
+                        : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
+                    )
+                  : null
               )
             );
           } catch (error) {
@@ -79689,7 +81117,8 @@ const html = `<!doctype html>
               taskTicketNumber,
               displayThreadTitle,
             } = getSidebarThreadTitleParts(fallbackThread);
-            const isMenuOpen = threadActionMenuState?.threadId === fallbackSafeThreadId;
+            const canManageThread = hasRealAccess && isRealThreadId(fallbackSafeThreadId);
+            const isMenuOpen = canManageThread && threadActionMenuState?.threadId === fallbackSafeThreadId;
             const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === fallbackSafeThreadId;
             const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === fallbackSafeThreadId;
             console.error("Failed to render sidebar thread row", error, thread);
@@ -79722,18 +81151,20 @@ const html = `<!doctype html>
                     ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, fallbackMetaText)
                     : null
                 ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
-                  onClick: (event) => openThreadActionMenu(event, fallbackSafeThreadId),
-                  "aria-label": "Thread actions",
-                  "aria-expanded": isMenuOpen ? "true" : "false",
-                  disabled: isDeleting || isPinMutating,
-                },
-                  isDeleting || isPinMutating
-                    ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
-                    : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
-                )
+                canManageThread
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
+                      onClick: (event) => openThreadActionMenu(event, fallbackSafeThreadId),
+                      "aria-label": "Thread actions",
+                      "aria-expanded": isMenuOpen ? "true" : "false",
+                      disabled: isDeleting || isPinMutating,
+                    },
+                      isDeleting || isPinMutating
+                        ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
+                        : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
+                    )
+                  : null
               )
             );
           }
@@ -79969,7 +81400,7 @@ const html = `<!doctype html>
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-action-button",
-                onClick: hasRealAccess ? handleNewThread : handleSignInWithComputerAgents
+                onClick: hasShellAccess ? handleNewThread : handleSignInWithComputerAgents
               },
                 React.createElement(SquarePen, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
                 React.createElement("span", null, "New Thread")
@@ -80060,7 +81491,7 @@ const html = `<!doctype html>
               },
                 renderAccountAvatar("sidebar-account-avatar", "sidebar-account-avatar-image", accountInitials, accountAvatarUrl),
                 React.createElement("div", { className: "sidebar-account-copy" },
-                  React.createElement("span", { className: "sidebar-account-name" }, hasSessionAuth ? accountName : "Sign in"),
+                  React.createElement("span", { className: "sidebar-account-name" }, hasShellAccess ? accountName : "Sign in"),
                   React.createElement("span", { className: "sidebar-account-tier" }, accountPlanLabel)
                 )
               )
@@ -80097,7 +81528,7 @@ const html = `<!doctype html>
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-rail-button",
-                onClick: hasRealAccess ? handleNewThread : handleSignInWithComputerAgents,
+                onClick: hasShellAccess ? handleNewThread : handleSignInWithComputerAgents,
                 "aria-label": "New thread",
                 title: "New thread"
               }, React.createElement(SquarePen, { className: "sidebar-rail-icon", strokeWidth: 1.5 })),
@@ -80142,7 +81573,7 @@ const html = `<!doctype html>
               className: "sidebar-rail-account",
               onClick: () => setAccountMenuOpen((current) => !current),
               "aria-label": "Open account menu",
-              title: hasSessionAuth ? accountName : "Sign in"
+              title: hasShellAccess ? accountName : "Sign in"
             },
               renderAccountAvatar("sidebar-account-avatar", "sidebar-rail-account-image", accountInitials, accountAvatarUrl)
             )
@@ -80165,7 +81596,7 @@ const html = `<!doctype html>
             })
           : null;
 
-        if (sessionState.status === "loading" || sessionState.status === "unauthenticated" || sessionState.status === "error") {
+        if (!hasShellAccess && (sessionState.status === "loading" || sessionState.status === "unauthenticated" || sessionState.status === "error")) {
           return React.createElement(React.Fragment, null,
             renderAuthGate(),
             renderedPlaygroundOnboarding
@@ -80200,9 +81631,13 @@ const html = `<!doctype html>
                     },
                       renderAccountAvatar("account-menu-avatar", "account-menu-avatar-image", accountInitials, accountAvatarUrl),
                       React.createElement("div", { className: "account-menu-account-copy" },
-                        React.createElement("div", { className: "account-menu-account-name" }, hasSessionAuth ? accountName : "Sign in to Agentic Compute Platform"),
+                        React.createElement("div", { className: "account-menu-account-name" }, hasShellAccess ? accountName : "Sign in to Agentic Compute Platform"),
                         React.createElement("div", { className: "account-menu-account-email" },
-                          hasSessionAuth ? (accountEmail || "Connected account") : "Use your existing Agentic Compute Platform account"
+                          hasSessionAuth
+                            ? (accountEmail || "Connected account")
+                            : hasDemoAccess
+                              ? "Seeded demo workspace. Sign in to switch to a live account."
+                              : "Use your existing Agentic Compute Platform account"
                         )
                       ),
                       React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
@@ -80499,7 +81934,9 @@ const html = `<!doctype html>
                               apiKey: effectiveApiKey,
                               upstreamUrl: resolvedUpstreamUrl,
                             })
-                          : renderAuthGate()
+                          : hasDemoAccess
+                            ? renderDemoFeaturePage("skills")
+                            : renderAuthGate()
                       : activePage === "files"
                         ? hasRealAccess
                           ? React.createElement(PlaygroundFilesPage, {
@@ -80516,7 +81953,9 @@ const html = `<!doctype html>
                                 setSidebarOpen(false);
                               },
                             })
-                          : renderAuthGate()
+                          : hasDemoAccess
+                            ? renderDemoFeaturePage("files")
+                            : renderAuthGate()
                       : activePage === "environments"
                         ? hasRealAccess
                           ? React.createElement(PlaygroundEnvironmentsPage, {
@@ -80532,7 +81971,9 @@ const html = `<!doctype html>
                                 setSidebarOpen(false);
                               },
                             })
-                          : renderAuthGate()
+                          : hasDemoAccess
+                            ? renderDemoFeaturePage("environments")
+                            : renderAuthGate()
                       : activePage === "agents"
                         ? hasRealAccess
                           ? React.createElement(PlaygroundAgentsPage, {
@@ -80553,9 +81994,12 @@ const html = `<!doctype html>
                                 handleNewThread();
                               },
                             })
-                          : renderAuthGate()
+                          : hasDemoAccess
+                            ? renderDemoFeaturePage("agents")
+                            : renderAuthGate()
                       : activePage === "tasks"
-                        ? React.createElement(PlaygroundTasksPage, {
+                        ? hasRealAccess
+                          ? React.createElement(PlaygroundTasksPage, {
                             backendUrl: proxyBackendBase,
                             requestHeaders: authRequestHeaders,
                             agents: runtimeAgents,
@@ -80632,10 +82076,13 @@ const html = `<!doctype html>
                               setSidebarOpen(false);
                             },
                           })
+                          : hasDemoAccess
+                            ? renderDemoFeaturePage("tasks")
+                            : renderAuthGate()
                       : React.createElement(React.Fragment, null,
                           React.createElement("div", { className: "playground-view-pane" + (contentMode === "chat" ? "" : " is-hidden") },
                             React.createElement("div", { className: "runner-host" },
-                              hasRealAccess
+                              (hasRealAccess || (hasDemoAccess && showInitialThreadWelcome))
                                 ? React.createElement(RunnerChat, {
                                     key: runnerRenderKey,
                                     className: "playground-thread-runner" + (selectedThreadShellBackground ? " is-project-wallpaper-active" : ""),
@@ -80659,7 +82106,7 @@ const html = `<!doctype html>
                                     skills: computerAgentsMode ? demoSkills : undefined,
                                     environmentId: resolvedEnvironmentId || undefined,
                                     agentId: resolvedTaskInputAgentId || undefined,
-                                    autoFocusComposer: true,
+                                    autoFocusComposer: !showInitialThreadWelcome,
                                     keepFocusOnSubmit: true,
                                     showUsageInStatus: false,
                                     placeholder: "What would you like me to do?",
@@ -80797,7 +82244,9 @@ const html = `<!doctype html>
                                     subagentDetailPortalTarget: threadSubagentDetailHost,
                                     disableSubagentDetailDrawer: isThreadTaskDetailOpen,
                                   })
-                                : renderAuthGate()
+                                : hasDemoAccess
+                                  ? renderDemoThreadChatSurface()
+                                  : renderAuthGate()
                             )
                           ),
                           React.createElement("div", { className: "playground-view-pane" + (contentMode === "changes" ? "" : " is-hidden") },
@@ -80816,7 +82265,9 @@ const html = `<!doctype html>
                                       setChangesNavigationTarget((current) => (current && current.token === token ? null : current));
                                     },
                                   })
-                                : renderAuthGate()
+                                : hasDemoAccess
+                                  ? renderDemoThreadChangesSurface()
+                                  : renderAuthGate()
                               : null
                           )
                         )
@@ -83367,7 +84818,29 @@ function serveEnvironmentGuiViewerPage(res) {
 const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", `http://localhost:${port}`);
 
-  if (req.method === "GET" && url.pathname === "/") {
+  if (isGithubApiRequestPath(url.pathname)) {
+    void handleGithubApiRequest({
+      req,
+      res,
+      url,
+      platformOrigin,
+      envFileCandidates: githubOauthEnvFileCandidates,
+      allowedOrigins: githubOauthAllowedOrigins,
+    });
+    return;
+  }
+
+  if (
+    req.method === "GET"
+    && (
+      url.pathname === "/"
+      || url.pathname === "/demo"
+      || url.pathname === "/demo/"
+      || url.pathname === "/login"
+      || url.pathname === "/signup"
+      || url.pathname === "/logout"
+    )
+  ) {
     res.writeHead(200, {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
