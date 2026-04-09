@@ -6093,6 +6093,350 @@ const html = `<!doctype html>
         gap: 24px;
       }
 
+      .playground-settings-plans-navbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: rgba(17, 17, 18, 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+
+      .playground-settings-plans-title {
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-settings-plans-menu-anchor {
+        position: relative;
+      }
+
+      .playground-settings-plans-budget-card {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-settings-plans-budget-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-settings-plans-budget-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-settings-plans-budget-period {
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-settings-plans-budget-value {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-settings-plans-budget-value-total,
+      .playground-settings-plans-budget-value-separator {
+        font-size: inherit;
+        font-weight: inherit;
+        color: inherit;
+      }
+
+      .playground-settings-plans-budget-reset {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-settings-plans-budget-breakdown {
+        margin-top: 2px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-settings-plans-budget-breakdown-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        min-height: 56px;
+        padding: 0 2px;
+      }
+
+      .playground-settings-plans-budget-breakdown-row + .playground-settings-plans-budget-breakdown-row {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-settings-plans-budget-breakdown-main {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-settings-plans-budget-breakdown-icon {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-settings-plans-budget-breakdown-title {
+        min-width: 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-settings-plans-budget-breakdown-copy {
+        margin-top: 2px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.44);
+      }
+
+      .playground-settings-plans-budget-breakdown-value {
+        flex: 0 0 auto;
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .playground-settings-plans-budget-card .playground-settings-usage-balance-track {
+        height: 16px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-settings-plans-budget-card .playground-settings-usage-balance-fill,
+      .playground-settings-plans-budget-card .playground-settings-usage-balance-fill.is-neutral {
+        background: rgba(255, 255, 255, 1);
+      }
+
+      .playground-settings-plans-add-more-button,
+      .playground-settings-plans-add-more-button.playground-environments-action-button {
+        border-radius: 999px !important;
+        background: transparent;
+      }
+
+      .playground-settings-plans-resource-cap-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-settings-plans-resource-cap-heading {
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: rgba(255, 255, 255, 0.94);
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tasks-detail-facts.playground-settings-plans-resource-cap-facts {
+        gap: 0;
+        background: transparent;
+        border: 0;
+        padding: 0;
+        border-radius: 0;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .playground-tasks-detail-facts.playground-settings-plans-resource-cap-facts::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-tasks-detail-facts.playground-settings-plans-resource-cap-facts .playground-tasks-detail-facts-body {
+        gap: 10px;
+      }
+
+      .playground-tasks-detail-facts.playground-settings-plans-resource-cap-facts .playground-tasks-detail-fact {
+        grid-template-columns: minmax(220px, 1fr) minmax(0, auto);
+        min-height: 34px;
+        gap: 24px;
+      }
+
+      .playground-settings-plans-resource-cap-label {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        position: relative;
+      }
+
+      .playground-settings-plans-resource-cap-info-trigger {
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.42);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .playground-settings-plans-resource-cap-info-trigger:hover {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-settings-plans-resource-cap-info-popover {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        z-index: 6;
+        width: 240px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(17, 17, 18, 0.98);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .playground-settings-plans-resource-cap-control {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-settings-input.playground-settings-plans-resource-cap-input {
+        width: 116px;
+        min-height: auto;
+        padding: 0;
+        text-align: right;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-settings-input.playground-settings-plans-resource-cap-input:focus {
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .playground-settings-input.playground-settings-plans-resource-cap-input::placeholder {
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-settings-input.playground-settings-plans-resource-cap-input::-webkit-outer-spin-button,
+      .playground-settings-input.playground-settings-plans-resource-cap-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      .playground-settings-input.playground-settings-plans-resource-cap-input[type="number"] {
+        appearance: textfield;
+        -moz-appearance: textfield;
+      }
+
+      .playground-settings-plans-resource-cap-suffix {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-settings-plans-quick-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .playground-settings-plans-quick-actions-heading {
+        margin-top: 20px;
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: rgba(255, 255, 255, 0.94);
+        margin-bottom: 26px;
+      }
+
+      .playground-settings-plans-quick-actions-grid {
+        margin-top: 0;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .playground-settings-plans-quick-action-card {
+        text-align: left;
+      }
+
+      .playground-settings-plans-quick-action-card .playground-environments-home-card-title,
+      .playground-settings-plans-quick-action-card .playground-environments-home-card-copy {
+        text-align: left;
+      }
+
+      .playground-settings-inference-endpoint-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-settings-inference-endpoint-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-settings-inference-endpoint-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-settings-inference-endpoint-toggle {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-settings-inference-endpoint-toggle-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-settings-inference-status-value {
+        font-size: 12px;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.82);
+        line-height: 1.4;
+        text-align: right;
+      }
+
       .playground-settings-plan-heading {
         margin: 23px 0 6px;
         text-align: center;
@@ -6960,6 +7304,11 @@ const html = `<!doctype html>
         flex: 1 1 auto;
       }
 
+      .playground-settings-model-entry-row .playground-settings-app-secondary-button {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+
       .playground-settings-choice-button {
         min-height: 38px;
         padding: 0 16px;
@@ -7743,15 +8092,17 @@ const html = `<!doctype html>
       .playground-settings-modal-backdrop {
         position: fixed;
         inset: 0;
-        z-index: 40;
+        z-index: 320;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 20px;
-        background: rgba(0, 0, 0, 0.46);
+        background: rgba(0, 0, 0, 0.62);
       }
 
       .playground-settings-modal {
+        position: relative;
+        z-index: 1;
         width: min(560px, 100%);
         max-height: calc(100vh - 40px);
         overflow: auto;
@@ -7760,6 +8111,10 @@ const html = `<!doctype html>
         border: 1px solid rgba(255, 255, 255, 0.12);
         background: rgba(18, 18, 20, 0.98);
         box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+      }
+
+      .playground-settings-modal.is-plan-selector {
+        width: min(1160px, 100%);
       }
 
       .playground-settings-modal-header {
@@ -13595,6 +13950,10 @@ const html = `<!doctype html>
         letter-spacing: -0.01em;
       }
 
+      .playground-agents-page .playground-environments-home-hero-title {
+        margin-top: 44px;
+      }
+
       .playground-agents-page .playground-environments-detail-actions {
         min-height: var(--playground-environments-nav-row-height);
         align-items: center;
@@ -13695,6 +14054,33 @@ const html = `<!doctype html>
         mask-origin: content-box, border-box;
         mask-repeat: repeat, repeat;
         mask-size: auto, auto;
+      }
+
+      .playground-agents-page .playground-environments-home-metrics .playground-tasks-detail-facts {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .playground-agents-page .playground-environments-home-metrics .playground-tasks-detail-facts::before {
+        content: none;
+      }
+
+      .playground-agents-page .playground-environments-home-card-grid {
+        margin-top: 20px;
+      }
+
+      .playground-agents-page .playground-environments-home-card {
+        text-align: left;
+      }
+
+      .playground-agents-page .playground-environments-home-card-title,
+      .playground-agents-page .playground-environments-home-card-copy {
+        width: 100%;
+        text-align: left;
       }
 
       .playground-agents-page .playground-agents-model-hint,
@@ -20791,7 +21177,9 @@ const html = `<!doctype html>
         .playground-settings-usage-app-header,
         .playground-settings-usage-card-header,
         .playground-settings-usage-legend-row,
-        .playground-settings-usage-source-row-top {
+        .playground-settings-usage-source-row-top,
+        .playground-settings-plans-budget-card-top,
+        .playground-settings-plans-budget-breakdown-row {
           flex-direction: column;
           align-items: stretch;
         }
@@ -20991,6 +21379,7 @@ const html = `<!doctype html>
 
     <script type="module">
       import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+      import { createPortal } from "react-dom";
       import { createRoot } from "react-dom/client";
       import { format, getDay, parse, startOfWeek } from "date-fns";
       import * as enUSLocale from "date-fns/locale/en-US";
@@ -21246,7 +21635,7 @@ const html = `<!doctype html>
       const SETTINGS_PLATFORM_CONFIG_STORAGE_KEY = "runner_demo_settings_platform_config_v1";
       const SETTINGS_DEFAULT_BILLING_PREFERENCES = {
         usageBillingEnabled: false,
-        monthlyResourceSpendLimit: 200,
+        monthlyResourceSpendLimit: 0,
         pauseOnLimit: true,
         emailAlerts: true,
       };
@@ -21257,6 +21646,7 @@ const html = `<!doctype html>
         defaultModel: "",
         availableModels: [],
         apiKeyConfigured: false,
+        apiKeyPreview: "",
         lastValidatedAt: "",
         healthStatus: "idle",
         lastError: "",
@@ -22114,16 +22504,19 @@ const html = `<!doctype html>
       function normalizeSettingsSpendLimit(value) {
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue)) {
-          return SETTINGS_DEFAULT_BILLING_PREFERENCES.monthlyResourceSpendLimit;
+          return 0;
         }
         return Math.max(0, Math.min(50000, Math.round(numericValue)));
       }
 
       function normalizeDemoSettingsBillingPreferences(value) {
         const source = value && typeof value === "object" ? value : {};
+        const normalizedUsageBillingEnabled = Boolean(source.usageBillingEnabled);
+        const normalizedSpendLimit = normalizeSettingsSpendLimit(source.monthlyResourceSpendLimit);
+        const legacyImplicitDefault = !normalizedUsageBillingEnabled && normalizedSpendLimit === 200;
         return {
-          usageBillingEnabled: Boolean(source.usageBillingEnabled),
-          monthlyResourceSpendLimit: normalizeSettingsSpendLimit(source.monthlyResourceSpendLimit),
+          usageBillingEnabled: normalizedUsageBillingEnabled,
+          monthlyResourceSpendLimit: legacyImplicitDefault ? 0 : normalizedSpendLimit,
           pauseOnLimit: Object.prototype.hasOwnProperty.call(source, "pauseOnLimit")
             ? Boolean(source.pauseOnLimit)
             : SETTINGS_DEFAULT_BILLING_PREFERENCES.pauseOnLimit,
@@ -22150,6 +22543,7 @@ const html = `<!doctype html>
               .slice(0, 100)
             : [],
           apiKeyConfigured: Boolean(source.apiKeyConfigured),
+          apiKeyPreview: typeof source.apiKeyPreview === "string" ? source.apiKeyPreview.trim() : "",
           lastValidatedAt: typeof source.lastValidatedAt === "string" ? source.lastValidatedAt.trim() : "",
           healthStatus: source.healthStatus === "healthy" || source.healthStatus === "error"
             ? source.healthStatus
@@ -22177,6 +22571,17 @@ const html = `<!doctype html>
             .map((entry) => entry.trim())
             .filter(Boolean)
         );
+      }
+
+      function buildDemoInferenceApiKeyPreview(value) {
+        const normalized = String(value || "").trim();
+        if (!normalized) {
+          return "";
+        }
+
+        return normalized.length > 10
+          ? normalized.slice(0, 10) + "..."
+          : normalized;
       }
 
       function readDemoSettingsPlatformConfig() {
@@ -22646,6 +23051,24 @@ const html = `<!doctype html>
           ...identity,
           userId: pickFirstSessionIdentityValue(user.localId, user.userId, user.id),
         };
+      }
+
+      async function syncFirebaseSessionCookieFromCurrentUser(forceRefresh = false) {
+        try {
+          const auth = await ensurePlaygroundFirebaseAuth();
+          const currentUser = auth?.currentUser || null;
+          if (!currentUser) {
+            return false;
+          }
+          const idToken = await currentUser.getIdToken(Boolean(forceRefresh));
+          if (!idToken) {
+            return false;
+          }
+          writeFirebaseSessionCookie(idToken);
+          return true;
+        } catch {
+          return false;
+        }
       }
 
       async function copyTextToClipboard(value) {
@@ -34330,6 +34753,7 @@ const html = `<!doctype html>
         onPreferredEnvironmentChange,
         onThreadRegistered,
         onThreadOpen,
+        onThreadStarted,
       }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
@@ -47295,6 +47719,29 @@ const html = `<!doctype html>
           onThreadOpen(normalizedThreadId);
         };
 
+        const handleEnvironmentsHomeThreadStartRequest = (runRequest) => {
+          const normalizedThreadId = String(runRequest?.threadId || "").trim();
+          const normalizedPrompt = String(runRequest?.prompt || "").trim();
+          if (!normalizedThreadId || !normalizedPrompt || typeof onThreadStarted !== "function") {
+            return false;
+          }
+          setEnvironmentsHomeActiveResourceCommand("");
+          setEnvironmentsHomeResourceCommandRequest(null);
+          onThreadStarted(normalizedThreadId, {
+            taskRunRequest: {
+              token: runRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+              prompt: normalizedPrompt,
+              attachments: Array.isArray(runRequest.attachments) ? runRequest.attachments : [],
+              githubRepo: runRequest.githubRepo || null,
+              enabledSkills: runRequest.enabledSkills || null,
+              environmentId: typeof runRequest.environmentId === "string" ? runRequest.environmentId : "",
+              quotedSelection: runRequest.quotedSelection || null,
+              executionStarted: false,
+            },
+          });
+          return true;
+        };
+
         function renderEnvironmentsHome() {
           const renderHomeResourceIcon = (item, className) => {
             if (item?.resourceType === "computer") {
@@ -48146,6 +48593,7 @@ const html = `<!doctype html>
                           enableResourceCreationCommand: true,
                           resourceCreationCommand: environmentsHomeResourceCommandRequest,
                           resourceCreationCommandHiddenPrompt: buildEnvironmentsHomeResourceHiddenPrompt,
+                          onExternalRunRequestCreate: handleEnvironmentsHomeThreadStartRequest,
                           onResourceCreationCommandChange: (commandType) => {
                             setEnvironmentsHomeActiveResourceCommand(commandType || "");
                           },
@@ -48156,7 +48604,6 @@ const html = `<!doctype html>
                             }
                             onThreadRegistered(normalizedThreadId);
                           },
-                          onRunStart: handleEnvironmentsHomeThreadOpen,
                           onRunFinish: (_result, threadId) => handleEnvironmentsHomeThreadOpen(threadId),
                           onAgentChange: (nextAgentId) => {
                             if (typeof onPreferredAgentChange === "function") {
@@ -48197,10 +48644,23 @@ const html = `<!doctype html>
       function PlaygroundAgentsPage({
         backendUrl,
         requestHeaders,
+        apiKey = "",
+        fetchCustomSkills,
+        speechToTextUrl = "",
+        computerAgents = null,
         agents,
+        environments = [],
+        skills = [],
         initialAgentId,
+        preferredEnvironmentId = "",
+        preferredAgentId = "",
         focusedAgentId = "",
         focusedAgentSelectionToken = "",
+        onPreferredAgentChange,
+        onPreferredEnvironmentChange,
+        onThreadRegistered,
+        onThreadOpen,
+        onThreadStarted,
         onAgentMutated,
         onStartThreadWithAgent,
       }) {
@@ -48235,6 +48695,13 @@ const html = `<!doctype html>
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [loadingAgentId, setLoadingAgentId] = useState("");
         const [loadingAgentAnalyticsId, setLoadingAgentAnalyticsId] = useState("");
+        const [isHomeViewActive, setIsHomeViewActive] = useState(() => !String(focusedAgentId || "").trim());
+        const [agentsHomeThreadRecords, setAgentsHomeThreadRecords] = useState([]);
+        const [agentsHomeThreadsLoading, setAgentsHomeThreadsLoading] = useState(false);
+        const [agentsHomeThreadsError, setAgentsHomeThreadsError] = useState("");
+        const [agentsHomeChartTimescale, setAgentsHomeChartTimescale] = useState("month");
+        const [agentsHomeCreationCommandRequest, setAgentsHomeCreationCommandRequest] = useState(null);
+        const [agentsHomeActiveCreationCommand, setAgentsHomeActiveCreationCommand] = useState("");
         const [agentListMode, setAgentListMode] = useState(() => {
           const initialSelectedAgent = agents.find((agent) => agent?.id === initialAgentId) || null;
           return getPlaygroundAgentListMode(initialSelectedAgent);
@@ -48968,6 +49435,8 @@ const html = `<!doctype html>
           getSeriesValue,
           getXAxisLabel,
           formatAxisValue,
+          chartHeight,
+          headerContent,
         }) {
           const frameRef = useRef(null);
           const [measuredWidth, setMeasuredWidth] = useState(0);
@@ -48997,12 +49466,21 @@ const html = `<!doctype html>
 
           const normalizedLabels = Array.isArray(labels) ? labels : [];
           const normalizedSeries = Array.isArray(series) ? series.filter(Boolean) : [];
+          const resolvedChartHeight = Number.isFinite(Number(chartHeight)) && Number(chartHeight) > 0
+            ? Number(chartHeight)
+            : 178;
           if (!normalizedLabels.length || !normalizedSeries.length) {
-            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "Select a metric");
+            return React.createElement("div", {
+                className: "playground-database-overview-timeseries-card",
+                "aria-label": ariaLabel || "Telemetry chart",
+              },
+              headerContent || null,
+              React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "Select a metric")
+            );
           }
 
           const svgWidth = Math.max(1, Math.round(measuredWidth || 420));
-          const svgHeight = 178;
+          const svgHeight = resolvedChartHeight;
           const marginTop = 14;
           const marginRight = 10;
           const marginBottom = 28;
@@ -49036,11 +49514,12 @@ const html = `<!doctype html>
               className: "playground-database-overview-timeseries-card",
               "aria-label": ariaLabel || "Telemetry chart",
             },
+            headerContent || null,
             React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
               React.createElement("div", {
                   ref: frameRef,
                   className: "playground-database-overview-timeseries-frame",
-                  style: { height: "178px" },
+                  style: { height: resolvedChartHeight + "px" },
                 },
                 React.createElement("svg", {
                     className: "playground-database-overview-timeseries-svg",
@@ -49206,6 +49685,118 @@ const html = `<!doctype html>
           }
         }, [agentAnalyticsById, backendUrl, requestHeaders]);
 
+        const loadAgentsHomeThreads = useCallback(async (options = {}) => {
+          const force = Boolean(options?.force);
+          if (!force && agentsHomeThreadRecords.length > 0) {
+            return agentsHomeThreadRecords;
+          }
+
+          setAgentsHomeThreadsLoading(true);
+          setAgentsHomeThreadsError("");
+          try {
+            const response = await fetch(backendUrl + "/threads?limit=240", {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load threads.");
+            }
+            const items = Array.isArray(data?.data) ? data.data : Array.isArray(data?.threads) ? data.threads : [];
+            setAgentsHomeThreadRecords(items);
+            return items;
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to load threads.";
+            setAgentsHomeThreadsError(errorMessage);
+            setAgentsHomeThreadRecords([]);
+            return [];
+          } finally {
+            setAgentsHomeThreadsLoading(false);
+          }
+        }, [agentsHomeThreadRecords, backendUrl, requestHeaders]);
+
+        function showAgentsHome() {
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+          setAgentListActionMenuState(null);
+          setAgentActionsPopoverOpen(false);
+          setAgentComposerOpen(false);
+          setAgentRenameState(null);
+          setAgentRenameValue("");
+          setAgentRenameError("");
+          setAgentsHomeActiveCreationCommand("");
+          setAgentsHomeCreationCommandRequest(null);
+          setIsHomeViewActive(true);
+        }
+
+        function stageAgentsHomeCreationCommand(commandType) {
+          const normalizedCommandType = String(commandType || "").trim().toLowerCase();
+          if (normalizedCommandType !== "agent" && normalizedCommandType !== "team") {
+            return;
+          }
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+          setAgentListActionMenuState(null);
+          setAgentsHomeActiveCreationCommand(normalizedCommandType);
+          setAgentsHomeCreationCommandRequest({
+            type: normalizedCommandType,
+            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+          });
+        }
+
+        function buildAgentsHomeCreationHiddenPrompt(commandType) {
+          if (commandType === "agent") {
+            return [
+              "The user is asking you to create a new ACP agent.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested agent instead of inventing IDs or writing raw API calls.",
+              "If essential details are missing, ask concise clarifying questions before creating anything. Focus on the agent's purpose, model, instructions, skills, tool or computer access, tone, and expected outputs.",
+              "Once the request is specific enough, create the agent and clearly summarize what you configured."
+            ].join(" ");
+          }
+          if (commandType === "team") {
+            return [
+              "The user is asking you to create a new ACP team.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested team instead of inventing IDs or writing raw API calls.",
+              "If essential details are missing, ask concise clarifying questions before creating anything. Focus on the team's purpose, orchestrator responsibilities, required subagents, collaboration pattern, models, and handoff expectations.",
+              "Once the request is specific enough, create the team and clearly summarize what you configured."
+            ].join(" ");
+          }
+          return "";
+        }
+
+        function handleAgentsHomeThreadOpen(threadId) {
+          const normalizedThreadId = String(threadId || "").trim();
+          if (!normalizedThreadId || typeof onThreadOpen !== "function") {
+            return;
+          }
+          setAgentsHomeActiveCreationCommand("");
+          setAgentsHomeCreationCommandRequest(null);
+          onThreadOpen(normalizedThreadId);
+        }
+
+        function handleAgentsHomeThreadStartRequest(runRequest) {
+          const normalizedThreadId = String(runRequest?.threadId || "").trim();
+          const normalizedPrompt = String(runRequest?.prompt || "").trim();
+          if (!normalizedThreadId || !normalizedPrompt || typeof onThreadStarted !== "function") {
+            return false;
+          }
+          setAgentsHomeActiveCreationCommand("");
+          setAgentsHomeCreationCommandRequest(null);
+          onThreadStarted(normalizedThreadId, {
+            taskRunRequest: {
+              token: runRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+              prompt: normalizedPrompt,
+              attachments: Array.isArray(runRequest.attachments) ? runRequest.attachments : [],
+              githubRepo: runRequest.githubRepo || null,
+              enabledSkills: runRequest.enabledSkills || null,
+              environmentId: typeof runRequest.environmentId === "string" ? runRequest.environmentId : "",
+              quotedSelection: runRequest.quotedSelection || null,
+              executionStarted: false,
+            },
+          });
+          return true;
+        }
+
         useEffect(() => {
           setAgentDetailsById((current) => {
             const next = {};
@@ -49241,6 +49832,7 @@ const html = `<!doctype html>
           if (focusedAgent) {
             setAgentListMode(getPlaygroundAgentListMode(focusedAgent));
           }
+          setIsHomeViewActive(false);
           setSelectedAgentId(normalizedFocusedAgentId);
           setToolbarPopover("");
           setSearchPopupQuery("");
@@ -49539,6 +50131,13 @@ const html = `<!doctype html>
           };
         }, [agentComposerModelPopover]);
 
+        useEffect(() => {
+          if (!isHomeViewActive) {
+            return;
+          }
+          void loadAgentsHomeThreads();
+        }, [isHomeViewActive, loadAgentsHomeThreads]);
+
         function handleAgentSelect(agentId) {
           if (draftAgent?.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID && editorDirtyRef.current) {
             agentAutosaveQueuedRef.current = normalizePlaygroundAgentRecord(draftAgent);
@@ -49551,6 +50150,7 @@ const html = `<!doctype html>
           setToolbarPopover("");
           setSearchPopupQuery("");
           setAgentListActionMenuState(null);
+          setIsHomeViewActive(false);
           setSelectedAgentId(agentId);
         }
 
@@ -49628,6 +50228,443 @@ const html = `<!doctype html>
 
         function handleCreateTeam() {
           openAgentComposer("team");
+        }
+
+        function renderAgentsHome() {
+          const allAgents = allKnownAgents.filter((agent) => agent?.id && agent.id !== PLAYGROUND_AGENT_DRAFT_ID);
+          const teamAgents = allAgents.filter((agent) => isPlaygroundTeamAgent(agent));
+          const singleAgents = allAgents.filter((agent) => !isPlaygroundTeamAgent(agent));
+          const teamAgentIds = new Set(teamAgents.map((agent) => String(agent.id || "").trim()).filter(Boolean));
+          const readThreadCreatedAtMs = (thread) => {
+            const timestamp = Date.parse(String(thread?.createdAt || thread?.updatedAt || ""));
+            return Number.isFinite(timestamp) ? timestamp : null;
+          };
+          const readThreadAgentId = (thread) => String(thread?.agentId || "").trim();
+          const readThreadTotalCT = (thread) => Math.max(0, Number(readSettingsComputeTokens(thread, "totalCT", "totalCost") || 0));
+          const getAgentsHomePeriodStartMs = (period) => {
+            const now = new Date();
+            const start = new Date(now);
+            if (period === "day") {
+              start.setHours(0, 0, 0, 0);
+              return start.getTime();
+            }
+            if (period === "week") {
+              start.setDate(start.getDate() - 6);
+              start.setHours(0, 0, 0, 0);
+              return start.getTime();
+            }
+            start.setDate(start.getDate() - 29);
+            start.setHours(0, 0, 0, 0);
+            return start.getTime();
+          };
+          const periodStartMs = getAgentsHomePeriodStartMs(agentsHomeChartTimescale);
+          const periodEndMs = Date.now();
+          const relevantThreads = (Array.isArray(agentsHomeThreadRecords) ? agentsHomeThreadRecords : []).filter((thread) => {
+            const createdAtMs = readThreadCreatedAtMs(thread);
+            return Number.isFinite(createdAtMs) && createdAtMs >= periodStartMs && createdAtMs <= periodEndMs;
+          });
+
+          let totalSingleAgentCT = 0;
+          let totalTeamAgentCT = 0;
+          relevantThreads.forEach((thread) => {
+            const nextCost = readThreadTotalCT(thread);
+            const threadAgentId = readThreadAgentId(thread);
+            if (threadAgentId && teamAgentIds.has(threadAgentId)) {
+              totalTeamAgentCT += nextCost;
+              return;
+            }
+            totalSingleAgentCT += nextCost;
+          });
+
+          const buildAgentsHomeActivityBuckets = (period) => {
+            if (period === "day") {
+              const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric" });
+              return Array.from({ length: 24 }, (_, index) => {
+                const date = new Date();
+                date.setMinutes(0, 0, 0);
+                date.setHours(date.getHours() - (23 - index));
+                return {
+                  key: date.toISOString().slice(0, 13),
+                  label: formatter.format(date),
+                  startMs: date.getTime(),
+                  endMs: date.getTime() + 60 * 60 * 1000,
+                };
+              });
+            }
+            if (period === "week") {
+              const formatter = new Intl.DateTimeFormat("en-US", { weekday: "short" });
+              return Array.from({ length: 7 }, (_, index) => {
+                const date = new Date();
+                date.setHours(0, 0, 0, 0);
+                date.setDate(date.getDate() - (6 - index));
+                return {
+                  key: date.toISOString().slice(0, 10),
+                  label: formatter.format(date),
+                  startMs: date.getTime(),
+                  endMs: date.getTime() + 24 * 60 * 60 * 1000,
+                };
+              });
+            }
+            const formatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+            return Array.from({ length: 30 }, (_, index) => {
+              const date = new Date();
+              date.setHours(0, 0, 0, 0);
+              date.setDate(date.getDate() - (29 - index));
+              return {
+                key: date.toISOString().slice(0, 10),
+                label: formatter.format(date),
+                startMs: date.getTime(),
+                endMs: date.getTime() + 24 * 60 * 60 * 1000,
+              };
+            });
+          };
+
+          const activityBuckets = buildAgentsHomeActivityBuckets(agentsHomeChartTimescale);
+          const singleAgentActivity = activityBuckets.map((bucket) => relevantThreads.reduce((sum, thread) => {
+            const createdAtMs = readThreadCreatedAtMs(thread);
+            if (!Number.isFinite(createdAtMs) || createdAtMs < bucket.startMs || createdAtMs >= bucket.endMs) {
+              return sum;
+            }
+            const threadAgentId = readThreadAgentId(thread);
+            return threadAgentId && teamAgentIds.has(threadAgentId) ? sum : sum + 1;
+          }, 0));
+          const teamActivity = activityBuckets.map((bucket) => relevantThreads.reduce((sum, thread) => {
+            const createdAtMs = readThreadCreatedAtMs(thread);
+            if (!Number.isFinite(createdAtMs) || createdAtMs < bucket.startMs || createdAtMs >= bucket.endMs) {
+              return sum;
+            }
+            const threadAgentId = readThreadAgentId(thread);
+            return threadAgentId && teamAgentIds.has(threadAgentId) ? sum + 1 : sum;
+          }, 0));
+
+          const buildAgentsHomeUsageLinePath = (points) => {
+            if (!Array.isArray(points) || points.length === 0) {
+              return "";
+            }
+            return points
+              .map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2))
+              .join(" ");
+          };
+
+          function AgentsHomeResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
+            const frameRef = useRef(null);
+            const [measuredWidth, setMeasuredWidth] = useState(0);
+
+            useLayoutEffect(() => {
+              const node = frameRef.current;
+              if (!node) {
+                return undefined;
+              }
+
+              const updateWidth = () => {
+                const nextWidth = Math.max(1, Math.round(node.clientWidth || fallbackWidth));
+                setMeasuredWidth((current) => current === nextWidth ? current : nextWidth);
+              };
+
+              updateWidth();
+
+              if (typeof ResizeObserver === "undefined") {
+                window.addEventListener("resize", updateWidth);
+                return () => window.removeEventListener("resize", updateWidth);
+              }
+
+              const observer = new ResizeObserver(() => updateWidth());
+              observer.observe(node);
+              return () => observer.disconnect();
+            }, [fallbackWidth]);
+
+            const resolvedSvgWidth = Math.max(1, Math.round(measuredWidth || fallbackWidth));
+            const resolvedSvgHeight = Math.max(1, Math.round(svgHeight || frameHeight || 208));
+
+            return React.createElement("div", {
+                ref: frameRef,
+                className: frameClassName,
+                style: frameHeight ? { height: String(frameHeight) + "px" } : undefined,
+              },
+              React.createElement("svg", {
+                  className: "playground-settings-usage-chart-svg",
+                  viewBox: "0 0 " + resolvedSvgWidth + " " + resolvedSvgHeight,
+                  preserveAspectRatio: "none",
+                  role: "img",
+                  "aria-label": ariaLabel || "Usage chart",
+                },
+                typeof children === "function"
+                  ? children({
+                      svgWidth: resolvedSvgWidth,
+                      svgHeight: resolvedSvgHeight,
+                    })
+                  : children
+              )
+            );
+          }
+
+          const renderAgentsHomeComparisonBarChart = ({ ariaLabel, labels, countValues, costValues, emptyText }) => {
+            const normalizedLabels = Array.isArray(labels) ? labels : [];
+            const normalizedCountValues = Array.isArray(countValues) ? countValues.map((value) => Math.max(0, Number(value || 0))) : [];
+            const normalizedCostValues = Array.isArray(costValues) ? costValues.map((value) => Math.max(0, Number(value || 0))) : [];
+            if (
+              !normalizedLabels.length
+              || normalizedLabels.length !== normalizedCountValues.length
+              || normalizedLabels.length !== normalizedCostValues.length
+            ) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No agent data yet");
+            }
+
+            const chartHeight = 194;
+            const marginTop = 12;
+            const marginRight = 42;
+            const marginBottom = 28;
+            const marginLeft = 30;
+            const maxCountValue = Math.max(1, ...normalizedCountValues);
+            const maxCostValue = Math.max(1, ...normalizedCostValues);
+            const countAxisValues = [maxCountValue, Math.round(maxCountValue / 2), 0];
+            const costAxisValues = [maxCostValue, Math.round(maxCostValue / 2), 0];
+
+            return React.createElement("div", {
+                className: "playground-database-overview-timeseries-card",
+                "aria-label": ariaLabel || "Agent overview chart",
+              },
+              React.createElement("div", { className: "playground-environments-home-comparison-header" },
+                React.createElement("div", { className: "playground-environments-home-comparison-copy" },
+                  React.createElement("div", { className: "playground-environments-home-comparison-title" }, "Agent comparison"),
+                  React.createElement("div", { className: "playground-environments-home-comparison-legend" },
+                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
+                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot is-count" }),
+                      React.createElement("span", null, "Count")
+                    ),
+                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
+                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot is-cost" }),
+                      React.createElement("span", null, "Compute cost")
+                    )
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
+                React.createElement(AgentsHomeResponsiveSvg, {
+                    frameClassName: "playground-database-overview-timeseries-frame",
+                    frameHeight: chartHeight,
+                    svgHeight: chartHeight,
+                    fallbackWidth: 420,
+                    ariaLabel: ariaLabel || "Agent overview chart",
+                  }, ({ svgWidth, svgHeight }) => {
+                    const plotWidth = svgWidth - marginLeft - marginRight;
+                    const plotHeight = svgHeight - marginTop - marginBottom;
+                    const baselineY = marginTop + plotHeight;
+                    const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
+                    const pairWidth = Math.min(38, Math.max(16, slotWidth * 0.42));
+                    const pairGap = Math.min(8, Math.max(4, slotWidth * 0.08));
+                    const barWidth = Math.max(5, (pairWidth - pairGap) / 2);
+
+                    return React.createElement(React.Fragment, null,
+                      Array.from({ length: 4 }).map((_, index) => {
+                        const y = marginTop + (plotHeight / 3) * index;
+                        return React.createElement("line", {
+                          key: "grid:" + index,
+                          className: "playground-database-overview-timeseries-grid-line",
+                          x1: marginLeft,
+                          y1: y,
+                          x2: svgWidth - marginRight,
+                          y2: y,
+                        });
+                      }),
+                      countAxisValues.map((value, index) =>
+                        React.createElement("text", {
+                          key: "count-axis:" + index,
+                          x: 0,
+                          y: marginTop + (plotHeight / 2) * index + 4,
+                          className: "playground-database-overview-timeseries-axis-label",
+                          fontSize: "10",
+                        }, String(value))
+                      ),
+                      costAxisValues.map((value, index) =>
+                        React.createElement("text", {
+                          key: "cost-axis:" + index,
+                          x: svgWidth,
+                          y: marginTop + (plotHeight / 2) * index + 4,
+                          textAnchor: "end",
+                          className: "playground-database-overview-timeseries-axis-label",
+                          fontSize: "10",
+                        }, formatSettingsComputeTokens(value))
+                      ),
+                      normalizedLabels.map((label, index) => {
+                        const groupX = marginLeft + slotWidth * index + ((slotWidth - pairWidth) / 2);
+                        const countHeight = (normalizedCountValues[index] / maxCountValue) * plotHeight;
+                        const costHeight = (normalizedCostValues[index] / maxCostValue) * plotHeight;
+                        return React.createElement(React.Fragment, { key: "bars:" + index },
+                          React.createElement("rect", {
+                            x: groupX,
+                            y: baselineY - countHeight,
+                            width: barWidth,
+                            height: Math.max(2, countHeight),
+                            rx: "7",
+                            ry: "7",
+                            className: "playground-database-overview-timeseries-bar is-comparison-count",
+                          }),
+                          React.createElement("rect", {
+                            x: groupX + barWidth + pairGap,
+                            y: baselineY - costHeight,
+                            width: barWidth,
+                            height: Math.max(2, costHeight),
+                            rx: "7",
+                            ry: "7",
+                            className: "playground-database-overview-timeseries-bar is-comparison-cost",
+                          })
+                        );
+                      }),
+                      normalizedLabels.map((label, index) =>
+                        React.createElement("text", {
+                          key: "label:" + index,
+                          x: marginLeft + slotWidth * index + (slotWidth / 2),
+                          y: svgHeight - 8,
+                          textAnchor: "middle",
+                          className: "playground-database-overview-timeseries-axis-label",
+                          fontSize: "10",
+                        }, String(label || ""))
+                      )
+                    );
+                  })
+              )
+            );
+          };
+
+          const renderAgentsHomeUsageChart = ({ ariaLabel, labels, singleValues, teamValues, emptyText }) => (
+            renderPlaygroundTelemetryTimeseriesChart({
+              ariaLabel: ariaLabel || "Overall agent activity",
+              labels,
+              series: [
+                {
+                  key: "agents",
+                  tone: "computers",
+                  values: singleValues,
+                },
+                {
+                  key: "teams",
+                  tone: "resources",
+                  values: teamValues,
+                },
+              ],
+              emptyText: emptyText || "No activity data yet",
+              buildLinePath: buildAgentsHomeUsageLinePath,
+              getSeriesValue: (entry, _bucket, index) => entry?.values?.[index],
+              getXAxisLabel: (bucket) => String(bucket?.label || ""),
+              chartHeight: 194,
+              headerContent: React.createElement("div", { className: "playground-environments-home-comparison-header is-simple" },
+                React.createElement("div", { className: "playground-environments-home-comparison-copy" },
+                  React.createElement("div", { className: "playground-environments-home-comparison-title" }, "Activity comparison"),
+                  React.createElement("div", { className: "playground-environments-home-comparison-legend" },
+                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
+                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot is-count" }),
+                      React.createElement("span", null, "Agents")
+                    ),
+                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
+                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot", style: { background: "var(--playground-chart-green)" } }),
+                      React.createElement("span", null, "Teams")
+                    )
+                  )
+                )
+              ),
+            })
+          );
+
+          const agentCards = [
+            {
+              command: "agent",
+              title: "Agents",
+              copy: "Create specialist agents with the right model, skills, instructions, and tools.",
+              actionLabel: "Create /agent",
+              Icon: Bot,
+            },
+            {
+              command: "team",
+              title: "Teams",
+              copy: "Compose orchestrators and subagents into reusable multi-agent teams.",
+              actionLabel: "Create /team",
+              Icon: Layers,
+            },
+          ];
+
+          return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll" },
+            React.createElement("div", { className: "playground-environments-home-content" },
+              React.createElement("section", { className: "playground-environments-home-hero" },
+                React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your AI workforce."),
+                React.createElement("div", { className: "playground-environments-home-hero-copy" },
+                  "Design specialist agents, compose orchestration teams, and launch new collaborators directly from one workspace."
+                ),
+                React.createElement("div", { className: "playground-environments-home-metrics-toolbar" },
+                  React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+                    React.createElement("select", {
+                      className: "playground-environments-home-comparison-timescale-select",
+                      value: agentsHomeChartTimescale,
+                      onChange: (event) => setAgentsHomeChartTimescale(String(event.target.value || "month")),
+                    },
+                      React.createElement("option", { value: "day" }, "Daily"),
+                      React.createElement("option", { value: "week" }, "Weekly"),
+                      React.createElement("option", { value: "month" }, "Monthly")
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-environments-home-metrics" },
+                  React.createElement("div", { className: "playground-tasks-detail-facts" },
+                    React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                      React.createElement("div", { className: "playground-database-overview" },
+                        React.createElement("div", { className: "playground-database-overview-chart-block" },
+                          renderAgentsHomeComparisonBarChart({
+                            ariaLabel: "Agent and team count compared with compute cost",
+                            labels: ["Agents", "Teams"],
+                            countValues: [singleAgents.length, teamAgents.length],
+                            costValues: [totalSingleAgentCT, totalTeamAgentCT],
+                            emptyText: agentsHomeThreadsLoading ? "Loading agent data..." : (agentsHomeThreadsError || "No agent data yet"),
+                          })
+                        )
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-detail-facts" },
+                    React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                      React.createElement("div", { className: "playground-database-overview" },
+                        React.createElement("div", { className: "playground-database-overview-chart-block" },
+                          renderAgentsHomeUsageChart({
+                            ariaLabel: "Agent and team activity over time",
+                            labels: activityBuckets,
+                            singleValues: singleAgentActivity,
+                            teamValues: teamActivity,
+                            emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
+                          })
+                        )
+                      )
+                    )
+                  )
+                ),
+                React.createElement("div", {
+                    className: "playground-environments-home-card-grid",
+                    style: { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" },
+                  },
+                  agentCards.map((card) =>
+                    React.createElement("button", {
+                        key: card.command,
+                        type: "button",
+                        className: "playground-environments-home-card" + (agentsHomeActiveCreationCommand === card.command ? " is-command-active" : ""),
+                        onClick: () => stageAgentsHomeCreationCommand(card.command),
+                      },
+                      React.createElement("div", { className: "playground-environments-home-card-visual" },
+                        React.createElement(card.Icon, { className: "playground-environments-home-card-icon", strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", { className: "playground-environments-home-card-title" }, card.title),
+                      React.createElement("div", { className: "playground-environments-home-card-copy" }, card.copy),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-home-card-button",
+                        onClick: (event) => {
+                          event.stopPropagation();
+                          stageAgentsHomeCreationCommand(card.command);
+                        },
+                      }, card.actionLabel)
+                    )
+                  )
+                )
+              )
+            )
+          );
         }
 
         function closeAgentListActionMenu() {
@@ -51299,6 +52336,8 @@ const html = `<!doctype html>
           );
         }
 
+        const shouldShowAgentsHome = isHomeViewActive || !selectedAgentId;
+
         return React.createElement("div", { className: "playground-environments-page playground-agents-page" },
           React.createElement("div", { className: "playground-environments-shell" },
             React.createElement("aside", { className: "playground-environments-list-pane" },
@@ -51310,7 +52349,11 @@ const html = `<!doctype html>
                     })
                   : null,
                 React.createElement("div", { className: "playground-files-topbar" },
-                  React.createElement("div", { className: "playground-environments-list-title" }, "Agents"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-list-title playground-environments-list-title-button",
+                    onClick: showAgentsHome,
+                  }, "Agents"),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
                     React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-environments-search-shell" },
                       React.createElement("button", {
@@ -51422,7 +52465,7 @@ const html = `<!doctype html>
                           ? section.items.map((agent) => {
                               const teamMetadata = getPlaygroundAgentTeamMetadata(agent.metadata);
                               const isTeamListItem = agent?.agentType === "team" || Boolean(teamMetadata);
-                              const isActive = selectedAgentId === agent.id;
+                              const isActive = !shouldShowAgentsHome && selectedAgentId === agent.id;
                               const hasActions = !agent.isDefault && !agent.isSystem;
                               const isMenuOpen = agentListActionMenuState?.agentId === agent.id;
                               return React.createElement("div", {
@@ -51487,11 +52530,74 @@ const html = `<!doctype html>
               )
             ),
             React.createElement("section", { className: "playground-environments-detail" },
-              isLoadingCurrentAgent && !draftAgent
-                ? React.createElement("div", { className: "playground-files-state" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+              shouldShowAgentsHome
+                ? renderAgentsHome()
+                : (
+                    isLoadingCurrentAgent && !draftAgent
+                      ? React.createElement("div", { className: "playground-files-state" },
+                          React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                        )
+                      : renderCurrentAgentEditor()
+                  ),
+              shouldShowAgentsHome
+                ? React.createElement("div", { className: "playground-environments-home-composer-host" },
+                    React.createElement("div", { className: "playground-environments-home-content" },
+                      React.createElement("div", { className: "playground-environments-home-composer-shell" },
+                        React.createElement(RunnerChat, {
+                          key: "agents-home-composer",
+                          className: "playground-environments-home-runner",
+                          backendUrl,
+                          apiKey,
+                          fetchCustomSkills,
+                          speechToTextUrl: speechToTextUrl || undefined,
+                          requestHeaders,
+                          appId: "runner-web-sdk-demo",
+                          inputMode: "computer-agents",
+                          computerAgents: computerAgents || undefined,
+                          environments: (Array.isArray(environments) ? environments : []).map((environment) => ({
+                            ...environment,
+                            ...(preferredEnvironmentId && environment.id === preferredEnvironmentId ? { isDefault: true } : {}),
+                          })),
+                          agents: (Array.isArray(agents) ? agents : []).map((agent) => ({
+                            ...agent,
+                            ...(preferredAgentId && agent.id === preferredAgentId ? { isDefault: true } : {}),
+                          })),
+                          skills: Array.isArray(skills) ? skills : [],
+                          environmentId: preferredEnvironmentId || undefined,
+                          agentId: preferredAgentId || undefined,
+                          keepFocusOnSubmit: true,
+                          showUsageInStatus: false,
+                          placeholder: "Type /agent or /team and describe what you want to create",
+                          enableAgentCreationCommand: true,
+                          agentCreationCommand: agentsHomeCreationCommandRequest,
+                          agentCreationCommandHiddenPrompt: buildAgentsHomeCreationHiddenPrompt,
+                          onExternalRunRequestCreate: handleAgentsHomeThreadStartRequest,
+                          onAgentCreationCommandChange: (commandType) => {
+                            setAgentsHomeActiveCreationCommand(commandType || "");
+                          },
+                          onThreadIdChange: (threadId) => {
+                            const normalizedThreadId = String(threadId || "").trim();
+                            if (!normalizedThreadId || typeof onThreadRegistered !== "function") {
+                              return;
+                            }
+                            onThreadRegistered(normalizedThreadId);
+                          },
+                          onRunFinish: (_result, threadId) => handleAgentsHomeThreadOpen(threadId),
+                          onAgentChange: (nextAgentId) => {
+                            if (typeof onPreferredAgentChange === "function") {
+                              onPreferredAgentChange(String(nextAgentId || "").trim());
+                            }
+                          },
+                          onEnvironmentChange: (nextEnvironmentId) => {
+                            if (typeof onPreferredEnvironmentChange === "function") {
+                              onPreferredEnvironmentChange(String(nextEnvironmentId || "").trim());
+                            }
+                          },
+                        })
+                      )
+                    )
                   )
-                : renderCurrentAgentEditor()
+                : null
             )
           ),
           renderAgentListActionMenu(),
@@ -71157,10 +72263,15 @@ const html = `<!doctype html>
         const [settingsInferenceModelInput, setSettingsInferenceModelInput] = useState("");
         const [settingsInferenceApiKeyInput, setSettingsInferenceApiKeyInput] = useState("");
         const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);
+        const [settingsInferenceApiKeyEditing, setSettingsInferenceApiKeyEditing] = useState(false);
         const [settingsCheckoutLoading, setSettingsCheckoutLoading] = useState(false);
         const [settingsSubscriptionActionId, setSettingsSubscriptionActionId] = useState("");
         const [settingsTopUpActionId, setSettingsTopUpActionId] = useState("");
         const [settingsSelectedTopUpId, setSettingsSelectedTopUpId] = useState("growth");
+        const [settingsPlansMenuOpen, setSettingsPlansMenuOpen] = useState(false);
+        const [settingsChangePlanModalOpen, setSettingsChangePlanModalOpen] = useState(false);
+        const [settingsTopUpModalOpen, setSettingsTopUpModalOpen] = useState(false);
+        const [settingsResourceCapInfoOpen, setSettingsResourceCapInfoOpen] = useState(false);
         const [settingsApiKeys, setSettingsApiKeys] = useState([]);
         const [settingsApiKeysLoading, setSettingsApiKeysLoading] = useState(false);
         const [settingsApiKeysError, setSettingsApiKeysError] = useState("");
@@ -71216,6 +72327,10 @@ const html = `<!doctype html>
         const threadSearchInputRef = useRef(null);
         const threadRenameInputRef = useRef(null);
         const threadNavMenuRef = useRef(null);
+        const settingsPlansMenuRef = useRef(null);
+        const settingsResourceCapInfoRef = useRef(null);
+        const settingsResourceCapAutosaveTimerRef = useRef(null);
+        const settingsInferenceAutosaveTimerRef = useRef(null);
         const authRedirectStartedRef = useRef(false);
         const hasAuthenticatedSessionThisMountRef = useRef(false);
         const sessionBudgetSyncKeyRef = useRef("");
@@ -71518,6 +72633,94 @@ const html = `<!doctype html>
             redirectToAiosLogin({ replace: false });
           }
         }
+
+        function buildThreadRunnerResourceHiddenPrompt(commandType) {
+          if (commandType === "computer") {
+            return [
+              "The user is asking you to create a new ACP computer.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested computer instead of inventing IDs or writing raw API calls.",
+              "If essential details are missing, ask concise clarifying questions before creating anything. Focus on operating system, runtime, Dockerfile or base image, packages, GUI requirements, secrets, and integrations.",
+              "Once the request is specific enough, create the computer and clearly summarize what you configured."
+            ].join(" ");
+          }
+          if (commandType === "app") {
+            return [
+              "The user is asking you to create a new ACP web app resource.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested app.",
+              "If the specification is incomplete, ask concise clarifying questions before creating anything. Focus on framework, source or runtime choice, build and start behavior, environment variables, route or domain expectations, and any required bindings.",
+              "Once the request is specific enough, create the app resource and clearly summarize what you configured."
+            ].join(" ");
+          }
+          if (commandType === "function") {
+            return [
+              "The user is asking you to create a new ACP function resource.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested function.",
+              "If the specification is incomplete, ask concise clarifying questions before creating anything. Focus on runtime, trigger shape, request and response contract, dependencies, environment variables, and any required bindings.",
+              "Once the request is specific enough, create the function resource and clearly summarize what you configured."
+            ].join(" ");
+          }
+          return "";
+        }
+
+        function buildThreadRunnerAgentHiddenPrompt(commandType) {
+          if (commandType === "agent") {
+            return [
+              "The user is asking you to create a new ACP agent.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested agent instead of inventing IDs or writing raw API calls.",
+              "If essential details are missing, ask concise clarifying questions before creating anything. Focus on the agent's purpose, model, instructions, skills, tool or computer access, tone, and expected outputs.",
+              "Once the request is specific enough, create the agent and clearly summarize what you configured."
+            ].join(" ");
+          }
+          if (commandType === "team") {
+            return [
+              "The user is asking you to create a new ACP team.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested team instead of inventing IDs or writing raw API calls.",
+              "If essential details are missing, ask concise clarifying questions before creating anything. Focus on the team's purpose, orchestrator responsibilities, required subagents, collaboration pattern, models, and handoff expectations.",
+              "Once the request is specific enough, create the team and clearly summarize what you configured."
+            ].join(" ");
+          }
+          return "";
+        }
+
+        function buildThreadRunnerSkillHiddenPrompt(commandType) {
+          if (commandType === "skill") {
+            return [
+              "The user is asking you to create a new ACP skill.",
+              "Use the Computer Agents skill to inspect the live platform and create the requested skill instead of inventing IDs or writing raw API calls.",
+              "If essential details are missing, ask concise clarifying questions before creating anything. Focus on the skill's purpose, triggers or entrypoints, required files, tool or environment access, expected inputs and outputs, and any dependencies or examples that should ship with it.",
+              "Once the request is specific enough, create the skill and clearly summarize what you configured."
+            ].join(" ");
+          }
+          return "";
+        }
+
+        const triggerPlatformSessionRecovery = useCallback(function triggerPlatformSessionRecovery() {
+          if (isDemoMode || authRedirectStartedRef.current) {
+            return;
+          }
+
+          authRedirectStartedRef.current = true;
+          clearPlaygroundAuthSessionMarker();
+          setSessionStreamingConfig({
+            status: "idle",
+            apiKey: "",
+            backendUrl: "",
+            error: "",
+          });
+          setSessionState({
+            status: "unauthenticated",
+            userId: "",
+            email: "",
+            projectId: "",
+            displayName: "",
+            photoURL: "",
+            emailVerified: false,
+            subscriptionTier: "free",
+            subscriptionStatus: "",
+            error: "",
+          });
+          redirectToAiosLogin({ replace: true });
+        }, [isDemoMode]);
 
         function buildAiosLogoutUrl() {
           const logoutUrl = new URL("/logout", ${JSON.stringify(aiosOrigin)});
@@ -72442,6 +73645,7 @@ const html = `<!doctype html>
           let firebaseIdentity = null;
           try {
             try {
+              await syncFirebaseSessionCookieFromCurrentUser(false);
               firebaseIdentity = await lookupFirebaseSessionIdentity();
             } catch {
               firebaseIdentity = null;
@@ -72450,7 +73654,6 @@ const html = `<!doctype html>
             if (firebaseIdentity) {
               setSessionState((current) => ({
                 ...current,
-                status: "authenticated",
                 userId: firebaseIdentity.userId || current.userId || "",
                 email: firebaseIdentity.email || current.email || "",
                 projectId: current.projectId || "",
@@ -72466,40 +73669,25 @@ const html = `<!doctype html>
               }));
             }
 
-            const { response, data } = await fetchJsonWithTimeout("/api/aios/user/profile", {
+            const loadProfile = () => fetchJsonWithTimeout("/api/aios/user/profile", {
               method: "GET",
               credentials: "include",
               cache: "no-store",
             }, 20000);
 
-            if (response.status === 401 || response.status === 403) {
-              if (firebaseIdentity) {
-                setSessionStreamingConfig({
-                  status: "idle",
-                  apiKey: "",
-                  backendUrl: "",
-                  error: "",
-                });
-                return;
+            let { response, data } = await loadProfile();
+
+            if (isUnauthorizedStatus(response.status)) {
+              const refreshedCookie = await syncFirebaseSessionCookieFromCurrentUser(true);
+              if (refreshedCookie) {
+                const retriedResult = await loadProfile();
+                response = retriedResult.response;
+                data = retriedResult.data;
               }
-              setSessionStreamingConfig({
-                status: "idle",
-                apiKey: "",
-                backendUrl: "",
-                error: "",
-              });
-              setSessionState({
-                status: "unauthenticated",
-                userId: "",
-                email: "",
-                projectId: "",
-                displayName: "",
-                photoURL: "",
-                emailVerified: false,
-                subscriptionTier: "free",
-                subscriptionStatus: "",
-                error: "",
-              });
+            }
+
+            if (isUnauthorizedStatus(response.status)) {
+              triggerPlatformSessionRecovery();
               return;
             }
 
@@ -72666,7 +73854,7 @@ const html = `<!doctype html>
               error: fallbackErrorMessage,
             });
           }
-        }, [isDemoMode]);
+        }, [isDemoMode, triggerPlatformSessionRecovery]);
 
         useEffect(() => {
           if (isDemoMode) {
@@ -74043,6 +75231,11 @@ const html = `<!doctype html>
             });
             const data = await response.json().catch(() => ({}));
 
+            if (isUnauthorizedStatus(response.status)) {
+              triggerPlatformSessionRecovery();
+              return null;
+            }
+
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to load subscription details.");
             }
@@ -74080,17 +75273,21 @@ const html = `<!doctype html>
           } catch {
             return null;
           }
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase]);
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
 
         const loadSettingsPlatformConfig = useCallback(async function loadSettingsPlatformConfig() {
           if (!hasRealAccess) {
             const localConfig = readDemoSettingsPlatformConfig();
             setSettingsBillingPreferences(localConfig.billing);
             setSettingsInferenceSettings(localConfig.inference);
+            setSettingsInferenceApiKeyInput("");
+            setSettingsClearInferenceApiKey(false);
+            setSettingsInferenceApiKeyEditing(false);
             return localConfig;
           }
 
           try {
+            const localConfig = readDemoSettingsPlatformConfig();
             const response = await fetch(proxyBackendBase + "/billing/preferences", {
               method: "GET",
               headers: authRequestHeaders,
@@ -74102,9 +75299,24 @@ const html = `<!doctype html>
             }
 
             const nextBillingPreferences = normalizeDemoSettingsBillingPreferences(data?.billing);
-            const nextInferenceSettings = normalizeDemoSettingsInferenceSettings(data?.inference);
+            const backendInferenceApiKeyPreview = typeof data?.inference?.apiKeyPreview === "string"
+              ? data.inference.apiKeyPreview.trim()
+              : "";
+            const localInferenceApiKeyPreview = typeof localConfig?.inference?.apiKeyPreview === "string"
+              ? localConfig.inference.apiKeyPreview.trim()
+              : "";
+            const nextInferenceApiKeyPreview = backendInferenceApiKeyPreview.length >= localInferenceApiKeyPreview.length
+              ? backendInferenceApiKeyPreview
+              : localInferenceApiKeyPreview;
+            const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
+              ...data?.inference,
+              apiKeyPreview: nextInferenceApiKeyPreview,
+            });
             setSettingsBillingPreferences(nextBillingPreferences);
             setSettingsInferenceSettings(nextInferenceSettings);
+            setSettingsInferenceApiKeyInput("");
+            setSettingsClearInferenceApiKey(false);
+            setSettingsInferenceApiKeyEditing(false);
             writeDemoSettingsPlatformConfig({
               billing: nextBillingPreferences,
               inference: nextInferenceSettings,
@@ -74117,6 +75329,9 @@ const html = `<!doctype html>
             const localConfig = readDemoSettingsPlatformConfig();
             setSettingsBillingPreferences(localConfig.billing);
             setSettingsInferenceSettings(localConfig.inference);
+            setSettingsInferenceApiKeyInput("");
+            setSettingsClearInferenceApiKey(false);
+            setSettingsInferenceApiKeyEditing(false);
             setSettingsPlatformConfigError(error instanceof Error ? error.message : "Failed to load platform settings.");
             return localConfig;
           }
@@ -75789,6 +77004,12 @@ const html = `<!doctype html>
             });
 
             const data = await response.json().catch(() => ({}));
+            if (isUnauthorizedStatus(response.status)) {
+              triggerPlatformSessionRecovery();
+              setRealThreads([]);
+              setRealThreadsHasMore(false);
+              return;
+            }
             if (!response.ok) {
               setRealThreads([]);
               setRealThreadsHasMore(false);
@@ -75804,7 +77025,7 @@ const html = `<!doctype html>
           } finally {
             setIsThreadsLoading(false);
           }
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase]);
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
 
         const handleShowMoreThreads = useCallback(async function handleShowMoreThreads() {
           const nextDisplayCount = threadDisplayCount + 10;
@@ -76331,10 +77552,22 @@ const html = `<!doctype html>
               return;
             }
 
+            if (isUnauthorizedStatus(response.status)) {
+              setRealEnvironments([]);
+              triggerPlatformSessionRecovery();
+              return;
+            }
+
             const fallbackResponse = await fetch(proxyBackendBase + "/environments/default", {
               method: "GET",
               headers: authRequestHeaders,
             });
+
+            if (isUnauthorizedStatus(fallbackResponse.status)) {
+              setRealEnvironments([]);
+              triggerPlatformSessionRecovery();
+              return;
+            }
 
             if (!fallbackResponse.ok) {
               setRealEnvironments([]);
@@ -76347,7 +77580,7 @@ const html = `<!doctype html>
           } catch {
             setRealEnvironments([]);
           }
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase]);
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
 
         const refreshAgents = useCallback(async function refreshAgents() {
           if (!hasRealAccess) {
@@ -76369,6 +77602,12 @@ const html = `<!doctype html>
               parsed = {};
             }
 
+            if (isUnauthorizedStatus(response.status)) {
+              setRealAgents([]);
+              triggerPlatformSessionRecovery();
+              return;
+            }
+
             if (!response.ok) {
               setRealAgents([]);
               return;
@@ -76378,7 +77617,7 @@ const html = `<!doctype html>
           } catch {
             setRealAgents([]);
           }
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase]);
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
 
         function handleNewThread() {
           setActivePage("thread");
@@ -76771,9 +78010,9 @@ const html = `<!doctype html>
             );
         }
 
-        const handleSettingsUsageBillingSave = useCallback(async () => {
+        const handleSettingsUsageBillingSave = useCallback(async (billingPreferencesOverride = null) => {
           if (!settingsCanConfigureBusinessFeatures) {
-            setSettingsPlatformConfigError("Upgrade to Team to configure usage billing.");
+            setSettingsPlatformConfigError("Upgrade to Team to configure a resource spend cap.");
             setSettingsPlatformConfigSuccess("");
             return;
           }
@@ -76782,7 +78021,10 @@ const html = `<!doctype html>
           setSettingsPlatformConfigError("");
           setSettingsPlatformConfigSuccess("");
           try {
-            const nextBillingPreferences = normalizeDemoSettingsBillingPreferences(settingsBillingPreferences);
+            const nextBillingPreferences = {
+              ...normalizeDemoSettingsBillingPreferences(billingPreferencesOverride || settingsBillingPreferences),
+              usageBillingEnabled: true,
+            };
             if (hasRealAccess) {
               const response = await fetch(proxyBackendBase + "/billing/preferences", {
                 method: "PATCH",
@@ -76794,7 +78036,7 @@ const html = `<!doctype html>
               });
               const data = await response.json().catch(() => ({}));
               if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to save usage billing.");
+                throw new Error(data?.message || data?.error || "Failed to save the resource spend cap.");
               }
               setSettingsBillingPreferences(normalizeDemoSettingsBillingPreferences(data?.billing));
               setSettingsInferenceSettings(normalizeDemoSettingsInferenceSettings(data?.inference));
@@ -76806,17 +78048,35 @@ const html = `<!doctype html>
                 inference: settingsInferenceSettings,
               });
             }
-            setSettingsPlatformConfigSuccess(
-              nextBillingPreferences.usageBillingEnabled
-                ? "Usage billing enabled for resource overages."
-                : "Usage billing settings saved."
-            );
+            setSettingsPlatformConfigSuccess("");
           } catch (error) {
-            setSettingsPlatformConfigError(error instanceof Error ? error.message : "Failed to save usage billing.");
+            setSettingsPlatformConfigError(error instanceof Error ? error.message : "Failed to save the resource spend cap.");
           } finally {
             setSettingsPlatformConfigSaving(false);
           }
         }, [authRequestHeaders, hasRealAccess, proxyBackendBase, settingsBillingPreferences, settingsCanConfigureBusinessFeatures, settingsInferenceSettings]);
+
+        const queueSettingsResourceCapAutosave = useCallback((nextBillingPreferences, immediate = false) => {
+          setSettingsBillingPreferences(nextBillingPreferences);
+          setSettingsPlatformConfigError("");
+          setSettingsPlatformConfigSuccess("");
+          if (settingsResourceCapAutosaveTimerRef.current) {
+            window.clearTimeout(settingsResourceCapAutosaveTimerRef.current);
+            settingsResourceCapAutosaveTimerRef.current = null;
+          }
+          const normalizedPreferences = normalizeDemoSettingsBillingPreferences(nextBillingPreferences);
+          if (!settingsCanConfigureBusinessFeatures) {
+            return;
+          }
+          if (immediate) {
+            void handleSettingsUsageBillingSave(normalizedPreferences);
+            return;
+          }
+          settingsResourceCapAutosaveTimerRef.current = window.setTimeout(() => {
+            settingsResourceCapAutosaveTimerRef.current = null;
+            void handleSettingsUsageBillingSave(normalizedPreferences);
+          }, 520);
+        }, [handleSettingsUsageBillingSave, settingsCanConfigureBusinessFeatures]);
 
         const handleSettingsInferenceConnectionTest = useCallback(async () => {
           if (!settingsCanConfigureBusinessFeatures) {
@@ -76915,36 +78175,46 @@ const html = `<!doctype html>
           proxyBackendBase,
         ]);
 
-        const handleSettingsInferenceSave = useCallback(async () => {
+        const handleSettingsInferenceSave = useCallback(async (inferenceSettingsOverride = null, options = null) => {
           if (!settingsCanConfigureBusinessFeatures) {
             setSettingsPlatformConfigError("Upgrade to Team to configure inference.");
             setSettingsPlatformConfigSuccess("");
             return;
           }
 
-          const trimmedBaseUrl = String(settingsInferenceSettings.baseUrl || "").trim();
-          if (settingsInferenceSettings.enabled && !trimmedBaseUrl) {
-            setSettingsPlatformConfigError("Inference needs an endpoint URL before it can be enabled.");
-            setSettingsPlatformConfigSuccess("");
-            return;
-          }
+          const saveOptions = options && typeof options === "object" ? options : {};
+          const sourceInferenceSettings = inferenceSettingsOverride
+            ? normalizeDemoSettingsInferenceSettings(inferenceSettingsOverride)
+            : settingsInferenceSettings;
+          const apiKeyInputValue = typeof saveOptions.apiKeyInputOverride === "string"
+            ? saveOptions.apiKeyInputOverride
+            : settingsInferenceApiKeyInput;
+          const clearApiKey = typeof saveOptions.clearApiKeyOverride === "boolean"
+            ? saveOptions.clearApiKeyOverride
+            : settingsClearInferenceApiKey;
+          const normalizedApiKeyInput = String(apiKeyInputValue || "").trim();
+          const trimmedBaseUrl = String(sourceInferenceSettings.baseUrl || "").trim();
 
           setSettingsPlatformConfigSaving(true);
           setSettingsPlatformConfigError("");
           setSettingsPlatformConfigSuccess("");
           try {
             const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
-              ...settingsInferenceSettings,
+              ...sourceInferenceSettings,
+              enabled: Boolean(trimmedBaseUrl),
               baseUrl: trimmedBaseUrl,
-              availableModels: mergeDemoInferenceModelLists(
-                settingsInferenceSettings.availableModels,
-                settingsInferenceSettings.defaultModel ? [settingsInferenceSettings.defaultModel] : []
-              ),
-              apiKeyConfigured: settingsClearInferenceApiKey
+              defaultModel: "",
+              availableModels: mergeDemoInferenceModelLists(sourceInferenceSettings.availableModels),
+              apiKeyConfigured: clearApiKey
                 ? false
-                : (settingsInferenceSettings.apiKeyConfigured || Boolean(settingsInferenceApiKeyInput.trim())),
-              lastError: settingsInferenceSettings.healthStatus === "error"
-                ? settingsInferenceSettings.lastError
+                : (sourceInferenceSettings.apiKeyConfigured || Boolean(normalizedApiKeyInput)),
+              apiKeyPreview: clearApiKey
+                ? ""
+                : (normalizedApiKeyInput
+                    ? buildDemoInferenceApiKeyPreview(normalizedApiKeyInput)
+                    : sourceInferenceSettings.apiKeyPreview),
+              lastError: sourceInferenceSettings.healthStatus === "error"
+                ? sourceInferenceSettings.lastError
                 : "",
             });
             if (hasRealAccess) {
@@ -76959,10 +78229,10 @@ const html = `<!doctype html>
                     enabled: nextInferenceSettings.enabled,
                     providerType: nextInferenceSettings.providerType,
                     baseUrl: nextInferenceSettings.baseUrl,
-                    defaultModel: nextInferenceSettings.defaultModel,
+                    defaultModel: "",
                     availableModels: nextInferenceSettings.availableModels,
-                    apiKey: settingsInferenceApiKeyInput.trim() || undefined,
-                    clearApiKey: settingsClearInferenceApiKey,
+                    apiKey: normalizedApiKeyInput || undefined,
+                    clearApiKey,
                     lastValidatedAt: nextInferenceSettings.lastValidatedAt || null,
                     healthStatus: nextInferenceSettings.healthStatus,
                     lastError: nextInferenceSettings.lastError,
@@ -76973,8 +78243,23 @@ const html = `<!doctype html>
               if (!response.ok) {
                 throw new Error(data?.message || data?.error || "Failed to save inference settings.");
               }
-              setSettingsBillingPreferences(normalizeDemoSettingsBillingPreferences(data?.billing));
-              setSettingsInferenceSettings(normalizeDemoSettingsInferenceSettings(data?.inference));
+              const persistedBillingPreferences = normalizeDemoSettingsBillingPreferences(data?.billing);
+              const backendPersistedInferenceApiKeyPreview = typeof data?.inference?.apiKeyPreview === "string"
+                ? data.inference.apiKeyPreview.trim()
+                : "";
+              const persistedInferenceApiKeyPreview = backendPersistedInferenceApiKeyPreview.length >= nextInferenceSettings.apiKeyPreview.length
+                ? backendPersistedInferenceApiKeyPreview
+                : nextInferenceSettings.apiKeyPreview;
+              const persistedInferenceSettings = normalizeDemoSettingsInferenceSettings({
+                ...data?.inference,
+                apiKeyPreview: persistedInferenceApiKeyPreview,
+              });
+              setSettingsBillingPreferences(persistedBillingPreferences);
+              setSettingsInferenceSettings(persistedInferenceSettings);
+              writeDemoSettingsPlatformConfig({
+                billing: persistedBillingPreferences,
+                inference: persistedInferenceSettings,
+              });
             } else {
               await new Promise((resolve) => window.setTimeout(resolve, 180));
               setSettingsInferenceSettings(nextInferenceSettings);
@@ -76983,11 +78268,14 @@ const html = `<!doctype html>
                 inference: nextInferenceSettings,
               });
             }
-            if (settingsClearInferenceApiKey) {
+            if (clearApiKey || normalizedApiKeyInput) {
               setSettingsInferenceApiKeyInput("");
+              setSettingsInferenceApiKeyEditing(false);
+            }
+            if (clearApiKey) {
               setSettingsClearInferenceApiKey(false);
             }
-            setSettingsPlatformConfigSuccess("Inference settings saved.");
+            setSettingsPlatformConfigSuccess("");
           } catch (error) {
             setSettingsPlatformConfigError(error instanceof Error ? error.message : "Failed to save inference settings.");
           } finally {
@@ -77004,30 +78292,54 @@ const html = `<!doctype html>
           proxyBackendBase,
         ]);
 
+        const queueSettingsInferenceAutosave = useCallback((nextInferenceSettings, options = {}) => {
+          setSettingsPlatformConfigError("");
+          setSettingsPlatformConfigSuccess("");
+          if (settingsInferenceAutosaveTimerRef.current) {
+            window.clearTimeout(settingsInferenceAutosaveTimerRef.current);
+            settingsInferenceAutosaveTimerRef.current = null;
+          }
+          const normalizedInferenceSettings = normalizeDemoSettingsInferenceSettings(nextInferenceSettings);
+          if (!settingsCanConfigureBusinessFeatures) {
+            return;
+          }
+          if (options.immediate) {
+            void handleSettingsInferenceSave(normalizedInferenceSettings, options);
+            return;
+          }
+          settingsInferenceAutosaveTimerRef.current = window.setTimeout(() => {
+            settingsInferenceAutosaveTimerRef.current = null;
+            void handleSettingsInferenceSave(normalizedInferenceSettings, options);
+          }, 520);
+        }, [handleSettingsInferenceSave, settingsCanConfigureBusinessFeatures]);
+
         const handleSettingsInferenceAddModels = useCallback((rawValue) => {
           const nextModels = parseDemoInferenceModelInput(rawValue);
           if (nextModels.length === 0) {
             return false;
           }
-          setSettingsInferenceSettings((current) => ({
-            ...current,
-            availableModels: mergeDemoInferenceModelLists(current.availableModels, nextModels),
-          }));
+          const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
+            ...settingsInferenceSettings,
+            availableModels: mergeDemoInferenceModelLists(settingsInferenceSettings.availableModels, nextModels),
+          });
+          setSettingsInferenceSettings(nextInferenceSettings);
           setSettingsInferenceModelInput("");
+          queueSettingsInferenceAutosave(nextInferenceSettings, { immediate: true });
           return true;
-        }, []);
+        }, [queueSettingsInferenceAutosave, settingsInferenceSettings]);
 
         const handleSettingsInferenceRemoveModel = useCallback((modelId) => {
           const normalizedModelId = String(modelId || "").trim();
           if (!normalizedModelId) {
             return;
           }
-          setSettingsInferenceSettings((current) => ({
-            ...current,
-            availableModels: current.availableModels.filter((entry) => entry !== normalizedModelId),
-            defaultModel: current.defaultModel === normalizedModelId ? "" : current.defaultModel,
-          }));
-        }, []);
+          const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
+            ...settingsInferenceSettings,
+            availableModels: settingsInferenceSettings.availableModels.filter((entry) => entry !== normalizedModelId),
+          });
+          setSettingsInferenceSettings(nextInferenceSettings);
+          queueSettingsInferenceAutosave(nextInferenceSettings, { immediate: true });
+        }, [queueSettingsInferenceAutosave, settingsInferenceSettings]);
 
         function renderSettingsApiKeyCard(apiKeyRecord, options = {}) {
           const isManaged = !!options.managed;
@@ -77769,7 +79081,7 @@ const html = `<!doctype html>
             {
               label: "Billing",
               items: [
-                { id: "costs-plans", icon: DollarSign, label: "Plans", meta: "Subscription and account defaults" },
+                { id: "costs-plans", icon: DollarSign, label: "Plans & Budget", meta: "Subscription and account defaults" },
                 { id: "inference", icon: HardDrive, label: "Inference", meta: "Bring-your-own model endpoints" },
                 { id: "costs-records", icon: ReceiptText, label: "Billing Records", meta: "Invoices and payment history" },
                 { id: "costs-overview", icon: LayoutGrid, label: "Usage Details", meta: "Live runner project state" },
@@ -77805,70 +79117,236 @@ const html = `<!doctype html>
 
           switch (settingsSection) {
             case "costs-plans":
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                settingsBudgetLoading
-                  ? React.createElement("div", { className: "playground-settings-loading-state" },
-                      React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 }),
-                      React.createElement("span", { className: "playground-settings-muted-copy" }, "Loading")
-                    )
-                  : (() => {
-                      const fallbackTierInfo = {
-                        id: "free",
-                        name: "Free",
-                        monthlyPrice: 0,
-                        computeTokens: 150,
-                        description: "Get started with basic usage. Perfect for trying out the platform.",
-                      };
-                      const userTier = settingsCurrentTierId;
-                      const tierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === userTier) || fallbackTierInfo;
-                      const tierLimit = Math.max(
-                        settingsDollarsToComputeTokens(settingsBudgetStatus?.tierQuota),
-                        Number(tierInfo.computeTokens || fallbackTierInfo.computeTokens)
-                      );
-                      const topUpBalanceCT = settingsDollarsToComputeTokens(settingsBudgetStatus?.topUpBalance);
-                      const hasTopUpBalance = topUpBalanceCT > 0;
-                      const totalUsedCT = Math.max(
-                        Number(settingsUsageSummary?.totals?.totalCT || 0),
-                        settingsDollarsToComputeTokens(settingsBudgetStatus?.currentPeriodUsage)
-                      );
-                      const usagePercent = tierLimit > 0 ? Math.round((totalUsedCT / tierLimit) * 100) : 0;
+              detailContent = (() => {
+                const fallbackTierInfo = {
+                  id: "free",
+                  name: "Free",
+                  monthlyPrice: 0,
+                  computeTokens: 150,
+                  description: "Get started with basic usage. Perfect for trying out the platform.",
+                };
+                const userTier = settingsCurrentTierId;
+                const tierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === userTier) || fallbackTierInfo;
+                const includedTierQuotaCT = Math.max(
+                  settingsDollarsToComputeTokens(settingsBudgetStatus?.includedTierQuota),
+                  settingsDollarsToComputeTokens(settingsBudgetStatus?.tierQuota),
+                  Number(tierInfo.computeTokens || fallbackTierInfo.computeTokens)
+                );
+                const topUpBalanceCT = Math.max(0, settingsDollarsToComputeTokens(settingsBudgetStatus?.topUpBalance));
+                const hasTopUpBalance = topUpBalanceCT > 0;
+                const totalUsedCT = Math.max(
+                  Number(settingsUsageSummary?.totals?.totalCT || 0),
+                  settingsDollarsToComputeTokens(settingsBudgetStatus?.currentPeriodUsage)
+                );
+                const remainingPlanCT = Math.max(0, includedTierQuotaCT - totalUsedCT);
+                const totalRemainingCT = remainingPlanCT + topUpBalanceCT;
+                const totalBudgetCT = Math.max(totalRemainingCT, includedTierQuotaCT + topUpBalanceCT, 1);
+                const remainingPercent = totalBudgetCT > 0 ? clampSettingsPercentage((totalRemainingCT / totalBudgetCT) * 100) : 0;
+                const usagePercent = includedTierQuotaCT > 0 ? Math.round((totalUsedCT / includedTierQuotaCT) * 100) : 0;
+                const selectedTopUpPackage = SETTINGS_TOP_UP_CATALOG.find((pkg) => pkg.id === settingsSelectedTopUpId) || SETTINGS_TOP_UP_CATALOG[1] || SETTINGS_TOP_UP_CATALOG[0] || null;
+                const periodStartDate = settingsBudgetStatus?.periodStartDate ? new Date(settingsBudgetStatus.periodStartDate) : null;
+                const periodEndDate = settingsBudgetStatus?.periodEndDate ? new Date(settingsBudgetStatus.periodEndDate) : null;
+                const hasValidPeriodDates = Boolean(
+                  periodStartDate
+                  && periodEndDate
+                  && !Number.isNaN(periodStartDate.getTime())
+                  && !Number.isNaN(periodEndDate.getTime())
+                );
+                const budgetPeriodLabel = new Date().toLocaleDateString("en-US", { month: "long" }) + " Budget";
+                const daysUntilRefresh = hasValidPeriodDates
+                  ? Math.max(0, Math.ceil((periodEndDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+                  : null;
+                const resetCopy = hasValidPeriodDates
+                  ? (daysUntilRefresh <= 0
+                    ? "Plan credits refresh today."
+                    : "Plan credits refresh in " + daysUntilRefresh + " day" + (daysUntilRefresh === 1 ? "" : "s") + ".")
+                  : "Plan credits refresh with your next billing cycle.";
+                const hasPaidActiveSubscription = settingsSubscriptions.some((subscription) =>
+                  ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase()) && !subscription.cancelled
+                );
 
-                      return React.createElement("div", { className: "playground-settings-plan-app-shell" },
-                        React.createElement("div", { className: "playground-settings-plan-progress" },
-                          React.createElement("div", { className: "playground-settings-plan-progress-header" },
-                            React.createElement("span", { className: "playground-settings-plan-progress-title" }, tierInfo.name + " Plan"),
-                            React.createElement("span", { className: "playground-settings-plan-progress-copy" }, Math.max(0, 100 - usagePercent) + "% remaining")
+                const renderPlanCards = React.createElement("div", { className: "playground-settings-plan-grid" },
+                  SETTINGS_PLAN_CATALOG.map((plan) => {
+                    const isCurrentTier = plan.id === userTier;
+                    const isHighlighted = Boolean(plan.highlighted);
+                    const planFeatures = getSettingsPlanFeatures(plan.id, Number(plan.computeTokens || 0));
+                    const activeSubscription = settingsSubscriptions.find((subscription) =>
+                      normalizeSettingsTierId(subscription.tier) === plan.id
+                      && ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase())
+                      && !subscription.cancelled
+                    );
+                    const cancelledSubscription = settingsSubscriptions.find((subscription) =>
+                      normalizeSettingsTierId(subscription.tier) === plan.id
+                      && subscription.cancelled
+                      && subscription.endsAt
+                      && new Date(subscription.endsAt) > new Date()
+                    );
+                    const currentPrice = Number(tierInfo.monthlyPrice || 0);
+                    const isUpgrade = Number(plan.monthlyPrice || 0) > currentPrice;
+                    let actionContent = null;
+
+                    if (settingsBudgetStatus?.subscriptionSource === "apple" && userTier !== "free") {
+                      actionContent = isCurrentTier
+                        ? React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan")
+                        : React.createElement("div", { className: "playground-settings-plan-card-cta-static is-apple" }, "Manage on your iPhone or iPad");
+                    } else if (isCurrentTier && activeSubscription) {
+                      actionContent = React.createElement("button", {
+                          type: "button",
+                          onClick: () => {
+                            setSettingsChangePlanModalOpen(false);
+                            void handleSettingsCancelSubscription(activeSubscription.id);
+                          },
+                          disabled: settingsSubscriptionActionId === activeSubscription.id,
+                          className: "playground-settings-plan-card-cta-button is-danger",
+                        },
+                          settingsSubscriptionActionId === activeSubscription.id
+                            ? React.createElement("span", null, "Cancelling...")
+                            : "Cancel Subscription"
+                        );
+                    } else if (isCurrentTier && cancelledSubscription) {
+                      actionContent = React.createElement("button", {
+                          type: "button",
+                          onClick: () => {
+                            setSettingsChangePlanModalOpen(false);
+                            void handleSettingsReactivateSubscription(cancelledSubscription.id);
+                          },
+                          disabled: settingsSubscriptionActionId === cancelledSubscription.id,
+                          className: "playground-settings-plan-card-cta-button is-light",
+                        },
+                          settingsSubscriptionActionId === cancelledSubscription.id
+                            ? React.createElement("span", null, "Reactivating...")
+                            : "Resubscribe"
+                        );
+                    } else if (isCurrentTier) {
+                      actionContent = React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan");
+                    } else if (hasPaidActiveSubscription) {
+                      const actionClassName = isUpgrade
+                        ? (isHighlighted ? "playground-settings-plan-card-cta-button is-primary" : "playground-settings-plan-card-cta-button is-light")
+                        : "playground-settings-plan-card-cta-button is-muted";
+                      actionContent = React.createElement("button", {
+                          type: "button",
+                          onClick: () => {
+                            setSettingsChangePlanModalOpen(false);
+                            void handleSettingsChangePlan(plan.id);
+                          },
+                          disabled: settingsSubscriptionActionId === plan.id,
+                          className: actionClassName,
+                        },
+                          settingsSubscriptionActionId === plan.id
+                            ? React.createElement("span", null, "Loading...")
+                            : (isUpgrade ? "Upgrade to " + plan.name : "Downgrade to " + plan.name)
+                        );
+                    } else {
+                      actionContent = React.createElement("button", {
+                          type: "button",
+                          onClick: () => {
+                            setSettingsChangePlanModalOpen(false);
+                            void handleSettingsSubscribe(plan.id);
+                          },
+                          disabled: settingsCheckoutLoading,
+                          className: isHighlighted
+                            ? "playground-settings-plan-card-cta-button is-primary"
+                            : "playground-settings-plan-card-cta-button is-light",
+                        },
+                          settingsCheckoutLoading
+                            ? React.createElement("span", null, "Loading...")
+                            : "Start with " + plan.name
+                        );
+                    }
+
+                    return React.createElement("div", {
+                        key: plan.id,
+                        className: "playground-settings-plan-card-app"
+                          + (isHighlighted ? " is-highlighted" : "")
+                          + (isCurrentTier ? " is-current" : ""),
+                      },
+                        React.createElement("div", { className: "playground-settings-plan-card-header" },
+                          React.createElement("span", { className: "playground-settings-plan-card-title" }, plan.name),
+                          isCurrentTier && cancelledSubscription
+                            ? React.createElement("span", { className: "playground-settings-plan-card-badge is-cancelled" }, "Cancels " + formatSettingsDate(cancelledSubscription.endsAt))
+                            : isCurrentTier
+                              ? React.createElement("span", { className: "playground-settings-plan-card-badge" }, "Current Plan")
+                              : null
+                        ),
+                        React.createElement("div", { className: "playground-settings-plan-card-price" },
+                          "$" + plan.monthlyPrice,
+                          React.createElement("span", { className: "playground-settings-plan-card-price-unit" }, " " + (plan.billingLabel || "/ month"))
+                        ),
+                        React.createElement("div", { className: "playground-settings-plan-card-cta" }, actionContent),
+                        React.createElement("div", { className: "playground-settings-plan-card-description" }, plan.description),
+                        React.createElement("ul", { className: "playground-settings-plan-card-features" },
+                          planFeatures.map((feature, index) => {
+                            const FeatureIcon = feature.icon;
+                            return React.createElement("li", {
+                                key: plan.id + ":" + index,
+                                className: "playground-settings-plan-card-feature" + (index === 0 ? " is-emphasis" : ""),
+                              },
+                                React.createElement(FeatureIcon, { className: "playground-settings-plan-card-feature-icon", width: 16, height: 16, strokeWidth: 1.8 }),
+                                React.createElement("span", null, feature.text)
+                              );
+                          })
+                        )
+                      );
+                  })
+                );
+
+                const plansMenu = React.createElement("div", {
+                    className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-settings-plans-menu-anchor",
+                    ref: settingsPlansMenuRef,
+                  },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-content-menu-button",
+                      "aria-label": "Plan settings",
+                      "aria-expanded": settingsPlansMenuOpen ? "true" : "false",
+                      onClick: () => setSettingsPlansMenuOpen((current) => !current),
+                    }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                    settingsPlansMenuOpen
+                      ? React.createElement("div", {
+                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                          onClick: (event) => event.stopPropagation(),
+                        },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setSettingsPlansMenuOpen(false);
+                              setSettingsChangePlanModalOpen(true);
+                            },
+                          },
+                            React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "Change Plan")
+                            )
+                          )
+                        )
+                      : null
+                  );
+
+                const changePlanModal = settingsChangePlanModalOpen
+                  ? React.createElement("div", {
+                      className: "playground-settings-modal-backdrop",
+                      onClick: () => setSettingsChangePlanModalOpen(false),
+                    },
+                      React.createElement("div", {
+                          className: "playground-settings-modal is-plan-selector",
+                          onClick: (event) => event.stopPropagation(),
+                        },
+                        React.createElement("div", { className: "playground-settings-modal-header" },
+                          React.createElement("div", null,
+                            React.createElement("div", { className: "playground-settings-card-title" }, "Change Plan"),
+                            React.createElement("div", { className: "playground-settings-muted-copy", style: { marginTop: "4px" } }, "Choose the subscription that fits your monthly compute budget.")
                           ),
-                          React.createElement("div", { className: "playground-settings-plan-progress-track" },
-                            React.createElement("div", {
-                              className: "playground-settings-plan-progress-fill" + (usagePercent >= 100 ? " is-danger" : usagePercent >= 80 ? " is-warning" : ""),
-                              style: { width: String(Math.min(usagePercent, 100)) + "%" },
-                            })
-                          ),
-                          usagePercent >= 100 && !hasTopUpBalance
-                            ? React.createElement("div", { className: "playground-settings-plan-action-warning" },
-                                React.createElement("strong", null, "Action Required:"),
-                                " You've used all your Compute Tokens. Upgrade your plan or buy a one-time add-on to continue using agents."
-                              )
-                            : null
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-settings-icon-button",
+                            onClick: () => setSettingsChangePlanModalOpen(false),
+                          }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
                         ),
                         renderSettingsBanner("error", settingsBillingError),
                         renderSettingsBanner("success", settingsBillingSuccess),
-                        React.createElement("div", { className: "playground-settings-plan-heading" },
-                          React.createElement("div", { className: "playground-settings-plan-heading-title" }, "Choose Your Plan"),
-                          React.createElement("div", { className: "playground-settings-plan-heading-copy" }, "Simple access plans with included credits, then usage-based infrastructure for larger workloads.")
-                        ),
-                        hasTopUpBalance
-                          ? React.createElement("div", { className: "playground-settings-plan-system-note" },
-                              React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "CT"),
-                              React.createElement("div", null,
-                                React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "One-time add-on balance available"),
-                                React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, formatSettingsComputeTokens(topUpBalanceCT) + " remain on this account after your included monthly credits.")
-                              )
-                            )
-                          : null,
                         settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "free"
-                          ? React.createElement("div", { className: "playground-settings-plan-system-note" },
+                          ? React.createElement("div", { className: "playground-settings-plan-system-note", style: { marginBottom: "16px" } },
                               React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "IOS"),
                               React.createElement("div", null,
                                 React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription managed through iPhone or iPad"),
@@ -77876,822 +79354,720 @@ const html = `<!doctype html>
                               )
                             )
                           : null,
-                        React.createElement("div", { className: "playground-settings-plan-grid" },
-                          SETTINGS_PLAN_CATALOG.map((plan) => {
-                            const isCurrentTier = plan.id === userTier;
-                            const isHighlighted = Boolean(plan.highlighted);
-                            const planFeatures = getSettingsPlanFeatures(plan.id, Number(plan.computeTokens || 0));
-                            const activeSubscription = settingsSubscriptions.find((subscription) =>
-                              normalizeSettingsTierId(subscription.tier) === plan.id
-                              && ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase())
-                              && !subscription.cancelled
-                            );
-                            const cancelledSubscription = settingsSubscriptions.find((subscription) =>
-                              normalizeSettingsTierId(subscription.tier) === plan.id
-                              && subscription.cancelled
-                              && subscription.endsAt
-                              && new Date(subscription.endsAt) > new Date()
-                            );
-                            const hasPaidActiveSubscription = settingsSubscriptions.some((subscription) =>
-                              ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase()) && !subscription.cancelled
-                            );
-                            const currentPrice = Number(tierInfo.monthlyPrice || 0);
-                            const isUpgrade = Number(plan.monthlyPrice || 0) > currentPrice;
-                            let actionContent = null;
+                        renderPlanCards
+                      )
+                    )
+                  : null;
 
-                            if (settingsBudgetStatus?.subscriptionSource === "apple" && userTier !== "free") {
-                              actionContent = isCurrentTier
-                                ? React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan")
-                                : React.createElement("div", { className: "playground-settings-plan-card-cta-static is-apple" }, "Manage on your iPhone or iPad");
-                            } else if (isCurrentTier && activeSubscription) {
-                              actionContent = React.createElement("button", {
-                                  type: "button",
-                                  onClick: () => {
-                                    void handleSettingsCancelSubscription(activeSubscription.id);
-                                  },
-                                  disabled: settingsSubscriptionActionId === activeSubscription.id,
-                                  className: "playground-settings-plan-card-cta-button is-danger",
+                const topUpModal = settingsTopUpModalOpen && selectedTopUpPackage
+                  ? React.createElement("div", {
+                      className: "playground-settings-modal-backdrop",
+                      onClick: () => setSettingsTopUpModalOpen(false),
+                    },
+                      React.createElement("div", {
+                          className: "playground-settings-modal",
+                          onClick: (event) => event.stopPropagation(),
+                        },
+                        React.createElement("div", { className: "playground-settings-modal-header" },
+                          React.createElement("div", null,
+                            React.createElement("div", { className: "playground-settings-card-title" }, "Add Compute Tokens"),
+                            React.createElement("div", { className: "playground-settings-muted-copy", style: { marginTop: "4px" } }, "Buy a one-time Compute Token add-on without changing your subscription.")
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-settings-icon-button",
+                            onClick: () => setSettingsTopUpModalOpen(false),
+                          }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
+                        ),
+                        renderSettingsBanner("error", settingsBillingError),
+                        renderSettingsBanner("success", settingsBillingSuccess),
+                        React.createElement("div", {
+                          style: {
+                            color: "rgba(255,255,255,0.68)",
+                            marginBottom: "14px",
+                          },
+                        }, "Purchased add-ons are consumed only after your included monthly plan credits are exhausted."),
+                        React.createElement("div", {
+                          style: {
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                            marginBottom: "14px",
+                          },
+                        },
+                          SETTINGS_TOP_UP_CATALOG.map((pkg) => {
+                            const isSelected = pkg.id === selectedTopUpPackage.id;
+                            return React.createElement("button", {
+                                key: pkg.id,
+                                type: "button",
+                                onClick: () => setSettingsSelectedTopUpId(pkg.id),
+                                style: {
+                                  display: "inline-flex",
+                                  flexDirection: "column",
+                                  alignItems: "flex-start",
+                                  justifyContent: "center",
+                                  gap: "2px",
+                                  minWidth: "124px",
+                                  padding: "10px 12px",
+                                  borderRadius: "14px",
+                                  background: isSelected ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+                                  color: isSelected ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.82)",
+                                  boxShadow: "none",
+                                  border: isSelected ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.08)",
+                                  cursor: "pointer",
                                 },
-                                  settingsSubscriptionActionId === activeSubscription.id
-                                    ? React.createElement("span", null, "Cancelling...")
-                                    : "Cancel Subscription"
-                                );
-                            } else if (isCurrentTier && cancelledSubscription) {
-                              actionContent = React.createElement("button", {
-                                  type: "button",
-                                  onClick: () => {
-                                    void handleSettingsReactivateSubscription(cancelledSubscription.id);
-                                  },
-                                  disabled: settingsSubscriptionActionId === cancelledSubscription.id,
-                                  className: "playground-settings-plan-card-cta-button is-light",
-                                },
-                                  settingsSubscriptionActionId === cancelledSubscription.id
-                                    ? React.createElement("span", null, "Reactivating...")
-                                    : "Resubscribe"
-                                );
-                            } else if (isCurrentTier) {
-                              actionContent = React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan");
-                            } else if (hasPaidActiveSubscription) {
-                              const actionClassName = isUpgrade
-                                ? (isHighlighted ? "playground-settings-plan-card-cta-button is-primary" : "playground-settings-plan-card-cta-button is-light")
-                                : "playground-settings-plan-card-cta-button is-muted";
-                              actionContent = React.createElement("button", {
-                                  type: "button",
-                                  onClick: () => {
-                                    void handleSettingsChangePlan(plan.id);
-                                  },
-                                  disabled: settingsSubscriptionActionId === plan.id,
-                                  className: actionClassName,
-                                },
-                                  settingsSubscriptionActionId === plan.id
-                                    ? React.createElement("span", null, "Loading...")
-                                    : (isUpgrade ? "Upgrade to " + plan.name : "Downgrade to " + plan.name)
-                                );
-                            } else {
-                              actionContent = React.createElement("button", {
-                                  type: "button",
-                                  onClick: () => {
-                                    void handleSettingsSubscribe(plan.id);
-                                  },
-                                  disabled: settingsCheckoutLoading,
-                                  className: isHighlighted
-                                    ? "playground-settings-plan-card-cta-button is-primary"
-                                    : "playground-settings-plan-card-cta-button is-light",
-                                },
-                                  settingsCheckoutLoading
-                                    ? React.createElement("span", null, "Loading...")
-                                    : "Start with " + plan.name
-                                );
-                            }
-
-                            return React.createElement("div", {
-                                key: plan.id,
-                                className: "playground-settings-plan-card-app"
-                                  + (isHighlighted ? " is-highlighted" : "")
-                                  + (isCurrentTier ? " is-current" : ""),
                               },
-                                React.createElement("div", { className: "playground-settings-plan-card-header" },
-                                  React.createElement("span", { className: "playground-settings-plan-card-title" }, plan.name),
-                                  isCurrentTier && cancelledSubscription
-                                      ? React.createElement("span", { className: "playground-settings-plan-card-badge is-cancelled" }, "Cancels " + formatSettingsDate(cancelledSubscription.endsAt))
-                                      : isCurrentTier
-                                        ? React.createElement("span", { className: "playground-settings-plan-card-badge" }, "Current Plan")
-                                        : null
-                                ),
-                                React.createElement("div", { className: "playground-settings-plan-card-price" },
-                                  "$" + plan.monthlyPrice,
-                                  React.createElement("span", { className: "playground-settings-plan-card-price-unit" }, " " + (plan.billingLabel || "/ month"))
-                                ),
-                                React.createElement("div", { className: "playground-settings-plan-card-cta" }, actionContent),
-                                React.createElement("div", { className: "playground-settings-plan-card-description" }, plan.description),
-                                React.createElement("ul", { className: "playground-settings-plan-card-features" },
-                                  planFeatures.map((feature, index) => {
-                                    const FeatureIcon = feature.icon;
-                                    return React.createElement("li", {
-                                        key: plan.id + ":" + index,
-                                        className: "playground-settings-plan-card-feature" + (index === 0 ? " is-emphasis" : ""),
-                                      },
-                                        React.createElement(FeatureIcon, { className: "playground-settings-plan-card-feature-icon", width: 16, height: 16, strokeWidth: 1.8 }),
-                                        React.createElement("span", null, feature.text)
-                                      );
-                                  })
-                                )
+                                React.createElement("span", {
+                                  style: {
+                                    fontSize: "13px",
+                                    fontWeight: "600",
+                                    lineHeight: 1.2,
+                                  },
+                                }, formatSettingsComputeTokens(pkg.computeTokens)),
+                                React.createElement("span", {
+                                  style: {
+                                    fontSize: "11px",
+                                    color: isSelected ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.56)",
+                                  },
+                                }, "$" + pkg.price + " one-time")
                               );
                           })
                         ),
-                        (() => {
-                          const selectedTopUpPackage = SETTINGS_TOP_UP_CATALOG.find((pkg) => pkg.id === settingsSelectedTopUpId) || SETTINGS_TOP_UP_CATALOG[1] || SETTINGS_TOP_UP_CATALOG[0] || null;
-                          return selectedTopUpPackage
-                            ? renderSettingsNote(
-                                "Add Compute Tokens",
-                                React.createElement(React.Fragment, null,
-                                  React.createElement("div", {
-                                    style: {
-                                      color: "rgba(255,255,255,0.68)",
-                                      marginBottom: "14px",
-                                    },
-                                  }, "Buy a one-time Compute Token add-on without changing your subscription. Purchased add-ons are consumed only after your included monthly credits are exhausted."),
-                                  React.createElement("div", {
-                                    style: {
-                                      display: "flex",
-                                      flexWrap: "wrap",
-                                      gap: "8px",
-                                      marginBottom: "14px",
-                                    },
-                                  },
-                                    SETTINGS_TOP_UP_CATALOG.map((pkg) => {
-                                      const isSelected = pkg.id === selectedTopUpPackage.id;
-                                      return React.createElement("button", {
-                                          key: pkg.id,
-                                          type: "button",
-                                          onClick: () => setSettingsSelectedTopUpId(pkg.id),
-                                          style: {
-                                            display: "inline-flex",
-                                            flexDirection: "column",
-                                            alignItems: "flex-start",
-                                            justifyContent: "center",
-                                            gap: "2px",
-                                            minWidth: "124px",
-                                            padding: "10px 12px",
-                                            borderRadius: "14px",
-                                            background: isSelected ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
-                                            color: isSelected ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.82)",
-                                            boxShadow: "none",
-                                            border: isSelected ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.08)",
-                                            cursor: "pointer",
-                                          },
-                                        },
-                                          React.createElement("span", {
-                                            style: {
-                                              fontSize: "13px",
-                                              fontWeight: "600",
-                                              lineHeight: 1.2,
-                                            },
-                                          }, formatSettingsComputeTokens(pkg.computeTokens)),
-                                          React.createElement("span", {
-                                            style: {
-                                              fontSize: "11px",
-                                              color: isSelected ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.56)",
-                                            },
-                                          }, "$" + pkg.price + " one-time")
-                                        );
-                                    })
-                                  ),
-                                  React.createElement("div", {
-                                    style: {
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "space-between",
-                                      gap: "14px",
-                                      padding: "14px 16px",
-                                      borderRadius: "16px",
-                                      background: "rgba(255,255,255,0.04)",
-                                      border: "1px solid rgba(255,255,255,0.08)",
-                                    },
-                                  },
-                                    React.createElement("div", {
-                                      style: {
-                                        minWidth: 0,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: "4px",
-                                      },
-                                    },
-                                      React.createElement("div", {
-                                        style: {
-                                          fontSize: "12px",
-                                          color: "rgba(255,255,255,0.58)",
-                                        },
-                                      }, "Selected purchase"),
-                                      React.createElement("div", {
-                                        style: {
-                                          fontSize: "17px",
-                                          fontWeight: "600",
-                                          color: "rgba(255,255,255,0.96)",
-                                          lineHeight: 1.2,
-                                        },
-                                      }, formatSettingsComputeTokens(selectedTopUpPackage.computeTokens) + " for $" + selectedTopUpPackage.price),
-                                      React.createElement("div", {
-                                        style: {
-                                          fontSize: "12px",
-                                          color: "rgba(255,255,255,0.56)",
-                                        },
-                                      }, selectedTopUpPackage.description)
-                                    ),
-                                    React.createElement("button", {
-                                        type: "button",
-                                        onClick: () => {
-                                          void handleSettingsBuyTopUp(selectedTopUpPackage.id);
-                                        },
-                                        disabled: settingsTopUpActionId === selectedTopUpPackage.id,
-                                        className: "playground-settings-plan-card-cta-button is-light",
-                                        style: {
-                                          minWidth: "152px",
-                                          justifyContent: "center",
-                                        },
-                                      },
-                                        settingsTopUpActionId === selectedTopUpPackage.id
-                                          ? React.createElement("span", null, "Loading...")
-                                          : "Buy Compute Tokens"
-                                      )
-                                  ),
-                                  hasTopUpBalance
-                                    ? React.createElement("div", {
-                                        style: {
-                                          marginTop: "12px",
-                                          fontSize: "12px",
-                                          color: "rgba(255,255,255,0.58)",
-                                        },
-                                      }, "Current one-time add-on balance: " + formatSettingsComputeTokens(topUpBalanceCT))
-                                    : null
-                                )
-                              )
-                            : null;
-                        })(),
                         React.createElement("div", {
-                          className: "playground-settings-detail-stack",
-                          style: { marginTop: "24px" },
-                        },
-                          renderSettingsBanner("error", settingsPlatformConfigError),
-                          renderSettingsBanner("success", settingsPlatformConfigSuccess),
-                          React.createElement("div", {
-                            className: "playground-settings-form-grid",
-                            style: { alignItems: "start" },
+                          style: {
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "14px",
+                            padding: "14px 16px",
+                            borderRadius: "16px",
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
                           },
-                            settingsCanConfigureBusinessFeatures
-                              ? renderSettingsNote(
-                                  "Usage Billing",
-                                  React.createElement(React.Fragment, null,
-                                    React.createElement("div", { style: { color: "rgba(255,255,255,0.68)" } },
-                                      "Use included monthly credits first, then continue paying only for the infrastructure you keep running."
-                                    ),
-                                    React.createElement("div", {
-                                      style: {
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        gap: "12px",
-                                        marginTop: "2px",
-                                      },
-                                    },
-                                      React.createElement("div", {
-                                        style: {
-                                          fontSize: "12px",
-                                          fontWeight: "600",
-                                          color: "rgba(255,255,255,0.9)",
-                                        },
-                                      }, "Usage-based infrastructure"),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        onClick: () => setSettingsBillingPreferences((current) => ({
-                                          ...current,
-                                          usageBillingEnabled: !current.usageBillingEnabled,
-                                        })),
-                                        style: {
-                                          position: "relative",
-                                          width: "48px",
-                                          height: "28px",
-                                          borderRadius: "999px",
-                                          border: "1px solid rgba(255,255,255,0.12)",
-                                          background: settingsBillingPreferences.usageBillingEnabled ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.12)",
-                                          cursor: "pointer",
-                                          padding: 0,
-                                        },
-                                        "aria-pressed": settingsBillingPreferences.usageBillingEnabled,
-                                      },
-                                        React.createElement("span", {
-                                          style: {
-                                            position: "absolute",
-                                            top: "3px",
-                                            left: settingsBillingPreferences.usageBillingEnabled ? "23px" : "3px",
-                                            width: "20px",
-                                            height: "20px",
-                                            borderRadius: "999px",
-                                            background: settingsBillingPreferences.usageBillingEnabled ? "rgba(17,17,17,0.96)" : "rgba(255,255,255,0.92)",
-                                            transition: "left 160ms ease",
-                                          },
-                                        })
-                                      )
-                                    ),
-                                    React.createElement("div", {
-                                      className: "playground-settings-form-grid",
-                                      style: { marginTop: "4px" },
-                                    },
-                                      React.createElement("div", { className: "playground-settings-field" },
-                                        React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-usage-billing-limit" }, "Monthly Resource Spend Cap"),
-                                        React.createElement("input", {
-                                          id: "settings-usage-billing-limit",
-                                          type: "number",
-                                          min: "0",
-                                          step: "1",
-                                          className: "playground-settings-input",
-                                          value: settingsBillingPreferences.monthlyResourceSpendLimit,
-                                          onChange: (event) => setSettingsBillingPreferences((current) => ({
-                                            ...current,
-                                            monthlyResourceSpendLimit: normalizeSettingsSpendLimit(event.target.value),
-                                          })),
-                                          placeholder: "200",
-                                        })
-                                      ),
-                                      React.createElement("div", {
-                                        className: "playground-settings-field",
-                                        style: { justifyContent: "flex-end" },
-                                      },
-                                        React.createElement("div", {
-                                          style: {
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: "10px",
-                                            paddingTop: "24px",
-                                          },
-                                        },
-                                          React.createElement("label", {
-                                            style: {
-                                              display: "flex",
-                                              alignItems: "center",
-                                              gap: "8px",
-                                              fontSize: "12px",
-                                              color: "rgba(255,255,255,0.74)",
-                                            },
-                                          },
-                                            React.createElement("input", {
-                                              type: "checkbox",
-                                              checked: settingsBillingPreferences.pauseOnLimit,
-                                              onChange: (event) => setSettingsBillingPreferences((current) => ({
-                                                ...current,
-                                                pauseOnLimit: event.target.checked,
-                                              })),
-                                            }),
-                                            React.createElement("span", null, "Pause resources when the cap is reached")
-                                          ),
-                                          React.createElement("label", {
-                                            style: {
-                                              display: "flex",
-                                              alignItems: "center",
-                                              gap: "8px",
-                                              fontSize: "12px",
-                                              color: "rgba(255,255,255,0.74)",
-                                            },
-                                          },
-                                            React.createElement("input", {
-                                              type: "checkbox",
-                                              checked: settingsBillingPreferences.emailAlerts,
-                                              onChange: (event) => setSettingsBillingPreferences((current) => ({
-                                                ...current,
-                                                emailAlerts: event.target.checked,
-                                              })),
-                                            }),
-                                            React.createElement("span", null, "Send email alerts before you hit the limit")
-                                          )
-                                        )
-                                      )
-                                    ),
-                                    React.createElement("div", {
-                                      style: {
-                                        fontSize: "12px",
-                                        color: "rgba(255,255,255,0.68)",
-                                      },
-                                    },
-                                      settingsBillingPreferences.usageBillingEnabled
-                                        ? "Usage billing is active. Resource spend stops at your cap unless you raise it."
-                                        : "Usage billing is off. Resources pause when included credits are exhausted."
-                                    )
-                                  ),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-settings-app-primary-button",
-                                    onClick: () => {
-                                      void handleSettingsUsageBillingSave();
-                                    },
-                                    disabled: settingsPlatformConfigSaving,
-                                  }, settingsPlatformConfigSaving ? "Saving..." : "Save Usage Billing")
-                                )
-                              : renderSettingsNote(
-                                  "Usage Billing",
-                                  React.createElement("div", { style: { color: "rgba(255,255,255,0.68)" } },
-                                    "Team and Enterprise unlock usage-based billing after included credits, plus bring-your-own inference infrastructure."
-                                  ),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-settings-app-primary-button",
-                                    onClick: () => {
-                                      void handleSettingsSubscribe("team");
-                                    },
-                                    disabled: settingsCheckoutLoading,
-                                  }, settingsCheckoutLoading ? "Loading..." : "Upgrade to Team")
-                                ),
-                            renderSettingsNote(
-                              "How Resource Billing Works",
-                              React.createElement("div", {
-                                style: {
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: "8px",
-                                  color: "rgba(255,255,255,0.68)",
-                                },
-                              },
-                                React.createElement("div", null, "Included monthly credits cover managed model usage and baseline runtime."),
-                                React.createElement("div", null, "Usage billing adds pay-as-you-go servers, functions, containers, and future storage overages."),
-                                React.createElement("div", null, "Team and Enterprise also unlock your own OpenAI-compatible inference endpoints.")
-                              ),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-settings-app-secondary-button",
-                                onClick: () => setSettingsSection("inference"),
-                              }, "Configure Inference")
-                            )
-                          )
-                        )
-                      );
-                    })()
-              );
-              break;
-            case "inference":
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                renderSettingsDetailHeader(
-                  "Inference",
-                  "Connect your own OpenAI-compatible endpoint for self-hosted or customer-managed models."
-                ),
-                renderSettingsBanner("error", settingsPlatformConfigError),
-                renderSettingsBanner("success", settingsPlatformConfigSuccess),
-                !settingsCanConfigureBusinessFeatures
-                  ? renderSettingsNote(
-                      "Bring Your Own Inference",
-                      React.createElement("div", {
-                        style: {
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
-                          color: "rgba(255,255,255,0.68)",
                         },
-                      },
-                        React.createElement("div", null, "Inference endpoints are available on Team and Enterprise."),
-                        React.createElement("div", null, "Use them to route model traffic to your own OpenAI-compatible infrastructure instead of managed model billing.")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-settings-app-primary-button",
-                        onClick: () => {
-                          void handleSettingsSubscribe("team");
-                        },
-                        disabled: settingsCheckoutLoading,
-                      }, settingsCheckoutLoading ? "Loading..." : "Upgrade to Team")
-                    )
-                  : React.createElement("div", {
-                      className: "playground-settings-form-grid",
-                      style: {
-                        alignItems: "start",
-                        marginTop: "18px",
-                      },
-                    },
-                      renderSettingsNote(
-                        "Inference Endpoint",
-                        React.createElement(React.Fragment, null,
-                          React.createElement("div", { style: { color: "rgba(255,255,255,0.68)" } },
-                            "Store one shared endpoint for your workspace. Agents can route compatible workloads there once you connect it."
-                          ),
                           React.createElement("div", {
                             style: {
+                              minWidth: 0,
                               display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: "12px",
-                              marginTop: "2px",
+                              flexDirection: "column",
+                              gap: "4px",
                             },
                           },
                             React.createElement("div", {
                               style: {
                                 fontSize: "12px",
-                                fontWeight: "600",
-                                color: "rgba(255,255,255,0.9)",
+                                color: "rgba(255,255,255,0.58)",
                               },
-                            }, "Enable external inference"),
-                            React.createElement("button", {
-                              type: "button",
-                              onClick: () => setSettingsInferenceSettings((current) => ({
-                                ...current,
-                                enabled: !current.enabled,
-                              })),
+                            }, "Selected purchase"),
+                            React.createElement("div", {
                               style: {
-                                position: "relative",
-                                width: "48px",
-                                height: "28px",
-                                borderRadius: "999px",
-                                border: "1px solid rgba(255,255,255,0.12)",
-                                background: settingsInferenceSettings.enabled ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.12)",
-                                cursor: "pointer",
-                                padding: 0,
+                                fontSize: "17px",
+                                fontWeight: "600",
+                                color: "rgba(255,255,255,0.96)",
+                                lineHeight: 1.2,
                               },
-                              "aria-pressed": settingsInferenceSettings.enabled,
-                            },
-                              React.createElement("span", {
-                                style: {
-                                  position: "absolute",
-                                  top: "3px",
-                                  left: settingsInferenceSettings.enabled ? "23px" : "3px",
-                                  width: "20px",
-                                  height: "20px",
-                                  borderRadius: "999px",
-                                  background: settingsInferenceSettings.enabled ? "rgba(17,17,17,0.96)" : "rgba(255,255,255,0.92)",
-                                  transition: "left 160ms ease",
-                                },
-                              })
-                            )
-                          ),
-                          React.createElement("div", {
-                            className: "playground-settings-form-grid",
-                            style: { marginTop: "4px" },
-                          },
-                            React.createElement("div", { className: "playground-settings-field" },
-                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-provider" }, "Provider"),
-                              React.createElement("select", {
-                                id: "settings-inference-provider",
-                                className: "playground-settings-select",
-                                value: settingsInferenceSettings.providerType,
-                                onChange: (event) => setSettingsInferenceSettings((current) => ({
-                                  ...current,
-                                  providerType: event.target.value,
-                                  availableModels: [],
-                                  healthStatus: "idle",
-                                  lastError: "",
-                                })),
+                            }, formatSettingsComputeTokens(selectedTopUpPackage.computeTokens) + " for $" + selectedTopUpPackage.price),
+                            React.createElement("div", {
+                              style: {
+                                fontSize: "12px",
+                                color: "rgba(255,255,255,0.56)",
                               },
-                                SETTINGS_INFERENCE_PROVIDER_OPTIONS.map((option) =>
-                                  React.createElement("option", { key: option.value, value: option.value }, option.label)
-                                )
-                              )
-                            ),
-                            React.createElement("div", { className: "playground-settings-field" },
-                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-default-model" }, "Default Model"),
-                              React.createElement("input", {
-                                id: "settings-inference-default-model",
-                                type: "text",
-                                className: "playground-settings-input",
-                                value: settingsInferenceSettings.defaultModel,
-                                onChange: (event) => setSettingsInferenceSettings((current) => ({
-                                  ...current,
-                                  defaultModel: event.target.value,
-                                })),
-                                placeholder: "claude-sonnet-compatible",
-                              })
-                            ),
-                            React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
-                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-base-url" }, "Endpoint URL"),
-                              React.createElement("input", {
-                                id: "settings-inference-base-url",
-                                type: "url",
-                                className: "playground-settings-input",
-                                value: settingsInferenceSettings.baseUrl,
-                                onChange: (event) => setSettingsInferenceSettings((current) => ({
-                                  ...current,
-                                  baseUrl: event.target.value,
-                                })),
-                                placeholder: "https://models.example.com/v1",
-                              })
-                            ),
-                            React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
-                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-api-key" }, "API Key"),
-                              React.createElement("input", {
-                                id: "settings-inference-api-key",
-                                type: "password",
-                                className: "playground-settings-input",
-                                value: settingsInferenceApiKeyInput,
-                                onChange: (event) => {
-                                  setSettingsInferenceApiKeyInput(event.target.value);
-                                  setSettingsClearInferenceApiKey(false);
-                                },
-                                placeholder: settingsInferenceSettings.apiKeyConfigured && !settingsClearInferenceApiKey
-                                  ? "Saved API key is configured"
-                                  : "sk-...",
-                              }),
-                              settingsInferenceSettings.apiKeyConfigured && !settingsClearInferenceApiKey
-                                ? React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-settings-app-secondary-button",
-                                    style: { alignSelf: "flex-start", minHeight: "34px" },
-                                    onClick: () => {
-                                      setSettingsClearInferenceApiKey(true);
-                                      setSettingsInferenceApiKeyInput("");
-                                    },
-                                  }, "Remove Saved Key")
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
-                              React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-model-list-input" }, "Models"),
-                              React.createElement("div", { className: "playground-settings-card-copy" },
-                                "Add one or more model ids for this workspace. You can paste multiple names separated by commas or new lines."
-                              ),
-                              React.createElement("div", { className: "playground-settings-model-entry-row" },
-                                React.createElement("input", {
-                                  id: "settings-inference-model-list-input",
-                                  type: "text",
-                                  className: "playground-settings-input",
-                                  value: settingsInferenceModelInput,
-                                  onChange: (event) => setSettingsInferenceModelInput(event.target.value),
-                                  onKeyDown: (event) => {
-                                    if (event.key === "Enter" || event.key === ",") {
-                                      event.preventDefault();
-                                      handleSettingsInferenceAddModels(settingsInferenceModelInput);
-                                    }
-                                  },
-                                  placeholder: "gpt-5.4-mini, gpt-4.1-mini",
-                                }),
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-settings-app-secondary-button",
-                                  onClick: () => {
-                                    handleSettingsInferenceAddModels(settingsInferenceModelInput);
-                                  },
-                                }, "Add Model")
-                              ),
-                              settingsInferenceSettings.availableModels.length > 0
-                                ? React.createElement("div", { className: "playground-tasks-skills-list" },
-                                    settingsInferenceSettings.availableModels.map((modelId) =>
-                                      React.createElement("div", {
-                                        key: modelId,
-                                        className: "playground-tasks-skill-pill",
-                                        title: modelId,
-                                      },
-                                        React.createElement("span", { className: "playground-tasks-skill-pill-label" }, modelId),
-                                        React.createElement("button", {
-                                          type: "button",
-                                          className: "playground-tasks-skill-pill-remove",
-                                          onClick: (event) => {
-                                            event.stopPropagation();
-                                            handleSettingsInferenceRemoveModel(modelId);
-                                          },
-                                          "aria-label": "Remove " + modelId,
-                                          title: "Remove " + modelId,
-                                        }, React.createElement(X, { width: 12, height: 12, strokeWidth: 1.9 }))
-                                      )
-                                    )
-                                  )
-                                : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No models added yet.")
+                            }, selectedTopUpPackage.description)
+                          ),
+                          React.createElement("button", {
+                              type: "button",
+                              onClick: () => {
+                                setSettingsTopUpModalOpen(false);
+                                void handleSettingsBuyTopUp(selectedTopUpPackage.id);
+                              },
+                              disabled: settingsTopUpActionId === selectedTopUpPackage.id,
+                              className: "playground-settings-plan-card-cta-button is-light",
+                              style: {
+                                minWidth: "152px",
+                                justifyContent: "center",
+                              },
+                            },
+                              settingsTopUpActionId === selectedTopUpPackage.id
+                                ? React.createElement("span", null, "Loading...")
+                                : "Buy Compute Tokens"
                             )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-settings-actions" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-settings-app-secondary-button",
-                            onClick: () => {
-                              void handleSettingsInferenceConnectionTest();
-                            },
-                            disabled: settingsPlatformConfigTesting,
-                          }, settingsPlatformConfigTesting ? "Testing..." : "Test Connection"),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-settings-app-primary-button",
-                            onClick: () => {
-                              void handleSettingsInferenceSave();
-                            },
-                            disabled: settingsPlatformConfigSaving,
-                          }, settingsPlatformConfigSaving ? "Saving..." : "Save Inference")
-                        )
-                      ),
-                      renderSettingsNote(
-                        "Health & Routing",
-                        React.createElement("div", {
-                          style: {
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "10px",
-                            color: "rgba(255,255,255,0.68)",
-                          },
-                        },
-                          React.createElement("div", null,
-                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "Status: "),
-                            settingsInferenceSettings.healthStatus === "healthy"
-                              ? "Healthy"
-                              : settingsInferenceSettings.healthStatus === "error"
-                                ? "Needs attention"
-                                : "Not tested"
-                          ),
-                          renderSettingsInlineStatus(
-                            settingsInferenceSettings.healthStatus === "error" ? "error" : "success",
-                            settingsInferenceSettings.healthStatus === "healthy"
-                              ? (settingsInferenceSettings.lastValidatedAt
-                                  ? "Last checked " + new Date(settingsInferenceSettings.lastValidatedAt).toLocaleString()
-                                  : "Ready to route model traffic.")
-                              : settingsInferenceSettings.healthStatus === "error"
-                                ? (settingsInferenceSettings.lastError || "Connection test failed.")
-                                : "Point this at an OpenAI-compatible HTTPS endpoint such as vLLM, TGI, or a secured Ollama proxy."
-                          ),
-                          React.createElement("div", null,
-                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "Provider: "),
-                            (SETTINGS_INFERENCE_PROVIDER_OPTIONS.find((option) => option.value === settingsInferenceSettings.providerType)?.label
-                              || settingsInferenceSettings.providerType)
-                          ),
-                          React.createElement("div", null,
-                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "Default model: "),
-                            settingsInferenceSettings.defaultModel || "Not set"
-                          ),
-                          React.createElement("div", null,
-                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "Configured models: "),
-                            settingsInferenceSettings.availableModels.length > 0
-                              ? String(settingsInferenceSettings.availableModels.length)
-                              : "None"
-                          ),
-                          React.createElement("div", null,
-                            React.createElement("strong", { style: { color: "rgba(255,255,255,0.94)" } }, "API key: "),
-                            settingsClearInferenceApiKey
-                              ? "Will be removed on save"
-                              : settingsInferenceSettings.apiKeyConfigured || Boolean(settingsInferenceApiKeyInput.trim())
-                                ? "Configured"
-                                : "Not configured"
-                          )
                         )
                       )
                     )
-              );
-              break;
-            case "costs-records":
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll is-plans" },
-                (() => {
-                  const activeSubscription = settingsPrimarySubscription;
-                  const canCancel = Boolean(
-                    activeSubscription
-                    && ["active", "on_trial", "past_due"].includes(String(activeSubscription.status || "").toLowerCase())
-                    && !activeSubscription.cancelled
-                  );
-                  const activeSubscriptionStatusClass = !activeSubscription
-                    ? ""
-                    : activeSubscription.status === "active" || activeSubscription.status === "on_trial"
-                      ? " is-success"
-                      : activeSubscription.status === "cancelled" || activeSubscription.cancelled
-                        ? " is-danger"
-                        : " is-warning";
+                  : null;
 
-                  return React.createElement("div", { className: "playground-settings-records-shell" },
-                    React.createElement("h3", { className: "playground-settings-records-title" }, "Billing Records"),
-                    React.createElement("p", { className: "playground-settings-records-subtitle" }, "Your subscription invoices"),
-                    renderSettingsBanner("error", settingsBillingError),
-                    renderSettingsBanner("success", settingsBillingSuccess),
-                    activeSubscription
-                      ? React.createElement("div", { className: "playground-settings-records-current" },
-                          React.createElement("div", { className: "playground-settings-records-current-box" },
-                            React.createElement("div", { className: "playground-settings-records-current-row" },
-                              React.createElement("div", { className: "playground-settings-records-current-plan" },
-                                React.createElement("img", {
-                                  className: "playground-settings-records-current-logo",
-                                  src: getSettingsTierLogoUrl(activeSubscription.tier),
-                                  alt: activeSubscription.variantName || activeSubscription.productName || "Subscription",
-                                }),
-                                React.createElement("div", null,
-                                  React.createElement("div", { className: "playground-settings-records-current-name" }, activeSubscription.variantName || activeSubscription.productName || formatSubscriptionTier(activeSubscription.tier)),
-                                  activeSubscription.renewsAt && !activeSubscription.cancelled
-                                    ? React.createElement("div", { className: "playground-settings-records-current-date" }, "Renews " + new Date(activeSubscription.renewsAt).toLocaleDateString())
-                                    : null,
-                                  activeSubscription.endsAt && activeSubscription.cancelled
-                                    ? React.createElement("div", { className: "playground-settings-records-current-date" }, "Ends " + new Date(activeSubscription.endsAt).toLocaleDateString())
-                                    : null
+                const renderSettingsModalPortal = (content) => {
+                  if (!content) {
+                    return null;
+                  }
+                  if (typeof document === "undefined" || !document.body) {
+                    return content;
+                  }
+                  return createPortal(content, document.body);
+                };
+
+                const settingsQuickActionCards = [
+                  {
+                    id: "change-plan",
+                    title: "Change Plan",
+                    copy: "Compare the available subscription tiers and update your plan.",
+                    actionLabel: "Open",
+                    Icon: DollarSign,
+                    onClick: () => setSettingsChangePlanModalOpen(true),
+                  },
+                  {
+                    id: "configure-inference",
+                    title: "Configure Inference",
+                    copy: "Connect your own inference endpoint and route compatible runs there.",
+                    actionLabel: "Open",
+                    Icon: HardDrive,
+                    onClick: () => setSettingsSection("inference"),
+                  },
+                  {
+                    id: "view-usage",
+                    title: "View Usage",
+                    copy: "Inspect current compute consumption, projects, and active workloads.",
+                    actionLabel: "Open",
+                    Icon: LayoutGrid,
+                    onClick: () => setSettingsSection("costs-overview"),
+                  },
+                ];
+
+                return React.createElement(React.Fragment, null,
+                  React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
+                    React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                      React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                        React.createElement("div", { className: "playground-settings-plans-title" }, tierInfo.name + " Plan")
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-content-nav-center" }),
+                    React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" }, plansMenu)
+                  ),
+                  React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+                    settingsBudgetLoading
+                      ? React.createElement("div", { className: "playground-settings-loading-state" },
+                          React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 }),
+                          React.createElement("span", { className: "playground-settings-muted-copy" }, "Loading")
+                        )
+                      : React.createElement("div", { className: "playground-settings-plan-app-shell" },
+                          renderSettingsBanner("error", settingsBillingError),
+                          renderSettingsBanner("success", settingsBillingSuccess),
+                          React.createElement("section", { className: "playground-settings-plans-budget-card playground-computer-details-card" },
+                            React.createElement("div", { className: "playground-settings-plans-budget-card-top" },
+                              React.createElement("div", { className: "playground-settings-plans-budget-copy" },
+                                React.createElement("div", { className: "playground-settings-plans-budget-period" }, budgetPeriodLabel),
+                                React.createElement("div", { className: "playground-settings-plans-budget-value" },
+                                  React.createElement("span", null, formatSettingsComputeTokens(totalRemainingCT)),
+                                  React.createElement("span", { className: "playground-settings-plans-budget-value-separator" }, "/"),
+                                  React.createElement("span", { className: "playground-settings-plans-budget-value-total" }, formatSettingsComputeTokens(totalBudgetCT))
                                 )
                               ),
-                              React.createElement("div", { className: "playground-settings-records-current-actions" },
-                                React.createElement("div", { className: "playground-settings-records-current-status-wrap" },
-                                  React.createElement("span", {
-                                    className: "playground-settings-records-status-badge" + activeSubscriptionStatusClass,
-                                  }, activeSubscription.cancelled ? "Cancelled" : (activeSubscription.statusFormatted || activeSubscription.status || "Unknown"))
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-environments-action-button playground-settings-plans-add-more-button",
+                                onClick: () => setSettingsTopUpModalOpen(true),
+                              }, "Add more")
+                            ),
+                            React.createElement("div", { className: "playground-settings-usage-balance-track" },
+                              React.createElement("span", {
+                                className: "playground-settings-usage-balance-fill is-neutral",
+                                style: { width: String(remainingPercent) + "%" },
+                              })
+                            ),
+                            React.createElement("div", { className: "playground-settings-plans-budget-reset" }, resetCopy),
+                            React.createElement("div", { className: "playground-settings-plans-budget-breakdown" },
+                              React.createElement("div", { className: "playground-settings-plans-budget-breakdown-row" },
+                                React.createElement("div", { className: "playground-settings-plans-budget-breakdown-main" },
+                                  React.createElement("div", { className: "playground-settings-plans-budget-breakdown-icon" },
+                                    React.createElement(Coins, { width: 14, height: 14, strokeWidth: 1.8 })
+                                  ),
+                                  React.createElement("div", null,
+                                    React.createElement("div", { className: "playground-settings-plans-budget-breakdown-title" }, "Remaining from Plan"),
+                                    React.createElement("div", { className: "playground-settings-plans-budget-breakdown-copy" }, "Included monthly credits from your " + tierInfo.name + " subscription.")
+                                  )
                                 ),
-                                canCancel
-                                  ? React.createElement("button", {
-                                      type: "button",
-                                      onClick: () => {
-                                        void handleSettingsCancelSubscription(activeSubscription.id);
-                                      },
-                                      disabled: settingsSubscriptionActionId === activeSubscription.id,
-                                      className: "playground-settings-records-cancel-button",
-                                    },
-                                      settingsSubscriptionActionId === activeSubscription.id
-                                        ? React.createElement(Loader2, { className: "playground-settings-records-spinner", strokeWidth: 1.8 })
-                                        : "Cancel"
-                                    )
-                                  : null
+                                React.createElement("div", { className: "playground-settings-plans-budget-breakdown-value" }, formatSettingsComputeTokens(remainingPlanCT))
+                              ),
+                              React.createElement("div", { className: "playground-settings-plans-budget-breakdown-row" },
+                                React.createElement("div", { className: "playground-settings-plans-budget-breakdown-main" },
+                                  React.createElement("div", { className: "playground-settings-plans-budget-breakdown-icon" },
+                                    React.createElement(Coins, { width: 14, height: 14, strokeWidth: 1.8 })
+                                  ),
+                                  React.createElement("div", null,
+                                    React.createElement("div", { className: "playground-settings-plans-budget-breakdown-title" }, "Remaining from fixed budget"),
+                                    React.createElement("div", { className: "playground-settings-plans-budget-breakdown-copy" }, hasTopUpBalance ? "Purchased one-time add-ons available on this account." : "No purchased add-on balance on this account yet.")
+                                  )
+                                ),
+                                React.createElement("div", { className: "playground-settings-plans-budget-breakdown-value" }, formatSettingsComputeTokens(topUpBalanceCT))
                               )
+                            )
+                          ),
+                          React.createElement("div", {
+                            className: "playground-settings-detail-stack",
+                            style: { marginTop: "4px" },
+                          },
+                            renderSettingsBanner("error", settingsPlatformConfigError),
+                            React.createElement("section", { className: "playground-settings-plans-resource-cap-section" },
+                              React.createElement("div", { className: "playground-settings-plans-resource-cap-heading" }, "Configure Usage Limits"),
+                              React.createElement("div", { className: "playground-tasks-detail-facts playground-settings-plans-resource-cap-facts" },
+                                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" },
+                                      React.createElement("div", { className: "playground-settings-plans-resource-cap-label", ref: settingsResourceCapInfoRef },
+                                        React.createElement("span", null, "Resource Usage Limit"),
+                                        React.createElement("button", {
+                                          type: "button",
+                                          className: "playground-settings-plans-resource-cap-info-trigger",
+                                          onClick: () => setSettingsResourceCapInfoOpen((current) => !current),
+                                          "aria-label": "What does Resource Usage Limit mean?",
+                                          "aria-expanded": settingsResourceCapInfoOpen ? "true" : "false",
+                                        }, React.createElement(CircleHelp, { width: 14, height: 14, strokeWidth: 1.9 })),
+                                        settingsResourceCapInfoOpen
+                                          ? React.createElement("div", { className: "playground-settings-plans-resource-cap-info-popover" },
+                                              "Limits how many Compute Tokens persistent resources like servers, functions, databases, and environments can consume each month, so more budget remains available for active agent threads."
+                                            )
+                                          : null
+                                      )
+                                    ),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                      React.createElement("div", { className: "playground-settings-plans-resource-cap-control" },
+                                        React.createElement("input", {
+                                          id: "settings-resource-spend-cap",
+                                          type: "number",
+                                          min: "0",
+                                          step: "1",
+                                          className: "playground-settings-input playground-settings-plans-resource-cap-input",
+                                          value: settingsBillingPreferences.monthlyResourceSpendLimit > 0 ? settingsBillingPreferences.monthlyResourceSpendLimit : "",
+                                          onChange: (event) => {
+                                            const nextPreferences = {
+                                              ...settingsBillingPreferences,
+                                              monthlyResourceSpendLimit: normalizeSettingsSpendLimit(event.target.value),
+                                            };
+                                            queueSettingsResourceCapAutosave(nextPreferences, false);
+                                          },
+                                          disabled: !settingsCanConfigureBusinessFeatures || settingsPlatformConfigSaving,
+                                          placeholder: "None",
+                                        }),
+                                        React.createElement("span", { className: "playground-settings-plans-resource-cap-suffix" }, "CT / month")
+                                      )
+                                    )
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Pause resources when the cap is reached"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "playground-environments-toggle" + (settingsBillingPreferences.pauseOnLimit ? " is-active" : ""),
+                                        onClick: () => {
+                                          if (!settingsCanConfigureBusinessFeatures || settingsPlatformConfigSaving) {
+                                            return;
+                                          }
+                                          const nextPreferences = {
+                                            ...settingsBillingPreferences,
+                                            pauseOnLimit: !settingsBillingPreferences.pauseOnLimit,
+                                          };
+                                          queueSettingsResourceCapAutosave(nextPreferences, true);
+                                        },
+                                        disabled: !settingsCanConfigureBusinessFeatures || settingsPlatformConfigSaving,
+                                        "aria-pressed": settingsBillingPreferences.pauseOnLimit,
+                                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                                    )
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Send email alerts before you hit the limit"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "playground-environments-toggle" + (settingsBillingPreferences.emailAlerts ? " is-active" : ""),
+                                        onClick: () => {
+                                          if (!settingsCanConfigureBusinessFeatures || settingsPlatformConfigSaving) {
+                                            return;
+                                          }
+                                          const nextPreferences = {
+                                            ...settingsBillingPreferences,
+                                            emailAlerts: !settingsBillingPreferences.emailAlerts,
+                                          };
+                                          queueSettingsResourceCapAutosave(nextPreferences, true);
+                                        },
+                                        disabled: !settingsCanConfigureBusinessFeatures || settingsPlatformConfigSaving,
+                                        "aria-pressed": settingsBillingPreferences.emailAlerts,
+                                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                                    )
+                                  )
+                                )
+                              )
+                            ),
+                            React.createElement("section", { className: "playground-settings-plans-quick-actions" },
+                              React.createElement("div", { className: "playground-settings-plans-quick-actions-heading" }, "Quick Actions"),
+                              React.createElement("div", {
+                                  className: "playground-environments-home-card-grid playground-settings-plans-quick-actions-grid",
+                                },
+                                settingsQuickActionCards.map((card) =>
+                                  React.createElement("button", {
+                                      key: card.id,
+                                      type: "button",
+                                      className: "playground-environments-home-card playground-settings-plans-quick-action-card",
+                                      onClick: card.onClick,
+                                    },
+                                    React.createElement("div", { className: "playground-environments-home-card-visual" },
+                                      React.createElement(card.Icon, { className: "playground-environments-home-card-icon", strokeWidth: 1.8 })
+                                    ),
+                                    React.createElement("div", { className: "playground-environments-home-card-title" }, card.title),
+                                    React.createElement("div", { className: "playground-environments-home-card-copy" }, card.copy),
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-environments-home-card-button",
+                                      onClick: (event) => {
+                                        event.stopPropagation();
+                                        card.onClick();
+                                      },
+                                    }, card.actionLabel)
+                                  )
+                                )
+                              )
+                            )
+                          ),
+                          usagePercent >= 100 && !hasTopUpBalance
+                            ? React.createElement("div", { className: "playground-settings-plan-action-warning" },
+                                React.createElement("strong", null, "Action Required:"),
+                                " You've used all your Compute Tokens. Upgrade your plan or buy a one-time add-on to continue using agents."
+                              )
+                            : null,
+                          settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "free"
+                            ? React.createElement("div", { className: "playground-settings-plan-system-note" },
+                                React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "IOS"),
+                                React.createElement("div", null,
+                                  React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription managed through iPhone or iPad"),
+                                  React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, "To change or cancel your plan, open Agentic Compute Platform on your iPhone or iPad.")
+                                )
+                              )
+                            : null,
+                        )
+                  ),
+                  renderSettingsModalPortal(changePlanModal),
+                  renderSettingsModalPortal(topUpModal)
+                );
+              })();
+              break;
+            case "inference":
+              detailContent = (() => {
+                const inferenceEndpointConfigured = Boolean(String(settingsInferenceSettings.baseUrl || "").trim());
+                const inferenceProviderLabel = SETTINGS_INFERENCE_PROVIDER_OPTIONS.find((option) => option.value === settingsInferenceSettings.providerType)?.label
+                  || settingsInferenceSettings.providerType;
+                const inferenceStatusLabel = settingsInferenceSettings.healthStatus === "healthy"
+                  ? "Healthy"
+                  : settingsInferenceSettings.healthStatus === "error"
+                    ? "Needs attention"
+                    : "Not tested";
+                const inferenceLastCheckedLabel = settingsInferenceSettings.lastValidatedAt
+                  ? new Date(settingsInferenceSettings.lastValidatedAt).toLocaleString()
+                  : "Never";
+                const inferenceRoutingLabel = inferenceEndpointConfigured ? "External endpoint configured" : "Not configured";
+                const inferenceApiKeyLabel = settingsInferenceSettings.apiKeyConfigured || Boolean(settingsInferenceApiKeyInput.trim())
+                  ? "Configured"
+                  : "Not configured";
+                const inferenceSavedApiKeyPreview = settingsClearInferenceApiKey ? "" : settingsInferenceSettings.apiKeyPreview;
+                const inferenceShowingSavedApiKeyPreview = !settingsInferenceApiKeyEditing
+                  && !settingsInferenceApiKeyInput
+                  && Boolean(inferenceSavedApiKeyPreview);
+                const inferenceApiKeyDisplayValue = inferenceShowingSavedApiKeyPreview
+                  ? inferenceSavedApiKeyPreview
+                  : settingsInferenceApiKeyInput;
+                const showRemoveInferenceButton = inferenceEndpointConfigured
+                  || settingsInferenceSettings.availableModels.length > 0
+                  || settingsInferenceSettings.apiKeyConfigured
+                  || Boolean(settingsInferenceApiKeyInput.trim());
+
+                return React.createElement(React.Fragment, null,
+                  React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
+                    React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                      React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                        React.createElement("div", { className: "playground-settings-plans-title" }, "Inference")
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-content-nav-center" }),
+                    React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
+                  ),
+                  React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+                    !settingsCanConfigureBusinessFeatures
+                      ? React.createElement("div", { className: "playground-settings-plan-app-shell" },
+                          renderSettingsBanner("error", settingsPlatformConfigError),
+                          renderSettingsBanner("success", settingsPlatformConfigSuccess),
+                          React.createElement("section", { className: "playground-settings-plans-budget-card playground-computer-details-card playground-settings-inference-endpoint-card" },
+                            React.createElement("div", { className: "playground-settings-inference-endpoint-copy" },
+                              React.createElement("div", { className: "playground-settings-card-title" }, "Inference Endpoint"),
+                              React.createElement("div", { className: "playground-settings-card-copy" }, "Connect your own OpenAI-compatible endpoint for self-hosted or customer-managed models.")
+                            ),
+                            React.createElement("div", {
+                              style: {
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px",
+                                color: "rgba(255,255,255,0.68)",
+                              },
+                            },
+                              React.createElement("div", null, "Inference endpoints are available on Team and Enterprise."),
+                              React.createElement("div", null, "Use them to route model traffic to your own OpenAI-compatible infrastructure instead of managed model billing.")
+                            ),
+                            React.createElement("div", { className: "playground-settings-actions" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-settings-app-primary-button",
+                                onClick: () => {
+                                  void handleSettingsSubscribe("team");
+                                },
+                                disabled: settingsCheckoutLoading,
+                              }, settingsCheckoutLoading ? "Loading..." : "Upgrade to Team")
                             )
                           )
                         )
-                      : null,
+                      : React.createElement("div", { className: "playground-settings-plan-app-shell" },
+                          renderSettingsBanner("error", settingsPlatformConfigError),
+                          renderSettingsBanner("success", settingsPlatformConfigSuccess),
+                          React.createElement("section", { className: "playground-settings-plans-budget-card playground-computer-details-card playground-settings-inference-endpoint-card" },
+                            React.createElement("div", { className: "playground-settings-inference-endpoint-copy" },
+                              React.createElement("div", { className: "playground-settings-card-title" }, "Inference Endpoint"),
+                              React.createElement("div", { className: "playground-settings-card-copy" }, "Store one shared endpoint for your workspace. Agents can route compatible workloads there once you connect it.")
+                            ),
+                            React.createElement("div", { className: "playground-settings-form-grid" },
+                              React.createElement("div", { className: "playground-settings-field" },
+                                React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-provider" }, "Provider"),
+                                React.createElement("select", {
+                                  id: "settings-inference-provider",
+                                  className: "playground-settings-select",
+                                  value: settingsInferenceSettings.providerType,
+                                  onChange: (event) => {
+                                    const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
+                                      ...settingsInferenceSettings,
+                                      providerType: event.target.value,
+                                      healthStatus: "idle",
+                                      lastValidatedAt: "",
+                                      lastError: "",
+                                    });
+                                    setSettingsInferenceSettings(nextInferenceSettings);
+                                    queueSettingsInferenceAutosave(nextInferenceSettings);
+                                  },
+                                },
+                                  SETTINGS_INFERENCE_PROVIDER_OPTIONS.map((option) =>
+                                    React.createElement("option", { key: option.value, value: option.value }, option.label)
+                                  )
+                                )
+                              ),
+                              React.createElement("div", { className: "playground-settings-field" },
+                                React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-base-url" }, "Endpoint URL"),
+                                React.createElement("input", {
+                                  id: "settings-inference-base-url",
+                                  type: "url",
+                                  className: "playground-settings-input",
+                                  value: settingsInferenceSettings.baseUrl,
+                                  onChange: (event) => {
+                                    const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
+                                      ...settingsInferenceSettings,
+                                      baseUrl: event.target.value,
+                                      healthStatus: "idle",
+                                      lastValidatedAt: "",
+                                      lastError: "",
+                                    });
+                                    setSettingsInferenceSettings(nextInferenceSettings);
+                                    queueSettingsInferenceAutosave(nextInferenceSettings);
+                                  },
+                                  placeholder: "https://models.example.com/v1",
+                                })
+                              ),
+                              React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
+                                React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-api-key" }, "API Key"),
+                                React.createElement("div", {
+                                  className: "playground-settings-model-entry-row",
+                                  style: { alignItems: "stretch" },
+                                },
+                                  React.createElement("input", {
+                                    id: "settings-inference-api-key",
+                                    type: "text",
+                                    className: "playground-settings-input",
+                                    value: inferenceApiKeyDisplayValue,
+                                    onFocus: () => {
+                                      if (inferenceShowingSavedApiKeyPreview) {
+                                        setSettingsInferenceApiKeyEditing(true);
+                                        setSettingsInferenceApiKeyInput("");
+                                      }
+                                    },
+                                    onBlur: () => {
+                                      if (!settingsInferenceApiKeyInput.trim()) {
+                                        setSettingsInferenceApiKeyEditing(false);
+                                      } else {
+                                        queueSettingsInferenceAutosave(settingsInferenceSettings, {
+                                          immediate: true,
+                                          apiKeyInputOverride: settingsInferenceApiKeyInput,
+                                          clearApiKeyOverride: false,
+                                        });
+                                      }
+                                    },
+                                    onChange: (event) => {
+                                      const nextValue = event.target.value;
+                                      setSettingsInferenceApiKeyEditing(true);
+                                      setSettingsInferenceApiKeyInput(nextValue);
+                                      setSettingsClearInferenceApiKey(false);
+                                      queueSettingsInferenceAutosave(settingsInferenceSettings, {
+                                        apiKeyInputOverride: nextValue,
+                                        clearApiKeyOverride: false,
+                                      });
+                                    },
+                                    placeholder: "sk-...",
+                                  }),
+                                  settingsInferenceSettings.apiKeyConfigured && !settingsClearInferenceApiKey
+                                    ? React.createElement("button", {
+                                        type: "button",
+                                        className: "playground-settings-app-secondary-button",
+                                        onClick: () => {
+                                          setSettingsInferenceApiKeyEditing(false);
+                                          setSettingsInferenceApiKeyInput("");
+                                          setSettingsClearInferenceApiKey(true);
+                                          queueSettingsInferenceAutosave(settingsInferenceSettings, {
+                                            immediate: true,
+                                            apiKeyInputOverride: "",
+                                            clearApiKeyOverride: true,
+                                          });
+                                        },
+                                      }, "Remove Saved Key")
+                                    : null
+                                )
+                              ),
+                              React.createElement("div", { className: "playground-settings-field playground-settings-field-span-2" },
+                                React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-inference-model-list-input" }, "Models"),
+                                React.createElement("div", { className: "playground-settings-card-copy" },
+                                  "Add one or more model ids for this workspace. You can paste multiple names separated by commas or new lines."
+                                ),
+                                React.createElement("div", { className: "playground-settings-model-entry-row" },
+                                  React.createElement("input", {
+                                    id: "settings-inference-model-list-input",
+                                    type: "text",
+                                    className: "playground-settings-input",
+                                    value: settingsInferenceModelInput,
+                                    onChange: (event) => setSettingsInferenceModelInput(event.target.value),
+                                    onKeyDown: (event) => {
+                                      if (event.key === "Enter" || event.key === ",") {
+                                        event.preventDefault();
+                                        handleSettingsInferenceAddModels(settingsInferenceModelInput);
+                                      }
+                                    },
+                                    placeholder: "gpt-5.4-mini, gpt-4.1-mini",
+                                  }),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-settings-app-secondary-button",
+                                    onClick: () => {
+                                      handleSettingsInferenceAddModels(settingsInferenceModelInput);
+                                    },
+                                  }, "Add Model")
+                                ),
+                                settingsInferenceSettings.availableModels.length > 0
+                                  ? React.createElement("div", { className: "playground-tasks-skills-list" },
+                                      settingsInferenceSettings.availableModels.map((modelId) =>
+                                        React.createElement("div", {
+                                          key: modelId,
+                                          className: "playground-tasks-skill-pill",
+                                          title: modelId,
+                                        },
+                                          React.createElement("span", { className: "playground-tasks-skill-pill-label" }, modelId),
+                                          React.createElement("button", {
+                                            type: "button",
+                                            className: "playground-tasks-skill-pill-remove",
+                                            onClick: (event) => {
+                                              event.stopPropagation();
+                                              handleSettingsInferenceRemoveModel(modelId);
+                                            },
+                                            "aria-label": "Remove " + modelId,
+                                            title: "Remove " + modelId,
+                                          }, React.createElement(X, { width: 12, height: 12, strokeWidth: 1.9 }))
+                                        )
+                                      )
+                                    )
+                                  : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No models added yet.")
+                              )
+                            ),
+                            showRemoveInferenceButton
+                              ? React.createElement("div", { className: "playground-settings-actions", style: { justifyContent: "flex-end" } },
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-settings-app-secondary-button",
+                                    onClick: () => {
+                                      const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
+                                        ...SETTINGS_DEFAULT_INFERENCE_SETTINGS,
+                                        providerType: settingsInferenceSettings.providerType,
+                                      });
+                                      setSettingsInferenceSettings(nextInferenceSettings);
+                                      setSettingsInferenceApiKeyInput("");
+                                      setSettingsInferenceApiKeyEditing(false);
+                                      setSettingsClearInferenceApiKey(true);
+                                      setSettingsInferenceModelInput("");
+                                      queueSettingsInferenceAutosave(nextInferenceSettings, {
+                                        immediate: true,
+                                        apiKeyInputOverride: "",
+                                        clearApiKeyOverride: true,
+                                      });
+                                    },
+                                    disabled: settingsPlatformConfigSaving,
+                                  }, settingsPlatformConfigSaving ? "Removing..." : "Remove Inference")
+                                )
+                              : null
+                          ),
+                          React.createElement("div", {
+                            className: "playground-settings-detail-stack",
+                            style: { marginTop: "4px" },
+                          },
+                            React.createElement("section", { className: "playground-settings-plans-resource-cap-section" },
+                              React.createElement("div", { className: "playground-settings-plans-resource-cap-heading" }, "Health & Routing"),
+                              React.createElement("div", { className: "playground-tasks-detail-facts playground-settings-plans-resource-cap-facts" },
+                                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Connection Status"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control playground-settings-inference-status-value" }, inferenceStatusLabel)
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Last Checked"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control playground-settings-inference-status-value" }, inferenceLastCheckedLabel)
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Routing"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control playground-settings-inference-status-value" }, inferenceRoutingLabel)
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Provider"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control playground-settings-inference-status-value" }, inferenceProviderLabel)
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Configured Models"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control playground-settings-inference-status-value" }, settingsInferenceSettings.availableModels.length > 0 ? String(settingsInferenceSettings.availableModels.length) : "None")
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "API Key"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control playground-settings-inference-status-value" }, inferenceApiKeyLabel)
+                                  )
+                                )
+                              ),
+                              settingsInferenceSettings.healthStatus === "error" && settingsInferenceSettings.lastError
+                                ? React.createElement("div", { className: "playground-settings-muted-copy" }, settingsInferenceSettings.lastError)
+                                : null
+                            )
+                          )
+                        )
+                  )
+                );
+              })();
+              break;
+            case "costs-records":
+              detailContent = React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
+                  React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                    React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                      React.createElement("div", { className: "playground-settings-plans-title" }, "Billing Records")
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-content-nav-center" }),
+                  React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
+                ),
+                React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll is-plans" },
+                  React.createElement("div", { className: "playground-settings-records-shell" },
                     settingsInvoicesLoading
                       ? React.createElement("div", { className: "playground-settings-records-loading" },
                           renderSettingsDotLoader(9),
@@ -78757,8 +80133,8 @@ const html = `<!doctype html>
                             )
                           )
                         )
-                  );
-                })()
+                  )
+                )
               );
               break;
             case "costs-overview": {
@@ -80594,6 +81970,82 @@ const html = `<!doctype html>
             window.removeEventListener("scroll", handleViewportChange, true);
           };
         }, [activePage, baseThreadItems, currentThreadId, hasRealAccess, threadNavMenuOpen, threadSubagentDetailOpen, threadTaskOpenRequest]);
+
+        useEffect(() => {
+          if (!settingsPlansMenuOpen) {
+            return undefined;
+          }
+
+          function handleSettingsPlansMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !settingsPlansMenuRef.current || settingsPlansMenuRef.current.contains(target)) {
+              return;
+            }
+            setSettingsPlansMenuOpen(false);
+          }
+
+          function handleSettingsPlansMenuEscape(event) {
+            if (event.key === "Escape") {
+              setSettingsPlansMenuOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleSettingsPlansMenuPointerDown);
+          window.addEventListener("keydown", handleSettingsPlansMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleSettingsPlansMenuPointerDown);
+            window.removeEventListener("keydown", handleSettingsPlansMenuEscape);
+          };
+        }, [settingsPlansMenuOpen]);
+
+        useEffect(() => {
+          if (!settingsResourceCapInfoOpen) {
+            return undefined;
+          }
+
+          function handleSettingsResourceCapInfoPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !settingsResourceCapInfoRef.current || settingsResourceCapInfoRef.current.contains(target)) {
+              return;
+            }
+            setSettingsResourceCapInfoOpen(false);
+          }
+
+          function handleSettingsResourceCapInfoEscape(event) {
+            if (event.key === "Escape") {
+              setSettingsResourceCapInfoOpen(false);
+            }
+          }
+
+          document.addEventListener("mousedown", handleSettingsResourceCapInfoPointerDown);
+          window.addEventListener("keydown", handleSettingsResourceCapInfoEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleSettingsResourceCapInfoPointerDown);
+            window.removeEventListener("keydown", handleSettingsResourceCapInfoEscape);
+          };
+        }, [settingsResourceCapInfoOpen]);
+
+        useEffect(() => {
+          if (activePage !== "settings" || settingsSection !== "costs-plans") {
+            setSettingsPlansMenuOpen(false);
+            setSettingsChangePlanModalOpen(false);
+            setSettingsTopUpModalOpen(false);
+            setSettingsResourceCapInfoOpen(false);
+          }
+        }, [activePage, settingsSection]);
+
+        useEffect(() => {
+          return () => {
+            if (settingsResourceCapAutosaveTimerRef.current) {
+              window.clearTimeout(settingsResourceCapAutosaveTimerRef.current);
+              settingsResourceCapAutosaveTimerRef.current = null;
+            }
+            if (settingsInferenceAutosaveTimerRef.current) {
+              window.clearTimeout(settingsInferenceAutosaveTimerRef.current);
+              settingsInferenceAutosaveTimerRef.current = null;
+            }
+          };
+        }, []);
 
         useEffect(() => {
           if (!threadRenameState || !threadRenameInputRef.current) {
@@ -82734,6 +84186,34 @@ const html = `<!doctype html>
                                 setRunnerRenderKey((current) => current + 1);
                                 void refreshThreads();
                               },
+                              onThreadStarted: (threadId, options = {}) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                setThreadAgentSelectionOverride(null);
+                                if (options?.taskRunRequest?.prompt) {
+                                  setPendingThreadRunRequest({
+                                    token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                                    threadId: normalizedThreadId,
+                                    prompt: options.taskRunRequest.prompt,
+                                    attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                                    githubRepo: options.taskRunRequest.githubRepo || null,
+                                    enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                    environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                    quotedSelection: options.taskRunRequest.quotedSelection || null,
+                                  });
+                                } else {
+                                  setPendingThreadRunRequest(null);
+                                }
+                                setActivePage("thread");
+                                setCurrentThreadId(normalizedThreadId);
+                                setContentMode("chat");
+                                setThreadListMode("threads");
+                                setChangesNavigationTarget(null);
+                                setRunnerRenderKey((current) => current + 1);
+                                void refreshThreads();
+                              },
                               onEnvironmentMutated: async () => {
                                 await refreshEnvironments();
                               },
@@ -82749,10 +84229,74 @@ const html = `<!doctype html>
                           ? React.createElement(PlaygroundAgentsPage, {
                               backendUrl: proxyBackendBase,
                               requestHeaders,
+                              apiKey: effectiveApiKey,
+                              fetchCustomSkills: handleFetchCustomSkills,
+                              speechToTextUrl: speechToTextUrl || "",
+                              computerAgents: demoComputerAgents,
                               agents: realAgents,
+                              environments: runtimeEnvironments,
+                              skills: demoSkills,
                               initialAgentId: resolvedPreferredAgentId || "",
+                              preferredEnvironmentId: resolvedEnvironmentId || "",
+                              preferredAgentId: resolvedPreferredAgentId || "",
                               focusedAgentId: agentPageSelectionRequest?.agentId || "",
                               focusedAgentSelectionToken: agentPageSelectionRequest?.token || "",
+                              onPreferredAgentChange: (nextAgentId) => {
+                                setPreferredAgentId(String(nextAgentId || "").trim());
+                              },
+                              onPreferredEnvironmentChange: (nextEnvironmentId) => {
+                                setEnvironmentId(String(nextEnvironmentId || "").trim());
+                              },
+                              onThreadRegistered: (threadId) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                setCurrentThreadId(normalizedThreadId);
+                                void refreshThreads();
+                              },
+                              onThreadOpen: (threadId) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                setThreadAgentSelectionOverride(null);
+                                setPendingThreadRunRequest(null);
+                                setActivePage("thread");
+                                setCurrentThreadId(normalizedThreadId);
+                                setContentMode("chat");
+                                setThreadListMode("threads");
+                                setChangesNavigationTarget(null);
+                                setRunnerRenderKey((current) => current + 1);
+                              },
+                              onThreadStarted: (threadId, options = {}) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                setThreadAgentSelectionOverride(null);
+                                if (options?.taskRunRequest?.prompt) {
+                                  setPendingThreadRunRequest({
+                                    token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                                    threadId: normalizedThreadId,
+                                    prompt: options.taskRunRequest.prompt,
+                                    attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                                    githubRepo: options.taskRunRequest.githubRepo || null,
+                                    enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                    environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                    quotedSelection: options.taskRunRequest.quotedSelection || null,
+                                  });
+                                } else {
+                                  setPendingThreadRunRequest(null);
+                                }
+                                setActivePage("thread");
+                                setCurrentThreadId(normalizedThreadId);
+                                setContentMode("chat");
+                                setThreadListMode("threads");
+                                setChangesNavigationTarget(null);
+                                setRunnerRenderKey((current) => current + 1);
+                                void refreshThreads();
+                              },
                               onAgentMutated: async () => {
                                 await refreshAgents();
                               },
@@ -82880,6 +84424,12 @@ const html = `<!doctype html>
                                     keepFocusOnSubmit: true,
                                     showUsageInStatus: false,
                                     placeholder: "What would you like me to do?",
+                                    enableResourceCreationCommand: true,
+                                    resourceCreationCommandHiddenPrompt: buildThreadRunnerResourceHiddenPrompt,
+                                    enableAgentCreationCommand: true,
+                                    agentCreationCommandHiddenPrompt: buildThreadRunnerAgentHiddenPrompt,
+                                    enableSkillCreationCommand: true,
+                                    skillCreationCommandHiddenPrompt: buildThreadRunnerSkillHiddenPrompt,
                                     emptyState: showInitialThreadWelcome ? renderInitialThreadWelcome() : undefined,
                                     threadTaskPreview: selectedThreadTaskPreview || undefined,
                                     threadMissionControlPreview: selectedThreadMissionControlPreview || undefined,

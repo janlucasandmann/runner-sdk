@@ -5959,6 +5959,15 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   width: 240px;
 }
 
+.tb-runner-chat .tb-popup-menu-slash {
+  width: 260px;
+  left: 0;
+}
+
+.tb-runner-chat .tb-popup-menu-slash-empty {
+  padding: 14px 16px;
+}
+
 .tb-runner-chat .tb-popup-menu-side {
   bottom: calc(100% + 8px);
   left: 248px;

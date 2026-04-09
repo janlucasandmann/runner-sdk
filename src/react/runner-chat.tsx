@@ -172,6 +172,8 @@ interface PendingRunnerMessage {
   quotedSelection?: RunnerQuotedSelection | null;
   backlogCommand?: StagedBacklogCommand | null;
   resourceCreationCommand?: StagedResourceCreationCommand | null;
+  agentCreationCommand?: StagedAgentCreationCommand | null;
+  skillCreationCommand?: StagedSkillCreationCommand | null;
 }
 
 interface BaseStagedBacklogCommand {
@@ -189,9 +191,19 @@ interface StagedBacklogMissionControlCommand extends BaseStagedBacklogCommand {
 
 type StagedBacklogCommand = StagedBacklogSubtaskCommand | StagedBacklogMissionControlCommand;
 type RunnerResourceCreationCommandType = "computer" | "app" | "function";
+type RunnerAgentCreationCommandType = "agent" | "team";
+type RunnerSkillCreationCommandType = "skill";
 
 interface StagedResourceCreationCommand extends BaseStagedBacklogCommand {
   action: RunnerResourceCreationCommandType;
+}
+
+interface StagedAgentCreationCommand extends BaseStagedBacklogCommand {
+  action: RunnerAgentCreationCommandType;
+}
+
+interface StagedSkillCreationCommand extends BaseStagedBacklogCommand {
+  action: RunnerSkillCreationCommandType;
 }
 
 interface RunnerTaskPreview {
@@ -606,6 +618,21 @@ export interface RunnerChatSkill {
   isCustom?: boolean;
 }
 
+export interface RunnerChatExternalRunRequest {
+  token: string | number;
+  threadId: string;
+  prompt: string;
+  attachments?: RunnerAttachment[] | null;
+  githubRepo?: {
+    repoFullName: string;
+    repoName: string;
+    branch: string;
+  } | null;
+  enabledSkills?: Record<string, unknown> | null;
+  environmentId?: string | null;
+  quotedSelection?: RunnerQuotedSelection | null;
+}
+
 export interface RunnerChatFileNode {
   id: string;
   name: string;
@@ -754,21 +781,9 @@ export interface RunnerChatProps {
   onResourcePreviewClick?: (resource: RunnerCreatedResourcePreview) => void;
   subagentDetailPortalTarget?: Element | null;
   disableSubagentDetailDrawer?: boolean;
-  externalRunRequest?: {
-    token: string | number;
-    threadId: string;
-    prompt: string;
-    attachments?: RunnerAttachment[] | null;
-    githubRepo?: {
-      repoFullName: string;
-      repoName: string;
-      branch: string;
-    } | null;
-    enabledSkills?: Record<string, unknown> | null;
-    environmentId?: string | null;
-    quotedSelection?: RunnerQuotedSelection | null;
-  } | null;
+  externalRunRequest?: RunnerChatExternalRunRequest | null;
   onExternalRunRequestHandled?: (token: string | number) => void;
+  onExternalRunRequestCreate?: (request: RunnerChatExternalRunRequest) => boolean | void;
   autoFocusComposer?: boolean;
   keepFocusOnSubmit?: boolean;
   enableBacklogSubtaskCommand?: boolean;
@@ -790,6 +805,22 @@ export interface RunnerChatProps {
   } | null;
   resourceCreationCommandHiddenPrompt?: (commandType: RunnerResourceCreationCommandType) => string;
   onResourceCreationCommandChange?: (commandType: RunnerResourceCreationCommandType | null) => void;
+  enableAgentCreationCommand?: boolean;
+  agentCreationCommand?: {
+    type: RunnerAgentCreationCommandType;
+    token: string | number;
+    label?: string;
+  } | null;
+  agentCreationCommandHiddenPrompt?: (commandType: RunnerAgentCreationCommandType) => string;
+  onAgentCreationCommandChange?: (commandType: RunnerAgentCreationCommandType | null) => void;
+  enableSkillCreationCommand?: boolean;
+  skillCreationCommand?: {
+    type: RunnerSkillCreationCommandType;
+    token: string | number;
+    label?: string;
+  } | null;
+  skillCreationCommandHiddenPrompt?: (commandType: RunnerSkillCreationCommandType) => string;
+  onSkillCreationCommandChange?: (commandType: RunnerSkillCreationCommandType | null) => void;
   onBacklogMissionControlSubmit?: (payload: {
     prompt: string;
     attachments: RunnerAttachment[];
@@ -1152,6 +1183,14 @@ function buildRunnerResourceCreationLabel(commandType: RunnerResourceCreationCom
   return `/${commandType}`;
 }
 
+function buildRunnerAgentCreationLabel(commandType: RunnerAgentCreationCommandType): string {
+  return `/${commandType}`;
+}
+
+function buildRunnerSkillCreationLabel(commandType: RunnerSkillCreationCommandType): string {
+  return `/${commandType}`;
+}
+
 function parseAutoStageBacklogSubtaskCommand(input: string): { ticketNumber: string; prompt: string } | null {
   const match = input.match(/^\/subtask\s+(\d{3})(?:\s+([\s\S]*))$/i);
   if (!match) {
@@ -1191,6 +1230,35 @@ function parseAutoStageResourceCreationCommand(input: string): { action: RunnerR
 
   return {
     action,
+    prompt: match[2] || "",
+  };
+}
+
+function parseAutoStageAgentCreationCommand(input: string): { action: RunnerAgentCreationCommandType; prompt: string } | null {
+  const match = input.match(/^\/(agent|team)(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return null;
+  }
+
+  const action = String(match[1] || "").trim().toLowerCase() as RunnerAgentCreationCommandType;
+  if (action !== "agent" && action !== "team") {
+    return null;
+  }
+
+  return {
+    action,
+    prompt: match[2] || "",
+  };
+}
+
+function parseAutoStageSkillCreationCommand(input: string): { action: RunnerSkillCreationCommandType; prompt: string } | null {
+  const match = input.match(/^\/(skill)(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    action: "skill",
     prompt: match[2] || "",
   };
 }
@@ -5122,6 +5190,7 @@ const LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 24;
 const REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS = 1500;
 const REATTACH_THREAD_RETRY_DELAY_MS = 3000;
 const REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT = 2;
+const REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT = 4;
 
 function isLogViewportPinnedToBottom(element: HTMLDivElement): boolean {
   return element.scrollHeight - element.scrollTop - element.clientHeight <= LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX;
@@ -5177,6 +5246,7 @@ export function RunnerChat({
   disableSubagentDetailDrawer = false,
   externalRunRequest = null,
   onExternalRunRequestHandled,
+  onExternalRunRequestCreate,
   autoFocusComposer = false,
   keepFocusOnSubmit = false,
   enableBacklogSubtaskCommand = false,
@@ -5187,6 +5257,14 @@ export function RunnerChat({
   resourceCreationCommand = null,
   resourceCreationCommandHiddenPrompt,
   onResourceCreationCommandChange,
+  enableAgentCreationCommand = false,
+  agentCreationCommand = null,
+  agentCreationCommandHiddenPrompt,
+  onAgentCreationCommandChange,
+  enableSkillCreationCommand = false,
+  skillCreationCommand = null,
+  skillCreationCommandHiddenPrompt,
+  onSkillCreationCommandChange,
   onBacklogMissionControlSubmit,
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
@@ -5322,6 +5400,8 @@ export function RunnerChat({
   const [recordingElapsedSeconds, setRecordingElapsedSeconds] = useState(0);
   const [stagedThreadContextCommand, setStagedThreadContextCommand] = useState<RunnerChatThreadContextAction | null>(null);
   const [stagedResourceCreationCommand, setStagedResourceCreationCommand] = useState<StagedResourceCreationCommand | null>(null);
+  const [stagedAgentCreationCommand, setStagedAgentCreationCommand] = useState<StagedAgentCreationCommand | null>(null);
+  const [stagedSkillCreationCommand, setStagedSkillCreationCommand] = useState<StagedSkillCreationCommand | null>(null);
   const [stagedBacklogSubtaskCommand, setStagedBacklogSubtaskCommand] = useState<StagedBacklogSubtaskCommand | null>(null);
   const [stagedBacklogMissionControlCommand, setStagedBacklogMissionControlCommand] = useState<StagedBacklogMissionControlCommand | null>(null);
   const [renderedMainPopup, setRenderedMainPopup] = useState<MainPopupRenderId | null>(null);
@@ -5370,6 +5450,8 @@ export function RunnerChat({
   const appliedBacklogSubtaskCommandTokenRef = useRef<string | number | null>(null);
   const appliedBacklogMissionControlCommandTokenRef = useRef<string | number | null>(null);
   const appliedResourceCreationCommandTokenRef = useRef<string | number | null>(null);
+  const appliedAgentCreationCommandTokenRef = useRef<string | number | null>(null);
+  const appliedSkillCreationCommandTokenRef = useRef<string | number | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
   const stopRequestedThreadIdRef = useRef<string | null>(null);
   const visibleTimelineItemCountsRef = useRef<Record<string, number>>({});
@@ -5436,10 +5518,17 @@ export function RunnerChat({
   const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
   const stagedThreadContextCommandLabel = stagedThreadContextCommand ? `/${stagedThreadContextCommand}` : "";
   const stagedResourceCreationCommandLabel = stagedResourceCreationCommand?.label || "";
+  const stagedAgentCreationCommandLabel = stagedAgentCreationCommand?.label || "";
+  const stagedSkillCreationCommandLabel = stagedSkillCreationCommand?.label || "";
   const stagedBacklogCommand = stagedBacklogMissionControlCommand || stagedBacklogSubtaskCommand;
-  const stagedComposerLabel = stagedBacklogCommand?.label || stagedResourceCreationCommandLabel || stagedThreadContextCommandLabel;
-  const stagedComposerToneValue = stagedBacklogCommand || stagedResourceCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
-  const stagedComposerOffsetValue = stagedBacklogCommand || stagedResourceCreationCommand
+  const stagedComposerLabel =
+    stagedBacklogCommand?.label
+    || stagedSkillCreationCommandLabel
+    || stagedAgentCreationCommandLabel
+    || stagedResourceCreationCommandLabel
+    || stagedThreadContextCommandLabel;
+  const stagedComposerToneValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
+  const stagedComposerOffsetValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand
     ? `${Math.max(
         16,
         Math.round(
@@ -5449,7 +5538,94 @@ export function RunnerChat({
         )
       )}px`
     : stagedThreadContextCommandOffset(stagedThreadContextCommand);
-  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedResourceCreationCommand || stagedBacklogCommand);
+  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedBacklogCommand);
+  const slashCommandInputState = useMemo(() => {
+    if (hasStagedComposerCommand || !input.startsWith("/")) {
+      return null;
+    }
+    const commandSource = input.slice(1);
+    const separatorIndex = commandSource.indexOf(" ");
+    const query = (separatorIndex === -1 ? commandSource : commandSource.slice(0, separatorIndex)).trim().toLowerCase();
+    const prompt = separatorIndex === -1 ? "" : commandSource.slice(separatorIndex + 1);
+    return {
+      query,
+      prompt,
+    };
+  }, [hasStagedComposerCommand, input]);
+  const availableSlashCommandItems = useMemo(() => {
+    const items: Array<{
+      id: string;
+      command: string;
+      description: string;
+      icon: ReactNode;
+      stage: () => void;
+    }> = [];
+    if (enableAgentCreationCommand) {
+      items.push({
+        id: "agent",
+        command: "/agent",
+        description: "Create agent",
+        icon: <LucideBot className="tb-popup-icon" strokeWidth={1.75} />,
+        stage: () => stageAgentCreationCommand("agent", slashCommandInputState?.prompt || ""),
+      });
+      items.push({
+        id: "team",
+        command: "/team",
+        description: "Create team",
+        icon: <LucideLayers className="tb-popup-icon" strokeWidth={1.75} />,
+        stage: () => stageAgentCreationCommand("team", slashCommandInputState?.prompt || ""),
+      });
+    }
+    if (enableResourceCreationCommand) {
+      items.push({
+        id: "computer",
+        command: "/computer",
+        description: "Create computer",
+        icon: <LucideCpu className="tb-popup-icon" strokeWidth={1.75} />,
+        stage: () => stageResourceCreationCommand("computer", slashCommandInputState?.prompt || ""),
+      });
+      items.push({
+        id: "app",
+        command: "/app",
+        description: "Create app",
+        icon: <LucideMonitor className="tb-popup-icon" strokeWidth={1.75} />,
+        stage: () => stageResourceCreationCommand("app", slashCommandInputState?.prompt || ""),
+      });
+      items.push({
+        id: "function",
+        command: "/function",
+        description: "Create function",
+        icon: <LucideCode className="tb-popup-icon" strokeWidth={1.75} />,
+        stage: () => stageResourceCreationCommand("function", slashCommandInputState?.prompt || ""),
+      });
+    }
+    if (enableSkillCreationCommand) {
+      items.push({
+        id: "skill",
+        command: "/skill",
+        description: "Create skill",
+        icon: <LucideWand2 className="tb-popup-icon" strokeWidth={1.75} />,
+        stage: () => stageSkillCreationCommand("skill", slashCommandInputState?.prompt || ""),
+      });
+    }
+    return items;
+  }, [enableAgentCreationCommand, enableResourceCreationCommand, enableSkillCreationCommand, slashCommandInputState?.prompt]);
+  const filteredSlashCommandItems = useMemo(() => {
+    if (!slashCommandInputState) {
+      return [];
+    }
+    const query = slashCommandInputState.query;
+    if (!query) {
+      return availableSlashCommandItems;
+    }
+    return availableSlashCommandItems.filter((item) => item.id.startsWith(query));
+  }, [availableSlashCommandItems, slashCommandInputState]);
+  const showSlashCommandPopup = Boolean(
+    inputMode === "computer-agents"
+    && !activeInputPopup
+    && slashCommandInputState
+    && availableSlashCommandItems.length > 0
+  );
   const canRunStagedThreadContextCommand = stagedThreadContextCommand
     ? stagedThreadContextCommand === "btw"
       ? trimmedInput.length > 0
@@ -5886,6 +6062,8 @@ export function RunnerChat({
     if (!options?.preserveStagedCommand) {
       setStagedThreadContextCommand(null);
       setStagedResourceCreationCommand(null);
+      setStagedAgentCreationCommand(null);
+      setStagedSkillCreationCommand(null);
       setStagedBacklogSubtaskCommand(null);
       setStagedBacklogMissionControlCommand(null);
     }
@@ -6119,6 +6297,8 @@ export function RunnerChat({
   function setComposerDraft(prompt: string) {
     setStagedThreadContextCommand(null);
     setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
     setInput(prompt);
     currentInputRef.current = prompt;
     speechBaseInputRef.current = prompt;
@@ -6127,6 +6307,8 @@ export function RunnerChat({
 
   function stageThreadContextCommand(action: RunnerChatThreadContextAction, prompt = "") {
     setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedThreadContextCommand(action);
@@ -6144,6 +6326,8 @@ export function RunnerChat({
     const nextPrompt = prompt === undefined ? currentInputRef.current : prompt;
     setStagedThreadContextCommand(null);
     setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedBacklogSubtaskCommand({
       action: "subtask",
@@ -6159,6 +6343,8 @@ export function RunnerChat({
   function stageBacklogMissionControlCommand(prompt = "") {
     setStagedThreadContextCommand(null);
     setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand({
       action: "mission_control",
@@ -6172,11 +6358,45 @@ export function RunnerChat({
 
   function stageResourceCreationCommand(action: RunnerResourceCreationCommandType, prompt = "") {
     setStagedThreadContextCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedResourceCreationCommand({
       action,
       label: buildRunnerResourceCreationLabel(action),
+    });
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageAgentCreationCommand(action: RunnerAgentCreationCommandType, prompt = "") {
+    setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
+    setStagedSkillCreationCommand(null);
+    setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand(null);
+    setStagedAgentCreationCommand({
+      action,
+      label: buildRunnerAgentCreationLabel(action),
+    });
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageSkillCreationCommand(action: RunnerSkillCreationCommandType, prompt = "") {
+    setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand(null);
+    setStagedSkillCreationCommand({
+      action,
+      label: buildRunnerSkillCreationLabel(action),
     });
     setInput(prompt);
     currentInputRef.current = prompt;
@@ -7017,6 +7237,8 @@ export function RunnerChat({
       environmentIdOverride?: string | null;
       backlogCommand?: StagedBacklogCommand | null;
       resourceCreationCommand?: StagedResourceCreationCommand | null;
+      agentCreationCommand?: StagedAgentCreationCommand | null;
+      skillCreationCommand?: StagedSkillCreationCommand | null;
       resolvedAttachmentsOverride?: RunnerAttachment[] | null;
       githubRepoOverride?: {
         repoFullName: string;
@@ -7030,8 +7252,14 @@ export function RunnerChat({
     const resourceCreationHiddenPromptText = options?.resourceCreationCommand
       ? String(resourceCreationCommandHiddenPrompt?.(options.resourceCreationCommand.action) || "").trim()
       : "";
+    const agentCreationHiddenPromptText = options?.agentCreationCommand
+      ? String(agentCreationCommandHiddenPrompt?.(options.agentCreationCommand.action) || "").trim()
+      : "";
+    const skillCreationHiddenPromptText = options?.skillCreationCommand
+      ? String(skillCreationCommandHiddenPrompt?.(options.skillCreationCommand.action) || "").trim()
+      : "";
     const executionTaskText =
-      [hiddenSystemPromptText, resourceCreationHiddenPromptText, taskText]
+      [hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, taskText]
         .filter((part) => typeof part === "string" && part.trim().length > 0)
         .join("\n\n");
     const hasResolvedThread = Boolean(options?.threadIdOverride || currentThreadId);
@@ -7055,6 +7283,37 @@ export function RunnerChat({
       options?.githubRepoOverride !== undefined
         ? options.githubRepoOverride
         : buildSelectedGithubRepoReference(attachmentEntries);
+    const shouldHandoffExternalRun =
+      Boolean(onExternalRunRequestCreate)
+      && ensuredThread.didCreateThread
+      && !options?.threadIdOverride
+      && !options?.turnId
+      && !currentThreadId;
+
+    if (shouldHandoffExternalRun) {
+      const resolvedAttachments =
+        options?.resolvedAttachmentsOverride !== undefined
+          ? options.resolvedAttachmentsOverride || undefined
+          : await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
+      const didHandleExternalRunRequest = onExternalRunRequestCreate?.({
+        token: generateId("runreq"),
+        threadId,
+        prompt: executionTaskText,
+        attachments: resolvedAttachments || [],
+        githubRepo: githubRepo || null,
+        enabledSkills: enabledSkillsPayload || null,
+        environmentId: typeof runEnvironmentId === "string" ? runEnvironmentId : "",
+        quotedSelection: options?.quotedSelection || null,
+      });
+      if (didHandleExternalRunRequest !== false) {
+        return {
+          threadId,
+          executionResult: null,
+          turnId: null,
+        };
+      }
+    }
+
     const initialTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
     const turnId = options?.turnId || generateId("turn");
     const startedAtMs = Date.now();
@@ -8150,6 +8409,44 @@ export function RunnerChat({
   useEffect(() => {
     onResourceCreationCommandChange?.(stagedResourceCreationCommand?.action || null);
   }, [onResourceCreationCommandChange, stagedResourceCreationCommand]);
+
+  useEffect(() => {
+    if (!enableAgentCreationCommand || !agentCreationCommand) {
+      return;
+    }
+    if (appliedAgentCreationCommandTokenRef.current === agentCreationCommand.token) {
+      return;
+    }
+    appliedAgentCreationCommandTokenRef.current = agentCreationCommand.token;
+    closeAllInputPopups();
+    stageAgentCreationCommand(agentCreationCommand.type);
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }, [agentCreationCommand, enableAgentCreationCommand]);
+
+  useEffect(() => {
+    onAgentCreationCommandChange?.(stagedAgentCreationCommand?.action || null);
+  }, [onAgentCreationCommandChange, stagedAgentCreationCommand]);
+
+  useEffect(() => {
+    if (!enableSkillCreationCommand || !skillCreationCommand) {
+      return;
+    }
+    if (appliedSkillCreationCommandTokenRef.current === skillCreationCommand.token) {
+      return;
+    }
+    appliedSkillCreationCommandTokenRef.current = skillCreationCommand.token;
+    closeAllInputPopups();
+    stageSkillCreationCommand(skillCreationCommand.type);
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }, [enableSkillCreationCommand, skillCreationCommand]);
+
+  useEffect(() => {
+    onSkillCreationCommandChange?.(stagedSkillCreationCommand?.action || null);
+  }, [onSkillCreationCommandChange, stagedSkillCreationCommand]);
 
   useEffect(() => {
     return () => {
@@ -9846,6 +10143,8 @@ export function RunnerChat({
       const quotedSelection = composerQuotedSelection;
       const backlogCommand = stagedBacklogCommand;
       const resourceCreationCommand = stagedResourceCreationCommand;
+      const agentCreationCommand = stagedAgentCreationCommand;
+      const skillCreationCommand = stagedSkillCreationCommand;
       if (stagedThreadContextCommand) {
         const stagedPrompt = textareaAllowsPromptAfterStagedCommand ? taskText : "";
         const shouldPreserveComposerState = stagedThreadContextCommand === "fork";
@@ -9940,17 +10239,21 @@ export function RunnerChat({
             quotedSelection,
             backlogCommand,
             resourceCreationCommand,
+            agentCreationCommand,
+            skillCreationCommand,
           },
         ]);
         return;
       }
 
       setIsPreparingRun(true);
-      const execution = await executeThreadRun(taskText, attachmentEntries, {
-        quotedSelection,
-        backlogCommand,
-        resourceCreationCommand,
-      });
+        const execution = await executeThreadRun(taskText, attachmentEntries, {
+          quotedSelection,
+          backlogCommand,
+          resourceCreationCommand,
+          agentCreationCommand,
+          skillCreationCommand,
+        });
       ensuredThreadId = execution.threadId;
     } catch (error) {
       const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -9984,6 +10287,8 @@ export function RunnerChat({
           quotedSelection: nextQueuedMessage.quotedSelection,
           backlogCommand: nextQueuedMessage.backlogCommand,
           resourceCreationCommand: nextQueuedMessage.resourceCreationCommand,
+          agentCreationCommand: nextQueuedMessage.agentCreationCommand,
+          skillCreationCommand: nextQueuedMessage.skillCreationCommand,
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -10000,7 +10305,7 @@ export function RunnerChat({
 
   function handleInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
     const nextValue = event.target.value;
-    if (!stagedThreadContextCommand && !stagedResourceCreationCommand && !stagedBacklogCommand) {
+    if (!stagedThreadContextCommand && !stagedResourceCreationCommand && !stagedAgentCreationCommand && !stagedSkillCreationCommand && !stagedBacklogCommand) {
       const autoStageCommand = parseAutoStageThreadContextCommand(nextValue);
       if (autoStageCommand) {
         stageThreadContextCommand(autoStageCommand.action, autoStageCommand.prompt);
@@ -10010,6 +10315,20 @@ export function RunnerChat({
         const autoStageResourceCreationCommand = parseAutoStageResourceCreationCommand(nextValue);
         if (autoStageResourceCreationCommand) {
           stageResourceCreationCommand(autoStageResourceCreationCommand.action, autoStageResourceCreationCommand.prompt);
+          return;
+        }
+      }
+      if (enableAgentCreationCommand) {
+        const autoStageAgentCreationCommand = parseAutoStageAgentCreationCommand(nextValue);
+        if (autoStageAgentCreationCommand) {
+          stageAgentCreationCommand(autoStageAgentCreationCommand.action, autoStageAgentCreationCommand.prompt);
+          return;
+        }
+      }
+      if (enableSkillCreationCommand) {
+        const autoStageSkillCreationCommand = parseAutoStageSkillCreationCommand(nextValue);
+        if (autoStageSkillCreationCommand) {
+          stageSkillCreationCommand(autoStageSkillCreationCommand.action, autoStageSkillCreationCommand.prompt);
           return;
         }
       }
@@ -10045,6 +10364,16 @@ export function RunnerChat({
     if (event.key === "Backspace" && stagedResourceCreationCommand && input.length === 0) {
       event.preventDefault();
       setStagedResourceCreationCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedAgentCreationCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedAgentCreationCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedSkillCreationCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedSkillCreationCommand(null);
       return;
     }
     if (event.key === "Backspace" && stagedBacklogSubtaskCommand && input.length === 0) {
@@ -11897,6 +12226,7 @@ export function RunnerChat({
     let pollInFlight = false;
     let timeoutId: number | null = null;
     let trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
+    let initialGracePollsRemaining = REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT;
 
     const scheduleNextPoll = (delayMs: number) => {
       if (cancelled) {
@@ -11971,12 +12301,19 @@ export function RunnerChat({
 
         if (remoteThreadIsRunning || nextHasRunningTurn || nextHasActiveDeepResearch) {
           trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
+          initialGracePollsRemaining = REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT;
           scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
           return;
         }
 
         if (shouldHydrateThread && trailingTerminalPollsRemaining > 0) {
           trailingTerminalPollsRemaining -= 1;
+          scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
+          return;
+        }
+
+        if (!shouldHydrateThread && initialGracePollsRemaining > 0) {
+          initialGracePollsRemaining -= 1;
           scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
         }
       } catch (error) {
@@ -13253,10 +13590,40 @@ export function RunnerChat({
                   hasStagedComposerCommand
                     ? ({
                         "--tb-staged-thread-command-offset": stagedComposerOffsetValue,
-                      } as CSSProperties)
+                    } as CSSProperties)
                     : undefined
                 }
               >
+                {showSlashCommandPopup ? (
+                  <div className="tb-popup-menu tb-popup-menu-main tb-popup-menu-slash tb-popup-menu-animate-up-in">
+                    {filteredSlashCommandItems.length > 0 ? (
+                      filteredSlashCommandItems.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className="tb-popup-row tb-popup-row-core-action"
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                          }}
+                          onClick={() => {
+                            item.stage();
+                            window.requestAnimationFrame(() => {
+                              textareaRef.current?.focus();
+                            });
+                          }}
+                        >
+                          {item.icon}
+                          <span className="tb-popup-label">{item.command}</span>
+                          <span className="tb-popup-value">{item.description}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="tb-popup-menu-slash-empty">
+                        <div className="tb-popup-empty-state">No slash commands match that input.</div>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
                 {hasStagedComposerCommand ? (
                   <span
                     className={`tb-staged-thread-command ${stagedComposerToneValue ? `tb-staged-thread-command-${stagedComposerToneValue}` : ""}`.trim()}
