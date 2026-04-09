@@ -5440,7 +5440,14 @@ export function RunnerChat({
   const stagedComposerLabel = stagedBacklogCommand?.label || stagedResourceCreationCommandLabel || stagedThreadContextCommandLabel;
   const stagedComposerToneValue = stagedBacklogCommand || stagedResourceCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
   const stagedComposerOffsetValue = stagedBacklogCommand || stagedResourceCreationCommand
-    ? `${Math.max(120, Math.round(stagedComposerLabel.length * 7.5 + 22))}px`
+    ? `${Math.max(
+        16,
+        Math.round(
+          stagedComposerLabel.length * 7
+          + 20
+          + (stagedResourceCreationCommand?.action === "computer" ? 14 : 0)
+        )
+      )}px`
     : stagedThreadContextCommandOffset(stagedThreadContextCommand);
   const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedResourceCreationCommand || stagedBacklogCommand);
   const canRunStagedThreadContextCommand = stagedThreadContextCommand

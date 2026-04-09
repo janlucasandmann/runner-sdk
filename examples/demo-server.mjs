@@ -37,6 +37,9 @@ const html = `<!doctype html>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Agentic Compute Platform</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/logos/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/logos/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/logos/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -76,6 +79,11 @@ const html = `<!doctype html>
       textarea,
       select {
         font-family: inherit;
+      }
+
+      button {
+        border: 0;
+        box-shadow: none;
       }
 
       aside {
@@ -10265,7 +10273,7 @@ const html = `<!doctype html>
       .playground-environments-home-hero-title {
         position: relative;
         z-index: 1;
-        margin-top: 50px;
+        margin-top: 54px;
         margin-bottom: 5px;
         max-width: 720px;
         font-size: 24px;
@@ -10368,15 +10376,26 @@ const html = `<!doctype html>
       .playground-environments-home-metrics {
         position: relative;
         z-index: 1;
-        margin-top: 18px;
+        margin-top: 10px;
         margin-bottom: 16px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
+        align-items: stretch;
+      }
+
+      .playground-environments-home-metrics-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        margin-top: 18px;
+        margin-bottom: 8px;
       }
 
       .playground-environments-home-metrics .playground-tasks-detail-facts {
+        display: flex;
         min-height: 100%;
+        height: 100%;
         padding: 0;
         border: 0;
         border-radius: 0;
@@ -10390,16 +10409,36 @@ const html = `<!doctype html>
       }
 
       .playground-environments-home-metrics .playground-tasks-detail-facts-body {
+        display: flex;
+        flex: 1 1 auto;
+        height: 100%;
         gap: 0;
       }
 
       .playground-environments-home-metrics .playground-database-overview {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .playground-environments-home-metrics .playground-database-overview-chart-block,
+      .playground-environments-home-metrics .playground-database-overview-timeseries-card,
+      .playground-environments-home-metrics .playground-database-overview-timeseries-chart {
         height: 100%;
       }
 
       .playground-database-overview-timeseries-bar {
         rx: 8px;
         ry: 8px;
+      }
+
+      .playground-database-overview-timeseries-bar.is-comparison-count {
+        fill: var(--playground-chart-blue);
+      }
+
+      .playground-database-overview-timeseries-bar.is-comparison-cost {
+        fill: var(--playground-chart-pink);
       }
 
       .playground-database-overview-kpi-label.is-computers .playground-database-overview-kpi-check,
@@ -10448,7 +10487,99 @@ const html = `<!doctype html>
         stroke: var(--playground-chart-green);
       }
 
+      .playground-environments-home-comparison-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+
+      .playground-environments-home-comparison-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-environments-home-comparison-title {
+        font-size: 14px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-environments-home-comparison-legend {
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .playground-environments-home-comparison-legend-item {
+        display: inline-flex;
+        align-items: center;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.72);
+        white-space: nowrap;
+        gap: 6px;
+      }
+
+      .playground-environments-home-comparison-legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        flex: 0 0 auto;
+      }
+
+      .playground-environments-home-comparison-legend-dot.is-count {
+        background: var(--playground-chart-blue);
+      }
+
+      .playground-environments-home-comparison-legend-dot.is-cost {
+        background: var(--playground-chart-pink);
+      }
+
+      .playground-environments-home-comparison-timescale {
+        position: relative;
+        flex: 0 0 auto;
+      }
+
+      .playground-environments-home-comparison-timescale-select {
+        appearance: none;
+        min-height: 30px;
+        padding: 0 28px 0 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 11px;
+        font-weight: 500;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .playground-environments-home-comparison-timescale::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        width: 6px;
+        height: 6px;
+        margin-top: -4px;
+        border-right: 1.5px solid rgba(255, 255, 255, 0.72);
+        border-bottom: 1.5px solid rgba(255, 255, 255, 0.72);
+        transform: rotate(45deg);
+        pointer-events: none;
+      }
+
+      .playground-environments-home-comparison-header.is-simple {
+        justify-content: flex-start;
+      }
+
       .playground-environments-home-card-grid {
+        margin-top: -20px;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 16px;
@@ -10458,8 +10589,8 @@ const html = `<!doctype html>
         min-width: 0;
         padding: 18px;
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 22px;
-        background: rgba(255, 255, 255, 0.03);
+        border-radius: 15px;
+        background: transparent;
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
         display: flex;
@@ -10471,13 +10602,13 @@ const html = `<!doctype html>
 
       .playground-environments-home-card:hover {
         border-color: rgba(255, 255, 255, 0.16);
-        background: rgba(255, 255, 255, 0.05);
+        background: transparent;
         transform: translateY(-1px);
       }
 
       .playground-environments-home-card.is-command-active {
         border-color: rgba(12, 111, 255, 0.42);
-        background: rgba(12, 111, 255, 0.08);
+        background: transparent;
       }
 
       .playground-environments-home-card-visual {
@@ -10518,10 +10649,10 @@ const html = `<!doctype html>
         margin-top: auto;
         min-height: 36px;
         width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.05);
-        color: rgba(255, 255, 255, 0.92);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
         font-size: 12px;
         font-weight: 500;
         cursor: pointer;
@@ -10529,7 +10660,7 @@ const html = `<!doctype html>
       }
 
       .playground-environments-home-card-button:hover {
-        background: rgba(255, 255, 255, 0.09);
+        background: rgba(255, 255, 255, 0.26);
         color: #fff;
       }
 
@@ -21089,6 +21220,29 @@ const html = `<!doctype html>
           description: "Enterprise-scale access with higher included usage, team operations, and room for advanced governance and self-hosting requirements.",
         },
       ];
+      const SETTINGS_TOP_UP_CATALOG = [
+        {
+          id: "boost",
+          name: "Boost Pack",
+          price: 39,
+          computeTokens: 2500,
+          description: "One-time extra budget for short bursts, overages, and deadline weeks.",
+        },
+        {
+          id: "growth",
+          name: "Growth Pack",
+          price: 149,
+          computeTokens: 10000,
+          description: "A larger top-up for heavier agent workloads and multi-step automation.",
+        },
+        {
+          id: "scale",
+          name: "Scale Pack",
+          price: 359,
+          computeTokens: 25000,
+          description: "High-volume one-time capacity for production spikes and larger pipelines.",
+        },
+      ];
       const SETTINGS_PLATFORM_CONFIG_STORAGE_KEY = "runner_demo_settings_platform_config_v1";
       const SETTINGS_DEFAULT_BILLING_PREFERENCES = {
         usageBillingEnabled: false,
@@ -23592,6 +23746,7 @@ const html = `<!doctype html>
           dockerfileExtensions: "",
           baseImage: "",
           metadata: null,
+          status: "stopped",
           estimatedStorageMB: 0,
           estimatedCostPerMinute: 0,
           isSystem: false,
@@ -23780,6 +23935,9 @@ const html = `<!doctype html>
           dockerfileExtensions: typeof environment.dockerfileExtensions === "string" ? environment.dockerfileExtensions : "",
           baseImage: typeof environment.baseImage === "string" ? environment.baseImage : "",
           metadata: normalizedMetadata,
+          status: ["running", "starting", "stopped", "error"].includes(String(environment.status || "").trim().toLowerCase())
+            ? String(environment.status || "").trim().toLowerCase()
+            : draft.status,
           estimatedStorageMB: Number.isFinite(environment.estimatedStorageMB) ? environment.estimatedStorageMB : draft.estimatedStorageMB,
           estimatedCostPerMinute: Number.isFinite(environment.estimatedCostPerMinute) ? environment.estimatedCostPerMinute : draft.estimatedCostPerMinute,
           isSystem: Boolean(environment.isSystem),
@@ -27488,6 +27646,18 @@ const html = `<!doctype html>
       function buildPlaygroundEnvironmentHomeAnalyticsUrl(backendUrl) {
         if (!backendUrl) return "";
         return backendUrl + "/environments/analytics/overview";
+      }
+
+      function buildPlaygroundCostsBreakdownUrl(backendUrl, groupBy, period) {
+        if (!backendUrl) return "";
+        const params = new URLSearchParams();
+        if (groupBy) {
+          params.set("groupBy", groupBy);
+        }
+        if (period) {
+          params.set("period", period);
+        }
+        return backendUrl + "/costs/breakdown" + (params.toString() ? "?" + params.toString() : "");
       }
 
       function buildPlaygroundAgentAnalyticsUrl(backendUrl, agentId) {
@@ -34222,6 +34392,7 @@ const html = `<!doctype html>
         });
         const [environmentAnalyticsById, setEnvironmentAnalyticsById] = useState({});
         const [environmentHomeAnalytics, setEnvironmentHomeAnalytics] = useState(null);
+        const [environmentHomeCostBreakdownByPeriod, setEnvironmentHomeCostBreakdownByPeriod] = useState({});
         const [servers, setServers] = useState([]);
         const [databases, setDatabases] = useState([]);
         const [serverDetailsById, setServerDetailsById] = useState({});
@@ -34243,6 +34414,7 @@ const html = `<!doctype html>
         const [loadingEnvironmentId, setLoadingEnvironmentId] = useState("");
         const [loadingEnvironmentAnalyticsId, setLoadingEnvironmentAnalyticsId] = useState("");
         const [environmentHomeAnalyticsLoading, setEnvironmentHomeAnalyticsLoading] = useState(false);
+        const [environmentHomeCostBreakdownLoadingPeriod, setEnvironmentHomeCostBreakdownLoadingPeriod] = useState("");
         const [loadingServerId, setLoadingServerId] = useState("");
         const [loadingDatabaseId, setLoadingDatabaseId] = useState("");
         const [loadingServerAnalyticsId, setLoadingServerAnalyticsId] = useState("");
@@ -34303,6 +34475,7 @@ const html = `<!doctype html>
         const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
         const [environmentsHomeResourceCommandRequest, setEnvironmentsHomeResourceCommandRequest] = useState(null);
         const [environmentsHomeActiveResourceCommand, setEnvironmentsHomeActiveResourceCommand] = useState("");
+        const [environmentHomeChartTimescale, setEnvironmentHomeChartTimescale] = useState("month");
         const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
@@ -34351,6 +34524,7 @@ const html = `<!doctype html>
         const [environmentListActionMenuState, setEnvironmentListActionMenuState] = useState(null);
         const [environmentAnalyticsErrorById, setEnvironmentAnalyticsErrorById] = useState({});
         const [environmentHomeAnalyticsError, setEnvironmentHomeAnalyticsError] = useState("");
+        const [environmentHomeCostBreakdownError, setEnvironmentHomeCostBreakdownError] = useState("");
         const [serverListLoading, setServerListLoading] = useState(false);
         const [databaseListLoading, setDatabaseListLoading] = useState(false);
         const [loadingServerFilesId, setLoadingServerFilesId] = useState("");
@@ -34973,6 +35147,8 @@ const html = `<!doctype html>
           getSeriesValue,
           getXAxisLabel,
           formatAxisValue,
+          chartHeight,
+          headerContent,
         }) {
           const frameRef = useRef(null);
           const [measuredWidth, setMeasuredWidth] = useState(0);
@@ -35002,12 +35178,21 @@ const html = `<!doctype html>
 
           const normalizedLabels = Array.isArray(labels) ? labels : [];
           const normalizedSeries = Array.isArray(series) ? series.filter(Boolean) : [];
+          const resolvedChartHeight = Number.isFinite(Number(chartHeight)) && Number(chartHeight) > 0
+            ? Number(chartHeight)
+            : 178;
           if (!normalizedLabels.length || !normalizedSeries.length) {
-            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "Select a metric");
+            return React.createElement("div", {
+                className: "playground-database-overview-timeseries-card",
+                "aria-label": ariaLabel || "Telemetry chart",
+              },
+              headerContent || null,
+              React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "Select a metric")
+            );
           }
 
           const svgWidth = Math.max(1, Math.round(measuredWidth || 420));
-          const svgHeight = 178;
+          const svgHeight = resolvedChartHeight;
           const marginTop = 14;
           const marginRight = 10;
           const marginBottom = 28;
@@ -35041,11 +35226,12 @@ const html = `<!doctype html>
               className: "playground-database-overview-timeseries-card",
               "aria-label": ariaLabel || "Telemetry chart",
             },
+            headerContent || null,
             React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
               React.createElement("div", {
                   ref: frameRef,
                   className: "playground-database-overview-timeseries-frame",
-                  style: { height: "178px" },
+                  style: { height: resolvedChartHeight + "px" },
                 },
                 React.createElement("svg", {
                     className: "playground-database-overview-timeseries-svg",
@@ -35489,6 +35675,47 @@ const html = `<!doctype html>
             setEnvironmentHomeAnalyticsLoading(false);
           }
         }, [backendUrl, environmentHomeAnalytics, requestHeaders]);
+
+        const loadEnvironmentHomeCostBreakdown = useCallback(async (period, options = {}) => {
+          const normalizedPeriod = ["day", "week", "month"].includes(String(period || "").trim())
+            ? String(period || "").trim()
+            : "month";
+          const force = options?.force === true;
+          if (!force && environmentHomeCostBreakdownByPeriod[normalizedPeriod]) {
+            return environmentHomeCostBreakdownByPeriod[normalizedPeriod];
+          }
+
+          setEnvironmentHomeCostBreakdownLoadingPeriod(normalizedPeriod);
+          setEnvironmentHomeCostBreakdownError("");
+
+          try {
+            const response = await fetch(
+              buildPlaygroundCostsBreakdownUrl(backendUrl, "source", normalizedPeriod),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load cost breakdown.");
+            }
+            const normalizedRecord = {
+              ...data,
+              loadedAt: new Date().toISOString(),
+            };
+            setEnvironmentHomeCostBreakdownByPeriod((current) => ({
+              ...current,
+              [normalizedPeriod]: normalizedRecord,
+            }));
+            return normalizedRecord;
+          } catch (error) {
+            setEnvironmentHomeCostBreakdownError(error instanceof Error ? error.message : "Failed to load cost breakdown.");
+            return null;
+          } finally {
+            setEnvironmentHomeCostBreakdownLoadingPeriod((current) => current === normalizedPeriod ? "" : current);
+          }
+        }, [backendUrl, environmentHomeCostBreakdownByPeriod, requestHeaders]);
 
         const loadAvailableRuntimeOptions = useCallback(async () => {
           try {
@@ -36720,6 +36947,19 @@ const html = `<!doctype html>
           }
           void loadEnvironmentHomeAnalytics();
         }, [environmentHomeAnalytics, environmentHomeAnalyticsLoading, loadEnvironmentHomeAnalytics]);
+
+        useEffect(() => {
+          const currentBreakdown = environmentHomeCostBreakdownByPeriod[environmentHomeChartTimescale];
+          if (currentBreakdown || environmentHomeCostBreakdownLoadingPeriod === environmentHomeChartTimescale) {
+            return;
+          }
+          void loadEnvironmentHomeCostBreakdown(environmentHomeChartTimescale);
+        }, [
+          environmentHomeChartTimescale,
+          environmentHomeCostBreakdownByPeriod,
+          environmentHomeCostBreakdownLoadingPeriod,
+          loadEnvironmentHomeCostBreakdown,
+        ]);
 
         useEffect(() => {
           if (!selectedEnvironmentId || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
@@ -47103,21 +47343,6 @@ const html = `<!doctype html>
               .join(" ");
           };
 
-          const renderHomeAnalyticsKpi = (label, value, tone, key = label) => React.createElement("div", {
-              className: "playground-servers-analytics-kpi",
-              key,
-            },
-            React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
-            React.createElement("span", {
-                className: "playground-database-overview-kpi-label is-static" + (tone ? " is-" + tone : ""),
-              },
-              React.createElement("span", { className: "playground-database-overview-kpi-check" },
-                React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
-              ),
-              React.createElement("span", null, label)
-            )
-          );
-
           function EnvironmentsHomeResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
             const frameRef = useRef(null);
             const [measuredWidth, setMeasuredWidth] = useState(0);
@@ -47170,28 +47395,47 @@ const html = `<!doctype html>
             );
           }
 
-          const renderHomeBarChart = ({ ariaLabel, labels, values, tones, emptyText, formatAxisValue }) => {
+          const renderHomeComparisonBarChart = ({ ariaLabel, labels, countValues, costValues, emptyText }) => {
             const normalizedLabels = Array.isArray(labels) ? labels : [];
-            const normalizedValues = Array.isArray(values) ? values.map((value) => Math.max(0, Number(value || 0))) : [];
-            if (!normalizedLabels.length || normalizedLabels.length !== normalizedValues.length) {
+            const normalizedCountValues = Array.isArray(countValues) ? countValues.map((value) => Math.max(0, Number(value || 0))) : [];
+            const normalizedCostValues = Array.isArray(costValues) ? costValues.map((value) => Math.max(0, Number(value || 0))) : [];
+            if (
+              !normalizedLabels.length
+              || normalizedLabels.length !== normalizedCountValues.length
+              || normalizedLabels.length !== normalizedCostValues.length
+            ) {
               return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No resource data yet");
             }
 
-            const chartHeight = 178;
-            const marginTop = 14;
-            const marginRight = 10;
+            const chartHeight = 194;
+            const marginTop = 12;
+            const marginRight = 42;
             const marginBottom = 28;
             const marginLeft = 30;
-            const maxValue = Math.max(1, ...normalizedValues);
-            const yAxisValues = [maxValue, Math.round(maxValue / 2), 0];
-            const renderYAxisLabel = typeof formatAxisValue === "function"
-              ? formatAxisValue
-              : (value) => String(value);
+            const maxCountValue = Math.max(1, ...normalizedCountValues);
+            const maxCostValue = Math.max(1, ...normalizedCostValues);
+            const countAxisValues = [maxCountValue, Math.round(maxCountValue / 2), 0];
+            const costAxisValues = [maxCostValue, Math.round(maxCostValue / 2), 0];
 
             return React.createElement("div", {
                 className: "playground-database-overview-timeseries-card",
                 "aria-label": ariaLabel || "Environment overview chart",
               },
+              React.createElement("div", { className: "playground-environments-home-comparison-header" },
+                React.createElement("div", { className: "playground-environments-home-comparison-copy" },
+                  React.createElement("div", { className: "playground-environments-home-comparison-title" }, "Resource comparison"),
+                  React.createElement("div", { className: "playground-environments-home-comparison-legend" },
+                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
+                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot is-count" }),
+                      React.createElement("span", null, "Count")
+                    ),
+                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
+                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot is-cost" }),
+                      React.createElement("span", null, "Running cost")
+                    )
+                  )
+                )
+              ),
               React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
                 React.createElement(EnvironmentsHomeResponsiveSvg, {
                     frameClassName: "playground-database-overview-timeseries-frame",
@@ -47204,7 +47448,9 @@ const html = `<!doctype html>
                     const plotHeight = svgHeight - marginTop - marginBottom;
                     const baselineY = marginTop + plotHeight;
                     const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
-                    const barWidth = Math.min(44, Math.max(16, slotWidth * 0.42));
+                    const pairWidth = Math.min(38, Math.max(16, slotWidth * 0.42));
+                    const pairGap = Math.min(8, Math.max(4, slotWidth * 0.08));
+                    const barWidth = Math.max(5, (pairWidth - pairGap) / 2);
 
                     return React.createElement(React.Fragment, null,
                       Array.from({ length: 4 }).map((_, index) => {
@@ -47218,29 +47464,49 @@ const html = `<!doctype html>
                           y2: y,
                         });
                       }),
-                      yAxisValues.map((value, index) =>
+                      countAxisValues.map((value, index) =>
                         React.createElement("text", {
-                          key: "y-axis:" + index,
+                          key: "count-axis:" + index,
                           x: 0,
                           y: marginTop + (plotHeight / 2) * index + 4,
                           className: "playground-database-overview-timeseries-axis-label",
                           fontSize: "10",
-                        }, renderYAxisLabel(value))
+                        }, String(value))
+                      ),
+                      costAxisValues.map((value, index) =>
+                        React.createElement("text", {
+                          key: "cost-axis:" + index,
+                          x: svgWidth,
+                          y: marginTop + (plotHeight / 2) * index + 4,
+                          textAnchor: "end",
+                          className: "playground-database-overview-timeseries-axis-label",
+                          fontSize: "10",
+                        }, formatSettingsComputeTokens(value))
                       ),
                       normalizedLabels.map((label, index) => {
-                        const x = marginLeft + slotWidth * index + ((slotWidth - barWidth) / 2);
-                        const barHeight = (normalizedValues[index] / maxValue) * plotHeight;
-                        const y = baselineY - barHeight;
-                        return React.createElement("rect", {
-                          key: "bar:" + index,
-                          x,
-                          y,
-                          width: barWidth,
-                          height: Math.max(2, barHeight),
-                          rx: "8",
-                          ry: "8",
-                          className: "playground-database-overview-timeseries-bar is-" + (tones?.[index] || "requests"),
-                        });
+                        const groupX = marginLeft + slotWidth * index + ((slotWidth - pairWidth) / 2);
+                        const countHeight = (normalizedCountValues[index] / maxCountValue) * plotHeight;
+                        const costHeight = (normalizedCostValues[index] / maxCostValue) * plotHeight;
+                        return React.createElement(React.Fragment, { key: "bars:" + index },
+                          React.createElement("rect", {
+                            x: groupX,
+                            y: baselineY - countHeight,
+                            width: barWidth,
+                            height: Math.max(2, countHeight),
+                            rx: "7",
+                            ry: "7",
+                            className: "playground-database-overview-timeseries-bar is-comparison-count",
+                          }),
+                          React.createElement("rect", {
+                            x: groupX + barWidth + pairGap,
+                            y: baselineY - costHeight,
+                            width: barWidth,
+                            height: Math.max(2, costHeight),
+                            rx: "7",
+                            ry: "7",
+                            className: "playground-database-overview-timeseries-bar is-comparison-cost",
+                          })
+                        );
                       }),
                       normalizedLabels.map((label, index) =>
                         React.createElement("text", {
@@ -47257,6 +47523,45 @@ const html = `<!doctype html>
               )
             );
           };
+
+          const renderHomeUsageChart = ({ ariaLabel, labels, computerValues, resourceValues, emptyText }) => (
+            renderPlaygroundTelemetryTimeseriesChart({
+              ariaLabel: ariaLabel || "Overall environment activity",
+              labels,
+              series: [
+                {
+                  key: "computers",
+                  tone: "computers",
+                  values: computerValues,
+                },
+                {
+                  key: "resources",
+                  tone: "resources",
+                  values: resourceValues,
+                },
+              ],
+              emptyText: emptyText || "No usage data yet",
+              buildLinePath: buildHomeUsageLinePath,
+              getSeriesValue: (entry, _bucket, index) => entry?.values?.[index],
+              getXAxisLabel: (bucket) => String(bucket?.label || ""),
+              chartHeight: 194,
+              headerContent: React.createElement("div", { className: "playground-environments-home-comparison-header is-simple" },
+                React.createElement("div", { className: "playground-environments-home-comparison-copy" },
+                  React.createElement("div", { className: "playground-environments-home-comparison-title" }, "Activity comparison"),
+                  React.createElement("div", { className: "playground-environments-home-comparison-legend" },
+                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
+                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot is-count" }),
+                      React.createElement("span", null, "Computers")
+                    ),
+                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
+                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot", style: { background: "var(--playground-chart-green)" } }),
+                      React.createElement("span", null, "Resources")
+                    )
+                  )
+                )
+              ),
+            })
+          );
 
           const homeActivityFormatter = new Intl.DateTimeFormat("en-US", {
             hour: "numeric",
@@ -47285,12 +47590,141 @@ const html = `<!doctype html>
           const homeResourceUsage = homeResourceUsageBuckets.length > 0
             ? homeResourceUsageBuckets.map((bucket) => Number(bucket?.activeMinutes || 0))
             : homeActivityBuckets.map(() => 0);
-          const totalComputerUsage = typeof environmentHomeAnalytics?.summary?.totalActiveMinutes24h === "number"
-            ? Number(environmentHomeAnalytics.summary.totalActiveMinutes24h || 0)
-            : homeComputerUsage.reduce((sum, value) => sum + value, 0);
-          const totalResourceUsage = typeof environmentHomeAnalytics?.summary?.totalResourceActiveMinutes24h === "number"
-            ? Number(environmentHomeAnalytics.summary.totalResourceActiveMinutes24h || 0)
-            : homeResourceUsage.reduce((sum, value) => sum + value, 0);
+          const currentEnvironmentHomeCostBreakdown = environmentHomeCostBreakdownByPeriod[environmentHomeChartTimescale] || null;
+          const currentEnvironmentHomeCostSources = Array.isArray(currentEnvironmentHomeCostBreakdown?.sources)
+            ? currentEnvironmentHomeCostBreakdown.sources
+            : [];
+          const SERVER_RUNTIME_RATE_PER_MINUTE = {
+            web_app: 0.006,
+            function: 0.003,
+            auth: 0.002,
+            agent_runtime: 0.008,
+          };
+          const DEFAULT_COMPUTER_RATE_PER_MINUTE = 0.03;
+          const getEnvironmentHomePeriodStartMs = (period) => {
+            const now = new Date();
+            const start = new Date(now);
+            if (period === "day") {
+              start.setHours(0, 0, 0, 0);
+              return start.getTime();
+            }
+            if (period === "week") {
+              start.setDate(start.getDate() - 7);
+              return start.getTime();
+            }
+            start.setMonth(start.getMonth() - 1);
+            return start.getTime();
+          };
+          const environmentHomeCostPeriodStartMs = getEnvironmentHomePeriodStartMs(environmentHomeChartTimescale);
+          const environmentHomeCostPeriodEndMs = Date.now();
+          const getResourceBillingState = (item) => {
+            const metadata = item?.metadata && typeof item.metadata === "object" && !Array.isArray(item.metadata)
+              ? item.metadata
+            : null;
+            const resourceBilling = metadata?.resourceBilling;
+            return resourceBilling && typeof resourceBilling === "object" && !Array.isArray(resourceBilling)
+              ? resourceBilling
+              : null;
+          };
+          const readIsoDateMs = (value) => {
+            const timestamp = Date.parse(String(value || ""));
+            return Number.isFinite(timestamp) ? timestamp : null;
+          };
+          const readEnvironmentHomeSourceCostCT = (sourceIds) => currentEnvironmentHomeCostSources.reduce((sum, entry) => {
+            const entryId = String(entry?.id || "").trim();
+            if (!sourceIds.includes(entryId)) {
+              return sum;
+            }
+            return sum + Math.max(0, Number(entry?.totalCT || 0));
+          }, 0);
+          const averageComputerRatePerMinute = (() => {
+            const rates = orderedEnvironments
+              .map((environment) => Number(environment?.estimatedCostPerMinute))
+              .filter((value) => Number.isFinite(value) && value > 0);
+            if (!rates.length) {
+              return DEFAULT_COMPUTER_RATE_PER_MINUTE;
+            }
+            return rates.reduce((sum, value) => sum + value, 0) / rates.length;
+          })();
+          const computeComputerUnsettledCostCT = (environment) => {
+            const billingState = getResourceBillingState(environment);
+            const ratePerMinute = Number.isFinite(Number(environment?.estimatedCostPerMinute))
+              ? Math.max(0, Number(environment.estimatedCostPerMinute || 0))
+              : DEFAULT_COMPUTER_RATE_PER_MINUTE;
+            const normalizedEnvironmentStatus = String(environment?.status || "").trim().toLowerCase();
+            const activeAnchorMs = readIsoDateMs(
+              billingState?.activeSessionLastSettledAt
+              || billingState?.activeSessionStartedAt
+              || (normalizedEnvironmentStatus === "running"
+                ? (environment?.updatedAt || environment?.createdAt)
+                : "")
+            );
+            const isActive = Boolean(activeAnchorMs)
+              || normalizedEnvironmentStatus === "running";
+            if (!isActive || ratePerMinute <= 0 || !activeAnchorMs) {
+              return 0;
+            }
+            const elapsedMinutes = Math.max(
+              0,
+              (environmentHomeCostPeriodEndMs - Math.max(activeAnchorMs, environmentHomeCostPeriodStartMs)) / 60_000
+            );
+            return settingsDollarsToComputeTokens(ratePerMinute * elapsedMinutes);
+          };
+          const computeServerUnsettledCostCT = (server) => {
+            if (String(server?.status || "").trim().toLowerCase() !== "deployed") {
+              return 0;
+            }
+            const billingState = getResourceBillingState(server);
+            const normalizedKind = canonicalizePlaygroundServerKind(server?.kind);
+            const ratePerMinute = SERVER_RUNTIME_RATE_PER_MINUTE[normalizedKind] || SERVER_RUNTIME_RATE_PER_MINUTE.web_app;
+            const activeAnchorMs = readIsoDateMs(billingState?.lastSettledAt || billingState?.activeSince);
+            if (!activeAnchorMs || ratePerMinute <= 0) {
+              return 0;
+            }
+            const elapsedMinutes = Math.max(
+              0,
+              (environmentHomeCostPeriodEndMs - Math.max(activeAnchorMs, environmentHomeCostPeriodStartMs)) / 60_000
+            );
+            return settingsDollarsToComputeTokens(ratePerMinute * elapsedMinutes);
+          };
+          const billedComputerRuntimeCT = readEnvironmentHomeSourceCostCT(["resource:computer"]);
+          const unsettledComputerRuntimeCT = orderedEnvironments.reduce((sum, environment) => sum + computeComputerUnsettledCostCT(environment), 0);
+          const observedComputerMinutes24h = homeComputerUsage.reduce((sum, value) => sum + Math.max(0, Number(value || 0)), 0);
+          const observedComputerFallbackMultiplier = environmentHomeChartTimescale === "day"
+            ? 1
+            : environmentHomeChartTimescale === "week"
+              ? 7
+              : 30;
+          const observedComputerFallbackCT = settingsDollarsToComputeTokens(
+            averageComputerRatePerMinute * observedComputerMinutes24h * observedComputerFallbackMultiplier
+          );
+          const totalComputerRuntimeCT = billedComputerRuntimeCT + unsettledComputerRuntimeCT > 0
+            ? billedComputerRuntimeCT + unsettledComputerRuntimeCT
+            : observedComputerFallbackCT;
+          const totalWebAppRuntimeCT = readEnvironmentHomeSourceCostCT(["resource:web_app", "resource:website", "resource:api"])
+            + orderedServers.reduce((sum, server) => {
+            const normalizedKind = canonicalizePlaygroundServerKind(server?.kind);
+            if (normalizedKind !== "web_app") {
+              return sum;
+            }
+            return sum + computeServerUnsettledCostCT(server);
+          }, 0);
+          const totalFunctionRuntimeCT = readEnvironmentHomeSourceCostCT(["resource:function"])
+            + orderedServers.reduce((sum, server) => {
+            const normalizedKind = canonicalizePlaygroundServerKind(server?.kind);
+            if (normalizedKind !== "function") {
+              return sum;
+            }
+            return sum + computeServerUnsettledCostCT(server);
+          }, 0);
+          const totalManagedRuntimeCT = readEnvironmentHomeSourceCostCT(["resource:auth", "resource:agent_runtime"])
+            + orderedServers.reduce((sum, server) => {
+            const normalizedKind = canonicalizePlaygroundServerKind(server?.kind);
+            if (!["auth", "agent_runtime"].includes(normalizedKind)) {
+              return sum;
+            }
+            return sum + computeServerUnsettledCostCT(server);
+          }, 0);
           const resourceBreakdownLabels = ["Computers", "Web Apps", "Functions", "Managed"];
           const resourceBreakdownValues = [
             environmentsHomeSummary.computers,
@@ -47298,18 +47732,12 @@ const html = `<!doctype html>
             environmentsHomeSummary.functions,
             environmentsHomeSummary.managedResources,
           ];
-          const resourceBreakdownTones = ["computers", "webapps", "functions", "managed"];
-          const formatHomeMinuteValue = (value) => {
-            const numericValue = Number(value || 0);
-            if (!Number.isFinite(numericValue) || numericValue <= 0) {
-              return "0 min";
-            }
-            const roundedValue = numericValue >= 10
-              ? Math.round(numericValue)
-              : Math.round(numericValue * 10) / 10;
-            return String(roundedValue) + " min";
-          };
-
+          const resourceBreakdownCostValues = [
+            totalComputerRuntimeCT,
+            totalWebAppRuntimeCT,
+            totalFunctionRuntimeCT,
+            totalManagedRuntimeCT,
+          ];
           const capabilityCards = [
             {
               id: "computer",
@@ -47347,24 +47775,30 @@ const html = `<!doctype html>
               React.createElement("div", { className: "playground-environments-home-hero-copy" },
                 "Create durable computers, publish web apps and functions, connect databases and auth, and power products with agent runtimes. Environments brings your full AI application stack together in one workspace."
               ),
+              React.createElement("div", { className: "playground-environments-home-metrics-toolbar" },
+                React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+                  React.createElement("select", {
+                    className: "playground-environments-home-comparison-timescale-select",
+                    value: environmentHomeChartTimescale,
+                    "aria-label": "Environment chart timescale",
+                    onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
+                  },
+                    React.createElement("option", { value: "day" }, "Daily"),
+                    React.createElement("option", { value: "week" }, "Weekly"),
+                    React.createElement("option", { value: "month" }, "Monthly")
+                  )
+                )
+              ),
               React.createElement("div", { className: "playground-environments-home-metrics" },
                 React.createElement("section", { className: "playground-tasks-detail-facts" },
                   React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                     React.createElement("div", { className: "playground-database-overview" },
-                      React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
-                        [
-                          renderHomeAnalyticsKpi("Computers", String(environmentsHomeSummary.computers), "computers", "home-kpi-computers"),
-                          renderHomeAnalyticsKpi("Web Apps", String(environmentsHomeSummary.webApps), "webapps", "home-kpi-webapps"),
-                          renderHomeAnalyticsKpi("Functions", String(environmentsHomeSummary.functions), "functions", "home-kpi-functions"),
-                          renderHomeAnalyticsKpi("Managed", String(environmentsHomeSummary.managedResources), "managed", "home-kpi-managed"),
-                        ]
-                      ),
                       React.createElement("div", { className: "playground-database-overview-chart-block" },
-                        renderHomeBarChart({
-                          ariaLabel: "Environment and resource counts",
+                        renderHomeComparisonBarChart({
+                          ariaLabel: "Environment and resource comparison",
                           labels: resourceBreakdownLabels,
-                          values: resourceBreakdownValues,
-                          tones: resourceBreakdownTones,
+                          countValues: resourceBreakdownValues,
+                          costValues: resourceBreakdownCostValues,
                           emptyText: "No environment data yet",
                         })
                       )
@@ -47374,32 +47808,13 @@ const html = `<!doctype html>
                 React.createElement("section", { className: "playground-tasks-detail-facts" },
                   React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                     React.createElement("div", { className: "playground-database-overview" },
-                      React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
-                        [
-                          renderHomeAnalyticsKpi("Computer Active Minutes (24h)", formatHomeMinuteValue(totalComputerUsage), "computers", "home-kpi-computer-usage"),
-                          renderHomeAnalyticsKpi("Resource Active Minutes (24h)", formatHomeMinuteValue(totalResourceUsage), "resources", "home-kpi-resource-usage"),
-                        ]
-                      ),
                       React.createElement("div", { className: "playground-database-overview-chart-block" },
-                        renderPlaygroundTelemetryTimeseriesChart({
+                        renderHomeUsageChart({
                           ariaLabel: "Overall environment activity",
                           labels: homeActivityBuckets,
-                          series: [
-                            {
-                              key: "computers",
-                              tone: "computers",
-                              values: homeComputerUsage,
-                            },
-                            {
-                              key: "resources",
-                              tone: "resources",
-                              values: homeResourceUsage,
-                            },
-                          ],
+                          computerValues: homeComputerUsage,
+                          resourceValues: homeResourceUsage,
                           emptyText: "No usage data yet",
-                          buildLinePath: buildHomeUsageLinePath,
-                          getSeriesValue: (entry, _bucket, index) => entry?.values?.[index],
-                          getXAxisLabel: (bucket) => String(bucket?.label || ""),
                         })
                       )
                     )
@@ -47427,7 +47842,6 @@ const html = `<!doctype html>
                   ),
                   React.createElement("div", { className: "playground-environments-home-card-title" }, card.title),
                   React.createElement("div", { className: "playground-environments-home-card-copy" }, card.copy),
-                  React.createElement("div", { className: "playground-environments-home-card-meta" }, card.countLabel),
                   React.createElement("button", {
                     type: "button",
                     className: "playground-environments-home-card-button",
@@ -70745,6 +71159,8 @@ const html = `<!doctype html>
         const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);
         const [settingsCheckoutLoading, setSettingsCheckoutLoading] = useState(false);
         const [settingsSubscriptionActionId, setSettingsSubscriptionActionId] = useState("");
+        const [settingsTopUpActionId, setSettingsTopUpActionId] = useState("");
+        const [settingsSelectedTopUpId, setSettingsSelectedTopUpId] = useState("growth");
         const [settingsApiKeys, setSettingsApiKeys] = useState([]);
         const [settingsApiKeysLoading, setSettingsApiKeysLoading] = useState(false);
         const [settingsApiKeysError, setSettingsApiKeysError] = useState("");
@@ -73956,6 +74372,41 @@ const html = `<!doctype html>
           }
         }
 
+        async function handleSettingsBuyTopUp(packageId) {
+          if (!hasSessionAuth) {
+            handleSignInWithComputerAgents();
+            return;
+          }
+
+          setSettingsTopUpActionId(packageId);
+          setSettingsBillingError("");
+          setSettingsBillingSuccess("");
+          try {
+            const response = await fetch("/api/aios/lemonsqueezy/checkout", {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                packageId,
+                successUrl: window.location.origin + window.location.pathname,
+                cancelUrl: window.location.origin + window.location.pathname,
+              }),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok || !data?.checkoutUrl) {
+              throw new Error(data?.message || data?.error || "Failed to start checkout.");
+            }
+
+            window.location.href = data.checkoutUrl;
+          } catch (error) {
+            setSettingsBillingError(error instanceof Error ? error.message : "Failed to start checkout.");
+            setSettingsTopUpActionId("");
+          }
+        }
+
         async function handleSettingsChangePlan(tierId) {
           if (!hasSessionAuth) {
             handleSignInWithComputerAgents();
@@ -76847,6 +77298,8 @@ const html = `<!doctype html>
           getSeriesValue,
           getXAxisLabel,
           formatAxisValue,
+          chartHeight,
+          headerContent,
         }) {
           const normalizedLabels = Array.isArray(labels) ? labels : [];
           const normalizedSeries = Array.isArray(series) ? series.filter(Boolean) : [];
@@ -76854,7 +77307,7 @@ const html = `<!doctype html>
             return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "Select a metric");
           }
 
-          const chartHeight = 178;
+          const resolvedChartHeight = Math.max(120, Number(chartHeight || 178));
           const marginTop = 14;
           const marginRight = 10;
           const marginBottom = 28;
@@ -76881,11 +77334,12 @@ const html = `<!doctype html>
               className: "playground-database-overview-timeseries-card",
               "aria-label": ariaLabel || "Telemetry chart",
             },
+            headerContent || null,
             React.createElement("div", { className: "playground-database-overview-timeseries-chart" },
               React.createElement(PlaygroundSettingsResponsiveSvg, {
                   frameClassName: "playground-database-overview-timeseries-frame",
-                  frameHeight: chartHeight,
-                  svgHeight: chartHeight,
+                  frameHeight: resolvedChartHeight,
+                  svgHeight: resolvedChartHeight,
                   fallbackWidth: 420,
                   ariaLabel: ariaLabel || "Telemetry chart",
                 }, ({ svgWidth, svgHeight }) => {
@@ -77367,7 +77821,12 @@ const html = `<!doctype html>
                       };
                       const userTier = settingsCurrentTierId;
                       const tierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === userTier) || fallbackTierInfo;
-                      const tierLimit = Number(tierInfo.computeTokens || fallbackTierInfo.computeTokens);
+                      const tierLimit = Math.max(
+                        settingsDollarsToComputeTokens(settingsBudgetStatus?.tierQuota),
+                        Number(tierInfo.computeTokens || fallbackTierInfo.computeTokens)
+                      );
+                      const topUpBalanceCT = settingsDollarsToComputeTokens(settingsBudgetStatus?.topUpBalance);
+                      const hasTopUpBalance = topUpBalanceCT > 0;
                       const totalUsedCT = Math.max(
                         Number(settingsUsageSummary?.totals?.totalCT || 0),
                         settingsDollarsToComputeTokens(settingsBudgetStatus?.currentPeriodUsage)
@@ -77386,10 +77845,10 @@ const html = `<!doctype html>
                               style: { width: String(Math.min(usagePercent, 100)) + "%" },
                             })
                           ),
-                          usagePercent >= 100
+                          usagePercent >= 100 && !hasTopUpBalance
                             ? React.createElement("div", { className: "playground-settings-plan-action-warning" },
                                 React.createElement("strong", null, "Action Required:"),
-                                " You've used all your Compute Tokens. Upgrade your plan to continue using agents."
+                                " You've used all your Compute Tokens. Upgrade your plan or buy a one-time add-on to continue using agents."
                               )
                             : null
                         ),
@@ -77399,6 +77858,15 @@ const html = `<!doctype html>
                           React.createElement("div", { className: "playground-settings-plan-heading-title" }, "Choose Your Plan"),
                           React.createElement("div", { className: "playground-settings-plan-heading-copy" }, "Simple access plans with included credits, then usage-based infrastructure for larger workloads.")
                         ),
+                        hasTopUpBalance
+                          ? React.createElement("div", { className: "playground-settings-plan-system-note" },
+                              React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "CT"),
+                              React.createElement("div", null,
+                                React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "One-time add-on balance available"),
+                                React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, formatSettingsComputeTokens(topUpBalanceCT) + " remain on this account after your included monthly credits.")
+                              )
+                            )
+                          : null,
                         settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "free"
                           ? React.createElement("div", { className: "playground-settings-plan-system-note" },
                               React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "IOS"),
@@ -77531,6 +77999,135 @@ const html = `<!doctype html>
                               );
                           })
                         ),
+                        (() => {
+                          const selectedTopUpPackage = SETTINGS_TOP_UP_CATALOG.find((pkg) => pkg.id === settingsSelectedTopUpId) || SETTINGS_TOP_UP_CATALOG[1] || SETTINGS_TOP_UP_CATALOG[0] || null;
+                          return selectedTopUpPackage
+                            ? renderSettingsNote(
+                                "Add Compute Tokens",
+                                React.createElement(React.Fragment, null,
+                                  React.createElement("div", {
+                                    style: {
+                                      color: "rgba(255,255,255,0.68)",
+                                      marginBottom: "14px",
+                                    },
+                                  }, "Buy a one-time Compute Token add-on without changing your subscription. Purchased add-ons are consumed only after your included monthly credits are exhausted."),
+                                  React.createElement("div", {
+                                    style: {
+                                      display: "flex",
+                                      flexWrap: "wrap",
+                                      gap: "8px",
+                                      marginBottom: "14px",
+                                    },
+                                  },
+                                    SETTINGS_TOP_UP_CATALOG.map((pkg) => {
+                                      const isSelected = pkg.id === selectedTopUpPackage.id;
+                                      return React.createElement("button", {
+                                          key: pkg.id,
+                                          type: "button",
+                                          onClick: () => setSettingsSelectedTopUpId(pkg.id),
+                                          style: {
+                                            display: "inline-flex",
+                                            flexDirection: "column",
+                                            alignItems: "flex-start",
+                                            justifyContent: "center",
+                                            gap: "2px",
+                                            minWidth: "124px",
+                                            padding: "10px 12px",
+                                            borderRadius: "14px",
+                                            background: isSelected ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+                                            color: isSelected ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.82)",
+                                            boxShadow: "none",
+                                            border: isSelected ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.08)",
+                                            cursor: "pointer",
+                                          },
+                                        },
+                                          React.createElement("span", {
+                                            style: {
+                                              fontSize: "13px",
+                                              fontWeight: "600",
+                                              lineHeight: 1.2,
+                                            },
+                                          }, formatSettingsComputeTokens(pkg.computeTokens)),
+                                          React.createElement("span", {
+                                            style: {
+                                              fontSize: "11px",
+                                              color: isSelected ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.56)",
+                                            },
+                                          }, "$" + pkg.price + " one-time")
+                                        );
+                                    })
+                                  ),
+                                  React.createElement("div", {
+                                    style: {
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "space-between",
+                                      gap: "14px",
+                                      padding: "14px 16px",
+                                      borderRadius: "16px",
+                                      background: "rgba(255,255,255,0.04)",
+                                      border: "1px solid rgba(255,255,255,0.08)",
+                                    },
+                                  },
+                                    React.createElement("div", {
+                                      style: {
+                                        minWidth: 0,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "4px",
+                                      },
+                                    },
+                                      React.createElement("div", {
+                                        style: {
+                                          fontSize: "12px",
+                                          color: "rgba(255,255,255,0.58)",
+                                        },
+                                      }, "Selected purchase"),
+                                      React.createElement("div", {
+                                        style: {
+                                          fontSize: "17px",
+                                          fontWeight: "600",
+                                          color: "rgba(255,255,255,0.96)",
+                                          lineHeight: 1.2,
+                                        },
+                                      }, formatSettingsComputeTokens(selectedTopUpPackage.computeTokens) + " for $" + selectedTopUpPackage.price),
+                                      React.createElement("div", {
+                                        style: {
+                                          fontSize: "12px",
+                                          color: "rgba(255,255,255,0.56)",
+                                        },
+                                      }, selectedTopUpPackage.description)
+                                    ),
+                                    React.createElement("button", {
+                                        type: "button",
+                                        onClick: () => {
+                                          void handleSettingsBuyTopUp(selectedTopUpPackage.id);
+                                        },
+                                        disabled: settingsTopUpActionId === selectedTopUpPackage.id,
+                                        className: "playground-settings-plan-card-cta-button is-light",
+                                        style: {
+                                          minWidth: "152px",
+                                          justifyContent: "center",
+                                        },
+                                      },
+                                        settingsTopUpActionId === selectedTopUpPackage.id
+                                          ? React.createElement("span", null, "Loading...")
+                                          : "Buy Compute Tokens"
+                                      )
+                                  ),
+                                  hasTopUpBalance
+                                    ? React.createElement("div", {
+                                        style: {
+                                          marginTop: "12px",
+                                          fontSize: "12px",
+                                          color: "rgba(255,255,255,0.58)",
+                                        },
+                                      }, "Current one-time add-on balance: " + formatSettingsComputeTokens(topUpBalanceCT))
+                                    : null
+                                )
+                              )
+                            : null;
+                        })(),
                         React.createElement("div", {
                           className: "playground-settings-detail-stack",
                           style: { marginTop: "24px" },
@@ -84696,8 +85293,8 @@ async function serveDistAsset(req, res) {
   }
 }
 
-async function serveAiosPublicAsset(req, res) {
-  const pathname = new URL(req.url, `http://localhost:${port}`).pathname;
+async function serveAiosPublicAsset(req, res, assetPath = "") {
+  const pathname = assetPath || new URL(req.url, `http://localhost:${port}`).pathname;
   const contentType = pathname.endsWith(".png")
     ? "image/png"
     : pathname.endsWith(".webp")
@@ -85069,6 +85666,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/environment-gui/viewer") {
     serveEnvironmentGuiViewerPage(res);
+    return;
+  }
+
+  if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/favicon.ico") {
+    void serveAiosPublicAsset(req, res, "/img/logos/favicon-32x32.png");
     return;
   }
 
@@ -86067,6 +86669,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/real/billing/budget") {
     void proxyUpstreamGet(req, res, "/billing/budget");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/costs/breakdown") {
+    void proxyUpstreamGet(req, res, "/costs/breakdown");
     return;
   }
 
