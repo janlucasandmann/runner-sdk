@@ -1773,8 +1773,18 @@ const html = `<!doctype html>
       }
 
       .playground-thread-runner.is-project-wallpaper-active .tb-log-card-panel,
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-file-preview-frame,
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-file-preview-topbar,
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-terminal-body,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface-topbar,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface-body,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface-fallback,
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-task-create-item,
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-resource-create-item,
       .playground-thread-runner.is-project-wallpaper-active .tb-subagent-log-prompt,
-      .playground-thread-runner.is-project-wallpaper-active .tb-subagent-log-summary {
+      .playground-thread-runner.is-project-wallpaper-active .tb-subagent-log-summary,
+      .playground-thread-runner.is-project-wallpaper-active .tb-deep-research-log-summary {
         -webkit-backdrop-filter: blur(50px);
         backdrop-filter: blur(50px);
       }
@@ -7590,24 +7600,36 @@ const html = `<!doctype html>
         gap: 16px;
       }
 
-      .playground-settings-usage-app-header {
+      .playground-settings-usage-period-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 8px;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      .playground-settings-usage-app-title {
-        font-size: 18px;
+      .playground-settings-usage-period-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex-wrap: wrap;
+      }
+
+      .playground-settings-usage-period-title {
+        font-size: 24px;
+        line-height: 1;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.96);
       }
 
       .playground-settings-usage-app-period {
-        margin-top: 4px;
         font-size: 12px;
-        color: rgba(255, 255, 255, 0.4);
+        line-height: 1.3;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.92);
       }
 
       .playground-settings-usage-nav {
@@ -7654,6 +7676,13 @@ const html = `<!doctype html>
         gap: 16px;
       }
 
+      .playground-settings-usage-analytics-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(330px, 360px);
+        gap: 16px;
+        align-items: stretch;
+      }
+
       .playground-settings-usage-summary-grid {
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       }
@@ -7663,6 +7692,20 @@ const html = `<!doctype html>
         border-radius: 18px;
         padding: 16px;
         background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-settings-usage-chart-card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        height: 100%;
+        border-radius: 0;
+        padding: 0;
+        background: transparent;
+      }
+
+      .playground-settings-usage-analytics-grid > .playground-settings-usage-chart-card {
+        min-height: 392px;
       }
 
       .playground-settings-usage-summary-label {
@@ -7775,6 +7818,96 @@ const html = `<!doctype html>
 
       .playground-settings-usage-chart-card.is-source {
         min-height: 260px;
+      }
+
+      .playground-settings-usage-chart-card.is-donut {
+        min-height: 260px;
+        min-width: 0;
+      }
+
+      .playground-settings-usage-chart-card.is-donut .playground-settings-usage-card-header {
+        padding-left: 64px;
+      }
+
+      .playground-settings-usage-donut-layout {
+        margin-top: -8px;
+        display: grid;
+        grid-template-columns: minmax(172px, 204px) max-content;
+        gap: 6px;
+        align-items: center;
+        justify-content: end;
+        width: 100%;
+        flex: 1 1 auto;
+      }
+
+      .playground-settings-usage-donut-frame {
+        width: min(100%, 204px);
+        height: 228px;
+        margin: 0 auto;
+      }
+
+      .playground-settings-usage-donut-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .playground-settings-usage-donut-column.is-right {
+        align-items: flex-start;
+        justify-self: end;
+      }
+
+      .playground-settings-usage-donut-legend-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .playground-settings-usage-donut-legend-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .playground-settings-usage-donut-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.58);
+        line-height: 1.35;
+        word-break: break-word;
+      }
+
+      .playground-settings-usage-donut-value {
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-settings-usage-donut-subvalue {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-settings-usage-donut-center-label {
+        fill: rgba(255, 255, 255, 0.46);
+        font-size: 10px;
+        font-weight: 500;
+      }
+
+      .playground-settings-usage-donut-center-value {
+        fill: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .playground-settings-usage-donut-center-copy {
+        fill: rgba(255, 255, 255, 0.4);
+        font-size: 9px;
       }
 
       .playground-settings-usage-chart-note {
@@ -17607,6 +17740,178 @@ const html = `<!doctype html>
         padding-right: 2px;
       }
 
+      .playground-settings-topup-modal-backdrop {
+        z-index: 320;
+      }
+
+      .playground-settings-topup-modal {
+        width: min(560px, 100%);
+      }
+
+      .playground-settings-topup-modal .playground-tasks-project-modal-name-row {
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .playground-settings-topup-modal-title-shell {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-top: 2px;
+      }
+
+      .playground-settings-topup-modal-title {
+        font-size: 17px;
+        line-height: 1.2;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-settings-topup-modal-subtitle {
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-settings-topup-modal-body {
+        gap: 14px;
+      }
+
+      .playground-settings-topup-note {
+        padding: 12px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      .playground-settings-topup-package-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+        gap: 10px;
+      }
+
+      .playground-settings-topup-package-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        width: 100%;
+        min-height: 132px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.86);
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease, color 160ms ease;
+      }
+
+      .playground-settings-topup-package-card:hover {
+        border-color: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateY(-1px);
+      }
+
+      .playground-settings-topup-package-card.is-selected {
+        border-color: rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-settings-topup-package-card-name {
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-settings-topup-package-card.is-selected .playground-settings-topup-package-card-name {
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-settings-topup-package-card-tokens {
+        font-size: 16px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: inherit;
+      }
+
+      .playground-settings-topup-package-card-price {
+        font-size: 12px;
+        line-height: 1.3;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-settings-topup-package-card-copy {
+        margin-top: auto;
+        font-size: 11px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-settings-topup-package-card.is-selected .playground-settings-topup-package-card-price,
+      .playground-settings-topup-package-card.is-selected .playground-settings-topup-package-card-copy {
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .playground-settings-topup-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-settings-topup-summary-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-settings-topup-summary-label {
+        font-size: 12px;
+        line-height: 1.2;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-settings-topup-summary-value {
+        font-size: 17px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-settings-topup-summary-description {
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-settings-topup-summary-badge {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 12px;
+        line-height: 1;
+        color: rgba(255, 255, 255, 0.68);
+        white-space: nowrap;
+      }
+
       .playground-settings-trigger-composer-modal {
         width: min(560px, 100%);
       }
@@ -21170,11 +21475,13 @@ const html = `<!doctype html>
         .playground-settings-plan-grid,
         .playground-settings-kpi-grid,
         .playground-settings-form-grid,
+        .playground-settings-usage-analytics-grid,
         .playground-settings-usage-balance-grid,
         .playground-settings-usage-secondary-grid {
           grid-template-columns: minmax(0, 1fr);
         }
-        .playground-settings-usage-app-header,
+        .playground-settings-usage-period-header,
+        .playground-settings-usage-period-heading,
         .playground-settings-usage-card-header,
         .playground-settings-usage-legend-row,
         .playground-settings-usage-source-row-top,
@@ -21186,6 +21493,18 @@ const html = `<!doctype html>
         .playground-settings-usage-card-header-legend,
         .playground-settings-usage-inline-legend {
           justify-content: flex-start;
+        }
+        .playground-settings-usage-donut-layout {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 16px;
+        }
+        .playground-settings-usage-donut-layout > .playground-settings-usage-donut-frame {
+          order: -1;
+        }
+        .playground-settings-usage-donut-column {
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: 12px;
         }
         .playground-settings-field-span-2 {
           grid-column: span 1;
@@ -21520,6 +21839,7 @@ const html = `<!doctype html>
         ios: "native",
         macos: "native",
         runner: "web",
+        agent_runtime: "web",
         web: "web",
         "runner-web-sdk-demo": "web",
         compass: "web",
@@ -21538,9 +21858,10 @@ const html = `<!doctype html>
       const SETTINGS_SOURCE_LABELS = {
         ios: "Native App",
         macos: "macOS App",
-        runner: "Runner",
+        runner: "Runtime",
+        agent_runtime: "Runtime",
         web: "Web App",
-        "runner-web-sdk-demo": "Web SDK Demo",
+        "runner-web-sdk-demo": "Web App",
         compass: "Compass",
         browser: "Compass",
         cocreate: "CoCreate",
@@ -21677,14 +21998,18 @@ const html = `<!doctype html>
       };
       const SETTINGS_TRIGGER_SOURCE_OPTIONS = [
         { value: "github", label: "GitHub" },
+        { value: "gitlab", label: "GitLab" },
         { value: "slack", label: "Slack" },
         { value: "webhook", label: "Custom Webhook" },
       ];
       const SETTINGS_GITHUB_EVENTS = ["push", "pull_request", "issues", "issue_comment", "release", "create", "delete", "workflow_run"];
       const SETTINGS_GITHUB_PULL_REQUEST_ACTION_EVENTS = ["pull_request", "issue_comment"];
+      const SETTINGS_GITLAB_EVENTS = ["Push Hook", "Merge Request Hook", "Note Hook", "Tag Push Hook", "Pipeline Hook"];
+      const SETTINGS_GITLAB_MERGE_REQUEST_ACTION_EVENTS = ["Merge Request Hook", "Note Hook"];
       const SETTINGS_TRIGGER_ACTION_OPTIONS = [
         { value: "send_message", label: "Start thread" },
         { value: "comment_pull_request", label: "Comment on pull request" },
+        { value: "comment_merge_request", label: "Comment on merge request" },
       ];
       const PLAYGROUND_CODE_EDITOR_THEME_NAME = "runner-playground-code-editor";
       const RUNNER_WELCOME_GREETING_TEMPLATES = [
@@ -22687,6 +23012,11 @@ const html = `<!doctype html>
               label: "GitHub",
               icon: GitCommitHorizontal,
             };
+          case "gitlab":
+            return {
+              label: "GitLab",
+              icon: GitCommitHorizontal,
+            };
           case "slack":
             return {
               label: "Slack",
@@ -22705,7 +23035,65 @@ const html = `<!doctype html>
         if (actionType === "comment_pull_request") {
           return "Comment on PR";
         }
+        if (actionType === "comment_merge_request") {
+          return "Comment on MR";
+        }
         return "Start thread";
+      }
+
+      function isSettingsTriggerActionSupportedForSource(source, actionType) {
+        const normalizedSource = String(source || "").trim().toLowerCase();
+        const normalizedActionType = String(actionType || "").trim().toLowerCase();
+        if (normalizedActionType === "comment_pull_request") {
+          return normalizedSource === "github";
+        }
+        if (normalizedActionType === "comment_merge_request") {
+          return normalizedSource === "gitlab";
+        }
+        return true;
+      }
+
+      function getSettingsTriggerDefaultEvent(source, actionType) {
+        const normalizedSource = String(source || "").trim().toLowerCase();
+        const normalizedActionType = String(actionType || "").trim().toLowerCase();
+        if (normalizedSource === "github") {
+          return normalizedActionType === "comment_pull_request" ? "pull_request" : "push";
+        }
+        if (normalizedSource === "gitlab") {
+          return normalizedActionType === "comment_merge_request" ? "Merge Request Hook" : "Push Hook";
+        }
+        return "";
+      }
+
+      function getSettingsTriggerEventOptions(source, actionType) {
+        const normalizedSource = String(source || "").trim().toLowerCase();
+        const normalizedActionType = String(actionType || "").trim().toLowerCase();
+        if (normalizedSource === "github") {
+          return normalizedActionType === "comment_pull_request"
+            ? SETTINGS_GITHUB_PULL_REQUEST_ACTION_EVENTS
+            : SETTINGS_GITHUB_EVENTS;
+        }
+        if (normalizedSource === "gitlab") {
+          return normalizedActionType === "comment_merge_request"
+            ? SETTINGS_GITLAB_MERGE_REQUEST_ACTION_EVENTS
+            : SETTINGS_GITLAB_EVENTS;
+        }
+        return [];
+      }
+
+      function getSettingsTriggerPromptPlaceholder(source, actionType) {
+        const normalizedSource = String(source || "").trim().toLowerCase();
+        const normalizedActionType = String(actionType || "").trim().toLowerCase();
+        if (normalizedActionType === "comment_pull_request") {
+          return "Review the pull request changes and write a concise, helpful GitHub comment.";
+        }
+        if (normalizedActionType === "comment_merge_request") {
+          return "Review the merge request changes and write a concise, helpful GitLab comment.";
+        }
+        if (normalizedSource === "gitlab") {
+          return "Inspect the GitLab event, pull the latest changes if needed, and summarize what happened.";
+        }
+        return "Pull the latest changes, inspect the webhook payload, and summarize what happened.";
       }
 
       function mapFirebaseAuthErrorMessage(code, fallbackMessage) {
@@ -29046,7 +29434,124 @@ const html = `<!doctype html>
         return normalized.length > maxLength ? normalized.slice(0, maxLength - 1).trimEnd() + "…" : normalized;
       }
 
-      function extractStepChangedPaths(step) {
+      function getHistoryLogCommand(log) {
+        const metadata = log && log.metadata && typeof log.metadata === "object" ? log.metadata : {};
+        return typeof metadata.command === "string" ? metadata.command : "";
+      }
+
+      function isReadOnlyHistorySyntheticFileCommand(command) {
+        const normalized = String(command || "").trim().replace(/^\$\s*/, "");
+        if (!normalized) {
+          return false;
+        }
+
+        if (/(^|[^>])>>?/.test(normalized)) {
+          return false;
+        }
+
+        const readOnlyCommands = new Set([
+          "cat",
+          "diff",
+          "du",
+          "env",
+          "exiftool",
+          "file",
+          "find",
+          "git",
+          "grep",
+          "head",
+          "identify",
+          "less",
+          "ls",
+          "od",
+          "pwd",
+          "readlink",
+          "realpath",
+          "rg",
+          "sed",
+          "sort",
+          "stat",
+          "tail",
+          "wc",
+          "which",
+        ]);
+        const writeCommands = new Set([
+          "cp",
+          "curl",
+          "ffmpeg",
+          "install",
+          "magick",
+          "mkdir",
+          "mv",
+          "rm",
+          "tee",
+          "touch",
+          "wget",
+        ]);
+
+        const segments = normalized.split(/\s*(?:&&|\|\||;)\s*/).map((segment) => segment.trim()).filter(Boolean);
+        if (segments.length === 0) {
+          return false;
+        }
+
+        function resolveCommandName(segment) {
+          const tokens = String(segment || "").split(/\s+/).filter(Boolean);
+          let index = 0;
+          while (index < tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[index])) {
+            index += 1;
+          }
+          if (tokens[index] === "sudo") {
+            index += 1;
+          }
+          return (tokens[index] || "").toLowerCase();
+        }
+
+        let sawReadOnly = false;
+        for (const segment of segments) {
+          const commandName = resolveCommandName(segment);
+          if (!commandName) {
+            return false;
+          }
+          if (writeCommands.has(commandName)) {
+            return false;
+          }
+          if (!readOnlyCommands.has(commandName)) {
+            return false;
+          }
+          sawReadOnly = true;
+        }
+
+        return sawReadOnly;
+      }
+
+      function shouldIgnoreSyntheticHistoryFileStep(step, historyLogsById) {
+        if (!step || step.eventType !== "file_change") {
+          return false;
+        }
+        const metadata = step && step.metadata && typeof step.metadata === "object" ? step.metadata : {};
+        const routeSource = typeof metadata.routeSource === "string" ? metadata.routeSource : "";
+        if (routeSource !== "threads.command_execution_generated_image") {
+          return false;
+        }
+        if (!historyLogsById || typeof step.sourceMessageId !== "string" || !step.sourceMessageId) {
+          return false;
+        }
+        const hasDiffs = metadata.diffs && typeof metadata.diffs === "object" && Object.keys(metadata.diffs).length > 0;
+        const hasFileContents = metadata.fileContents && typeof metadata.fileContents === "object" && Object.keys(metadata.fileContents).length > 0;
+        if (hasDiffs || hasFileContents) {
+          return false;
+        }
+        const sourceLog = historyLogsById.get(step.sourceMessageId);
+        if (!sourceLog || sourceLog.eventType !== "command_execution") {
+          return false;
+        }
+        return isReadOnlyHistorySyntheticFileCommand(getHistoryLogCommand(sourceLog));
+      }
+
+      function extractStepChangedPaths(step, historyLogsById) {
+        if (shouldIgnoreSyntheticHistoryFileStep(step, historyLogsById)) {
+          return [];
+        }
         const metadata = step && step.metadata && typeof step.metadata === "object" ? step.metadata : {};
         const values = [];
         if (Array.isArray(metadata.changedPaths)) values.push(...metadata.changedPaths);
@@ -30082,14 +30587,24 @@ const html = `<!doctype html>
         const explicitFilePaths = Array.isArray(metadata.filePaths) ? metadata.filePaths : [];
         const explicitChangeKinds = Array.isArray(metadata.changeKinds) ? metadata.changeKinds : [];
         const result = metadata.result;
+        const structuredResultPaths = extractGeneratedImagePathsFromHistoryResult(result);
 
         const looksLikeImageGeneration =
           metadata.isImageGeneration
           || command.includes("generate-image.py")
           || command.includes(".claude/skills/image-generation/")
           || /image saved to:/i.test(output);
+        const hasExplicitImageMetadata = Boolean(savedImagePath) || explicitFilePaths.length > 0 || structuredResultPaths.length > 0;
+
+        if (eventType !== "file_change" && isReadOnlyHistorySyntheticFileCommand(command)) {
+          return [];
+        }
 
         if (!looksLikeImageGeneration && eventType !== "file_change") {
+          return [];
+        }
+
+        if (eventType !== "file_change" && !hasExplicitImageMetadata) {
           return [];
         }
 
@@ -30109,14 +30624,12 @@ const html = `<!doctype html>
         for (let index = 0; index < explicitFilePaths.length; index += 1) {
           push(explicitFilePaths[index], explicitChangeKinds[index]);
         }
-        for (const filePath of extractGeneratedImagePathsFromHistoryResult(result)) push(filePath, fallbackChangeKind);
-        for (const filePath of extractGeneratedImagePathsFromHistoryOutput(output)) push(filePath, fallbackChangeKind);
-        for (const filePath of extractGeneratedImagePathsFromHistoryOutput(log?.message || "")) push(filePath, fallbackChangeKind);
+        for (const filePath of structuredResultPaths) push(filePath, fallbackChangeKind);
 
         return Array.from(entries.values());
       }
 
-      function buildSupplementalHistoryStepEntriesById(steps, logs) {
+      function buildSupplementalHistoryStepEntriesById(steps, logs, historyLogsById) {
         const nextMap = new Map();
         const orderedSteps = Array.isArray(steps)
           ? [...steps].sort((left, right) => String(left?.createdAt || "").localeCompare(String(right?.createdAt || "")))
@@ -30164,7 +30677,7 @@ const html = `<!doctype html>
             if (!createdAt || createdAt > windowEnd || (windowStart && createdAt <= windowStart)) {
               return false;
             }
-            return extractStepChangedFileEntries(candidate).length > 0;
+            return extractStepChangedFileEntries(candidate, historyLogsById).length > 0;
           });
 
           for (const log of orderedLogs) {
@@ -30301,7 +30814,10 @@ const html = `<!doctype html>
         return Array.from(entries.values());
       }
 
-      function extractStepChangedFileEntries(step) {
+      function extractStepChangedFileEntries(step, historyLogsById) {
+        if (shouldIgnoreSyntheticHistoryFileStep(step, historyLogsById)) {
+          return [];
+        }
         const metadata = step && step.metadata && typeof step.metadata === "object" ? step.metadata : {};
         const filePaths = Array.isArray(metadata.filePaths) ? metadata.filePaths : [];
         const changeKinds = Array.isArray(metadata.changeKinds) ? metadata.changeKinds : [];
@@ -30372,7 +30888,7 @@ const html = `<!doctype html>
           });
         }
 
-        for (const changedPath of extractStepChangedPaths(step)) {
+        for (const changedPath of extractStepChangedPaths(step, historyLogsById)) {
           upsertEntry(changedPath, {});
         }
 
@@ -30385,7 +30901,7 @@ const html = `<!doctype html>
         return Array.from(entries.values());
       }
 
-      function buildStepFileEntries(step, diffSummary, snapshotFiles, supplementalEntries) {
+      function buildStepFileEntries(step, diffSummary, snapshotFiles, supplementalEntries, historyLogsById) {
         const entries = new Map();
 
         function upsertEntry(rawPath, extra) {
@@ -30416,7 +30932,7 @@ const html = `<!doctype html>
           });
         }
 
-        for (const entry of extractStepChangedFileEntries(step)) {
+        for (const entry of extractStepChangedFileEntries(step, historyLogsById)) {
           upsertEntry(entry.path, entry);
         }
 
@@ -30612,16 +31128,16 @@ const html = `<!doctype html>
         return historyOperation === "reapply" ? "reapply" : historyOperation === "revert" ? "revert" : "";
       }
 
-      function shouldDisplayHistoryStep(step) {
+      function shouldDisplayHistoryStep(step, historyLogsById) {
         if (!step || typeof step !== "object") return false;
-        return extractStepChangedFileEntries(step).length > 0;
+        return extractStepChangedFileEntries(step, historyLogsById).length > 0;
       }
 
-      function getPreferredHistoryStep(steps) {
+      function getPreferredHistoryStep(steps, historyLogsById) {
         if (!Array.isArray(steps) || steps.length === 0) return null;
         return (
-          steps.find((step) => extractStepChangedFileEntries(step).length > 0)
-          || steps.find((step) => shouldDisplayHistoryStep(step))
+          steps.find((step) => extractStepChangedFileEntries(step, historyLogsById).length > 0)
+          || steps.find((step) => shouldDisplayHistoryStep(step, historyLogsById))
           || steps[0]
           || null
         );
@@ -31329,15 +31845,25 @@ const html = `<!doctype html>
         const [historyMutationError, setHistoryMutationError] = useState("");
         const [reloadNonce, setReloadNonce] = useState(0);
 
+        const historyLogsById = useMemo(() => {
+          const nextMap = new Map();
+          for (const log of Array.isArray(threadLogs) ? threadLogs : []) {
+            if (log && typeof log.id === "string" && log.id) {
+              nextMap.set(log.id, log);
+            }
+          }
+          return nextMap;
+        }, [threadLogs]);
+
         const supplementalStepEntriesById = useMemo(() => {
-          return buildSupplementalHistoryStepEntriesById(steps, threadLogs);
-        }, [steps, threadLogs]);
+          return buildSupplementalHistoryStepEntriesById(steps, threadLogs, historyLogsById);
+        }, [historyLogsById, steps, threadLogs]);
 
         const displaySteps = useMemo(() => {
           return steps.filter((step) => {
-            return shouldDisplayHistoryStep(step) || (supplementalStepEntriesById.get(step.id) || []).length > 0;
+            return shouldDisplayHistoryStep(step, historyLogsById) || (supplementalStepEntriesById.get(step.id) || []).length > 0;
           });
-        }, [supplementalStepEntriesById, steps]);
+        }, [historyLogsById, supplementalStepEntriesById, steps]);
 
         const sortedSteps = useMemo(() => {
           return [...displaySteps].sort((left, right) => right.sequence - left.sequence);
@@ -31407,27 +31933,27 @@ const html = `<!doctype html>
         const previewStepFilesById = useMemo(() => {
           const nextMap = new Map();
           for (const step of sortedSteps) {
-            nextMap.set(step.id, buildStepFileEntries(step, null, [], supplementalStepEntriesById.get(step.id) || []));
+            nextMap.set(step.id, buildStepFileEntries(step, null, [], supplementalStepEntriesById.get(step.id) || [], historyLogsById));
           }
           if (selectedStep?.id) {
             nextMap.set(
               selectedStep.id,
               stepFiles.length > 0
                 ? stepFiles
-                : buildStepFileEntries(selectedStep, stepDiffSummary, [], supplementalStepEntriesById.get(selectedStep.id) || [])
+                : buildStepFileEntries(selectedStep, stepDiffSummary, [], supplementalStepEntriesById.get(selectedStep.id) || [], historyLogsById)
             );
           }
           return nextMap;
-        }, [selectedStep, sortedSteps, stepDiffSummary, stepFiles, supplementalStepEntriesById]);
+        }, [historyLogsById, selectedStep, sortedSteps, stepDiffSummary, stepFiles, supplementalStepEntriesById]);
 
         const selectedStepFiles = selectedStep ? (previewStepFilesById.get(selectedStep.id) || []) : [];
 
         const changedPaths = useMemo(() => {
           return uniqueHistoryPaths([
-            ...(selectedStep ? extractStepChangedPaths(selectedStep) : []),
+            ...(selectedStep ? extractStepChangedPaths(selectedStep, historyLogsById) : []),
             ...(Array.isArray(stepDiffSummary?.changedPaths) ? stepDiffSummary.changedPaths : []),
           ]);
-        }, [selectedStep, stepDiffSummary]);
+        }, [historyLogsById, selectedStep, stepDiffSummary]);
 
         const selectedFileEntry = useMemo(() => {
           return selectedStepFiles.find((entry) => historyPathsMatch(entry.path, selectedFilePath)) || null;
@@ -31566,12 +32092,12 @@ const html = `<!doctype html>
             return;
           }
 
-          const fallbackPath = getPreferredHistoryEntryPath(previewStepFilesById.get(targetStep.id) || [], extractStepChangedPaths(targetStep));
+          const fallbackPath = getPreferredHistoryEntryPath(previewStepFilesById.get(targetStep.id) || [], extractStepChangedPaths(targetStep, historyLogsById));
           setSelectedStepId(targetStep.id);
           setSelectedFilePath(navigationTarget.filePath || fallbackPath);
           setChangesScreenMode(navigationTarget.openDetail ? "detail" : "timeline");
           onNavigationTargetHandled?.(navigationTarget.token);
-        }, [navigationTarget, onNavigationTargetHandled, previewStepFilesById, sortedSteps, stepsLoadedOnce, threadId]);
+        }, [historyLogsById, navigationTarget, onNavigationTargetHandled, previewStepFilesById, sortedSteps, stepsLoadedOnce, threadId]);
 
         useEffect(() => {
           if (sortedSteps.length === 0) {
@@ -31583,9 +32109,9 @@ const html = `<!doctype html>
             return;
           }
 
-          const preferredStep = getPreferredHistoryStep(sortedSteps);
+          const preferredStep = getPreferredHistoryStep(sortedSteps, historyLogsById);
           setSelectedStepId(preferredStep?.id || "");
-        }, [selectedStepId, sortedSteps]);
+        }, [historyLogsById, selectedStepId, sortedSteps]);
 
         useEffect(() => {
           let cancelled = false;
@@ -31611,11 +32137,11 @@ const html = `<!doctype html>
           }).then((nextDiffSummary) => {
             if (cancelled) return;
             setStepDiffSummary(nextDiffSummary);
-            setStepFiles(buildStepFileEntries(selectedStep, nextDiffSummary, [], supplementalStepEntriesById.get(selectedStep.id) || []));
+            setStepFiles(buildStepFileEntries(selectedStep, nextDiffSummary, [], supplementalStepEntriesById.get(selectedStep.id) || [], historyLogsById));
             setStepDataError("");
           }).catch((error) => {
             if (cancelled) return;
-            const fallbackFiles = buildStepFileEntries(selectedStep, null, [], supplementalStepEntriesById.get(selectedStep.id) || []);
+            const fallbackFiles = buildStepFileEntries(selectedStep, null, [], supplementalStepEntriesById.get(selectedStep.id) || [], historyLogsById);
             setStepFiles(fallbackFiles);
             setStepDiffSummary(null);
             if (fallbackFiles.length === 0) {
@@ -31632,7 +32158,7 @@ const html = `<!doctype html>
           return () => {
             cancelled = true;
           };
-        }, [backendUrl, client, historyHeaders, selectedStep, supplementalStepEntriesById, threadId]);
+        }, [backendUrl, client, historyHeaders, historyLogsById, selectedStep, supplementalStepEntriesById, threadId]);
 
         useEffect(() => {
           const currentEntryStillExists = selectedStepFiles.some((entry) => historyPathsMatch(entry.path, selectedFilePath));
@@ -31790,7 +32316,7 @@ const html = `<!doctype html>
 
         function handleStepSelection(step, files) {
           setSelectedStepId(step.id);
-          setSelectedFilePath(getPreferredHistoryEntryPath(files, extractStepChangedPaths(step)));
+          setSelectedFilePath(getPreferredHistoryEntryPath(files, extractStepChangedPaths(step, historyLogsById)));
         }
 
         function handleFileSelection(step, path) {
@@ -57557,6 +58083,15 @@ const html = `<!doctype html>
         }
 
         function buildPlaygroundMissionControlSkillSnapshot(systemSkillRecords, customSkillRecords) {
+          const builtInSkillInvocationNames = {
+            image_generation: "image-generation",
+            web_search: "web-search",
+            deep_research: "deep-research",
+            frontend_design: "frontend-design",
+            task_management: "task-management",
+            computer_agents: "computer-agents",
+            app_platform: "app-platform",
+          };
           const normalizedSystemSkillRecords = (Array.isArray(systemSkillRecords) ? systemSkillRecords : [])
             .filter((skillRecord) => skillRecord?.id)
             .slice()
@@ -57569,10 +58104,21 @@ const html = `<!doctype html>
           return [
             "Available skills:",
             normalizedSystemSkillRecords.length > 0
-              ? ("- System skills: " + normalizedSystemSkillRecords.map((skillRecord) => (skillRecord.name || skillRecord.id) + " (" + skillRecord.id + ")").join(", "))
+              ? ("- System skills: " + normalizedSystemSkillRecords.map((skillRecord) => {
+                  const skillId = String(skillRecord.id || "").trim();
+                  const displayName = skillRecord.name || skillId;
+                  const invocationName = builtInSkillInvocationNames[skillId] || skillId;
+                  if (invocationName && invocationName !== skillId) {
+                    return displayName + " [invoke as " + invocationName + "; attach id " + skillId + "]";
+                  }
+                  return displayName + " [id " + skillId + "]";
+                }).join(", "))
               : "- System skills: None listed.",
             normalizedCustomSkillRecords.length > 0
-              ? ("- Custom skills: " + normalizedCustomSkillRecords.map((skillRecord) => (skillRecord.name || skillRecord.id) + " (" + skillRecord.id + ")").join(", "))
+              ? ("- Custom skills: " + normalizedCustomSkillRecords.map((skillRecord) => {
+                  const skillId = String(skillRecord.id || "").trim();
+                  return (skillRecord.name || skillId) + " [id " + skillId + "]";
+                }).join(", "))
               : "- Custom skills: None yet.",
           ].join("\\n");
         }
@@ -57918,6 +58464,7 @@ const html = `<!doctype html>
             "Your job is to analyze the available project context, define the right strategy, and update the project structure using the Task Management and Computer Agents skills where appropriate.",
             "Always use the Task Management skill for releases, tasks, subtasks, blockers, comments, and other planning mutations instead of only describing them in prose.",
             "Always use the Computer Agents skill for live discovery of agents, environments, and skills instead of inventing IDs or writing raw curl requests.",
+            "When invoking built-in skills, use the exact invocation names from the available skills list, for example task-management and computer-agents. Do not invoke skills using attachment IDs like task_management or computer_agents.",
             "Project: " + (normalizedProject.name || "Untitled Project"),
             missionInstructions
               ? ("Mission instructions:" + newline + missionInstructions)
@@ -72296,7 +72843,7 @@ const html = `<!doctype html>
         const [settingsTriggerForm, setSettingsTriggerForm] = useState({
           name: "",
           source: "github",
-          event: "push",
+          event: getSettingsTriggerDefaultEvent("github", "send_message"),
           environmentId: "",
           agentId: "",
           actionType: "send_message",
@@ -72686,9 +73233,15 @@ const html = `<!doctype html>
           if (commandType === "skill") {
             return [
               "The user is asking you to create a new ACP skill.",
-              "Use the Computer Agents skill to inspect the live platform and create the requested skill instead of inventing IDs or writing raw API calls.",
+              "Use the Computer Agents skill to inspect the live platform and publish the requested skill instead of inventing IDs or writing raw API calls.",
+              "Read /workspace/.claude/skills/computer-agents/SKILL.md, then use python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py skills --help and skills list before creating anything.",
+              "Draft the skill locally first: create a proper SKILL.md plus any supporting code files in a temporary workspace folder.",
+              "Then publish it with python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py skills create --name ... --description ... --markdown-file ... --code-file target=source ....",
+              "Do not stop after creating local files. The skill only counts as finished once it has been published to the live ACP custom skills list.",
+              "After publishing, verify success by running skills list --query ... and confirm the created skill appears in the account skill list.",
               "If essential details are missing, ask concise clarifying questions before creating anything. Focus on the skill's purpose, triggers or entrypoints, required files, tool or environment access, expected inputs and outputs, and any dependencies or examples that should ship with it.",
-              "Once the request is specific enough, create the skill and clearly summarize what you configured."
+              "If publishing fails, explain the exact blocker and the command output instead of claiming the skill was created.",
+              "Once the request is specific enough and the publish step succeeds, clearly summarize what you configured and which skill ID or name was created."
             ].join(" ");
           }
           return "";
@@ -72701,6 +73254,11 @@ const html = `<!doctype html>
 
           authRedirectStartedRef.current = true;
           clearPlaygroundAuthSessionMarker();
+          clearPlaygroundAuthRedirectState();
+          try {
+            localStorage.removeItem("runner_demo_api_key");
+          } catch {}
+          setApiKey("");
           setSessionStreamingConfig({
             status: "idle",
             apiKey: "",
@@ -74928,7 +75486,7 @@ const html = `<!doctype html>
           setSettingsTriggerForm({
             name: "",
             source: "github",
-            event: "push",
+            event: getSettingsTriggerDefaultEvent("github", "send_message"),
             environmentId: resolvedEnvironmentId || "",
             agentId: resolvedPreferredAgentId || "",
             actionType: "send_message",
@@ -76094,7 +76652,7 @@ const html = `<!doctype html>
           setSettingsTriggersError("");
           try {
             const filters = {};
-            if (settingsTriggerForm.source === "github") {
+            if (settingsTriggerForm.source === "github" || settingsTriggerForm.source === "gitlab") {
               if (String(settingsTriggerForm.filterRepo || "").trim()) {
                 filters.repo = String(settingsTriggerForm.filterRepo || "").trim();
               }
@@ -76104,10 +76662,14 @@ const html = `<!doctype html>
             }
 
             const action = {
-              type: settingsTriggerForm.actionType === "comment_pull_request" ? "comment_pull_request" : "send_message",
+              type: settingsTriggerForm.actionType === "comment_pull_request"
+                ? "comment_pull_request"
+                : settingsTriggerForm.actionType === "comment_merge_request"
+                  ? "comment_merge_request"
+                  : "send_message",
               prompt: promptValue,
             };
-            if (settingsTriggerForm.actionType !== "comment_pull_request") {
+            if (settingsTriggerForm.actionType !== "comment_pull_request" && settingsTriggerForm.actionType !== "comment_merge_request") {
               action.message = promptValue;
             }
 
@@ -78969,6 +79531,192 @@ const html = `<!doctype html>
           );
         }
 
+        function renderSettingsUsageMultiStackedChart(config) {
+          const labels = Array.isArray(config?.labels) ? config.labels : [];
+          const series = Array.isArray(config?.series)
+            ? config.series.filter((entry) => entry && Array.isArray(entry.values))
+            : [];
+          if (!labels.length || !series.length) {
+            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No usage data in this period");
+          }
+
+          const chartFrameHeight = Number(config?.tall) ? 288 : 228;
+          const baseSvgHeight = Number(config?.tall) ? 252 : 220;
+          const marginTop = 12;
+          const marginRight = 14;
+          const marginBottom = 38;
+          const marginLeft = 40;
+          const totals = labels.map((_, index) =>
+            series.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
+          );
+          const yMax = Math.max(1, Number(config?.yMax || Math.max(...totals, 1)));
+          const gridLineCount = 4;
+          const tickFormatter = typeof config?.tickFormatter === "function"
+            ? config.tickFormatter
+            : (value) => String(Math.round(value));
+          const labelStep = Math.max(1, Math.ceil(labels.length / 8));
+
+          return React.createElement(PlaygroundSettingsResponsiveSvg, {
+              frameClassName: "playground-settings-usage-chart-frame" + (config?.tall ? " is-tall" : ""),
+              frameHeight: chartFrameHeight,
+              svgHeight: baseSvgHeight,
+              ariaLabel: config?.ariaLabel || "Usage chart",
+            }, ({ svgWidth, svgHeight }) => {
+              const plotWidth = svgWidth - marginLeft - marginRight;
+              const plotHeight = svgHeight - marginTop - marginBottom;
+              const slotWidth = plotWidth / Math.max(labels.length, 1);
+              const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+              const baselineY = marginTop + plotHeight;
+
+              return React.createElement(React.Fragment, null,
+                Array.from({ length: gridLineCount + 1 }).map((_, index) => {
+                  const y = marginTop + (plotHeight / gridLineCount) * index;
+                  const tickValue = yMax - (yMax / gridLineCount) * index;
+                  return React.createElement(React.Fragment, { key: "grid:" + index },
+                    React.createElement("line", {
+                      x1: marginLeft,
+                      y1: y,
+                      x2: svgWidth - marginRight,
+                      y2: y,
+                      stroke: "rgba(255,255,255,0.10)",
+                      strokeWidth: "1",
+                    }),
+                    React.createElement("text", {
+                      x: marginLeft - 8,
+                      y: y + 3,
+                      textAnchor: "end",
+                      fill: "rgba(255,255,255,0.4)",
+                      fontSize: "10",
+                    }, tickFormatter(tickValue))
+                  );
+                }),
+                labels.map((label, index) => {
+                  const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                  let stackOffsetY = baselineY;
+                  const stackRects = series.map((entry, seriesIndex) => {
+                    const rawValue = Math.max(0, Number(entry.values[index] || 0));
+                    if (rawValue <= 0) {
+                      return null;
+                    }
+                    const segmentHeight = (rawValue / yMax) * plotHeight;
+                    stackOffsetY -= segmentHeight;
+                    return React.createElement("rect", {
+                      key: "segment:" + seriesIndex,
+                      x,
+                      y: stackOffsetY,
+                      width: barWidth,
+                      height: Math.max(segmentHeight, 1),
+                      rx: "3",
+                      fill: entry.color || "rgba(255,255,255,0.8)",
+                    });
+                  });
+
+                  return React.createElement(React.Fragment, { key: "stack:" + index },
+                    stackRects,
+                    index % labelStep === 0 || index === labels.length - 1
+                      ? React.createElement("text", {
+                          x: marginLeft + slotWidth * index + slotWidth / 2,
+                          y: svgHeight - 10,
+                          textAnchor: "middle",
+                          fill: "rgba(255,255,255,0.4)",
+                          fontSize: "10",
+                        }, label)
+                      : null
+                  );
+                })
+              );
+            }
+          );
+        }
+
+        function renderSettingsUsageDonutChart(config) {
+          const items = Array.isArray(config?.items) ? config.items.filter(Boolean) : [];
+          if (!items.length) {
+            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No source usage data in this period");
+          }
+
+          const totalValue = Math.max(0, items.reduce((sum, item) => sum + Math.max(0, Number(item.value || 0)), 0));
+          if (totalValue <= 0) {
+            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No source usage data in this period");
+          }
+
+          const renderArcPath = (cx, cy, innerRadius, outerRadius, startAngle, endAngle) => {
+            const startOuterX = cx + outerRadius * Math.cos(startAngle);
+            const startOuterY = cy + outerRadius * Math.sin(startAngle);
+            const endOuterX = cx + outerRadius * Math.cos(endAngle);
+            const endOuterY = cy + outerRadius * Math.sin(endAngle);
+            const startInnerX = cx + innerRadius * Math.cos(endAngle);
+            const startInnerY = cy + innerRadius * Math.sin(endAngle);
+            const endInnerX = cx + innerRadius * Math.cos(startAngle);
+            const endInnerY = cy + innerRadius * Math.sin(startAngle);
+            const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
+            return [
+              "M", startOuterX, startOuterY,
+              "A", outerRadius, outerRadius, 0, largeArcFlag, 1, endOuterX, endOuterY,
+              "L", startInnerX, startInnerY,
+              "A", innerRadius, innerRadius, 0, largeArcFlag, 0, endInnerX, endInnerY,
+              "Z",
+            ].join(" ");
+          };
+
+          const renderLegendColumn = (legendItems, className) =>
+            React.createElement("div", { className }, legendItems.map((item) =>
+              React.createElement("div", { key: "legend:" + (item.id || item.label), className: "playground-settings-usage-donut-legend-item" },
+                React.createElement("span", {
+                  className: "playground-settings-usage-legend-swatch",
+                  style: { background: item.color },
+                }),
+                React.createElement("div", { className: "playground-settings-usage-donut-legend-copy" },
+                  React.createElement("div", { className: "playground-settings-usage-donut-label" }, item.label),
+                  React.createElement("div", { className: "playground-settings-usage-donut-value" }, formatSettingsComputeTokens(item.value || 0))
+                )
+              )
+            ));
+
+          return React.createElement("div", { className: "playground-settings-usage-donut-layout" },
+            React.createElement(PlaygroundSettingsResponsiveSvg, {
+                frameClassName: "playground-settings-usage-donut-frame",
+                frameHeight: 240,
+                svgHeight: 240,
+                fallbackWidth: 240,
+                ariaLabel: config?.ariaLabel || "Usage by source",
+              }, ({ svgWidth, svgHeight }) => {
+                const cx = svgWidth / 2;
+                const cy = svgHeight / 2;
+                const outerRadius = Math.min(svgWidth, svgHeight) * 0.38;
+                const innerRadius = outerRadius * 0.58;
+                let currentAngle = -Math.PI / 2;
+
+                return React.createElement(React.Fragment, null,
+                  items.map((item) => {
+                    const value = Math.max(0, Number(item.value || 0));
+                    const sliceAngle = (value / totalValue) * Math.PI * 2;
+                    const path = renderArcPath(cx, cy, innerRadius, outerRadius, currentAngle, currentAngle + sliceAngle);
+                    currentAngle += sliceAngle;
+                    return React.createElement("path", {
+                      key: item.id || item.label,
+                      d: path,
+                      fill: item.color,
+                    });
+                  }),
+                  React.createElement("text", {
+                    x: cx,
+                    y: cy - 16,
+                    textAnchor: "middle",
+                    className: "playground-settings-usage-donut-center-label",
+                  }, config?.centerLabel || "Total CT"),
+                  React.createElement("text", {
+                    x: cx,
+                    y: cy + 6,
+                    textAnchor: "middle",
+                    className: "playground-settings-usage-donut-center-value",
+                  }, config?.centerValue || formatSettingsComputeTokens(totalValue)),
+                );
+              }),
+            renderLegendColumn(items, "playground-settings-usage-donut-column is-right")
+          );
+        }
+
         function renderSettingsUsageSourceBreakdown(items) {
           if (!Array.isArray(items) || items.length === 0) {
             return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, "No source usage data in this period");
@@ -79361,137 +80109,87 @@ const html = `<!doctype html>
 
                 const topUpModal = settingsTopUpModalOpen && selectedTopUpPackage
                   ? React.createElement("div", {
-                      className: "playground-settings-modal-backdrop",
+                      className: "playground-tasks-project-modal-backdrop playground-settings-topup-modal-backdrop",
                       onClick: () => setSettingsTopUpModalOpen(false),
                     },
-                      React.createElement("div", {
-                          className: "playground-settings-modal",
+                      React.createElement("form", {
+                          className: "playground-tasks-project-modal playground-agent-composer-modal playground-settings-topup-modal",
                           onClick: (event) => event.stopPropagation(),
+                          onSubmit: (event) => {
+                            event.preventDefault();
+                            setSettingsTopUpModalOpen(false);
+                            void handleSettingsBuyTopUp(selectedTopUpPackage.id);
+                          },
                         },
-                        React.createElement("div", { className: "playground-settings-modal-header" },
-                          React.createElement("div", null,
-                            React.createElement("div", { className: "playground-settings-card-title" }, "Add Compute Tokens"),
-                            React.createElement("div", { className: "playground-settings-muted-copy", style: { marginTop: "4px" } }, "Buy a one-time Compute Token add-on without changing your subscription.")
+                        React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                          React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                            React.createElement("div", {
+                              className: "playground-tasks-project-modal-icon-trigger",
+                              "aria-hidden": "true",
+                            }, React.createElement(Coins, { width: 18, height: 18, strokeWidth: 1.9 })),
+                            React.createElement("div", { className: "playground-settings-topup-modal-title-shell" },
+                              React.createElement("div", { className: "playground-settings-topup-modal-title" }, "Add Compute Tokens"),
+                              React.createElement("div", { className: "playground-settings-topup-modal-subtitle" }, "Buy a one-time Compute Token add-on without changing your subscription.")
+                            )
                           ),
                           React.createElement("button", {
                             type: "button",
-                            className: "playground-settings-icon-button",
+                            className: "playground-settings-icon-button playground-tasks-project-modal-close",
                             onClick: () => setSettingsTopUpModalOpen(false),
-                          }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
+                            title: "Close",
+                            disabled: settingsTopUpActionId === selectedTopUpPackage.id,
+                          }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                         ),
-                        renderSettingsBanner("error", settingsBillingError),
-                        renderSettingsBanner("success", settingsBillingSuccess),
-                        React.createElement("div", {
-                          style: {
-                            color: "rgba(255,255,255,0.68)",
-                            marginBottom: "14px",
-                          },
-                        }, "Purchased add-ons are consumed only after your included monthly plan credits are exhausted."),
-                        React.createElement("div", {
-                          style: {
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "8px",
-                            marginBottom: "14px",
-                          },
-                        },
+                        React.createElement("div", { className: "playground-agent-composer-modal-body playground-settings-topup-modal-body" },
+                          renderSettingsBanner("error", settingsBillingError),
+                          renderSettingsBanner("success", settingsBillingSuccess),
+                          React.createElement("div", { className: "playground-settings-topup-note" }, "Purchased add-ons are consumed only after your included monthly plan credits are exhausted."),
+                          React.createElement("div", { className: "playground-settings-topup-package-grid" },
                           SETTINGS_TOP_UP_CATALOG.map((pkg) => {
                             const isSelected = pkg.id === selectedTopUpPackage.id;
                             return React.createElement("button", {
                                 key: pkg.id,
                                 type: "button",
                                 onClick: () => setSettingsSelectedTopUpId(pkg.id),
-                                style: {
-                                  display: "inline-flex",
-                                  flexDirection: "column",
-                                  alignItems: "flex-start",
-                                  justifyContent: "center",
-                                  gap: "2px",
-                                  minWidth: "124px",
-                                  padding: "10px 12px",
-                                  borderRadius: "14px",
-                                  background: isSelected ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
-                                  color: isSelected ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.82)",
-                                  boxShadow: "none",
-                                  border: isSelected ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.08)",
-                                  cursor: "pointer",
-                                },
+                                className: "playground-settings-topup-package-card" + (isSelected ? " is-selected" : ""),
+                                disabled: settingsTopUpActionId === selectedTopUpPackage.id,
                               },
-                                React.createElement("span", {
-                                  style: {
-                                    fontSize: "13px",
-                                    fontWeight: "600",
-                                    lineHeight: 1.2,
-                                  },
-                                }, formatSettingsComputeTokens(pkg.computeTokens)),
-                                React.createElement("span", {
-                                  style: {
-                                    fontSize: "11px",
-                                    color: isSelected ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.56)",
-                                  },
-                                }, "$" + pkg.price + " one-time")
+                                React.createElement("span", { className: "playground-settings-topup-package-card-name" }, pkg.name),
+                                React.createElement("span", { className: "playground-settings-topup-package-card-tokens" }, formatSettingsComputeTokens(pkg.computeTokens)),
+                                React.createElement("span", { className: "playground-settings-topup-package-card-price" }, "$" + pkg.price + " one-time"),
+                                React.createElement("span", { className: "playground-settings-topup-package-card-copy" }, pkg.description)
                               );
                           })
-                        ),
-                        React.createElement("div", {
-                          style: {
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: "14px",
-                            padding: "14px 16px",
-                            borderRadius: "16px",
-                            background: "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                          },
-                        },
-                          React.createElement("div", {
-                            style: {
-                              minWidth: 0,
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: "4px",
-                            },
-                          },
-                            React.createElement("div", {
-                              style: {
-                                fontSize: "12px",
-                                color: "rgba(255,255,255,0.58)",
-                              },
-                            }, "Selected purchase"),
-                            React.createElement("div", {
-                              style: {
-                                fontSize: "17px",
-                                fontWeight: "600",
-                                color: "rgba(255,255,255,0.96)",
-                                lineHeight: 1.2,
-                              },
-                            }, formatSettingsComputeTokens(selectedTopUpPackage.computeTokens) + " for $" + selectedTopUpPackage.price),
-                            React.createElement("div", {
-                              style: {
-                                fontSize: "12px",
-                                color: "rgba(255,255,255,0.56)",
-                              },
-                            }, selectedTopUpPackage.description)
                           ),
+                          React.createElement("div", { className: "playground-settings-topup-summary" },
+                            React.createElement("div", { className: "playground-settings-topup-summary-copy" },
+                              React.createElement("div", { className: "playground-settings-topup-summary-label" }, "Selected purchase"),
+                              React.createElement("div", { className: "playground-settings-topup-summary-value" }, formatSettingsComputeTokens(selectedTopUpPackage.computeTokens) + " for $" + selectedTopUpPackage.price),
+                              React.createElement("div", { className: "playground-settings-topup-summary-description" }, selectedTopUpPackage.description)
+                            ),
+                            React.createElement("div", { className: "playground-settings-topup-summary-badge" },
+                              React.createElement(Coins, { width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "One-time add-on")
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-tasks-project-modal-actions" },
                           React.createElement("button", {
-                              type: "button",
-                              onClick: () => {
-                                setSettingsTopUpModalOpen(false);
-                                void handleSettingsBuyTopUp(selectedTopUpPackage.id);
-                              },
+                            type: "button",
+                            className: "playground-environments-action-button",
+                            onClick: () => setSettingsTopUpModalOpen(false),
+                            disabled: settingsTopUpActionId === selectedTopUpPackage.id,
+                          }, "Cancel"),
+                          React.createElement("button", {
+                              type: "submit",
+                              className: "playground-environments-action-button is-primary",
                               disabled: settingsTopUpActionId === selectedTopUpPackage.id,
-                              className: "playground-settings-plan-card-cta-button is-light",
-                              style: {
-                                minWidth: "152px",
-                                justifyContent: "center",
-                              },
                             },
                               settingsTopUpActionId === selectedTopUpPackage.id
                                 ? React.createElement("span", null, "Loading...")
                                 : "Buy Compute Tokens"
                             )
-                        )
+                          ),
                       )
                     )
                   : null;
@@ -80138,14 +80836,18 @@ const html = `<!doctype html>
               );
               break;
             case "costs-overview": {
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+              detailContent = React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
+                  React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                    React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                      React.createElement("div", { className: "playground-settings-plans-title" }, "Usage Details")
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-content-nav-center" }),
+                  React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
+                ),
+                React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
                 (() => {
-                  const userTier = settingsCurrentTierId;
-                  const tierLimit = Math.max(
-                    settingsDollarsToComputeTokens(settingsBudgetStatus?.tierQuota),
-                    Number(settingsUsageSummary?.totals?.totalCT || 0),
-                    1
-                  );
                   const periodStart = settingsUsageSummary?.startDate ? new Date(settingsUsageSummary.startDate) : new Date();
                   const periodEnd = settingsUsageSummary?.endDate ? new Date(settingsUsageSummary.endDate) : new Date();
                   const formatPeriodDate = (date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -80191,18 +80893,7 @@ const html = `<!doctype html>
                     });
                   }
 
-                  let cumulative = 0;
-                  const cumulativeData = dailyData.map((day) => {
-                    if (day.isFuture) {
-                      return null;
-                    }
-
-                    cumulative += day.dailyCT;
-                    return cumulative;
-                  });
-
                   const totalUsedCT = Number(safeTotals.totalCT || 0);
-                  const usagePercent = tierLimit > 0 ? Math.round((totalUsedCT / tierLimit) * 100) : 0;
                   const attributedSourceItems = [...settingsUsageBreakdown]
                     .map((item) => ({
                       ...item,
@@ -80220,217 +80911,197 @@ const html = `<!doctype html>
                       name: "Unattributed",
                       totalCT: unattributedCT,
                       channel: "unattributed",
-                      displayName: "Unattributed usage",
+                      displayName: "Unattributed",
                     }] : []),
                   ].sort((left, right) => right.totalCT - left.totalCT);
-                  const sourceChartItems = sourceItems.slice(0, 6);
-                  const channelTotals = sourceItems.reduce((acc, item) => {
-                    acc[item.channel] += item.totalCT;
-                    return acc;
-                  }, { native: 0, web: 0, api: 0, integrations: 0, unattributed: 0 });
-                  const summaryChannels = ["native", "web", "api", "integrations"];
-                  if (channelTotals.unattributed > 0) {
-                    summaryChannels.push("unattributed");
-                  }
-                  const legendChannels = channelTotals.unattributed > 0
-                    ? ["native", "web", "api", "unattributed"]
-                    : ["native", "web", "api"];
                   const dailyLabels = dailyData.map((day) => {
                     const date = new Date(day.date);
                     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
                   });
-                  const heroMax = Math.max(tierLimit * 1.1, ...cumulativeData.filter((value) => value != null), 100);
-                  const usageBreakdownMax = Math.max(...dailyData.map((day) => day.aiCT + day.runtimeCT), 1);
-                  let threadTotal = 0;
-                  const cumulativeThreadData = dailyData.map((day) => {
-                    if (day.isFuture) {
-                      return null;
-                    }
+                  const resourceResidualSeries = dailyData.map((day) => Math.max(0, day.dailyCT - day.aiCT - day.runtimeCT));
+                  const resourceSeries = [
+                    {
+                      id: "inference",
+                      label: "LLM Inference",
+                      color: "rgb(143,196,255)",
+                      values: dailyData.map((day) => day.aiCT),
+                    },
+                    {
+                      id: "runtime",
+                      label: "Computers & Resources",
+                      color: "rgb(103,80,255)",
+                      values: dailyData.map((day) => day.runtimeCT),
+                    },
+                  ];
+                  if (resourceResidualSeries.some((value) => value > 0)) {
+                    resourceSeries.push({
+                      id: "other",
+                      label: "Other Runtime",
+                      color: "rgb(94,234,212)",
+                      values: resourceResidualSeries,
+                    });
+                  }
 
-                    threadTotal += day.threadCount;
-                    return threadTotal;
-                  });
-                  const maxCumulativeThreads = Math.max(...cumulativeThreadData.filter((value) => value != null), 1);
+                  const sourceChartPalette = [
+                    "rgb(91, 95, 255)",
+                    "rgb(140, 123, 255)",
+                    "rgb(36, 198, 205)",
+                    "rgb(140, 227, 255)",
+                    "rgb(255, 255, 255)",
+                    "rgb(148, 163, 184)",
+                  ];
+                  const visibleSourceItems = sourceItems.length <= 5 ? sourceItems : sourceItems.slice(0, 4);
+                  const remainingSourceCT = sourceItems.length <= 5
+                    ? 0
+                    : sourceItems.slice(4).reduce((sum, item) => sum + Number(item.totalCT || 0), 0);
+                  const donutItems = [
+                    ...visibleSourceItems.map((item, index) => ({
+                      id: item.id,
+                      label: item.displayName || item.name || item.id || "Unattributed",
+                      value: Number(item.totalCT || 0),
+                      color: sourceChartPalette[index % sourceChartPalette.length],
+                    })),
+                    ...(remainingSourceCT > 0
+                      ? [{
+                          id: "other",
+                          label: "Other",
+                          value: remainingSourceCT,
+                          color: sourceChartPalette[visibleSourceItems.length % sourceChartPalette.length],
+                        }]
+                      : []),
+                  ].filter((item) => item.value > 0);
+
+                  const averageCtPerThreadValues = dailyData.map((day) =>
+                    day.threadCount > 0 ? Math.round(day.dailyCT / day.threadCount) : 0
+                  );
+                  const averageCtPerThreadOverall = safeTotals.totalThreads > 0
+                    ? Math.round(totalUsedCT / safeTotals.totalThreads)
+                    : 0;
+                  const maxAverageCtPerThread = Math.max(...averageCtPerThreadValues, 1);
 
                   return React.createElement("div", { className: "playground-settings-usage-app-shell" },
-                    React.createElement("div", { className: "playground-settings-usage-app-header" },
-                      React.createElement("div", null,
-                        React.createElement("div", { className: "playground-settings-usage-app-title" }, "Usage Details"),
-                        React.createElement("div", { className: "playground-settings-usage-app-period" },
-                          formatPeriodDate(periodStart) + " - " + formatPeriodDate(periodEnd)
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-settings-usage-nav" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-usage-nav-button",
-                          onClick: () => setSettingsBillingPeriodOffset((current) => current - 1),
-                          title: "Previous period",
-                        }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-usage-nav-current",
-                          onClick: () => setSettingsBillingPeriodOffset(0),
-                          disabled: settingsBillingPeriodOffset === 0,
-                        }, "Current"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-usage-nav-button",
-                          onClick: () => setSettingsBillingPeriodOffset((current) => Math.min(0, current + 1)),
-                          disabled: settingsBillingPeriodOffset >= 0,
-                          title: "Next period",
-                        }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-settings-usage-summary-grid" },
-                      summaryChannels.map((channel) =>
-                        React.createElement("div", { key: channel, className: "playground-settings-usage-summary-card" },
-                          React.createElement("div", { className: "playground-settings-usage-summary-label" }, SETTINGS_CHANNEL_LABELS[channel]),
-                          React.createElement("div", { className: "playground-settings-usage-summary-value" }, formatSettingsComputeTokens(channelTotals[channel])),
-                          React.createElement("div", { className: "playground-settings-usage-summary-copy" },
-                            totalUsedCT > 0 ? Math.round((channelTotals[channel] / totalUsedCT) * 100) + "% of period usage" : "No usage this period"
-                          )
-                        )
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-settings-usage-chart-card is-source" },
-                      React.createElement("div", { className: "playground-settings-usage-card-header" },
-                        React.createElement("div", null,
-                          React.createElement("div", { className: "playground-settings-usage-card-title" }, "Usage by source"),
-                          React.createElement("div", { className: "playground-settings-usage-card-copy" }, "Native app, web surfaces, and API usage in one view")
-                        ),
-                        React.createElement("div", { className: "playground-settings-usage-card-header-legend" },
-                          legendChannels.map((channel) =>
-                            React.createElement("div", { key: channel, className: "playground-settings-usage-legend-item" },
-                              React.createElement("span", {
-                                className: "playground-settings-usage-legend-swatch",
-                                style: { background: SETTINGS_CHANNEL_COLORS[channel] },
-                              }),
-                              React.createElement("span", null, SETTINGS_CHANNEL_LABELS[channel])
-                            )
-                          )
-                        )
-                      ),
-                      settingsUsageLoading
-                        ? React.createElement("div", { className: "playground-settings-loading-state" },
-                            React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                          )
-                        : renderSettingsUsageSourceBreakdown(sourceChartItems),
-                      channelTotals.unattributed > 0
-                        ? React.createElement("div", { className: "playground-settings-usage-chart-note" },
-                            "Some usage in this billing period could not be mapped to a source yet and is shown as unattributed."
-                          )
-                        : null
-                    ),
-                    dailyData.length > 0
-                      ? React.createElement(React.Fragment, null,
-                          React.createElement("div", null,
-                            renderSettingsUsageMixedChart({
-                              labels: dailyLabels,
-                              barValues: dailyData.map((day) => day.dailyCT),
-                              lineValues: cumulativeData,
-                              yMax: heroMax,
-                              limitValue: tierLimit,
-                              limitLabel: "Limit: " + formatSettingsAxisComputeTokens(tierLimit),
-                              tickFormatter: formatSettingsAxisComputeTokens,
-                              barColor: "rgb(143,196,255)",
-                              lineColor: "rgb(24,59,184)",
-                              areaColor: "rgba(24,59,184,0.10)",
-                              tall: true,
-                              ariaLabel: "Daily and cumulative compute token usage",
-                            }),
-                            React.createElement("div", { className: "playground-settings-usage-legend-row" },
-                              React.createElement("span", { className: "playground-settings-usage-card-title" }, formatSubscriptionTier(userTier) + " Plan"),
-                              React.createElement("div", { className: "playground-settings-usage-inline-legend" },
-                                React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                                  React.createElement("span", {
-                                    className: "playground-settings-usage-legend-line",
-                                    style: { background: "rgb(24,59,184)" },
-                                  }),
-                                  React.createElement("span", null, "Cumulative")
-                                ),
-                                React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                                  React.createElement("span", {
-                                    className: "playground-settings-usage-legend-swatch",
-                                    style: { background: "rgb(143,196,255)" },
-                                  }),
-                                  React.createElement("span", null, "Daily")
-                                )
-                              ),
-                              React.createElement("span", { className: "playground-settings-usage-summary-copy" }, Math.max(0, 100 - usagePercent) + "% remaining")
+                      React.createElement("div", { className: "playground-settings-usage-period-header" },
+                          React.createElement("div", { className: "playground-settings-usage-period-heading" },
+                            React.createElement("div", { className: "playground-settings-usage-app-period" },
+                              formatPeriodDate(periodStart) + " - " + formatPeriodDate(periodEnd)
                             )
                           ),
-                          React.createElement("div", { className: "playground-settings-usage-secondary-grid" },
-                            React.createElement("div", { className: "playground-settings-usage-chart-card" },
-                              React.createElement("div", { className: "playground-settings-usage-card-header" },
-                                React.createElement("div", { className: "playground-settings-usage-card-title" }, "Usage Breakdown"),
-                                React.createElement("div", { className: "playground-settings-usage-inline-legend" },
-                                  React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                                    React.createElement("span", {
-                                      className: "playground-settings-usage-legend-swatch",
-                                      style: { background: "rgb(255,255,255)" },
-                                    }),
-                                    React.createElement("span", null, "AI")
-                                  ),
-                                  React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                                    React.createElement("span", {
-                                      className: "playground-settings-usage-legend-swatch",
-                                      style: { background: "rgb(150,150,150)" },
-                                    }),
-                                    React.createElement("span", null, "Runtime")
-                                  )
-                                )
-                              ),
-                              renderSettingsUsageStackedChart({
+                          React.createElement("div", { className: "playground-settings-usage-nav" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-settings-usage-nav-button",
+                              onClick: () => setSettingsBillingPeriodOffset((current) => current - 1),
+                              title: "Previous period",
+                            }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-settings-usage-nav-current",
+                              onClick: () => setSettingsBillingPeriodOffset(0),
+                              disabled: settingsBillingPeriodOffset === 0,
+                            }, "Current"),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-settings-usage-nav-button",
+                              onClick: () => setSettingsBillingPeriodOffset((current) => Math.min(0, current + 1)),
+                              disabled: settingsBillingPeriodOffset >= 0,
+                              title: "Next period",
+                            }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-settings-usage-analytics-grid" },
+                          React.createElement("section", { className: "playground-settings-usage-chart-card" },
+                          React.createElement("div", { className: "playground-settings-usage-card-header" },
+                            React.createElement("div", null,
+                              React.createElement("div", { className: "playground-settings-usage-card-title" }, "Daily CT by Resource Type")
+                            )
+                          ),
+                          settingsUsageLoading
+                            ? React.createElement("div", { className: "playground-settings-loading-state" },
+                                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                              )
+                            : renderSettingsUsageMultiStackedChart({
                                 labels: dailyLabels,
-                                primaryValues: dailyData.map((day) => day.aiCT),
-                                secondaryValues: dailyData.map((day) => day.runtimeCT),
-                                yMax: usageBreakdownMax,
-                                primaryColor: "rgb(255,255,255)",
-                                secondaryColor: "rgb(150,150,150)",
-                                ariaLabel: "AI and runtime usage breakdown",
-                              })
+                                series: resourceSeries,
+                                yMax: Math.max(...dailyData.map((day) => day.dailyCT), 1),
+                                tickFormatter: formatSettingsAxisComputeTokens,
+                                tall: true,
+                                ariaLabel: "Daily compute token usage by resource type",
+                                }),
+                          React.createElement("div", {
+                            className: "playground-settings-usage-inline-legend",
+                            style: { justifyContent: "flex-start" },
+                          },
+                            resourceSeries.map((entry) =>
+                              React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
+                                React.createElement("span", {
+                                  className: "playground-settings-usage-legend-swatch",
+                                  style: { background: entry.color },
+                                }),
+                                React.createElement("span", null, entry.label)
+                              )
+                            )
+                          )
+                        ),
+                          React.createElement("section", { className: "playground-settings-usage-chart-card is-donut" },
+                            React.createElement("div", { className: "playground-settings-usage-card-header" },
+                              React.createElement("div", null,
+                                React.createElement("div", { className: "playground-settings-usage-card-title" }, "Usage by Source")
+                              )
                             ),
-                            React.createElement("div", { className: "playground-settings-usage-chart-card" },
-                              React.createElement("div", { className: "playground-settings-usage-card-header" },
-                                React.createElement("div", { className: "playground-settings-usage-card-title" }, "Threads Started"),
-                                React.createElement("div", { className: "playground-settings-usage-inline-legend" },
-                                  React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                                    React.createElement("span", {
-                                      className: "playground-settings-usage-legend-line",
-                                      style: { background: "rgb(20,93,251)" },
-                                    }),
-                                    React.createElement("span", null, String(safeTotals.totalThreads || 0) + " total this period")
-                                  ),
-                                  React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                                    React.createElement("span", {
-                                      className: "playground-settings-usage-legend-swatch",
-                                      style: { background: "rgb(143,196,255)" },
-                                    }),
-                                    React.createElement("span", null, "Threads per day")
-                                  )
+                            settingsUsageLoading
+                              ? React.createElement("div", { className: "playground-settings-loading-state" },
+                                  React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
                                 )
-                              ),
-                              renderSettingsUsageMixedChart({
+                              : renderSettingsUsageDonutChart({
+                                  items: donutItems,
+                                  centerLabel: "Total CT",
+                                  centerValue: formatSettingsComputeTokens(totalUsedCT),
+                                  ariaLabel: "Compute token usage by source",
+                                })
+                          )
+                        ),
+                        React.createElement("section", { className: "playground-settings-usage-chart-card" },
+                          React.createElement("div", { className: "playground-settings-usage-card-header" },
+                            React.createElement("div", null,
+                              React.createElement("div", { className: "playground-settings-usage-card-title" }, "Average CT per Thread")
+                            )
+                          ),
+                          settingsUsageLoading
+                            ? React.createElement("div", { className: "playground-settings-loading-state" },
+                                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                              )
+                            : renderSettingsUsageMixedChart({
                                 labels: dailyLabels,
-                                barValues: dailyData.map((day) => day.threadCount),
-                                lineValues: cumulativeThreadData,
-                                yMax: Math.max(maxCumulativeThreads * 1.2, 5),
-                                tickFormatter: (value) => String(Number.isInteger(Math.round(value)) ? Math.round(value) : ""),
+                                barValues: averageCtPerThreadValues,
+                                lineValues: [],
+                                yMax: Math.max(maxAverageCtPerThread * 1.2, 5),
+                                tickFormatter: formatSettingsAxisComputeTokens,
                                 barColor: "rgb(143,196,255)",
-                                lineColor: "rgb(20,93,251)",
-                                areaColor: "rgba(20,93,251,0.10)",
-                                ariaLabel: "Threads started over time",
-                              })
+                                ariaLabel: "Average compute tokens per thread over time",
+                                emptyText: "No thread usage in this period",
+                              }),
+                          React.createElement("div", {
+                            className: "playground-settings-usage-inline-legend",
+                            style: { justifyContent: "flex-start" },
+                          },
+                            React.createElement("div", { className: "playground-settings-usage-legend-item" },
+                              React.createElement("span", {
+                                className: "playground-settings-usage-legend-swatch",
+                                style: { background: "rgb(143,196,255)" },
+                              }),
+                              React.createElement("span", null, "Average CT / thread")
+                            ),
+                            React.createElement("div", { className: "playground-settings-usage-legend-item" },
+                              React.createElement("span", null, String(safeTotals.totalThreads || 0) + " threads total")
+                            ),
+                            React.createElement("div", { className: "playground-settings-usage-legend-item" },
+                              React.createElement("span", null, averageCtPerThreadOverall > 0 ? (averageCtPerThreadOverall + " CT avg") : "No threads yet")
                             )
                           )
                         )
-                      : null,
-                    settingsUsageLoading
-                      ? React.createElement("div", { className: "playground-settings-usage-chart-note" }, "Loading usage data...")
-                      : null
-                  );
+                      );
                 })()
+                )
               );
               break;
             }
@@ -80831,7 +81502,7 @@ const html = `<!doctype html>
                       ),
                       React.createElement("div", { className: "playground-agent-composer-modal-body" },
                         React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: "4px" } },
-                          React.createElement("div", { className: "playground-environments-muted" }, "Need help setting up GitHub or webhook delivery?"),
+                          React.createElement("div", { className: "playground-environments-muted" }, "Need help setting up GitHub, GitLab, or webhook delivery?"),
                           React.createElement("button", {
                             type: "button",
                             className: "playground-environments-action-button",
@@ -80852,14 +81523,20 @@ const html = `<!doctype html>
                                 className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
                                 value: settingsTriggerForm.source,
                                 disabled: settingsTriggerSubmitting,
-                                onChange: (event) => setSettingsTriggerForm((current) => ({
-                                  ...current,
-                                  source: event.target.value,
-                                  event: event.target.value === "github" ? "push" : "",
-                                  actionType: event.target.value === "github"
+                                onChange: (event) => setSettingsTriggerForm((current) => {
+                                  const nextSource = event.target.value;
+                                  const nextActionType = isSettingsTriggerActionSupportedForSource(nextSource, current.actionType)
                                     ? current.actionType
-                                    : "send_message",
-                                })),
+                                    : "send_message";
+                                  return {
+                                    ...current,
+                                    source: nextSource,
+                                    event: getSettingsTriggerDefaultEvent(nextSource, nextActionType),
+                                    actionType: nextActionType,
+                                    filterRepo: "",
+                                    filterBranch: "",
+                                  };
+                                }),
                               },
                                 SETTINGS_TRIGGER_SOURCE_OPTIONS.map((option) =>
                                   React.createElement("option", { key: option.value, value: option.value }, option.label)
@@ -80870,17 +81547,14 @@ const html = `<!doctype html>
                           React.createElement("div", { className: "playground-tasks-detail-fact" },
                             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Event"),
                             React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                              settingsTriggerForm.source === "github"
+                              settingsTriggerForm.source === "github" || settingsTriggerForm.source === "gitlab"
                                 ? React.createElement("select", {
                                     className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
                                     value: settingsTriggerForm.event,
                                     disabled: settingsTriggerSubmitting,
                                     onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, event: event.target.value })),
                                   },
-                                    (settingsTriggerForm.actionType === "comment_pull_request"
-                                      ? SETTINGS_GITHUB_PULL_REQUEST_ACTION_EVENTS
-                                      : SETTINGS_GITHUB_EVENTS
-                                    ).map((eventName) =>
+                                    getSettingsTriggerEventOptions(settingsTriggerForm.source, settingsTriggerForm.actionType).map((eventName) =>
                                       React.createElement("option", { key: eventName, value: eventName }, eventName)
                                     )
                                   )
@@ -80922,16 +81596,12 @@ const html = `<!doctype html>
                                   return {
                                     ...current,
                                     actionType: nextActionType,
-                                    event: current.source === "github"
-                                      && nextActionType === "comment_pull_request"
-                                      && !SETTINGS_GITHUB_PULL_REQUEST_ACTION_EVENTS.includes(String(current.event || ""))
-                                      ? "pull_request"
-                                      : current.event,
+                                    event: getSettingsTriggerDefaultEvent(current.source, nextActionType),
                                   };
                                 }),
                               },
                                 SETTINGS_TRIGGER_ACTION_OPTIONS
-                                  .filter((option) => settingsTriggerForm.source === "github" || option.value === "send_message")
+                                  .filter((option) => isSettingsTriggerActionSupportedForSource(settingsTriggerForm.source, option.value))
                                   .map((option) =>
                                     React.createElement("option", { key: option.value, value: option.value }, option.label)
                                   )
@@ -80988,9 +81658,7 @@ const html = `<!doctype html>
                                       })
                                     : React.createElement("div", {
                                         className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                      }, settingsTriggerForm.actionType === "comment_pull_request"
-                                        ? "Review the pull request changes and write a concise, helpful GitHub comment."
-                                        : "Pull the latest changes, inspect the webhook payload, and summarize what happened.")
+                                      }, getSettingsTriggerPromptPlaceholder(settingsTriggerForm.source, settingsTriggerForm.actionType))
                                 )
                               : null,
                             React.createElement("textarea", {
@@ -80998,9 +81666,7 @@ const html = `<!doctype html>
                               className: "playground-tasks-detail-description-input " + (isSettingsTriggerPromptEditing ? "is-editing" : "is-preview"),
                               rows: 1,
                               placeholder: isSettingsTriggerPromptEditing
-                                ? (settingsTriggerForm.actionType === "comment_pull_request"
-                                  ? "Review the pull request changes and write a concise, helpful GitHub comment."
-                                  : "Pull the latest changes, inspect the webhook payload, and summarize what happened.")
+                                ? getSettingsTriggerPromptPlaceholder(settingsTriggerForm.source, settingsTriggerForm.actionType)
                                 : "",
                               value: settingsTriggerForm.message,
                               disabled: settingsTriggerSubmitting,
@@ -81014,6 +81680,8 @@ const html = `<!doctype html>
                           ),
                           settingsTriggerForm.actionType === "comment_pull_request"
                             ? React.createElement("div", { className: "playground-environments-muted", style: { marginTop: 8 } }, "The assistant response will be posted back to the matching GitHub pull request as a comment.")
+                            : settingsTriggerForm.actionType === "comment_merge_request"
+                              ? React.createElement("div", { className: "playground-environments-muted", style: { marginTop: 8 } }, "The assistant response will be posted back to the matching GitLab merge request as a comment.")
                             : null
                         ),
                         settingsTriggerForm.source === "github"
@@ -81089,6 +81757,41 @@ const html = `<!doctype html>
                                     )
                                   )
                             )
+                          : settingsTriggerForm.source === "gitlab"
+                            ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                                React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Filters"),
+                                React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: 8 } },
+                                  React.createElement("div", { className: "playground-environments-muted" }, "Set a GitLab webhook secret in ACP, then configure the project webhook in GitLab. Add a GITLAB_TOKEN secret on the selected computer if you want ACP to comment back on merge requests.")
+                                ),
+                                React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Project Filter"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                      React.createElement("input", {
+                                        type: "text",
+                                        className: "playground-environments-input playground-tasks-detail-fact-select",
+                                        value: settingsTriggerForm.filterRepo,
+                                        disabled: settingsTriggerSubmitting,
+                                        onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterRepo: event.target.value })),
+                                        placeholder: "group/project",
+                                      })
+                                    )
+                                  ),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Branch Filter"),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                      React.createElement("input", {
+                                        type: "text",
+                                        className: "playground-environments-input playground-tasks-detail-fact-select",
+                                        value: settingsTriggerForm.filterBranch,
+                                        disabled: settingsTriggerSubmitting,
+                                        onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterBranch: event.target.value })),
+                                        placeholder: "main",
+                                      })
+                                    )
+                                  )
+                                )
+                              )
                           : null
                       ),
                       settingsTriggersError
@@ -81239,7 +81942,7 @@ const html = `<!doctype html>
                       })()
                     : renderSettingsSectionCard(
                         "Webhook triggers",
-                        "Route GitHub, Slack, and raw webhook events into agent executions.",
+                        "Route GitHub, GitLab, Slack, and raw webhook events into agent executions.",
                         settingsTriggersLoading
                           ? React.createElement("div", { className: "playground-settings-loading-state" },
                               React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
@@ -86704,6 +87407,7 @@ async function proxyPlaygroundCustomSkills(req, res) {
     const cookie = req.headers.cookie || "";
     const authorization = req.headers.authorization || "";
     const apiKey = normalizePlaygroundApiKey(readHeader(req, "x-api-key"));
+    let resolvedApiKey = apiKey;
     let aiosSkills = [];
 
     if (!projectId && (cookie || authorization)) {
@@ -86757,8 +87461,25 @@ async function proxyPlaygroundCustomSkills(req, res) {
       }
     }
 
+    if (!resolvedApiKey && (cookie || authorization)) {
+      const streamingResponse = await fetch(`${aiosOrigin}/api/user/streaming-key`, {
+        method: "GET",
+        headers: {
+          cookie,
+          authorization,
+        },
+      });
+      if (streamingResponse.ok) {
+        const streamingData = await streamingResponse.json().catch(() => ({}));
+        const nextApiKey = typeof streamingData?.apiKey === "string" ? streamingData.apiKey.trim() : "";
+        if (nextApiKey) {
+          resolvedApiKey = nextApiKey;
+        }
+      }
+    }
+
     const upstreamHeader = readHeader(req, "x-runner-upstream-url");
-    if (!apiKey) {
+    if (!resolvedApiKey) {
       return sendJson(res, 200, { skills: [], source: "none" });
     }
 
@@ -86766,7 +87487,7 @@ async function proxyPlaygroundCustomSkills(req, res) {
     const upstreamResponse = await fetch(upstreamTarget.toString(), {
       method: "GET",
       headers: {
-        "X-API-Key": apiKey,
+        "X-API-Key": resolvedApiKey,
       },
     });
     const upstreamText = await upstreamResponse.text();

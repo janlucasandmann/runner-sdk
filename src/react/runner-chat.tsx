@@ -7457,6 +7457,17 @@ export function RunnerChat({
       setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
 
       refreshThreadContextDetailsInBackground(threadId);
+      if (options?.skillCreationCommand && fetchCustomSkills) {
+        void fetchCustomSkills()
+          .then((loadedSkills) => {
+            const filtered = (loadedSkills || []).filter((skill) => skill.isCustom);
+            setCustomSkills(filtered);
+            setCustomSkillsLoaded(true);
+          })
+          .catch(() => {
+            setCustomSkillsLoaded(false);
+          });
+      }
       onRunFinish?.(executionResult, threadId);
       return { threadId, executionResult, turnId };
     } catch (error) {
@@ -7882,7 +7893,7 @@ export function RunnerChat({
         const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
         setTurns(mergedTurns);
         setExpandedTurns((previousExpandedTurns) =>
-          mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns)
+          mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, { defaultLatestExpanded: true })
         );
       })
       .catch((error) => {

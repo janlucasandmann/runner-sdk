@@ -2353,6 +2353,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   color: inherit;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  isolation: isolate;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
 }
@@ -3023,9 +3024,19 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-log-file-preview-frame {
+  position: relative;
   margin: -12px -12px 0;
   border-radius: 15px;
   overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  isolation: isolate;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.tb-runner-chat .tb-log-file-preview-frame > * {
+  position: relative;
+  z-index: 1;
 }
 
 .tb-runner-chat .tb-log-file-preview-topbar {
@@ -3035,7 +3046,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   gap: 12px;
   padding: 8px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .tb-runner-chat .tb-log-file-preview-language {
@@ -3441,11 +3454,20 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-diff-surface {
+  position: relative;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 15px;
   overflow: hidden;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.04);
+  isolation: isolate;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   scrollbar-width: none;
+}
+
+.tb-runner-diff-surface > * {
+  position: relative;
+  z-index: 1;
 }
 
 .tb-runner-diff-surface::-webkit-scrollbar {
@@ -3464,7 +3486,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   gap: 12px;
   padding: 6px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .tb-runner-diff-surface-meta {
@@ -3615,7 +3639,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-diff-surface-body {
-  background: #171717;
+  background: rgba(15, 17, 21, 0.38);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -3816,7 +3842,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-diff-surface-fallback {
   overflow: hidden;
-  background: #171717;
+  background: rgba(15, 17, 21, 0.38);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .tb-runner-diff-surface-fallback-hunk,
@@ -4013,7 +4041,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: transparent;
+  background: rgba(15, 17, 21, 0.2);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .tb-runner-chat .tb-log-terminal-command-viewer .tb-log-card-code,
