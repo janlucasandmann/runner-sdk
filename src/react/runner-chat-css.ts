@@ -2351,7 +2351,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 12px;
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
   overflow: hidden;
   isolation: isolate;
   -webkit-backdrop-filter: blur(20px);

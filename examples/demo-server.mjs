@@ -1772,7 +1772,12 @@ const html = `<!doctype html>
         right: 22px;
       }
 
-      .playground-thread-runner.is-project-wallpaper-active .tb-log-card-panel,
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-card-panel {
+        background: rgba(18, 20, 24, 0.22);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
       .playground-thread-runner.is-project-wallpaper-active .tb-log-file-preview-frame,
       .playground-thread-runner.is-project-wallpaper-active .tb-log-file-preview-topbar,
       .playground-thread-runner.is-project-wallpaper-active .tb-log-terminal-body,
@@ -1785,8 +1790,20 @@ const html = `<!doctype html>
       .playground-thread-runner.is-project-wallpaper-active .tb-subagent-log-prompt,
       .playground-thread-runner.is-project-wallpaper-active .tb-subagent-log-summary,
       .playground-thread-runner.is-project-wallpaper-active .tb-deep-research-log-summary {
-        -webkit-backdrop-filter: blur(50px);
-        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-file-preview-frame,
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-file-preview-topbar,
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-file-preview-body,
+      .playground-thread-runner.is-project-wallpaper-active .tb-log-terminal-body,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface-topbar,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface-body,
+      .playground-thread-runner.is-project-wallpaper-active .tb-runner-diff-surface-fallback {
+        background: transparent !important;
+        box-shadow: none;
       }
 
       .playground-thread-runner.is-project-wallpaper-active .task-input-box {
@@ -7823,16 +7840,19 @@ const html = `<!doctype html>
       .playground-settings-usage-chart-card.is-donut {
         min-height: 260px;
         min-width: 0;
+        width: fit-content;
+        max-width: 100%;
+        justify-self: end;
       }
 
       .playground-settings-usage-chart-card.is-donut .playground-settings-usage-card-header {
-        padding-left: 64px;
+        padding-left: 0;
       }
 
       .playground-settings-usage-donut-layout {
         margin-top: -8px;
         display: grid;
-        grid-template-columns: minmax(172px, 204px) max-content;
+        grid-template-columns: 232px max-content;
         gap: 6px;
         align-items: center;
         justify-content: end;
@@ -7841,8 +7861,8 @@ const html = `<!doctype html>
       }
 
       .playground-settings-usage-donut-frame {
-        width: min(100%, 204px);
-        height: 228px;
+        width: 232px;
+        height: 252px;
         margin: 0 auto;
       }
 
@@ -11164,6 +11184,10 @@ const html = `<!doctype html>
         margin-top: auto;
         padding: 0;
         background: transparent;
+      }
+
+      .playground-tasks-backlog-composer-shell {
+        margin-bottom: 10px;
       }
 
       .playground-environments-home-composer-host {
@@ -17602,6 +17626,7 @@ const html = `<!doctype html>
         display: flex;
         align-items: center;
         justify-content: center;
+        color: white;
         background: rgba(0, 0, 0, 0.26);
       }
 
@@ -18138,6 +18163,22 @@ const html = `<!doctype html>
         overflow: hidden;
       }
 
+      .playground-tasks-project-card-copy .tb-message-markdown-paragraph,
+      .playground-tasks-project-card-copy .tb-message-markdown-list,
+      .playground-tasks-project-card-copy .tb-message-markdown-heading {
+        margin: 0;
+        font-size: inherit;
+        line-height: inherit;
+        color: inherit;
+      }
+
+      .playground-tasks-project-card-copy .tb-message-markdown-strong,
+      .playground-tasks-project-card-copy .tb-message-markdown-em,
+      .playground-tasks-project-card-copy .tb-message-markdown-inline-code,
+      .playground-tasks-project-card-copy .tb-message-markdown-link {
+        color: inherit;
+      }
+
       .playground-tasks-project-card-body {
         padding: 16px 18px 18px;
         display: flex;
@@ -18460,6 +18501,22 @@ const html = `<!doctype html>
         white-space: normal;
         overflow: visible;
         text-overflow: clip;
+      }
+
+      .playground-tasks-backlog-description .tb-message-markdown-paragraph,
+      .playground-tasks-backlog-description .tb-message-markdown-list,
+      .playground-tasks-backlog-description .tb-message-markdown-heading {
+        margin: 0;
+        font-size: inherit;
+        line-height: inherit;
+        color: inherit;
+      }
+
+      .playground-tasks-backlog-description .tb-message-markdown-strong,
+      .playground-tasks-backlog-description .tb-message-markdown-em,
+      .playground-tasks-backlog-description .tb-message-markdown-inline-code,
+      .playground-tasks-backlog-description .tb-message-markdown-link {
+        color: inherit;
       }
 
       .playground-tasks-backlog-primary-actions,
@@ -19569,6 +19626,22 @@ const html = `<!doctype html>
         overflow: hidden;
         word-break: break-word;
         overflow-wrap: anywhere;
+      }
+
+      .playground-tasks-card-copy .tb-message-markdown-paragraph,
+      .playground-tasks-card-copy .tb-message-markdown-list,
+      .playground-tasks-card-copy .tb-message-markdown-heading {
+        margin: 0;
+        font-size: inherit;
+        line-height: inherit;
+        color: inherit;
+      }
+
+      .playground-tasks-card-copy .tb-message-markdown-strong,
+      .playground-tasks-card-copy .tb-message-markdown-em,
+      .playground-tasks-card-copy .tb-message-markdown-inline-code,
+      .playground-tasks-card-copy .tb-message-markdown-link {
+        color: inherit;
       }
 
       .playground-tasks-lane-card-copy {
@@ -21497,6 +21570,10 @@ const html = `<!doctype html>
         .playground-settings-usage-donut-layout {
           grid-template-columns: minmax(0, 1fr);
           gap: 16px;
+        }
+        .playground-settings-usage-chart-card.is-donut {
+          width: 100%;
+          justify-self: stretch;
         }
         .playground-settings-usage-donut-layout > .playground-settings-usage-donut-frame {
           order: -1;
@@ -56268,6 +56345,7 @@ const html = `<!doctype html>
         const backlogTitleSkipCommitRef = useRef("");
         const taskRunPendingIdsRef = useRef(new Set());
         const taskCompletionReconciliationInFlightRef = useRef(new Set());
+        const missingTaskCompletionThreadKeysRef = useRef(new Set());
         const missionControlSyncThreadIdRef = useRef("");
         const missionControlRecoveryThreadIdRef = useRef("");
         const missionControlAutosaveInFlightRef = useRef(false);
@@ -57928,6 +58006,15 @@ const html = `<!doctype html>
           ].filter(Boolean).join(newline);
         }
 
+        function wrapPlaygroundHiddenSystemPrompt(prompt) {
+          const normalizedPrompt = String(prompt || "").trim();
+          if (!normalizedPrompt) {
+            return "";
+          }
+          const newline = String.fromCharCode(10);
+          return ["<system>", normalizedPrompt, "</system>"].join(newline);
+        }
+
         function buildPlaygroundTaskRunPrompt(taskRecord, options = {}) {
           const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
           const ticketNumber = taskTicketNumbersById[normalizedTask.id] || normalizedTask.ticketNumber || "000";
@@ -57964,7 +58051,7 @@ const html = `<!doctype html>
               copy: "These files belong to the whole project and should be treated as shared project context for this task.",
             }
           );
-          return [
+          return wrapPlaygroundHiddenSystemPrompt([
             "Run this backlog ticket as configured.",
             "Ticket: " + ticketNumber,
             "Title: " + (normalizedTask.title || "Untitled Task"),
@@ -57980,7 +58067,7 @@ const html = `<!doctype html>
             commentLines.length > 0 ? "Comments:" + newline + commentLines.join(newline) : "",
             taskAttachmentsSection,
             projectAttachmentsSection,
-          ].filter(Boolean).join(paragraphBreak);
+          ].filter(Boolean).join(paragraphBreak));
         }
 
         function buildPlaygroundMissionControlTaskSnapshot(taskRecords) {
@@ -63439,14 +63526,17 @@ const html = `<!doctype html>
 
         function renderTaskCommentAvatar(comment, className) {
           const authorName = getTaskCommentDisplayName(comment);
-          const normalizedPhotoUrl = comment?.authorType === "agent"
-            ? ""
-            : typeof comment?.authorAvatarUrl === "string" && comment.authorAvatarUrl.trim()
+          const authorAgent = comment?.authorAgentId ? agentsById[comment.authorAgentId] || null : null;
+          const normalizedPhotoUrl = normalizeSessionPhotoUrl(
+            typeof comment?.authorAvatarUrl === "string" && comment.authorAvatarUrl.trim()
               ? comment.authorAvatarUrl.trim()
-              : "";
+              : authorAgent
+                ? getPlaygroundAgentProfilePhotoUrl(authorAgent)
+                : ""
+          );
           const avatarLetter = getTaskCommentAvatarLetter(authorName);
           return React.createElement("div", { className },
-            normalizedPhotoUrl
+            canRenderAvatarImage(normalizedPhotoUrl)
               ? React.createElement("img", {
                   className: className + "-image",
                   src: normalizedPhotoUrl,
@@ -64159,6 +64249,9 @@ const html = `<!doctype html>
               if (taskCompletionReconciliationInFlightRef.current.has(reconciliationKey)) {
                 continue;
               }
+              if (missingTaskCompletionThreadKeysRef.current.has(reconciliationKey)) {
+                continue;
+              }
 
               taskCompletionReconciliationInFlightRef.current.add(reconciliationKey);
               try {
@@ -64166,6 +64259,30 @@ const html = `<!doctype html>
                   method: "GET",
                   headers: requestHeaders,
                 });
+                if (response.status === 404) {
+                  missingTaskCompletionThreadKeysRef.current.add(reconciliationKey);
+                  try {
+                    const remainingLinkedThreadIds = Array.isArray(task?.linkedThreadIds)
+                      ? task.linkedThreadIds.filter((value) => String(value || "").trim() && String(value || "").trim() !== normalizedThreadId)
+                      : [];
+                    const cleanedTask = await patchTaskRecord(task, {
+                      linkedThreadIds: remainingLinkedThreadIds,
+                      lastStartedThreadId: "",
+                    });
+                    if (!cancelled && cleanedTask?.id) {
+                      commitLocalTaskRecord(cleanedTask, {
+                        selectTask: selectedTaskId === normalizedTaskId,
+                      });
+                    }
+                  } catch (cleanupError) {
+                    console.warn("Failed to clean stale task thread reference", {
+                      taskId: normalizedTaskId,
+                      threadId: normalizedThreadId,
+                      error: cleanupError,
+                    });
+                  }
+                  continue;
+                }
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok || cancelled) {
                   continue;
@@ -64652,16 +64769,39 @@ const html = `<!doctype html>
           setDraftTask(null);
         }
 
-        function handleBacklogComposerRunFinish() {
+        async function handleBacklogComposerRunFinish(_result, threadId) {
           if (!selectedProjectId) {
             return;
           }
+          const normalizedThreadId = String(threadId || "").trim();
           setSelectedTaskId("");
           setDraftTask(null);
           setBacklogComposerSubtaskCommandRequest(null);
           setBacklogComposerMissionControlCommandRequest(null);
           setBacklogComposerKey((current) => current + 1);
-          void loadProjectWorkspace(selectedProjectId);
+          if (normalizedThreadId) {
+            try {
+              const response = await fetch(
+                backlogComposerBackendUrl + "/threads/" + encodeURIComponent(normalizedThreadId) + "/result",
+                {
+                  method: "GET",
+                  headers: requestHeaders,
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (response.ok) {
+                const createdTask = getPlaygroundTaskResponseRecord(data);
+                if (createdTask?.id) {
+                  commitLocalTaskRecord(createdTask, {
+                    selectTask: false,
+                    syncDraft: false,
+                    markClean: false,
+                  });
+                }
+              }
+            } catch {}
+          }
+          await loadProjectWorkspace(selectedProjectId);
         }
 
         function buildPlaygroundProjectSavePayload(projectRecord, metadataOverrides = {}) {
@@ -65688,7 +65828,6 @@ const html = `<!doctype html>
             const launchPrompt = buildPlaygroundTaskRunPrompt(taskToLaunch, {
               projectAttachments: projectLaunchAttachments,
             });
-            const launchAttachments = mergePlaygroundAttachmentLists(taskToLaunch.attachments, projectLaunchAttachments);
             const response = await fetch(backendUrl + "/tasks/" + encodeURIComponent(task.id) + "/start-thread", {
               method: "POST",
               headers: {
@@ -65700,7 +65839,6 @@ const html = `<!doctype html>
                 environmentId: launchEnvironmentId || undefined,
                 agentId: launchAgentId || undefined,
                 enabledSkills: enabledSkillsPayload,
-                attachments: launchAttachments,
                 githubRepo: githubRepo || undefined,
                 connectors: normalizePlaygroundTaskConnectorSelections(taskToLaunch.connectors),
                 launchPrompt: launchPrompt,
@@ -65720,6 +65858,7 @@ const html = `<!doctype html>
             if (!updatedTask?.id) {
               throw new Error("Task update failed after thread start.");
             }
+            const executionStarted = Boolean(data?.executionStarted);
 
             taskRunPendingIdsRef.current.delete(normalizedTaskId);
             setTaskRunPendingIds((current) => current.filter((taskId) => taskId !== normalizedTaskId));
@@ -65741,14 +65880,19 @@ const html = `<!doctype html>
               onThreadStarted(threadRecord.id, {
                 threadRecord,
                 taskPreview: buildPlaygroundTaskThreadPreview(updatedTask, threadRecord.id),
-                taskRunRequest: {
-                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                  prompt: launchPrompt,
-                  attachments: launchAttachments,
-                  githubRepo: githubRepo || null,
-                  enabledSkills: enabledSkillsPayload || null,
-                  environmentId: launchEnvironmentId || "",
-                },
+                ...(executionStarted
+                  ? {}
+                  : {
+                      taskRunRequest: {
+                        token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                        prompt: launchPrompt,
+                        attachments: [],
+                        githubRepo: githubRepo || null,
+                        enabledSkills: enabledSkillsPayload || null,
+                        environmentId: launchEnvironmentId || "",
+                        executionStarted,
+                      },
+                    }),
               });
             }
           } catch (error) {
@@ -67520,7 +67664,10 @@ const html = `<!doctype html>
                   React.createElement("div", {
                     className: "playground-tasks-card-title" + (task.status === "done" ? " is-complete" : ""),
                   }, task.title || "Untitled Task"),
-                  React.createElement("div", { className: "playground-tasks-card-copy" }, task.description || "Add task details, dependencies, and assignment context from the right-hand pane.")
+                  React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                    content: task.description || "Add task details, dependencies, and assignment context from the right-hand pane.",
+                    className: "playground-tasks-card-copy tb-message-markdown",
+                  })
                 ),
                 React.createElement("div", { className: "playground-tasks-card-actions" },
                   React.createElement("span", { className: priorityClass }, getPlaygroundTaskPriorityLabel(task.priority)),
@@ -67652,7 +67799,10 @@ const html = `<!doctype html>
                 ),
                 React.createElement("div", { className: "playground-tasks-project-card-kicker" }, "Project Workspace"),
                 React.createElement("div", { className: "playground-tasks-project-card-title" }, project.name || "Untitled Project"),
-                React.createElement("div", { className: "playground-tasks-project-card-copy" }, project.description || "Open this project to access its environments, active threads, and sprint-driven task board.")
+                React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                  content: project.description || "Open this project to access its environments, active threads, and sprint-driven task board.",
+                  className: "playground-tasks-project-card-copy tb-message-markdown",
+                })
               ),
               React.createElement("div", { className: "playground-tasks-project-card-body" },
                 React.createElement("div", { className: "playground-tasks-project-card-metrics" },
@@ -68678,7 +68828,10 @@ const html = `<!doctype html>
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-backlog-header-row is-secondary" },
-                  React.createElement("div", { className: "playground-tasks-backlog-description" }, headerDescription)
+                  React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                    content: headerDescription,
+                    className: "playground-tasks-backlog-description tb-message-markdown",
+                  })
                 ),
                 React.createElement("div", {
                   className: "playground-tasks-backlog-header-row is-tertiary",
@@ -69029,7 +69182,10 @@ const html = `<!doctype html>
                 )
               ),
               React.createElement("div", { className: "playground-tasks-backlog-header-row is-secondary" },
-                React.createElement("div", { className: "playground-tasks-backlog-description" }, boardHeaderDescription)
+                React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                  content: boardHeaderDescription,
+                  className: "playground-tasks-backlog-description tb-message-markdown",
+                })
               ),
               React.createElement("div", { className: "playground-tasks-backlog-header-row is-tertiary" },
                 React.createElement("div", { className: "playground-tasks-backlog-secondary-actions" },
@@ -72880,6 +73036,7 @@ const html = `<!doctype html>
         const settingsInferenceAutosaveTimerRef = useRef(null);
         const authRedirectStartedRef = useRef(false);
         const hasAuthenticatedSessionThisMountRef = useRef(false);
+        const explicitSignOutInProgressRef = useRef(false);
         const sessionBudgetSyncKeyRef = useRef("");
         const demoReadyAnnouncedRef = useRef(false);
         const threadSubagentDetailHostRef = useCallback((node) => {
@@ -73146,9 +73303,13 @@ const html = `<!doctype html>
           return () => controller.abort();
         }, [effectiveApiKey, hasRealAccess, latestInteractedProjectId, proxyBackendBase, showInitialThreadWelcome, upstreamUrl]);
 
-        function buildAiosLoginUrl() {
+        function buildAiosLoginUrl(options) {
+          const nextOptions = options && typeof options === "object" ? options : {};
           const loginUrl = new URL("/login", ${JSON.stringify(aiosOrigin)});
           loginUrl.searchParams.set("redirect", window.location.href);
+          if (nextOptions.signedOut) {
+            loginUrl.searchParams.set("signed_out", "1");
+          }
           return loginUrl.toString();
         }
 
@@ -73175,6 +73336,7 @@ const html = `<!doctype html>
 
         function handleSignInWithComputerAgents() {
           setPlatformAuthError("");
+          explicitSignOutInProgressRef.current = false;
           if (!authRedirectStartedRef.current) {
             authRedirectStartedRef.current = true;
             redirectToAiosLogin({ replace: false });
@@ -73282,11 +73444,13 @@ const html = `<!doctype html>
 
         function buildAiosLogoutUrl() {
           const logoutUrl = new URL("/logout", ${JSON.stringify(aiosOrigin)});
-          logoutUrl.searchParams.set("redirect", buildAiosLoginUrl());
+          logoutUrl.searchParams.set("redirect", buildAiosLoginUrl({ signedOut: true }));
           return logoutUrl.toString();
         }
 
         async function handleSignOutFromComputerAgents() {
+          explicitSignOutInProgressRef.current = true;
+          authRedirectStartedRef.current = true;
           clearPlaygroundAuthRedirectState();
           clearPlaygroundAuthSessionMarker();
           setPlatformAuthBusy("signout");
@@ -73785,7 +73949,7 @@ const html = `<!doctype html>
               copy: "These files belong to the whole project and should be treated as shared project context for this task.",
             }
           );
-          return [
+          return wrapPlaygroundHiddenSystemPrompt([
             "Run this backlog ticket as configured.",
             "Ticket: " + ticketNumber,
             "Title: " + (normalizedTask.title || "Untitled Task"),
@@ -73798,7 +73962,7 @@ const html = `<!doctype html>
               : "Description:" + newline + "None provided.",
             taskAttachmentsSection,
             projectAttachmentsSection,
-          ].filter(Boolean).join(paragraphBreak);
+          ].filter(Boolean).join(paragraphBreak));
         }
 
         async function handleWelcomeWidgetToggleTaskDone(taskRecord, event) {
@@ -73852,7 +74016,6 @@ const html = `<!doctype html>
             const launchPrompt = buildWelcomeWidgetTaskRunPrompt(normalizedTask, {
               projectAttachments: projectLaunchAttachments,
             });
-            const launchAttachments = mergePlaygroundAttachmentLists(normalizedTask.attachments, projectLaunchAttachments);
             const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/start-thread", {
               method: "POST",
               headers: {
@@ -73864,7 +74027,6 @@ const html = `<!doctype html>
                 environmentId: normalizedTask.environmentId || undefined,
                 agentId: !isPlaygroundHumanAssigneeId(normalizedTask.assigneeAgentId) ? (normalizedTask.assigneeAgentId || undefined) : undefined,
                 enabledSkills: enabledSkillsPayload,
-                attachments: launchAttachments,
                 githubRepo: githubRepo || undefined,
                 connectors: normalizePlaygroundTaskConnectorSelections(normalizedTask.connectors),
                 launchPrompt,
@@ -73881,6 +74043,7 @@ const html = `<!doctype html>
             if (!threadRecord?.id || !updatedTask?.id) {
               throw new Error("Task thread creation failed.");
             }
+            const executionStarted = Boolean(data?.executionStarted);
 
             updateWelcomeWidgetTaskLocally(updatedTask);
             upsertRealThreadRecord(threadRecord, {
@@ -73892,15 +74055,17 @@ const html = `<!doctype html>
             }
             setLatestInteractedProjectId(updatedTask.projectId || welcomeWidgetsState.projectId || latestInteractedProjectId || "");
             setThreadAgentSelectionOverride(null);
-            setPendingThreadRunRequest({
-              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-              threadId: threadRecord.id,
-              prompt: launchPrompt,
-              attachments: launchAttachments,
-              githubRepo: githubRepo || null,
-              enabledSkills: enabledSkillsPayload || null,
-              environmentId: normalizedTask.environmentId || "",
-            });
+            setPendingThreadRunRequest(executionStarted
+              ? null
+              : {
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                  threadId: threadRecord.id,
+                  prompt: launchPrompt,
+                  attachments: [],
+                  githubRepo: githubRepo || null,
+                  enabledSkills: enabledSkillsPayload || null,
+                  environmentId: normalizedTask.environmentId || "",
+                });
             setActivePage("thread");
             setCurrentThreadId(threadRecord.id);
             setContentMode("chat");
@@ -73915,8 +74080,10 @@ const html = `<!doctype html>
               title: updatedTask.title || taskPreview.title || "Untitled Task",
               phase: "running",
             });
-            void refreshThreads();
-            void loadThreadGroundTruthStatus(threadRecord.id);
+            void refreshThreads(undefined, threadRecord.id);
+            if (executionStarted) {
+              void loadThreadGroundTruthStatus(threadRecord.id);
+            }
           } catch (error) {
             applyTaskRunState({
               taskId: normalizedTaskId,
@@ -74416,12 +74583,14 @@ const html = `<!doctype html>
 
         useEffect(() => {
           if (isDemoMode) {
+            explicitSignOutInProgressRef.current = false;
             authRedirectStartedRef.current = false;
             clearPlaygroundAuthRedirectState();
             return;
           }
 
           if (sessionState.status === "authenticated") {
+            explicitSignOutInProgressRef.current = false;
             hasAuthenticatedSessionThisMountRef.current = true;
             authRedirectStartedRef.current = false;
             clearPlaygroundAuthRedirectState();
@@ -74433,6 +74602,10 @@ const html = `<!doctype html>
           }
 
           if (sessionState.status === "loading") {
+            return;
+          }
+
+          if (explicitSignOutInProgressRef.current) {
             return;
           }
 
@@ -77546,7 +77719,7 @@ const html = `<!doctype html>
             return "";
           }
         }, [resolvedUpstreamUrl]);
-        const refreshThreads = useCallback(async function refreshThreads(limitOverride) {
+        const refreshThreads = useCallback(async function refreshThreads(limitOverride, preserveThreadIdOverride = "") {
           if (!hasRealAccess) {
             setRealThreads([]);
             setRealThreadsHasMore(false);
@@ -77557,6 +77730,7 @@ const html = `<!doctype html>
             Number.isFinite(limitOverride) && limitOverride > 0
               ? Math.max(1, Math.round(limitOverride))
               : 20;
+          const normalizedPreserveThreadId = String(preserveThreadIdOverride || "").trim();
 
           setIsThreadsLoading(true);
           try {
@@ -77579,7 +77753,21 @@ const html = `<!doctype html>
             }
 
             const items = Array.isArray(data?.data) ? data.data : Array.isArray(data?.threads) ? data.threads : [];
-            setRealThreads(normalizeThreadList(items));
+            const normalizedFetchedThreads = normalizeThreadList(items);
+            setRealThreads((current) => {
+              const fetchedIds = new Set(normalizedFetchedThreads.map((thread) => thread.id));
+              const optimisticThreads = (Array.isArray(current) ? current : []).filter((thread) => {
+                const normalizedThreadId = String(thread?.id || "").trim();
+                if (!normalizedThreadId || fetchedIds.has(normalizedThreadId)) {
+                  return false;
+                }
+                const normalizedStatus = String(thread?.status || "").trim().toLowerCase();
+                return normalizedThreadId === currentThreadId
+                  || normalizedThreadId === normalizedPreserveThreadId
+                  || ["running", "queued", "pending", "scheduled", "starting"].includes(normalizedStatus);
+              });
+              return normalizeThreadList([...optimisticThreads, ...normalizedFetchedThreads]);
+            });
             setRealThreadsHasMore(Boolean(data?.has_more) || items.length >= requestedLimit);
           } catch {
             setRealThreads([]);
@@ -77587,7 +77775,7 @@ const html = `<!doctype html>
           } finally {
             setIsThreadsLoading(false);
           }
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
+        }, [authRequestHeaders, currentThreadId, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
 
         const handleShowMoreThreads = useCallback(async function handleShowMoreThreads() {
           const nextDisplayCount = threadDisplayCount + 10;
@@ -77683,6 +77871,13 @@ const html = `<!doctype html>
             ? options.taskPreview
             : null;
           const fallbackStatus = typeof options?.status === "string" ? options.status.trim() : "";
+          const normalizedIncomingStatus = typeof threadRecord?.status === "string" ? threadRecord.status.trim() : "";
+          const shouldPreferFallbackStatus =
+            Boolean(fallbackStatus)
+            && (
+              !normalizedIncomingStatus
+              || ["active", "created", "ready"].includes(normalizedIncomingStatus.toLowerCase())
+            );
 
           setRealThreads((current) => {
             const existingThread = current.find((thread) => thread.id === normalizedThreadId) || null;
@@ -77710,9 +77905,9 @@ const html = `<!doctype html>
               ...(existingThread || {}),
               ...(threadRecord || {}),
               id: normalizedThreadId,
-              status: typeof threadRecord?.status === "string" && threadRecord.status.trim()
-                ? threadRecord.status.trim()
-                : fallbackStatus || existingThread?.status || "",
+              status: shouldPreferFallbackStatus
+                ? fallbackStatus
+                : normalizedIncomingStatus || fallbackStatus || existingThread?.status || "",
               createdAt: typeof threadRecord?.createdAt === "string" && threadRecord.createdAt.trim()
                 ? threadRecord.createdAt.trim()
                 : existingThread?.createdAt || nowIso,
@@ -79631,14 +79826,8 @@ const html = `<!doctype html>
 
         function renderSettingsUsageDonutChart(config) {
           const items = Array.isArray(config?.items) ? config.items.filter(Boolean) : [];
-          if (!items.length) {
-            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No source usage data in this period");
-          }
-
           const totalValue = Math.max(0, items.reduce((sum, item) => sum + Math.max(0, Number(item.value || 0)), 0));
-          if (totalValue <= 0) {
-            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, config?.emptyText || "No source usage data in this period");
-          }
+          const hasData = items.length > 0 && totalValue > 0;
 
           const renderArcPath = (cx, cy, innerRadius, outerRadius, startAngle, endAngle) => {
             const startOuterX = cx + outerRadius * Math.cos(startAngle);
@@ -79676,29 +79865,54 @@ const html = `<!doctype html>
           return React.createElement("div", { className: "playground-settings-usage-donut-layout" },
             React.createElement(PlaygroundSettingsResponsiveSvg, {
                 frameClassName: "playground-settings-usage-donut-frame",
-                frameHeight: 240,
-                svgHeight: 240,
-                fallbackWidth: 240,
+                frameHeight: 264,
+                svgHeight: 264,
+                fallbackWidth: 264,
                 ariaLabel: config?.ariaLabel || "Usage by source",
               }, ({ svgWidth, svgHeight }) => {
                 const cx = svgWidth / 2;
                 const cy = svgHeight / 2;
                 const outerRadius = Math.min(svgWidth, svgHeight) * 0.38;
                 const innerRadius = outerRadius * 0.58;
+                const trackRadius = (outerRadius + innerRadius) / 2;
+                const trackStrokeWidth = outerRadius - innerRadius;
                 let currentAngle = -Math.PI / 2;
 
                 return React.createElement(React.Fragment, null,
-                  items.map((item) => {
-                    const value = Math.max(0, Number(item.value || 0));
-                    const sliceAngle = (value / totalValue) * Math.PI * 2;
-                    const path = renderArcPath(cx, cy, innerRadius, outerRadius, currentAngle, currentAngle + sliceAngle);
-                    currentAngle += sliceAngle;
-                    return React.createElement("path", {
-                      key: item.id || item.label,
-                      d: path,
-                      fill: item.color,
-                    });
+                  React.createElement("circle", {
+                    cx,
+                    cy,
+                    r: trackRadius,
+                    fill: "none",
+                    stroke: "rgba(255, 255, 255, 0.10)",
+                    strokeWidth: trackStrokeWidth,
                   }),
+                  hasData
+                    ? items.map((item) => {
+                        const value = Math.max(0, Number(item.value || 0));
+                        const sliceAngle = (value / totalValue) * Math.PI * 2;
+                        const isFullCircleSlice = sliceAngle >= (Math.PI * 2) - 0.0001;
+                        const path = isFullCircleSlice
+                          ? null
+                          : renderArcPath(cx, cy, innerRadius, outerRadius, currentAngle, currentAngle + sliceAngle);
+                        currentAngle += sliceAngle;
+                        return isFullCircleSlice
+                          ? React.createElement("circle", {
+                              key: item.id || item.label,
+                              cx,
+                              cy,
+                              r: trackRadius,
+                              fill: "none",
+                              stroke: item.color,
+                              strokeWidth: trackStrokeWidth,
+                            })
+                          : React.createElement("path", {
+                              key: item.id || item.label,
+                              d: path,
+                              fill: item.color,
+                            });
+                      })
+                    : null,
                   React.createElement("text", {
                     x: cx,
                     y: cy - 16,
@@ -79713,7 +79927,9 @@ const html = `<!doctype html>
                   }, config?.centerValue || formatSettingsComputeTokens(totalValue)),
                 );
               }),
-            renderLegendColumn(items, "playground-settings-usage-donut-column is-right")
+            items.length > 0
+              ? renderLegendColumn(items, "playground-settings-usage-donut-column is-right")
+              : null
           );
         }
 
@@ -84895,6 +85111,12 @@ const html = `<!doctype html>
                                   return;
                                 }
                                 setThreadAgentSelectionOverride(null);
+                                if (options?.taskPreview?.taskId) {
+                                  upsertThreadTaskPreview(normalizedThreadId, {
+                                    ...options.taskPreview,
+                                    threadId: normalizedThreadId,
+                                  });
+                                }
                                 if (options?.taskRunRequest?.prompt) {
                                   setPendingThreadRunRequest({
                                     token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
@@ -84978,6 +85200,12 @@ const html = `<!doctype html>
                                   return;
                                 }
                                 setThreadAgentSelectionOverride(null);
+                                if (options?.taskPreview?.taskId) {
+                                  upsertThreadTaskPreview(normalizedThreadId, {
+                                    ...options.taskPreview,
+                                    threadId: normalizedThreadId,
+                                  });
+                                }
                                 if (options?.taskRunRequest?.prompt) {
                                   setPendingThreadRunRequest({
                                     token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
@@ -85050,10 +85278,20 @@ const html = `<!doctype html>
                             },
                             onProjectRecordCommitted: handleThreadProjectRecordCommitted,
                             onThreadStarted: (threadId, options = {}) => {
+                              const normalizedThreadId = String(threadId || "").trim();
+                              if (!normalizedThreadId) {
+                                return;
+                              }
                               if (options?.threadRecord?.id) {
                                 upsertRealThreadRecord(options.threadRecord, {
                                   taskPreview: options?.taskPreview || null,
                                   status: options?.taskRunRequest?.prompt ? "running" : "",
+                                });
+                              }
+                              if (options?.taskPreview?.taskId) {
+                                upsertThreadTaskPreview(normalizedThreadId, {
+                                  ...options.taskPreview,
+                                  threadId: normalizedThreadId,
                                 });
                               }
                               if (options?.taskPreview?.environmentId) {
@@ -85063,12 +85301,12 @@ const html = `<!doctype html>
                               if (options?.taskRunRequest?.prompt) {
                                 if (options.taskRunRequest.executionStarted) {
                                   setPendingThreadRunRequest(null);
-                                  void loadThreadGroundTruthStatus(threadId);
-                                  void refreshThreads();
+                                  void loadThreadGroundTruthStatus(normalizedThreadId);
+                                  void refreshThreads(undefined, normalizedThreadId);
                                 } else {
                                   setPendingThreadRunRequest({
                                     token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
-                                    threadId,
+                                    threadId: normalizedThreadId,
                                     prompt: options.taskRunRequest.prompt,
                                     attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
                                     githubRepo: options.taskRunRequest.githubRepo || null,
@@ -85081,12 +85319,12 @@ const html = `<!doctype html>
                               }
                               setThreadTaskOpenRequest(null);
                               setActivePage("thread");
-                              setCurrentThreadId(threadId);
+                              setCurrentThreadId(normalizedThreadId);
                               setContentMode(options?.contentMode === "changes" ? "changes" : "chat");
                               setThreadListMode("threads");
                               setChangesNavigationTarget(null);
                               setRunnerRenderKey((current) => current + 1);
-                              void refreshThreads();
+                              void refreshThreads(undefined, normalizedThreadId);
                             },
                             onRequireAuth: handleSignInWithComputerAgents,
                             onRequestSidebarCollapse: () => {
@@ -85329,42 +85567,53 @@ const html = `<!doctype html>
                               },
                               onProjectRecordCommitted: handleThreadProjectRecordCommitted,
                               onThreadStarted: (threadId, options = {}) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
                                 if (options?.threadRecord?.id) {
                                   upsertRealThreadRecord(options.threadRecord, {
                                     taskPreview: options?.taskPreview || null,
                                     status: options?.taskRunRequest?.prompt ? "running" : "",
                                   });
-                              }
-                              if (options?.taskPreview?.environmentId) {
-                                setEnvironmentId(options.taskPreview.environmentId);
-                              }
-                              setThreadAgentSelectionOverride(null);
-                              if (options?.taskRunRequest?.prompt) {
-                                if (options.taskRunRequest.executionStarted) {
-                                  setPendingThreadRunRequest(null);
-                                  void loadThreadGroundTruthStatus(threadId);
-                                } else {
-                                  setPendingThreadRunRequest({
-                                      token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
-                                      threadId,
-                                      prompt: options.taskRunRequest.prompt,
-                                      attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
-                                      githubRepo: options.taskRunRequest.githubRepo || null,
-                                      enabledSkills: options.taskRunRequest.enabledSkills || null,
-                                      environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
-                                    });
                                 }
-                              } else {
-                                setPendingThreadRunRequest(null);
-                              }
+                                if (options?.taskPreview?.taskId) {
+                                  upsertThreadTaskPreview(normalizedThreadId, {
+                                    ...options.taskPreview,
+                                    threadId: normalizedThreadId,
+                                  });
+                                }
+                                if (options?.taskPreview?.environmentId) {
+                                  setEnvironmentId(options.taskPreview.environmentId);
+                                }
+                                setThreadAgentSelectionOverride(null);
+                                if (options?.taskRunRequest?.prompt) {
+                                  if (options.taskRunRequest.executionStarted) {
+                                    setPendingThreadRunRequest(null);
+                                    void loadThreadGroundTruthStatus(normalizedThreadId);
+                                    void refreshThreads(undefined, normalizedThreadId);
+                                  } else {
+                                    setPendingThreadRunRequest({
+                                        token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                                        threadId: normalizedThreadId,
+                                        prompt: options.taskRunRequest.prompt,
+                                        attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                                        githubRepo: options.taskRunRequest.githubRepo || null,
+                                        enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                        environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                      });
+                                  }
+                                } else {
+                                  setPendingThreadRunRequest(null);
+                                }
                                 setThreadTaskOpenRequest(null);
                                 setActivePage("thread");
-                                setCurrentThreadId(threadId);
+                                setCurrentThreadId(normalizedThreadId);
                                 setContentMode(options?.contentMode === "changes" ? "changes" : "chat");
                                 setThreadListMode("threads");
                                 setChangesNavigationTarget(null);
                                 setRunnerRenderKey((current) => current + 1);
-                                void refreshThreads();
+                                void refreshThreads(undefined, normalizedThreadId);
                               },
                               onRequireAuth: handleSignInWithComputerAgents,
                               onRequestSidebarCollapse: () => {
@@ -85782,6 +86031,7 @@ async function proxyThreadMessages(req, res, threadId) {
 }
 
 const PLAYGROUND_TASK_BACKLOG_THREAD_PREFIX = "taskbacklog_";
+const backlogComposerResultsByThreadId = new Map();
 const PLAYGROUND_TASK_HUMAN_ME_ID = "__runner_playground_human_me__";
 
 function isPlaygroundHumanAssigneeId(value) {
@@ -86022,20 +86272,10 @@ async function proxyTaskStartThread(req, res, taskId) {
       });
     }
 
-    const launchPrompt = String(body?.launchPrompt || body?.content || body?.task || taskRecord.title || "").trim();
-    if (!launchPrompt) {
-      return sendJson(res, 400, {
-        error: "Invalid task prompt",
-        message: "A task run prompt is required.",
-      });
-    }
-
     const taskMetadata = getServerBacklogTaskRunnerMetadata(taskRecord) || {};
     const environmentId = String(body?.environmentId || taskRecord.environmentId || taskMetadata.environmentId || "").trim();
     const requestedAgentId = String(body?.agentId || taskRecord.assigneeAgentId || taskMetadata.assigneeActorId || "").trim();
     const agentId = isPlaygroundHumanAssigneeId(requestedAgentId) ? "" : requestedAgentId;
-    const enabledSkills = body?.enabledSkills && typeof body.enabledSkills === "object" ? body.enabledSkills : null;
-    const githubRepo = body?.githubRepo && typeof body.githubRepo === "object" ? body.githubRepo : null;
     const taskPreview = body?.taskPreview && typeof body.taskPreview === "object" ? body.taskPreview : null;
     const threadTitle = String(body?.title || (taskPreview?.ticketNumber ? `${taskPreview.ticketNumber} ${taskPreview.title || taskRecord.title || "Task"}` : taskRecord.title || "Task")).trim();
     if (isPlaygroundHumanAssigneeId(requestedAgentId)) {
@@ -86043,19 +86283,6 @@ async function proxyTaskStartThread(req, res, taskId) {
         error: "Human task cannot start thread",
         message: "Tasks assigned to Me do not start agent threads.",
       });
-    }
-
-    if (environmentId) {
-      await fetchCloudApi(`/environments/${encodeURIComponent(environmentId)}/start`, "POST", {
-        ...(agentId ? { agentId } : {}),
-        ...(enabledSkills ? { enabledSkills } : {}),
-      });
-      if (githubRepo?.repoFullName && githubRepo?.branch) {
-        await fetchCloudApi(`/environments/${encodeURIComponent(environmentId)}/github/prepare`, "POST", {
-          repoFullName: githubRepo.repoFullName,
-          branch: githubRepo.branch,
-        });
-      }
     }
 
     const createdThreadPayload = await fetchCloudApi("/threads", "POST", {
@@ -86118,9 +86345,16 @@ async function proxyTaskStartThread(req, res, taskId) {
       throw new Error("Task thread was started, but the task update response was invalid.");
     }
 
+    const responseThreadRecord = {
+      ...patchedThreadRecord,
+      status: "running",
+      updatedAt: new Date().toISOString(),
+    };
+
     return sendJson(res, 200, {
-      thread: patchedThreadRecord,
+      thread: responseThreadRecord,
       task: updatedTaskRecord,
+      executionStarted: false,
     });
   } catch (error) {
     return sendJson(res, 502, {
@@ -86343,6 +86577,14 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId, 
       return sendJson(res, upstream.status, parsed);
     }
 
+    const createdTaskRecord = extractServerTaskRecord(parsed);
+    if (createdTaskRecord?.id) {
+      backlogComposerResultsByThreadId.set(threadId, {
+        task: createdTaskRecord,
+        createdAt: Date.now(),
+      });
+    }
+
     res.writeHead(200, {
       "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
@@ -86354,6 +86596,66 @@ async function proxyTaskBacklogCreateTaskMessage(req, res, projectId, threadId, 
   } catch (error) {
     return sendJson(res, 502, {
       error: "Failed to create backlog task from task input",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+async function proxyTaskBacklogResult(req, res, projectId, threadId) {
+  try {
+    const threadState = decodePlaygroundTaskBacklogThreadState(threadId);
+    if (!threadState || threadState.projectId !== projectId) {
+      return sendJson(res, 400, {
+        error: "Invalid backlog capture thread",
+        message: "The backlog composer thread state is missing or invalid.",
+      });
+    }
+
+    const storedResult = backlogComposerResultsByThreadId.get(threadId);
+    if (!storedResult?.task?.id) {
+      return sendJson(res, 404, {
+        error: "Backlog result unavailable",
+        message: "No created task result is available for this backlog composer thread.",
+      });
+    }
+
+    return sendJson(res, 200, {
+      task: storedResult.task,
+    });
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to load backlog result",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+async function proxyTaskBacklogGenerateTitle(req, res, projectId, threadId) {
+  try {
+    const threadState = decodePlaygroundTaskBacklogThreadState(threadId);
+    if (!threadState || threadState.projectId !== projectId) {
+      return sendJson(res, 400, {
+        error: "Invalid backlog capture thread",
+        message: "The backlog composer thread state is missing or invalid.",
+      });
+    }
+
+    const body = await readRequestBody(req);
+    const rawMessage = String(body?.message || body?.content || "").replace(/\s+/g, " ").trim();
+    const nextTitle = rawMessage
+      ? rawMessage.slice(0, 120).trim()
+      : "New Task";
+
+    return sendJson(res, 200, {
+      title: nextTitle,
+      thread: {
+        id: threadId,
+        title: nextTitle,
+      },
+    });
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to generate backlog thread title",
       message: error instanceof Error ? error.message : String(error),
     });
   }
@@ -87989,6 +88291,28 @@ const server = http.createServer((req, res) => {
       decodeURIComponent(taskBacklogThreadMessagesMatch[1]),
       decodeURIComponent(taskBacklogThreadMessagesMatch[3]),
       taskBacklogThreadMessagesMatch[2] ? decodeURIComponent(taskBacklogThreadMessagesMatch[2]) : "",
+    );
+    return;
+  }
+
+  const taskBacklogThreadResultMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?\/threads\/([^/]+)\/result$/);
+  if (req.method === "GET" && taskBacklogThreadResultMatch) {
+    void proxyTaskBacklogResult(
+      req,
+      res,
+      decodeURIComponent(taskBacklogThreadResultMatch[1]),
+      decodeURIComponent(taskBacklogThreadResultMatch[3]),
+    );
+    return;
+  }
+
+  const taskBacklogThreadGenerateTitleMatch = url.pathname.match(/^\/api\/task-backlog\/([^/]+)(?:\/releases\/([^/]+))?\/threads\/([^/]+)\/generate-title$/);
+  if (req.method === "POST" && taskBacklogThreadGenerateTitleMatch) {
+    void proxyTaskBacklogGenerateTitle(
+      req,
+      res,
+      decodeURIComponent(taskBacklogThreadGenerateTitleMatch[1]),
+      decodeURIComponent(taskBacklogThreadGenerateTitleMatch[3]),
     );
     return;
   }

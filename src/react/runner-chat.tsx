@@ -3810,6 +3810,55 @@ async function fetchThreadHydrationPayload(params: {
   };
 }
 
+async function fetchThreadLogsSnapshot(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  requestHeaders?: HeadersInit;
+}): Promise<{
+  logs: RunnerLog[];
+  status: string | null;
+  durationSeconds: number | null;
+  agentName: string | null;
+  environmentName: string | null;
+}> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/logs`, {
+    method: "GET",
+    headers: buildRunnerHeaders(params.requestHeaders, params.apiKey),
+    cache: "no-store",
+  });
+
+  const bodyText = await response.text();
+  let parsed: {
+    logs?: RunnerLog[];
+    status?: string | null;
+    duration?: string | number | null;
+    agentName?: string | null;
+    environmentName?: string | null;
+    message?: string;
+    error?: string;
+  } = {};
+
+  try {
+    parsed = bodyText ? JSON.parse(bodyText) : {};
+  } catch {
+    parsed = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(parsed.message || parsed.error || `Failed to load thread logs (${response.status})`);
+  }
+
+  return {
+    logs: Array.isArray(parsed.logs) ? parsed.logs : [],
+    status: typeof parsed.status === "string" && parsed.status.trim() ? parsed.status.trim() : null,
+    durationSeconds: parseDurationSecondsValue(parsed.duration),
+    agentName: parsed.agentName ?? null,
+    environmentName: parsed.environmentName ?? null,
+  };
+}
+
 async function fetchThreadStatusSnapshot(params: {
   backendUrl: string;
   apiKey: string;
@@ -3867,7 +3916,15 @@ function normalizeThreadLifecycleStatus(status: string | null | undefined): stri
 }
 
 function isRunningThreadLifecycleStatus(status: string | null | undefined): boolean {
-  return normalizeThreadLifecycleStatus(status) === "running";
+  return [
+    "queued",
+    "pending",
+    "starting",
+    "running",
+    "active",
+    "created",
+    "ready",
+  ].includes(normalizeThreadLifecycleStatus(status));
 }
 
 function buildHydratedTurnsFromMessages(
@@ -4538,8 +4595,43 @@ function turnsLikelyMatch(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): bool
     return (
       localAssistantText === hydratedAssistantText ||
       localAssistantText.startsWith(hydratedAssistantText) ||
-      hydratedAssistantText.startsWith(localAssistantText)
+        hydratedAssistantText.startsWith(localAssistantText)
     );
+  }
+
+  const localAssistantText = normalizeTurnPrompt(getTurnAssistantMessageText(localTurn));
+  const hydratedAssistantText = normalizeTurnPrompt(getTurnAssistantMessageText(hydratedTurn));
+  const oneSideMissingPrompt = (!localPrompt && hydratedPrompt) || (localPrompt && !hydratedPrompt);
+  if (oneSideMissingPrompt && localAssistantText && hydratedAssistantText) {
+    const assistantResponseMatches =
+      localAssistantText === hydratedAssistantText ||
+      localAssistantText.startsWith(hydratedAssistantText) ||
+      hydratedAssistantText.startsWith(localAssistantText);
+    if (assistantResponseMatches) {
+      const startedAtDeltaMs = Math.abs((localTurn.startedAtMs || 0) - (hydratedTurn.startedAtMs || 0));
+      if (startedAtDeltaMs <= 60_000) {
+        return true;
+      }
+    }
+  }
+
+  if (!localPrompt && !hydratedPrompt) {
+    const localTimelineCount = localTurn.logs.filter(shouldDisplayTimelineLog).length;
+    const hydratedTimelineCount = hydratedTurn.logs.filter(shouldDisplayTimelineLog).length;
+    const localHasTimeline = localTimelineCount > 0;
+    const hydratedHasTimeline = hydratedTimelineCount > 0;
+    const localHasResponse = localAssistantText.length > 0;
+    const hydratedHasResponse = hydratedAssistantText.length > 0;
+    const oneSideIsTimelineHeavy =
+      (localHasTimeline && !hydratedHasTimeline && hydratedHasResponse) ||
+      (hydratedHasTimeline && !localHasTimeline && localHasResponse);
+
+    if (oneSideIsTimelineHeavy) {
+      const startedAtDeltaMs = Math.abs((localTurn.startedAtMs || 0) - (hydratedTurn.startedAtMs || 0));
+      if (startedAtDeltaMs <= 60_000) {
+        return true;
+      }
+    }
   }
 
   return false;
@@ -4816,6 +4908,73 @@ function parseIsoTimestampMs(value: unknown): number | null {
   }
   const parsed = Date.parse(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function resolveHydrationInitialPrompt(
+  turns: RunnerTurn[],
+  cachedPayload?: RunnerThreadHydrationPayload | null
+): string {
+  const cachedPrompt = typeof cachedPayload?.initialPrompt === "string" ? cachedPayload.initialPrompt.trim() : "";
+  if (cachedPrompt) {
+    return cachedPrompt;
+  }
+
+  const firstPromptTurn = turns.find((turn) => {
+    const normalizedPrompt = String(turn.prompt || "").trim();
+    if (!normalizedPrompt) {
+      return false;
+    }
+    return turnPresentation(turn) !== "context-action-notice";
+  });
+
+  return typeof firstPromptTurn?.prompt === "string" ? firstPromptTurn.prompt.trim() : "";
+}
+
+async function fetchThreadLiveRefreshPayload(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  requestHeaders?: HeadersInit;
+  statusSnapshot: {
+    status: string | null;
+    updatedAt: string | null;
+    completedAt: string | null;
+  };
+  existingTurns: RunnerTurn[];
+  cachedPayload?: RunnerThreadHydrationPayload | null;
+}): Promise<RunnerThreadHydrationPayload> {
+  const logsSnapshot = await fetchThreadLogsSnapshot({
+    backendUrl: params.backendUrl,
+    apiKey: params.apiKey,
+    threadId: params.threadId,
+    requestHeaders: params.requestHeaders,
+  });
+
+  const cachedPayload = params.cachedPayload || null;
+
+  return {
+    threadId: params.threadId,
+    threadStatus: logsSnapshot.status ?? params.statusSnapshot.status ?? cachedPayload?.threadStatus ?? null,
+    threadUpdatedAt: params.statusSnapshot.updatedAt ?? cachedPayload?.threadUpdatedAt ?? null,
+    threadEnvironmentId: cachedPayload?.threadEnvironmentId ?? null,
+    threadEnvironmentName:
+      logsSnapshot.environmentName
+      ?? cachedPayload?.threadEnvironmentName
+      ?? cachedPayload?.environmentName
+      ?? null,
+    initialPrompt: resolveHydrationInitialPrompt(params.existingTurns, cachedPayload),
+    logs: logsSnapshot.logs,
+    messages: cachedPayload?.messages || [],
+    durationSeconds: logsSnapshot.durationSeconds ?? cachedPayload?.durationSeconds ?? null,
+    startedAtMs: cachedPayload?.startedAtMs ?? null,
+    completedAtMs: parseIsoTimestampMs(params.statusSnapshot.completedAt) ?? cachedPayload?.completedAtMs ?? null,
+    agentName: logsSnapshot.agentName ?? cachedPayload?.agentName ?? null,
+    environmentName:
+      logsSnapshot.environmentName
+      ?? cachedPayload?.environmentName
+      ?? cachedPayload?.threadEnvironmentName
+      ?? null,
+  };
 }
 
 function normalizeHydratedLog(log: RunnerLog): RunnerLog {
@@ -5187,10 +5346,10 @@ function defaultAttachmentFromFile(file: File): RunnerAttachment {
 }
 
 const LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 24;
-const REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS = 1500;
-const REATTACH_THREAD_RETRY_DELAY_MS = 3000;
+const REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS = 900;
+const REATTACH_THREAD_RETRY_DELAY_MS = 1500;
 const REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT = 2;
-const REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT = 4;
+const REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT = 30;
 
 function isLogViewportPinnedToBottom(element: HTMLDivElement): boolean {
   return element.scrollHeight - element.scrollTop - element.clientHeight <= LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX;
@@ -5443,7 +5602,9 @@ export function RunnerChat({
   const attachmentUploadPromisesRef = useRef<Record<string, Promise<RunnerAttachment> | undefined>>({});
   const githubPreparationPromisesRef = useRef<Record<string, Promise<void> | undefined>>({});
   const turnsRef = useRef<RunnerTurn[]>([]);
+  const threadHydrationCacheRef = useRef<RunnerThreadHydrationPayload | null>(null);
   const initializedThreadHistoryIdRef = useRef<string | null>(null);
+  const locallyOwnedExecutionThreadIdRef = useRef<string | null>(null);
   const lastEnvironmentStartRequestKeyRef = useRef<string | null>(null);
   const quotedSelectionPopupRef = useRef<HTMLDivElement | null>(null);
   const composerQuotedSelectionAnimationTimerRef = useRef<number | null>(null);
@@ -5465,6 +5626,8 @@ export function RunnerChat({
   const [isThreadHistoryRailHovered, setIsThreadHistoryRailHovered] = useState(false);
   const [isThreadHistoryAtMaxWidth, setIsThreadHistoryAtMaxWidth] = useState(true);
   const shouldAutoScrollLogsRef = useRef(true);
+  const autoScrollAnimationFrameRef = useRef<number | null>(null);
+  const previousLogsScrollHeightRef = useRef(0);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -6686,6 +6849,7 @@ export function RunnerChat({
           threadId: executionThreadId,
           requestHeaders,
         });
+        threadHydrationCacheRef.current = payload;
         applyHydratedThreadEnvironment(payload);
         const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
           agentName: displayedAgentLabel,
@@ -6708,6 +6872,7 @@ export function RunnerChat({
           requestHeaders,
         })
           .then((payload) => {
+            threadHydrationCacheRef.current = payload;
             applyHydratedThreadEnvironment(payload);
             return buildHydratedTurnsFromPayload(payload, {
               agentName: displayedAgentLabel,
@@ -6880,6 +7045,7 @@ export function RunnerChat({
           threadId: params.nextThreadId,
           requestHeaders,
         });
+        threadHydrationCacheRef.current = payload;
         applyHydratedThreadEnvironment(payload);
         const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
           agentName: displayedAgentLabel,
@@ -7314,6 +7480,8 @@ export function RunnerChat({
       }
     }
 
+    locallyOwnedExecutionThreadIdRef.current = threadId;
+
     const initialTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
     const turnId = options?.turnId || generateId("turn");
     const startedAtMs = Date.now();
@@ -7372,6 +7540,15 @@ export function RunnerChat({
               ? { enabledSkills: enabledSkillsPayload }
               : {}),
         });
+        if (githubRepo?.repoFullName && githubRepo?.branch) {
+          await prepareGithubRepoForThreadRun(
+            {
+              repoFullName: githubRepo.repoFullName,
+              branch: githubRepo.branch,
+            },
+            runEnvironmentId
+          );
+        }
       }
 
       const resolvedAttachments =
@@ -7481,6 +7658,9 @@ export function RunnerChat({
       }));
       throw normalizedError;
     } finally {
+      if (locallyOwnedExecutionThreadIdRef.current === threadId) {
+        locallyOwnedExecutionThreadIdRef.current = null;
+      }
       releasePreparationState();
     }
   }
@@ -7803,12 +7983,12 @@ export function RunnerChat({
       && handledExternalRunRequestTokenRef.current !== externalRunRequest?.token
       && String(externalRunRequest?.threadId || "").trim() === String(threadId || "").trim()
       && String(externalRunRequest?.prompt || "").trim().length > 0;
-    const hasLocalExecutionStateForRequestedThread =
+    const isLocallyOwnedExecutionForRequestedThread =
       Boolean(threadId) &&
-      initializedThreadHistoryIdRef.current === threadId &&
-      (isPreparingRun || isRunning || hasRunningTurn || pendingQueuedMessages.length > 0);
+      locallyOwnedExecutionThreadIdRef.current === threadId &&
+      (isPreparingRun || isRunning || pendingQueuedMessages.length > 0);
 
-    if (!threadId || !hasApiKey || isRunning || hasPendingExternalRunForThread || hasLocalExecutionStateForRequestedThread) {
+    if (!threadId || !hasApiKey || isRunning || hasPendingExternalRunForThread || isLocallyOwnedExecutionForRequestedThread) {
       setIsThreadHistoryLoading(false);
       return () => {
         cancelled = true;
@@ -7866,6 +8046,7 @@ export function RunnerChat({
       .then((payload) => {
         if (cancelled) return;
         hydrationApplied = true;
+        threadHydrationCacheRef.current = payload;
         applyHydratedThreadEnvironment(payload);
         return buildHydratedTurnsFromPayload(payload, {
           agentName: displayedAgentLabel,
@@ -7942,6 +8123,9 @@ export function RunnerChat({
     setForkingTurnId(null);
     setPendingEditConfirmation(null);
     isDrainingQueuedRunsRef.current = false;
+    if (locallyOwnedExecutionThreadIdRef.current !== currentThreadId) {
+      locallyOwnedExecutionThreadIdRef.current = null;
+    }
   }, [currentThreadId]);
 
   useEffect(() => {
@@ -8275,6 +8459,12 @@ export function RunnerChat({
 
   useLayoutEffect(() => {
     shouldAutoScrollLogsRef.current = true;
+    previousLogsScrollHeightRef.current = 0;
+    threadHydrationCacheRef.current = null;
+    if (autoScrollAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
+      autoScrollAnimationFrameRef.current = null;
+    }
   }, [currentThreadId]);
 
   useEffect(() => {
@@ -8299,8 +8489,49 @@ export function RunnerChat({
   useLayoutEffect(() => {
     if (!logsRef.current) return;
     if (!shouldAutoScrollLogsRef.current) return;
-    logsRef.current.scrollTop = logsRef.current.scrollHeight;
+    const scrollElement = logsRef.current;
+    const nextScrollHeight = scrollElement.scrollHeight;
+    const previousScrollHeight = previousLogsScrollHeightRef.current;
+    previousLogsScrollHeightRef.current = nextScrollHeight;
+
+    const prefersReducedMotion =
+      typeof window !== "undefined"
+      && typeof window.matchMedia === "function"
+      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const shouldAnimateSmoothly =
+      !prefersReducedMotion
+      && previousScrollHeight > 0
+      && nextScrollHeight > previousScrollHeight
+      && (nextScrollHeight - previousScrollHeight) <= Math.max(scrollElement.clientHeight * 1.5, 640);
+
+    if (autoScrollAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
+    }
+
+    autoScrollAnimationFrameRef.current = window.requestAnimationFrame(() => {
+      if (!logsRef.current || !shouldAutoScrollLogsRef.current) {
+        autoScrollAnimationFrameRef.current = null;
+        return;
+      }
+      if (shouldAnimateSmoothly && typeof logsRef.current.scrollTo === "function") {
+        logsRef.current.scrollTo({
+          top: logsRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      } else {
+        logsRef.current.scrollTop = logsRef.current.scrollHeight;
+      }
+      autoScrollAnimationFrameRef.current = null;
+    });
   }, [logs, turns]);
+
+  useEffect(() => {
+    return () => {
+      if (autoScrollAnimationFrameRef.current !== null) {
+        window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const hasRunningTurn = turns.some((turn) => turn.status === "running");
@@ -8645,6 +8876,38 @@ export function RunnerChat({
 
     await preparationPromise;
     return attachment.resolvedAttachment;
+  }
+
+  async function prepareGithubRepoForThreadRun(
+    repoSelection: {
+      repoFullName: string;
+      branch: string;
+    },
+    targetEnvironmentId: string
+  ): Promise<void> {
+    const repoFullName = String(repoSelection?.repoFullName || "").trim();
+    const branch = String(repoSelection?.branch || "").trim() || "main";
+    if (!repoFullName || !targetEnvironmentId || !normalizedBackendUrl || !apiKey.trim()) {
+      return;
+    }
+
+    const preparationKey = `${targetEnvironmentId}\u0000${repoFullName}\u0000${branch}`;
+    let preparationPromise = githubPreparationPromisesRef.current[preparationKey];
+    if (!preparationPromise) {
+      preparationPromise = prepareGithubRepositorySelection({
+        backendUrl: normalizedBackendUrl,
+        apiKey: apiKey.trim(),
+        requestHeaders,
+        environmentId: targetEnvironmentId,
+        repoFullName,
+        branch,
+      }).finally(() => {
+        delete githubPreparationPromisesRef.current[preparationKey];
+      });
+      githubPreparationPromisesRef.current[preparationKey] = preparationPromise;
+    }
+
+    await preparationPromise;
   }
 
   async function resolveSingleAttachment(
@@ -12226,8 +12489,8 @@ export function RunnerChat({
   useEffect(() => {
     const hasLocalExecutionStateForCurrentThread =
       Boolean(currentThreadId) &&
-      initializedThreadHistoryIdRef.current === currentThreadId &&
-      (isPreparingRun || isRunning || hasRunningTurn || pendingQueuedMessages.length > 0);
+      locallyOwnedExecutionThreadIdRef.current === currentThreadId &&
+      (isPreparingRun || isRunning || pendingQueuedMessages.length > 0);
 
     if (!currentThreadId || !hasApiKey || !normalizedBackendUrl || isRunning || hasLocalExecutionStateForCurrentThread) {
       return;
@@ -12272,24 +12535,48 @@ export function RunnerChat({
 
         const localHasRunningTurn = turnsRef.current.some((turn) => turn.status === "running");
         const localHasActiveDeepResearch = turnsRef.current.some((turn) => hasActiveDeepResearchLogGroup(turn.logs));
+        const localHasNoHydratedTurns = turnsRef.current.length === 0;
         const remoteThreadIsRunning = isRunningThreadLifecycleStatus(statusSnapshot.status);
-        const shouldHydrateThread = remoteThreadIsRunning || localHasRunningTurn || localHasActiveDeepResearch;
+        const shouldHydrateThread =
+          remoteThreadIsRunning
+          || localHasRunningTurn
+          || localHasActiveDeepResearch
+          || (localHasNoHydratedTurns && initialGracePollsRemaining > 0);
 
         let nextHasRunningTurn = localHasRunningTurn;
         let nextHasActiveDeepResearch = localHasActiveDeepResearch;
 
         if (shouldHydrateThread) {
-          const payload = await fetchThreadHydrationPayload({
-            backendUrl: normalizedBackendUrl,
-            apiKey: apiKey.trim(),
-            threadId: currentThreadId,
-            requestHeaders,
-          });
+          const cachedPayload =
+            threadHydrationCacheRef.current?.threadId === currentThreadId
+              ? threadHydrationCacheRef.current
+              : null;
+          const resolvedInitialPrompt = resolveHydrationInitialPrompt(turnsRef.current, cachedPayload);
+          const shouldUseFullHydration =
+            !remoteThreadIsRunning
+            || (!cachedPayload && !resolvedInitialPrompt);
+          const payload = shouldUseFullHydration
+            ? await fetchThreadHydrationPayload({
+                backendUrl: normalizedBackendUrl,
+                apiKey: apiKey.trim(),
+                threadId: currentThreadId,
+                requestHeaders,
+              })
+            : await fetchThreadLiveRefreshPayload({
+                backendUrl: normalizedBackendUrl,
+                apiKey: apiKey.trim(),
+                threadId: currentThreadId,
+                requestHeaders,
+                statusSnapshot,
+                existingTurns: turnsRef.current,
+                cachedPayload,
+              });
 
           if (cancelled) {
             return;
           }
 
+          threadHydrationCacheRef.current = payload;
           applyHydratedThreadEnvironment(payload);
           const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
             agentName: displayedAgentLabel,
