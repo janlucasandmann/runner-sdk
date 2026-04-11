@@ -18,6 +18,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
+import { RunnerCodeViewer } from "./runner-log-boxes.js";
 import { RunnerMarkdown } from "./runner-markdown.js";
 
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
@@ -190,7 +191,7 @@ export function RunnerDocumentPreviewDrawer({
       return;
     }
 
-    const previewKind = getRunnerDocumentPreviewKind(attachment);
+    const previewKind = attachment.previewKindOverride ?? getRunnerDocumentPreviewKind(attachment);
     if (previewKind === "unsupported") {
       setDocumentPreviewState({
         status: "ready",
@@ -757,7 +758,15 @@ export function RunnerDocumentPreviewDrawer({
               />
             </div>
           ) : documentPreviewState.kind === "text" && typeof documentPreviewState.text === "string" ? (
-            <pre className="tb-attachment-preview-text">{documentPreviewState.text}</pre>
+            <div className="tb-attachment-preview-code-shell">
+              <RunnerCodeViewer
+                content={documentPreviewState.text}
+                filePath={attachment.filename}
+                maxHeight={inline ? 520 : 980}
+                showLineNumbers
+                className="tb-log-card-code-hide-scrollbars"
+              />
+            </div>
           ) : documentPreviewState.kind === "docx" ? (
             <div className="tb-attachment-preview-docx-shell">
               <div ref={documentPreviewDocxRef} className="tb-attachment-preview-docx-stage" />

@@ -29,6 +29,7 @@ import {
   Images,
   Lightbulb,
   LoaderCircle,
+  ListChevronsUpDown,
   ListTodo,
   Mail,
   Monitor,
@@ -47,6 +48,7 @@ import type { RunnerLog } from "../types.js";
 import {
   buildRunnerPreviewAttachmentFromPath,
   buildRunnerPreviewDownloadUrl,
+  buildRunnerPreviewHtmlDocument,
   getRunnerDocumentPreviewKind,
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
@@ -496,7 +498,7 @@ async function copyRunnerText(text: string) {
   document.body.removeChild(textarea);
 }
 
-function RunnerCodeViewer({
+export function RunnerCodeViewer({
   content,
   filePath,
   language,
@@ -2640,6 +2642,8 @@ function stripLineNumbers(text: string): string {
 function isReadFileCommand(command?: string): boolean {
   if (!command) return false;
   return [
+    /^\$?\s*read_file\b/i,
+    /^reading:\s+/i,
     /sed\s+-n\s+['"][^'"]*['"]\s+/,
     /\bcat\s+["']?[^|&;]+/,
     /\bhead\s+(?:-n\s+\d+\s+)?["']?[^|&;]+/,
@@ -2675,18 +2679,359 @@ function extractReadLineRange(command?: string): string | null {
   return null;
 }
 
+function decodeJsonStringFragment(fragment: string): string {
+  let result = "";
+  for (let index = 0; index < fragment.length; index += 1) {
+    const char = fragment[index];
+    if (char !== "\\") {
+      result += char;
+      continue;
+    }
+
+    const next = fragment[index + 1];
+    if (next == null) {
+      break;
+    }
+
+    index += 1;
+    if (next === "n") {
+      result += "\n";
+    } else if (next === "r") {
+      result += "\r";
+    } else if (next === "t") {
+      result += "\t";
+    } else if (next === "b") {
+      result += "\b";
+    } else if (next === "f") {
+      result += "\f";
+    } else if (next === '"' || next === "\\" || next === "/") {
+      result += next;
+    } else if (next === "u") {
+      const hex = fragment.slice(index + 1, index + 5);
+      if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+        result += String.fromCharCode(Number.parseInt(hex, 16));
+        index += 4;
+      }
+    } else {
+      result += next;
+    }
+  }
+  return result;
+}
+
+function extractJsonStringFieldValue(source: string, fieldNames: string[]): string | null {
+  for (const fieldName of fieldNames) {
+    const fieldPattern = new RegExp(`"${fieldName}"\\s*:\\s*"`, "i");
+    const match = fieldPattern.exec(source);
+    if (!match) {
+      continue;
+    }
+
+    const start = match.index + match[0].length;
+    let raw = "";
+    let escaped = false;
+    for (let index = start; index < source.length; index += 1) {
+      const char = source[index];
+      if (escaped) {
+        raw += char;
+        escaped = false;
+        continue;
+      }
+      if (char === "\\") {
+        raw += char;
+        escaped = true;
+        continue;
+      }
+      if (char === '"') {
+        return decodeJsonStringFragment(raw);
+      }
+      raw += char;
+    }
+
+    if (raw) {
+      return decodeJsonStringFragment(raw);
+    }
+  }
+  return null;
+}
+
+function extractJsonBooleanFieldValue(source: string, fieldNames: string[]): boolean | null {
+  for (const fieldName of fieldNames) {
+    const fieldPattern = new RegExp(`"${fieldName}"\\s*:\\s*(true|false)`, "i");
+    const match = fieldPattern.exec(source);
+    if (!match?.[1]) {
+      continue;
+    }
+    return match[1].toLowerCase() === "true";
+  }
+  return null;
+}
+
+type StructuredCommandExecutionOutput = {
+  stdout: string;
+  stderr: string;
+  returnCodeInterpretation: string | null;
+  backgroundTaskId: string | null;
+  interrupted: boolean | null;
+  noOutputExpected: boolean | null;
+};
+
+function parseStructuredCommandExecutionOutput(output: unknown): StructuredCommandExecutionOutput | null {
+  const hasEnvelopeKeys = (record: Record<string, unknown>): boolean =>
+    [
+      "stdout",
+      "stderr",
+      "returnCodeInterpretation",
+      "backgroundTaskId",
+      "interrupted",
+      "noOutputExpected",
+      "sandboxStatus",
+      "rawOutputPath",
+      "persistedOutputPath",
+    ].some((key) => Object.prototype.hasOwnProperty.call(record, key));
+
+  const buildEnvelope = (record: Record<string, unknown>): StructuredCommandExecutionOutput => ({
+    stdout: typeof record.stdout === "string" ? record.stdout : "",
+    stderr: typeof record.stderr === "string" ? record.stderr : "",
+    returnCodeInterpretation:
+      typeof record.returnCodeInterpretation === "string" && record.returnCodeInterpretation.trim()
+        ? record.returnCodeInterpretation.trim()
+        : null,
+    backgroundTaskId:
+      typeof record.backgroundTaskId === "string" && record.backgroundTaskId.trim()
+        ? record.backgroundTaskId.trim()
+        : null,
+    interrupted: typeof record.interrupted === "boolean" ? record.interrupted : null,
+    noOutputExpected: typeof record.noOutputExpected === "boolean" ? record.noOutputExpected : null,
+  });
+
+  const visit = (value: unknown): StructuredCommandExecutionOutput | null => {
+    if (value == null) {
+      return null;
+    }
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const nested = visit(entry);
+        if (nested) {
+          return nested;
+        }
+      }
+      return null;
+    }
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) {
+        return null;
+      }
+      try {
+        return visit(JSON.parse(trimmed));
+      } catch {
+        return null;
+      }
+    }
+    if (typeof value !== "object") {
+      return null;
+    }
+
+    const record = value as Record<string, unknown>;
+    if (hasEnvelopeKeys(record)) {
+      return buildEnvelope(record);
+    }
+
+    const nestedCandidates = [
+      record.result,
+      record.payload,
+      record.data,
+      record.structuredContent,
+      record.structured_content,
+    ];
+    for (const candidate of nestedCandidates) {
+      const nested = visit(candidate);
+      if (nested) {
+        return nested;
+      }
+    }
+    return null;
+  };
+
+  const structured = visit(output);
+  if (structured) {
+    return structured;
+  }
+
+  if (typeof output !== "string") {
+    return null;
+  }
+
+  const trimmed = output.trim();
+  if (!trimmed || !/"(?:stdout|stderr|returnCodeInterpretation|backgroundTaskId|interrupted|noOutputExpected)"\s*:/i.test(trimmed)) {
+    return null;
+  }
+
+  return {
+    stdout: extractJsonStringFieldValue(trimmed, ["stdout"]) || "",
+    stderr: extractJsonStringFieldValue(trimmed, ["stderr"]) || "",
+    returnCodeInterpretation: extractJsonStringFieldValue(trimmed, ["returnCodeInterpretation"]),
+    backgroundTaskId: extractJsonStringFieldValue(trimmed, ["backgroundTaskId"]),
+    interrupted: extractJsonBooleanFieldValue(trimmed, ["interrupted"]),
+    noOutputExpected: extractJsonBooleanFieldValue(trimmed, ["noOutputExpected"]),
+  };
+}
+
+function extractStructuredReadFilePayload(output: string): { filePath?: string; content?: string } | null {
+  const visit = (value: unknown): { filePath?: string; content?: string } | null => {
+    if (value == null) {
+      return null;
+    }
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const nested = visit(entry);
+        if (nested) {
+          return nested;
+        }
+      }
+      return null;
+    }
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) {
+        return null;
+      }
+      try {
+        return visit(JSON.parse(trimmed));
+      } catch {
+        return null;
+      }
+    }
+    if (typeof value !== "object") {
+      return null;
+    }
+
+    const record = value as Record<string, unknown>;
+    const filePathCandidate =
+      typeof record.filePath === "string" ? record.filePath
+      : typeof record.file_path === "string" ? record.file_path
+      : typeof record.path === "string" ? record.path
+      : undefined;
+    const contentCandidate =
+      typeof record.content === "string" ? record.content
+      : typeof record.text === "string" ? record.text
+      : undefined;
+
+    if (filePathCandidate || contentCandidate !== undefined) {
+      return {
+        ...(filePathCandidate ? { filePath: filePathCandidate } : {}),
+        ...(contentCandidate !== undefined ? { content: contentCandidate } : {}),
+      };
+    }
+
+    const nestedCandidates = [
+      record.file,
+      record.result,
+      record.payload,
+      record.data,
+      record.structuredContent,
+      record.structured_content,
+    ];
+    for (const candidate of nestedCandidates) {
+      const nested = visit(candidate);
+      if (nested) {
+        return nested;
+      }
+    }
+    return null;
+  };
+
+  const structured = visit(output);
+  if (structured) {
+    return structured;
+  }
+
+  const fallbackFilePath = extractJsonStringFieldValue(output, ["filePath", "file_path", "path"]);
+  const fallbackContent = extractJsonStringFieldValue(output, ["content", "text"]);
+  if (fallbackFilePath || fallbackContent !== null) {
+    return {
+      ...(fallbackFilePath ? { filePath: fallbackFilePath } : {}),
+      ...(fallbackContent !== null ? { content: fallbackContent } : {}),
+    };
+  }
+
+  return null;
+}
+
+function resolveReadDocumentPreviewAttachment(
+  filePath: string | undefined,
+  content: string,
+  backendUrl?: string,
+  environmentId?: string | null
+): RunnerPreviewAttachment | null {
+  const normalizedContent = String(content || "");
+  const looksLikeHtml =
+    /\.html?$/i.test(String(filePath || "")) ||
+    /<!doctype\s+html/i.test(normalizedContent) ||
+    /<html[\s>]/i.test(normalizedContent) ||
+    (/<head[\s>]/i.test(normalizedContent) && /<body[\s>]/i.test(normalizedContent));
+  if (!looksLikeHtml) {
+    return null;
+  }
+
+  const normalizedPath = normalizeRunnerFilePath(filePath) || "/workspace/preview.html";
+  const baseAttachment = buildRunnerPreviewAttachmentFromPath(normalizedPath, {
+    backendUrl,
+    environmentId,
+    idPrefix: "log-preview",
+  });
+  const htmlDocument = buildRunnerPreviewHtmlDocument(normalizedContent);
+  return {
+    ...baseAttachment,
+    filename: getFileName(normalizedPath),
+    mimeType: "text/html",
+    type: "document",
+    htmlPreviewUrl: `data:text/html;charset=utf-8,${encodeURIComponent(htmlDocument)}`,
+  };
+}
+
+function resolveReadCodePreviewAttachment(
+  filePath: string | undefined,
+  content: string,
+  backendUrl?: string,
+  environmentId?: string | null
+): RunnerPreviewAttachment | null {
+  const normalizedContent = String(content || "");
+  if (!normalizedContent.trim()) {
+    return null;
+  }
+  const normalizedPath = normalizeRunnerFilePath(filePath) || "/workspace/preview.txt";
+  const filename = getFileName(normalizedPath);
+  return {
+    ...buildRunnerPreviewAttachmentFromPath(normalizedPath, {
+      backendUrl,
+      environmentId,
+      idPrefix: "log-preview-code",
+    }),
+    filename,
+    mimeType: "text/plain",
+    type: "document",
+    previewKindOverride: "text",
+    url: `data:text/plain;charset=utf-8,${encodeURIComponent(normalizedContent)}`,
+    previewUrl: `data:text/plain;charset=utf-8,${encodeURIComponent(normalizedContent)}`,
+  };
+}
+
 function ReadFileLogBox({
   log,
   timeLabel,
   backendUrl,
   environmentId,
   requestHeaders,
+  onPreviewDocument,
 }: {
   log: RunnerLog;
   timeLabel?: string;
   backendUrl?: string;
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
+  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -2695,16 +3040,20 @@ function ReadFileLogBox({
     normalizeRunnerFilePath(log.metadata?.filePaths?.[0] as string | undefined) ||
     normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.file_path) ||
     normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.path) ||
+    normalizeRunnerFilePath(extractStructuredReadFilePayload(stripRunnerSystemTags(String(log.metadata?.output || "")))?.filePath) ||
     normalizeRunnerFilePath(extractReadFilePath(command)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(log.message)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(command));
   const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
+  const structuredReadPayload = extractStructuredReadFilePayload(output);
   const lineRange = extractReadLineRange(command);
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
-  const content = stripLineNumbers(output);
+  const content = stripLineNumbers(structuredReadPayload?.content ?? output);
   const normalizedContent = content.trim().toLowerCase();
   const isImageFile = Boolean(filePath && isRunnerLogImageFilePath(filePath));
   const imagePreviewUrl = isImageFile ? buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath) : null;
+  const codePreviewAttachment = resolveReadCodePreviewAttachment(filePath || undefined, content, backendUrl, environmentId);
+  const previewAttachment = resolveReadDocumentPreviewAttachment(filePath || undefined, content, backendUrl, environmentId);
   const isImageReadWithoutText =
     isImageFile
     && (
@@ -2774,10 +3123,34 @@ function ReadFileLogBox({
             <div className="tb-log-file-preview-frame">
               <div className="tb-log-file-preview-topbar">
                 <span className="tb-log-file-preview-language">{languageLabel}</span>
-                <button type="button" className="tb-log-file-preview-copy" onClick={handleCopy}>
-                  <Copy className="tb-log-pill-icon" strokeWidth={1.5} />
-                  <span>{copied ? "Copied" : "Copy"}</span>
-                </button>
+                <div className="tb-log-file-preview-actions">
+                  {codePreviewAttachment ? (
+                    <button
+                      type="button"
+                      className="tb-log-file-preview-icon-button"
+                      onClick={() => onPreviewDocument?.(codePreviewAttachment)}
+                      aria-label={`Open code preview for ${codePreviewAttachment.filename}`}
+                      title={`Open code preview for ${codePreviewAttachment.filename}`}
+                    >
+                      <ListChevronsUpDown className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
+                    </button>
+                  ) : null}
+                  {previewAttachment ? (
+                    <button
+                      type="button"
+                      className="tb-log-file-preview-icon-button"
+                      onClick={() => onPreviewDocument?.(previewAttachment)}
+                      aria-label={`Preview ${previewAttachment.filename}`}
+                      title={`Preview ${previewAttachment.filename}`}
+                    >
+                      <Eye className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
+                    </button>
+                  ) : null}
+                  <button type="button" className="tb-log-file-preview-copy" onClick={handleCopy}>
+                    <Copy className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
+                    <span>{copied ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
               </div>
               <div className="tb-log-file-preview-body">
                 <RunnerCodeViewer
@@ -6031,17 +6404,85 @@ function TodoListLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string
 function GenericCommandLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   const [collapsed, setCollapsed] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
   const command = stripRunnerSystemTags(log.metadata?.command || log.message || "");
-  const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
-  const hasOutput = output.trim().length > 0;
   const exitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
-  const isError = exitCode !== null && exitCode !== 0;
+  const parsedOutput = useMemo(
+    () => parseStructuredCommandExecutionOutput(log.metadata?.output),
+    [log.metadata?.output]
+  );
+  const rawOutput = stripRunnerSystemTags(String(log.metadata?.output || ""));
+  const stdout = stripRunnerSystemTags(parsedOutput?.stdout || "");
+  const stderr = stripRunnerSystemTags(parsedOutput?.stderr || "");
+  const hasStdout = stdout.trim().length > 0;
+  const hasStderr = stderr.trim().length > 0;
+  const statusNotice = (() => {
+    if (parsedOutput?.backgroundTaskId) {
+      return `Backgrounded (${parsedOutput.backgroundTaskId})`;
+    }
+    if (parsedOutput?.returnCodeInterpretation === "timeout") {
+      return "Timed out";
+    }
+    if (typeof exitCode === "number" && exitCode !== 0 && !hasStdout && !hasStderr) {
+      return `Exited with code ${exitCode}`;
+    }
+    if (parsedOutput?.interrupted && !hasStdout && !hasStderr) {
+      return "Interrupted";
+    }
+    return null;
+  })();
+  const hasStructuredTerminalOutput = hasStdout || hasStderr || Boolean(statusNotice);
+  const output = parsedOutput ? "" : rawOutput;
+  const hasOutput = hasStructuredTerminalOutput || output.trim().length > 0;
+  const isError =
+    (typeof exitCode === "number" && exitCode !== 0) ||
+    parsedOutput?.returnCodeInterpretation === "timeout" ||
+    hasStderr;
   const shellCommand = formatShellCommandForDisplay(command);
-  const commandLine = shellCommand ? `$ ${shellCommand}` : "";
-  const commandDisplay = expanded || commandLine.length <= 700 ? commandLine : `${commandLine.slice(0, 700)}...`;
+  const commandDisplay = expanded || shellCommand.length <= 700 ? shellCommand : `${shellCommand.slice(0, 700)}...`;
+  const stdoutDisplay = expanded || stdout.length <= 700 ? stdout : `${stdout.slice(0, 700)}...`;
+  const stderrDisplay = expanded || stderr.length <= 700 ? stderr : `${stderr.slice(0, 700)}...`;
   const outputDisplay = expanded || output.length <= 700 ? output : `${output.slice(0, 700)}...`;
-  const isSkillLaunchOutput = hasOutput && isSkillLaunchNotice(outputDisplay);
-  const shouldShowExpandToggle = commandLine.length > 700 || output.length > 700;
+  const isSkillLaunchOutput = !parsedOutput && hasOutput && isSkillLaunchNotice(outputDisplay);
+  const shouldShowExpandToggle =
+    shellCommand.length > 700 ||
+    stdout.length > 700 ||
+    stderr.length > 700 ||
+    output.length > 700;
+  const copyPayload = useMemo(() => {
+    const normalizedCommand = shellCommand.trim()
+      ? shellCommand.trim().startsWith("$")
+        ? shellCommand.trim()
+        : `$ ${shellCommand.trim()}`
+      : "";
+    const parts = [
+      normalizedCommand,
+      parsedOutput ? stdout : "",
+      parsedOutput ? stderr : "",
+      parsedOutput ? statusNotice || "" : output,
+    ].filter((value) => typeof value === "string" && value.trim().length > 0);
+    return parts.join("\n");
+  }, [output, parsedOutput, shellCommand, statusNotice, stderr, stdout]);
+  const title = parsedOutput?.backgroundTaskId
+    ? "backgrounded"
+    : parsedOutput?.returnCodeInterpretation === "timeout"
+      ? "timed out"
+      : exitCode !== null && exitCode !== 0
+        ? `exit ${exitCode}`
+        : undefined;
+
+  useEffect(() => {
+    if (!copied) return;
+    const timeoutId = window.setTimeout(() => setCopied(false), 1200);
+    return () => window.clearTimeout(timeoutId);
+  }, [copied]);
+
+  async function handleCopy() {
+    try {
+      await copyRunnerText(copyPayload);
+      setCopied(true);
+    } catch {}
+  }
 
   return (
     <div className="tb-log-card">
@@ -6049,7 +6490,7 @@ function GenericCommandLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: 
         icon={<Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
         className={`tb-log-card-header-command${isError ? " is-error" : ""}`}
         label="Tool Call"
-        title={exitCode !== null ? `exit ${exitCode}` : undefined}
+        title={title}
         timeLabel={timeLabel}
         collapsed={collapsed}
         onToggle={() => setCollapsed((value) => !value)}
@@ -6060,10 +6501,22 @@ function GenericCommandLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: 
             <div className="tb-log-file-preview-frame tb-log-terminal-frame">
               <div className="tb-log-file-preview-topbar">
                 <span className="tb-log-file-preview-language">Bash</span>
+                <div className="tb-log-file-preview-actions">
+                  <button type="button" className="tb-log-file-preview-copy" onClick={handleCopy}>
+                    <Copy className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
+                    <span>{copied ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
               </div>
               <div className="tb-log-terminal-body">
                 {command ? <RunnerShellCommandViewer command={commandDisplay} /> : null}
-                {hasOutput ? (
+                {parsedOutput ? (
+                  <>
+                    {hasStdout ? <RunnerAnsiOutput content={stdoutDisplay} /> : null}
+                    {hasStderr ? <RunnerAnsiOutput content={stderrDisplay} isError /> : null}
+                    {!hasStdout && !hasStderr && statusNotice ? <RunnerTerminalStatus content={statusNotice} /> : null}
+                  </>
+                ) : hasOutput ? (
                   isSkillLaunchOutput ? <RunnerTerminalStatus content={outputDisplay} /> : <RunnerAnsiOutput content={outputDisplay} isError={isError} />
                 ) : null}
                 {!hasOutput ? <div className="tb-log-card-empty">No command output.</div> : null}
@@ -6191,6 +6644,7 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
           backendUrl={backendUrl}
           environmentId={environmentId}
           requestHeaders={requestHeaders}
+          onPreviewDocument={onPreviewDocument}
         />
       );
     }

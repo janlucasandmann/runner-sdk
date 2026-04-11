@@ -5,6 +5,7 @@ export interface RunnerPreviewAttachment {
   filename: string;
   mimeType: string;
   type: "image" | "document";
+  previewKindOverride?: RunnerDocumentPreviewKind;
   uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";
   url?: string;
   previewUrl?: string;

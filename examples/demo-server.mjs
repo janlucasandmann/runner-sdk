@@ -5290,6 +5290,14 @@ const html = `<!doctype html>
         gap: 18px;
       }
 
+      .playground-settings-detail-scroll.is-usage {
+        scrollbar-width: none;
+      }
+
+      .playground-settings-detail-scroll.is-usage::-webkit-scrollbar {
+        display: none;
+      }
+
       .playground-settings-detail-scroll.is-plans {
         padding-top: 0;
       }
@@ -7849,8 +7857,92 @@ const html = `<!doctype html>
         padding-left: 0;
       }
 
+      .playground-settings-usage-resource-table-wrap {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding-top: 10px;
+      }
+
+      .playground-settings-usage-resource-table-wrap .playground-settings-usage-card-header {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-settings-usage-resource-table-shell {
+        width: 100%;
+      }
+
+      .playground-settings-usage-resource-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .playground-settings-usage-resource-table th,
+      .playground-settings-usage-resource-table td {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        text-align: left;
+      }
+
+      .playground-settings-usage-resource-table th {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-settings-usage-resource-table th.is-numeric,
+      .playground-settings-usage-resource-table td.playground-settings-usage-resource-ct-cell {
+        text-align: right;
+      }
+
+      .playground-settings-usage-resource-table td {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      .playground-settings-usage-resource-name-cell {
+        min-width: 0;
+      }
+
+      .playground-settings-usage-resource-name-cell,
+      .playground-settings-usage-resource-type-cell {
+        padding-right: 16px;
+      }
+
+      .playground-settings-usage-resource-name {
+        display: block;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-settings-usage-resource-meta {
+        display: block;
+        margin-top: 3px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.38);
+      }
+
+      .playground-settings-usage-resource-type-cell {
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-settings-usage-resource-ct-cell {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.92);
+        white-space: nowrap;
+      }
+
+      .playground-settings-usage-resource-empty-row td {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
       .playground-settings-usage-donut-layout {
-        margin-top: -8px;
+        margin-top: -50px;
         display: grid;
         grid-template-columns: 232px max-content;
         gap: 6px;
@@ -15101,6 +15193,10 @@ const html = `<!doctype html>
         margin-bottom: 6px;
       }
 
+      .playground-tasks-detail-facts.is-popover-open {
+        z-index: 220;
+      }
+
       .playground-tasks-detail-facts-header {
         display: flex;
         align-items: center;
@@ -15832,6 +15928,10 @@ const html = `<!doctype html>
       .playground-tasks-detail-select-shell.playground-environments-runtime-popup-shell {
         width: auto;
         max-width: 100%;
+      }
+
+      .playground-tasks-detail-select-shell.playground-environments-runtime-popup-shell.is-open {
+        z-index: 260;
       }
 
       .playground-tasks-detail-select-shell .playground-tasks-toolbar-popup-menu {
@@ -22828,6 +22928,35 @@ const html = `<!doctype html>
 
       function getSettingsSourceChannel(sourceId) {
         return SETTINGS_SOURCE_CHANNELS[sourceId] || "integrations";
+      }
+
+      function formatSettingsUsageResourceKind(value) {
+        switch (String(value || "").trim().toLowerCase()) {
+          case "llm":
+            return "LLM";
+          case "thread_runtime":
+            return "Thread Runtime";
+          case "mcp":
+            return "MCP";
+          case "computer":
+            return "Computer";
+          case "website":
+            return "Website";
+          case "web_app":
+            return "Web App";
+          case "api":
+            return "API";
+          case "function":
+            return "Function";
+          case "auth":
+            return "Auth";
+          case "agent_runtime":
+            return "Agent Runtime";
+          case "database":
+            return "Database";
+          default:
+            return value ? String(value) : "Resource";
+        }
       }
 
       function getSettingsPlanFeatures(tierId, computeTokens) {
@@ -69815,7 +69944,10 @@ const html = `<!doctype html>
                       })
                     )
                   ),
-                  React.createElement("div", { className: "playground-tasks-detail-facts playground-tasks-schedule-detail-facts" },
+                  React.createElement("div", {
+                    className: "playground-tasks-detail-facts playground-tasks-schedule-detail-facts"
+                      + ((taskDetailSelectPopover || taskSkillsPopoverOpen || taskScheduleDialogState) ? " is-popover-open" : ""),
+                  },
                     React.createElement("div", { className: "playground-tasks-detail-facts-header" },
                       React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
                       React.createElement("button", {
@@ -71623,7 +71755,10 @@ const html = `<!doctype html>
                     })
                   )
                 ),
-                React.createElement("div", { className: "playground-tasks-detail-facts" },
+                React.createElement("div", {
+                  className: "playground-tasks-detail-facts"
+                    + ((taskDetailSelectPopover || taskSkillsPopoverOpen || taskScheduleDialogState) ? " is-popover-open" : ""),
+                },
                 React.createElement("div", { className: "playground-tasks-detail-facts-header" },
                   React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
                   React.createElement("button", {
@@ -72950,6 +73085,7 @@ const html = `<!doctype html>
         const [settingsBudgetLoading, setSettingsBudgetLoading] = useState(false);
         const [settingsUsageSummary, setSettingsUsageSummary] = useState(createEmptySettingsUsageSummary);
         const [settingsUsageBreakdown, setSettingsUsageBreakdown] = useState([]);
+        const [settingsUsageResourceItems, setSettingsUsageResourceItems] = useState([]);
         const [settingsUsageLoading, setSettingsUsageLoading] = useState(false);
         const [settingsBillingPeriodOffset, setSettingsBillingPeriodOffset] = useState(0);
         const [settingsInvoices, setSettingsInvoices] = useState([]);
@@ -73649,6 +73785,11 @@ const html = `<!doctype html>
         function openHelpPage() {
           setAccountMenuOpen(false);
           window.open(${JSON.stringify(aiosOrigin + "/support")}, "_blank", "noopener,noreferrer");
+        }
+
+        function openDocsPage() {
+          setAccountMenuOpen(false);
+          window.open(${JSON.stringify(aiosOrigin + "/developers")}, "_blank", "noopener,noreferrer");
         }
 
         function handleWelcomeWidgetOpen(view, options = {}) {
@@ -76103,6 +76244,7 @@ const html = `<!doctype html>
           if (!hasSessionAuth) {
             setSettingsUsageSummary(createEmptySettingsUsageSummary());
             setSettingsUsageBreakdown([]);
+            setSettingsUsageResourceItems([]);
             return;
           }
 
@@ -76124,21 +76266,35 @@ const html = `<!doctype html>
 
           setSettingsUsageLoading(true);
           try {
-            const [summaryResponse, breakdownResponse] = await Promise.all([
-              fetch("/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/costs/summary?" + usageParams.toString(), {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store",
-              }),
-              fetch("/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/costs/breakdown?groupBy=source&" + usageParams.toString(), {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store",
-              }),
+            const summaryUrl = hasRealAccess
+              ? proxyBackendBase + "/costs/summary?" + usageParams.toString()
+              : "/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/costs/summary?" + usageParams.toString();
+            const sourceBreakdownUrl = hasRealAccess
+              ? proxyBackendBase + "/costs/breakdown?groupBy=source&" + usageParams.toString()
+              : "/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/costs/breakdown?groupBy=source&" + usageParams.toString();
+            const resourceBreakdownUrl = hasRealAccess
+              ? proxyBackendBase + "/costs/breakdown?groupBy=resource&" + usageParams.toString()
+              : "/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/costs/breakdown?groupBy=resource&" + usageParams.toString();
+            const usageFetchOptions = hasRealAccess
+              ? {
+                  method: "GET",
+                  headers: authRequestHeaders,
+                  cache: "no-store",
+                }
+              : {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                };
+            const [summaryResponse, breakdownResponse, resourceBreakdownResponse] = await Promise.all([
+              fetch(summaryUrl, usageFetchOptions),
+              fetch(sourceBreakdownUrl, usageFetchOptions),
+              fetch(resourceBreakdownUrl, usageFetchOptions),
             ]);
 
             const summaryData = await summaryResponse.json().catch(() => ({}));
             const breakdownData = await breakdownResponse.json().catch(() => ({}));
+            const resourceBreakdownData = await resourceBreakdownResponse.json().catch(() => ({}));
 
             if (!summaryResponse.ok) {
               throw new Error(summaryData?.message || summaryData?.error || "Failed to load usage summary.");
@@ -76166,6 +76322,22 @@ const html = `<!doctype html>
                 }))
                 .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0)
               : [];
+            const normalizedResourceItems = Array.isArray(resourceBreakdownData?.resources)
+              ? resourceBreakdownData.resources
+                .map((entry) => ({
+                  id: String(entry?.id || entry?.resourceId || entry?.name || "resource"),
+                  name: entry?.name || entry?.displayName || entry?.resourceName || "Unknown",
+                  kind: String(entry?.kind || entry?.resourceKind || entry?.type || "").trim().toLowerCase(),
+                  resourceType: typeof entry?.resourceType === "string" ? entry.resourceType : "",
+                  resourceKind: typeof entry?.resourceKind === "string" ? entry.resourceKind : "",
+                  resourceId: typeof entry?.resourceId === "string" ? entry.resourceId : "",
+                  totalCT: readSettingsComputeTokens(entry, "totalCT", "totalCost"),
+                  agentCT: readSettingsComputeTokens(entry, "agentCT", "agentCost"),
+                  environmentCT: readSettingsComputeTokens(entry, "environmentCT", "environmentCost"),
+                  threadCount: Number(entry?.threadCount ?? entry?.totalThreads ?? entry?.totalRuns ?? entry?.runCount ?? 0),
+                }))
+                .filter((entry) => entry.totalCT > 0)
+              : [];
 
             setSettingsUsageSummary({
               startDate: typeof summaryData?.startDate === "string" ? summaryData.startDate : "",
@@ -76179,14 +76351,19 @@ const html = `<!doctype html>
               byDay: normalizedByDay,
             });
             setSettingsUsageBreakdown(normalizedSources);
+            setSettingsUsageResourceItems(normalizedResourceItems);
           } catch (error) {
             setSettingsUsageSummary(createEmptySettingsUsageSummary());
             setSettingsUsageBreakdown([]);
+            setSettingsUsageResourceItems([]);
           } finally {
             setSettingsUsageLoading(false);
           }
         }, [
+          authRequestHeaders,
+          hasRealAccess,
           hasSessionAuth,
+          proxyBackendBase,
           settingsBillingPeriodOffset,
           settingsBudgetStatus?.periodEndDate,
           settingsBudgetStatus?.periodStartDate,
@@ -81062,7 +81239,7 @@ const html = `<!doctype html>
                   React.createElement("div", { className: "playground-content-nav-center" }),
                   React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
                 ),
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+                React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll is-usage" },
                 (() => {
                   const periodStart = settingsUsageSummary?.startDate ? new Date(settingsUsageSummary.startDate) : new Date();
                   const periodEnd = settingsUsageSummary?.endDate ? new Date(settingsUsageSummary.endDate) : new Date();
@@ -81194,6 +81371,16 @@ const html = `<!doctype html>
                     ? Math.round(totalUsedCT / safeTotals.totalThreads)
                     : 0;
                   const maxAverageCtPerThread = Math.max(...averageCtPerThreadValues, 1);
+                  const resourceUsageRows = Array.isArray(settingsUsageResourceItems)
+                    ? [...settingsUsageResourceItems]
+                      .map((item) => ({
+                        ...item,
+                        totalCT: Number(item?.totalCT || 0),
+                        displayKind: formatSettingsUsageResourceKind(item?.kind || item?.resourceKind || item?.resourceType),
+                      }))
+                      .filter((item) => item.totalCT > 0)
+                      .sort((left, right) => right.totalCT - left.totalCT)
+                    : [];
 
                   return React.createElement("div", { className: "playground-settings-usage-app-shell" },
                       React.createElement("div", { className: "playground-settings-usage-period-header" },
@@ -81314,6 +81501,46 @@ const html = `<!doctype html>
                               React.createElement("span", null, averageCtPerThreadOverall > 0 ? (averageCtPerThreadOverall + " CT avg") : "No threads yet")
                             )
                           )
+                        ),
+                        React.createElement("section", { className: "playground-settings-usage-resource-table-wrap" },
+                          React.createElement("div", { className: "playground-settings-usage-card-header" },
+                            React.createElement("div", null,
+                              React.createElement("div", { className: "playground-settings-usage-card-title" }, "Consumers")
+                            )
+                          ),
+                          settingsUsageLoading
+                            ? React.createElement("div", { className: "playground-settings-loading-state" },
+                                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                              )
+                            : React.createElement("div", { className: "playground-settings-usage-resource-table-shell" },
+                                React.createElement("table", { className: "playground-settings-usage-resource-table" },
+                                  React.createElement("thead", null,
+                                    React.createElement("tr", null,
+                                      React.createElement("th", null, "Resource"),
+                                      React.createElement("th", null, "Type"),
+                                      React.createElement("th", { className: "is-numeric" }, "CT")
+                                    )
+                                  ),
+                                  React.createElement("tbody", null,
+                                    resourceUsageRows.length === 0
+                                      ? React.createElement("tr", { className: "playground-settings-usage-resource-empty-row" },
+                                          React.createElement("td", { colSpan: 3 }, "No measured usage in this period.")
+                                        )
+                                      : resourceUsageRows.map((item) =>
+                                          React.createElement("tr", { key: item.id },
+                                            React.createElement("td", { className: "playground-settings-usage-resource-name-cell" },
+                                              React.createElement("span", { className: "playground-settings-usage-resource-name" }, item.name || "Unknown"),
+                                              item.resourceId
+                                                ? React.createElement("span", { className: "playground-settings-usage-resource-meta" }, item.resourceId)
+                                                : null
+                                            ),
+                                            React.createElement("td", { className: "playground-settings-usage-resource-type-cell" }, item.displayKind),
+                                            React.createElement("td", { className: "playground-settings-usage-resource-ct-cell" }, formatSettingsComputeTokens(item.totalCT))
+                                          )
+                                        )
+                                  )
+                                )
+                              )
                         )
                       );
                 })()
@@ -84762,6 +84989,15 @@ const html = `<!doctype html>
                       },
                         React.createElement(CircleHelp, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
                         React.createElement("span", { className: "account-menu-item-label" }, "Help"),
+                        React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "account-menu-item",
+                        onClick: openDocsPage,
+                      },
+                        React.createElement(FileText, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
+                        React.createElement("span", { className: "account-menu-item-label" }, "Docs"),
                         React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
                       ),
                       React.createElement("div", { className: "account-menu-divider" }),
@@ -89264,6 +89500,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/real/billing/budget") {
     void proxyUpstreamGet(req, res, "/billing/budget");
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/costs/summary") {
+    void proxyUpstreamGet(req, res, "/costs/summary");
     return;
   }
 

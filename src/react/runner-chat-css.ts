@@ -2346,10 +2346,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-log-card-panel {
   position: relative;
   margin-top: 8px;
-  border: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 15px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 12px 0;
+  background: transparent;
   color: inherit;
   box-shadow: none;
   overflow: hidden;
@@ -3028,10 +3028,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   margin: -12px -12px 0;
   border-radius: 15px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
+  background: none;
   isolation: isolate;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .tb-runner-chat .tb-log-file-preview-frame > * {
@@ -3044,19 +3044,49 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  padding: 12px 20px;
+  border-bottom: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .tb-runner-chat .tb-log-file-preview-language {
   min-width: 0;
-  color: rgba(255, 255, 255, 0.58);
+  color: white;
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-file-preview-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+
+.tb-runner-chat .tb-log-file-preview-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tb-runner-chat .tb-log-file-preview-icon-button:hover,
+.tb-runner-chat .tb-log-file-preview-copy:hover {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.tb-runner-chat .tb-log-file-preview-action-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .tb-runner-chat .tb-log-task-create-list {
@@ -3277,6 +3307,14 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   color: rgba(255, 255, 255, 0.74);
 }
 
+.tb-runner-chat .tb-log-resource-create-item.is-release {
+  padding: 0;
+  border: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .tb-runner-chat .tb-log-resource-create-leading {
   flex: 1 1 auto;
   min-width: 0;
@@ -3351,10 +3389,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-log-resource-create-status {
   flex: 0 0 auto;
   padding: 2px 6px;
-  border-radius: 5px;
+  border-radius: 999px;
   font-size: 10px;
   line-height: 1.3;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .tb-runner-chat .tb-log-resource-create-type-pill {
@@ -3438,19 +3476,15 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 0;
   border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.58);
+  color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   line-height: 1.2;
   cursor: pointer;
   flex-shrink: 0;
 }
 
-.tb-runner-chat .tb-log-file-preview-copy:hover {
-  color: rgba(255, 255, 255, 0.88);
-}
-
 .tb-runner-chat .tb-log-file-preview-body {
-  padding: 12px;
+  padding: 0 12px 12px;
 }
 
 .tb-runner-diff-surface {
@@ -4037,13 +4071,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-log-terminal-body {
-  padding: 10px 12px 12px;
+  padding: 0 20px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: rgba(15, 17, 21, 0.2);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .tb-runner-chat .tb-log-terminal-command-viewer .tb-log-card-code,
@@ -4135,6 +4169,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-log-terminal-output {
   color: var(--tb-working-log-text);
+  padding-top: 12px;
+  padding-bottom: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tb-runner-chat .tb-log-terminal-status {
