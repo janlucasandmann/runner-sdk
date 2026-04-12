@@ -5176,7 +5176,7 @@ const html = `<!doctype html>
         height: 100%;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(174px, 198px) minmax(0, 1fr);
+        grid-template-columns: 270px minmax(0, 1fr);
         gap: 0;
         align-items: stretch;
       }
@@ -10286,7 +10286,7 @@ const html = `<!doctype html>
         height: 100%;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+        grid-template-columns: 270px minmax(0, 1fr);
         background: transparent;
       }
 
@@ -17842,6 +17842,103 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.56);
       }
 
+      .playground-environment-profile-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-bottom: 14px;
+        margin-bottom: 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-environment-profile-selector {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .playground-environment-profile-selector.is-compact {
+        gap: 8px;
+      }
+
+      .playground-environment-profile-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        width: 100%;
+        padding: 13px 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.88);
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-environment-profile-card:hover {
+        border-color: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-environment-profile-card.is-selected {
+        border-color: rgba(57, 136, 255, 0.44);
+        background: rgba(57, 136, 255, 0.1);
+      }
+
+      .playground-environment-profile-card:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      .playground-environment-profile-selector.is-compact .playground-environment-profile-card {
+        padding: 11px 12px;
+        gap: 6px;
+      }
+
+      .playground-environment-profile-card-top {
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .playground-environment-profile-card-label {
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-environment-profile-card-rate {
+        font-size: 11px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.62);
+        white-space: nowrap;
+      }
+
+      .playground-environment-profile-card-meta,
+      .playground-environment-profile-card-footer {
+        font-size: 11px;
+        line-height: 1.35;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-environment-profile-card-copy {
+        font-size: 11px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-environment-profile-note {
+        font-size: 11px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
       .playground-environment-composer-runtime-facts {
         display: flex;
         flex-direction: column;
@@ -24733,6 +24830,149 @@ const html = `<!doctype html>
         return 1;
       }
 
+      const PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES = [
+        {
+          id: "lite",
+          label: "Lite",
+          description: "Lowest-cost profile for fast CLI-first work.",
+          cpuCores: 0.5,
+          memoryMb: 1536,
+          guiEnabled: false,
+          officeAppsEnabled: false,
+          minutePrice: 0.002,
+        },
+        {
+          id: "standard",
+          label: "Standard",
+          description: "Balanced default for most coding and automation work.",
+          cpuCores: 1,
+          memoryMb: 2048,
+          guiEnabled: false,
+          officeAppsEnabled: false,
+          minutePrice: 0.004,
+        },
+        {
+          id: "power",
+          label: "Power",
+          description: "More CPU and memory for heavier builds and multi-step tasks.",
+          cpuCores: 2,
+          memoryMb: 4096,
+          guiEnabled: false,
+          officeAppsEnabled: false,
+          minutePrice: 0.0075,
+        },
+        {
+          id: "desktop",
+          label: "Desktop",
+          description: "GUI-enabled profile for browser and desktop-app workflows.",
+          cpuCores: 2,
+          memoryMb: 4096,
+          guiEnabled: true,
+          officeAppsEnabled: false,
+          minutePrice: 0.01,
+        },
+      ];
+      const PLAYGROUND_DEFAULT_USER_ENVIRONMENT_COMPUTE_PROFILE = "lite";
+      const PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE = "standard";
+
+      function normalizePlaygroundEnvironmentComputeProfileId(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (normalized === "lite" || normalized === "standard" || normalized === "power" || normalized === "desktop") {
+          return normalized;
+        }
+        return "";
+      }
+
+      function getPlaygroundEnvironmentComputeProfileConfig(profileId) {
+        const normalized = normalizePlaygroundEnvironmentComputeProfileId(profileId) || PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE;
+        return PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES.find((profile) => profile.id === normalized)
+          || PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES[1];
+      }
+
+      function clonePlaygroundEnvironmentMetadata(metadata) {
+        return metadata && typeof metadata === "object" && !Array.isArray(metadata)
+          ? JSON.parse(JSON.stringify(metadata))
+          : {};
+      }
+
+      function resolvePlaygroundEnvironmentComputeProfileId(environment) {
+        const metadata = environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)
+          ? environment.metadata
+          : null;
+        const explicitProfile = normalizePlaygroundEnvironmentComputeProfileId(environment?.computeProfile || metadata?.computeProfile);
+        if (explicitProfile) {
+          return explicitProfile;
+        }
+
+        const guiEnabled = typeof environment?.guiEnabled === "boolean"
+          ? environment.guiEnabled
+          : metadata?.guiEnabled === true;
+        const officeAppsEnabled = typeof environment?.officeAppsEnabled === "boolean"
+          ? environment.officeAppsEnabled
+          : metadata?.officeAppsEnabled === true;
+
+        if (guiEnabled || officeAppsEnabled) {
+          return "desktop";
+        }
+
+        return environment?.isDefault
+          ? PLAYGROUND_DEFAULT_USER_ENVIRONMENT_COMPUTE_PROFILE
+          : PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE;
+      }
+
+      function getPlaygroundEnvironmentRatePerMinute(environment) {
+        const profile = getPlaygroundEnvironmentComputeProfileConfig(resolvePlaygroundEnvironmentComputeProfileId(environment));
+        return profile.minutePrice;
+      }
+
+      function applyPlaygroundEnvironmentComputeProfileDraft(environment, profileId, options = {}) {
+        const base = environment && typeof environment === "object"
+          ? environment
+          : {};
+        const profile = getPlaygroundEnvironmentComputeProfileConfig(profileId);
+        const metadata = clonePlaygroundEnvironmentMetadata(base.metadata);
+        const pricing = metadata.pricing && typeof metadata.pricing === "object" && !Array.isArray(metadata.pricing)
+          ? { ...metadata.pricing }
+          : {};
+        pricing.minutePrice = profile.minutePrice;
+
+        const requestedOfficeAppsEnabled = Object.prototype.hasOwnProperty.call(options, "officeAppsEnabled")
+          ? options.officeAppsEnabled === true
+          : base.officeAppsEnabled === true;
+        const officeAppsEnabled = profile.id === "desktop" ? requestedOfficeAppsEnabled : false;
+
+        return {
+          ...base,
+          computeProfile: profile.id,
+          guiEnabled: profile.guiEnabled,
+          officeAppsEnabled,
+          estimatedCostPerMinute: profile.minutePrice,
+          metadata: {
+            ...metadata,
+            computeProfile: profile.id,
+            computeResources: {
+              cpuCores: profile.cpuCores,
+              memoryMb: profile.memoryMb,
+            },
+            pricing,
+            guiEnabled: profile.guiEnabled,
+            officeAppsEnabled,
+          },
+        };
+      }
+
+      function setPlaygroundEnvironmentOfficeAppsEnabled(environment, enabled) {
+        if (enabled) {
+          return applyPlaygroundEnvironmentComputeProfileDraft(environment, "desktop", { officeAppsEnabled: true });
+        }
+
+        return applyPlaygroundEnvironmentComputeProfileDraft(
+          environment,
+          resolvePlaygroundEnvironmentComputeProfileId(environment),
+          { officeAppsEnabled: false }
+        );
+      }
+
       function buildPlaygroundDefaultEnvironmentDraft() {
         const now = new Date().toISOString();
         const defaultRuntimes = {
@@ -24740,7 +24980,7 @@ const html = `<!doctype html>
           nodejs: "22",
         };
 
-        return {
+        const draft = {
           id: "",
           userId: "",
           name: "New Environment",
@@ -24758,8 +24998,9 @@ const html = `<!doctype html>
           mcpServers: [],
           documentation: [],
           internetAccess: true,
-          guiEnabled: true,
+          guiEnabled: false,
           officeAppsEnabled: false,
+          computeProfile: PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE,
           dockerfileExtensions: "",
           baseImage: "",
           metadata: null,
@@ -24772,6 +25013,12 @@ const html = `<!doctype html>
           createdAt: now,
           updatedAt: now,
         };
+
+        return applyPlaygroundEnvironmentComputeProfileDraft(
+          draft,
+          PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE,
+          { officeAppsEnabled: false }
+        );
       }
 
       function buildPlaygroundDefaultServerDraft() {
@@ -24921,14 +25168,20 @@ const html = `<!doctype html>
         const normalizedMetadata = environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)
           ? environment.metadata
           : null;
+        const computeProfile = resolvePlaygroundEnvironmentComputeProfileId({
+          ...environment,
+          metadata: normalizedMetadata,
+        });
+        const profileConfig = getPlaygroundEnvironmentComputeProfileConfig(computeProfile);
         const guiEnabled = typeof environment?.guiEnabled === "boolean"
           ? environment.guiEnabled
-          : normalizedMetadata?.guiEnabled !== false;
+          : normalizedMetadata?.guiEnabled === true
+            ? true
+            : profileConfig.guiEnabled;
         const officeAppsEnabled = typeof environment?.officeAppsEnabled === "boolean"
           ? environment.officeAppsEnabled
           : normalizedMetadata?.officeAppsEnabled === true;
-
-        return {
+        const normalizedEnvironment = {
           ...draft,
           id: typeof environment.id === "string" ? environment.id : draft.id,
           userId: typeof environment.userId === "string" ? environment.userId : draft.userId,
@@ -24949,6 +25202,7 @@ const html = `<!doctype html>
           internetAccess: environment.internetAccess !== false,
           guiEnabled,
           officeAppsEnabled,
+          computeProfile,
           dockerfileExtensions: typeof environment.dockerfileExtensions === "string" ? environment.dockerfileExtensions : "",
           baseImage: typeof environment.baseImage === "string" ? environment.baseImage : "",
           metadata: normalizedMetadata,
@@ -24956,13 +25210,25 @@ const html = `<!doctype html>
             ? String(environment.status || "").trim().toLowerCase()
             : draft.status,
           estimatedStorageMB: Number.isFinite(environment.estimatedStorageMB) ? environment.estimatedStorageMB : draft.estimatedStorageMB,
-          estimatedCostPerMinute: Number.isFinite(environment.estimatedCostPerMinute) ? environment.estimatedCostPerMinute : draft.estimatedCostPerMinute,
+          estimatedCostPerMinute: getPlaygroundEnvironmentRatePerMinute({
+            ...environment,
+            computeProfile,
+            metadata: normalizedMetadata,
+            guiEnabled,
+            officeAppsEnabled,
+          }),
           isSystem: Boolean(environment.isSystem),
           isDefault: Boolean(environment.isDefault),
           isActive: environment.isActive !== false,
           createdAt: typeof environment.createdAt === "string" && environment.createdAt ? environment.createdAt : draft.createdAt,
           updatedAt: typeof environment.updatedAt === "string" && environment.updatedAt ? environment.updatedAt : draft.updatedAt,
         };
+
+        return applyPlaygroundEnvironmentComputeProfileDraft(
+          normalizedEnvironment,
+          computeProfile,
+          { officeAppsEnabled }
+        );
       }
 
       function parsePlaygroundEnvironmentListResponse(data) {
@@ -39909,22 +40175,24 @@ const html = `<!doctype html>
         }
 
         function buildSanitizedEnvironmentPayload(environment) {
+          const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environment);
+          const profile = getPlaygroundEnvironmentComputeProfileConfig(normalizedEnvironment.computeProfile);
           const runtimes = Object.fromEntries(
-            Object.entries(environment?.runtimes || {}).filter(([, value]) => typeof value === "string" && value.trim())
+            Object.entries(normalizedEnvironment?.runtimes || {}).filter(([, value]) => typeof value === "string" && value.trim())
           );
           const packages = {
-            system: (environment?.packages?.system || []).map((value) => String(value || "").trim()).filter(Boolean),
-            python: (environment?.packages?.python || []).map((value) => String(value || "").trim()).filter(Boolean),
-            node: (environment?.packages?.node || []).map((value) => String(value || "").trim()).filter(Boolean),
+            system: (normalizedEnvironment?.packages?.system || []).map((value) => String(value || "").trim()).filter(Boolean),
+            python: (normalizedEnvironment?.packages?.python || []).map((value) => String(value || "").trim()).filter(Boolean),
+            node: (normalizedEnvironment?.packages?.node || []).map((value) => String(value || "").trim()).filter(Boolean),
           };
-          const environmentVariables = (environment?.environmentVariables || [])
+          const environmentVariables = (normalizedEnvironment?.environmentVariables || [])
             .map((item) => ({
               key: String(item?.key || "").trim(),
               value: typeof item?.value === "string" ? item.value : "",
             }))
             .filter((item) => item.key);
 
-          const preparedSecrets = (environment?.secrets || [])
+          const preparedSecrets = (normalizedEnvironment?.secrets || [])
             .map((secret) => {
               const key = String(secret?.key || "").trim();
               const isExisting = existingSecretKeys.has(key);
@@ -39942,7 +40210,7 @@ const html = `<!doctype html>
             })
             .filter((secret) => secret.key && !secret._unchanged);
 
-          const preparedMcpServers = (environment?.mcpServers || [])
+          const preparedMcpServers = (normalizedEnvironment?.mcpServers || [])
             .map((server) => {
               const normalizedServer = {
                 id: server?.id,
@@ -39965,7 +40233,7 @@ const html = `<!doctype html>
             })
             .filter(Boolean);
 
-          const documentation = (environment?.documentation || [])
+          const documentation = (normalizedEnvironment?.documentation || [])
             .map((document, index) => ({
               id: typeof document?.id === "string" && document.id.trim() ? document.id : "doc-" + index,
               name: String(document?.name || "").trim() || ("Document " + (index + 1)),
@@ -39974,22 +40242,34 @@ const html = `<!doctype html>
             }))
             .filter((document) => document.name || document.content);
 
+          const metadata = clonePlaygroundEnvironmentMetadata(normalizedEnvironment?.metadata);
+          const pricing = metadata.pricing && typeof metadata.pricing === "object" && !Array.isArray(metadata.pricing)
+            ? { ...metadata.pricing }
+            : {};
+          pricing.minutePrice = profile.minutePrice;
+
           return {
-            name: String(environment?.name || "").trim() || "Untitled Environment",
-            description: typeof environment?.description === "string" ? environment.description : "",
+            name: String(normalizedEnvironment?.name || "").trim() || "Untitled Environment",
+            description: typeof normalizedEnvironment?.description === "string" ? normalizedEnvironment.description : "",
             runtimes,
             packages,
-            dockerfileExtensions: typeof environment?.dockerfileExtensions === "string" ? environment.dockerfileExtensions : "",
+            dockerfileExtensions: typeof normalizedEnvironment?.dockerfileExtensions === "string" ? normalizedEnvironment.dockerfileExtensions : "",
             environmentVariables,
             secrets: preparedSecrets,
-            setupScripts: (environment?.setupScripts || []).map((value) => String(value || "")).filter((value) => value.trim()),
+            setupScripts: (normalizedEnvironment?.setupScripts || []).map((value) => String(value || "")).filter((value) => value.trim()),
             mcpServers: preparedMcpServers,
             documentation,
-            internetAccess: environment?.internetAccess !== false,
+            internetAccess: normalizedEnvironment?.internetAccess !== false,
             metadata: {
-              ...((environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)) ? environment.metadata : {}),
-              guiEnabled: environment?.guiEnabled !== false,
-              officeAppsEnabled: environment?.officeAppsEnabled === true,
+              ...metadata,
+              computeProfile: profile.id,
+              computeResources: {
+                cpuCores: profile.cpuCores,
+                memoryMb: profile.memoryMb,
+              },
+              pricing,
+              guiEnabled: profile.guiEnabled,
+              officeAppsEnabled: normalizedEnvironment?.officeAppsEnabled === true && profile.id === "desktop",
             },
           };
         }
@@ -42405,10 +42685,34 @@ const html = `<!doctype html>
         }
 
         function updateEnvironmentField(field, value) {
-          updateDraftEnvironment((current) => ({
-            ...current,
-            [field]: value,
-          }));
+          updateDraftEnvironment((current) => {
+            if (!current) {
+              return current;
+            }
+            if (field === "computeProfile") {
+              return applyPlaygroundEnvironmentComputeProfileDraft(current, value, {
+                officeAppsEnabled: current.officeAppsEnabled === true,
+              });
+            }
+            if (field === "officeAppsEnabled") {
+              return setPlaygroundEnvironmentOfficeAppsEnabled(current, value === true);
+            }
+            if (field === "guiEnabled") {
+              return value === true
+                ? applyPlaygroundEnvironmentComputeProfileDraft(current, "desktop", {
+                    officeAppsEnabled: current.officeAppsEnabled === true,
+                  })
+                : applyPlaygroundEnvironmentComputeProfileDraft(
+                    current,
+                    current.isDefault ? PLAYGROUND_DEFAULT_USER_ENVIRONMENT_COMPUTE_PROFILE : PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE,
+                    { officeAppsEnabled: false }
+                  );
+            }
+            return {
+              ...current,
+              [field]: value,
+            };
+          });
         }
 
         function closeEnvironmentRenameDialog() {
@@ -42418,14 +42722,100 @@ const html = `<!doctype html>
         }
 
         function updateEnvironmentComposerField(field, value) {
-          setEnvironmentComposerDraft((current) => ({
-            ...(current || buildPlaygroundDefaultEnvironmentDraft()),
-            [field]: value,
-          }));
+          setEnvironmentComposerDraft((current) => {
+            const base = current || buildPlaygroundDefaultEnvironmentDraft();
+            if (field === "computeProfile") {
+              return applyPlaygroundEnvironmentComputeProfileDraft(base, value, {
+                officeAppsEnabled: base.officeAppsEnabled === true,
+              });
+            }
+            if (field === "officeAppsEnabled") {
+              return setPlaygroundEnvironmentOfficeAppsEnabled(base, value === true);
+            }
+            if (field === "guiEnabled") {
+              return value === true
+                ? applyPlaygroundEnvironmentComputeProfileDraft(base, "desktop", {
+                    officeAppsEnabled: base.officeAppsEnabled === true,
+                  })
+                : applyPlaygroundEnvironmentComputeProfileDraft(
+                    base,
+                    base.isDefault ? PLAYGROUND_DEFAULT_USER_ENVIRONMENT_COMPUTE_PROFILE : PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE,
+                    { officeAppsEnabled: false }
+                  );
+            }
+            return {
+              ...base,
+              [field]: value,
+            };
+          });
           setEnvironmentComposerSaveState((current) => ({
             ...current,
             error: "",
           }));
+        }
+
+        function formatPlaygroundEnvironmentProfileRate(profile) {
+          const rate = Number(profile?.minutePrice || 0) * 100;
+          if (!Number.isFinite(rate) || rate <= 0) {
+            return "0 CT / min";
+          }
+          if (Math.abs(rate - Math.round(rate)) < 0.001) {
+            return String(Math.round(rate)) + " CT / min";
+          }
+          if (Math.abs(rate * 10 - Math.round(rate * 10)) < 0.001) {
+            return rate.toFixed(1) + " CT / min";
+          }
+          return rate.toFixed(2) + " CT / min";
+        }
+
+        function formatPlaygroundEnvironmentProfileResources(profile) {
+          const cpuLabel = Number(profile?.cpuCores || 0) % 1 === 0
+            ? String(Number(profile?.cpuCores || 0))
+            : Number(profile?.cpuCores || 0).toFixed(1).replace(/\\.0$/, "");
+          const memoryGb = Number(profile?.memoryMb || 0) / 1024;
+          const memoryLabel = Math.abs(memoryGb - Math.round(memoryGb)) < 0.001
+            ? String(Math.round(memoryGb))
+            : memoryGb.toFixed(1).replace(/\\.0$/, "");
+          return cpuLabel + " vCPU · " + memoryLabel + " GB RAM";
+        }
+
+        function formatPlaygroundEnvironmentProfileHourlyPrice(profile) {
+          return "$" + (Number(profile?.minutePrice || 0) * 60).toFixed(2) + " / hr";
+        }
+
+        function renderEnvironmentComputeProfileSelector(selectedProfileId, onSelect, options = {}) {
+          const disabled = options?.disabled === true;
+          const compact = options?.compact === true;
+          const normalizedSelectedProfileId = normalizePlaygroundEnvironmentComputeProfileId(selectedProfileId)
+            || PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE;
+          return React.createElement("div", {
+              className: "playground-environment-profile-selector" + (compact ? " is-compact" : ""),
+            },
+            PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES.map((profile) => {
+              const isSelected = profile.id === normalizedSelectedProfileId;
+              return React.createElement("button", {
+                  key: profile.id,
+                  type: "button",
+                  className: "playground-environment-profile-card" + (isSelected ? " is-selected" : ""),
+                  onClick: () => onSelect(profile.id),
+                  disabled,
+                },
+                React.createElement("div", { className: "playground-environment-profile-card-top" },
+                  React.createElement("span", { className: "playground-environment-profile-card-label" }, profile.label),
+                  React.createElement("span", { className: "playground-environment-profile-card-rate" }, formatPlaygroundEnvironmentProfileRate(profile))
+                ),
+                React.createElement("div", { className: "playground-environment-profile-card-meta" }, formatPlaygroundEnvironmentProfileResources(profile)),
+                compact
+                  ? null
+                  : React.createElement("div", { className: "playground-environment-profile-card-copy" }, profile.description),
+                React.createElement("div", { className: "playground-environment-profile-card-footer" },
+                  formatPlaygroundEnvironmentProfileHourlyPrice(profile),
+                  " · ",
+                  profile.guiEnabled ? "GUI enabled" : "CLI-first"
+                )
+              );
+            })
+          );
         }
 
         function updateEnvironmentComposerRuntime(key, value) {
@@ -42822,21 +43212,34 @@ const html = `<!doctype html>
                     )
                   ),
                   React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Graphical User Interface"),
-                    React.createElement("div", { className: "playground-environment-composer-toggle-row" },
-                      React.createElement("div", { className: "playground-environment-composer-toggle-help" },
-                        "Enable desktop apps and computer use. Turn this off to keep the environment lighter and reduce startup overhead."
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-toggle" + (composerDraft.guiEnabled !== false ? " is-active" : ""),
-                        onClick: () => updateEnvironmentComposerField("guiEnabled", !(composerDraft.guiEnabled !== false)),
-                        "aria-pressed": composerDraft.guiEnabled !== false ? "true" : "false",
-                        title: composerDraft.guiEnabled !== false ? "GUI enabled" : "GUI disabled",
-                        disabled: environmentComposerSaveState.isSaving,
-                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Computer Profile"),
+                    renderEnvironmentComputeProfileSelector(
+                      composerDraft.computeProfile,
+                      (profileId) => updateEnvironmentComposerField("computeProfile", profileId),
+                      { disabled: environmentComposerSaveState.isSaving }
+                    ),
+                    React.createElement("div", { className: "playground-environment-profile-note" },
+                      "Lite is the lowest-cost default. Standard and Power add more CPU and memory. Desktop enables the GUI."
                     )
                   ),
+                  composerDraft.computeProfile === "desktop"
+                    ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                        React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Office Apps"),
+                        React.createElement("div", { className: "playground-environment-composer-toggle-row" },
+                          React.createElement("div", { className: "playground-environment-composer-toggle-help" },
+                            "Install Writer and Calc on the Desktop profile for document and spreadsheet work."
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-environments-toggle" + (composerDraft.officeAppsEnabled === true ? " is-active" : ""),
+                            onClick: () => updateEnvironmentComposerField("officeAppsEnabled", !(composerDraft.officeAppsEnabled === true)),
+                            "aria-pressed": composerDraft.officeAppsEnabled === true ? "true" : "false",
+                            title: composerDraft.officeAppsEnabled === true ? "Office apps enabled" : "Office apps disabled",
+                            disabled: environmentComposerSaveState.isSaving,
+                          }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                        )
+                      )
+                    : null,
                   React.createElement("div", { className: "playground-tasks-project-modal-field" },
                     React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Runtime Versions"),
                     React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
@@ -47419,6 +47822,7 @@ const html = `<!doctype html>
               ? "System"
               : "Custom";
           const officeAppsEnabled = draftEnvironment.officeAppsEnabled === true;
+          const activeEnvironmentComputeProfile = getPlaygroundEnvironmentComputeProfileConfig(draftEnvironment.computeProfile);
           const isEnvironmentDescriptionLocked = Boolean(draftEnvironment.isDefault);
           const shouldShowEnvironmentAnalytics = Boolean(
             draftEnvironment.id && draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
@@ -47606,6 +48010,17 @@ const html = `<!doctype html>
                         React.createElement("div", { className: "playground-database-summary-divider" })
                       )
                     : null,
+                  React.createElement("div", { className: "playground-environment-profile-section" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Computer Profile"),
+                    renderEnvironmentComputeProfileSelector(
+                      draftEnvironment.computeProfile,
+                      (profileId) => updateEnvironmentField("computeProfile", profileId),
+                      { compact: true }
+                    ),
+                    React.createElement("div", { className: "playground-environment-profile-note" },
+                      "Profile selection controls CPU, memory, startup behavior, and metered computer runtime."
+                    )
+                  ),
                   renderEnvironmentFactRow("ID",
                     React.createElement("span", {
                       className: "playground-environments-editor-fact-value is-id",
@@ -47621,6 +48036,14 @@ const html = `<!doctype html>
                   renderEnvironmentFactRow("Storage",
                     React.createElement("span", { className: "playground-environments-editor-fact-value" }, storageDisplay)
                   ),
+                  renderEnvironmentFactRow("Rate",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" },
+                      formatPlaygroundEnvironmentProfileRate(activeEnvironmentComputeProfile) + " · " + formatPlaygroundEnvironmentProfileHourlyPrice(activeEnvironmentComputeProfile)
+                    )
+                  ),
+                  renderEnvironmentFactRow("Resources",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundEnvironmentProfileResources(activeEnvironmentComputeProfile))
+                  ),
                   renderEnvironmentFactRow("Internet",
                     React.createElement("button", {
                       type: "button",
@@ -47630,24 +48053,17 @@ const html = `<!doctype html>
                       title: draftEnvironment.internetAccess ? "Internet access enabled" : "Internet access disabled",
                     }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
                   ),
-                  renderEnvironmentFactRow("GUI",
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-toggle" + (draftEnvironment.guiEnabled !== false ? " is-active" : ""),
-                      onClick: () => updateEnvironmentField("guiEnabled", !(draftEnvironment.guiEnabled !== false)),
-                      "aria-pressed": draftEnvironment.guiEnabled !== false ? "true" : "false",
-                      title: draftEnvironment.guiEnabled !== false ? "GUI enabled" : "GUI disabled",
-                    }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                  ),
-                  renderEnvironmentFactRow("Install Office",
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-toggle" + (officeAppsEnabled ? " is-active" : ""),
-                      onClick: () => updateEnvironmentField("officeAppsEnabled", !officeAppsEnabled),
-                      "aria-pressed": officeAppsEnabled ? "true" : "false",
-                      title: officeAppsEnabled ? "Office apps enabled" : "Office apps disabled",
-                    }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                  )
+                  draftEnvironment.computeProfile === "desktop"
+                    ? renderEnvironmentFactRow("Office Apps",
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-toggle" + (officeAppsEnabled ? " is-active" : ""),
+                          onClick: () => updateEnvironmentField("officeAppsEnabled", !officeAppsEnabled),
+                          "aria-pressed": officeAppsEnabled ? "true" : "false",
+                          title: officeAppsEnabled ? "Office apps enabled" : "Office apps disabled",
+                        }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                      )
+                    : null
                 )
               : null
           );
@@ -73175,6 +73591,8 @@ const html = `<!doctype html>
         const explicitSignOutInProgressRef = useRef(false);
         const sessionBudgetSyncKeyRef = useRef("");
         const demoReadyAnnouncedRef = useRef(false);
+        const proactiveDefaultEnvironmentWarmPromisesRef = useRef(new Map());
+        const proactiveDefaultEnvironmentWarmCacheUntilMsRef = useRef(new Map());
         const threadSubagentDetailHostRef = useCallback((node) => {
           setThreadSubagentDetailHost(node || null);
         }, []);
@@ -73254,6 +73672,34 @@ const html = `<!doctype html>
         ), [hasDemoAccess, sessionState.displayName, sessionState.email]);
         const initialThreadPlanLabel = hasShellAccess ? accountTier + " Plan" : "";
         const showInitialThreadWelcome = activePage === "thread" && hasShellAccess && !currentThreadId;
+        function buildPlaygroundEnvironmentWarmRequestKey(environmentId) {
+          return JSON.stringify({
+            backendUrl: String(proxyBackendBase || "").replace(/\\/+$/, ""),
+            environmentId: String(environmentId || "").trim(),
+            agentId: null,
+          });
+        }
+
+        function readSharedEnvironmentWarmCacheUntilMs(requestKey) {
+          try {
+            return Number(window.__runnerEnvironmentWarmCacheUntilMs?.[requestKey] || 0);
+          } catch {
+            return 0;
+          }
+        }
+
+        function writeSharedEnvironmentWarmCacheUntilMs(requestKey, untilMs) {
+          try {
+            const sharedCache = window.__runnerEnvironmentWarmCacheUntilMs || {};
+            if (untilMs > Date.now()) {
+              sharedCache[requestKey] = untilMs;
+            } else {
+              delete sharedCache[requestKey];
+            }
+            window.__runnerEnvironmentWarmCacheUntilMs = sharedCache;
+          } catch {}
+        }
+
         const welcomeWidgetProject = welcomeWidgetsState.project;
         const welcomeWidgetTicketNumbersById = useMemo(() => (
           buildPlaygroundTaskTicketNumberMap(welcomeWidgetsState.tasks)
@@ -77673,6 +78119,13 @@ const html = `<!doctype html>
           }
           return hasRealAccess ? "" : computerAgentsMode ? "env_default" : "";
         }, [computerAgentsMode, environmentId, hasRealAccess, realEnvironments]);
+        const defaultShellEnvironmentId = useMemo(() => {
+          if (!hasRealAccess || realEnvironments.length === 0) {
+            return "";
+          }
+          const defaultEnvironment = realEnvironments.find((environment) => environment?.isDefault) || realEnvironments[0];
+          return defaultEnvironment?.id || "";
+        }, [hasRealAccess, realEnvironments]);
         const resolvedPreferredAgentId = useMemo(() => {
           if (preferredAgentId.trim()) {
             return preferredAgentId.trim();
@@ -77683,6 +78136,87 @@ const html = `<!doctype html>
           }
           return hasRealAccess ? "" : computerAgentsMode ? "agent_default" : "";
         }, [computerAgentsMode, hasRealAccess, preferredAgentId, realAgents]);
+        const proactivelyWarmDefaultEnvironment = useCallback(async function proactivelyWarmDefaultEnvironment(nextEnvironmentId) {
+          const normalizedEnvironmentId = String(nextEnvironmentId || "").trim();
+          if (!hasRealAccess || !normalizedEnvironmentId) {
+            return;
+          }
+
+          const requestKey = buildPlaygroundEnvironmentWarmRequestKey(normalizedEnvironmentId);
+          const cachedUntilMs = Math.max(
+            Number(proactiveDefaultEnvironmentWarmCacheUntilMsRef.current.get(requestKey) || 0),
+            readSharedEnvironmentWarmCacheUntilMs(requestKey),
+          );
+          if (cachedUntilMs > Date.now()) {
+            return;
+          }
+
+          const existingPromise = proactiveDefaultEnvironmentWarmPromisesRef.current.get(requestKey);
+          if (existingPromise) {
+            return existingPromise;
+          }
+
+          const warmPromise = (async () => {
+            try {
+              const response = await fetch(proxyBackendBase + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/start", {
+                method: "POST",
+                headers: {
+                  ...authRequestHeaders,
+                  "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({}),
+              });
+
+              if (isUnauthorizedStatus(response.status)) {
+                proactiveDefaultEnvironmentWarmCacheUntilMsRef.current.delete(requestKey);
+                writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
+                triggerPlatformSessionRecovery();
+                return;
+              }
+
+              if (!response.ok) {
+                proactiveDefaultEnvironmentWarmCacheUntilMsRef.current.delete(requestKey);
+                writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
+                return;
+              }
+
+              const nextWarmCacheUntilMs = Date.now() + 90 * 1000;
+              proactiveDefaultEnvironmentWarmCacheUntilMsRef.current.set(requestKey, nextWarmCacheUntilMs);
+              writeSharedEnvironmentWarmCacheUntilMs(requestKey, nextWarmCacheUntilMs);
+            } finally {
+              proactiveDefaultEnvironmentWarmPromisesRef.current.delete(requestKey);
+            }
+          })();
+
+          proactiveDefaultEnvironmentWarmPromisesRef.current.set(requestKey, warmPromise);
+          return warmPromise;
+        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
+        useEffect(() => {
+          const shouldWarmDefaultEnvironment =
+            hasRealAccess
+            && Boolean(defaultShellEnvironmentId)
+            && (activePage === "tasks" || showInitialThreadWelcome);
+
+          if (!shouldWarmDefaultEnvironment) {
+            return undefined;
+          }
+
+          void proactivelyWarmDefaultEnvironment(defaultShellEnvironmentId);
+          const intervalId = window.setInterval(() => {
+            void proactivelyWarmDefaultEnvironment(defaultShellEnvironmentId);
+          }, 4 * 60 * 1000);
+
+          return () => {
+            window.clearInterval(intervalId);
+          };
+        }, [
+          activePage,
+          defaultShellEnvironmentId,
+          hasRealAccess,
+          proactivelyWarmDefaultEnvironment,
+          showInitialThreadWelcome,
+        ]);
         const buildLiveThreadTaskPreview = useCallback(function buildLiveThreadTaskPreview(taskRecord, existingPreview, threadId = "") {
           const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
           const normalizedThreadId = String(threadId || existingPreview?.threadId || "").trim();

@@ -2868,6 +2868,34 @@ const environmentStartPromises = new Map<string, Promise<void>>();
 const environmentWarmCacheUntilMs = new Map<string, number>();
 const ENVIRONMENT_START_CACHE_TTL_MS = 90 * 1000;
 
+type SharedEnvironmentWarmCacheStore = Record<string, number>;
+
+function readSharedEnvironmentWarmCacheUntilMs(requestKey: string): number {
+  if (typeof window === "undefined") {
+    return 0;
+  }
+  const sharedCache = (window as typeof window & {
+    __runnerEnvironmentWarmCacheUntilMs?: SharedEnvironmentWarmCacheStore;
+  }).__runnerEnvironmentWarmCacheUntilMs;
+  return Number(sharedCache?.[requestKey] || 0);
+}
+
+function writeSharedEnvironmentWarmCacheUntilMs(requestKey: string, untilMs: number): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const nextWindow = window as typeof window & {
+    __runnerEnvironmentWarmCacheUntilMs?: SharedEnvironmentWarmCacheStore;
+  };
+  const sharedCache = nextWindow.__runnerEnvironmentWarmCacheUntilMs || {};
+  if (untilMs > Date.now()) {
+    sharedCache[requestKey] = untilMs;
+  } else {
+    delete sharedCache[requestKey];
+  }
+  nextWindow.__runnerEnvironmentWarmCacheUntilMs = sharedCache;
+}
+
 function buildEnvironmentStartRequestKey(params: {
   backendUrl: string;
   environmentId: string;
@@ -2892,11 +2920,15 @@ async function startEnvironment(params: {
 }): Promise<void> {
   const requestKey = buildEnvironmentStartRequestKey(params);
   if (!params.force) {
-    const cachedUntilMs = environmentWarmCacheUntilMs.get(requestKey) ?? 0;
+    const cachedUntilMs = Math.max(
+      environmentWarmCacheUntilMs.get(requestKey) ?? 0,
+      readSharedEnvironmentWarmCacheUntilMs(requestKey),
+    );
     if (cachedUntilMs > Date.now()) {
       return;
     }
     environmentWarmCacheUntilMs.delete(requestKey);
+    writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
   }
   if (!params.force && environmentStartPromises.has(requestKey)) {
     return environmentStartPromises.get(requestKey);
@@ -2928,9 +2960,12 @@ async function startEnvironment(params: {
   if (!response.ok) {
     const bodyText = await response.text().catch(() => "");
     environmentWarmCacheUntilMs.delete(requestKey);
+    writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
     throw new Error(bodyText || `Failed to start environment (${response.status})`);
   }
-  environmentWarmCacheUntilMs.set(requestKey, Date.now() + ENVIRONMENT_START_CACHE_TTL_MS);
+  const nextWarmCacheUntilMs = Date.now() + ENVIRONMENT_START_CACHE_TTL_MS;
+  environmentWarmCacheUntilMs.set(requestKey, nextWarmCacheUntilMs);
+  writeSharedEnvironmentWarmCacheUntilMs(requestKey, nextWarmCacheUntilMs);
   })().finally(() => {
     environmentStartPromises.delete(requestKey);
   });
