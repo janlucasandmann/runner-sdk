@@ -4455,6 +4455,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-log-web-search-source-list.is-after-summary {
   margin-top: 12px;
+  margin-bottom: 12px;
 }
 
 .tb-runner-chat .tb-log-web-search-source-link {

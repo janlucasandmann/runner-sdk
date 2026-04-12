@@ -3549,21 +3549,33 @@ type WebSearchImage = { url: string; thumbnail?: string; title?: string; source?
 
 function isWebSearchCommand(command?: string): boolean {
   if (!command) return false;
-  return command.includes("/workspace/.scripts/web-search.py") || command.includes("web-search.py") || command.includes(".claude/skills/web-search/");
+  return (
+    command.includes("/workspace/.scripts/web-search.py") ||
+    command.includes("web-search.py") ||
+    command.includes(".claude/skills/web-search/") ||
+    /^searching web:\s+/i.test(command.trim())
+  );
 }
 
 function isWebSearchOutput(output?: string): boolean {
   if (!output) return false;
+  const structuredCommandOutput = parseStructuredCommandExecutionOutput(output);
+  const candidate = structuredCommandOutput
+    ? [structuredCommandOutput.stdout, structuredCommandOutput.stderr].filter(Boolean).join("\n")
+    : output;
   return (
-    output.includes("Web search results for query:") ||
-    output.includes("Links: [{") ||
-    (/(?:^|\n)##?\s*Search Results/i.test(output) && /(?:^|\n)##?\s*Sources/i.test(output)) ||
-    (output.includes("SUMMARY:") && output.includes("SOURCES:"))
+    candidate.includes("Web search results for query:") ||
+    candidate.includes("Links: [{") ||
+    (/(?:^|\n)##?\s*Search Results/i.test(candidate) && /(?:^|\n)##?\s*Sources/i.test(candidate)) ||
+    (candidate.includes("SUMMARY:") && candidate.includes("SOURCES:")) ||
+    (/^\s*\{[\s\S]*"query"\s*:\s*".+?"[\s\S]*"results"\s*:/i.test(candidate))
   );
 }
 
 function extractSearchQuery(command?: string): string | null {
   if (!command) return null;
+  const searchingWeb = command.match(/^searching web:\s+(.+)$/i);
+  if (searchingWeb?.[1]) return searchingWeb[1].trim();
   const quoted = command.match(/web-search\.py\s+["']([^"']+)["']/);
   if (quoted?.[1]) return quoted[1];
   const unquoted = command.match(/web-search\.py\s+(\S+)/);
@@ -3708,7 +3720,7 @@ function parseWebSearchStructuredPayload(value: unknown): { summary: string | nu
   const sources = resultItems
     .map((item) => {
       if (typeof item === "string") {
-        return buildWebSearchSourceEntry(undefined, item);
+        return /^https?:\/\//i.test(item.trim()) ? buildWebSearchSourceEntry(undefined, item) : null;
       }
       if (!item || typeof item !== "object") {
         return null;
@@ -3761,7 +3773,13 @@ function parseWebSearchStructuredPayload(value: unknown): { summary: string | nu
     .filter((item): item is WebSearchImage => Boolean(item));
 
   return {
-    summary,
+    summary:
+      summary ||
+      resultItems
+        .find((item) => typeof item === "string" && !/^https?:\/\//i.test(item.trim()))
+        ?.toString()
+        ?.trim() ||
+      null,
     sources: dedupeWebSearchSources(sources),
     images: dedupeWebSearchImages(images),
   };
@@ -3809,22 +3827,44 @@ function getWebSearchFaviconUrl(domain?: string): string | null {
 
 function parseWebSearchOutput(output?: string): { summary: string | null; sources: WebSearchResult[]; images: WebSearchImage[] } {
   if (!output) return { summary: null, sources: [], images: [] };
+  const structuredCommandOutput = parseStructuredCommandExecutionOutput(output);
+  const candidateOutput = stripRunnerSystemTags(
+    structuredCommandOutput
+      ? [structuredCommandOutput.stdout, structuredCommandOutput.stderr].filter(Boolean).join("\n")
+      : output
+  ).trim();
+  if (!candidateOutput) {
+    return { summary: null, sources: [], images: [] };
+  }
+
+  if (candidateOutput.startsWith("{") || candidateOutput.startsWith("[")) {
+    try {
+      const parsedJson = JSON.parse(candidateOutput);
+      const parsedStructured = parseWebSearchStructuredPayload(parsedJson);
+      if (parsedStructured.summary || parsedStructured.sources.length > 0 || parsedStructured.images.length > 0) {
+        return parsedStructured;
+      }
+    } catch {
+      // Fall through to legacy text parsing.
+    }
+  }
+
   let summary: string | null = null;
   let sources: WebSearchResult[] = [];
   let images: WebSearchImage[] = [];
 
-  if (output.includes("Web search results for query:")) {
+  if (candidateOutput.includes("Web search results for query:")) {
     try {
       const linkPattern = /\{"title":"([^"]*?)","url":"([^"]*?)"\}/g;
       let match: RegExpExecArray | null = null;
-      while ((match = linkPattern.exec(output)) !== null) {
+      while ((match = linkPattern.exec(candidateOutput)) !== null) {
         const source = buildWebSearchSourceEntry(match[1] || match[2], match[2]);
         if (source) {
           sources.push(source);
         }
       }
 
-      const imagesMatch = output.match(/##?\s*Images\s*\n([\s\S]*?)$/i);
+      const imagesMatch = candidateOutput.match(/##?\s*Images\s*\n([\s\S]*?)$/i);
       if (imagesMatch) {
         const imagePattern = /(?:[-*]|\d+\.)\s*!\[([^\]]*)\]\(([^)]+)\)(?:\{([^}]+)\})?/g;
         let imageMatch: RegExpExecArray | null = null;
@@ -3836,9 +3876,9 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
         }
       }
 
-      const linksStart = output.indexOf("Links:");
+      const linksStart = candidateOutput.indexOf("Links:");
       if (linksStart !== -1) {
-        const afterLinks = output.slice(linksStart);
+        const afterLinks = candidateOutput.slice(linksStart);
         const arrayEnd = afterLinks.match(/\}]\s*([\s\S]*?)(?=##?\s*Images|$)/i);
         if (arrayEnd?.[1]) {
           const candidate = arrayEnd[1].trim();
@@ -3849,14 +3889,14 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
       }
 
       if (!summary) {
-        const directArrayEndMatch = output.match(/\}]\s*([A-Z][^{}\[\]]{10,}?)(?=##?\s*Images|$)/i);
+        const directArrayEndMatch = candidateOutput.match(/\}]\s*([A-Z][^{}\[\]]{10,}?)(?=##?\s*Images|$)/i);
         if (directArrayEndMatch?.[1]) {
           summary = cleanSummaryText(directArrayEndMatch[1].trim());
         }
       }
 
       if (!summary) {
-        const beforeLinksMatch = output.match(/Web search results for query:[^\n]*\n\n([\s\S]*?)(?=Links:|$)/);
+        const beforeLinksMatch = candidateOutput.match(/Web search results for query:[^\n]*\n\n([\s\S]*?)(?=Links:|$)/);
         if (beforeLinksMatch?.[1]?.trim()) {
           summary = cleanSummaryText(beforeLinksMatch[1]);
         }
@@ -3870,9 +3910,9 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
     }
   }
 
-  const markdownResults = output.match(/##?\s*Search Results[^\n]*\n([\s\S]*?)(?=##?\s*Sources|##?\s*Images|$)/i);
-  const markdownSources = output.match(/##?\s*Sources\s*\n([\s\S]*?)(?=##?\s*Images|$)/i);
-  const markdownImages = output.match(/##?\s*Images\s*\n([\s\S]*?)$/i);
+  const markdownResults = candidateOutput.match(/##?\s*Search Results[^\n]*\n([\s\S]*?)(?=##?\s*Sources|##?\s*Images|$)/i);
+  const markdownSources = candidateOutput.match(/##?\s*Sources\s*\n([\s\S]*?)(?=##?\s*Images|$)/i);
+  const markdownImages = candidateOutput.match(/##?\s*Images\s*\n([\s\S]*?)$/i);
   if (markdownResults) {
     summary = cleanSummaryText(markdownResults[1]);
     if (markdownSources) {
@@ -3910,7 +3950,7 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
   ];
 
   for (const pattern of jsonPatterns) {
-    const match = output.match(pattern);
+    const match = candidateOutput.match(pattern);
     if (!match?.[1]) {
       continue;
     }
@@ -3981,14 +4021,14 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
   }
 
   if (!summary) {
-    const summaryMatch = output.match(/SUMMARY:\s*([\s\S]*?)(?=SOURCES:|JSON OUTPUT:|IMAGES:|$)/i);
+    const summaryMatch = candidateOutput.match(/SUMMARY:\s*([\s\S]*?)(?=SOURCES:|JSON OUTPUT:|IMAGES:|$)/i);
     if (summaryMatch?.[1]) {
       summary = cleanSummaryText(summaryMatch[1]);
     }
   }
 
   if (sources.length === 0) {
-    const sourcesMatch = output.match(/SOURCES:\s*-*\s*([\s\S]*?)(?=JSON OUTPUT:|IMAGES:|$)/i);
+    const sourcesMatch = candidateOutput.match(/SOURCES:\s*-*\s*([\s\S]*?)(?=JSON OUTPUT:|IMAGES:|$)/i);
     if (sourcesMatch?.[1]) {
       const lines = sourcesMatch[1].split("\n");
       let currentTitle: string | null = null;
@@ -4040,7 +4080,7 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
 
   if (images.length === 0) {
     const imageUrlPattern = /(https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|gif|webp|avif|bmp)(?:\?[^\s"'<>]*)?)/gi;
-    const imageMatches = output.match(imageUrlPattern);
+    const imageMatches = candidateOutput.match(imageUrlPattern);
     if (imageMatches) {
       images = Array.from(new Set(imageMatches))
         .slice(0, 10)
@@ -4081,7 +4121,11 @@ function WebSearchSourceChip({ source }: { source: WebSearchResult }) {
 function WebSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   const [collapsed, setCollapsed] = useState(false);
   const query = extractSearchQuery(log.metadata?.command || "");
-  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const rawOutput = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const structuredCommandOutput = parseStructuredCommandExecutionOutput(rawOutput);
+  const output = structuredCommandOutput
+    ? [structuredCommandOutput.stdout, structuredCommandOutput.stderr].filter(Boolean).join("\n")
+    : rawOutput;
   const resultValue = log.metadata?.result;
   const fullReport = typeof (log.metadata as Record<string, unknown> | undefined)?.fullReport === "string"
     ? String((log.metadata as Record<string, unknown>).fullReport)
@@ -4104,6 +4148,7 @@ function WebSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: strin
   }, [fullReport, log.message, output, resultValue]);
   const isRunning = log.metadata?.status === "running" || log.metadata?.status === "started";
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  const errorMessage = stripRunnerSystemTags(output || rawOutput).trim();
 
   return (
     <div className="tb-log-card">
@@ -4119,7 +4164,7 @@ function WebSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: strin
       />
       <LogPanel collapsed={collapsed}>
         {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{output || "Web search failed."}</div>
+          <div className="tb-log-card-state tb-log-card-state-error">{errorMessage || "Web search failed."}</div>
         ) : (
           <>
             {parsed.images.length > 0 ? (

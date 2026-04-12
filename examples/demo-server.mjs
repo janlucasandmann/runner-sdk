@@ -419,7 +419,7 @@ const html = `<!doctype html>
         width: 100vw;
         height: 100vh;
         display: grid;
-        grid-template-columns: 320px minmax(0, 1fr);
+        grid-template-columns: 270px minmax(0, 1fr);
         background: var(--playground-app-bg);
         background-size: cover;
         background-position: center;
@@ -21830,7 +21830,7 @@ const html = `<!doctype html>
         .playground-sidebar {
           position: fixed;
           inset: 0 auto 0 0;
-          width: min(320px, 100vw);
+          width: min(270px, 100vw);
           z-index: 85;
         }
         .playground-sidebar.is-collapsed {

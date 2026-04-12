@@ -2865,7 +2865,8 @@ async function generateThreadTitle(params: {
 }
 
 const environmentStartPromises = new Map<string, Promise<void>>();
-const environmentStartedRequestKeys = new Set<string>();
+const environmentWarmCacheUntilMs = new Map<string, number>();
+const ENVIRONMENT_START_CACHE_TTL_MS = 90 * 1000;
 
 function buildEnvironmentStartRequestKey(params: {
   backendUrl: string;
@@ -2877,7 +2878,6 @@ function buildEnvironmentStartRequestKey(params: {
     backendUrl: sanitizeBackendUrl(params.backendUrl),
     environmentId: params.environmentId,
     agentId: params.agentId || null,
-    enabledSkills: params.enabledSkills || null,
   });
 }
 
@@ -2891,8 +2891,15 @@ async function startEnvironment(params: {
   force?: boolean;
 }): Promise<void> {
   const requestKey = buildEnvironmentStartRequestKey(params);
-  if (!params.force && environmentStartedRequestKeys.has(requestKey)) {
-    return;
+  if (!params.force) {
+    const cachedUntilMs = environmentWarmCacheUntilMs.get(requestKey) ?? 0;
+    if (cachedUntilMs > Date.now()) {
+      return;
+    }
+    environmentWarmCacheUntilMs.delete(requestKey);
+  }
+  if (!params.force && environmentStartPromises.has(requestKey)) {
+    return environmentStartPromises.get(requestKey);
   }
   const existingPromise = environmentStartPromises.get(requestKey);
   if (existingPromise) {
@@ -2905,28 +2912,10 @@ async function startEnvironment(params: {
   headers.set("Content-Type", "application/json");
   headers.set("X-API-Key", params.apiKey);
 
-  if (!params.force) {
-    try {
-      const statusResponse = await fetch(
-        `${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/status`,
-        {
-          method: "GET",
-          headers,
-        }
-      );
-      if (statusResponse.ok) {
-        const statusPayload = await statusResponse.json().catch(() => ({}));
-        const normalizedStatus = String(statusPayload?.status || "").trim().toLowerCase();
-        if (normalizedStatus === "running") {
-          environmentStartedRequestKeys.add(requestKey);
-          return;
-        }
-      }
-    } catch {
-      // Ignore status probe failures and fall back to the start endpoint.
-    }
-  }
-
+  // Do not short-circuit on `/status === running`.
+  // The backend `/start` route is the idempotent warm-up trigger that restores workspace,
+  // syncs skills, and pre-warms the execution stream. A merely running container is not
+  // equivalent to a warm container.
   const response = await fetch(`${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/start`, {
     method: "POST",
     headers,
@@ -2938,10 +2927,10 @@ async function startEnvironment(params: {
 
   if (!response.ok) {
     const bodyText = await response.text().catch(() => "");
-    environmentStartedRequestKeys.delete(requestKey);
+    environmentWarmCacheUntilMs.delete(requestKey);
     throw new Error(bodyText || `Failed to start environment (${response.status})`);
   }
-  environmentStartedRequestKeys.add(requestKey);
+  environmentWarmCacheUntilMs.set(requestKey, Date.now() + ENVIRONMENT_START_CACHE_TTL_MS);
   })().finally(() => {
     environmentStartPromises.delete(requestKey);
   });
@@ -5866,6 +5855,8 @@ export function RunnerChat({
   }, [hasApiKey, resolvedSpeechToTextUrl]);
   const effectiveAgentId = useComputerAgentsMode ? selectedAgentId || agentId : agentId;
   const effectiveEnvironmentId = useComputerAgentsMode ? selectedEnvironmentId || environmentId : environmentId;
+  const isPassiveWarmEnvironmentReady = !useComputerAgentsMode || Boolean(effectiveEnvironmentId);
+  const isPassiveWarmAgentReady = !useComputerAgentsMode || Boolean(effectiveAgentId);
   const textareaAllowsPromptAfterStagedCommand = threadContextActionAllowsPrompt(stagedThreadContextCommand);
 
   function focusComposerSoon() {
@@ -8182,7 +8173,21 @@ export function RunnerChat({
   }, [apiKey, currentThreadId, hasApiKey, isRunning, normalizedBackendUrl, requestHeaders]);
 
   useEffect(() => {
-    if (!hasApiKey || !normalizedBackendUrl || !effectiveEnvironmentId) {
+    const hasPendingExternalRunForThread =
+      Boolean(externalRunRequest)
+      && handledExternalRunRequestTokenRef.current !== externalRunRequest?.token
+      && String(externalRunRequest?.threadId || "").trim() === String(threadId || "").trim()
+      && String(externalRunRequest?.prompt || "").trim().length > 0;
+    if (
+      !hasApiKey ||
+      !normalizedBackendUrl ||
+      !effectiveEnvironmentId ||
+      !isPassiveWarmEnvironmentReady ||
+      !isPassiveWarmAgentReady ||
+      isPreparingRun ||
+      isRunning ||
+      hasPendingExternalRunForThread
+    ) {
       lastEnvironmentStartRequestKeyRef.current = null;
       return;
     }
@@ -8208,9 +8213,15 @@ export function RunnerChat({
     effectiveAgentId,
     effectiveEnvironmentId,
     enabledSkillsPayload,
+    externalRunRequest,
     hasApiKey,
+    isPassiveWarmAgentReady,
+    isPassiveWarmEnvironmentReady,
+    isPreparingRun,
+    isRunning,
     normalizedBackendUrl,
     requestHeaders,
+    threadId,
   ]);
 
   useEffect(() => {
