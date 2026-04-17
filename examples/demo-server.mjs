@@ -120,7 +120,7 @@ const html = `<!doctype html>
         display: flex;
         align-items: center;
         gap: 10px;
-        font-weight: 600;
+        font-weight: 500;
         margin-bottom: 14px;
       }
 
@@ -152,7 +152,7 @@ const html = `<!doctype html>
       }
 
       .field label {
-        font-size: 11px;
+        font-size: 10px;
         color: var(--text-dim);
       }
 
@@ -972,8 +972,9 @@ const html = `<!doctype html>
         align-items: center;
         justify-content: flex-end;
         min-width: 24px;
-        max-width: 84px;
+        max-width: 96px;
         height: 24px;
+        padding-right: 28px;
         transform: translateY(-50%);
       }
 
@@ -984,6 +985,23 @@ const html = `<!doctype html>
         flex-shrink: 0;
         white-space: nowrap;
         line-height: 1;
+        transition: opacity 160ms ease;
+      }
+
+      .sidebar-thread-hover-meta {
+        position: absolute;
+        top: 50%;
+        right: 28px;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+        line-height: 1;
+        white-space: nowrap;
+        margin-right: -3px;
+        opacity: 0;
+        pointer-events: none;
         transition: opacity 160ms ease;
       }
 
@@ -1011,7 +1029,7 @@ const html = `<!doctype html>
 
       .sidebar-thread-menu-button:hover,
       .sidebar-thread-menu-button.is-open {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
         color: #fff;
       }
 
@@ -1034,6 +1052,15 @@ const html = `<!doctype html>
       .sidebar-thread-item.is-active .sidebar-thread-meta {
         opacity: 0;
         pointer-events: none;
+      }
+
+      .sidebar-pinned-button:hover .sidebar-thread-hover-meta,
+      .sidebar-thread-item:hover .sidebar-thread-hover-meta,
+      .sidebar-pinned-button:focus-within .sidebar-thread-hover-meta,
+      .sidebar-thread-item:focus-within .sidebar-thread-hover-meta,
+      .sidebar-pinned-button.is-active .sidebar-thread-hover-meta,
+      .sidebar-thread-item.is-active .sidebar-thread-hover-meta {
+        opacity: 1;
       }
 
       .sidebar-thread-menu-icon {
@@ -1388,6 +1415,18 @@ const html = `<!doctype html>
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.02em;
+      }
+
+      .sidebar-account-avatar-fallback,
+      .account-menu-avatar-fallback {
+        width: 100%;
+        height: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: uppercase;
       }
 
       .sidebar-account-copy {
@@ -1838,6 +1877,23 @@ const html = `<!doctype html>
         font-size: 14px;
         font-style: italic;
         line-height: 1.2;
+      }
+
+      .playground-thread-welcome-plan-offer {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #66a6ff;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 1.2;
+        cursor: pointer;
+      }
+
+      .playground-thread-welcome-plan-offer:hover {
+        color: #7cb3ff;
       }
 
       .playground-thread-welcome-title {
@@ -4140,7 +4196,7 @@ const html = `<!doctype html>
         max-height: min(86vh, 860px);
         display: flex;
         flex-direction: column;
-        border-radius: 24px;
+        border-radius: 15px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: linear-gradient(180deg, rgba(36, 36, 36, 0.98) 0%, rgba(28, 28, 28, 0.98) 100%);
         box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
@@ -4149,11 +4205,16 @@ const html = `<!doctype html>
 
       .playground-onboarding-header {
         display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 24px 24px 0;
+      }
+
+      .playground-onboarding-header-top {
+        display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 18px;
-        padding: 24px 24px 18px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .playground-onboarding-header-copy {
@@ -4161,62 +4222,57 @@ const html = `<!doctype html>
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
       }
 
       .playground-onboarding-title-wrap {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
       }
 
       .playground-onboarding-kicker {
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 10px;
+        font-weight: 400;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.46);
+        color: rgba(255, 255, 255, 0.7);
       }
 
       .playground-onboarding-title {
         margin: 0;
         font-size: 24px;
-        font-weight: 600;
+        font-weight: 500;
         line-height: 1.12;
         color: rgba(255, 255, 255, 0.98);
       }
 
       .playground-onboarding-step-meta {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+        width: 100%;
       }
 
       .playground-onboarding-progress {
-        min-width: 0;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        width: 100%;
       }
 
       .playground-onboarding-progress-track {
-        height: 6px;
+        width: 100%;
+        height: 2px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.1);
         overflow: hidden;
       }
 
       .playground-onboarding-progress-fill {
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, rgba(125, 176, 255, 0.95) 0%, rgba(255, 255, 255, 0.92) 100%);
+        background: rgba(255, 255, 255, 1);
         transition: width 180ms ease;
       }
 
       .playground-onboarding-progress-label {
         font-size: 12px;
-        font-weight: 500;
+        font-weight: 400;
         color: rgba(255, 255, 255, 0.58);
       }
 
@@ -4259,43 +4315,68 @@ const html = `<!doctype html>
         gap: 24px;
       }
 
-      .playground-onboarding-concept-center {
+      .playground-onboarding-concept-hero {
         flex: 1;
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(280px, 0.88fr);
         align-items: center;
-        justify-content: center;
-        gap: 18px;
-        text-align: center;
+        gap: 24px;
       }
 
-      .playground-onboarding-concept-visual {
-        width: 84px;
-        height: 84px;
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
-        display: inline-flex;
-        align-items: center;
+      .playground-onboarding-concept-copy-column {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
         justify-content: center;
+        gap: 16px;
+        text-align: left;
+      }
+
+      .playground-onboarding-concept-preview-panel {
+        width: 100%;
+        min-height: 248px;
+        border-radius: 5px;
+        background:
+          linear-gradient(180deg, rgba(8, 15, 26, 0.42) 0%, rgba(8, 15, 26, 0.72) 100%),
+          url("/img/agent-profile-pics/starbg.jpeg");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        padding-left: 24px;
+        padding-top: 24px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
         overflow: hidden;
       }
 
-      .playground-onboarding-concept-visual.is-surface {
-        background: linear-gradient(180deg, rgba(15, 15, 15, 0.96) 0%, rgba(28, 28, 28, 0.9) 100%);
+      .playground-onboarding-concept-preview-image {
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        border-radius: 5px 0 5px 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        overflow: visible;
       }
 
-      .playground-onboarding-concept-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+      .playground-onboarding-concept-preview-asset {
+        display: block;
+        width: auto;
+        height: auto;
+        border-radius: inherit;
+        max-width: min(100%, 560px);
+        max-height: 244px;
+        object-fit: contain;
+        object-position: right bottom;
       }
 
+      .playground-onboarding-concept-visual,
+      .playground-onboarding-concept-image,
       .playground-onboarding-concept-icon {
-        width: 34px;
-        height: 34px;
-        color: rgba(255, 255, 255, 0.92);
+        display: none;
       }
 
       .playground-onboarding-concept-title {
@@ -4308,7 +4389,7 @@ const html = `<!doctype html>
 
       .playground-onboarding-concept-copy {
         margin: 0;
-        max-width: 620px;
+        max-width: 420px;
         font-size: 14px;
         line-height: 1.7;
         color: rgba(255, 255, 255, 0.62);
@@ -4328,15 +4409,14 @@ const html = `<!doctype html>
 
       .playground-onboarding-detail-card {
         padding: 16px;
-        border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.03);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-left: 0;
       }
 
       .playground-onboarding-detail-card-title {
         margin: 0 0 6px;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 500;
         color: rgba(255, 255, 255, 0.92);
       }
 
@@ -4360,6 +4440,12 @@ const html = `<!doctype html>
         margin: 0;
         padding: 0;
         list-style: none;
+      }
+
+      .playground-onboarding-plan-features-inline {
+        width: 100%;
+        max-width: 420px;
+        margin-top: 8px;
       }
 
       .playground-onboarding-plan-feature {
@@ -4388,6 +4474,26 @@ const html = `<!doctype html>
       .playground-onboarding-plan-price-copy {
         font-size: 12px;
         color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-onboarding-plan-offer {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 12px;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      .playground-onboarding-plan-cta {
+        width: 100%;
+        margin-top: 16px;
+        background: #fff;
+        color: #111;
+        border-radius: 999px;
       }
 
       .playground-onboarding-hero {
@@ -4743,6 +4849,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 14px;
+        border-radius: 15px;
       }
 
       .playground-onboarding-sdk-title-row,
@@ -4827,14 +4934,14 @@ const html = `<!doctype html>
       }
 
       .playground-onboarding-button {
-        min-height: 40px;
+        min-height: 36px;
         padding: 0 16px;
-        border-radius: 12px;
+        border-radius: 999px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.04);
         color: rgba(255, 255, 255, 0.92);
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 500;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
@@ -4953,6 +5060,18 @@ const html = `<!doctype html>
         .playground-onboarding-detail-grid,
         .playground-onboarding-plan-panel {
           grid-template-columns: 1fr;
+        }
+
+        .playground-onboarding-concept-hero {
+          grid-template-columns: 1fr;
+        }
+
+        .playground-onboarding-concept-copy-column {
+          gap: 14px;
+        }
+
+        .playground-onboarding-concept-preview-panel {
+          min-height: 200px;
         }
       }
 
@@ -5474,6 +5593,476 @@ const html = `<!doctype html>
 
       .playground-settings-integrations-shell {
         width: 100%;
+      }
+
+      .playground-plugins-page {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 0 0 26px;
+      }
+
+      .playground-plugins-section {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-plugins-section-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 24px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-plugins-section-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-plugins-section-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-plugins-section-subtitle {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-plugins-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-plugins-subtitle {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-plugins-search {
+        flex: 1 1 320px;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 13px;
+        outline: none;
+      }
+
+      .playground-plugins-search::placeholder {
+        color: rgba(255, 255, 255, 0.34);
+      }
+
+      .playground-plugins-filter {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-plugins-hero-heading {
+        margin: 0;
+        text-align: center;
+        font-size: 38px;
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-plugins-search-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .playground-plugins-search-row .playground-plugins-search {
+        max-width: 560px;
+      }
+
+      .playground-plugins-hero-slider {
+        position: relative;
+        min-height: 252px;
+        border-radius: 18px;
+        overflow: hidden;
+        background-image:
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04)),
+          url('/img/bg/clouds.jpeg');
+        background-size: cover;
+        background-position: center;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-plugins-hero-slider::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12), transparent 30%);
+        pointer-events: none;
+      }
+
+      .playground-plugins-hero-slide {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        min-height: 252px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 40px 44px;
+      }
+
+      .playground-plugins-hero-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 0 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.84);
+        color: #111;
+        font-size: 12px;
+        font-weight: 500;
+        box-shadow: 0 14px 44px rgba(0, 0, 0, 0.16);
+      }
+
+      .playground-plugins-hero-pill img {
+        width: 16px;
+        height: 16px;
+        object-fit: contain;
+      }
+
+      .playground-plugins-hero-cta {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        min-height: 32px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: #0d0d0d;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .playground-plugins-hero-dots {
+        position: absolute;
+        top: 50%;
+        right: 18px;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-plugins-hero-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.28);
+        transition: background-color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-plugins-hero-dot.is-active {
+        background: rgba(255, 255, 255, 0.96);
+        transform: scale(1.1);
+      }
+
+      .playground-plugins-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 16px;
+        align-items: start;
+      }
+
+      .playground-plugin-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        width: 100%;
+        padding: 12px 14px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+        transition: background-color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-plugin-row:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-plugin-row-copy {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-plugin-row-logo-shell {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        flex: 0 0 auto;
+      }
+
+      .playground-plugin-row-logo {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        display: block;
+      }
+
+      .playground-plugin-row-logo.is-github {
+        filter: brightness(0) invert(1);
+      }
+
+      .playground-plugin-row-fallback-logo {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-plugin-row-text {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-plugin-row-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-plugin-row-description {
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.48);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-plugin-row-state {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.94);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-plugin-row-state.is-connected {
+        color: rgba(255, 255, 255, 0.96);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-plugins-empty {
+        padding: 28px 0 0;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-plugin-modal-scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 400;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(0, 0, 0, 0.58);
+        backdrop-filter: blur(10px);
+      }
+
+      .playground-plugin-modal {
+        width: min(640px, calc(100vw - 32px));
+        max-height: min(86vh, 760px);
+        overflow: auto;
+        padding: 18px 18px 20px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #1a1a1a;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+      }
+
+      .playground-plugin-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-plugin-modal-header-copy {
+        min-width: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+      }
+
+      .playground-plugin-modal-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-plugin-modal-subtitle {
+        margin: 6px 0 0;
+        font-size: 12px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-plugin-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        padding-top: 18px;
+      }
+
+      .playground-plugin-modal-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 16px;
+      }
+
+      .playground-plugin-modal-meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-plugin-modal-meta-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-plugin-modal-meta-value {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-plugin-modal-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-plugin-modal-section-title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-plugin-modal-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 12px;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-plugin-modal-list li::before {
+        content: "• ";
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-plugin-modal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .playground-plugin-modal-button {
+        min-height: 36px;
+        padding: 0 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      .playground-plugin-modal-button.is-primary {
+        border-color: transparent;
+        background: #fff;
+        color: #111;
+      }
+
+      .playground-plugin-modal-button.is-destructive {
+        background: rgba(239, 68, 68, 0.10);
+        color: rgba(248, 113, 113, 0.98);
+      }
+
+      .playground-plugin-modal-button:disabled {
+        opacity: 0.58;
+        cursor: default;
+      }
+
+      @media (max-width: 920px) {
+        .playground-plugins-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .playground-plugin-modal-meta {
+          grid-template-columns: 1fr;
+        }
       }
 
       .playground-settings-integrations-title {
@@ -6500,6 +7089,11 @@ const html = `<!doctype html>
         background: rgba(59, 130, 246, 0.1);
       }
 
+      .playground-settings-plan-system-note.is-cancelled {
+        border-color: rgba(249, 115, 22, 0.24);
+        background: rgba(249, 115, 22, 0.12);
+      }
+
       .playground-settings-plan-system-note-icon {
         width: 30px;
         height: 30px;
@@ -6514,10 +7108,19 @@ const html = `<!doctype html>
         letter-spacing: 0.04em;
       }
 
+      .playground-settings-plan-system-note.is-cancelled .playground-settings-plan-system-note-icon {
+        background: rgba(249, 115, 22, 0.16);
+        color: rgb(251, 146, 60);
+      }
+
       .playground-settings-plan-system-note-title {
         font-size: 14px;
         font-weight: 500;
         color: rgb(147, 197, 253);
+      }
+
+      .playground-settings-plan-system-note.is-cancelled .playground-settings-plan-system-note-title {
+        color: rgb(251, 146, 60);
       }
 
       .playground-settings-plan-system-note-copy {
@@ -8370,6 +8973,122 @@ const html = `<!doctype html>
         margin-bottom: 16px;
       }
 
+      .playground-subscription-success-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 340;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.68);
+        backdrop-filter: blur(12px);
+      }
+
+      .playground-subscription-success-modal {
+        width: min(420px, 100%);
+        border-radius: 15px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #323232;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+      }
+
+      .playground-subscription-success-image {
+        display: block;
+        width: 100%;
+        height: 190px;
+        object-fit: cover;
+        background: #111;
+      }
+
+      .playground-subscription-success-copy {
+        padding: 26px 24px 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 8px;
+      }
+
+      .playground-subscription-success-title {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-subscription-success-description {
+        margin: 12px 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-subscription-success-actions {
+        padding: 18px 24px 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .playground-subscription-success-button {
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-subscription-success-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-subscription-success-button.is-primary {
+        border-color: rgba(255, 255, 255, 0.92);
+        background: #ffffff;
+        color: #0d0d0d;
+      }
+
+      .playground-subscription-success-button.is-primary:hover {
+        background: rgba(255, 255, 255, 0.94);
+        color: #000;
+      }
+
+      @media (max-width: 720px) {
+        .playground-subscription-success-modal {
+          border-radius: 15px;
+        }
+
+        .playground-subscription-success-title {
+          font-size: 30px;
+        }
+
+        .playground-subscription-success-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .playground-subscription-success-button {
+          width: 100%;
+        }
+      }
+
       .playground-settings-danger-action {
         border-color: rgba(255, 107, 107, 0.2);
         color: #ffb9b9;
@@ -9963,6 +10682,13 @@ const html = `<!doctype html>
         flex-direction: column;
         align-items: center;
         padding-bottom: 0;
+      }
+
+      .playground-files-preview-top-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
       }
 
       .playground-files-preview-empty {
@@ -22080,15 +22806,78 @@ const html = `<!doctype html>
         );
       }
 
+      function PlaygroundSubscriptionSuccessModal({
+        open,
+        planLabel = "paid plan",
+        onClose,
+        onOpenBilling,
+      }) {
+        if (!open) {
+          return null;
+        }
+
+        const normalizedPlanLabel = String(planLabel || "").trim() || "Enterprise";
+
+        return React.createElement("div", {
+            className: "playground-subscription-success-backdrop",
+            onClick: () => {
+              if (typeof onClose === "function") {
+                onClose();
+              }
+            },
+          },
+            React.createElement("div", {
+              className: "playground-subscription-success-modal",
+              onClick: (event) => event.stopPropagation(),
+            },
+              React.createElement("img", {
+                className: "playground-subscription-success-image",
+                src: "/img/002-hero/inside-rocket.jpg",
+                alt: "Subscription active",
+              }),
+              React.createElement("div", { className: "playground-subscription-success-copy" },
+                React.createElement("h2", { className: "playground-subscription-success-title" }, "Congratulations!"),
+                React.createElement("p", { className: "playground-subscription-success-description" },
+                  "Thank you for subscribing to computer agents ACP! Your ",
+                  normalizedPlanLabel,
+                  " subscription is now active."
+                )
+              ),
+              React.createElement("div", { className: "playground-subscription-success-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-subscription-success-button",
+                  onClick: () => {
+                    if (typeof onOpenBilling === "function") {
+                      onOpenBilling();
+                    }
+                  },
+                }, "Open billing"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-subscription-success-button is-primary",
+                  onClick: () => {
+                    if (typeof onClose === "function") {
+                      onClose();
+                    }
+                  },
+                }, "Go to platform"),
+              )
+            )
+          );
+      }
+
       const STATUS_INDICATOR_PENDING_STORAGE_KEY = "runner_demo_pending_status_indicators_v1";
       const INTEGRATION_STATUS_STORAGE_KEY = "runner_demo_integration_status_v1";
       const HISTORY_MONACO_THEME_NAME = "runner-history-diff";
       const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
       const PLAYGROUND_GITHUB_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg";
+      const PLAYGROUND_GITLAB_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e1/GitLab_logo.svg";
       const PLAYGROUND_GOOGLE_DRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg";
       const PLAYGROUND_ONEDRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/5/59/Microsoft_Office_OneDrive_%282019%E2%80%932025%29.svg";
       const PLAYGROUND_NOTION_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg";
       const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
+      const PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM = "showSubscriptionSuccess";
       const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
       const PLAYGROUND_AUTH_REDIRECT_STATE_KEY = "runner_demo_auth_redirect_v1";
       const PLAYGROUND_AUTH_SESSION_MARKER_KEY = "runner_demo_auth_session_marker_v1";
@@ -23779,24 +24568,48 @@ const html = `<!doctype html>
       }
 
       function AccountAvatar({ className, imageClassName, fallbackLabel, photoUrl }) {
-        const [imageFailed, setImageFailed] = useState(false);
+        const [imageReady, setImageReady] = useState(false);
         const normalizedPhotoUrl = normalizeSessionPhotoUrl(photoUrl);
         const normalizedFallbackLabel = normalizeSessionIdentityValue(fallbackLabel) || "CA";
+        const fallbackClassName = className + "-fallback";
+        const shouldAttemptImage = canRenderAvatarImage(normalizedPhotoUrl);
 
         useEffect(() => {
-          setImageFailed(false);
-        }, [normalizedPhotoUrl]);
+          let cancelled = false;
+          setImageReady(false);
+
+          if (!shouldAttemptImage) {
+            return undefined;
+          }
+
+          const probe = new Image();
+          probe.onload = () => {
+            if (!cancelled) {
+              setImageReady(true);
+            }
+          };
+          probe.onerror = () => {
+            if (!cancelled) {
+              setImageReady(false);
+            }
+          };
+          probe.src = normalizedPhotoUrl;
+
+          return () => {
+            cancelled = true;
+          };
+        }, [normalizedPhotoUrl, shouldAttemptImage]);
 
         return React.createElement("div", { className },
-          !imageFailed && canRenderAvatarImage(normalizedPhotoUrl)
+          imageReady && shouldAttemptImage
             ? React.createElement("img", {
                 className: imageClassName,
                 src: normalizedPhotoUrl,
-                alt: normalizedFallbackLabel,
+                alt: "",
+                "aria-hidden": "true",
                 referrerPolicy: "no-referrer",
-                onError: () => setImageFailed(true),
               })
-            : normalizedFallbackLabel
+            : React.createElement("span", { className: fallbackClassName, "aria-hidden": "true" }, normalizedFallbackLabel)
         );
       }
 
@@ -24199,6 +25012,31 @@ const html = `<!doctype html>
         if (diffMs < weekMs) return Math.max(1, Math.round(diffMs / dayMs)) + " D";
         if (diffMs < monthMs) return Math.max(1, Math.round(diffMs / weekMs)) + " W";
         return Math.max(1, Math.round(diffMs / monthMs)) + " M";
+      }
+
+      function formatCompactThreadActivityTime(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        const diffMs = Math.max(0, Date.now() - date.getTime());
+        const minuteMs = 60 * 1000;
+        const hourMs = 60 * minuteMs;
+        const dayMs = 24 * hourMs;
+        const weekMs = 7 * dayMs;
+        const monthMs = 30 * dayMs;
+        const yearMs = 365 * dayMs;
+
+        if (diffMs < hourMs) return Math.max(1, Math.round(diffMs / minuteMs)) + "M";
+        if (diffMs < dayMs) return Math.max(1, Math.round(diffMs / hourMs)) + "H";
+        if (diffMs < weekMs) return Math.max(1, Math.round(diffMs / dayMs)) + "D";
+        if (diffMs < monthMs) return Math.max(1, Math.round(diffMs / weekMs)) + "W";
+        if (diffMs < yearMs) {
+          const months = Math.max(1, Math.round(diffMs / monthMs));
+          if (months <= 9) {
+            return months + "MO";
+          }
+        }
+        return Math.max(1, Math.round(diffMs / yearMs)) + "Y";
       }
 
       function normalizeThreadItem(thread) {
@@ -25423,6 +26261,67 @@ const html = `<!doctype html>
               ? data.items
               : [];
         return items.map(normalizePlaygroundServerRecord);
+      }
+
+      function buildPlaygroundProjectLinkedFilePathIndex(projects, servers, tasks) {
+        const next = {};
+
+        function getEnvironmentRecord(environmentId) {
+          const normalizedEnvironmentId = String(environmentId || "").trim();
+          if (!normalizedEnvironmentId) {
+            return null;
+          }
+          if (!next[normalizedEnvironmentId]) {
+            next[normalizedEnvironmentId] = {
+              all: new Set(),
+              byProjectId: {},
+            };
+          }
+          return next[normalizedEnvironmentId];
+        }
+
+        function addPath(environmentId, path, projectId = "") {
+          const normalizedPath = normalizeHistoryPath(path);
+          const normalizedProjectId = String(projectId || "").trim();
+          const environmentRecord = getEnvironmentRecord(environmentId);
+          if (!environmentRecord || !normalizedPath) {
+            return;
+          }
+          environmentRecord.all.add(normalizedPath);
+          if (normalizedProjectId) {
+            if (!environmentRecord.byProjectId[normalizedProjectId]) {
+              environmentRecord.byProjectId[normalizedProjectId] = new Set();
+            }
+            environmentRecord.byProjectId[normalizedProjectId].add(normalizedPath);
+          }
+        }
+
+        (Array.isArray(projects) ? projects : []).forEach((project) => {
+          const projectId = String(project?.id || "").trim();
+          normalizePlaygroundTaskAttachmentList(project?.attachments).forEach((attachment) => {
+            addPath(attachment?.environmentId, attachment?.sourcePath || attachment?.workspacePath, projectId);
+          });
+        });
+
+        (Array.isArray(servers) ? servers : []).forEach((server) => {
+          const projectId = String(server?.projectId || "").trim();
+          if (!projectId) {
+            return;
+          }
+          addPath(server?.sourceEnvironmentId, server?.sourcePath, projectId);
+        });
+
+        (Array.isArray(tasks) ? tasks : []).forEach((task) => {
+          const projectId = String(task?.projectId || "").trim();
+          if (!projectId) {
+            return;
+          }
+          normalizePlaygroundTaskAttachmentList(task?.attachments).forEach((attachment) => {
+            addPath(attachment?.environmentId, attachment?.sourcePath || attachment?.workspacePath, projectId);
+          });
+        });
+
+        return next;
       }
 
       function getPlaygroundServerResponseRecord(data) {
@@ -29619,6 +30518,22 @@ const html = `<!doctype html>
         return true;
       }
 
+      function matchesPlaygroundEnvironmentEntryProjectFilter(entry, projectLinkedPaths) {
+        const normalizedPath = normalizeHistoryPath(entry?.path);
+        if (!normalizedPath || !(projectLinkedPaths instanceof Set) || projectLinkedPaths.size === 0) {
+          return false;
+        }
+        if (!entry?.isFolder) {
+          return projectLinkedPaths.has(normalizedPath);
+        }
+        for (const linkedPath of projectLinkedPaths) {
+          if (linkedPath === normalizedPath || linkedPath.startsWith(normalizedPath + "/")) {
+            return true;
+          }
+        }
+        return false;
+      }
+
       function buildPlaygroundEnvironmentTree(inventory) {
         const root = {
           id: "",
@@ -33502,6 +34417,9 @@ const html = `<!doctype html>
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [filterMode, setFilterMode] = useState("all");
         const [sortMode, setSortMode] = useState("name-asc");
+        const [projectFilterScope, setProjectFilterScope] = useState("");
+        const [availableProjectFilters, setAvailableProjectFilters] = useState([]);
+        const [projectLinkedPathsByEnvironmentId, setProjectLinkedPathsByEnvironmentId] = useState({});
         const [isPreviewOpen, setIsPreviewOpen] = useState(true);
         const [isFileChatOpen, setIsFileChatOpen] = useState(false);
         const [browserPaneMode, setBrowserPaneMode] = useState("expanded");
@@ -33673,6 +34591,7 @@ const html = `<!doctype html>
           setSearchPopupQuery("");
           setFilterMode("all");
           setSortMode("name-asc");
+          setProjectFilterScope("");
           setIsPreviewOpen(true);
           setIsFileChatOpen(false);
           setBrowserPaneMode("expanded");
@@ -33722,6 +34641,68 @@ const html = `<!doctype html>
           searchPopupQuery,
           selectedEnvironmentId,
         ]);
+
+        useEffect(() => {
+          const controller = new AbortController();
+
+          async function loadProjectLinkedPaths() {
+            try {
+              const [projectsResult, serversResult, tasksResult] = await Promise.allSettled([
+                fetch(backendUrl + "/projects", {
+                  method: "GET",
+                  headers: requestHeaders,
+                  signal: controller.signal,
+                }),
+                fetch(backendUrl + "/servers", {
+                  method: "GET",
+                  headers: requestHeaders,
+                  signal: controller.signal,
+                }),
+                fetch(backendUrl + "/tasks", {
+                  method: "GET",
+                  headers: requestHeaders,
+                  signal: controller.signal,
+                }),
+              ]);
+
+              let nextProjects = [];
+              let nextServers = [];
+              let nextTasks = [];
+
+              if (projectsResult.status === "fulfilled" && projectsResult.value.ok) {
+                const data = await projectsResult.value.json().catch(() => ({}));
+                nextProjects = parsePlaygroundProjectListResponse(data);
+              }
+
+              if (serversResult.status === "fulfilled" && serversResult.value.ok) {
+                const data = await serversResult.value.json().catch(() => ({}));
+                nextServers = parsePlaygroundServerListResponse(data);
+              }
+
+              if (tasksResult.status === "fulfilled" && tasksResult.value.ok) {
+                const data = await tasksResult.value.json().catch(() => ({}));
+                nextTasks = parsePlaygroundTaskListResponse(data);
+              }
+
+              if (!controller.signal.aborted) {
+                setAvailableProjectFilters(
+                  nextProjects.filter((project) => String(project?.id || "").trim())
+                );
+                setProjectLinkedPathsByEnvironmentId(
+                  buildPlaygroundProjectLinkedFilePathIndex(nextProjects, nextServers, nextTasks)
+                );
+              }
+            } catch {
+              if (!controller.signal.aborted) {
+                setAvailableProjectFilters([]);
+                setProjectLinkedPathsByEnvironmentId({});
+              }
+            }
+          }
+
+          void loadProjectLinkedPaths();
+          return () => controller.abort();
+        }, [backendUrl, requestHeaders]);
 
         useEffect(() => {
           if (!toolbarPopover) return;
@@ -33782,6 +34763,41 @@ const html = `<!doctype html>
           && !currentEnvironmentError
           && (!loadedFolderPaths.has(normalizedCurrentPath) || loadingFolderPaths.has(normalizedCurrentPath))
         );
+        const currentProjectLinkedRecord = projectLinkedPathsByEnvironmentId[selectedEnvironmentId] || null;
+        const currentProjectLinkedPaths = useMemo(() => {
+          if (!currentProjectLinkedRecord) {
+            return new Set();
+          }
+          if (projectFilterScope === "__all__") {
+            return currentProjectLinkedRecord.all || new Set();
+          }
+          if (projectFilterScope) {
+            return currentProjectLinkedRecord.byProjectId?.[projectFilterScope] || new Set();
+          }
+          return new Set();
+        }, [currentProjectLinkedRecord, projectFilterScope]);
+        const activeProjectFilterOption = useMemo(() => {
+          if (projectFilterScope === "__all__") {
+            return {
+              id: "__all__",
+              label: "All Project Files",
+              description: "Show files linked to any project",
+            };
+          }
+          if (projectFilterScope) {
+            const matchingProject = availableProjectFilters.find((project) => project.id === projectFilterScope) || null;
+            return {
+              id: projectFilterScope,
+              label: matchingProject?.name || "Project",
+              description: "Show only files linked to this project",
+            };
+          }
+          return {
+            id: "",
+            label: "All Files",
+            description: "Show every file in this environment",
+          };
+        }, [availableProjectFilters, projectFilterScope]);
         const environmentTree = useMemo(() => buildPlaygroundEnvironmentTree(currentInventory), [currentInventory]);
         const currentFolderNode = (environmentTree.nodesByPath.get(normalizedCurrentPath || "") || environmentTree.root || null);
         const currentEntries = useMemo(
@@ -33789,14 +34805,17 @@ const html = `<!doctype html>
           [currentFolderNode, sortMode]
         );
         const filteredCurrentEntries = useMemo(
-          () => currentEntries.filter((entry) => matchesPlaygroundEnvironmentEntryFilter(entry, filterMode)),
-          [currentEntries, filterMode]
+          () => currentEntries.filter((entry) =>
+            matchesPlaygroundEnvironmentEntryFilter(entry, filterMode)
+            && (!projectFilterScope || matchesPlaygroundEnvironmentEntryProjectFilter(entry, currentProjectLinkedPaths))
+          ),
+          [currentEntries, currentProjectLinkedPaths, filterMode, projectFilterScope]
         );
         const visibleRows = useMemo(
-          () => filterMode === "all"
+          () => filterMode === "all" && !projectFilterScope
             ? buildPlaygroundEnvironmentVisibleRows(environmentTree, currentPath, expandedFolders, sortMode)
             : filteredCurrentEntries.map((entry) => ({ entry, level: 0 })),
-          [currentPath, environmentTree, expandedFolders, filterMode, filteredCurrentEntries, sortMode]
+          [currentPath, environmentTree, expandedFolders, filterMode, filteredCurrentEntries, projectFilterScope, sortMode]
         );
         const selectionScopeEntries = viewMode === "list" ? visibleRows.map((row) => row.entry) : filteredCurrentEntries;
         const breadcrumbs = useMemo(() => buildPlaygroundEnvironmentBreadcrumbs(currentPath), [currentPath]);
@@ -33964,15 +34983,6 @@ const html = `<!doctype html>
         }, [hasPreviewPanel, hasSingleFilePreview]);
 
         useEffect(() => {
-          if (!hasPreviewPanel) {
-            return;
-          }
-          if (typeof onRequestSidebarCollapse === "function") {
-            onRequestSidebarCollapse();
-          }
-        }, [hasPreviewPanel, onRequestSidebarCollapse]);
-
-        useEffect(() => {
           if (browserPaneMode === "auto" && !hasPreviewPanel) {
             setBrowserPaneMode("expanded");
           }
@@ -34036,17 +35046,10 @@ const html = `<!doctype html>
           setIsPreviewOpen(false);
           setPreviewPanelWidth(null);
           closeFileChatPane();
+          clearSelection();
         }
 
-        function maybeAutoMinimizeBrowser(nextPreviewWidth, nextChatWidth) {
-          const shellWidth = getShellWidth();
-          if (!shellWidth || (nextPreviewWidth <= 0 && nextChatWidth <= 0)) {
-            return;
-          }
-          if (shellWidth - nextPreviewWidth - nextChatWidth < FILES_PANE_CLOSE_THRESHOLD) {
-            setBrowserPaneMode((current) => current === "manual" ? current : "auto");
-          }
-        }
+        function maybeAutoMinimizeBrowser() {}
 
         function expandBrowserPane() {
           const shellWidth = getShellWidth();
@@ -34322,9 +35325,6 @@ const html = `<!doctype html>
             setIsFileChatOpen(false);
             return;
           }
-          if (typeof onRequestSidebarCollapse === "function") {
-            onRequestSidebarCollapse();
-          }
           setIsFileChatOpen(true);
         }
 
@@ -34344,6 +35344,7 @@ const html = `<!doctype html>
           const next = normalizedPath ? new Set([normalizedPath]) : new Set();
           setSelectedPaths(next);
           setSelectionAnchorPath(normalizedPath);
+          setIsPreviewOpen(Boolean(normalizedPath));
         }
 
         function pushPath(nextPath, nextSelectionPaths = []) {
@@ -34417,6 +35418,12 @@ const html = `<!doctype html>
           const targetPath = normalizeHistoryPath(entry.path);
           if (!targetPath) return;
 
+          if (entry.isFolder && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
+            toggleFolderExpansion(targetPath);
+            setContextMenu(null);
+            return;
+          }
+
           if (event.shiftKey && selectionAnchorPath) {
             const orderedPaths = selectionScopeEntries.map((value) => normalizeHistoryPath(value.path));
             const anchorIndex = orderedPaths.indexOf(selectionAnchorPath);
@@ -34425,6 +35432,7 @@ const html = `<!doctype html>
               const nextSelection = orderedPaths.slice(Math.min(anchorIndex, targetIndex), Math.max(anchorIndex, targetIndex) + 1);
               setSelectedPaths(new Set(nextSelection));
               setSelectionAnchorPath(targetPath);
+              setIsPreviewOpen(nextSelection.length > 0);
               setContextMenu(null);
               return;
             }
@@ -34438,6 +35446,7 @@ const html = `<!doctype html>
               } else {
                 next.add(targetPath);
               }
+              setIsPreviewOpen(next.size > 0);
               return next;
             });
             setSelectionAnchorPath(targetPath);
@@ -34461,10 +35470,12 @@ const html = `<!doctype html>
           if (!entry) return;
           if (entry.isFolder) {
             pushPath(entry.path, [entry.path]);
+            setIsPreviewOpen(true);
             return;
           }
           const parentPath = getPlaygroundEntryParentPath(entry.path);
           pushPath(parentPath, [entry.path]);
+          setIsPreviewOpen(true);
         }
 
         async function handleCreateFolder(basePath = currentPath) {
@@ -35035,16 +36046,6 @@ const html = `<!doctype html>
                       onFileChatThreadMutated();
                     }
                   },
-                  onDocumentPreviewOpenChange: (isOpen) => {
-                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
-                      onRequestSidebarCollapse();
-                    }
-                  },
-                  onDeepResearchDetailOpenChange: (isOpen) => {
-                    if (isOpen && typeof onRequestSidebarCollapse === "function") {
-                      onRequestSidebarCollapse();
-                    }
-                  },
                 })
               )
             )
@@ -35061,6 +36062,14 @@ const html = `<!doctype html>
             const fileCount = selectedEntries.length - folderCount;
             return React.createElement("div", { className: "playground-files-preview-shell" },
               React.createElement("div", { className: "playground-files-preview-top" },
+                React.createElement("div", { className: "playground-files-preview-top-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-chat-close",
+                    onClick: closePreviewPane,
+                    "aria-label": "Close file preview",
+                  }, React.createElement(X, { className: "playground-files-chat-close-icon", strokeWidth: 1.9 }))
+                ),
                 React.createElement("div", { className: "playground-files-preview-selection-badge" }, String(selectedEntries.length)),
                 React.createElement("div", { className: "playground-files-preview-name" }, selectedEntries.length + " items selected"),
                 React.createElement("div", { className: "playground-files-preview-meta" }, folderCount + " folders, " + fileCount + " files")
@@ -35123,13 +36132,13 @@ const html = `<!doctype html>
               backendUrl,
               requestHeaders,
               headerActions: previewHeaderActions,
-              onClose: () => setIsPreviewOpen(false),
+              onClose: closePreviewPane,
               onResizeStart: startPreviewResize,
               onSaveSuccess: () => refreshEnvironmentFolders(
                 selectedEnvironmentId,
                 [getPlaygroundEntryParentPath(singleSelectedEntry.path)]
               ),
-              showCloseButton: false,
+              showCloseButton: true,
               showResizeHandle: true,
             });
           }
@@ -35141,9 +36150,9 @@ const html = `<!doctype html>
               requestHeaders,
               headerActions: previewHeaderActions,
               inline: true,
-              onClose: () => setIsPreviewOpen(false),
+              onClose: closePreviewPane,
               onResizeStart: startPreviewResize,
-              showCloseButton: false,
+              showCloseButton: true,
               showResizeHandle: true,
             });
           }
@@ -35163,6 +36172,14 @@ const html = `<!doctype html>
 
           return React.createElement("div", { className: "playground-files-preview-shell" },
             React.createElement("div", { className: "playground-files-preview-top" },
+              React.createElement("div", { className: "playground-files-preview-top-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-chat-close",
+                  onClick: closePreviewPane,
+                  "aria-label": "Close file preview",
+                }, React.createElement(X, { className: "playground-files-chat-close-icon", strokeWidth: 1.9 }))
+              ),
               React.createElement("div", { className: "playground-files-preview-hero" + (isFolderSelection ? " is-folder" : "") },
                 React.createElement(PlaygroundFileIcon, {
                   entry: singleSelectedEntry,
@@ -35607,6 +36624,67 @@ const html = `<!doctype html>
                             )
                           )
                         : null
+                    ),
+                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button" + (toolbarPopover === "projects" || projectFilterScope ? " is-active" : ""),
+                        onClick: () => toggleToolbarPopover("projects"),
+                        title: "Filter files by project",
+                      },
+                        React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Projects")
+                      ),
+                      toolbarPopover === "projects"
+                        ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
+                            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeProjectFilterOption.label),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-files-toolbar-menu-item" + (projectFilterScope === "" ? " is-active" : ""),
+                              onClick: () => {
+                                setProjectFilterScope("");
+                                setToolbarPopover("");
+                              },
+                            },
+                              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === "" ? "•" : ""),
+                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                React.createElement("span", null, "All Files"),
+                                React.createElement("span", null, "Show every file in this environment")
+                              )
+                            ),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-files-toolbar-menu-item" + (projectFilterScope === "__all__" ? " is-active" : ""),
+                              onClick: () => {
+                                setProjectFilterScope("__all__");
+                                setToolbarPopover("");
+                              },
+                            },
+                              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === "__all__" ? "•" : ""),
+                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                React.createElement("span", null, "All Project Files"),
+                                React.createElement("span", null, "Show files created, updated, or attached through any project")
+                              )
+                            ),
+                            availableProjectFilters.map((project) =>
+                              React.createElement("button", {
+                                  key: project.id,
+                                  type: "button",
+                                  className: "playground-files-toolbar-menu-item" + (projectFilterScope === project.id ? " is-active" : ""),
+                                  onClick: () => {
+                                    setProjectFilterScope(project.id);
+                                    setToolbarPopover("");
+                                  },
+                                },
+                                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === project.id ? "•" : ""),
+                                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                    React.createElement("span", null, project.name || "Project"),
+                                    React.createElement("span", null, "Show only files linked to this project")
+                                  )
+                                )
+                            )
+                          )
+                        : null
                     )
                   ),
                   React.createElement("div", { className: "playground-files-control-spacer" }),
@@ -35701,7 +36779,15 @@ const html = `<!doctype html>
                                 )
                               )
                             )
-                          : React.createElement("div", { className: "playground-files-state" }, currentEntries.length === 0 ? "This folder is empty" : "No items match the current filter")
+                          : React.createElement("div", { className: "playground-files-state" },
+                              projectFilterScope
+                                ? projectFilterScope === "__all__"
+                                  ? "No project-linked files found in this location."
+                                  : "No files linked to the selected project were found in this location."
+                                : currentEntries.length === 0
+                                  ? "This folder is empty"
+                                  : "No items match the current filter"
+                            )
                         : viewMode === "list"
                           ? React.createElement("div", { className: "playground-files-entry-list" }, visibleRows.map(renderEntryRow))
                           : React.createElement("div", { className: "playground-files-grid" }, filteredCurrentEntries.map(renderGridItem))
@@ -72941,6 +74027,11 @@ const html = `<!doctype html>
         const normalizedPlanId = normalizeSettingsTierId(currentPlanId) || "free";
         const isOnPaidPlan = normalizedPlanId !== "free";
         const individualPlan = SETTINGS_PLAN_CATALOG.find((plan) => plan.id === "individual") || SETTINGS_PLAN_CATALOG[0];
+        const individualPlanFeatures = [
+          "More compute for heavier daily usage",
+          "A cleaner fit once you start running the platform as your main workspace",
+          "More room for bigger agents, richer environments, and longer project-driven execution",
+        ];
         const buildSnapshot = useCallback((nextStepIndex = stepIndex) => ({
           stepIndex: nextStepIndex,
         }), [stepIndex]);
@@ -72951,6 +74042,13 @@ const html = `<!doctype html>
           }
           writePlaygroundOnboardingState(buildSnapshot());
         }, [buildSnapshot, open]);
+
+        const handleClose = useCallback(() => {
+          clearPlaygroundOnboardingState();
+          if (typeof onClose === "function") {
+            onClose();
+          }
+        }, [onClose]);
 
         useEffect(() => {
           if (!open) {
@@ -72964,14 +74062,7 @@ const html = `<!doctype html>
           }
           window.addEventListener("keydown", handleKeyDown);
           return () => window.removeEventListener("keydown", handleKeyDown);
-        }, [open]);
-
-        const handleClose = useCallback(() => {
-          clearPlaygroundOnboardingState();
-          if (typeof onClose === "function") {
-            onClose();
-          }
-        }, [onClose]);
+        }, [handleClose, open]);
 
         function renderFooter(options = {}) {
           const {
@@ -73071,10 +74162,12 @@ const html = `<!doctype html>
         const conceptPages = [
           {
             key: "agents",
+            previewImage: "/img/001-docs/screen-agents.png",
+            previewAlt: "Agents screen preview",
             visual: React.createElement("div", { className: "playground-onboarding-concept-visual" },
               React.createElement("img", {
                 className: "playground-onboarding-concept-image",
-                src: PLAYGROUND_AGENTS_APP_ICON_URL,
+                src: "/img/agent-profile-pics/devastro.webp",
                 alt: "Agents",
               })
             ),
@@ -73100,6 +74193,8 @@ const html = `<!doctype html>
           },
           {
             key: "environments",
+            previewImage: "/img/001-docs/screen-environments.png",
+            previewAlt: "Environments screen preview",
             visual: React.createElement("div", { className: "playground-onboarding-concept-visual is-surface" },
               React.createElement("div", {
                 style: {
@@ -73144,6 +74239,8 @@ const html = `<!doctype html>
           },
           {
             key: "skills",
+            previewImage: "/img/001-docs/screen-skills.png",
+            previewAlt: "Skills screen preview",
             visual: React.createElement("div", { className: "playground-onboarding-concept-visual" },
               React.createElement("img", {
                 className: "playground-onboarding-concept-image",
@@ -73171,6 +74268,8 @@ const html = `<!doctype html>
           },
           {
             key: "projects",
+            previewImage: "/img/001-docs/screen-projects.png",
+            previewAlt: "Projects screen preview",
             visual: React.createElement("div", { className: "playground-onboarding-concept-visual is-surface" },
               React.createElement(Rocket, { className: "playground-onboarding-concept-icon", strokeWidth: 1.75 })
             ),
@@ -73194,14 +74293,16 @@ const html = `<!doctype html>
           },
           {
             key: "individual",
+            previewImage: "/img/001-docs/screen-agents.png",
+            previewAlt: "Plan screen preview",
             visual: React.createElement("div", { className: "playground-onboarding-concept-visual is-surface" },
               React.createElement(Sparkles, { className: "playground-onboarding-concept-icon", strokeWidth: 1.75 })
             ),
-            title: isOnPaidPlan ? "You already have a paid plan" : "Upgrade when you want more headroom",
+            title: isOnPaidPlan ? "You already have a paid plan" : "Special offer: get 14 days free",
             copy: isOnPaidPlan
               ? "Your account already has the upgraded plan, so you’re ready to use the full platform without changing anything."
-              : "Individual is the clean next step once you start using Agentic Compute Platform as your main workspace. It gives you more compute and room to run the platform more seriously.",
-            actionLabel: isOnPaidPlan ? "Enter playground" : "Upgrade to Individual",
+              : "Start Individual with a 14-day free trial and keep the extra compute, richer environments, and workspace headroom once you decide to continue.",
+            actionLabel: isOnPaidPlan ? "Enter ACP" : "Upgrade to Individual",
             details: [],
           },
         ];
@@ -73216,56 +74317,41 @@ const html = `<!doctype html>
               onClick: (event) => event.stopPropagation(),
             },
               React.createElement("div", { className: "playground-onboarding-header" },
-                React.createElement("div", { className: "playground-onboarding-header-copy" },
-                  React.createElement("div", { className: "playground-onboarding-title-wrap" },
-                    React.createElement("div", { className: "playground-onboarding-kicker" }, "Agentic Compute Platform"),
-                    React.createElement("h2", { className: "playground-onboarding-title" }, "Set up your runner workspace")
+                React.createElement("div", { className: "playground-onboarding-header-top" },
+                  React.createElement("div", { className: "playground-onboarding-header-copy" },
+                    React.createElement("div", { className: "playground-onboarding-title-wrap" },
+                      React.createElement("div", { className: "playground-onboarding-kicker" }, "Agentic Compute Platform"),
+                      React.createElement("h2", { className: "playground-onboarding-title" }, currentPage.title)
+                    )
                   ),
-                  React.createElement("div", { className: "playground-onboarding-step-meta" },
-                    React.createElement("div", { className: "playground-onboarding-progress" },
-                      React.createElement("div", { className: "playground-onboarding-progress-track" },
-                        React.createElement("div", {
-                          className: "playground-onboarding-progress-fill",
-                          style: { width: (((stepIndex + 1) / totalSteps) * 100) + "%" },
-                        })
-                      ),
-                      React.createElement("div", { className: "playground-onboarding-progress-label" }, currentPage.title)
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-close",
+                    onClick: handleClose,
+                    "aria-label": "Close onboarding",
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.9 }))
+                ),
+                React.createElement("div", { className: "playground-onboarding-step-meta" },
+                  React.createElement("div", { className: "playground-onboarding-progress" },
+                    React.createElement("div", { className: "playground-onboarding-progress-track" },
+                      React.createElement("div", {
+                        className: "playground-onboarding-progress-fill",
+                        style: { width: (((stepIndex + 1) / totalSteps) * 100) + "%" },
+                      })
                     )
                   )
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-onboarding-close",
-                  onClick: handleClose,
-                  "aria-label": "Close onboarding",
-                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.9 }))
+                )
               ),
               React.createElement("div", { className: "playground-onboarding-body" },
                 React.createElement("div", { className: "playground-onboarding-concept-step" },
-                  React.createElement("div", { className: "playground-onboarding-concept-center" },
-                    currentPage.visual,
-                    React.createElement("h3", { className: "playground-onboarding-concept-title" }, currentPage.title),
-                    React.createElement("p", { className: "playground-onboarding-concept-copy" }, currentPage.copy)
-                  ),
-                  stepIndex === totalSteps - 1
-                    ? React.createElement("div", { className: "playground-onboarding-plan-panel" },
-                        React.createElement("div", { className: "playground-onboarding-sdk-card" },
-                          React.createElement("div", { className: "playground-onboarding-sdk-title" }, individualPlan.name + " Plan"),
-                          React.createElement("div", { className: "playground-onboarding-plan-price" },
-                            "$" + individualPlan.monthlyPrice
-                          ),
-                          React.createElement("div", { className: "playground-onboarding-plan-price-copy" }, "per month"),
-                          React.createElement("p", { className: "playground-onboarding-sdk-note" },
-                            individualPlan.description || "Personal access with more compute and room to scale."
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-onboarding-sdk-card" },
-                          React.createElement("ul", { className: "playground-onboarding-plan-features" },
-                            [
-                              "More compute for heavier daily usage",
-                              "A cleaner fit once you start running the platform as your main workspace",
-                              "More room for bigger agents, richer environments, and longer project-driven execution",
-                            ].map((feature) =>
+                  React.createElement("div", { className: "playground-onboarding-concept-hero" },
+                    React.createElement("div", { className: "playground-onboarding-concept-copy-column" },
+                      React.createElement("p", { className: "playground-onboarding-concept-copy" }, currentPage.copy),
+                      stepIndex === totalSteps - 1
+                        ? React.createElement("ul", {
+                            className: "playground-onboarding-plan-features playground-onboarding-plan-features-inline",
+                          },
+                            individualPlanFeatures.map((feature) =>
                               React.createElement("li", {
                                 key: feature,
                                 className: "playground-onboarding-plan-feature",
@@ -73275,8 +74361,50 @@ const html = `<!doctype html>
                               )
                             )
                           )
+                        : null
+                    ),
+                    stepIndex === totalSteps - 1
+                      ? React.createElement("div", { className: "playground-onboarding-sdk-card" },
+                          !isOnPaidPlan
+                            ? React.createElement("div", { className: "playground-onboarding-plan-offer" }, "14 Days Free")
+                            : null,
+                          React.createElement("div", { className: "playground-onboarding-sdk-title" }, individualPlan.name + " Plan"),
+                          React.createElement("div", { className: "playground-onboarding-plan-price" },
+                            "$" + individualPlan.monthlyPrice
+                          ),
+                          React.createElement("div", { className: "playground-onboarding-plan-price-copy" },
+                            isOnPaidPlan ? "per month" : "14 days free, then $" + individualPlan.monthlyPrice + " / month"
+                          ),
+                          React.createElement("p", { className: "playground-onboarding-sdk-note" },
+                            isOnPaidPlan
+                              ? (individualPlan.description || "Personal access with more compute and room to scale.")
+                              : "Claim the onboarding offer now and start with the full Individual workspace before your first charge."
+                          ),
+                          !isOnPaidPlan
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "playground-onboarding-button playground-onboarding-plan-cta",
+                                onClick: () => {
+                                  if (typeof onUpgradeToIndividual === "function") {
+                                    void Promise.resolve(onUpgradeToIndividual());
+                                  }
+                                },
+                              }, "Get 14 Days for free")
+                            : null
                         )
+                      : React.createElement("div", { className: "playground-onboarding-concept-preview-panel" },
+                          React.createElement("div", { className: "playground-onboarding-concept-preview-image" },
+                            React.createElement("img", {
+                              className: "playground-onboarding-concept-preview-asset",
+                              src: currentPage.previewImage || "/img/001-docs/screen-agents.png",
+                              alt: currentPage.previewAlt || "Preview",
+                            })
+                          )
                       )
+                    
+                  ),
+                  stepIndex === totalSteps - 1
+                    ? null
                     : React.createElement("div", { className: "playground-onboarding-detail-grid" },
                         currentPage.details.map((detail) =>
                           React.createElement("div", {
@@ -73291,7 +74419,7 @@ const html = `<!doctype html>
                   renderFooter(
                     stepIndex === totalSteps - 1
                       ? {
-                          primaryLabel: isOnPaidPlan ? "Enter playground" : "Upgrade to Individual",
+                          primaryLabel: isOnPaidPlan ? "Enter ACP" : "Upgrade to Individual",
                           onPrimary: isOnPaidPlan
                             ? handleClose
                             : () => {
@@ -73329,6 +74457,7 @@ const html = `<!doctype html>
         const [renderedAccountMenu, setRenderedAccountMenu] = useState(false);
         const [accountMenuPhase, setAccountMenuPhase] = useState("idle");
         const [showPlaygroundOnboarding, setShowPlaygroundOnboarding] = useState(() => readCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM) === "true");
+        const [showSubscriptionSuccessModal, setShowSubscriptionSuccessModal] = useState(() => readCurrentSearchParam(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM) === "true");
         const [threadSearchOpen, setThreadSearchOpen] = useState(false);
         const [threadSearchQuery, setThreadSearchQuery] = useState("");
         const [profileEditorOpen, setProfileEditorOpen] = useState(false);
@@ -73378,6 +74507,7 @@ const html = `<!doctype html>
           emailVerified: false,
           subscriptionTier: isDemoMode ? "enterprise" : "free",
           subscriptionStatus: isDemoMode ? "active" : "",
+          onboardingCompleted: null,
           error: "",
         });
         const [platformAuthForm, setPlatformAuthForm] = useState({
@@ -73519,6 +74649,10 @@ const html = `<!doctype html>
         const [settingsInferenceApiKeyInput, setSettingsInferenceApiKeyInput] = useState("");
         const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);
         const [settingsInferenceApiKeyEditing, setSettingsInferenceApiKeyEditing] = useState(false);
+        const [pluginsSearchQuery, setPluginsSearchQuery] = useState("");
+        const [selectedPluginId, setSelectedPluginId] = useState("");
+        const [pluginsHeroSlideIndex, setPluginsHeroSlideIndex] = useState(0);
+        const [pluginsNavPopover, setPluginsNavPopover] = useState("");
         const [settingsCheckoutLoading, setSettingsCheckoutLoading] = useState(false);
         const [settingsSubscriptionActionId, setSettingsSubscriptionActionId] = useState("");
         const [settingsTopUpActionId, setSettingsTopUpActionId] = useState("");
@@ -73541,6 +74675,8 @@ const html = `<!doctype html>
         const [settingsTriggersLoading, setSettingsTriggersLoading] = useState(false);
         const [settingsTriggersError, setSettingsTriggersError] = useState("");
         const [settingsTriggersSuccess, setSettingsTriggersSuccess] = useState("");
+        const pluginsNavActionsRef = useRef(null);
+        const pluginsSearchPopupInputRef = useRef(null);
         const [settingsSelectedTriggerId, setSettingsSelectedTriggerId] = useState("");
         const [settingsShowTriggerSecret, setSettingsShowTriggerSecret] = useState(false);
         const [settingsCopiedField, setSettingsCopiedField] = useState("");
@@ -73671,6 +74807,7 @@ const html = `<!doctype html>
             : buildWelcomeGreeting(sessionState.displayName, sessionState.email || "")
         ), [hasDemoAccess, sessionState.displayName, sessionState.email]);
         const initialThreadPlanLabel = hasShellAccess ? accountTier + " Plan" : "";
+        const isInitialThreadOnFreePlan = hasShellAccess && (normalizeSettingsTierId(sessionState.subscriptionTier || "free") || "free") === "free";
         const showInitialThreadWelcome = activePage === "thread" && hasShellAccess && !currentThreadId;
         function buildPlaygroundEnvironmentWarmRequestKey(environmentId) {
           return JSON.stringify({
@@ -74019,6 +75156,7 @@ const html = `<!doctype html>
             emailVerified: false,
             subscriptionTier: "free",
             subscriptionStatus: "",
+            onboardingCompleted: null,
             error: "",
           });
           redirectToAiosLogin({ replace: true });
@@ -74060,6 +75198,7 @@ const html = `<!doctype html>
               emailVerified: false,
               subscriptionTier: "free",
               subscriptionStatus: "",
+              onboardingCompleted: null,
               error: "",
             });
             setPlatformAuthBusy("");
@@ -74071,6 +75210,34 @@ const html = `<!doctype html>
           clearPlaygroundOnboardingState();
           removeCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM);
           setShowPlaygroundOnboarding(false);
+          if (sessionState.status === "authenticated" && sessionState.onboardingCompleted === false) {
+            setSessionState((current) => ({
+              ...current,
+              onboardingCompleted: true,
+            }));
+            void fetchJsonWithTimeout("/api/aios/user/profile", {
+              method: "PATCH",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                onboardingCompleted: true,
+              }),
+            }, 15000).catch(() => {});
+          }
+        }
+
+        function closeSubscriptionSuccessModal() {
+          removeCurrentSearchParam(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM);
+          setShowSubscriptionSuccessModal(false);
+        }
+
+        function handleOpenSubscriptionSuccessBilling() {
+          closeSubscriptionSuccessModal();
+          setActivePage("settings");
+          setSettingsSection("costs-plans");
         }
 
         function openThreadSearch() {
@@ -74162,6 +75329,7 @@ const html = `<!doctype html>
         useEffect(() => {
           function syncPlaygroundOnboardingFromUrl() {
             setShowPlaygroundOnboarding(readCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM) === "true");
+            setShowSubscriptionSuccessModal(readCurrentSearchParam(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM) === "true");
           }
 
           window.addEventListener("popstate", syncPlaygroundOnboardingFromUrl);
@@ -74178,6 +75346,30 @@ const html = `<!doctype html>
           setThreadActionMenuState(null);
           setThreadNavMenuOpen(false);
         }, [showPlaygroundOnboarding]);
+
+        useEffect(() => {
+          if (!showSubscriptionSuccessModal) {
+            return;
+          }
+          setAccountMenuOpen(false);
+          setThreadSearchOpen(false);
+          setProfileEditorOpen(false);
+          setThreadActionMenuState(null);
+          setThreadNavMenuOpen(false);
+        }, [showSubscriptionSuccessModal]);
+
+        useEffect(() => {
+          if (sessionState.status !== "authenticated") {
+            return;
+          }
+          if (sessionState.onboardingCompleted !== false) {
+            return;
+          }
+          if (showPlaygroundOnboarding) {
+            return;
+          }
+          setShowPlaygroundOnboarding(true);
+        }, [sessionState.onboardingCompleted, sessionState.status, showPlaygroundOnboarding]);
 
         useEffect(() => {
           if (!threadSearchOpen) {
@@ -74226,6 +75418,11 @@ const html = `<!doctype html>
           setAccountMenuOpen(false);
           setActivePage("settings");
           setSettingsSection(nextSectionId);
+        }
+
+        function openPluginsPage() {
+          setAccountMenuOpen(false);
+          setActivePage("plugins");
         }
 
         function openHelpPage() {
@@ -74938,6 +76135,7 @@ const html = `<!doctype html>
               emailVerified: false,
               subscriptionTier: "enterprise",
               subscriptionStatus: "active",
+              onboardingCompleted: null,
               error: "",
             });
             return;
@@ -75029,6 +76227,7 @@ const html = `<!doctype html>
                 emailVerified: false,
                 subscriptionTier: "free",
                 subscriptionStatus: "",
+                onboardingCompleted: null,
                 error: data.message || data.error || "Failed to load account session.",
               });
               return;
@@ -75114,6 +76313,7 @@ const html = `<!doctype html>
                   : (typeof payloadIdentity.emailVerified === "boolean" ? payloadIdentity.emailVerified : !!data.emailVerified),
               subscriptionTier: resolvedSubscriptionTier,
               subscriptionStatus: resolvedSubscriptionStatus,
+              onboardingCompleted: typeof data?.onboardingCompleted === "boolean" ? data.onboardingCompleted : null,
               error: "",
             });
           } catch (error) {
@@ -75142,6 +76342,7 @@ const html = `<!doctype html>
                     : current.emailVerified,
                 subscriptionTier: current.subscriptionTier || "free",
                 subscriptionStatus: current.subscriptionStatus || "",
+                onboardingCompleted: current.onboardingCompleted,
                 error: "",
               }));
               return;
@@ -75163,6 +76364,7 @@ const html = `<!doctype html>
               emailVerified: false,
               subscriptionTier: "free",
               subscriptionStatus: "",
+              onboardingCompleted: null,
               error: fallbackErrorMessage,
             });
           }
@@ -76414,6 +77616,18 @@ const html = `<!doctype html>
           setSettingsCreatingTrigger(true);
         }
 
+        function openGitLabWebhookComposer() {
+          resetSettingsTriggerForm();
+          setSettingsTriggersError("");
+          setIsSettingsTriggerPromptEditing(false);
+          setSettingsTriggerForm((current) => ({
+            ...current,
+            source: "gitlab",
+            event: getSettingsTriggerDefaultEvent("gitlab", current.actionType || "send_message"),
+          }));
+          setSettingsCreatingTrigger(true);
+        }
+
         function closeSettingsTriggerComposer() {
           if (settingsTriggerSubmitting) {
             return;
@@ -76916,6 +78130,16 @@ const html = `<!doctype html>
           setSettingsBillingError("");
           setSettingsBillingSuccess("");
           try {
+            const successUrl = (() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM, "true");
+              return url.toString();
+            })();
+            const cancelUrl = (() => {
+              const url = new URL(window.location.href);
+              url.searchParams.delete(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM);
+              return url.toString();
+            })();
             const response = await fetch("/api/aios/lemonsqueezy/checkout", {
               method: "POST",
               credentials: "include",
@@ -76924,8 +78148,8 @@ const html = `<!doctype html>
               },
               body: JSON.stringify({
                 tier: tierId,
-                successUrl: window.location.origin + window.location.pathname,
-                cancelUrl: window.location.origin + window.location.pathname,
+                successUrl,
+                cancelUrl,
               }),
             });
             const data = await response.json().catch(() => ({}));
@@ -77406,21 +78630,7 @@ const html = `<!doctype html>
               throw new Error(purgeData?.message || purgeData?.details || purgeData?.error || "Failed to delete account data.");
             }
 
-            const deleteResponse = await fetch(buildFirebaseRestUrl("accounts:delete"), {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                idToken: signInData.idToken,
-              }),
-            });
-            const deleteData = await deleteResponse.json().catch(() => ({}));
-
-            if (!deleteResponse.ok) {
-              throw new Error(mapFirebaseAuthErrorMessage(deleteData?.error?.message, "Failed to remove the account."));
-            }
-
+            clearFirebaseSessionCookie();
             window.location.href = buildAiosLogoutUrl();
           } catch (error) {
             setSettingsDeleteError(error instanceof Error ? error.message : "Failed to delete account.");
@@ -77948,6 +79158,28 @@ const html = `<!doctype html>
         ]);
 
         useEffect(() => {
+          if (activePage !== "plugins" || !hasSessionAuth) {
+            return;
+          }
+
+          void loadSettingsEmailStatus();
+          void loadSettingsDiscordStatus();
+          void loadSettingsTelegramStatus();
+          void refreshGithubStatus();
+          void refreshGoogleDriveStatus();
+          void refreshOneDriveStatus();
+          void refreshNotionStatus();
+          void loadSettingsTriggers();
+        }, [
+          activePage,
+          hasSessionAuth,
+          loadSettingsDiscordStatus,
+          loadSettingsEmailStatus,
+          loadSettingsTelegramStatus,
+          loadSettingsTriggers,
+        ]);
+
+        useEffect(() => {
           const discordSuccess = readCurrentSearchParam("discord_success");
           const discordError = readCurrentSearchParam("discord_error");
 
@@ -77957,8 +79189,7 @@ const html = `<!doctype html>
 
           setSettingsDiscordSuccess(discordSuccess);
           setSettingsDiscordError(discordError);
-          setActivePage("settings");
-          setSettingsSection("integrations");
+          setActivePage("plugins");
           if (discordSuccess) {
             window.dispatchEvent(new CustomEvent("integrations-updated"));
           }
@@ -77971,6 +79202,61 @@ const html = `<!doctype html>
           } catch {
           }
         }, []);
+
+        useEffect(() => {
+          if (activePage === "settings" && (settingsSection === "integrations" || settingsSection === "webhooks")) {
+            setActivePage("plugins");
+          }
+        }, [activePage, settingsSection]);
+
+        useEffect(() => {
+          if (activePage !== "plugins") {
+            setSelectedPluginId("");
+            setPluginsSearchQuery("");
+            setPluginsNavPopover("");
+          }
+        }, [activePage]);
+
+        useEffect(() => {
+          if (activePage !== "plugins") {
+            return;
+          }
+
+          const intervalId = window.setInterval(() => {
+            setPluginsHeroSlideIndex((current) => (current + 1) % 3);
+          }, 3200);
+
+          return () => window.clearInterval(intervalId);
+        }, [activePage]);
+
+        useEffect(() => {
+          if (activePage !== "plugins" || !pluginsNavPopover) {
+            return;
+          }
+
+          function handlePluginsNavPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !pluginsNavActionsRef.current || pluginsNavActionsRef.current.contains(target)) {
+              return;
+            }
+            setPluginsNavPopover("");
+          }
+
+          document.addEventListener("mousedown", handlePluginsNavPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handlePluginsNavPopoverPointerDown);
+        }, [activePage, pluginsNavPopover]);
+
+        useEffect(() => {
+          if (pluginsNavPopover !== "search") {
+            return undefined;
+          }
+          const frame = window.requestAnimationFrame(() => {
+            if (pluginsSearchPopupInputRef.current) {
+              pluginsSearchPopupInputRef.current.focus();
+            }
+          });
+          return () => window.cancelAnimationFrame(frame);
+        }, [pluginsNavPopover]);
 
         useEffect(() => {
           if (activePage !== "settings" || settingsSection !== "profile") {
@@ -79391,7 +80677,6 @@ const html = `<!doctype html>
 
         function handleOpenEnvironmentsShortcut() {
           setActivePage("environments");
-          setSidebarOpen(false);
           setEnvironmentsOpenToken((current) => current + 1);
         }
 
@@ -79917,6 +81202,24 @@ const html = `<!doctype html>
             React.createElement("div", { className: "playground-settings-empty-title" }, title),
             React.createElement("div", { className: "playground-settings-empty-copy" }, copy),
             action || null
+          );
+        }
+
+        function renderWebhookEmptyState() {
+          return React.createElement("div", { className: "playground-tasks-empty" },
+            React.createElement(Webhook, { width: 28, height: 28, strokeWidth: 1.9 }),
+            React.createElement("div", { className: "playground-tasks-empty-title" }, "Create your first webhook"),
+            React.createElement("div", { className: "playground-tasks-empty-copy" }, "Webhook triggers let ACP react to external events automatically. Start with one trigger, connect a source, and route incoming events into agent work."),
+            React.createElement("div", { className: "playground-tasks-empty-actions" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-empty-primary-button",
+                onClick: openSettingsTriggerComposer,
+              },
+                React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
+                React.createElement("span", null, "New Webhook")
+              )
+            )
           );
         }
 
@@ -80751,6 +82054,1267 @@ const html = `<!doctype html>
           );
         }
 
+        function renderPluginRowLogo(plugin) {
+          if (plugin.logoUrl) {
+            return React.createElement("img", {
+              src: plugin.logoUrl,
+              alt: plugin.label,
+              className: "playground-plugin-row-logo" + (plugin.id === "github" ? " is-github" : ""),
+            });
+          }
+
+          return React.createElement("span", { className: "playground-plugin-row-fallback-logo" }, plugin.shortLabel || plugin.label.slice(0, 2));
+        }
+
+        function getPluginConnectionSummary(pluginId) {
+          if (pluginId === "email") {
+            if (settingsEmailStatus?.linked && settingsEmailStatus?.verified) {
+              return settingsEmailStatus.email || "Connected";
+            }
+            if (settingsEmailStatus?.linked && !settingsEmailStatus?.verified) {
+              return "Verification pending";
+            }
+            return "Not connected";
+          }
+          if (pluginId === "discord") {
+            return settingsDiscordStatus?.linked && settingsDiscordStatus?.verified
+              ? (settingsDiscordStatus?.discordUsername || "Connected")
+              : "Not connected";
+          }
+          if (pluginId === "telegram") {
+            return settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
+              ? getSettingsTelegramDisplayName(settingsTelegramStatus)
+              : "Not connected";
+          }
+          if (pluginId === "github") {
+            const profile = githubStatus?.profile || {};
+            return githubStatus?.connected
+              ? (profile.login || profile.email || profile.name || "Connected")
+              : "Not connected";
+          }
+          if (pluginId === "google-drive") {
+            const profile = googleDriveStatus?.profile || {};
+            return googleDriveStatus?.connected
+              ? (profile.email || profile.username || "Connected")
+              : "Not connected";
+          }
+          if (pluginId === "one-drive") {
+            const profile = oneDriveStatus?.profile || {};
+            return oneDriveStatus?.connected
+              ? (profile.email || profile.username || "Connected")
+              : "Not connected";
+          }
+          if (pluginId === "notion") {
+            const profile = notionStatus?.profile || {};
+            return notionStatus?.connected
+              ? (profile.workspaceName || profile.name || profile.email || "Connected")
+              : "Not connected";
+          }
+          if (pluginId === "gitlab") {
+            return "Available via webhooks";
+          }
+          return "Not connected";
+        }
+
+        function buildPluginsCatalog() {
+          return [
+            {
+              id: "github",
+              label: "GitHub",
+              shortLabel: "GH",
+              logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
+              description: "Browse repos, branches, and files inside ACP workspaces.",
+              connected: Boolean(githubStatus?.connected),
+              statusCopy: getPluginConnectionSummary("github"),
+              category: "Source control",
+              capabilities: [
+                "Browse repositories and branches in the file browser.",
+                "Read repository files and use them in agent tasks.",
+                "Use GitHub-based webhooks for pull request workflows.",
+              ],
+              actions: githubStatus?.connected
+                ? [{ label: "Disconnect GitHub", onClick: () => { void handleGithubAuthDisconnect(); }, tone: "destructive" }]
+                : [{ label: "Connect GitHub", onClick: () => { void handleGithubAuthConnect(); }, tone: "primary" }],
+            },
+            {
+              id: "gitlab",
+              label: "GitLab",
+              shortLabel: "GL",
+              logoUrl: PLAYGROUND_GITLAB_LOGO_URL,
+              description: "Trigger threads and merge request comments from GitLab webhooks.",
+              connected: false,
+              statusCopy: getPluginConnectionSummary("gitlab"),
+              category: "Automation",
+              capabilities: [
+                "Receive push, merge request, note, and pipeline events.",
+                "Start agent threads or comment back on merge requests.",
+                "Configure delivery through ACP webhook endpoints.",
+              ],
+              actions: [{ label: "Create GitLab Webhook", onClick: () => { setSelectedPluginId(""); openGitLabWebhookComposer(); }, tone: "primary" }],
+            },
+            {
+              id: "notion",
+              label: "Notion",
+              shortLabel: "N",
+              logoUrl: PLAYGROUND_NOTION_LOGO_URL,
+              description: "Use connected Notion databases and pages inside agent work.",
+              connected: Boolean(notionStatus?.connected),
+              statusCopy: getPluginConnectionSummary("notion"),
+              category: "Knowledge",
+              capabilities: [
+                "Browse Notion databases in the connector browser.",
+                "Reference workspace knowledge during tasks.",
+                "Keep structured docs available to agents.",
+              ],
+              actions: notionStatus?.connected
+                ? [{ label: "Disconnect Notion", onClick: () => { void handleNotionAuthDisconnect(); }, tone: "destructive" }]
+                : [{ label: "Connect Notion", onClick: () => { void handleNotionAuthConnect(); }, tone: "primary" }],
+            },
+            {
+              id: "google-drive",
+              label: "Google Drive",
+              shortLabel: "GD",
+              logoUrl: PLAYGROUND_GOOGLE_DRIVE_LOGO_URL,
+              description: "Open Drive files directly in ACP and share them with agents.",
+              connected: Boolean(googleDriveStatus?.connected),
+              statusCopy: getPluginConnectionSummary("google-drive"),
+              category: "Storage",
+              capabilities: [
+                "Browse files and folders from My Drive.",
+                "Download file previews into current tasks.",
+                "Manage granted file access from ACP.",
+              ],
+              actions: googleDriveStatus?.connected
+                ? [
+                    { label: "Manage access", onClick: () => { void handleGoogleDriveManageAccess(); } },
+                    { label: "Disconnect Google Drive", onClick: () => { void handleGoogleDriveAuthDisconnect(); }, tone: "destructive" },
+                  ]
+                : [{ label: "Connect Google Drive", onClick: () => { void handleGoogleDriveAuthConnect(); }, tone: "primary" }],
+            },
+            {
+              id: "one-drive",
+              label: "OneDrive",
+              shortLabel: "OD",
+              logoUrl: PLAYGROUND_ONEDRIVE_LOGO_URL,
+              description: "Access OneDrive folders and files from your ACP workspace.",
+              connected: Boolean(oneDriveStatus?.connected),
+              statusCopy: getPluginConnectionSummary("one-drive"),
+              category: "Storage",
+              capabilities: [
+                "Browse folders and files from OneDrive.",
+                "Download documents into current agent tasks.",
+                "Keep Microsoft-hosted files available to ACP.",
+              ],
+              actions: oneDriveStatus?.connected
+                ? [{ label: "Disconnect OneDrive", onClick: () => { void handleOneDriveAuthDisconnect(); }, tone: "destructive" }]
+                : [{ label: "Connect OneDrive", onClick: () => { void handleOneDriveAuthConnect(); }, tone: "primary" }],
+            },
+            {
+              id: "discord",
+              label: "Discord",
+              shortLabel: "D",
+              logoUrl: "/img/logos/discord.svg",
+              description: "Run tasks and receive updates through Discord slash commands.",
+              connected: Boolean(settingsDiscordStatus?.linked && settingsDiscordStatus?.verified),
+              statusCopy: getPluginConnectionSummary("discord"),
+              category: "Channels",
+              capabilities: [
+                "Run agent tasks from Discord slash commands.",
+                "Check status, recent runs, agents, and environments.",
+                "Receive asynchronous updates in Discord.",
+              ],
+              actions: settingsDiscordStatus?.linked && settingsDiscordStatus?.verified
+                ? [{ label: "Disconnect Discord", onClick: () => { void handleSettingsUnlinkDiscord(); }, tone: "destructive" }]
+                : [{ label: "Connect Discord", onClick: () => { void handleSettingsLinkDiscord(); }, tone: "primary" }],
+            },
+            {
+              id: "telegram",
+              label: "Telegram",
+              shortLabel: "TG",
+              logoUrl: "/img/logos/telegram.svg",
+              description: "Run tasks and receive updates through the ACP Telegram bot.",
+              connected: Boolean(settingsTelegramStatus?.linked && settingsTelegramStatus?.verified),
+              statusCopy: getPluginConnectionSummary("telegram"),
+              category: "Channels",
+              capabilities: [
+                "Run agent tasks and query run status from Telegram.",
+                "Use the ACP bot to manage environments and agents.",
+                "Link the bot with a short verification code.",
+              ],
+              actions: settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
+                ? [{ label: "Disconnect Telegram", onClick: () => { void handleSettingsUnlinkTelegram(); }, tone: "destructive" }]
+                : [{ label: "Open Telegram link flow", onClick: () => { setSelectedPluginId("telegram"); }, tone: "primary" }],
+            },
+            {
+              id: "email",
+              label: "Email",
+              shortLabel: "EM",
+              logoUrl: "/img/logos/mailicon.webp",
+              description: "Send tasks, files, and replies through your ACP email channel.",
+              connected: Boolean(settingsEmailStatus?.linked && settingsEmailStatus?.verified),
+              statusCopy: getPluginConnectionSummary("email"),
+              category: "Channels",
+              capabilities: [
+                "Send tasks from email subject or body.",
+                "Attach files and continue existing threads by reply.",
+                "Receive verification and notification emails.",
+              ],
+              actions: settingsEmailStatus?.linked && settingsEmailStatus?.verified
+                ? [{ label: "Disconnect Email", onClick: () => { void handleSettingsUnlinkEmail(); }, tone: "destructive" }]
+                : [{ label: "Open email link flow", onClick: () => { setSelectedPluginId("email"); }, tone: "primary" }],
+            },
+          ];
+        }
+
+        function renderPluginModal(selectedPlugin) {
+          if (!selectedPlugin) {
+            return null;
+          }
+
+          let body = null;
+          if (selectedPlugin.id === "email") {
+            body = React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-plugin-modal-section" },
+                React.createElement("h4", { className: "playground-plugin-modal-section-title" }, "Use cases"),
+                React.createElement("ul", { className: "playground-plugin-modal-list" },
+                  selectedPlugin.capabilities.map((item, index) =>
+                    React.createElement("li", { key: "email-capability:" + index }, item)
+                  )
+                )
+              ),
+              settingsEmailLoading
+                ? React.createElement("div", { className: "playground-settings-integration-loading" },
+                    React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                  )
+                : settingsEmailStatus?.linked && settingsEmailStatus?.verified
+                  ? React.createElement("div", { className: "playground-plugin-modal-section" },
+                      React.createElement("h4", { className: "playground-plugin-modal-section-title" }, "Connected email"),
+                      React.createElement("div", { className: "playground-plugin-modal-meta" },
+                        React.createElement("div", { className: "playground-plugin-modal-meta-item" },
+                          React.createElement("div", { className: "playground-plugin-modal-meta-label" }, "Linked address"),
+                          React.createElement("div", { className: "playground-plugin-modal-meta-value" }, settingsEmailStatus.email || "Connected")
+                        ),
+                        React.createElement("div", { className: "playground-plugin-modal-meta-item" },
+                          React.createElement("div", { className: "playground-plugin-modal-meta-label" }, "Agent inbox"),
+                          React.createElement("div", { className: "playground-plugin-modal-meta-value" }, "[agent-name]@agent.computer-agents.com")
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-plugin-modal-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-plugin-modal-button is-destructive",
+                          onClick: () => {
+                            void handleSettingsUnlinkEmail();
+                          },
+                          disabled: settingsIsUnlinkingEmail,
+                        }, settingsIsUnlinkingEmail ? "Disconnecting..." : "Disconnect Email")
+                      )
+                    )
+                  : settingsShowEmailVerificationInput || (settingsEmailStatus?.linked && !settingsEmailStatus?.verified)
+                    ? React.createElement("div", { className: "playground-plugin-modal-section" },
+                        React.createElement("h4", { className: "playground-plugin-modal-section-title" }, "Verify email"),
+                        React.createElement("div", { className: "playground-settings-integration-notice is-warning" }, "A verification code has been sent to your email. Enter it below to complete linking."),
+                        React.createElement("div", { className: "playground-settings-integration-form-row" },
+                          React.createElement("input", {
+                            type: "text",
+                            value: settingsEmailVerificationCodeInput,
+                            onChange: (event) => setSettingsEmailVerificationCodeInput(event.target.value),
+                            placeholder: "Enter 6-digit code",
+                            maxLength: 6,
+                            className: "playground-settings-integration-input is-code",
+                          }),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-plugin-modal-button is-primary",
+                            onClick: () => {
+                              void handleSettingsVerifyEmailCode();
+                            },
+                            disabled: settingsIsVerifyingEmail || !settingsEmailVerificationCodeInput,
+                          }, settingsIsVerifyingEmail ? "Verifying..." : "Verify")
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-plugin-modal-button",
+                          onClick: () => {
+                            void handleSettingsCancelEmailVerification();
+                          },
+                        }, "Cancel")
+                      )
+                    : React.createElement("div", { className: "playground-plugin-modal-section" },
+                        React.createElement("h4", { className: "playground-plugin-modal-section-title" }, "Link email"),
+                        React.createElement("div", { className: "playground-settings-integration-form-row" },
+                          React.createElement("input", {
+                            type: "email",
+                            value: settingsEmailInput,
+                            onChange: (event) => setSettingsEmailInput(event.target.value),
+                            placeholder: "you@example.com",
+                            className: "playground-settings-integration-input is-email",
+                          }),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-plugin-modal-button is-primary",
+                            onClick: () => {
+                              void handleSettingsLinkEmail();
+                            },
+                            disabled: settingsIsLinkingEmail || !settingsEmailInput,
+                          }, settingsIsLinkingEmail ? "Linking..." : "Link Email")
+                        )
+                      ),
+              renderSettingsIntegrationMessage("error", settingsEmailError),
+              renderSettingsIntegrationMessage("success", settingsEmailSuccess)
+            );
+          } else if (selectedPlugin.id === "telegram") {
+            body = React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-plugin-modal-section" },
+                React.createElement("h4", { className: "playground-plugin-modal-section-title" }, "Use cases"),
+                React.createElement("ul", { className: "playground-plugin-modal-list" },
+                  selectedPlugin.capabilities.map((item, index) =>
+                    React.createElement("li", { key: "telegram-capability:" + index }, item)
+                  )
+                )
+              ),
+              settingsTelegramLoading
+                ? React.createElement("div", { className: "playground-settings-integration-loading" },
+                    React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                  )
+                : settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
+                  ? React.createElement("div", { className: "playground-plugin-modal-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-plugin-modal-button is-destructive",
+                        onClick: () => {
+                          void handleSettingsUnlinkTelegram();
+                        },
+                        disabled: settingsIsUnlinkingTelegram,
+                      }, settingsIsUnlinkingTelegram ? "Disconnecting..." : "Disconnect Telegram")
+                    )
+                  : React.createElement("div", { className: "playground-plugin-modal-section" },
+                      React.createElement("h4", { className: "playground-plugin-modal-section-title" }, "Link Telegram"),
+                      React.createElement("ul", { className: "playground-plugin-modal-list" },
+                        React.createElement("li", null, "Open Telegram and search for @aios_agent_bot."),
+                        React.createElement("li", null, "Send /link to the bot."),
+                        React.createElement("li", null, "Enter the verification code below.")
+                      ),
+                      React.createElement("div", { className: "playground-settings-integration-form-row" },
+                        React.createElement("input", {
+                          type: "text",
+                          value: settingsTelegramVerificationCode,
+                          onChange: (event) => setSettingsTelegramVerificationCode(event.target.value),
+                          placeholder: "Enter verification code",
+                          className: "playground-settings-integration-input",
+                          maxLength: 6,
+                        }),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-plugin-modal-button is-primary",
+                          onClick: () => {
+                            void handleSettingsVerifyTelegramCode();
+                          },
+                          disabled: settingsIsVerifyingTelegram || !settingsTelegramVerificationCode.trim(),
+                        }, settingsIsVerifyingTelegram ? "Verifying..." : "Verify")
+                      )
+                    ),
+              renderSettingsIntegrationMessage("error", settingsTelegramError),
+              renderSettingsIntegrationMessage("success", settingsTelegramSuccess)
+            );
+          } else if (selectedPlugin.id === "discord") {
+            body = React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-plugin-modal-section" },
+                React.createElement("h4", { className: "playground-plugin-modal-section-title" }, "Use cases"),
+                React.createElement("ul", { className: "playground-plugin-modal-list" },
+                  selectedPlugin.capabilities.map((item, index) =>
+                    React.createElement("li", { key: "discord-capability:" + index }, item)
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-plugin-modal-actions" },
+                selectedPlugin.actions.map((action) =>
+                  React.createElement("button", {
+                    key: selectedPlugin.id + ":" + action.label,
+                    type: "button",
+                    className: "playground-plugin-modal-button" + (action.tone === "primary" ? " is-primary" : action.tone === "destructive" ? " is-destructive" : ""),
+                    onClick: action.onClick,
+                    disabled: settingsIsLinkingDiscord || settingsIsUnlinkingDiscord,
+                  }, (settingsIsLinkingDiscord && action.tone === "primary")
+                    ? "Connecting..."
+                    : (settingsIsUnlinkingDiscord && action.tone === "destructive")
+                      ? "Disconnecting..."
+                      : action.label)
+                )
+              ),
+              renderSettingsIntegrationMessage("error", settingsDiscordError),
+              renderSettingsIntegrationMessage("success", settingsDiscordSuccess)
+            );
+          } else {
+            body = React.createElement(React.Fragment, null,
+              React.createElement("div", { className: "playground-plugin-modal-section" },
+                React.createElement("h4", { className: "playground-plugin-modal-section-title" }, "What you can do"),
+                React.createElement("ul", { className: "playground-plugin-modal-list" },
+                  selectedPlugin.capabilities.map((item, index) =>
+                    React.createElement("li", { key: selectedPlugin.id + ":capability:" + index }, item)
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-plugin-modal-actions" },
+                selectedPlugin.actions.map((action) =>
+                  React.createElement("button", {
+                    key: selectedPlugin.id + ":" + action.label,
+                    type: "button",
+                    className: "playground-plugin-modal-button" + (action.tone === "primary" ? " is-primary" : action.tone === "destructive" ? " is-destructive" : ""),
+                    onClick: action.onClick,
+                  }, action.label)
+                )
+              )
+            );
+          }
+
+          return React.createElement("div", {
+              className: "playground-plugin-modal-scrim",
+              onClick: () => setSelectedPluginId(""),
+            },
+            React.createElement("div", {
+                className: "playground-plugin-modal",
+                onClick: (event) => event.stopPropagation(),
+              },
+              React.createElement("div", { className: "playground-plugin-modal-header" },
+                React.createElement("div", { className: "playground-plugin-modal-header-copy" },
+                  React.createElement("div", { className: "playground-plugin-row-logo-shell" }, renderPluginRowLogo(selectedPlugin)),
+                  React.createElement("div", null,
+                    React.createElement("h3", { className: "playground-plugin-modal-title" }, selectedPlugin.label),
+                    React.createElement("p", { className: "playground-plugin-modal-subtitle" }, selectedPlugin.description)
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-onboarding-icon-button",
+                  onClick: () => setSelectedPluginId(""),
+                  "aria-label": "Close plugin details",
+                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+              ),
+              React.createElement("div", { className: "playground-plugin-modal-body" },
+                React.createElement("div", { className: "playground-plugin-modal-meta" },
+                  React.createElement("div", { className: "playground-plugin-modal-meta-item" },
+                    React.createElement("div", { className: "playground-plugin-modal-meta-label" }, "Status"),
+                    React.createElement("div", { className: "playground-plugin-modal-meta-value" }, selectedPlugin.statusCopy)
+                  ),
+                  React.createElement("div", { className: "playground-plugin-modal-meta-item" },
+                    React.createElement("div", { className: "playground-plugin-modal-meta-label" }, "Category"),
+                    React.createElement("div", { className: "playground-plugin-modal-meta-value" }, selectedPlugin.category)
+                  )
+                ),
+                body
+              )
+            )
+          );
+        }
+
+        function renderWebhookActionsPanel(options = {}) {
+          const embedded = Boolean(options.embedded);
+          const canCreateSettingsTrigger = Boolean(
+            String(settingsTriggerForm.name || "").trim()
+            && String(settingsTriggerForm.event || "").trim()
+            && String(settingsTriggerForm.environmentId || "").trim()
+            && String(settingsTriggerForm.message || "").trim()
+            && (settingsTriggerForm.source !== "github" || githubStatus.connected)
+          );
+
+          const settingsTriggerComposerDialog = settingsCreatingTrigger
+            ? React.createElement("div", {
+                className: "playground-modal-scrim",
+                onClick: closeSettingsTriggerComposer,
+              },
+                React.createElement("div", {
+                  className: "playground-tasks-project-modal",
+                  onClick: (event) => event.stopPropagation(),
+                },
+                  React.createElement("div", { className: "playground-tasks-project-modal-header" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-copy" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-title" }, "Create Webhook"),
+                      React.createElement("div", { className: "playground-tasks-project-modal-subtitle" }, "Route external events into a selected environment and agent.")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-project-modal-close",
+                      onClick: closeSettingsTriggerComposer,
+                      "aria-label": "Close webhook composer",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("form", {
+                    className: "playground-tasks-project-modal-form",
+                    onSubmit: (event) => {
+                      event.preventDefault();
+                      void handleSettingsCreateTrigger();
+                    },
+                  },
+                    React.createElement("div", { className: "playground-tasks-project-modal-body" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                        React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Name"),
+                        React.createElement("input", {
+                          type: "text",
+                          className: "playground-environments-input",
+                          value: settingsTriggerForm.name,
+                          onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, name: event.target.value })),
+                          placeholder: "GitHub PR Review",
+                          disabled: settingsTriggerSubmitting,
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-tasks-project-modal-grid" },
+                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Source"),
+                          React.createElement("select", {
+                            className: "playground-environments-select",
+                            value: settingsTriggerForm.source,
+                            disabled: settingsTriggerSubmitting,
+                            onChange: (event) => setSettingsTriggerForm((current) => {
+                              const nextSource = event.target.value;
+                              const nextActionType = isSettingsTriggerActionSupportedForSource(nextSource, current.actionType)
+                                ? current.actionType
+                                : "send_message";
+                              return {
+                                ...current,
+                                source: nextSource,
+                                actionType: nextActionType,
+                                event: getSettingsTriggerDefaultEvent(nextSource, nextActionType),
+                              };
+                            }),
+                          },
+                            SETTINGS_TRIGGER_SOURCE_OPTIONS.map((option) =>
+                              React.createElement("option", { key: option.value, value: option.value }, option.label)
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Event"),
+                          React.createElement("select", {
+                            className: "playground-environments-select",
+                            value: settingsTriggerForm.event,
+                            disabled: settingsTriggerSubmitting,
+                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, event: event.target.value })),
+                          },
+                            getSettingsTriggerEventOptions(settingsTriggerForm.source, settingsTriggerForm.actionType).map((eventName) =>
+                              React.createElement("option", { key: eventName, value: eventName }, eventName)
+                            )
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-tasks-project-modal-grid" },
+                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Environment"),
+                          React.createElement("select", {
+                            className: "playground-environments-select",
+                            value: settingsTriggerForm.environmentId,
+                            disabled: settingsTriggerSubmitting,
+                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, environmentId: event.target.value })),
+                          },
+                            React.createElement("option", { value: "" }, "Select environment"),
+                            runtimeEnvironments.map((environment) =>
+                              React.createElement("option", { key: environment.id, value: environment.id }, environment.name || environment.id)
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Action"),
+                          React.createElement("select", {
+                            className: "playground-environments-select",
+                            value: settingsTriggerForm.actionType,
+                            disabled: settingsTriggerSubmitting,
+                            onChange: (event) => setSettingsTriggerForm((current) => {
+                              const nextActionType = event.target.value;
+                              return {
+                                ...current,
+                                actionType: nextActionType,
+                                event: getSettingsTriggerDefaultEvent(current.source, nextActionType),
+                              };
+                            }),
+                          },
+                            SETTINGS_TRIGGER_ACTION_OPTIONS
+                              .filter((option) => isSettingsTriggerActionSupportedForSource(settingsTriggerForm.source, option.value))
+                              .map((option) => React.createElement("option", { key: option.value, value: option.value }, option.label))
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                        React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Agent"),
+                        React.createElement("select", {
+                          className: "playground-environments-select",
+                          value: settingsTriggerForm.agentId,
+                          disabled: settingsTriggerSubmitting,
+                          onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, agentId: event.target.value })),
+                        },
+                          React.createElement("option", { value: "" }, "Select agent"),
+                          runtimeAgents.map((agent) =>
+                            React.createElement("option", { key: agent.id, value: agent.id }, agent.name || agent.id)
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                        React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Message"),
+                        React.createElement("div", { className: "playground-tasks-detail-description-toolbar" },
+                          ["bold", "italic", "underline", "list"].map((action) =>
+                            React.createElement("button", {
+                              key: action,
+                              type: "button",
+                              className: "playground-tasks-detail-description-toolbar-button",
+                              onClick: () => handleSettingsTriggerPromptMarkdownFormat(action),
+                            },
+                              action === "bold" ? React.createElement(Bold, { width: 14, height: 14, strokeWidth: 1.8 })
+                                : action === "italic" ? React.createElement(Italic, { width: 14, height: 14, strokeWidth: 1.8 })
+                                : action === "underline" ? React.createElement(Underline, { width: 14, height: 14, strokeWidth: 1.8 })
+                                : React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 })
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-tasks-detail-description-editor " + (isSettingsTriggerPromptEditing ? "is-editing" : "is-preview") },
+                          React.createElement("textarea", {
+                            ref: settingsTriggerPromptTextareaRef,
+                            className: "playground-tasks-detail-description-input " + (isSettingsTriggerPromptEditing ? "is-editing" : "is-preview"),
+                            value: settingsTriggerForm.message,
+                            placeholder: getSettingsTriggerPromptPlaceholder(settingsTriggerForm.source, settingsTriggerForm.actionType),
+                            disabled: settingsTriggerSubmitting,
+                            onFocus: () => setIsSettingsTriggerPromptEditing(true),
+                            onChange: (event) => {
+                              updateSettingsTriggerPromptField(event.target.value);
+                              resizeSettingsTriggerPromptTextarea(event.currentTarget);
+                            },
+                            onBlur: () => setIsSettingsTriggerPromptEditing(false),
+                          })
+                        ),
+                        settingsTriggerForm.actionType === "comment_pull_request"
+                          ? React.createElement("div", { className: "playground-environments-muted", style: { marginTop: 8 } }, "The assistant response will be posted back to the matching GitHub pull request as a comment.")
+                          : settingsTriggerForm.actionType === "comment_merge_request"
+                            ? React.createElement("div", { className: "playground-environments-muted", style: { marginTop: 8 } }, "The assistant response will be posted back to the matching GitLab merge request as a comment.")
+                            : null
+                      ),
+                      settingsTriggerForm.source === "github"
+                        ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                            React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Filters"),
+                            !githubStatus.connected
+                              ? React.createElement("div", { className: "playground-settings-trigger-connect-card" },
+                                  React.createElement("div", { className: "playground-environments-muted" }, "Connect GitHub to choose one of your repositories for this webhook."),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-environments-action-button is-primary",
+                                    onClick: () => {
+                                      void handleGithubAuthConnect();
+                                    },
+                                    disabled: settingsTriggerSubmitting,
+                                  }, React.createElement("span", null, "Connect GitHub"))
+                                )
+                              : React.createElement(React.Fragment, null,
+                                  React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: 8 } },
+                                    React.createElement("div", { className: "playground-environments-muted" }, "GitHub is connected. Choose a repository or log out of GitHub for this webhook."),
+                                    React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-environments-action-button",
+                                      onClick: () => {
+                                        void handleGithubAuthDisconnect();
+                                      },
+                                      disabled: settingsTriggerSubmitting,
+                                    }, React.createElement("span", null, "Log out of GitHub"))
+                                  ),
+                                  React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
+                                    React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                      React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Repository"),
+                                      React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                        React.createElement("select", {
+                                          className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
+                                          value: settingsTriggerForm.filterRepo,
+                                          disabled: settingsTriggerSubmitting || settingsTriggerGithubReposLoading,
+                                          onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterRepo: event.target.value })),
+                                        },
+                                          React.createElement("option", { value: "" },
+                                            settingsTriggerGithubReposLoading
+                                              ? "Loading repositories..."
+                                              : settingsTriggerGithubRepos.length === 0
+                                                ? "No repositories found"
+                                                : "Any connected repo"
+                                          ),
+                                          settingsTriggerGithubRepos.map((repo) =>
+                                            React.createElement("option", { key: repo.id, value: repo.fullName }, repo.fullName)
+                                          )
+                                        )
+                                      )
+                                    ),
+                                    React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                      React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Branch Filter"),
+                                      React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                        React.createElement("input", {
+                                          type: "text",
+                                          className: "playground-environments-input playground-tasks-detail-fact-select",
+                                          value: settingsTriggerForm.filterBranch,
+                                          disabled: settingsTriggerSubmitting,
+                                          onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterBranch: event.target.value })),
+                                          placeholder: "main",
+                                        })
+                                      )
+                                    ),
+                                    settingsTriggerGithubReposError
+                                      ? React.createElement("div", { className: "playground-environments-muted", style: { color: "#ffb0b0" } }, settingsTriggerGithubReposError)
+                                      : null
+                                  )
+                                )
+                          )
+                        : settingsTriggerForm.source === "gitlab"
+                          ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                              React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Filters"),
+                              React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: 8 } },
+                                React.createElement("div", { className: "playground-environments-muted" }, "Set a GitLab webhook secret in ACP, then configure the project webhook in GitLab. Add a GITLAB_TOKEN secret on the selected computer if you want ACP to comment back on merge requests.")
+                              ),
+                              React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
+                                React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Project Filter"),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                    React.createElement("input", {
+                                      type: "text",
+                                      className: "playground-environments-input playground-tasks-detail-fact-select",
+                                      value: settingsTriggerForm.filterRepo,
+                                      disabled: settingsTriggerSubmitting,
+                                      onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterRepo: event.target.value })),
+                                      placeholder: "group/project",
+                                    })
+                                  )
+                                ),
+                                React.createElement("div", { className: "playground-tasks-detail-fact" },
+                                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Branch Filter"),
+                                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                                    React.createElement("input", {
+                                      type: "text",
+                                      className: "playground-environments-input playground-tasks-detail-fact-select",
+                                      value: settingsTriggerForm.filterBranch,
+                                      disabled: settingsTriggerSubmitting,
+                                      onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterBranch: event.target.value })),
+                                      placeholder: "main",
+                                    })
+                                  )
+                                )
+                              )
+                            )
+                          : null
+                    ),
+                    settingsTriggersError
+                      ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, settingsTriggersError)
+                      : null,
+                    React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        onClick: closeSettingsTriggerComposer,
+                        disabled: settingsTriggerSubmitting,
+                      }, "Cancel"),
+                      React.createElement("button", {
+                        type: "submit",
+                        className: "playground-environments-action-button is-primary",
+                        disabled: settingsTriggerSubmitting || !canCreateSettingsTrigger,
+                      }, settingsTriggerSubmitting ? "Creating..." : "Create Webhook")
+                    )
+                  )
+                )
+              )
+            : null;
+
+          const content = React.createElement(React.Fragment, null,
+            renderSettingsBanner("error", settingsTriggersError),
+            renderSettingsBanner("success", settingsTriggersSuccess),
+            settingsSelectedTrigger
+              ? (() => {
+                  const sourceMeta = getSettingsTriggerSourceMeta(settingsSelectedTrigger.source);
+                  const TriggerIcon = sourceMeta.icon;
+                  return React.createElement(React.Fragment, null,
+                    renderSettingsSectionCard(
+                      settingsSelectedTrigger.name || "Webhook",
+                      sourceMeta.label + " · " + (settingsSelectedTrigger.event || "event") + " · " + getSettingsTriggerActionLabel(settingsSelectedTrigger.action),
+                      React.createElement("div", { className: "playground-settings-card-stack" },
+                        React.createElement("div", { className: "playground-settings-inline-row" },
+                          React.createElement("div", { className: "playground-settings-inline-row-main" },
+                            React.createElement("div", { className: "playground-settings-empty-icon is-inline" },
+                              React.createElement(TriggerIcon, { width: 18, height: 18, strokeWidth: 1.8 })
+                            ),
+                            React.createElement("div", null,
+                              React.createElement("div", { className: "playground-settings-emphasis" }, settingsSelectedTrigger.name || "Webhook"),
+                              React.createElement("div", { className: "playground-settings-muted-copy" },
+                                settingsSelectedTrigger.lastTriggeredAt
+                                  ? "Last triggered " + formatSettingsDateTime(settingsSelectedTrigger.lastTriggeredAt)
+                                  : "No runs yet"
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-settings-chip-row" },
+                            renderSettingsChip(settingsSelectedTrigger.enabled ? "Enabled" : "Disabled", settingsSelectedTrigger.enabled ? "success" : "muted")
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-settings-form-grid" },
+                          React.createElement("div", { className: "playground-settings-field" },
+                            React.createElement("label", { className: "playground-settings-label" }, "Webhook URL"),
+                            React.createElement("div", { className: "playground-settings-code-row" },
+                              React.createElement("code", { className: "playground-settings-code" }, settingsSelectedTrigger.webhookUrl || "Unavailable"),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-settings-icon-button",
+                                onClick: () => {
+                                  void handleSettingsCopyField(settingsSelectedTrigger.webhookUrl, "trigger-url");
+                                },
+                              }, settingsCopiedField === "trigger-url" ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }) : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-settings-field" },
+                            React.createElement("label", { className: "playground-settings-label" }, "Webhook Secret"),
+                            React.createElement("div", { className: "playground-settings-code-row" },
+                              React.createElement("code", { className: "playground-settings-code" }, settingsShowTriggerSecret ? (settingsSelectedTrigger.webhookSecret || "Unavailable") : "••••••••••••••••••••"),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-settings-icon-button",
+                                onClick: () => setSettingsShowTriggerSecret((current) => !current),
+                              }, settingsShowTriggerSecret ? React.createElement(EyeOff, { width: 14, height: 14, strokeWidth: 1.8 }) : React.createElement(Eye, { width: 14, height: 14, strokeWidth: 1.8 })),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-settings-icon-button",
+                                onClick: () => {
+                                  void handleSettingsCopyField(settingsSelectedTrigger.webhookSecret, "trigger-secret");
+                                },
+                              }, settingsCopiedField === "trigger-secret" ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }) : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
+                            )
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-settings-form-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button",
+                          disabled: settingsTriggerActionId === settingsSelectedTrigger.id,
+                          onClick: () => {
+                            void handleSettingsToggleTrigger(settingsSelectedTrigger);
+                          },
+                        }, React.createElement("span", null, settingsTriggerActionId === settingsSelectedTrigger.id && settingsTriggerActionType === "toggle" ? "Updating..." : (settingsSelectedTrigger.enabled ? "Disable" : "Enable"))),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button is-primary",
+                          disabled: settingsTriggerActionId === settingsSelectedTrigger.id,
+                          onClick: () => {
+                            void handleSettingsTestTrigger(settingsSelectedTrigger);
+                          },
+                        }, React.createElement("span", null, settingsTriggerActionId === settingsSelectedTrigger.id && settingsTriggerActionType === "test" ? "Testing..." : "Test Fire")),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button playground-settings-danger-action",
+                          disabled: settingsTriggerActionId === settingsSelectedTrigger.id,
+                          onClick: () => {
+                            void handleSettingsDeleteTrigger(settingsSelectedTrigger);
+                          },
+                        }, React.createElement("span", null, settingsTriggerActionId === settingsSelectedTrigger.id && settingsTriggerActionType === "delete" ? "Deleting..." : "Delete"))
+                      )
+                    )
+                  );
+                })()
+              : renderSettingsSectionCard(
+                  "Webhook triggers",
+                  "Route GitHub, GitLab, Slack, and raw webhook events into agent executions.",
+                  settingsTriggersLoading
+                    ? React.createElement("div", { className: "playground-settings-loading-state" },
+                        React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                      )
+                    : settingsTriggers.length === 0
+                      ? renderWebhookEmptyState()
+                      : React.createElement("div", { className: "playground-settings-listing" },
+                          settingsTriggers.map((trigger) => {
+                            const sourceMeta = getSettingsTriggerSourceMeta(trigger.source);
+                            const TriggerIcon = sourceMeta.icon;
+                            return React.createElement("button", {
+                                key: trigger.id,
+                                type: "button",
+                                className: "playground-settings-trigger-card",
+                                onClick: () => setSettingsSelectedTriggerId(trigger.id),
+                              },
+                                React.createElement("div", { className: "playground-settings-inline-row" },
+                                  React.createElement("div", { className: "playground-settings-inline-row-main" },
+                                    React.createElement("div", { className: "playground-settings-empty-icon is-inline" },
+                                      React.createElement(TriggerIcon, { width: 18, height: 18, strokeWidth: 1.8 })
+                                    ),
+                                    React.createElement("div", null,
+                                      React.createElement("div", { className: "playground-settings-emphasis" }, trigger.name || "Webhook"),
+                                      React.createElement("div", { className: "playground-settings-muted-copy" },
+                                        sourceMeta.label + " · " + (trigger.event || "event") + " · " + getSettingsTriggerActionLabel(trigger.action) + (trigger.lastTriggeredAt ? " · " + formatSettingsDate(trigger.lastTriggeredAt) : "")
+                                      )
+                                    )
+                                  ),
+                                  React.createElement("div", { className: "playground-settings-chip-row" },
+                                    renderSettingsChip(trigger.enabled ? "Active" : "Inactive", trigger.enabled ? "success" : "muted")
+                                  )
+                                )
+                              );
+                          })
+                        )
+                ),
+            settingsTriggerComposerDialog
+          );
+
+          if (embedded) {
+            return React.createElement("section", { className: "playground-plugins-section" },
+              React.createElement("div", { className: "playground-plugins-section-header" },
+                React.createElement("div", { className: "playground-plugins-section-copy" },
+                  React.createElement("h3", { className: "playground-plugins-section-title" }, "Actions via Webhooks"),
+                  React.createElement("p", { className: "playground-plugins-section-subtitle" }, "Start agent work automatically from GitHub, GitLab, Slack, and custom webhooks.")
+                ),
+                React.createElement("div", { className: "playground-settings-actions" },
+                  settingsSelectedTrigger
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        onClick: () => {
+                          setSettingsSelectedTriggerId("");
+                          setSettingsShowTriggerSecret(false);
+                        },
+                      }, React.createElement("span", null, "Back to List"))
+                    : React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-header-icon-button is-plain",
+                        onClick: openSettingsTriggerComposer,
+                        title: "New webhook",
+                        "aria-label": "New webhook",
+                      },
+                        React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })
+                      ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-header-icon-button is-plain",
+                    onClick: () => {
+                      void loadSettingsTriggers();
+                    },
+                    title: "Refresh",
+                    "aria-label": "Refresh",
+                  },
+                    React.createElement(RefreshCw, { width: 16, height: 16, strokeWidth: 1.8 })
+                  )
+                )
+              ),
+              !settingsSelectedTrigger && !settingsTriggersLoading && settingsTriggers.length === 0
+                ? renderWebhookEmptyState()
+                : null,
+              !settingsSelectedTrigger && !settingsTriggersLoading && settingsTriggers.length === 0
+                ? settingsTriggerComposerDialog
+                : content
+            );
+          }
+
+          return React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+            renderSettingsDetailHeader(
+              "Webhooks",
+              "Create triggers that launch agent work automatically when external events arrive.",
+              React.createElement(React.Fragment, null,
+                settingsSelectedTrigger
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: () => {
+                        setSettingsSelectedTriggerId("");
+                        setSettingsShowTriggerSecret(false);
+                      },
+                    }, React.createElement("span", null, "Back to List"))
+                  : React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button is-primary",
+                      onClick: openSettingsTriggerComposer,
+                    },
+                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "New Webhook")
+                    ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => {
+                    void loadSettingsTriggers();
+                  },
+                },
+                  React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Refresh")
+                )
+              )
+            ),
+            content
+          );
+        }
+
+        function renderPluginsPageNav() {
+          const handleDisconnectAllPlugins = async () => {
+            const hasConnectedPlugin = Boolean(
+              githubStatus?.connected
+              || googleDriveStatus?.connected
+              || oneDriveStatus?.connected
+              || notionStatus?.connected
+              || (settingsEmailStatus?.linked && settingsEmailStatus?.verified)
+              || (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified)
+              || (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified)
+            );
+            if (!hasConnectedPlugin) {
+              setPluginsNavPopover("");
+              return;
+            }
+            if (!window.confirm("Disconnect all connected plugins from this account?")) {
+              return;
+            }
+            setPluginsNavPopover("");
+            if (githubStatus?.connected) {
+              await handleGithubAuthDisconnect();
+            }
+            if (googleDriveStatus?.connected) {
+              await handleGoogleDriveAuthDisconnect();
+            }
+            if (oneDriveStatus?.connected) {
+              await handleOneDriveAuthDisconnect();
+            }
+            if (notionStatus?.connected) {
+              await handleNotionAuthDisconnect();
+            }
+            if (settingsEmailStatus?.linked && settingsEmailStatus?.verified) {
+              await handleSettingsUnlinkEmail();
+            }
+            if (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified) {
+              await handleSettingsUnlinkDiscord();
+            }
+            if (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified) {
+              await handleSettingsUnlinkTelegram();
+            }
+          };
+
+          const handleDeleteAllWebhooks = async () => {
+            if (!settingsTriggers.length) {
+              setPluginsNavPopover("");
+              return;
+            }
+            if (!window.confirm("Delete all webhook actions? This cannot be undone.")) {
+              return;
+            }
+            setPluginsNavPopover("");
+            for (const trigger of settingsTriggers) {
+              await handleSettingsDeleteTrigger(trigger);
+            }
+          };
+
+          return React.createElement("div", { className: "playground-content-nav playground-tasks-project-navbar playground-tasks-project-home-navbar" },
+            React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
+              React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                React.createElement("div", { className: "playground-content-title" }, "Plugins & Actions")
+              )
+            ),
+            React.createElement("div", { className: "playground-content-nav-center" }),
+            React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions", ref: pluginsNavActionsRef },
+              React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-header-icon-button is-plain",
+                  onClick: openSettingsTriggerComposer,
+                  title: "New webhook",
+                  "aria-label": "New webhook",
+                }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
+              ),
+              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-project-search-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-header-icon-button is-plain" + (pluginsNavPopover === "search" ? " is-active" : ""),
+                  onClick: () => setPluginsNavPopover((current) => current === "search" ? "" : "search"),
+                  title: "Search plugins",
+                  "aria-label": "Search plugins",
+                }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
+                pluginsNavPopover === "search"
+                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                      React.createElement("div", { className: "playground-tasks-project-search-header" },
+                        React.createElement("div", { className: "playground-tasks-project-search-title" }, "Search Plugins"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-tasks-project-search-close",
+                          onClick: () => setPluginsNavPopover(""),
+                        }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
+                      ),
+                      React.createElement("div", { className: "playground-tasks-project-search-body" },
+                        React.createElement("div", { className: "playground-files-search-field" },
+                          React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
+                          React.createElement("input", {
+                            ref: pluginsSearchPopupInputRef,
+                            type: "text",
+                            className: "playground-files-search-field-input",
+                            placeholder: "Search by plugin name or description...",
+                            value: pluginsSearchQuery,
+                            onChange: (event) => setPluginsSearchQuery(event.target.value),
+                          })
+                        ),
+                        React.createElement("div", { className: "playground-tasks-project-search-hint" }, "Search plugins by name, category, or description.")
+                      )
+                    )
+                  : null
+              ),
+              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-header-icon-button is-plain" + (pluginsNavPopover === "menu" ? " is-active" : ""),
+                  "aria-label": "Plugins actions",
+                  "aria-expanded": pluginsNavPopover === "menu" ? "true" : "false",
+                  onClick: () => setPluginsNavPopover((current) => current === "menu" ? "" : "menu"),
+                  title: "More actions",
+                }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.75 })),
+                pluginsNavPopover === "menu"
+                  ? React.createElement("div", {
+                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                    },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row",
+                        onClick: () => {
+                          void handleDisconnectAllPlugins();
+                        },
+                      },
+                        React.createElement(Unlink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, "Disconnect all plugins")
+                        )
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                        onClick: () => {
+                          void handleDeleteAllWebhooks();
+                        },
+                      },
+                        React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, "Remove all webhooks")
+                        )
+                      )
+                    )
+                  : null
+              )
+            )
+          );
+        }
+
+        function renderPluginsPage() {
+          const pluginsCatalog = buildPluginsCatalog();
+          const normalizedQuery = String(pluginsSearchQuery || "").trim().toLowerCase();
+          const filteredPlugins = normalizedQuery
+            ? pluginsCatalog.filter((plugin) =>
+                [plugin.label, plugin.description, plugin.category]
+                  .join(" ")
+                  .toLowerCase()
+                  .includes(normalizedQuery)
+              )
+            : pluginsCatalog;
+          const selectedPlugin = pluginsCatalog.find((plugin) => plugin.id === selectedPluginId) || null;
+          const featuredPlugins = [
+            {
+              id: "calendar",
+              label: "Google Calendar",
+              logoUrl: "/img/logos/calendar.png",
+              copy: "Schedule a recurring 1:1",
+            },
+            {
+              id: "github",
+              label: "GitHub",
+              logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
+              copy: "Triages PRs, CI, and releases",
+            },
+            {
+              id: "notion",
+              label: "Notion",
+              logoUrl: PLAYGROUND_NOTION_LOGO_URL,
+              copy: "Draft specs and sync project notes",
+            },
+          ];
+          const activeFeaturedPlugin = featuredPlugins[pluginsHeroSlideIndex % featuredPlugins.length] || featuredPlugins[0];
+
+          return React.createElement("section", { className: "playground-environments-detail" },
+            React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+              React.createElement("div", { className: "playground-plugins-page" },
+                React.createElement("h2", { className: "playground-plugins-hero-heading" }, "Integrate ACP into your Daily work"),
+                React.createElement("div", { className: "playground-plugins-search-row" },
+                  React.createElement("input", {
+                    type: "search",
+                    value: pluginsSearchQuery,
+                    onChange: (event) => setPluginsSearchQuery(event.target.value),
+                    className: "playground-plugins-search",
+                    placeholder: "Search plugins",
+                  }),
+                  React.createElement("div", { className: "playground-plugins-filter" },
+                    React.createElement("span", null, "All"),
+                    React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                  )
+                ),
+                React.createElement("section", { className: "playground-plugins-hero-slider" },
+                  React.createElement("div", { className: "playground-plugins-hero-slide" },
+                    React.createElement("div", { className: "playground-plugins-hero-pill" },
+                      React.createElement("img", {
+                        src: activeFeaturedPlugin.logoUrl,
+                        alt: activeFeaturedPlugin.label,
+                        style: activeFeaturedPlugin.id === "github" ? { filter: "brightness(0) invert(1)" } : undefined,
+                      }),
+                      React.createElement("span", null, activeFeaturedPlugin.label),
+                      React.createElement("span", { style: { color: "rgba(17,17,17,0.72)" } }, activeFeaturedPlugin.copy)
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-plugins-hero-cta",
+                      onClick: () => {
+                        const pluginMatch = pluginsCatalog.find((plugin) => plugin.id === activeFeaturedPlugin.id || plugin.label === activeFeaturedPlugin.label);
+                        if (pluginMatch) {
+                          setSelectedPluginId(pluginMatch.id);
+                        }
+                      },
+                    },
+                      React.createElement(Link2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Try in ACP")
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-plugins-hero-dots" },
+                    featuredPlugins.map((plugin, index) =>
+                      React.createElement("button", {
+                        key: plugin.id,
+                        type: "button",
+                        className: "playground-plugins-hero-dot" + (index === pluginsHeroSlideIndex % featuredPlugins.length ? " is-active" : ""),
+                        onClick: () => setPluginsHeroSlideIndex(index),
+                        "aria-label": "Show " + plugin.label,
+                      })
+                    )
+                  )
+                ),
+                React.createElement("section", { className: "playground-plugins-section" },
+                  React.createElement("div", { className: "playground-plugins-section-header" },
+                    React.createElement("div", { className: "playground-plugins-section-copy" },
+                      React.createElement("h3", { className: "playground-plugins-section-title" }, "Plugins"),
+                      React.createElement("p", { className: "playground-plugins-section-subtitle" }, "Connect files, source control, and communication channels to ACP.")
+                    )
+                  ),
+                  filteredPlugins.length === 0
+                    ? React.createElement("div", { className: "playground-plugins-empty" }, "No plugins match your search.")
+                    : React.createElement("div", { className: "playground-plugins-grid" },
+                        filteredPlugins.map((plugin) =>
+                          React.createElement("button", {
+                            key: plugin.id,
+                            type: "button",
+                            className: "playground-plugin-row",
+                            onClick: () => setSelectedPluginId(plugin.id),
+                          },
+                            React.createElement("div", { className: "playground-plugin-row-copy" },
+                              React.createElement("div", { className: "playground-plugin-row-logo-shell" }, renderPluginRowLogo(plugin)),
+                              React.createElement("div", { className: "playground-plugin-row-text" },
+                                React.createElement("div", { className: "playground-plugin-row-title" }, plugin.label),
+                                React.createElement("div", { className: "playground-plugin-row-description" }, plugin.description)
+                              )
+                            ),
+                            React.createElement("span", {
+                              className: "playground-plugin-row-state" + (plugin.connected ? " is-connected" : ""),
+                            },
+                              plugin.connected
+                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 2 })
+                                : React.createElement(Plus, { width: 14, height: 14, strokeWidth: 2 })
+                            )
+                          )
+                        )
+                      )
+                ),
+                renderWebhookActionsPanel({ embedded: true }),
+                renderPluginModal(selectedPlugin)
+              )
+            )
+          );
+        }
+
         function renderSettingsPage() {
           const navigationGroups = [
             {
@@ -80765,7 +83329,6 @@ const html = `<!doctype html>
             {
               label: "System",
               items: [
-                { id: "integrations", icon: Cable, label: "Integrations", meta: "GitHub, Notion, Drive, OneDrive" },
                 { id: "webhooks", icon: Webhook, label: "Webhooks", meta: "Automation endpoints and callbacks" },
                 { id: "api", icon: Code, label: "API Keys", meta: "Manual override and backend routing" },
                 { id: "design", icon: Paintbrush, label: "Design", meta: "Playground presentation and mode" },
@@ -80839,6 +83402,14 @@ const html = `<!doctype html>
                 const hasPaidActiveSubscription = settingsSubscriptions.some((subscription) =>
                   ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase()) && !subscription.cancelled
                 );
+                const currentCancelledSubscription = settingsSubscriptions.find((subscription) =>
+                  normalizeSettingsTierId(subscription?.tier) === userTier
+                  && subscription?.cancelled
+                  && (!subscription?.endsAt || new Date(subscription.endsAt) > new Date())
+                ) || null;
+                const currentCancelledSubscriptionCopy = currentCancelledSubscription?.endsAt
+                  ? "Your " + tierInfo.name + " subscription has been cancelled and remains active until " + formatSettingsDate(currentCancelledSubscription.endsAt) + "."
+                  : "Your " + tierInfo.name + " subscription has been cancelled and remains active until the end of the current billing period.";
 
                 const renderPlanCards = React.createElement("div", { className: "playground-settings-plan-grid" },
                   SETTINGS_PLAN_CATALOG.map((plan) => {
@@ -81177,6 +83748,15 @@ const html = `<!doctype html>
                       : React.createElement("div", { className: "playground-settings-plan-app-shell" },
                           renderSettingsBanner("error", settingsBillingError),
                           renderSettingsBanner("success", settingsBillingSuccess),
+                          currentCancelledSubscription
+                            ? React.createElement("div", { className: "playground-settings-plan-system-note is-cancelled" },
+                                React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "CT"),
+                                React.createElement("div", null,
+                                  React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription cancelled"),
+                                  React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, currentCancelledSubscriptionCopy)
+                                )
+                              )
+                            : null,
                           React.createElement("section", { className: "playground-settings-plans-budget-card playground-computer-details-card" },
                             React.createElement("div", { className: "playground-settings-plans-budget-card-top" },
                               React.createElement("div", { className: "playground-settings-plans-budget-copy" },
@@ -82925,16 +85505,7 @@ const html = `<!doctype html>
                               React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
                             )
                           : settingsTriggers.length === 0
-                            ? renderSettingsEmptyState(
-                                Webhook,
-                                "No webhook triggers yet",
-                                "Create a trigger to start work automatically when external events arrive.",
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-environments-action-button is-primary",
-                                  onClick: openSettingsTriggerComposer,
-                                }, React.createElement("span", null, "Create Webhook"))
-                              )
+                            ? renderWebhookEmptyState()
                             : React.createElement("div", { className: "playground-settings-listing" },
                                 settingsTriggers.map((trigger) => {
                                   const sourceMeta = getSettingsTriggerSourceMeta(trigger.source);
@@ -83870,6 +86441,9 @@ const html = `<!doctype html>
           if (activePage === "settings") {
             return "Settings";
           }
+          if (activePage === "plugins") {
+            return "Plugins & Actions";
+          }
           if (activePage === "files") {
             return "Files";
           }
@@ -84261,12 +86835,6 @@ const html = `<!doctype html>
         }, [activePage]);
 
         useEffect(() => {
-          if (activePage === "settings" || activePage === "agents") {
-            setSidebarOpen(false);
-          }
-        }, [activePage]);
-
-        useEffect(() => {
           if (!threadTaskOpenRequest) {
             return;
           }
@@ -84616,7 +87184,18 @@ const html = `<!doctype html>
           return React.createElement("div", { className: "playground-thread-welcome" },
             React.createElement("div", { className: "playground-thread-welcome-copy" },
               initialThreadPlanLabel
-                ? React.createElement("p", { className: "playground-thread-welcome-plan" }, initialThreadPlanLabel)
+                ? React.createElement("p", { className: "playground-thread-welcome-plan" },
+                    initialThreadPlanLabel,
+                    isInitialThreadOnFreePlan
+                      ? React.createElement("button", {
+                          type: "button",
+                          className: "playground-thread-welcome-plan-offer",
+                          onClick: () => {
+                            void handleSettingsSubscribe("individual");
+                          },
+                        }, " - Get 14 Days for Free")
+                      : null
+                  )
                 : null,
               React.createElement("h1", { className: "playground-thread-welcome-title" }, initialThreadGreeting)
             ),
@@ -84919,6 +87498,7 @@ const html = `<!doctype html>
               ? taskPreview.projectName.trim()
               : "Project";
             const threadMetaText = threadMetaLabel(safeThread);
+            const threadLastActivityText = formatCompactThreadActivityTime(resolveThreadSortTimestamp(safeThread));
 
             return React.createElement("div", {
               key: safeThreadId,
@@ -84958,6 +87538,12 @@ const html = `<!doctype html>
                     ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadMetaText)
                     : null
                 ),
+                threadLastActivityText
+                  ? React.createElement("span", {
+                      className: "sidebar-thread-hover-meta",
+                      title: formatThreadSearchTimestamp(resolveThreadSortTimestamp(safeThread)) || "",
+                    }, threadLastActivityText)
+                  : null,
                 canManageThread
                   ? React.createElement("button", {
                       type: "button",
@@ -84986,6 +87572,7 @@ const html = `<!doctype html>
             const isMenuOpen = canManageThread && threadActionMenuState?.threadId === fallbackSafeThreadId;
             const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === fallbackSafeThreadId;
             const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === fallbackSafeThreadId;
+            const fallbackLastActivityText = formatCompactThreadActivityTime(resolveThreadSortTimestamp(fallbackThread));
             console.error("Failed to render sidebar thread row", error, thread);
             return React.createElement("div", {
               key: fallbackSafeThreadId,
@@ -85016,6 +87603,12 @@ const html = `<!doctype html>
                     ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, fallbackMetaText)
                     : null
                 ),
+                fallbackLastActivityText
+                  ? React.createElement("span", {
+                      className: "sidebar-thread-hover-meta",
+                      title: formatThreadSearchTimestamp(resolveThreadSortTimestamp(fallbackThread)) || "",
+                    }, fallbackLastActivityText)
+                  : null,
                 canManageThread
                   ? React.createElement("button", {
                       type: "button",
@@ -85460,11 +88053,23 @@ const html = `<!doctype html>
               onUpgradeToIndividual: () => handleSettingsSubscribe("individual"),
             })
           : null;
+        const subscriptionSuccessPlanLabel = settingsCurrentTierId && settingsCurrentTierId !== "free"
+          ? formatSubscriptionTier(settingsCurrentTierId)
+          : "paid plan";
+        const renderedSubscriptionSuccessModal = showSubscriptionSuccessModal
+          ? React.createElement(PlaygroundSubscriptionSuccessModal, {
+              open: showSubscriptionSuccessModal,
+              planLabel: subscriptionSuccessPlanLabel,
+              onClose: closeSubscriptionSuccessModal,
+              onOpenBilling: handleOpenSubscriptionSuccessBilling,
+            })
+          : null;
 
         if (!hasShellAccess && (sessionState.status === "loading" || sessionState.status === "unauthenticated" || sessionState.status === "error")) {
           return React.createElement(React.Fragment, null,
             renderAuthGate(),
-            renderedPlaygroundOnboarding
+            renderedPlaygroundOnboarding,
+            renderedSubscriptionSuccessModal
           );
         }
 
@@ -85477,6 +88082,7 @@ const html = `<!doctype html>
         return (
           React.createElement(React.Fragment, null,
             renderedPlaygroundOnboarding,
+            renderedSubscriptionSuccessModal,
             renderThreadSearchPalette(),
             renderThreadActionMenu(),
             renderThreadRenameModal(),
@@ -85515,6 +88121,14 @@ const html = `<!doctype html>
                       },
                         React.createElement(Settings2, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
                         React.createElement("span", { className: "account-menu-item-label" }, "Settings")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "account-menu-item",
+                        onClick: openPluginsPage,
+                      },
+                        React.createElement(Package, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
+                        React.createElement("span", { className: "account-menu-item-label" }, "Plugins")
                       ),
                       React.createElement("button", {
                         type: "button",
@@ -85669,8 +88283,10 @@ const html = `<!doctype html>
               ),
               React.createElement("main", { className: "playground-main" },
                 React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") },
-                  activePage === "settings" || activePage === "files" || activePage === "environments" || activePage === "agents" || activePage === "skills" || activePage === "tasks" || showInitialThreadWelcome
-                    ? null
+                  activePage === "plugins"
+                    ? renderPluginsPageNav()
+                    : activePage === "settings" || activePage === "files" || activePage === "environments" || activePage === "agents" || activePage === "skills" || activePage === "tasks" || showInitialThreadWelcome
+                      ? null
                     : React.createElement("div", { className: "playground-content-nav" },
                         React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle),
                         React.createElement("div", { className: "playground-content-nav-center" },
@@ -85796,6 +88412,12 @@ const html = `<!doctype html>
                   React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") },
                     activePage === "settings"
                       ? renderSettingsPage()
+                      : activePage === "plugins"
+                        ? hasRealAccess
+                          ? renderPluginsPage()
+                          : hasDemoAccess
+                            ? renderDemoFeaturePage("skills")
+                            : renderAuthGate()
                       : activePage === "skills"
                         ? hasRealAccess
                           ? React.createElement(PlaygroundSkillsPage, {
@@ -85911,9 +88533,6 @@ const html = `<!doctype html>
                               },
                               onEnvironmentMutated: async () => {
                                 await refreshEnvironments();
-                              },
-                              onRequestSidebarCollapse: () => {
-                                setSidebarOpen(false);
                               },
                             })
                           : hasDemoAccess

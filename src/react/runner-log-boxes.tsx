@@ -2959,6 +2959,117 @@ function extractStructuredReadFilePayload(output: string): { filePath?: string; 
   return null;
 }
 
+function extractStructuredWriteFilePayload(output: string): { filePath?: string; content?: string; operation?: "created" | "modified" } | null {
+  const normalizeOperation = (value: unknown): "created" | "modified" | undefined => {
+    const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+    if (!normalized) return undefined;
+    if (normalized === "created" || normalized === "create" || normalized === "new" || normalized === "write") {
+      return "created";
+    }
+    if (
+      normalized === "modified" ||
+      normalized === "modify" ||
+      normalized === "updated" ||
+      normalized === "update" ||
+      normalized === "edit" ||
+      normalized === "edited" ||
+      normalized === "replace"
+    ) {
+      return "modified";
+    }
+    return undefined;
+  };
+
+  const visit = (value: unknown): { filePath?: string; content?: string; operation?: "created" | "modified" } | null => {
+    if (value == null) {
+      return null;
+    }
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const nested = visit(entry);
+        if (nested) {
+          return nested;
+        }
+      }
+      return null;
+    }
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) {
+        return null;
+      }
+      try {
+        return visit(JSON.parse(trimmed));
+      } catch {
+        return null;
+      }
+    }
+    if (typeof value !== "object") {
+      return null;
+    }
+
+    const record = value as Record<string, unknown>;
+    const filePathCandidate =
+      typeof record.filePath === "string" ? record.filePath
+      : typeof record.file_path === "string" ? record.file_path
+      : typeof record.path === "string" ? record.path
+      : undefined;
+    const contentCandidate =
+      typeof record.content === "string" ? record.content
+      : typeof record.text === "string" ? record.text
+      : undefined;
+    const operationCandidate =
+      normalizeOperation(record.operationKind)
+      || normalizeOperation(record.operation_kind)
+      || normalizeOperation(record.operation)
+      || normalizeOperation(record.type)
+      || normalizeOperation(record.mode);
+
+    if (filePathCandidate || contentCandidate !== undefined || operationCandidate) {
+      return {
+        ...(filePathCandidate ? { filePath: filePathCandidate } : {}),
+        ...(contentCandidate !== undefined ? { content: contentCandidate } : {}),
+        ...(operationCandidate ? { operation: operationCandidate } : {}),
+      };
+    }
+
+    const nestedCandidates = [
+      record.file,
+      record.result,
+      record.payload,
+      record.data,
+      record.structuredContent,
+      record.structured_content,
+    ];
+    for (const candidate of nestedCandidates) {
+      const nested = visit(candidate);
+      if (nested) {
+        return nested;
+      }
+    }
+    return null;
+  };
+
+  const structured = visit(output);
+  if (structured) {
+    return structured;
+  }
+
+  const fallbackFilePath = extractJsonStringFieldValue(output, ["filePath", "file_path", "path"]);
+  const fallbackContent = extractJsonStringFieldValue(output, ["content", "text"]);
+  const fallbackOperation =
+    normalizeOperation(extractJsonStringFieldValue(output, ["operationKind", "operation_kind", "operation", "type", "mode"]));
+  if (fallbackFilePath || fallbackContent !== null || fallbackOperation) {
+    return {
+      ...(fallbackFilePath ? { filePath: fallbackFilePath } : {}),
+      ...(fallbackContent !== null ? { content: fallbackContent } : {}),
+      ...(fallbackOperation ? { operation: fallbackOperation } : {}),
+    };
+  }
+
+  return null;
+}
+
 function resolveReadDocumentPreviewAttachment(
   filePath: string | undefined,
   content: string,
@@ -3176,6 +3287,8 @@ function ReadFileLogBox({
 function isWriteFileCommand(command?: string): boolean {
   if (!command) return false;
   return [
+    /^\$?\s*write_file\b/i,
+    /^\$?\s*edit_file\b/i,
     /\bcat\s+>+\s*/,
     /\becho\s+.*>+\s*/,
     /\bprintf\s+.*>+\s*/,
@@ -3260,19 +3373,41 @@ function WriteFileSingleLogBox({
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [copied, setCopied] = useState(false);
   const command = log.metadata?.command || "";
-  const filePath = (log.metadata?.filePaths?.[0] as string | undefined) || extractWriteFilePath(command) || undefined;
+  const structuredWrite = extractStructuredWriteFilePayload(stripRunnerSystemTags(String(log.metadata?.output || "")));
+  const filePath =
+    (log.metadata?.filePaths?.[0] as string | undefined)
+    || structuredWrite?.filePath
+    || extractWriteFilePath(command)
+    || undefined;
   const fileContents = log.metadata?.fileContents as Record<string, string> | undefined;
-  const fileContent = resolveFileMapValue(fileContents, filePath);
+  const fileContent = resolveFileMapValue(fileContents, filePath) ?? structuredWrite?.content;
   const output = stripRunnerSystemTags(String(fileContent || log.metadata?.output || ""));
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
-  const operation = deriveWriteOperation(command, log.metadata?.changeKinds?.[0]);
+  const operation = structuredWrite?.operation || deriveWriteOperation(command, log.metadata?.changeKinds?.[0]);
   const { diffText, additions, deletions, hasKnownCounts } = resolveWriteDiffPreview(log, filePath, output, operation);
   const imagePreviewUrl = isRunnerLogImageFilePath(filePath)
     ? buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath)
     : null;
   const previewAttachment = resolveWriteDocumentPreviewAttachment(filePath, backendUrl, environmentId);
+  const codePreviewAttachment = resolveReadCodePreviewAttachment(filePath || undefined, output, backendUrl, environmentId);
+  const detectedLanguage = detectCodeLanguage(output, filePath || undefined);
+  const languageLabel = formatCodeLanguageLabel(detectedLanguage);
   const imageLabel = operation === "created" ? "Generated Image" : "Updated Image";
+
+  useEffect(() => {
+    if (!copied) return;
+    const timeoutId = window.setTimeout(() => setCopied(false), 1200);
+    return () => window.clearTimeout(timeoutId);
+  }, [copied]);
+
+  async function handleCopy() {
+    try {
+      await copyRunnerText(output || diffText || "");
+      setCopied(true);
+    } catch {}
+  }
 
   return (
     <div className="tb-log-card">
@@ -3296,45 +3431,70 @@ function WriteFileSingleLogBox({
               loadStrategy="visible"
             />
           </div>
-        ) : (
+        ) : diffText || output ? (
           <>
-            {diffText ? (
-              <RunnerFileDiffSurface
-                filePath={filePath}
-                diffContent={diffText}
-                fileContent={output}
-                additions={hasKnownCounts ? additions : undefined}
-                deletions={hasKnownCounts ? deletions : undefined}
-                emptyMessage="Diff unavailable for this log."
-                bleed
-                collapsedPreviewLines={10}
-                controlsAccessory={
-                  previewAttachment ? (
+            <div className="tb-log-file-preview-frame">
+              <div className="tb-log-file-preview-topbar">
+                <span className="tb-log-file-preview-language">{languageLabel}</span>
+                <div className="tb-log-file-preview-actions">
+                  {codePreviewAttachment ? (
                     <button
                       type="button"
-                      className="tb-runner-diff-surface-action-button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onPreviewDocument?.(previewAttachment);
-                      }}
+                      className="tb-log-file-preview-icon-button"
+                      onClick={() => onPreviewDocument?.(codePreviewAttachment)}
+                      aria-label={`Open code preview for ${codePreviewAttachment.filename}`}
+                      title={`Open code preview for ${codePreviewAttachment.filename}`}
+                    >
+                      <ListChevronsUpDown className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
+                    </button>
+                  ) : null}
+                  {previewAttachment ? (
+                    <button
+                      type="button"
+                      className="tb-log-file-preview-icon-button"
+                      onClick={() => onPreviewDocument?.(previewAttachment)}
                       aria-label={`Preview ${previewAttachment.filename}`}
                       title={`Preview ${previewAttachment.filename}`}
                     >
-                      <Eye className="tb-runner-diff-surface-action-icon" strokeWidth={1.9} />
+                      <Eye className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
                     </button>
-                  ) : null
-                }
-              />
-            ) : output ? (
-              <>
-                <RunnerCodeViewer content={output} filePath={filePath || undefined} className="tb-log-card-code-hide-scrollbars" />
-                <div className="tb-log-card-note">Diff unavailable for this log.</div>
-              </>
-            ) : (
-              <div className="tb-log-card-empty">Diff unavailable for this log.</div>
-            )}
+                  ) : null}
+                  <button type="button" className="tb-log-file-preview-copy" onClick={handleCopy}>
+                    <Copy className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
+                    <span>{copied ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
+              </div>
+              <div className="tb-log-file-preview-body">
+                {diffText ? (
+                  <RunnerFileDiffSurface
+                    filePath={filePath}
+                    diffContent={diffText}
+                    fileContent={output}
+                    additions={hasKnownCounts ? additions : undefined}
+                    deletions={hasKnownCounts ? deletions : undefined}
+                    emptyMessage="Diff unavailable for this log."
+                    maxHeight={500}
+                    defaultExpanded
+                    hideTopbar
+                    embedded
+                  />
+                ) : (
+                  <RunnerCodeViewer
+                    key={`${filePath || "inline"}:${detectedLanguage}:write-file-preview`}
+                    content={output}
+                    filePath={filePath}
+                    language={detectedLanguage}
+                    maxHeight={500}
+                    showLineNumbers
+                    className="tb-log-card-code-hide-scrollbars"
+                  />
+                )}
+              </div>
+            </div>
           </>
+        ) : (
+          <div className="tb-log-card-empty">Diff unavailable for this log.</div>
         )}
       </LogPanel>
     </div>

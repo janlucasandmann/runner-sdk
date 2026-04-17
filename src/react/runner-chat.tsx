@@ -5120,12 +5120,23 @@ function isRedundantToolStartReasoningLog(log: RunnerLog): boolean {
   return /^running\s+[a-z0-9_-]+(?:\s|:|$)/.test(normalizedMessage);
 }
 
+function isSyntheticProgressReasoningLog(log: RunnerLog): boolean {
+  if (log.eventType !== "reasoning" && log.eventType !== "planning" && !log.isReasoning && !log.isPlanning) {
+    return false;
+  }
+
+  const metadata = log.metadata as Record<string, unknown> | null | undefined;
+  const source = typeof metadata?.source === "string" ? metadata.source.trim().toLowerCase() : "";
+  return metadata?.synthetic === true || source === "synthetic_progress";
+}
+
 function shouldDisplayTimelineLog(log: RunnerLog): boolean {
   const normalizedMessage = stripSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
   if (log.eventType === "turn_completed") return false;
   if (log.eventType === "agent_message" || log.eventType === "llm_response") return false;
   if (log.eventType === "setup" || log.eventType === "startup") return false;
   if (isInternalFileChangeLog(log)) return false;
+  if (isSyntheticProgressReasoningLog(log)) return false;
   if (isRedundantToolStartReasoningLog(log)) return false;
   if (log.eventType === "command_execution" && isBrowserSkillLaunchCommand(log.metadata?.command || log.message || "")) return false;
   if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") return false;

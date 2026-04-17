@@ -20,6 +20,8 @@ export interface RunnerFileDiffSurfaceProps {
   defaultHideUnchanged?: boolean;
   defaultExpanded?: boolean;
   controlsAccessory?: ReactNode;
+  hideTopbar?: boolean;
+  embedded?: boolean;
 }
 
 let runnerDiffSurfaceMonacoLoader: Promise<any> | null = null;
@@ -661,6 +663,8 @@ export function RunnerFileDiffSurface({
   defaultHideUnchanged = true,
   defaultExpanded,
   controlsAccessory,
+  hideTopbar = false,
+  embedded = false,
 }: RunnerFileDiffSurfaceProps) {
   mountRunnerChatStyles();
 
@@ -692,50 +696,58 @@ export function RunnerFileDiffSurface({
     return file;
   }, [displayPath, language, models.modified, models.original]);
 
+  const appliedMaxHeight = typeof maxHeight === "number" ? maxHeight : null;
+  const collapsedHeight = appliedMaxHeight !== null ? Math.min(collapsedBodyMaxHeight, appliedMaxHeight) : collapsedBodyMaxHeight;
+  const bodyStyle = isExpanded
+    ? (appliedMaxHeight !== null ? { maxHeight: `${appliedMaxHeight}px` } : undefined)
+    : { maxHeight: `${collapsedHeight}px` };
+
   return (
-    <div className={`tb-runner-diff-surface${bleed ? " is-bleed" : ""}`.trim()}>
-      <div className="tb-runner-diff-surface-topbar">
-        <div className="tb-runner-diff-surface-meta">
-          <button
-            type="button"
-            className="tb-runner-diff-surface-toggle-button"
-            onClick={() => setIsExpanded((current) => !current)}
-            aria-label={isExpanded ? "Show fewer lines" : "Show more lines"}
-            title={isExpanded ? "Show fewer lines" : "Show more lines"}
-          >
-            {isExpanded ? <ChevronDown className="tb-runner-diff-surface-icon" strokeWidth={2} /> : <ChevronRight className="tb-runner-diff-surface-icon" strokeWidth={2} />}
-          </button>
-          <span className="tb-runner-diff-surface-filename" title={displayPath}>
-            {displayPath}
-          </span>
-        </div>
-        <div className="tb-runner-diff-surface-controls">
-          <div className="tb-runner-diff-surface-view-switch">
+    <div className={`tb-runner-diff-surface${bleed ? " is-bleed" : ""}${embedded ? " is-embedded" : ""}`.trim()}>
+      {!hideTopbar ? (
+        <div className="tb-runner-diff-surface-topbar">
+          <div className="tb-runner-diff-surface-meta">
             <button
               type="button"
-              className={`tb-runner-diff-surface-view-button${viewMode === "split" ? " is-active" : ""}`.trim()}
-              onClick={() => setViewMode("split")}
+              className="tb-runner-diff-surface-toggle-button"
+              onClick={() => setIsExpanded((current) => !current)}
+              aria-label={isExpanded ? "Show fewer lines" : "Show more lines"}
+              title={isExpanded ? "Show fewer lines" : "Show more lines"}
             >
-              Split
+              {isExpanded ? <ChevronDown className="tb-runner-diff-surface-icon" strokeWidth={2} /> : <ChevronRight className="tb-runner-diff-surface-icon" strokeWidth={2} />}
             </button>
-            <button
-              type="button"
-              className={`tb-runner-diff-surface-view-button${viewMode === "unified" ? " is-active" : ""}`.trim()}
-              onClick={() => setViewMode("unified")}
-            >
-              Unified
-            </button>
+            <span className="tb-runner-diff-surface-filename" title={displayPath}>
+              {displayPath}
+            </span>
           </div>
-          <span className="tb-runner-diff-surface-diff-stats">
-            <span className="tb-runner-diff-surface-diff-count is-added">+{resolvedStats.additions}</span>
-            <span className="tb-runner-diff-surface-diff-count is-removed">-{resolvedStats.deletions}</span>
-          </span>
-          {controlsAccessory}
+          <div className="tb-runner-diff-surface-controls">
+            <div className="tb-runner-diff-surface-view-switch">
+              <button
+                type="button"
+                className={`tb-runner-diff-surface-view-button${viewMode === "split" ? " is-active" : ""}`.trim()}
+                onClick={() => setViewMode("split")}
+              >
+                Split
+              </button>
+              <button
+                type="button"
+                className={`tb-runner-diff-surface-view-button${viewMode === "unified" ? " is-active" : ""}`.trim()}
+                onClick={() => setViewMode("unified")}
+              >
+                Unified
+              </button>
+            </div>
+            <span className="tb-runner-diff-surface-diff-stats">
+              <span className="tb-runner-diff-surface-diff-count is-added">+{resolvedStats.additions}</span>
+              <span className="tb-runner-diff-surface-diff-count is-removed">-{resolvedStats.deletions}</span>
+            </span>
+            {controlsAccessory}
+          </div>
         </div>
-      </div>
+      ) : null}
       <div
         className={`tb-runner-diff-surface-body ${isExpanded ? "is-expanded" : "is-collapsed"}`.trim()}
-        style={isExpanded ? undefined : { maxHeight: `${collapsedBodyMaxHeight}px` }}
+        style={bodyStyle}
       >
         {!normalizedDiff ? (
           <div className="tb-runner-diff-surface-empty">{emptyMessage}</div>

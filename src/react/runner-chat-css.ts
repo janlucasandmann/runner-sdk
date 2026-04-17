@@ -1839,6 +1839,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-work-collapse-inner {
   overflow: hidden;
+  margin-bottom: 24px;
 }
 
 .tb-runner-chat .tb-step-row-pending-state {
@@ -2943,6 +2944,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   color: inherit;
   font-size: 12px;
   line-height: 1.5;
+  margin-bottom: 12px;
 }
 
 .tb-runner-chat .tb-log-card-state-error {
@@ -3512,6 +3514,14 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   margin: -12px -12px -12px;
 }
 
+.tb-runner-diff-surface.is-embedded {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 .tb-runner-diff-surface-topbar {
   min-height: 38px;
   display: flex;
@@ -3693,6 +3703,18 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   border-bottom-left-radius: 15px;
   border-bottom-right-radius: 15px;
   overflow: auto;
+}
+
+.tb-runner-diff-surface.is-embedded .tb-runner-diff-surface-body,
+.tb-runner-diff-surface.is-embedded .tb-runner-diff-surface-fallback {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.tb-runner-diff-surface.is-embedded .tb-runner-diff-surface-body.is-collapsed,
+.tb-runner-diff-surface.is-embedded .tb-runner-diff-surface-body.is-expanded {
+  border-radius: 0;
 }
 
 .tb-runner-diff-surface-body .diff-tailwindcss-wrapper {
@@ -4562,6 +4584,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
+  margin-bottom: 12px;
 }
 
 .tb-runner-chat .tb-message-markdown > :first-child {
@@ -4580,6 +4603,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-message-markdown-user {
   color: #fff;
   font-weight: 400;
+  margin-bottom: 0 !important;
 }
 
 .tb-runner-chat .tb-message-markdown-user .tb-message-markdown-paragraph,
