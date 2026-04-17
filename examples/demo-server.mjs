@@ -5602,6 +5602,11 @@ const html = `<!doctype html>
         padding: 0 0 26px;
       }
 
+      .playground-plugins-detail {
+        height: 100%;
+        min-height: 0;
+      }
+
       .playground-plugins-section {
         display: flex;
         flex-direction: column;
@@ -5653,9 +5658,9 @@ const html = `<!doctype html>
       }
 
       .playground-plugins-search {
-        flex: 1 1 320px;
+        width: 100%;
         min-height: 38px;
-        padding: 0 14px;
+        padding: 0 14px 0 36px;
         border-radius: 999px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.04);
@@ -5666,6 +5671,21 @@ const html = `<!doctype html>
 
       .playground-plugins-search::placeholder {
         color: rgba(255, 255, 255, 0.34);
+      }
+
+      .playground-plugins-search-shell {
+        position: relative;
+        flex: 1 1 320px;
+        max-width: 560px;
+      }
+
+      .playground-plugins-search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.42);
+        pointer-events: none;
       }
 
       .playground-plugins-filter {
@@ -5680,6 +5700,11 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.82);
         font-size: 12px;
         font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-plugins-filter-shell {
+        position: relative;
       }
 
       .playground-plugins-hero-heading {
@@ -5698,10 +5723,6 @@ const html = `<!doctype html>
         justify-content: center;
         gap: 12px;
         flex-wrap: wrap;
-      }
-
-      .playground-plugins-search-row .playground-plugins-search {
-        max-width: 560px;
       }
 
       .playground-plugins-hero-slider {
@@ -5833,14 +5854,41 @@ const html = `<!doctype html>
       }
 
       .playground-plugin-row-logo-shell {
+        position: relative;
+        overflow: visible;
         width: 34px;
         height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.05);
+        border: 0;
         flex: 0 0 auto;
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-plugin-row-logo-shell::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: 10px;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-plugin-row-logo {
@@ -5891,12 +5939,12 @@ const html = `<!doctype html>
         flex: 0 0 auto;
         border-radius: 999px;
         color: rgba(255, 255, 255, 0.94);
-        background: rgba(255, 255, 255, 0.06);
+        background: transparent;
       }
 
       .playground-plugin-row-state.is-connected {
         color: rgba(255, 255, 255, 0.96);
-        background: rgba(255, 255, 255, 0.04);
+        background: transparent;
       }
 
       .playground-plugins-empty {
@@ -74650,6 +74698,8 @@ const html = `<!doctype html>
         const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);
         const [settingsInferenceApiKeyEditing, setSettingsInferenceApiKeyEditing] = useState(false);
         const [pluginsSearchQuery, setPluginsSearchQuery] = useState("");
+        const [pluginsSearchScope, setPluginsSearchScope] = useState("all");
+        const [pluginsSearchFilterOpen, setPluginsSearchFilterOpen] = useState(false);
         const [selectedPluginId, setSelectedPluginId] = useState("");
         const [pluginsHeroSlideIndex, setPluginsHeroSlideIndex] = useState(0);
         const [pluginsNavPopover, setPluginsNavPopover] = useState("");
@@ -74676,7 +74726,7 @@ const html = `<!doctype html>
         const [settingsTriggersError, setSettingsTriggersError] = useState("");
         const [settingsTriggersSuccess, setSettingsTriggersSuccess] = useState("");
         const pluginsNavActionsRef = useRef(null);
-        const pluginsSearchPopupInputRef = useRef(null);
+        const pluginsSearchFilterRef = useRef(null);
         const [settingsSelectedTriggerId, setSettingsSelectedTriggerId] = useState("");
         const [settingsShowTriggerSecret, setSettingsShowTriggerSecret] = useState(false);
         const [settingsCopiedField, setSettingsCopiedField] = useState("");
@@ -79213,6 +79263,7 @@ const html = `<!doctype html>
           if (activePage !== "plugins") {
             setSelectedPluginId("");
             setPluginsSearchQuery("");
+            setPluginsSearchFilterOpen(false);
             setPluginsNavPopover("");
           }
         }, [activePage]);
@@ -79247,16 +79298,21 @@ const html = `<!doctype html>
         }, [activePage, pluginsNavPopover]);
 
         useEffect(() => {
-          if (pluginsNavPopover !== "search") {
+          if (activePage !== "plugins" || !pluginsSearchFilterOpen) {
             return undefined;
           }
-          const frame = window.requestAnimationFrame(() => {
-            if (pluginsSearchPopupInputRef.current) {
-              pluginsSearchPopupInputRef.current.focus();
+
+          function handlePluginsSearchFilterPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !pluginsSearchFilterRef.current || pluginsSearchFilterRef.current.contains(target)) {
+              return;
             }
-          });
-          return () => window.cancelAnimationFrame(frame);
-        }, [pluginsNavPopover]);
+            setPluginsSearchFilterOpen(false);
+          }
+
+          document.addEventListener("mousedown", handlePluginsSearchFilterPointerDown);
+          return () => document.removeEventListener("mousedown", handlePluginsSearchFilterPointerDown);
+        }, [activePage, pluginsSearchFilterOpen]);
 
         useEffect(() => {
           if (activePage !== "settings" || settingsSection !== "profile") {
@@ -82055,6 +82111,14 @@ const html = `<!doctype html>
         }
 
         function renderPluginRowLogo(plugin) {
+          if (plugin.icon) {
+            const PluginIcon = plugin.icon;
+            return React.createElement(PluginIcon, {
+              className: "playground-plugin-row-logo",
+              strokeWidth: 1.8,
+            });
+          }
+
           if (plugin.logoUrl) {
             return React.createElement("img", {
               src: plugin.logoUrl,
@@ -82140,7 +82204,7 @@ const html = `<!doctype html>
               id: "gitlab",
               label: "GitLab",
               shortLabel: "GL",
-              logoUrl: PLAYGROUND_GITLAB_LOGO_URL,
+              logoUrl: "/img/04-skills/gitlab.svg",
               description: "Trigger threads and merge request comments from GitLab webhooks.",
               connected: false,
               statusCopy: getPluginConnectionSummary("gitlab"),
@@ -82249,7 +82313,7 @@ const html = `<!doctype html>
               id: "email",
               label: "Email",
               shortLabel: "EM",
-              logoUrl: "/img/logos/mailicon.webp",
+              icon: Mail,
               description: "Send tasks, files, and replies through your ACP email channel.",
               connected: Boolean(settingsEmailStatus?.linked && settingsEmailStatus?.verified),
               statusCopy: getPluginConnectionSummary("email"),
@@ -82510,6 +82574,21 @@ const html = `<!doctype html>
 
         function renderWebhookActionsPanel(options = {}) {
           const embedded = Boolean(options.embedded);
+          const normalizedWebhookSearchQuery = String(options.searchQuery || "").trim().toLowerCase();
+          const visibleTriggers = normalizedWebhookSearchQuery
+            ? settingsTriggers.filter((trigger) => {
+                const sourceMeta = getSettingsTriggerSourceMeta(trigger.source);
+                const haystack = [
+                  trigger.name || "",
+                  sourceMeta.label || "",
+                  trigger.event || "",
+                  getSettingsTriggerActionLabel(trigger.action),
+                ]
+                  .join(" ")
+                  .toLowerCase();
+                return haystack.includes(normalizedWebhookSearchQuery);
+              })
+            : settingsTriggers;
           const canCreateSettingsTrigger = Boolean(
             String(settingsTriggerForm.name || "").trim()
             && String(settingsTriggerForm.event || "").trim()
@@ -82951,8 +83030,7 @@ const html = `<!doctype html>
             return React.createElement("section", { className: "playground-plugins-section" },
               React.createElement("div", { className: "playground-plugins-section-header" },
                 React.createElement("div", { className: "playground-plugins-section-copy" },
-                  React.createElement("h3", { className: "playground-plugins-section-title" }, "Actions via Webhooks"),
-                  React.createElement("p", { className: "playground-plugins-section-subtitle" }, "Start agent work automatically from GitHub, GitLab, Slack, and custom webhooks.")
+                  React.createElement("h3", { className: "playground-plugins-section-title" }, "Actions via Webhooks")
                 ),
                 React.createElement("div", { className: "playground-settings-actions" },
                   settingsSelectedTrigger
@@ -83106,41 +83184,6 @@ const html = `<!doctype html>
                   "aria-label": "New webhook",
                 }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
               ),
-              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-project-search-shell" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-header-icon-button is-plain" + (pluginsNavPopover === "search" ? " is-active" : ""),
-                  onClick: () => setPluginsNavPopover((current) => current === "search" ? "" : "search"),
-                  title: "Search plugins",
-                  "aria-label": "Search plugins",
-                }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
-                pluginsNavPopover === "search"
-                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                      React.createElement("div", { className: "playground-tasks-project-search-header" },
-                        React.createElement("div", { className: "playground-tasks-project-search-title" }, "Search Plugins"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-tasks-project-search-close",
-                          onClick: () => setPluginsNavPopover(""),
-                        }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
-                      ),
-                      React.createElement("div", { className: "playground-tasks-project-search-body" },
-                        React.createElement("div", { className: "playground-files-search-field" },
-                          React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
-                          React.createElement("input", {
-                            ref: pluginsSearchPopupInputRef,
-                            type: "text",
-                            className: "playground-files-search-field-input",
-                            placeholder: "Search by plugin name or description...",
-                            value: pluginsSearchQuery,
-                            onChange: (event) => setPluginsSearchQuery(event.target.value),
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-tasks-project-search-hint" }, "Search plugins by name, category, or description.")
-                      )
-                    )
-                  : null
-              ),
               React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                 React.createElement("button", {
                   type: "button",
@@ -83188,6 +83231,8 @@ const html = `<!doctype html>
         function renderPluginsPage() {
           const pluginsCatalog = buildPluginsCatalog();
           const normalizedQuery = String(pluginsSearchQuery || "").trim().toLowerCase();
+          const shouldShowPluginsSection = pluginsSearchScope !== "webhooks";
+          const shouldShowWebhooksSection = pluginsSearchScope !== "plugins";
           const filteredPlugins = normalizedQuery
             ? pluginsCatalog.filter((plugin) =>
                 [plugin.label, plugin.description, plugin.category]
@@ -83219,23 +83264,70 @@ const html = `<!doctype html>
           ];
           const activeFeaturedPlugin = featuredPlugins[pluginsHeroSlideIndex % featuredPlugins.length] || featuredPlugins[0];
 
-          return React.createElement("section", { className: "playground-environments-detail" },
+          return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail" },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
               React.createElement("div", { className: "playground-plugins-page" },
-                React.createElement("h2", { className: "playground-plugins-hero-heading" }, "Integrate ACP into your Daily work"),
-                React.createElement("div", { className: "playground-plugins-search-row" },
+              React.createElement("h2", { className: "playground-plugins-hero-heading" }, "Integrate ACP into your Daily work"),
+              React.createElement("div", { className: "playground-plugins-search-row" },
+                React.createElement("div", { className: "playground-plugins-search-shell" },
+                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                   React.createElement("input", {
                     type: "search",
                     value: pluginsSearchQuery,
                     onChange: (event) => setPluginsSearchQuery(event.target.value),
                     className: "playground-plugins-search",
-                    placeholder: "Search plugins",
-                  }),
-                  React.createElement("div", { className: "playground-plugins-filter" },
-                    React.createElement("span", null, "All"),
-                    React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                  )
+                    placeholder: "Search",
+                  })
                 ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell", ref: pluginsSearchFilterRef },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-plugins-filter",
+                    onClick: () => setPluginsSearchFilterOpen((current) => !current),
+                    "aria-expanded": pluginsSearchFilterOpen ? "true" : "false",
+                    "aria-label": "Filter plugin search scope",
+                  },
+                    React.createElement("span", null,
+                      pluginsSearchScope === "plugins"
+                        ? "Plugins"
+                        : pluginsSearchScope === "webhooks"
+                          ? "Webhooks"
+                          : "All"
+                    ),
+                    React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                  ),
+                  pluginsSearchFilterOpen
+                    ? React.createElement("div", {
+                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                      },
+                        [
+                          { id: "all", label: "All" },
+                          { id: "plugins", label: "Plugins" },
+                          { id: "webhooks", label: "Webhooks" },
+                        ].map((option) =>
+                          React.createElement("button", {
+                            key: option.id,
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setPluginsSearchScope(option.id);
+                              setPluginsSearchFilterOpen(false);
+                            },
+                          },
+                            React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" },
+                              pluginsSearchScope === option.id
+                                ? React.createElement(Check, { width: 12, height: 12, strokeWidth: 2 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label)
+                            )
+                          )
+                        )
+                      )
+                    : null
+                )
+              ),
                 React.createElement("section", { className: "playground-plugins-hero-slider" },
                   React.createElement("div", { className: "playground-plugins-hero-slide" },
                     React.createElement("div", { className: "playground-plugins-hero-pill" },
@@ -83273,46 +83365,49 @@ const html = `<!doctype html>
                     )
                   )
                 ),
-                React.createElement("section", { className: "playground-plugins-section" },
-                  React.createElement("div", { className: "playground-plugins-section-header" },
-                    React.createElement("div", { className: "playground-plugins-section-copy" },
-                      React.createElement("h3", { className: "playground-plugins-section-title" }, "Plugins"),
-                      React.createElement("p", { className: "playground-plugins-section-subtitle" }, "Connect files, source control, and communication channels to ACP.")
-                    )
-                  ),
-                  filteredPlugins.length === 0
-                    ? React.createElement("div", { className: "playground-plugins-empty" }, "No plugins match your search.")
-                    : React.createElement("div", { className: "playground-plugins-grid" },
-                        filteredPlugins.map((plugin) =>
-                          React.createElement("button", {
-                            key: plugin.id,
-                            type: "button",
-                            className: "playground-plugin-row",
-                            onClick: () => setSelectedPluginId(plugin.id),
-                          },
-                            React.createElement("div", { className: "playground-plugin-row-copy" },
-                              React.createElement("div", { className: "playground-plugin-row-logo-shell" }, renderPluginRowLogo(plugin)),
-                              React.createElement("div", { className: "playground-plugin-row-text" },
-                                React.createElement("div", { className: "playground-plugin-row-title" }, plugin.label),
-                                React.createElement("div", { className: "playground-plugin-row-description" }, plugin.description)
-                              )
-                            ),
-                            React.createElement("span", {
-                              className: "playground-plugin-row-state" + (plugin.connected ? " is-connected" : ""),
+              shouldShowPluginsSection
+                ? React.createElement("section", { className: "playground-plugins-section" },
+                    React.createElement("div", { className: "playground-plugins-section-header" },
+                      React.createElement("div", { className: "playground-plugins-section-copy" },
+                        React.createElement("h3", { className: "playground-plugins-section-title" }, "Plugins")
+                      )
+                    ),
+                    filteredPlugins.length === 0
+                      ? React.createElement("div", { className: "playground-plugins-empty" }, "No plugins match your search.")
+                      : React.createElement("div", { className: "playground-plugins-grid" },
+                          filteredPlugins.map((plugin) =>
+                            React.createElement("button", {
+                              key: plugin.id,
+                              type: "button",
+                              className: "playground-plugin-row",
+                              onClick: () => setSelectedPluginId(plugin.id),
                             },
-                              plugin.connected
-                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 2 })
-                                : React.createElement(Plus, { width: 14, height: 14, strokeWidth: 2 })
+                              React.createElement("div", { className: "playground-plugin-row-copy" },
+                                React.createElement("div", { className: "playground-plugin-row-logo-shell" }, renderPluginRowLogo(plugin)),
+                                React.createElement("div", { className: "playground-plugin-row-text" },
+                                  React.createElement("div", { className: "playground-plugin-row-title" }, plugin.label),
+                                  React.createElement("div", { className: "playground-plugin-row-description" }, plugin.description)
+                                )
+                              ),
+                              React.createElement("span", {
+                                className: "playground-plugin-row-state" + (plugin.connected ? " is-connected" : ""),
+                              },
+                                plugin.connected
+                                  ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 2 })
+                                  : React.createElement(Plus, { width: 14, height: 14, strokeWidth: 2 })
+                              )
                             )
                           )
                         )
-                      )
-                ),
-                renderWebhookActionsPanel({ embedded: true }),
-                renderPluginModal(selectedPlugin)
-              )
+                  )
+                : null,
+              shouldShowWebhooksSection
+                ? renderWebhookActionsPanel({ embedded: true, searchQuery: pluginsSearchQuery })
+                : null,
+              renderPluginModal(selectedPlugin)
             )
-          );
+          )
+        );
         }
 
         function renderSettingsPage() {
@@ -85500,14 +85595,18 @@ const html = `<!doctype html>
                     : renderSettingsSectionCard(
                         "Webhook triggers",
                         "Route GitHub, GitLab, Slack, and raw webhook events into agent executions.",
-                        settingsTriggersLoading
-                          ? React.createElement("div", { className: "playground-settings-loading-state" },
-                              React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                            )
-                          : settingsTriggers.length === 0
-                            ? renderWebhookEmptyState()
-                            : React.createElement("div", { className: "playground-settings-listing" },
-                                settingsTriggers.map((trigger) => {
+                  settingsTriggersLoading
+                    ? React.createElement("div", { className: "playground-settings-loading-state" },
+                        React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                      )
+                    : visibleTriggers.length === 0
+                      ? (
+                        settingsTriggers.length === 0
+                          ? renderWebhookEmptyState()
+                          : React.createElement("div", { className: "playground-plugins-empty" }, "No webhooks match your search.")
+                      )
+                      : React.createElement("div", { className: "playground-settings-listing" },
+                          visibleTriggers.map((trigger) => {
                                   const sourceMeta = getSettingsTriggerSourceMeta(trigger.source);
                                   const TriggerIcon = sourceMeta.icon;
                                   return React.createElement("button", {
