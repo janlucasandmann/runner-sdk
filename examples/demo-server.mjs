@@ -5728,14 +5728,14 @@ const html = `<!doctype html>
       .playground-plugins-hero-slider {
         position: relative;
         min-height: 252px;
-        border-radius: 18px;
+        border-radius: 15px;
         overflow: hidden;
         background-image:
           linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04)),
           url('/img/bg/clouds.jpeg');
         background-size: cover;
         background-position: center;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 0;
       }
 
       .playground-plugins-hero-slider::before {
@@ -5757,6 +5757,14 @@ const html = `<!doctype html>
         padding: 32px 40px 44px;
       }
 
+      .playground-plugins-hero-pill-stack {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+      }
+
       .playground-plugins-hero-pill {
         display: inline-flex;
         align-items: center;
@@ -5771,10 +5779,26 @@ const html = `<!doctype html>
         box-shadow: 0 14px 44px rgba(0, 0, 0, 0.16);
       }
 
+      .playground-plugins-hero-pill.is-incoming {
+        animation: playground-plugins-hero-pill-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .playground-plugins-hero-pill.is-outgoing {
+        position: absolute;
+        inset: 0 auto auto 50%;
+        transform: translateX(-50%);
+        animation: playground-plugins-hero-pill-out 260ms cubic-bezier(0.7, 0, 0.84, 0) both;
+        pointer-events: none;
+      }
+
       .playground-plugins-hero-pill img {
         width: 16px;
         height: 16px;
         object-fit: contain;
+      }
+
+      .playground-plugins-hero-pill img.is-github-hero {
+        filter: none;
       }
 
       .playground-plugins-hero-cta {
@@ -5807,16 +5831,44 @@ const html = `<!doctype html>
       }
 
       .playground-plugins-hero-dot {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
+        display: block;
+        flex: 0 0 auto;
+        padding: 0;
+        border: 0;
         border-radius: 999px;
+        appearance: none;
         background: rgba(255, 255, 255, 0.28);
         transition: background-color 160ms ease, transform 160ms ease;
+        cursor: pointer;
       }
 
       .playground-plugins-hero-dot.is-active {
         background: rgba(255, 255, 255, 0.96);
         transform: scale(1.1);
+      }
+
+      @keyframes playground-plugins-hero-pill-in {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes playground-plugins-hero-pill-out {
+        from {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(-50%) translateY(-12px);
+        }
       }
 
       .playground-plugins-grid {
@@ -5844,6 +5896,10 @@ const html = `<!doctype html>
 
       .playground-plugin-row:hover {
         background: rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-plugins-grid > .playground-plugin-row:nth-child(odd) {
+        padding-left: 0;
       }
 
       .playground-plugin-row-copy {
@@ -11062,6 +11118,10 @@ const html = `<!doctype html>
         display: grid;
         grid-template-columns: 270px minmax(0, 1fr);
         background: transparent;
+      }
+
+      .playground-skills-page .playground-environments-shell {
+        margin-top: -5px;
       }
 
       .playground-environments-list-pane {
@@ -19308,12 +19368,53 @@ const html = `<!doctype html>
         box-sizing: border-box;
       }
 
+      .playground-tools-navbar {
+        min-height: 56px;
+        padding: 2px 12px 6px;
+        margin-bottom: 0;
+        border-bottom: 0;
+        box-sizing: border-box;
+      }
+
       .playground-tasks-project-home-navbar .playground-tasks-project-navbar-title,
       .playground-tasks-project-home-navbar .playground-content-nav-right,
       .playground-tasks-project-home-navbar .playground-content-nav-center {
         min-height: 0;
         height: auto;
         align-items: center;
+      }
+
+      .playground-tools-navbar-title,
+      .playground-tools-navbar .playground-content-nav-right,
+      .playground-tools-navbar .playground-content-nav-center {
+        min-height: 0;
+        height: auto;
+        align-items: center;
+      }
+
+      .playground-tools-navbar-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .playground-tools-navbar-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+      }
+
+      .playground-tools-skills-nav-actions-slot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        flex-wrap: nowrap;
+        white-space: nowrap;
       }
 
       .playground-tasks-project-workspace .playground-environments-detail-scroll {
@@ -19802,6 +19903,7 @@ const html = `<!doctype html>
         scrollbar-width: none;
         gap: 8px;
         padding-top: 17px;
+        padding-bottom: 16px;
       }
 
       .playground-tasks-backlog-list::-webkit-scrollbar {
@@ -34428,7 +34530,7 @@ const html = `<!doctype html>
                     React.createElement("span", null, isSaving ? "Saving..." : "Save"),
                     React.createElement("span", { className: "playground-code-preview-toolbar-keyhint" }, shortcutLabel)
                   )
-                )
+                ),
               ),
               React.createElement("div", { className: "playground-code-preview-editor-shell" }, renderEditorBody())
             )
@@ -54897,6 +54999,7 @@ const html = `<!doctype html>
         projectId,
         apiKey,
         upstreamUrl,
+        topNavActionsPortalId,
       }) {
         const searchPopupInputRef = useRef(null);
         const skillCodeFileInputRef = useRef(null);
@@ -54932,6 +55035,7 @@ const html = `<!doctype html>
           isSaving: false,
           error: "",
         });
+        const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
         const [isSkillComposerDescriptionEditing, setIsSkillComposerDescriptionEditing] = useState(false);
         const [skillComposerIconPickerOpen, setSkillComposerIconPickerOpen] = useState(false);
         const [skillDetailIconPickerOpen, setSkillDetailIconPickerOpen] = useState(false);
@@ -55586,6 +55690,19 @@ const html = `<!doctype html>
             window.removeEventListener("keydown", handleKeyDown);
           };
         }, [toolbarPopover]);
+
+        useLayoutEffect(() => {
+          if (!topNavActionsPortalId || typeof document === "undefined") {
+            setTopNavActionsContainer(null);
+            return undefined;
+          }
+          const updateContainer = () => {
+            setTopNavActionsContainer(document.getElementById(topNavActionsPortalId));
+          };
+          updateContainer();
+          const frame = window.requestAnimationFrame(updateContainer);
+          return () => window.cancelAnimationFrame(frame);
+        }, [topNavActionsPortalId]);
 
         useLayoutEffect(() => {
           if (!skillComposerOpen) {
@@ -57272,15 +57389,102 @@ const html = `<!doctype html>
         }
 
         function renderCurrentSkillDetail() {
+          const skillsSearchAction = React.createElement("div", {
+              className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-environments-search-shell",
+            },
+            React.createElement("button", {
+              type: "button",
+              className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
+              onClick: () => toggleToolbarPopover("search"),
+              title: skillListMode === "custom" ? "Search skills" : "Search system skills",
+              "aria-label": skillListMode === "custom" ? "Search skills" : "Search system skills",
+            }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
+            toolbarPopover === "search"
+              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                  React.createElement("div", { className: "playground-tasks-project-search-header" },
+                    React.createElement("div", { className: "playground-tasks-project-search-title" }, skillListMode === "custom" ? "Search Skills" : "Search System Skills"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-project-search-close",
+                      onClick: () => setToolbarPopover(""),
+                    }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-search-body" },
+                    React.createElement("div", { className: "playground-files-search-field" },
+                      React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
+                      React.createElement("input", {
+                        ref: searchPopupInputRef,
+                        type: "text",
+                        className: "playground-files-search-field-input",
+                        placeholder: skillListMode === "custom"
+                          ? "Search skills by name or description..."
+                          : "Search system skills by name or description...",
+                        value: searchPopupQuery,
+                        onChange: (event) => setSearchPopupQuery(event.target.value),
+                      })
+                    ),
+                    searchPopupQuery.trim()
+                      ? searchResults.length > 0
+                        ? React.createElement("div", { className: "playground-files-search-results" },
+                            searchResults.map((skill) =>
+                              React.createElement("button", {
+                                  key: skill.id,
+                                  type: "button",
+                                  className: "playground-files-search-result",
+                                  onClick: () => handleSkillSelect(skill.id),
+                                },
+                                  renderSkillIcon(skill, "playground-files-entry-icon"),
+                                  React.createElement("div", { className: "playground-files-search-result-copy" },
+                                    React.createElement("div", { className: "playground-files-search-result-name" }, skill.name || skill.id),
+                                    React.createElement("div", { className: "playground-files-search-result-path" }, skill.description || skill.id)
+                                  )
+                                )
+                            )
+                          )
+                        : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "No matching skills found." : "No matching system skills found.")
+                      : React.createElement("div", { className: "playground-tasks-project-search-hint" }, skillListMode === "custom" ? "Type a skill name or description to search." : "Type a system skill name or description to search.")
+                  )
+                )
+              : null
+          );
+          const skillsCreateAction = React.createElement("button", {
+            type: "button",
+            className: "playground-files-header-icon-button is-plain",
+            onClick: openSkillComposer,
+            title: "Create custom skill",
+            "aria-label": "Create custom skill",
+            disabled: skillComposerSaveState.isSaving || !baseSkillProjectId,
+          }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }));
+          const skillsTopNavActions = topNavActionsContainer
+            ? createPortal(React.createElement(React.Fragment, null,
+                skillsCreateAction,
+                skillsSearchAction
+              ), topNavActionsContainer)
+            : null;
+
           if (!selectedSkill) {
-            return React.createElement("div", { className: "playground-files-state" },
-              skillsLoading
-                ? React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                : null,
-              React.createElement("span", null,
-                skillListMode === "custom"
-                  ? (skillsLoading ? "Loading skills..." : "Select a skill")
-                  : "Select a system skill"
+            return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
+              skillsTopNavActions,
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                  React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                    React.createElement("div", { className: "playground-content-title" }, "Skills")
+                  )
+                ),
+                React.createElement("div", { className: "playground-content-nav-center" }),
+                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
+              ),
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+                React.createElement("div", { className: "playground-files-state" },
+                  skillsLoading
+                    ? React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                    : null,
+                  React.createElement("span", null,
+                    skillListMode === "custom"
+                      ? (skillsLoading ? "Loading skills..." : "Select a skill")
+                      : "Select a system skill"
+                  )
+                )
               )
             );
           }
@@ -57431,6 +57635,7 @@ const html = `<!doctype html>
           );
 
           return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
+            skillsTopNavActions,
             React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
               React.createElement("div", { className: "playground-environments-editor-navbar-title" },
                 detailSkillIconControl,
@@ -57795,81 +58000,14 @@ const html = `<!doctype html>
 
         return React.createElement("div", { className: "playground-environments-page playground-agents-page playground-skills-page" },
           React.createElement("div", { className: "playground-environments-shell" },
+            toolbarPopover
+              ? React.createElement("div", {
+                  className: "playground-files-search-backdrop",
+                  onClick: () => setToolbarPopover(""),
+                })
+              : null,
             React.createElement("aside", { className: "playground-environments-list-pane" },
               React.createElement("div", { className: "playground-files-browser-header playground-environments-list-header" },
-                toolbarPopover
-                  ? React.createElement("div", {
-                      className: "playground-files-search-backdrop",
-                      onClick: () => setToolbarPopover(""),
-                    })
-                  : null,
-                React.createElement("div", { className: "playground-files-topbar" },
-                  React.createElement("div", { className: "playground-environments-list-title" }, "Skills"),
-                  React.createElement("div", { className: "playground-files-topbar-actions" },
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-environments-search-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
-                        onClick: () => toggleToolbarPopover("search"),
-                        title: skillListMode === "custom" ? "Search skills" : "Search system skills",
-                      }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
-                      toolbarPopover === "search"
-                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            React.createElement("div", { className: "playground-tasks-project-search-header" },
-                              React.createElement("div", { className: "playground-tasks-project-search-title" }, skillListMode === "custom" ? "Search Skills" : "Search System Skills"),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-tasks-project-search-close",
-                                onClick: () => setToolbarPopover(""),
-                              }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
-                            ),
-                            React.createElement("div", { className: "playground-tasks-project-search-body" },
-                              React.createElement("div", { className: "playground-files-search-field" },
-                                React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
-                                React.createElement("input", {
-                                  ref: searchPopupInputRef,
-                                  type: "text",
-                                  className: "playground-files-search-field-input",
-                                  placeholder: skillListMode === "custom"
-                                    ? "Search skills by name or description..."
-                                    : "Search system skills by name or description...",
-                                  value: searchPopupQuery,
-                                  onChange: (event) => setSearchPopupQuery(event.target.value),
-                                })
-                              ),
-                              searchPopupQuery.trim()
-                                ? searchResults.length > 0
-                                  ? React.createElement("div", { className: "playground-files-search-results" },
-                                      searchResults.map((skill) =>
-                                        React.createElement("button", {
-                                            key: skill.id,
-                                            type: "button",
-                                            className: "playground-files-search-result",
-                                            onClick: () => handleSkillSelect(skill.id),
-                                          },
-                                            renderSkillIcon(skill, "playground-files-entry-icon"),
-                                            React.createElement("div", { className: "playground-files-search-result-copy" },
-                                              React.createElement("div", { className: "playground-files-search-result-name" }, skill.name || skill.id),
-                                              React.createElement("div", { className: "playground-files-search-result-path" }, skill.description || skill.id)
-                                            )
-                                          )
-                                      )
-                                    )
-                                  : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "No matching skills found." : "No matching system skills found.")
-                                : React.createElement("div", { className: "playground-tasks-project-search-hint" }, skillListMode === "custom" ? "Type a skill name or description to search." : "Type a system skill name or description to search.")
-                            )
-                          )
-                        : null
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-header-icon-button",
-                      onClick: openSkillComposer,
-                      title: "Create custom skill",
-                      disabled: skillComposerSaveState.isSaving || !baseSkillProjectId,
-                    }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  )
-                ),
                 React.createElement("div", { className: "playground-agents-list-switch-row" },
                   React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
                     React.createElement("button", {
@@ -57905,10 +58043,7 @@ const html = `<!doctype html>
                               renderSkillIcon(skill, "playground-environments-list-item-icon"),
                               React.createElement("div", { className: "playground-environments-list-item-copy" },
                                 React.createElement("div", { className: "playground-environments-list-item-title" }, skill.name || skill.id)
-                              ),
-                              !skill.isCustom
-                                ? React.createElement("span", { className: "playground-environments-badge" }, "System")
-                                : null
+                              )
                             ),
                           hasActions
                             ? React.createElement("div", { className: "playground-environments-list-item-side" },
@@ -57989,9 +58124,11 @@ const html = `<!doctype html>
         onRequestSidebarCollapse,
         detailOnly,
         onCloseDetailOnly,
+        standaloneMode,
       }) {
         const effectiveApiKey = useMemo(() => String(apiKey || "").trim(), [apiKey]);
         const isDetailOnlyMode = Boolean(detailOnly);
+        const isStandaloneCalendarMode = standaloneMode === "calendar";
         const editorDirtyRef = useRef(false);
         const taskAutosaveInFlightRef = useRef(false);
         const taskAutosaveQueuedRef = useRef(null);
@@ -58079,7 +58216,8 @@ const html = `<!doctype html>
         const [projectEnvironmentFilePickerSearch, setProjectEnvironmentFilePickerSearch] = useState("");
         const [projectEnvironmentFilePickerExpandedFolders, setProjectEnvironmentFilePickerExpandedFolders] = useState([]);
         const [projectEnvironmentFilePickerSelectedPaths, setProjectEnvironmentFilePickerSelectedPaths] = useState([]);
-        const [taskView, setTaskView] = useState("backlog");
+        const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "backlog");
+        const isCalendarContext = isStandaloneCalendarMode || taskView === "calendar";
         const [backlogToolbarPopover, setBacklogToolbarPopover] = useState("");
         const [backlogFilterMode, setBacklogFilterMode] = useState("open");
         const [backlogSortMode, setBacklogSortMode] = useState("default");
@@ -58437,11 +58575,14 @@ const html = `<!doctype html>
           }
           const rootStyle = document.documentElement.style;
           const fallbackBackground = "linear-gradient(to top, #000000 0%, #111111 100%)";
-          rootStyle.setProperty("--playground-app-bg", selectedProjectShellBackground || fallbackBackground);
+          rootStyle.setProperty(
+            "--playground-app-bg",
+            !isStandaloneCalendarMode && selectedProjectShellBackground ? selectedProjectShellBackground : fallbackBackground
+          );
           return () => {
             rootStyle.setProperty("--playground-app-bg", fallbackBackground);
           };
-        }, [isDetailOnlyMode, selectedProjectShellBackground]);
+        }, [isDetailOnlyMode, isStandaloneCalendarMode, selectedProjectShellBackground]);
 
         const selectedProjectEnvironments = useMemo(() => {
           return selectedProjectDetail?.project?.id === selectedProjectId
@@ -58500,7 +58641,8 @@ const html = `<!doctype html>
           return projectComposerAvailableEnvironments.find((environment) => environment.id === activeProjectAttachmentEnvironmentId) || null;
         }, [activeProjectAttachmentEnvironmentId, projectComposerAvailableEnvironments]);
 
-        const isCalendarScheduleDetailMode = Boolean(!draftTask && taskView === "calendar" && scheduleViewMode === "setup");
+        const isCalendarScheduleDetailMode = Boolean(!draftTask && isCalendarContext && scheduleViewMode === "setup");
+        const projectWallpaperActive = !isStandaloneCalendarMode && Boolean(selectedProjectShellBackground);
 
         const activeTaskEnvironmentId = useMemo(() => {
           return String(
@@ -60554,7 +60696,7 @@ const html = `<!doctype html>
         }, [selectedReleaseId, taskView]);
 
         const projectSidebarNavItems = useMemo(() => {
-          return PLAYGROUND_PROJECT_VIEW_OPTIONS;
+          return PLAYGROUND_PROJECT_VIEW_OPTIONS.filter((item) => item.id !== "calendar");
         }, []);
 
         const filteredProjects = useMemo(() => {
@@ -62255,7 +62397,7 @@ const html = `<!doctype html>
             error: "",
           });
           setSearchQuery("");
-          setTaskView("backlog");
+          setTaskView(isStandaloneCalendarMode ? "calendar" : "backlog");
           setBoardSprintId(PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID);
           setSprintComposerOpen(false);
           setSprintDraft(buildPlaygroundDefaultSprintDraft());
@@ -63561,7 +63703,7 @@ const html = `<!doctype html>
         }, [taskView]);
 
         useEffect(() => {
-          if (taskView === "calendar") {
+          if (isStandaloneCalendarMode || taskView === "calendar") {
             return;
           }
           if (scheduleViewMode !== "calendar" || selectedScheduleId) {
@@ -63570,7 +63712,26 @@ const html = `<!doctype html>
             setScheduleEditorMode("create");
             resetScheduleSaveState("");
           }
-        }, [scheduleViewMode, selectedScheduleId, taskView]);
+        }, [isStandaloneCalendarMode, scheduleViewMode, selectedScheduleId, taskView]);
+
+        useEffect(() => {
+          if (!isStandaloneCalendarMode) {
+            return;
+          }
+          if (taskView !== "calendar") {
+            setTaskView("calendar");
+          }
+          setSelectedTaskId("");
+          setDraftTask(null);
+        }, [isStandaloneCalendarMode, taskView]);
+
+        useEffect(() => {
+          if (!isStandaloneCalendarMode || selectedProjectId || projects.length === 0) {
+            return;
+          }
+          handleSelectProject(projects[0].id);
+          setTaskView("calendar");
+        }, [isStandaloneCalendarMode, projects, selectedProjectId]);
 
         useEffect(() => {
           if (!selectedTaskId || taskView === "threads") {
@@ -63727,6 +63888,9 @@ const html = `<!doctype html>
 
           const requestedProjectId = String(navigationRequest?.projectId || "").trim();
           const requestedView = navigationRequest?.view === "calendar" ? "calendar" : "backlog";
+          const nextView = isStandaloneCalendarMode
+            ? "calendar"
+            : (requestedView === "calendar" ? "backlog" : requestedView);
           const requestedMissionControlAction = navigationRequest?.missionControlAction === "run" ? "run" : "";
           const requestedProjectComposerAction = navigationRequest?.projectComposerAction === "create" ? "create" : "";
 
@@ -63736,7 +63900,7 @@ const html = `<!doctype html>
             handleSelectProject("");
           }
 
-          setTaskView(requestedView);
+          setTaskView(nextView);
           if (requestedView === "calendar") {
             setSelectedTaskId("");
             setSelectedScheduleId("");
@@ -63762,7 +63926,7 @@ const html = `<!doctype html>
           if (typeof onNavigationRequestHandled === "function") {
             onNavigationRequestHandled(requestToken);
           }
-        }, [navigationRequest, onNavigationRequestHandled]);
+        }, [isStandaloneCalendarMode, navigationRequest, onNavigationRequestHandled]);
 
         useEffect(() => {
           const pendingRequestToken = String(pendingNavigationMissionControlRequest?.token || "").trim();
@@ -70780,7 +70944,7 @@ const html = `<!doctype html>
             showComposer: true,
             listFooter: null,
             composer: React.createElement("div", {
-                className: "playground-tasks-backlog-composer-shell" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""),
+                className: "playground-tasks-backlog-composer-shell" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""),
               },
                 React.createElement(RunnerChat, {
                   key: selectedProjectId + ":" + (selectedReleaseId || "__all__") + ":" + backlogComposerKey,
@@ -71341,7 +71505,7 @@ const html = `<!doctype html>
           }
 
           return React.createElement("div", { className: "playground-tasks-detail-shell playground-tasks-schedule-detail-shell" },
-            React.createElement("div", { className: "playground-tasks-detail-main" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : "") },
+            React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : "") },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
                 React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
                   React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
@@ -72426,7 +72590,7 @@ const html = `<!doctype html>
                 )
               ),
               React.createElement("div", {
-                className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll" + (taskView === "calendar" ? " is-calendar" : ""),
+                className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll",
               },
                 taskLoadState.status === "error" && tasks.length > 0
                   ? React.createElement("div", { className: "playground-environments-error" },
@@ -72456,10 +72620,152 @@ const html = `<!doctype html>
                     : React.createElement(React.Fragment, null,
                         taskView === "board"
                           ? renderBoardView()
-                          : taskView === "calendar"
-                            ? renderCalendarView()
-                            : renderBacklogView()
+                          : renderBacklogView()
                       )
+              )
+            )
+          );
+        }
+
+        function renderStandaloneCalendarWorkspace() {
+          if (!selectedProject) {
+            return React.createElement("div", {
+                className: "playground-environments-page playground-tasks-project-workspace",
+              },
+              React.createElement("section", { className: "playground-environments-detail playground-tasks-project-workspace-detail" },
+                React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-tasks-project-navbar" },
+                  React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
+                    React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                      React.createElement("div", { className: "playground-content-title" }, "Calendar")
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-content-nav-center" }),
+                  React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions" })
+                ),
+                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll is-calendar" },
+                  React.createElement("div", { className: "playground-tasks-empty" },
+                    React.createElement("div", { className: "playground-tasks-empty-title" }, "No project selected"),
+                    React.createElement("div", { className: "playground-tasks-empty-copy" }, "Create or open a project first to view scheduled work in the calendar.")
+                  )
+                )
+              )
+            );
+          }
+
+          return React.createElement("div", {
+              className: "playground-environments-page playground-tasks-project-workspace",
+            },
+            React.createElement("section", { className: "playground-environments-detail playground-tasks-project-workspace-detail" },
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-tasks-project-navbar" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
+                  React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                    React.createElement("div", { className: "playground-content-title" }, "Calendar")
+                  )
+                ),
+                React.createElement("div", { className: "playground-content-nav-center" }),
+                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions", ref: projectSidebarActionsRef },
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-project-search-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain" + (projectSidebarPopover === "search" ? " is-active" : ""),
+                      onClick: () => setProjectSidebarPopover((current) => current === "search" ? "" : "search"),
+                      title: "Search calendar",
+                    }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
+                    projectSidebarPopover === "search"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          React.createElement("div", { className: "playground-tasks-project-search-header" },
+                            React.createElement("div", { className: "playground-tasks-project-search-title" }, "Search Calendar"),
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-tasks-project-search-close",
+                              onClick: () => setProjectSidebarPopover(""),
+                            }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
+                          ),
+                          React.createElement("div", { className: "playground-tasks-project-search-body" },
+                            React.createElement("div", { className: "playground-files-search-field" },
+                              React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
+                              React.createElement("input", {
+                                type: "text",
+                                className: "playground-files-search-field-input",
+                                placeholder: projectSearchPlaceholder,
+                                value: searchQuery,
+                                onChange: (event) => setSearchQuery(event.target.value),
+                              })
+                            ),
+                            React.createElement("div", { className: "playground-tasks-project-search-hint" }, "Filter tasks and schedules by title, task, agent, or environment.")
+                          )
+                        )
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain" + (projectSidebarPopover === "menu" ? " is-active" : ""),
+                      onClick: () => setProjectSidebarPopover((current) => current === "menu" ? "" : "menu"),
+                      title: "Calendar actions",
+                    }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+                    projectSidebarPopover === "menu"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setProjectSidebarPopover("");
+                              openScheduleComposer();
+                            },
+                          },
+                            React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "New Scheduled Task"),
+                              React.createElement("span", null, "Create a new calendar automation for this project.")
+                            )
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-popup-row",
+                            onClick: () => {
+                              setProjectSidebarPopover("");
+                              setActivePage("tasks");
+                            },
+                          },
+                            React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, "Open Project"),
+                              React.createElement("span", null, "Return to the project workspace for backlog and board.")
+                            )
+                          )
+                        )
+                      : null
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll is-calendar" },
+                taskLoadState.status === "error" && tasks.length > 0
+                  ? React.createElement("div", { className: "playground-environments-error" },
+                      React.createElement("span", null, taskLoadState.error || "Failed to refresh project tasks."),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        onClick: () => void loadProjectWorkspace(selectedProjectId),
+                      }, "Retry")
+                    )
+                  : null,
+                taskLoadState.status === "loading" && tasks.length === 0
+                  ? React.createElement("div", { className: "playground-tasks-loading-state" },
+                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                      React.createElement("div", { className: "playground-tasks-loading-copy" }, "Loading project…")
+                    )
+                  : taskLoadState.status === "error" && tasks.length === 0
+                    ? React.createElement("div", { className: "playground-tasks-empty" },
+                        React.createElement("div", { className: "playground-tasks-empty-title" }, "Project workspace unavailable"),
+                        React.createElement("div", { className: "playground-tasks-empty-copy" }, taskLoadState.error || "The tasks API could not be reached for this project."),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button is-primary",
+                          onClick: () => void loadProjectWorkspace(selectedProjectId),
+                        }, "Retry")
+                      )
+                    : renderCalendarView()
               )
             )
           );
@@ -72524,7 +72830,7 @@ const html = `<!doctype html>
               .filter((segment) => segment.count > 0);
             const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
             return React.createElement("div", { className: "playground-tasks-detail-shell" },
-              React.createElement("div", { className: "playground-tasks-detail-main" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
+              React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
                 React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
                   React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
                     React.createElement("div", { className: "playground-tasks-detail-navbar-title-main" },
@@ -72905,7 +73211,7 @@ const html = `<!doctype html>
             );
           }
 
-          if (!draftTask && taskView === "calendar" && scheduleViewMode === "setup") {
+          if (!draftTask && isCalendarContext && scheduleViewMode === "setup") {
             return renderScheduleDetailPanel();
           }
 
@@ -73118,7 +73424,7 @@ const html = `<!doctype html>
           return React.createElement("div", {
               className: "playground-tasks-detail-shell" + (previewedTaskAttachment ? " is-preview-open" : ""),
             },
-            React.createElement("div", { className: "playground-tasks-detail-main" + (selectedProjectShellBackground ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
+            React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
                 React.createElement("div", { className: "playground-tasks-detail-navbar-title" },
                   React.createElement("div", { className: "playground-tasks-detail-navbar-title-meta" },
@@ -73945,7 +74251,7 @@ const html = `<!doctype html>
         }
 
         const isTaskDetailOpen = Boolean(selectedProjectId && draftTask?.id && taskView !== "threads");
-        const isScheduleDetailOpen = Boolean(selectedProjectId && taskView === "calendar" && scheduleViewMode === "setup");
+        const isScheduleDetailOpen = Boolean(selectedProjectId && isCalendarContext && scheduleViewMode === "setup");
         const isMissionControlDetailOpen = Boolean(selectedProjectId && missionControlStrategyOpen);
         const isDetailOpen = isTaskDetailOpen || isScheduleDetailOpen || isMissionControlDetailOpen;
         const isTaskAttachmentPreviewOpen = Boolean((isTaskDetailOpen || isScheduleDetailOpen) && previewedTaskAttachment);
@@ -73973,7 +74279,7 @@ const html = `<!doctype html>
                   className: "playground-tasks-main-scroll" + (selectedProject ? " is-project-workspace" : " is-projects-home"),
                   onClick: handleTaskSurfaceClick,
                 },
-                !selectedProject
+                !selectedProject && !isStandaloneCalendarMode
                   ? React.createElement("div", { className: "playground-content-nav playground-tasks-project-navbar playground-tasks-project-home-navbar playground-tasks-home-width" },
                       React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
                         React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
@@ -74024,7 +74330,7 @@ const html = `<!doctype html>
                       )
                     )
                   : null,
-                !selectedProject && projectLoadState.status === "error" && projects.length > 0
+                !selectedProject && !isStandaloneCalendarMode && projectLoadState.status === "error" && projects.length > 0
                   ? React.createElement("div", { className: "playground-environments-error playground-tasks-home-width" },
                       React.createElement("span", null, projectLoadState.error || "Failed to refresh projects."),
                       React.createElement("button", {
@@ -74034,7 +74340,9 @@ const html = `<!doctype html>
                       }, "Retry")
                     )
                   : null,
-                selectedProject ? renderSelectedProjectWorkspace() : renderProjectLanding()
+                isStandaloneCalendarMode
+                  ? renderStandaloneCalendarWorkspace()
+                  : selectedProject ? renderSelectedProjectWorkspace() : renderProjectLanding()
               )
             ),
             React.createElement("aside", { className: "playground-environments-detail playground-tasks-detail-panel" },
@@ -74698,10 +75006,13 @@ const html = `<!doctype html>
         const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);
         const [settingsInferenceApiKeyEditing, setSettingsInferenceApiKeyEditing] = useState(false);
         const [pluginsSearchQuery, setPluginsSearchQuery] = useState("");
-        const [pluginsSearchScope, setPluginsSearchScope] = useState("all");
-        const [pluginsSearchFilterOpen, setPluginsSearchFilterOpen] = useState(false);
+        const [toolsView, setToolsView] = useState("plugins");
         const [selectedPluginId, setSelectedPluginId] = useState("");
         const [pluginsHeroSlideIndex, setPluginsHeroSlideIndex] = useState(0);
+        const [pluginsHeroDisplayIndex, setPluginsHeroDisplayIndex] = useState(0);
+        const [pluginsHeroOutgoingIndex, setPluginsHeroOutgoingIndex] = useState(null);
+        const [pluginsHeroTransitionKey, setPluginsHeroTransitionKey] = useState(0);
+        const [pendingThreadComposerPlusOpen, setPendingThreadComposerPlusOpen] = useState(false);
         const [pluginsNavPopover, setPluginsNavPopover] = useState("");
         const [settingsCheckoutLoading, setSettingsCheckoutLoading] = useState(false);
         const [settingsSubscriptionActionId, setSettingsSubscriptionActionId] = useState("");
@@ -74726,7 +75037,6 @@ const html = `<!doctype html>
         const [settingsTriggersError, setSettingsTriggersError] = useState("");
         const [settingsTriggersSuccess, setSettingsTriggersSuccess] = useState("");
         const pluginsNavActionsRef = useRef(null);
-        const pluginsSearchFilterRef = useRef(null);
         const [settingsSelectedTriggerId, setSettingsSelectedTriggerId] = useState("");
         const [settingsShowTriggerSecret, setSettingsShowTriggerSecret] = useState(false);
         const [settingsCopiedField, setSettingsCopiedField] = useState("");
@@ -75472,7 +75782,13 @@ const html = `<!doctype html>
 
         function openPluginsPage() {
           setAccountMenuOpen(false);
-          setActivePage("plugins");
+          setToolsView("plugins");
+          setActivePage("tools");
+        }
+
+        function openCalendarPage() {
+          setAccountMenuOpen(false);
+          setActivePage("calendar");
         }
 
         function openHelpPage() {
@@ -75502,7 +75818,7 @@ const html = `<!doctype html>
             missionControlAction: normalizedMissionControlAction,
             projectComposerAction: normalizedProjectComposerAction,
           });
-          setActivePage("tasks");
+          setActivePage(view === "calendar" ? "calendar" : "tasks");
         }
 
         function handleWelcomeWidgetRunMissionControl(event) {
@@ -79208,7 +79524,7 @@ const html = `<!doctype html>
         ]);
 
         useEffect(() => {
-          if (activePage !== "plugins" || !hasSessionAuth) {
+          if (activePage !== "tools" || !hasSessionAuth) {
             return;
           }
 
@@ -79239,7 +79555,8 @@ const html = `<!doctype html>
 
           setSettingsDiscordSuccess(discordSuccess);
           setSettingsDiscordError(discordError);
-          setActivePage("plugins");
+          setToolsView("plugins");
+          setActivePage("tools");
           if (discordSuccess) {
             window.dispatchEvent(new CustomEvent("integrations-updated"));
           }
@@ -79255,21 +79572,21 @@ const html = `<!doctype html>
 
         useEffect(() => {
           if (activePage === "settings" && (settingsSection === "integrations" || settingsSection === "webhooks")) {
-            setActivePage("plugins");
+            setToolsView(settingsSection === "webhooks" ? "actions" : "plugins");
+            setActivePage("tools");
           }
         }, [activePage, settingsSection]);
 
         useEffect(() => {
-          if (activePage !== "plugins") {
+          if (activePage !== "tools" || toolsView !== "plugins") {
             setSelectedPluginId("");
             setPluginsSearchQuery("");
-            setPluginsSearchFilterOpen(false);
             setPluginsNavPopover("");
           }
-        }, [activePage]);
+        }, [activePage, toolsView]);
 
         useEffect(() => {
-          if (activePage !== "plugins") {
+          if (activePage !== "tools" || toolsView !== "plugins") {
             return;
           }
 
@@ -79278,10 +79595,23 @@ const html = `<!doctype html>
           }, 3200);
 
           return () => window.clearInterval(intervalId);
-        }, [activePage]);
+        }, [activePage, toolsView]);
 
         useEffect(() => {
-          if (activePage !== "plugins" || !pluginsNavPopover) {
+          if (pluginsHeroSlideIndex === pluginsHeroDisplayIndex) {
+            return undefined;
+          }
+          setPluginsHeroOutgoingIndex(pluginsHeroDisplayIndex);
+          setPluginsHeroDisplayIndex(pluginsHeroSlideIndex);
+          setPluginsHeroTransitionKey((current) => current + 1);
+          const timeoutId = window.setTimeout(() => {
+            setPluginsHeroOutgoingIndex(null);
+          }, 260);
+          return () => window.clearTimeout(timeoutId);
+        }, [pluginsHeroDisplayIndex, pluginsHeroSlideIndex]);
+
+        useEffect(() => {
+          if (activePage !== "tools" || !pluginsNavPopover) {
             return;
           }
 
@@ -79296,23 +79626,6 @@ const html = `<!doctype html>
           document.addEventListener("mousedown", handlePluginsNavPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handlePluginsNavPopoverPointerDown);
         }, [activePage, pluginsNavPopover]);
-
-        useEffect(() => {
-          if (activePage !== "plugins" || !pluginsSearchFilterOpen) {
-            return undefined;
-          }
-
-          function handlePluginsSearchFilterPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !pluginsSearchFilterRef.current || pluginsSearchFilterRef.current.contains(target)) {
-              return;
-            }
-            setPluginsSearchFilterOpen(false);
-          }
-
-          document.addEventListener("mousedown", handlePluginsSearchFilterPointerDown);
-          return () => document.removeEventListener("mousedown", handlePluginsSearchFilterPointerDown);
-        }, [activePage, pluginsSearchFilterOpen]);
 
         useEffect(() => {
           if (activePage !== "settings" || settingsSection !== "profile") {
@@ -80720,7 +81033,8 @@ const html = `<!doctype html>
         function handleOpenSkillsShortcut() {
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
-          setActivePage("skills");
+          setToolsView("plugins");
+          setActivePage("tools");
         }
 
         function handleOpenTasksShortcut() {
@@ -82574,6 +82888,7 @@ const html = `<!doctype html>
 
         function renderWebhookActionsPanel(options = {}) {
           const embedded = Boolean(options.embedded);
+          const showEmbeddedListActions = options.showEmbeddedListActions !== false;
           const normalizedWebhookSearchQuery = String(options.searchQuery || "").trim().toLowerCase();
           const visibleTriggers = normalizedWebhookSearchQuery
             ? settingsTriggers.filter((trigger) => {
@@ -83027,47 +83342,53 @@ const html = `<!doctype html>
           );
 
           if (embedded) {
+            const embeddedHeaderActions = settingsSelectedTrigger
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => {
+                    setSettingsSelectedTriggerId("");
+                    setSettingsShowTriggerSecret(false);
+                  },
+                }, React.createElement("span", null, "Back to List"))
+              : showEmbeddedListActions
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain",
+                      onClick: openSettingsTriggerComposer,
+                      title: "New webhook",
+                      "aria-label": "New webhook",
+                    },
+                      React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain",
+                      onClick: () => {
+                        void loadSettingsTriggers();
+                      },
+                      title: "Refresh",
+                      "aria-label": "Refresh",
+                    },
+                      React.createElement(RefreshCw, { width: 16, height: 16, strokeWidth: 1.8 })
+                    )
+                  )
+                : null;
+            const shouldShowEmbeddedEmptyState = !settingsSelectedTrigger && !settingsTriggersLoading && settingsTriggers.length === 0;
             return React.createElement("section", { className: "playground-plugins-section" },
               React.createElement("div", { className: "playground-plugins-section-header" },
                 React.createElement("div", { className: "playground-plugins-section-copy" },
                   React.createElement("h3", { className: "playground-plugins-section-title" }, "Actions via Webhooks")
                 ),
                 React.createElement("div", { className: "playground-settings-actions" },
-                  settingsSelectedTrigger
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: () => {
-                          setSettingsSelectedTriggerId("");
-                          setSettingsShowTriggerSecret(false);
-                        },
-                      }, React.createElement("span", null, "Back to List"))
-                    : React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-header-icon-button is-plain",
-                        onClick: openSettingsTriggerComposer,
-                        title: "New webhook",
-                        "aria-label": "New webhook",
-                      },
-                        React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })
-                      ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-header-icon-button is-plain",
-                    onClick: () => {
-                      void loadSettingsTriggers();
-                    },
-                    title: "Refresh",
-                    "aria-label": "Refresh",
-                  },
-                    React.createElement(RefreshCw, { width: 16, height: 16, strokeWidth: 1.8 })
-                  )
+                  embeddedHeaderActions
                 )
               ),
-              !settingsSelectedTrigger && !settingsTriggersLoading && settingsTriggers.length === 0
+              shouldShowEmbeddedEmptyState
                 ? renderWebhookEmptyState()
                 : null,
-              !settingsSelectedTrigger && !settingsTriggersLoading && settingsTriggers.length === 0
+              shouldShowEmbeddedEmptyState
                 ? settingsTriggerComposerDialog
                 : content
             );
@@ -83167,72 +83488,144 @@ const html = `<!doctype html>
             }
           };
 
-          return React.createElement("div", { className: "playground-content-nav playground-tasks-project-navbar playground-tasks-project-home-navbar" },
-            React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
+          const isPluginsView = toolsView === "plugins";
+          const isSkillsView = toolsView === "skills";
+          const isActionsView = toolsView === "actions";
+          const hasMenu = isPluginsView || isActionsView;
+
+          return React.createElement("div", { className: "playground-content-nav playground-tools-navbar" },
+            React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tools-navbar-title" },
               React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                React.createElement("div", { className: "playground-content-title" }, "Plugins & Actions")
+                React.createElement("div", { className: "playground-content-title" }, "Tools")
               )
             ),
-            React.createElement("div", { className: "playground-content-nav-center" }),
-            React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions", ref: pluginsNavActionsRef },
-              React.createElement("div", { className: "playground-files-toolbar-anchor" },
+            React.createElement("div", { className: "playground-content-nav-center" },
+              React.createElement("div", { className: "content-mode-switch" },
                 React.createElement("button", {
                   type: "button",
-                  className: "playground-files-header-icon-button is-plain",
-                  onClick: openSettingsTriggerComposer,
-                  title: "New webhook",
-                  "aria-label": "New webhook",
-                }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
-              ),
-              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                  className: "content-mode-button" + (isPluginsView ? " is-active" : ""),
+                  onClick: () => setToolsView("plugins"),
+                  "aria-pressed": isPluginsView ? "true" : "false",
+                }, "Plugins"),
                 React.createElement("button", {
                   type: "button",
-                  className: "playground-files-header-icon-button is-plain" + (pluginsNavPopover === "menu" ? " is-active" : ""),
-                  "aria-label": "Plugins actions",
-                  "aria-expanded": pluginsNavPopover === "menu" ? "true" : "false",
-                  onClick: () => setPluginsNavPopover((current) => current === "menu" ? "" : "menu"),
-                  title: "More actions",
-                }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.75 })),
-                pluginsNavPopover === "menu"
-                  ? React.createElement("div", {
-                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                    },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "tb-popup-row",
-                        onClick: () => {
-                          void handleDisconnectAllPlugins();
-                        },
-                      },
-                        React.createElement(Unlink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Disconnect all plugins")
-                        )
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-                        onClick: () => {
-                          void handleDeleteAllWebhooks();
-                        },
-                      },
-                        React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Remove all webhooks")
-                        )
-                      )
-                    )
-                  : null
+                  className: "content-mode-button" + (isSkillsView ? " is-active" : ""),
+                  onClick: () => setToolsView("skills"),
+                  "aria-pressed": isSkillsView ? "true" : "false",
+                }, "Skills"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "content-mode-button" + (isActionsView ? " is-active" : ""),
+                  onClick: () => setToolsView("actions"),
+                  "aria-pressed": isActionsView ? "true" : "false",
+                }, "Actions")
               )
+            ),
+            React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tools-navbar-actions", ref: pluginsNavActionsRef },
+              isActionsView && !settingsSelectedTrigger
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-header-icon-button is-plain",
+                        onClick: openSettingsTriggerComposer,
+                        title: "New webhook",
+                        "aria-label": "New webhook",
+                      }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
+                    ),
+                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-header-icon-button is-plain",
+                        onClick: () => {
+                          void loadSettingsTriggers();
+                        },
+                        title: "Refresh",
+                        "aria-label": "Refresh",
+                      }, React.createElement(RefreshCw, { width: 16, height: 16, strokeWidth: 1.8 }))
+                    )
+                  )
+                : null,
+              isSkillsView
+                ? React.createElement("div", {
+                    id: "playground-tools-skills-nav-actions",
+                    className: "playground-tools-skills-nav-actions-slot",
+                  })
+                : null,
+              hasMenu
+                ? React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain" + (pluginsNavPopover === "menu" ? " is-active" : ""),
+                      "aria-label": "Tools actions",
+                      "aria-expanded": pluginsNavPopover === "menu" ? "true" : "false",
+                      onClick: () => setPluginsNavPopover((current) => current === "menu" ? "" : "menu"),
+                      title: "More actions",
+                    }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.75 })),
+                    pluginsNavPopover === "menu"
+                      ? React.createElement("div", {
+                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                        },
+                          isPluginsView
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row",
+                                onClick: () => {
+                                  void handleDisconnectAllPlugins();
+                                },
+                              },
+                                React.createElement(Unlink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                  React.createElement("span", null, "Disconnect all plugins")
+                                )
+                              )
+                            : React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                                onClick: () => {
+                                  void handleDeleteAllWebhooks();
+                                },
+                              },
+                                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                  React.createElement("span", null, "Remove all webhooks")
+                                )
+                              )
+                        )
+                      : null
+                  )
+                : null
             )
           );
         }
 
         function renderPluginsPage() {
+          if (toolsView === "skills") {
+            return React.createElement(PlaygroundSkillsPage, {
+              skills: demoSkills,
+              fetchSkills: handleFetchSkills,
+              backendUrl: proxyBackendBase,
+              requestHeaders,
+              environments: realEnvironments,
+              projectId: settingsProjectRoutingId,
+              apiKey: effectiveApiKey,
+              upstreamUrl: resolvedUpstreamUrl,
+              topNavActionsPortalId: "playground-tools-skills-nav-actions",
+            });
+          }
+
+          if (toolsView === "actions") {
+            return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail" },
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+                React.createElement("div", { className: "playground-plugins-page" },
+                  renderWebhookActionsPanel({ embedded: true, searchQuery: "", showEmbeddedListActions: false })
+                )
+              )
+            );
+          }
+
           const pluginsCatalog = buildPluginsCatalog();
           const normalizedQuery = String(pluginsSearchQuery || "").trim().toLowerCase();
-          const shouldShowPluginsSection = pluginsSearchScope !== "webhooks";
-          const shouldShowWebhooksSection = pluginsSearchScope !== "plugins";
           const filteredPlugins = normalizedQuery
             ? pluginsCatalog.filter((plugin) =>
                 [plugin.label, plugin.description, plugin.category]
@@ -83244,10 +83637,10 @@ const html = `<!doctype html>
           const selectedPlugin = pluginsCatalog.find((plugin) => plugin.id === selectedPluginId) || null;
           const featuredPlugins = [
             {
-              id: "calendar",
-              label: "Google Calendar",
-              logoUrl: "/img/logos/calendar.png",
-              copy: "Schedule a recurring 1:1",
+              id: "google-drive",
+              label: "Google Drive",
+              logoUrl: PLAYGROUND_GOOGLE_DRIVE_LOGO_URL,
+              copy: "Review new files from a shared folder",
             },
             {
               id: "github",
@@ -83262,95 +83655,64 @@ const html = `<!doctype html>
               copy: "Draft specs and sync project notes",
             },
           ];
-          const activeFeaturedPlugin = featuredPlugins[pluginsHeroSlideIndex % featuredPlugins.length] || featuredPlugins[0];
+          const activeFeaturedPlugin = featuredPlugins[pluginsHeroDisplayIndex % featuredPlugins.length] || featuredPlugins[0];
+          const outgoingFeaturedPlugin = pluginsHeroOutgoingIndex === null
+            ? null
+            : featuredPlugins[pluginsHeroOutgoingIndex % featuredPlugins.length] || null;
 
           return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail" },
             React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
               React.createElement("div", { className: "playground-plugins-page" },
-              React.createElement("h2", { className: "playground-plugins-hero-heading" }, "Integrate ACP into your Daily work"),
-              React.createElement("div", { className: "playground-plugins-search-row" },
-                React.createElement("div", { className: "playground-plugins-search-shell" },
-                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("input", {
-                    type: "search",
-                    value: pluginsSearchQuery,
-                    onChange: (event) => setPluginsSearchQuery(event.target.value),
-                    className: "playground-plugins-search",
-                    placeholder: "Search",
-                  })
+                React.createElement("h2", { className: "playground-plugins-hero-heading" }, "Integrate ACP into your Daily work"),
+                React.createElement("div", { className: "playground-plugins-search-row" },
+                  React.createElement("div", { className: "playground-plugins-search-shell" },
+                    React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("input", {
+                      type: "search",
+                      value: pluginsSearchQuery,
+                      onChange: (event) => setPluginsSearchQuery(event.target.value),
+                      className: "playground-plugins-search",
+                      placeholder: "Search",
+                    })
+                  )
                 ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell", ref: pluginsSearchFilterRef },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-plugins-filter",
-                    onClick: () => setPluginsSearchFilterOpen((current) => !current),
-                    "aria-expanded": pluginsSearchFilterOpen ? "true" : "false",
-                    "aria-label": "Filter plugin search scope",
-                  },
-                    React.createElement("span", null,
-                      pluginsSearchScope === "plugins"
-                        ? "Plugins"
-                        : pluginsSearchScope === "webhooks"
-                          ? "Webhooks"
-                          : "All"
-                    ),
-                    React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                  ),
-                  pluginsSearchFilterOpen
-                    ? React.createElement("div", {
-                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                      },
-                        [
-                          { id: "all", label: "All" },
-                          { id: "plugins", label: "Plugins" },
-                          { id: "webhooks", label: "Webhooks" },
-                        ].map((option) =>
-                          React.createElement("button", {
-                            key: option.id,
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              setPluginsSearchScope(option.id);
-                              setPluginsSearchFilterOpen(false);
-                            },
-                          },
-                            React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" },
-                              pluginsSearchScope === option.id
-                                ? React.createElement(Check, { width: 12, height: 12, strokeWidth: 2 })
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, option.label)
-                            )
-                          )
-                        )
-                      )
-                    : null
-                )
-              ),
                 React.createElement("section", { className: "playground-plugins-hero-slider" },
                   React.createElement("div", { className: "playground-plugins-hero-slide" },
-                    React.createElement("div", { className: "playground-plugins-hero-pill" },
-                      React.createElement("img", {
-                        src: activeFeaturedPlugin.logoUrl,
-                        alt: activeFeaturedPlugin.label,
-                        style: activeFeaturedPlugin.id === "github" ? { filter: "brightness(0) invert(1)" } : undefined,
-                      }),
-                      React.createElement("span", null, activeFeaturedPlugin.label),
-                      React.createElement("span", { style: { color: "rgba(17,17,17,0.72)" } }, activeFeaturedPlugin.copy)
+                    React.createElement("div", { className: "playground-plugins-hero-pill-stack" },
+                      outgoingFeaturedPlugin
+                        ? React.createElement("div", { className: "playground-plugins-hero-pill is-outgoing" },
+                            React.createElement("img", {
+                              src: outgoingFeaturedPlugin.logoUrl,
+                              alt: outgoingFeaturedPlugin.label,
+                              className: outgoingFeaturedPlugin.id === "github" ? "is-github-hero" : "",
+                            }),
+                            React.createElement("span", null, outgoingFeaturedPlugin.label),
+                            React.createElement("span", { style: { color: "rgba(17,17,17,0.72)" } }, outgoingFeaturedPlugin.copy)
+                          )
+                        : null,
+                      React.createElement("div", {
+                          key: activeFeaturedPlugin.id + ":" + pluginsHeroTransitionKey,
+                          className: "playground-plugins-hero-pill is-incoming",
+                        },
+                        React.createElement("img", {
+                          src: activeFeaturedPlugin.logoUrl,
+                          alt: activeFeaturedPlugin.label,
+                          className: activeFeaturedPlugin.id === "github" ? "is-github-hero" : "",
+                        }),
+                        React.createElement("span", null, activeFeaturedPlugin.label),
+                        React.createElement("span", { style: { color: "rgba(17,17,17,0.72)" } }, activeFeaturedPlugin.copy)
+                      )
                     ),
                     React.createElement("button", {
                       type: "button",
                       className: "playground-plugins-hero-cta",
                       onClick: () => {
-                        const pluginMatch = pluginsCatalog.find((plugin) => plugin.id === activeFeaturedPlugin.id || plugin.label === activeFeaturedPlugin.label);
-                        if (pluginMatch) {
-                          setSelectedPluginId(pluginMatch.id);
-                        }
+                        handleNewThread();
+                        setPendingThreadComposerPlusOpen(true);
                       },
                     },
-                      React.createElement(Link2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Try in ACP")
+                      React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Start a Thread")
                     )
                   ),
                   React.createElement("div", { className: "playground-plugins-hero-dots" },
@@ -83365,49 +83727,44 @@ const html = `<!doctype html>
                     )
                   )
                 ),
-              shouldShowPluginsSection
-                ? React.createElement("section", { className: "playground-plugins-section" },
-                    React.createElement("div", { className: "playground-plugins-section-header" },
-                      React.createElement("div", { className: "playground-plugins-section-copy" },
-                        React.createElement("h3", { className: "playground-plugins-section-title" }, "Plugins")
-                      )
-                    ),
-                    filteredPlugins.length === 0
-                      ? React.createElement("div", { className: "playground-plugins-empty" }, "No plugins match your search.")
-                      : React.createElement("div", { className: "playground-plugins-grid" },
-                          filteredPlugins.map((plugin) =>
-                            React.createElement("button", {
-                              key: plugin.id,
-                              type: "button",
-                              className: "playground-plugin-row",
-                              onClick: () => setSelectedPluginId(plugin.id),
-                            },
-                              React.createElement("div", { className: "playground-plugin-row-copy" },
-                                React.createElement("div", { className: "playground-plugin-row-logo-shell" }, renderPluginRowLogo(plugin)),
-                                React.createElement("div", { className: "playground-plugin-row-text" },
-                                  React.createElement("div", { className: "playground-plugin-row-title" }, plugin.label),
-                                  React.createElement("div", { className: "playground-plugin-row-description" }, plugin.description)
-                                )
-                              ),
-                              React.createElement("span", {
-                                className: "playground-plugin-row-state" + (plugin.connected ? " is-connected" : ""),
-                              },
-                                plugin.connected
-                                  ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 2 })
-                                  : React.createElement(Plus, { width: 14, height: 14, strokeWidth: 2 })
+                React.createElement("section", { className: "playground-plugins-section" },
+                  React.createElement("div", { className: "playground-plugins-section-header" },
+                    React.createElement("div", { className: "playground-plugins-section-copy" },
+                      React.createElement("h3", { className: "playground-plugins-section-title" }, "Plugins")
+                    )
+                  ),
+                  filteredPlugins.length === 0
+                    ? React.createElement("div", { className: "playground-plugins-empty" }, "No plugins match your search.")
+                    : React.createElement("div", { className: "playground-plugins-grid" },
+                        filteredPlugins.map((plugin) =>
+                          React.createElement("button", {
+                            key: plugin.id,
+                            type: "button",
+                            className: "playground-plugin-row",
+                            onClick: () => setSelectedPluginId(plugin.id),
+                          },
+                            React.createElement("div", { className: "playground-plugin-row-copy" },
+                              React.createElement("div", { className: "playground-plugin-row-logo-shell" }, renderPluginRowLogo(plugin)),
+                              React.createElement("div", { className: "playground-plugin-row-text" },
+                                React.createElement("div", { className: "playground-plugin-row-title" }, plugin.label),
+                                React.createElement("div", { className: "playground-plugin-row-description" }, plugin.description)
                               )
+                            ),
+                            React.createElement("span", {
+                              className: "playground-plugin-row-state" + (plugin.connected ? " is-connected" : ""),
+                            },
+                              plugin.connected
+                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 2 })
+                                : React.createElement(Plus, { width: 14, height: 14, strokeWidth: 2 })
                             )
                           )
                         )
-                  )
-                : null,
-              shouldShowWebhooksSection
-                ? renderWebhookActionsPanel({ embedded: true, searchQuery: pluginsSearchQuery })
-                : null,
-              renderPluginModal(selectedPlugin)
+                      )
+                ),
+                renderPluginModal(selectedPlugin)
+              )
             )
-          )
-        );
+          );
         }
 
         function renderSettingsPage() {
@@ -86196,6 +86553,43 @@ const html = `<!doctype html>
           }
         }, [activePage, contentMode, currentThreadId]);
 
+        useEffect(() => {
+          if (!pendingThreadComposerPlusOpen) {
+            return;
+          }
+          if (activePage !== "thread" || currentThreadId) {
+            return;
+          }
+
+          let cancelled = false;
+          let attemptCount = 0;
+
+          function tryOpenComposerPlus() {
+            if (cancelled) {
+              return;
+            }
+            const plusButton = document.querySelector(".playground-thread-runner .task-attachment-button-full");
+            if (plusButton instanceof HTMLButtonElement) {
+              plusButton.click();
+              plusButton.focus();
+              setPendingThreadComposerPlusOpen(false);
+              return;
+            }
+            attemptCount += 1;
+            if (attemptCount < 20) {
+              window.setTimeout(tryOpenComposerPlus, 80);
+              return;
+            }
+            setPendingThreadComposerPlusOpen(false);
+          }
+
+          const startId = window.setTimeout(tryOpenComposerPlus, 120);
+          return () => {
+            cancelled = true;
+            window.clearTimeout(startId);
+          };
+        }, [activePage, currentThreadId, pendingThreadComposerPlusOpen]);
+
         const demoThreadCatalog = useMemo(() => (
           normalizeThreadList([
             ...DEMO_PINNED_THREADS,
@@ -86540,8 +86934,8 @@ const html = `<!doctype html>
           if (activePage === "settings") {
             return "Settings";
           }
-          if (activePage === "plugins") {
-            return "Plugins & Actions";
+          if (activePage === "tools" || activePage === "plugins" || activePage === "skills") {
+            return "Tools";
           }
           if (activePage === "files") {
             return "Files";
@@ -86552,11 +86946,11 @@ const html = `<!doctype html>
           if (activePage === "agents") {
             return "Agents";
           }
-          if (activePage === "skills") {
-            return "Skills";
-          }
           if (activePage === "tasks") {
             return "Projects";
+          }
+          if (activePage === "calendar") {
+            return "Calendar";
           }
           if (!hasRealAccess && !currentThreadId) {
             return hasDemoAccess ? "ACP Demo" : "Sign In Required";
@@ -87996,11 +88390,11 @@ const html = `<!doctype html>
               ),
               React.createElement("button", {
                 type: "button",
-                className: "sidebar-action-button" + (activePage === "skills" ? " is-active" : ""),
+                className: "sidebar-action-button" + (activePage === "tools" ? " is-active" : ""),
                 onClick: handleOpenSkillsShortcut
               },
                 React.createElement(Layers, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
-                React.createElement("span", null, "Skills")
+                React.createElement("span", null, "Tools")
               )
             ),
             !threadsSectionCollapsed && pinnedThreadItems.length > 0
@@ -88119,10 +88513,10 @@ const html = `<!doctype html>
               }, React.createElement(Bot, { className: "sidebar-rail-icon", strokeWidth: 1.5 })),
               React.createElement("button", {
                 type: "button",
-                className: "sidebar-rail-button" + (activePage === "skills" ? " is-active" : ""),
+                className: "sidebar-rail-button" + (activePage === "tools" ? " is-active" : ""),
                 onClick: handleOpenSkillsShortcut,
-                "aria-label": "Skills",
-                title: "Skills"
+                "aria-label": "Tools",
+                title: "Tools"
               }, React.createElement(Layers, { className: "sidebar-rail-icon", strokeWidth: 1.5 }))
             ),
             React.createElement("button", {
@@ -88224,10 +88618,10 @@ const html = `<!doctype html>
                       React.createElement("button", {
                         type: "button",
                         className: "account-menu-item",
-                        onClick: openPluginsPage,
+                        onClick: openCalendarPage,
                       },
-                        React.createElement(Package, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "account-menu-item-label" }, "Plugins")
+                        React.createElement(CalendarIcon, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
+                        React.createElement("span", { className: "account-menu-item-label" }, "Calendar")
                       ),
                       React.createElement("button", {
                         type: "button",
@@ -88382,9 +88776,9 @@ const html = `<!doctype html>
               ),
               React.createElement("main", { className: "playground-main" },
                 React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") },
-                  activePage === "plugins"
+                  activePage === "tools"
                     ? renderPluginsPageNav()
-                    : activePage === "settings" || activePage === "files" || activePage === "environments" || activePage === "agents" || activePage === "skills" || activePage === "tasks" || showInitialThreadWelcome
+                    : activePage === "settings" || activePage === "files" || activePage === "environments" || activePage === "agents" || activePage === "tasks" || activePage === "calendar" || showInitialThreadWelcome
                       ? null
                     : React.createElement("div", { className: "playground-content-nav" },
                         React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle),
@@ -88511,24 +88905,9 @@ const html = `<!doctype html>
                   React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") },
                     activePage === "settings"
                       ? renderSettingsPage()
-                      : activePage === "plugins"
+                      : activePage === "tools"
                         ? hasRealAccess
                           ? renderPluginsPage()
-                          : hasDemoAccess
-                            ? renderDemoFeaturePage("skills")
-                            : renderAuthGate()
-                      : activePage === "skills"
-                        ? hasRealAccess
-                          ? React.createElement(PlaygroundSkillsPage, {
-                              skills: demoSkills,
-                              fetchSkills: handleFetchSkills,
-                              backendUrl: proxyBackendBase,
-                              requestHeaders,
-                              environments: realEnvironments,
-                              projectId: settingsProjectRoutingId,
-                              apiKey: effectiveApiKey,
-                              upstreamUrl: resolvedUpstreamUrl,
-                            })
                           : hasDemoAccess
                             ? renderDemoFeaturePage("skills")
                             : renderAuthGate()
@@ -88730,7 +89109,7 @@ const html = `<!doctype html>
                           : hasDemoAccess
                             ? renderDemoFeaturePage("agents")
                             : renderAuthGate()
-                      : activePage === "tasks"
+                      : activePage === "tasks" || activePage === "calendar"
                         ? hasRealAccess
                           ? React.createElement(PlaygroundTasksPage, {
                             backendUrl: proxyBackendBase,
@@ -88818,6 +89197,7 @@ const html = `<!doctype html>
                             onRequestSidebarCollapse: () => {
                               setSidebarOpen(false);
                             },
+                            standaloneMode: activePage === "calendar" ? "calendar" : "",
                           })
                           : hasDemoAccess
                             ? renderDemoFeaturePage("tasks")
