@@ -1647,6 +1647,23 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             .filter((item) => !normalizedSearchQuery || String(item?.searchText || "").includes(normalizedSearchQuery));
           const overviewProjectAttachments = Array.isArray(selectedProjectAttachments) ? selectedProjectAttachments : [];
           const hasOverviewProjectAttachments = overviewProjectAttachments.length > 0;
+          function openOverviewAttachmentInFiles(attachment) {
+            const normalizedPath = normalizeHistoryPath(attachment?.sourcePath || attachment?.workspacePath || "");
+            if (!normalizedPath) {
+              return;
+            }
+            if (typeof navigateProjectOverviewFileToFiles === "function") {
+              navigateProjectOverviewFileToFiles({
+                path: normalizedPath,
+                title: attachment?.filename || getHistoryPathName(normalizedPath) || "Untitled file",
+                environmentId: attachment?.environmentId || activeProjectAttachmentEnvironmentId || selectedProject?.defaultEnvironmentId || "",
+                projectId: normalizedSelectedProjectId,
+              });
+            }
+            if (typeof setProjectPreviewedAttachmentId === "function") {
+              setProjectPreviewedAttachmentId("");
+            }
+          }
           const allOverviewProjectFileCount = (() => {
             const next = new Set();
             (projectOverviewFileActivityState?.items || []).forEach((item) => {
@@ -2371,7 +2388,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                                 renderTaskAttachmentChip(attachment, {
                                   removable: true,
                                   activeAttachmentId: projectPreviewedAttachmentId,
-                                  onPreview: handleProjectAttachmentPreviewToggle,
+                                  onPreview: openOverviewAttachmentInFiles,
                                   onRemove: handleRemoveProjectAttachment,
                                 })
                               )
@@ -2388,18 +2405,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                           )
                     )
                   ),
-                  previewedProjectAttachment
-                    ? React.createElement("div", { className: "tb-runner-document-preview-host tb-runner-document-preview-host-inline playground-tasks-detail-preview-host playground-tasks-project-modal-preview" },
-                        React.createElement(RunnerDocumentPreviewDrawer, {
-                          attachment: previewedProjectAttachment,
-                          backendUrl,
-                          requestHeaders,
-                          inline: true,
-                          onClose: () => setProjectPreviewedAttachmentId(""),
-                          showResizeHandle: false,
-                        })
-                      )
-                    : null,
                   projectAttachmentTransferState.isProcessing
                     ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
                     : null,
