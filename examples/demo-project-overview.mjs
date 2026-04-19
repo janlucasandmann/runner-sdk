@@ -125,8 +125,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-summary-kpis {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
         gap: 12px;
       }
 
@@ -135,6 +137,17 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 4px;
+        flex: 1 1 0;
+      }
+
+      .playground-project-overview-summary-kpi:nth-child(3) {
+        align-items: center;
+        text-align: center;
+      }
+
+      .playground-project-overview-summary-kpi:nth-last-child(-n+2) {
+        align-items: flex-end;
+        text-align: right;
       }
 
       .playground-project-overview-summary-kpi-value {
@@ -393,6 +406,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         gap: 16px;
       }
 
+      .playground-project-overview-chart-header .playground-environments-home-comparison-timescale-select {
+        border-radius: 999px;
+      }
+
       .playground-project-overview-chart-title {
         font-size: 14px;
         line-height: 1.2;
@@ -437,6 +454,106 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-panel-plain .playground-plugins-section-title {
         font-size: 14px;
+      }
+
+      .playground-project-overview-files-section {
+        margin-top: 32px;
+        padding: 20px 20px 22px;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.035);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-project-overview-files-section > .playground-plugins-section-header {
+        margin-top: 0;
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .playground-project-overview-files-section .playground-plugins-section-title {
+        font-size: 14px;
+      }
+
+      .playground-project-overview-files-section .playground-tasks-attachments {
+        gap: 14px;
+      }
+
+      .playground-project-overview-files-section .playground-tasks-attachments-toolbar {
+        padding: 0;
+      }
+
+      .playground-project-overview-files-section .playground-tasks-attachments-surface.tb-runner-chat {
+        padding: 0;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-project-overview-files-section .playground-tasks-attachments-topline {
+        justify-content: center;
+      }
+
+      .playground-project-overview-files-section .playground-tasks-attachments-surface.tb-runner-chat .runner-attachments {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .playground-project-overview-files-activity {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin-bottom: 20px;
+      }
+
+      .playground-project-overview-files-table-header,
+      .playground-project-overview-files-table-row {
+        display: grid;
+        grid-template-columns: minmax(0, 2.5fr) minmax(110px, 0.9fr) minmax(120px, 1fr) minmax(84px, 0.7fr) minmax(112px, 0.8fr) 28px;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .playground-project-overview-files-table-header {
+        min-height: 34px;
+        padding: 0 0 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 11px;
+        line-height: 1.4;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 0.02em;
+      }
+
+      .playground-project-overview-files-table-row {
+        min-height: 50px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-project-overview-file-cell {
+        min-width: 0;
+      }
+
+      .playground-project-overview-file-cell.is-operation,
+      .playground-project-overview-file-cell.is-task,
+      .playground-project-overview-file-cell.is-date {
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.56);
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-file-cell.is-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .playground-project-overview-files-table .playground-plugin-row-title {
+        font-size: 12px;
+        line-height: 1.45;
       }
 
       .playground-project-overview-backlog-list {
@@ -529,6 +646,146 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .playground-project-overview-resources-section > .playground-plugins-section-header {
+        margin-top: 32px;
+        padding-bottom: 0 !important;
+        border-bottom: 0 !important;
+      }
+
+      .playground-project-overview-resources-section {
+        margin-bottom: 32px;
+      }
+
+      .playground-project-overview-files-subsection {
+        margin-top: 32px;
+      }
+
+      .playground-project-overview-files-subsection > .playground-plugins-section-header {
+        margin-top: 0;
+        padding-bottom: 0 !important;
+        border-bottom: 0 !important;
+      }
+
+      .playground-project-overview-files-subsection-empty {
+        margin-top: 12px;
+      }
+
+      .playground-project-overview-resources-table {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .playground-project-overview-resources-table-header,
+      .playground-project-overview-resources-table-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) minmax(96px, 0.85fr) minmax(0, 1.45fr) minmax(92px, 0.8fr) minmax(112px, 0.8fr);
+        align-items: center;
+        gap: 16px;
+      }
+
+      .playground-project-overview-resources-table-header {
+        min-height: 34px;
+        padding: 0 0 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 11px;
+        line-height: 1.4;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 0.02em;
+      }
+
+      .playground-project-overview-resources-table-row {
+        min-height: 50px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-project-overview-resource-cell {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-project-overview-resources-table .playground-plugin-row-title {
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-project-overview-resource-cell.is-type,
+      .playground-project-overview-resource-cell.is-status,
+      .playground-project-overview-resource-cell.is-date {
+        color: rgba(255, 255, 255, 0.56);
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-resource-cell.is-endpoint {
+        color: rgba(255, 255, 255, 0.72);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-project-overview-resource-status {
+        text-transform: capitalize;
+      }
+
+      .playground-project-overview-plugins-table {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .playground-project-overview-plugins-table-header,
+      .playground-project-overview-plugins-table-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) minmax(120px, 1fr) minmax(84px, 0.7fr) minmax(112px, 0.8fr);
+        align-items: center;
+        gap: 16px;
+      }
+
+      .playground-project-overview-plugins-table-header {
+        min-height: 34px;
+        padding: 0 0 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 11px;
+        line-height: 1.4;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 0.02em;
+      }
+
+      .playground-project-overview-plugins-table-row {
+        min-height: 50px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-project-overview-plugin-table-cell {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-project-overview-plugin-table-cell.is-usage,
+      .playground-project-overview-plugin-table-cell.is-task,
+      .playground-project-overview-plugin-table-cell.is-date {
+        color: rgba(255, 255, 255, 0.56);
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-plugin-table-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .playground-project-overview-plugins-table .playground-plugin-row-title {
+        font-size: 12px;
+        line-height: 1.45;
       }
 
       .playground-project-overview-threads-section > .playground-plugins-section-header {
@@ -1215,113 +1472,148 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
           const maxProjectDailyCt = Math.max(...projectThreadTimeline.map((bucket) => bucket.totalCT), 1);
           const projectTotalCt = projectThreadTimeline.reduce((sum, bucket) => sum + bucket.totalCT, 0);
-          const allOverviewResourceItems = (() => {
-            const resourceItems = [];
-
-            selectedProjectEnvironments.forEach((environment) => {
-              const environmentId = String(environment?.id || "").trim();
-              if (!environmentId) {
-                return;
-              }
-              const environmentMetadata = environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)
-                ? environment.metadata
-                : {};
-              const endpoint = [
-                environment?.url,
-                environment?.previewUrl,
-                environment?.publicUrl,
-                environmentMetadata?.endpoint,
-                environmentMetadata?.publicUrl,
-                environmentMetadata?.previewUrl,
-                environmentMetadata?.url,
-                environmentMetadata?.domain,
-              ].find((value) => typeof value === "string" && value.trim()) || "";
-              resourceItems.push({
-                id: "environment:" + environmentId,
-                label: environment.name || "Untitled Environment",
-                description: [
-                  environment.description || "",
-                  environmentId === String(selectedProject?.defaultEnvironmentId || "").trim() ? "Default environment" : "",
-                ].filter(Boolean).join(" • "),
-                chip: "Environment",
-                endpoint,
-                status: "ready",
-                searchText: [
-                  environment.name || "",
-                  environment.description || "",
-                  environmentId,
-                  "environment runtime computer",
-                ].join(" ").toLowerCase(),
-              });
-            });
-
-            selectedProjectAttachments.slice(0, 4).forEach((attachment) => {
-              const attachmentId = String(attachment?.id || attachment?.filename || resourceItems.length).trim();
-              if (!attachmentId) {
-                return;
-              }
-              const endpoint = [
-                attachment?.url,
-                attachment?.previewUrl,
-                attachment?.sourcePath,
-                attachment?.workspacePath,
-              ].find((value) => typeof value === "string" && value.trim()) || "";
-              resourceItems.push({
-                id: "attachment:" + attachmentId,
-                label: attachment.filename || attachment.name || "Project File",
-                description: [
-                  attachment.environmentName || "",
-                  formatPlaygroundFileDate(attachment.createdAt),
-                ].filter(Boolean).join(" • "),
-                chip: "File",
-                endpoint,
-                status: "linked",
-                searchText: [
-                  attachment.filename || "",
-                  attachment.name || "",
-                  attachment.environmentName || "",
-                  attachment.sourcePath || "",
-                  attachment.workspacePath || "",
-                  "file attachment",
-                ].join(" ").toLowerCase(),
-              });
-            });
-
-            projectThreads
-              .filter((thread) => Math.max(0, Number(readSettingsComputeTokens(thread, "totalCT", "totalCost") || 0)) > 0)
-              .sort((left, right) => String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || "")))
-              .slice(0, 4)
-              .forEach((thread) => {
-                const threadId = String(thread?.id || "").trim();
-                if (!threadId) {
-                  return;
-                }
-                const totalCT = Math.max(0, Number(readSettingsComputeTokens(thread, "totalCT", "totalCost") || 0));
-                resourceItems.push({
-                  id: "thread-runtime:" + threadId,
-                  label: thread.title || "Thread Runtime",
-                  description: [
-                    formatRelativeThreadTime(thread.updatedAt || thread.createdAt) || "",
-                    totalCT > 0 ? formatProjectOverviewCt(totalCT) + " CT" : "",
-                  ].filter(Boolean).join(" • "),
-                  chip: "Runtime",
-                  endpoint: "",
-                  status: "active",
-                  searchText: [
-                    thread.title || "",
-                    threadId,
-                    "runtime thread compute tokens",
-                  ].join(" ").toLowerCase(),
-                });
-              });
-
-            return resourceItems
-              .sort((left, right) => String(left.label || "").localeCompare(String(right.label || "")));
-          })();
-
+          const allOverviewResourceItems = Array.isArray(projectOverviewServerResourcesState?.items)
+            ? projectOverviewServerResourcesState.items
+            : [];
           const overviewResourceItems = allOverviewResourceItems
-              .filter((item) => !normalizedSearchQuery || item.searchText.includes(normalizedSearchQuery))
-              .sort((left, right) => String(left.label || "").localeCompare(String(right.label || "")));
+            .filter((item) => !normalizedSearchQuery || String(item?.searchText || "").includes(normalizedSearchQuery));
+          const allOverviewPluginItems = (() => {
+            const next = new Map();
+            const normalizedProjectTasks = Array.isArray(tasks)
+              ? tasks.map((task) => normalizePlaygroundTaskRecord(task))
+              : [];
+
+            function upsertPluginUsage(source, usageLabel, taskRecord) {
+              const option = typeof getPlaygroundTaskConnectorOption === "function"
+                ? getPlaygroundTaskConnectorOption(source)
+                : null;
+              if (!option?.key) {
+                return;
+              }
+              const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+              const taskId = String(normalizedTask?.id || "").trim();
+              const ticketNumber = taskId
+                ? (taskTicketNumbersById[taskId] || normalizedTask?.ticketNumber || "")
+                : (normalizedTask?.ticketNumber || "");
+              const updatedAt = String(normalizedTask?.updatedAt || normalizedTask?.createdAt || "").trim();
+              const existing = next.get(option.key) || {
+                id: option.key,
+                label: option.label,
+                logoUrl: option.logoUrl,
+                usageLabels: new Set(),
+                taskIds: new Set(),
+                latestTaskTicketNumber: "",
+                latestUsedAt: "",
+              };
+              existing.usageLabels.add(String(usageLabel || "").trim() || "Task usage");
+              if (taskId) {
+                existing.taskIds.add(taskId);
+              }
+              if (!existing.latestUsedAt || String(updatedAt || "").localeCompare(existing.latestUsedAt) >= 0) {
+                existing.latestUsedAt = updatedAt;
+                existing.latestTaskTicketNumber = String(ticketNumber || "").trim();
+              }
+              next.set(option.key, existing);
+            }
+
+            normalizedProjectTasks.forEach((taskRecord) => {
+              const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+              normalizePlaygroundTaskAttachmentList(normalizedTask.attachments).forEach((attachment) => {
+                const source = getPlaygroundTaskAttachmentConnectorSource(attachment);
+                if (source) {
+                  upsertPluginUsage(source, "Task attachment", normalizedTask);
+                }
+              });
+
+              const taskConnectors = normalizePlaygroundTaskConnectorSelections(normalizedTask.connectors);
+              (Array.isArray(PLAYGROUND_TASK_CONNECTOR_OPTIONS) ? PLAYGROUND_TASK_CONNECTOR_OPTIONS : []).forEach((option) => {
+                const selection = taskConnectors?.[option.key];
+                const hasSelection = Boolean(
+                  (Array.isArray(selection?.items) && selection.items.length > 0)
+                  || (Array.isArray(selection?.selectedIds) && selection.selectedIds.length > 0)
+                );
+                if (hasSelection) {
+                  upsertPluginUsage(option.source, "Task connector", normalizedTask);
+                }
+              });
+
+              const githubRepo = typeof buildPlaygroundTaskGithubRepoReference === "function"
+                ? buildPlaygroundTaskGithubRepoReference(normalizedTask)
+                : null;
+              if (githubRepo?.repoFullName) {
+                upsertPluginUsage("github", "Repo context", normalizedTask);
+              }
+            });
+
+            return Array.from(next.values())
+              .map((item) => {
+                const usage = Array.from(item.usageLabels).filter(Boolean).join(" · ");
+                const taskCount = item.taskIds.size;
+                const taskLabel = item.latestTaskTicketNumber || (taskCount > 1 ? String(taskCount) + " tasks" : "—");
+                const searchText = [
+                  item.label,
+                  usage,
+                  taskLabel,
+                  item.latestUsedAt,
+                ].join(" ").toLowerCase();
+                return {
+                  id: item.id,
+                  label: item.label,
+                  logoUrl: item.logoUrl,
+                  usage,
+                  taskLabel,
+                  latestUsedAt: item.latestUsedAt,
+                  searchText,
+                };
+              })
+              .sort((left, right) => String(right.latestUsedAt || "").localeCompare(String(left.latestUsedAt || "")));
+          })();
+          const overviewPluginItems = allOverviewPluginItems
+            .filter((item) => !normalizedSearchQuery || String(item?.searchText || "").includes(normalizedSearchQuery));
+          const overviewProjectAttachments = Array.isArray(selectedProjectAttachments) ? selectedProjectAttachments : [];
+          const hasOverviewProjectAttachments = overviewProjectAttachments.length > 0;
+          const allOverviewProjectFileCount = (() => {
+            const next = new Set();
+            (projectOverviewFileActivityState?.items || []).forEach((item) => {
+              const key = String(item?.path || item?.title || item?.id || "").trim();
+              if (key) {
+                next.add(key);
+              }
+            });
+            overviewProjectAttachments.forEach((attachment) => {
+              const key = String(
+                attachment?.sourcePath
+                || attachment?.workspacePath
+                || attachment?.filename
+                || attachment?.id
+                || ""
+              ).trim();
+              if (key) {
+                next.add(key);
+              }
+            });
+            return next.size;
+          })();
+          const visibleOverviewTasks = overviewVisibleTasks.slice(0, 5);
+          const visibleProjectThreads = filteredProjectThreads.slice(0, Math.max(5, Number(projectOverviewVisibleThreadCount) || 5));
+          const hasMoreProjectThreads = filteredProjectThreads.length > visibleProjectThreads.length;
+          const filteredProjectFileActivityItems = (projectOverviewFileActivityState?.items || [])
+            .filter((item) => {
+              if (!normalizedSearchQuery) {
+                return true;
+              }
+              const haystack = [
+                item?.title || "",
+                item?.path || "",
+                item?.operation || "",
+                item?.assignee || "",
+                item?.taskTicketNumber || "",
+              ]
+                .join(" ")
+                .toLowerCase();
+              return haystack.includes(normalizedSearchQuery);
+            })
+            .slice(0, 12);
           const projectOverviewKpis = [
             {
               id: "tasks",
@@ -1336,12 +1628,17 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             {
               id: "ct",
               value: formatProjectOverviewCt(projectTotalCt) + " CT",
-              label: "CT Spent",
+              label: "Spent on Project",
             },
             {
               id: "resources",
               value: String(allOverviewResourceItems.length),
               label: "Resources",
+            },
+            {
+              id: "files",
+              value: String(allOverviewProjectFileCount),
+              label: "Files",
             },
           ];
 
@@ -1545,23 +1842,147 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           }
 
           function renderOverviewPluginRow(plugin) {
-            return React.createElement("div", { key: plugin.id, className: "playground-plugin-row playground-project-overview-plugin-row" },
-              React.createElement("div", { className: "playground-plugin-row-copy" },
-                renderOverviewPluginLogo(plugin),
-                React.createElement("div", { className: "playground-plugin-row-text" },
-                  React.createElement("div", { className: "playground-plugin-row-title" }, plugin.label),
-                  React.createElement("div", { className: "playground-plugin-row-description" }, plugin.description)
+            return React.createElement("div", {
+                key: plugin.id,
+                className: "playground-project-overview-plugins-table-row",
+              },
+              React.createElement("div", { className: "playground-project-overview-plugin-table-cell" },
+                React.createElement("div", { className: "playground-project-overview-plugin-table-main" },
+                  renderOverviewPluginLogo(plugin),
+                  React.createElement("div", { className: "playground-plugin-row-title" }, plugin.label)
                 )
               ),
-              React.createElement("div", {
-                className: "playground-plugin-row-state" + (plugin.isActive ? " is-connected" : ""),
-                "aria-hidden": "true",
-              },
-                plugin.isActive
-                  ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 2.2 })
-                  : React.createElement(Plus, { width: 14, height: 14, strokeWidth: 2.2 })
+              React.createElement("div", { className: "playground-project-overview-plugin-table-cell is-usage" }, plugin.usage || "Project usage"),
+              React.createElement("div", { className: "playground-project-overview-plugin-table-cell is-task" }, plugin.taskLabel || "—"),
+              React.createElement("div", { className: "playground-project-overview-plugin-table-cell is-date" },
+                (typeof formatThreadSearchTimestamp === "function"
+                  ? formatThreadSearchTimestamp(plugin?.latestUsedAt || "")
+                  : null)
+                || formatRelativeThreadTime(plugin?.latestUsedAt || "")
+                || "—"
               )
             );
+          }
+
+          function renderOverviewResourceRow(resource) {
+            return React.createElement("div", {
+                key: resource.id || resource.title,
+                className: "playground-project-overview-resources-table-row",
+              },
+              React.createElement("div", { className: "playground-project-overview-resource-cell" },
+                React.createElement("div", { className: "playground-plugin-row-title" }, resource?.title || "Untitled Resource")
+              ),
+              React.createElement("div", { className: "playground-project-overview-resource-cell is-type" }, resource?.type || "Resource"),
+              React.createElement("div", {
+                className: "playground-project-overview-resource-cell is-endpoint",
+                title: resource?.endpoint || "",
+              }, resource?.endpoint || "Internal"),
+              React.createElement("div", { className: "playground-project-overview-resource-cell is-status" },
+                React.createElement("span", { className: "playground-project-overview-resource-status" }, resource?.status || "draft")
+              ),
+              React.createElement("div", { className: "playground-project-overview-resource-cell is-date" },
+                (typeof formatThreadSearchTimestamp === "function"
+                  ? formatThreadSearchTimestamp(resource?.updatedAt || "")
+                  : null)
+                || formatRelativeThreadTime(resource?.updatedAt || "")
+                || "—"
+              )
+            );
+          }
+
+          function renderOverviewFileActivityRow(row) {
+            const rowId = String(row?.id || "").trim();
+            const taskLabel = String(row?.taskTicketNumber || "").trim() || "—";
+            const isRowMutating = projectOverviewFileMutationState?.rowId === rowId;
+            const isRenaming = isRowMutating && projectOverviewFileMutationState?.action === "rename";
+            const isReverting = isRowMutating && projectOverviewFileMutationState?.action === "revert";
+
+            return React.createElement("div", {
+                key: rowId || [row?.threadId, row?.stepId, row?.path].filter(Boolean).join(":"),
+                className: "playground-project-overview-files-table-row",
+              },
+              React.createElement("div", { className: "playground-project-overview-file-cell" },
+                React.createElement("div", { className: "playground-plugin-row-title" }, row?.title || "Untitled file")
+              ),
+              React.createElement("div", { className: "playground-project-overview-file-cell is-operation" }, row?.operation || "Modified"),
+              React.createElement("div", { className: "playground-project-overview-file-cell" },
+                React.createElement("div", { className: "playground-project-overview-thread-agent" }, row?.assignee || "No agent")
+              ),
+              React.createElement("div", { className: "playground-project-overview-file-cell is-task" }, taskLabel),
+              React.createElement("div", { className: "playground-project-overview-file-cell is-date" }, row?.dateLabel || "—"),
+              React.createElement("div", { className: "playground-project-overview-file-cell is-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-thread-menu-button",
+                  "aria-label": "File actions",
+                  onClick: (event) => typeof openProjectOverviewFileMenu === "function" && openProjectOverviewFileMenu(event, row),
+                  disabled: isRenaming || isReverting,
+                },
+                  isRenaming || isReverting
+                    ? React.createElement(Loader2, { width: 15, height: 15, strokeWidth: 1.8, className: "sidebar-thread-menu-icon is-spinning" })
+                    : React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 })
+                )
+              )
+            );
+          }
+
+          function renderProjectOverviewFileMenu() {
+            if (!projectOverviewFileMenuState?.row) {
+              return null;
+            }
+            const targetRow = projectOverviewFileMenuState.row;
+            const targetRowId = String(targetRow?.id || "").trim();
+            const isRowMutating = projectOverviewFileMutationState?.rowId === targetRowId;
+            const isRenaming = isRowMutating && projectOverviewFileMutationState?.action === "rename";
+            const isReverting = isRowMutating && projectOverviewFileMutationState?.action === "revert";
+            const canRevert = Boolean(String(targetRow?.revertTargetStepId || "").trim());
+
+            const content = React.createElement("div", {
+                className: "sidebar-thread-popup-scrim",
+                onClick: () => typeof closeProjectOverviewFileMenu === "function" && closeProjectOverviewFileMenu(),
+              },
+              React.createElement("div", {
+                className: "sidebar-thread-popup",
+                style: {
+                  top: projectOverviewFileMenuState.top + "px",
+                  left: projectOverviewFileMenuState.left + "px",
+                },
+                onClick: (event) => event.stopPropagation(),
+              },
+                React.createElement("div", { className: "sidebar-thread-popup-title" }, "File"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row",
+                  onClick: () => typeof handleProjectOverviewFileRename === "function" && handleProjectOverviewFileRename(targetRow),
+                  disabled: isRenaming || isReverting,
+                },
+                  React.createElement(SquarePen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isRenaming ? "Renaming..." : "Rename file")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row",
+                  onClick: () => typeof handleProjectOverviewFileRevert === "function" && handleProjectOverviewFileRevert(targetRow),
+                  disabled: !canRevert || isRenaming || isReverting,
+                },
+                  React.createElement(History, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isReverting ? "Reverting..." : "Revert changes")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row",
+                  onClick: () => typeof navigateProjectOverviewFileToFiles === "function" && navigateProjectOverviewFileToFiles(targetRow),
+                  disabled: isRenaming || isReverting,
+                },
+                  React.createElement(FolderOpen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Show in Files")
+                )
+              )
+            );
+            if (typeof document !== "undefined" && document.body) {
+              return createPortal(content, document.body);
+            }
+            return content;
           }
 
           return React.createElement("div", { className: "playground-tasks-view-section playground-project-overview-view" },
@@ -1656,12 +2077,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     onClick: () => typeof setTaskView === "function" && setTaskView("backlog"),
                   },
                     React.createElement(ListTodo, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Backlog")
+                    React.createElement("span", null, "See all")
                   )
                 ),
                 overviewVisibleTasks.length > 0
                   ? React.createElement("div", { className: "playground-project-overview-backlog-list" },
-                      overviewVisibleTasks.map((task) => renderOverviewTaskRow(task))
+                      visibleOverviewTasks.map((task) => renderOverviewTaskRow(task))
                     )
                   : React.createElement("div", { className: "playground-tasks-secondary-copy" },
                       normalizedSearchQuery ? "No matching active tasks." : "No active tasks in this project."
@@ -1669,7 +2090,18 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ),
               React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section" },
                 renderOverviewSectionHeader(
-                  "Threads"
+                  "Threads",
+                  null,
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button",
+                    onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
+                    disabled: !hasMoreProjectThreads,
+                    style: !hasMoreProjectThreads ? { opacity: 0.5 } : undefined,
+                  },
+                    React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Show more")
+                  )
                 ),
                 filteredProjectThreads.length > 0
                   ? React.createElement("div", { className: "playground-project-overview-threads-table" },
@@ -1681,68 +2113,197 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         React.createElement("div", null)
                       ),
                       React.createElement("div", { className: "playground-project-overview-thread-list" },
-                      filteredProjectThreads.slice(0, 8).map((thread) => renderOverviewThreadRow(thread))
+                      visibleProjectThreads.map((thread) => renderOverviewThreadRow(thread))
                       )
                     )
                   : React.createElement("div", { className: "playground-tasks-secondary-copy" },
                       normalizedSearchQuery ? "No matching project threads." : "No project threads yet."
                     )
               ),
-              React.createElement("div", { className: "playground-tasks-project-panel" },
+              React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
                 renderOverviewSectionHeader(
                   "Files",
-                  "Shared files and attachments currently linked to the project."
+                  null,
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                    onClick: () => {
+                      const normalizedProjectId = String(selectedProjectId || "").trim();
+                      const normalizedEnvironmentId = String(
+                        selectedProject?.defaultEnvironmentId
+                        || activeProjectAttachmentEnvironmentId
+                        || ""
+                      ).trim();
+                      if (typeof onOpenFilesPage === "function") {
+                        onOpenFilesPage({
+                          token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                          projectId: normalizedProjectId,
+                          environmentId: normalizedEnvironmentId,
+                        });
+                      }
+                    },
+                  }, "Show all on Files")
                 ),
-                filteredProjectAttachments.length > 0
-                  ? React.createElement("div", { className: "playground-tasks-project-list" },
-                      filteredProjectAttachments.slice(0, 8).map((attachment) =>
-                        React.createElement("div", { key: attachment.id, className: "playground-tasks-project-row" },
-                          React.createElement("div", { className: "playground-tasks-project-row-main" },
-                            React.createElement("div", { className: "playground-tasks-project-row-title" }, attachment.filename || attachment.name || "Untitled file"),
-                            React.createElement("div", { className: "playground-tasks-project-row-copy" },
-                              attachment.environmentName
-                                ? attachment.environmentName + " • " + formatPlaygroundFileDate(attachment.createdAt)
-                                : formatPlaygroundFileDate(attachment.createdAt)
+                React.createElement("div", { className: "playground-project-overview-files-activity" },
+                  filteredProjectFileActivityItems.length > 0
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement("div", { className: "playground-project-overview-files-table-header" },
+                          React.createElement("div", null, "File Title"),
+                          React.createElement("div", null, "Operation"),
+                          React.createElement("div", null, "Assignee"),
+                          React.createElement("div", null, "Task"),
+                          React.createElement("div", null, "Date"),
+                          React.createElement("div", null)
+                        ),
+                        filteredProjectFileActivityItems.map((row) => renderOverviewFileActivityRow(row))
+                      )
+                    : projectOverviewFileActivityState?.status === "loading"
+                      ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading file activity…")
+                      : projectOverviewFileActivityState?.status === "error"
+                        ? React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileActivityState.error || "Failed to load project file activity.")
+                        : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                            normalizedSearchQuery ? "No matching project file activity." : "No project file activity yet."
+                          )
+                ),
+                projectOverviewFileMutationState?.error
+                  ? React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileMutationState.error)
+                  : null,
+                React.createElement("div", { className: "playground-tasks-attachments" },
+                  React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
+                    React.createElement("div", { className: "playground-tasks-attachments-actions" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                        onClick: openProjectEnvironmentFilePicker,
+                        disabled: projectAttachmentTransferState.isProcessing || !activeProjectAttachmentEnvironmentId,
+                        title: activeProjectAttachmentEnvironmentId
+                          ? "Add files from " + (activeProjectAttachmentEnvironment?.name || "the selected environment")
+                          : "Select an environment first",
+                      }, "From Environment")
+                    )
+                  ),
+                  React.createElement("input", {
+                    ref: projectAttachmentInputRef,
+                    type: "file",
+                    multiple: true,
+                    hidden: true,
+                    onChange: (event) => void handleProjectAttachmentInputChange(event),
+                  }),
+                  React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+                    React.createElement("div", {
+                      className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isProjectAttachmentDragging ? " dragging" : "") + (hasOverviewProjectAttachments ? " is-filled" : ""),
+                      onDragOver: (event) => {
+                        event.preventDefault();
+                        if (!activeProjectAttachmentEnvironmentId) {
+                          return;
+                        }
+                        setIsProjectAttachmentDragging(true);
+                      },
+                      onDragLeave: (event) => {
+                        if (event.currentTarget.contains(event.relatedTarget)) {
+                          return;
+                        }
+                        setIsProjectAttachmentDragging(false);
+                      },
+                      onDrop: (event) => void handleProjectAttachmentDrop(event),
+                    },
+                      hasOverviewProjectAttachments
+                        ? React.createElement(React.Fragment, null,
+                            React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                              React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                              React.createElement("span", null, isProjectAttachmentDragging ? "Drop files here" : "Drop files to attach, or"),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-tasks-attachments-browse",
+                                onClick: openProjectAttachmentPicker,
+                              }, "browse.")
+                            ),
+                            React.createElement("div", { className: "runner-attachments" },
+                              overviewProjectAttachments.map((attachment) =>
+                                renderTaskAttachmentChip(attachment, {
+                                  removable: true,
+                                  activeAttachmentId: projectPreviewedAttachmentId,
+                                  onPreview: handleProjectAttachmentPreviewToggle,
+                                  onRemove: handleRemoveProjectAttachment,
+                                })
+                              )
                             )
                           )
-                        )
+                        : React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-attachments-empty-button",
+                            onClick: openProjectAttachmentPicker,
+                          },
+                            React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                            React.createElement("span", { className: "tb-popup-dropzone-title" }, isProjectAttachmentDragging ? "Drop files here" : "Drag & drop files here"),
+                            React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
+                          )
+                    )
+                  ),
+                  previewedProjectAttachment
+                    ? React.createElement("div", { className: "tb-runner-document-preview-host tb-runner-document-preview-host-inline playground-tasks-detail-preview-host playground-tasks-project-modal-preview" },
+                        React.createElement(RunnerDocumentPreviewDrawer, {
+                          attachment: previewedProjectAttachment,
+                          backendUrl,
+                          requestHeaders,
+                          inline: true,
+                          onClose: () => setProjectPreviewedAttachmentId(""),
+                          showResizeHandle: false,
+                        })
                       )
-                    )
-                  : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                      normalizedSearchQuery ? "No matching files." : "No project files have been attached yet."
-                    )
+                    : null,
+                  projectAttachmentTransferState.isProcessing
+                    ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
+                    : null,
+                projectAttachmentTransferState.error
+                  ? React.createElement("div", { className: "playground-environments-error" }, projectAttachmentTransferState.error)
+                  : null
+                ),
+                React.createElement("div", { className: "playground-project-overview-files-subsection" },
+                  renderOverviewSectionHeader(
+                    "Plugins",
+                    null
+                  ),
+                  overviewPluginItems.length > 0
+                    ? React.createElement("div", { className: "playground-project-overview-plugins-table" },
+                        React.createElement("div", { className: "playground-project-overview-plugins-table-header" },
+                          React.createElement("div", null, "Title"),
+                          React.createElement("div", null, "Used In"),
+                          React.createElement("div", null, "Task"),
+                          React.createElement("div", null, "Date")
+                        ),
+                        overviewPluginItems.map((plugin) => renderOverviewPluginRow(plugin))
+                      )
+                    : React.createElement("div", { className: "playground-tasks-secondary-copy playground-project-overview-files-subsection-empty" },
+                        normalizedSearchQuery ? "No matching project plugins." : "No plugins have been used in this project yet."
+                      )
+                ),
+                renderProjectOverviewFileMenu()
               ),
-              React.createElement("div", { className: "playground-tasks-project-panel" },
+              React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-resources-section" },
                 renderOverviewSectionHeader(
                   "Resources",
-                  "Environments, shared files, and active runtime assets attached to this project."
+                  null
                 ),
-                overviewResourceItems.length > 0
-                  ? React.createElement("div", { className: "playground-tasks-project-list" },
-                      overviewResourceItems.slice(0, 8).map((resource) =>
-                        React.createElement("div", { key: resource.id, className: "playground-tasks-project-row" },
-                          React.createElement("div", { className: "playground-tasks-project-row-main" },
-                            React.createElement("div", { className: "playground-tasks-project-row-title" }, resource.label),
-                            React.createElement("div", { className: "playground-tasks-project-row-copy" }, resource.description || resource.status || "Project resource")
+                projectOverviewServerResourcesState?.status === "loading"
+                  ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading project resources...")
+                  : projectOverviewServerResourcesState?.status === "error"
+                    ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, projectOverviewServerResourcesState.error || "Failed to load project resources.")
+                    : overviewResourceItems.length > 0
+                      ? React.createElement("div", { className: "playground-project-overview-resources-table" },
+                          React.createElement("div", { className: "playground-project-overview-resources-table-header" },
+                            React.createElement("div", null, "Title"),
+                            React.createElement("div", null, "Type"),
+                            React.createElement("div", null, "Endpoint"),
+                            React.createElement("div", null, "Status"),
+                            React.createElement("div", null, "Date")
                           ),
-                          React.createElement("span", { className: "playground-tasks-chip" }, resource.chip)
+                          overviewResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
                         )
-                      )
-                    )
-                  : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                      normalizedSearchQuery ? "No matching resources." : "No project resources have been attached yet."
-                    )
-              ),
-              React.createElement("section", { className: "playground-plugins-section" },
-                renderOverviewSectionHeader(
-                  "Plugins",
-                  "Connected tools and external systems available in project work."
-                ),
-                overviewPluginItems.length > 0
-                  ? React.createElement("div", { className: "playground-project-overview-plugins-list" },
-                      overviewPluginItems.map((plugin) => renderOverviewPluginRow(plugin))
-                    )
-                  : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No matching plugins.")
+                      : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                          normalizedSearchQuery ? "No matching resources." : "No project resources have been created yet."
+                        )
               )
             )
           );

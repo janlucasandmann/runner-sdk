@@ -5973,7 +5973,7 @@ const html = `<!doctype html>
       }
 
       .playground-plugin-row-title {
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.96);
       }
@@ -17951,6 +17951,10 @@ const html = `<!doctype html>
 
       .playground-tasks-attachments-dropzone.is-filled {
         padding: 12px 14px 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
       }
 
       .playground-tasks-attachments-empty-button {
@@ -17980,6 +17984,12 @@ const html = `<!doctype html>
         line-height: 1.35;
       }
 
+      .playground-tasks-attachments-dropzone.is-filled .playground-tasks-attachments-topline {
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+      }
+
       .playground-tasks-attachments-topline .tb-popup-dropzone-icon {
         width: 14px;
         height: 14px;
@@ -18002,6 +18012,16 @@ const html = `<!doctype html>
 
       .playground-tasks-attachments-surface.tb-runner-chat .runner-attachments {
         padding-top: 0;
+      }
+
+      .playground-tasks-attachments-dropzone.is-filled .runner-attachments {
+        width: auto;
+        max-width: 100%;
+        display: inline-flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 0;
+        margin: 0 auto;
       }
 
       .playground-tasks-attachments-status {
@@ -26485,6 +26505,248 @@ ${PROJECT_OVERVIEW_CSS}
         return next;
       }
 
+      function getPlaygroundThreadProjectId(thread) {
+        const safeThread = normalizeThreadItem(thread);
+        const taskPreview = getThreadTaskPreview(safeThread);
+        const missionControlMetadata = getThreadMissionControlMetadata(safeThread);
+        return String(
+          taskPreview?.projectId
+          || missionControlMetadata?.projectId
+          || safeThread?.projectId
+          || ""
+        ).trim();
+      }
+
+      function getPlaygroundThreadEnvironmentId(thread, fallbackEnvironmentId = "") {
+        const safeThread = normalizeThreadItem(thread);
+        const taskPreview = getThreadTaskPreview(safeThread);
+        return String(
+          taskPreview?.environmentId
+          || fallbackEnvironmentId
+          || ""
+        ).trim();
+      }
+
+      function buildPlaygroundProjectFileActivityRowsForThreadHistory({
+        thread,
+        steps,
+        threadLogs,
+        fallbackEnvironmentId = "",
+        agentsById = {},
+      }) {
+        const safeThread = normalizeThreadItem(thread);
+        const normalizedThreadId = String(safeThread?.id || "").trim();
+        const normalizedProjectId = getPlaygroundThreadProjectId(safeThread);
+        if (!normalizedThreadId || !normalizedProjectId) {
+          return [];
+        }
+
+        const normalizedSteps = Array.isArray(steps) ? steps : [];
+        const normalizedThreadLogs = Array.isArray(threadLogs) ? threadLogs : [];
+        if (normalizedSteps.length === 0 && normalizedThreadLogs.length === 0) {
+          return [];
+        }
+
+        const historyLogsById = new Map();
+        for (const log of normalizedThreadLogs) {
+          if (log && typeof log.id === "string" && log.id) {
+            historyLogsById.set(log.id, log);
+          }
+        }
+
+        const supplementalStepEntriesById = buildSupplementalHistoryStepEntriesById(
+          normalizedSteps,
+          normalizedThreadLogs,
+          historyLogsById
+        );
+        const orderedSteps = [...normalizedSteps].sort((left, right) => {
+          const leftSequence = Number(left?.sequence || 0);
+          const rightSequence = Number(right?.sequence || 0);
+          return rightSequence - leftSequence;
+        });
+
+        function resolveRevertTargetStep(selectedStep) {
+          if (!selectedStep) {
+            return null;
+          }
+
+          if (selectedStep.snapshotBeforeId) {
+            const matchedBySnapshot = orderedSteps.find((step) => {
+              return (
+                step.id !== selectedStep.id
+                && (
+                  (step.snapshotAfterId && step.snapshotAfterId === selectedStep.snapshotBeforeId)
+                  || (step.snapshotBeforeId && step.snapshotBeforeId === selectedStep.snapshotBeforeId)
+                )
+              );
+            });
+            if (matchedBySnapshot) {
+              return matchedBySnapshot;
+            }
+          }
+
+          const previousSteps = orderedSteps
+            .filter((step) => {
+              return (
+                step.id !== selectedStep.id
+                && Number.isFinite(step?.sequence)
+                && Number(step.sequence) < Number(selectedStep.sequence)
+                && (step.snapshotAfterId || step.snapshotBeforeId)
+              );
+            })
+            .sort((left, right) => Number(right.sequence || 0) - Number(left.sequence || 0));
+
+          return previousSteps[0] || null;
+        }
+
+        const {
+          safeThread: normalizedSafeThread,
+          taskPreview,
+          taskTicketNumber,
+        } = getSidebarThreadTitleParts(safeThread);
+        const resolvedEnvironmentId = getPlaygroundThreadEnvironmentId(
+          safeThread,
+          fallbackEnvironmentId
+        );
+        const threadAgentId = String(normalizedSafeThread?.agentId || "").trim();
+        const threadAgentName = threadAgentId && agentsById[threadAgentId]
+          ? (agentsById[threadAgentId]?.name || threadAgentId)
+          : "No agent";
+
+        return orderedSteps.flatMap((step) => {
+          const stepId = String(step?.id || "").trim();
+          if (!stepId) {
+            return [];
+          }
+
+          const revertTargetStep = resolveRevertTargetStep(step);
+          const stepFileEntries = buildStepFileEntries(
+            step,
+            null,
+            [],
+            supplementalStepEntriesById.get(stepId) || [],
+            historyLogsById
+          ).filter((entry) => entry && entry.type === "file" && entry.path);
+
+          if (stepFileEntries.length === 0) {
+            return [];
+          }
+
+          const stepTimestamp = Date.parse(String(step?.createdAt || normalizedSafeThread?.updatedAt || normalizedSafeThread?.createdAt || ""));
+          const dateLabel = Number.isFinite(stepTimestamp)
+            ? new Date(stepTimestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+            : "—";
+
+          return stepFileEntries.map((entry) => {
+            const normalizedPath = normalizeHistoryPath(entry.path);
+            const operationKind = normalizeHistoryChangeKind(entry.changeKind)
+              || inferHistoryChangeKindFromDiffText(entry.diffText)
+              || "modified";
+            return {
+              id: "project-file-change:" + normalizedThreadId + ":" + stepId + ":" + normalizedPath,
+              threadId: normalizedThreadId,
+              projectId: normalizedProjectId,
+              stepId,
+              revertTargetStepId: typeof revertTargetStep?.id === "string" ? revertTargetStep.id : "",
+              title: entry.name || getHistoryPathName(normalizedPath) || normalizedPath,
+              path: normalizedPath,
+              operation: getHistoryChangeKindLabel(operationKind) || "Modified",
+              operationKind,
+              assignee: threadAgentName,
+              assigneeId: threadAgentId,
+              taskTicketNumber: taskTicketNumber || "",
+              taskId: String(taskPreview?.taskId || "").trim(),
+              dateLabel,
+              timestamp: Number.isFinite(stepTimestamp) ? stepTimestamp : 0,
+              environmentId: resolvedEnvironmentId,
+              threadRecord: normalizedSafeThread,
+            };
+          });
+        });
+      }
+
+      function buildPlaygroundProjectLinkedFilePathIndexFromActivityRows(rows) {
+        const next = {};
+
+        function getEnvironmentRecord(environmentId) {
+          const normalizedEnvironmentId = String(environmentId || "").trim();
+          if (!normalizedEnvironmentId) {
+            return null;
+          }
+          if (!next[normalizedEnvironmentId]) {
+            next[normalizedEnvironmentId] = {
+              all: new Set(),
+              byProjectId: {},
+            };
+          }
+          return next[normalizedEnvironmentId];
+        }
+
+        (Array.isArray(rows) ? rows : []).forEach((row) => {
+          const normalizedEnvironmentId = String(row?.environmentId || "").trim();
+          const normalizedProjectId = String(row?.projectId || "").trim();
+          const normalizedPath = normalizeHistoryPath(row?.path || "");
+          const environmentRecord = getEnvironmentRecord(normalizedEnvironmentId);
+          if (!environmentRecord || !normalizedPath) {
+            return;
+          }
+          environmentRecord.all.add(normalizedPath);
+          if (normalizedProjectId) {
+            if (!environmentRecord.byProjectId[normalizedProjectId]) {
+              environmentRecord.byProjectId[normalizedProjectId] = new Set();
+            }
+            environmentRecord.byProjectId[normalizedProjectId].add(normalizedPath);
+          }
+        });
+
+        return next;
+      }
+
+      function mergePlaygroundProjectLinkedFilePathIndexes(baseIndex, extraIndex) {
+        const next = {};
+
+        function ensureEnvironmentRecord(environmentId) {
+          const normalizedEnvironmentId = String(environmentId || "").trim();
+          if (!normalizedEnvironmentId) {
+            return null;
+          }
+          if (!next[normalizedEnvironmentId]) {
+            next[normalizedEnvironmentId] = {
+              all: new Set(),
+              byProjectId: {},
+            };
+          }
+          return next[normalizedEnvironmentId];
+        }
+
+        function mergeIndex(index) {
+          Object.entries(index && typeof index === "object" ? index : {}).forEach(([environmentId, environmentRecord]) => {
+            const targetRecord = ensureEnvironmentRecord(environmentId);
+            if (!targetRecord) {
+              return;
+            }
+            (environmentRecord?.all instanceof Set ? environmentRecord.all : []).forEach((path) => {
+              targetRecord.all.add(path);
+            });
+            Object.entries(environmentRecord?.byProjectId && typeof environmentRecord.byProjectId === "object"
+              ? environmentRecord.byProjectId
+              : {})
+              .forEach(([projectId, paths]) => {
+                if (!targetRecord.byProjectId[projectId]) {
+                  targetRecord.byProjectId[projectId] = new Set();
+                }
+                (paths instanceof Set ? paths : []).forEach((path) => {
+                  targetRecord.byProjectId[projectId].add(path);
+                });
+              });
+          });
+        }
+
+        mergeIndex(baseIndex);
+        mergeIndex(extraIndex);
+        return next;
+      }
+
       function getPlaygroundServerResponseRecord(data) {
         const source = data?.server || data?.data || data;
         return source && typeof source === "object" && typeof source.id === "string"
@@ -34550,10 +34812,11 @@ ${PROJECT_OVERVIEW_CSS}
         );
       }
 
-      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, onFileChatThreadMutated, onRequestSidebarCollapse }) {
+      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, onFileChatThreadMutated, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled }) {
         const FILE_CHAT_PANEL_DEFAULT_WIDTH = 420;
         const FILES_BROWSER_RESTORE_WIDTH = 320;
         const FILES_PANE_CLOSE_THRESHOLD = 100;
+        const projectLinkedHistoryClient = useMemo(() => new RunnerClient(), []);
         const uploadInputRef = useRef(null);
         const searchPopupInputRef = useRef(null);
         const renameInputRef = useRef(null);
@@ -34791,6 +35054,59 @@ ${PROJECT_OVERVIEW_CSS}
         }, [currentPath, expandedFolders, loadEnvironmentFolder, selectedEnvironmentId]);
 
         useEffect(() => {
+          if (!navigationRequest) {
+            return;
+          }
+
+          const requestToken = typeof navigationRequest?.token === "string" ? navigationRequest.token : "";
+          const requestedProjectId = String(navigationRequest?.projectId || "").trim();
+          const requestedEnvironmentId = String(navigationRequest?.environmentId || "").trim();
+          const requestedPath = normalizeHistoryPath(navigationRequest?.path || "");
+          const requestedIsFolder = Boolean(navigationRequest?.isFolder);
+          const targetEnvironmentId = requestedEnvironmentId || selectedEnvironmentId;
+
+          if (requestedEnvironmentId && requestedEnvironmentId !== selectedEnvironmentId) {
+            setSelectedEnvironmentId(requestedEnvironmentId);
+            return;
+          }
+
+          let cancelled = false;
+          const targetFolderPath = requestedPath
+            ? (requestedIsFolder ? requestedPath : getPlaygroundEntryParentPath(requestedPath))
+            : "";
+          const targetSelectionPaths = requestedPath && !requestedIsFolder ? [requestedPath] : [];
+
+          void (async () => {
+            try {
+              if (requestedProjectId) {
+                setProjectFilterScope(requestedProjectId);
+              }
+              if (targetEnvironmentId) {
+                await loadEnvironmentFolder(targetEnvironmentId, targetFolderPath);
+              }
+              if (cancelled) {
+                return;
+              }
+              pushPath(targetFolderPath, targetSelectionPaths);
+              setIsPreviewOpen(targetSelectionPaths.length > 0);
+            } finally {
+              if (!cancelled && requestToken && typeof onNavigationRequestHandled === "function") {
+                onNavigationRequestHandled(requestToken);
+              }
+            }
+          })();
+
+          return () => {
+            cancelled = true;
+          };
+        }, [
+          loadEnvironmentFolder,
+          navigationRequest,
+          onNavigationRequestHandled,
+          selectedEnvironmentId,
+        ]);
+
+        useEffect(() => {
           if (!selectedEnvironmentId || !searchPopupQuery.trim()) return;
           if (searchInventoryByEnvironmentId[selectedEnvironmentId] || searchInventoryLoadingByEnvironmentId[selectedEnvironmentId]) {
             return;
@@ -34809,7 +35125,7 @@ ${PROJECT_OVERVIEW_CSS}
 
           async function loadProjectLinkedPaths() {
             try {
-              const [projectsResult, serversResult, tasksResult] = await Promise.allSettled([
+              const [projectsResult, serversResult, tasksResult, threadsResult] = await Promise.allSettled([
                 fetch(backendUrl + "/projects", {
                   method: "GET",
                   headers: requestHeaders,
@@ -34825,11 +35141,17 @@ ${PROJECT_OVERVIEW_CSS}
                   headers: requestHeaders,
                   signal: controller.signal,
                 }),
+                fetch(backendUrl + "/threads?limit=240", {
+                  method: "GET",
+                  headers: requestHeaders,
+                  signal: controller.signal,
+                }),
               ]);
 
               let nextProjects = [];
               let nextServers = [];
               let nextTasks = [];
+              let nextThreads = [];
 
               if (projectsResult.status === "fulfilled" && projectsResult.value.ok) {
                 const data = await projectsResult.value.json().catch(() => ({}));
@@ -34846,12 +35168,85 @@ ${PROJECT_OVERVIEW_CSS}
                 nextTasks = parsePlaygroundTaskListResponse(data);
               }
 
+              if (threadsResult.status === "fulfilled" && threadsResult.value.ok) {
+                const data = await threadsResult.value.json().catch(() => ({}));
+                const items = Array.isArray(data?.data)
+                  ? data.data
+                  : Array.isArray(data?.threads)
+                    ? data.threads
+                    : [];
+                nextThreads = normalizeThreadList(items);
+              }
+
+              const baseLinkedIndex = buildPlaygroundProjectLinkedFilePathIndex(nextProjects, nextServers, nextTasks);
+
               if (!controller.signal.aborted) {
                 setAvailableProjectFilters(
                   nextProjects.filter((project) => String(project?.id || "").trim())
                 );
+                setProjectLinkedPathsByEnvironmentId(baseLinkedIndex);
+              }
+
+              const projectDefaultEnvironmentIdsById = {};
+              nextProjects.forEach((project) => {
+                const normalizedProjectId = String(project?.id || "").trim();
+                if (!normalizedProjectId) {
+                  return;
+                }
+                projectDefaultEnvironmentIdsById[normalizedProjectId] = String(project?.defaultEnvironmentId || "").trim();
+              });
+
+              const projectThreads = nextThreads
+                .filter((thread) => getPlaygroundThreadProjectId(thread))
+                .sort(compareThreadsByRecent)
+                .slice(0, 60);
+
+              if (projectThreads.length === 0) {
+                return;
+              }
+
+              const linkedActivityResults = await Promise.allSettled(projectThreads.map(async (thread) => {
+                const normalizedThreadId = String(thread?.id || "").trim();
+                if (!normalizedThreadId) {
+                  return [];
+                }
+                const normalizedProjectId = getPlaygroundThreadProjectId(thread);
+                const [stepsResult, logsResult] = await Promise.allSettled([
+                  projectLinkedHistoryClient.listThreadSteps({
+                    backendUrl,
+                    threadId: normalizedThreadId,
+                    limit: 250,
+                    headers: requestHeaders,
+                  }),
+                  fetchHistoryThreadLogs({
+                    client: projectLinkedHistoryClient,
+                    backendUrl,
+                    threadId: normalizedThreadId,
+                    headers: requestHeaders,
+                  }),
+                ]);
+
+                const steps = stepsResult.status === "fulfilled" && Array.isArray(stepsResult.value)
+                  ? stepsResult.value
+                  : [];
+                const threadLogs = logsResult.status === "fulfilled" && Array.isArray(logsResult.value)
+                  ? logsResult.value
+                  : [];
+
+                return buildPlaygroundProjectFileActivityRowsForThreadHistory({
+                  thread,
+                  steps,
+                  threadLogs,
+                  fallbackEnvironmentId: projectDefaultEnvironmentIdsById[normalizedProjectId] || "",
+                });
+              }));
+
+              if (!controller.signal.aborted) {
+                const historyLinkedIndex = buildPlaygroundProjectLinkedFilePathIndexFromActivityRows(
+                  linkedActivityResults.flatMap((result) => result.status === "fulfilled" && Array.isArray(result.value) ? result.value : [])
+                );
                 setProjectLinkedPathsByEnvironmentId(
-                  buildPlaygroundProjectLinkedFilePathIndex(nextProjects, nextServers, nextTasks)
+                  mergePlaygroundProjectLinkedFilePathIndexes(baseLinkedIndex, historyLinkedIndex)
                 );
               }
             } catch {
@@ -34864,7 +35259,7 @@ ${PROJECT_OVERVIEW_CSS}
 
           void loadProjectLinkedPaths();
           return () => controller.abort();
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, projectLinkedHistoryClient, requestHeaders]);
 
         useEffect(() => {
           if (!toolbarPopover) return;
@@ -58134,6 +58529,7 @@ ${PROJECT_OVERVIEW_CSS}
         onNavigationRequestHandled,
         onProjectScopeChange,
         onProjectRecordCommitted,
+        onOpenFilesPage,
         onRequireAuth,
         onRequestSidebarCollapse,
         detailOnly,
@@ -58233,6 +58629,24 @@ ${PROJECT_OVERVIEW_CSS}
         const [projectEnvironmentFilePickerSelectedPaths, setProjectEnvironmentFilePickerSelectedPaths] = useState([]);
         const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "overview");
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
+        const [projectOverviewFileActivityState, setProjectOverviewFileActivityState] = useState({
+          status: "idle",
+          error: "",
+          items: [],
+        });
+        const [projectOverviewFileActivityReloadNonce, setProjectOverviewFileActivityReloadNonce] = useState(0);
+        const [projectOverviewFileMenuState, setProjectOverviewFileMenuState] = useState(null);
+        const [projectOverviewFileMutationState, setProjectOverviewFileMutationState] = useState({
+          rowId: "",
+          action: "",
+          error: "",
+        });
+        const [projectOverviewServerResourcesState, setProjectOverviewServerResourcesState] = useState({
+          status: "idle",
+          error: "",
+          items: [],
+        });
+        const [projectOverviewVisibleThreadCount, setProjectOverviewVisibleThreadCount] = useState(5);
         const isCalendarContext = isStandaloneCalendarMode || taskView === "calendar";
         const [backlogToolbarPopover, setBacklogToolbarPopover] = useState("");
         const [backlogFilterMode, setBacklogFilterMode] = useState("open");
@@ -58411,6 +58825,7 @@ ${PROJECT_OVERVIEW_CSS}
         const [projectCustomSkillsLoading, setProjectCustomSkillsLoading] = useState(false);
         const [sprintComposerOpen, setSprintComposerOpen] = useState(false);
         const [sprintDraft, setSprintDraft] = useState(buildPlaygroundDefaultSprintDraft());
+        const projectOverviewHistoryClient = useMemo(() => new RunnerClient(), []);
 
         const sortedAgents = useMemo(() => {
           return [...agents].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
@@ -58646,7 +59061,7 @@ ${PROJECT_OVERVIEW_CSS}
         }, [availableBacklogEnvironments, backlogComposerEnvironmentId]);
         const projectAttachmentHostRecord = missionControlStrategyOpen
           ? selectedProject
-          : projectDraft;
+          : ((projectComposerOpen || !selectedProject) ? projectDraft : selectedProject);
         const activeProjectAttachmentEnvironmentId = typeof projectAttachmentHostRecord?.defaultEnvironmentId === "string"
           ? projectAttachmentHostRecord.defaultEnvironmentId.trim()
           : "";
@@ -58897,6 +59312,447 @@ ${PROJECT_OVERVIEW_CSS}
           selectedProjectId,
           selectedProjectMissionControl.document,
         ]);
+
+        const loadProjectOverviewFileActivity = useCallback(async function loadProjectOverviewFileActivity() {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          if (!normalizedProjectId || taskView !== "overview") {
+            setProjectOverviewFileActivityState((current) => ({
+              ...current,
+              status: normalizedProjectId ? current.status : "idle",
+              error: normalizedProjectId ? current.error : "",
+              items: normalizedProjectId ? current.items : [],
+            }));
+            return;
+          }
+
+          setProjectOverviewFileActivityState((current) => ({
+            ...current,
+            status: "loading",
+            error: "",
+          }));
+
+          const threadHeaders = {
+            ...(requestHeaders && typeof requestHeaders === "object" ? requestHeaders : {}),
+          };
+
+          let projectThreads = normalizeThreadList(selectedProjectRecentThreads);
+          try {
+            const threadsResponse = await fetch(backendUrl + "/threads?limit=240", {
+              method: "GET",
+              headers: threadHeaders,
+            });
+            const threadsData = await threadsResponse.json().catch(() => ({}));
+            if (threadsResponse.ok) {
+              const items = Array.isArray(threadsData?.data)
+                ? threadsData.data
+                : Array.isArray(threadsData?.threads)
+                  ? threadsData.threads
+                  : [];
+              const fetchedProjectThreads = normalizeThreadList(items)
+                .filter((thread) => getPlaygroundThreadProjectId(thread) === normalizedProjectId);
+              projectThreads = normalizeThreadList([...fetchedProjectThreads, ...projectThreads])
+                .sort(compareThreadsByRecent)
+                .slice(0, 18);
+            }
+          } catch {
+            projectThreads = projectThreads.slice(0, 12);
+          }
+
+          if (projectThreads.length === 0) {
+            setProjectOverviewFileActivityState({
+              status: "ready",
+              error: "",
+              items: [],
+            });
+            return;
+          }
+
+          const results = await Promise.allSettled(projectThreads.map(async (threadRecord) => {
+            const thread = normalizeThreadItem(threadRecord);
+            const normalizedThreadId = String(thread.id || "").trim();
+            if (!normalizedThreadId) {
+              return [];
+            }
+
+            const [stepsResult, logsResult] = await Promise.allSettled([
+              projectOverviewHistoryClient.listThreadSteps({
+                backendUrl,
+                threadId: normalizedThreadId,
+                limit: 250,
+                headers: threadHeaders,
+              }),
+              fetchHistoryThreadLogs({
+                client: projectOverviewHistoryClient,
+                backendUrl,
+                threadId: normalizedThreadId,
+                headers: threadHeaders,
+              }),
+            ]);
+
+            const steps = stepsResult.status === "fulfilled" && Array.isArray(stepsResult.value)
+              ? stepsResult.value
+              : [];
+            const threadLogs = logsResult.status === "fulfilled" && Array.isArray(logsResult.value)
+              ? logsResult.value
+              : [];
+            return buildPlaygroundProjectFileActivityRowsForThreadHistory({
+              thread,
+              steps,
+              threadLogs,
+              fallbackEnvironmentId: String(
+                selectedProject?.defaultEnvironmentId
+                || activeProjectAttachmentEnvironmentId
+                || ""
+              ).trim(),
+              agentsById,
+            });
+          }));
+
+          const nextItems = results
+            .flatMap((result) => result.status === "fulfilled" && Array.isArray(result.value) ? result.value : [])
+            .sort((left, right) => {
+              const timeDelta = Number(right.timestamp || 0) - Number(left.timestamp || 0);
+              if (timeDelta !== 0) {
+                return timeDelta;
+              }
+              return String(left.title || "").localeCompare(String(right.title || ""));
+            })
+            .slice(0, 40);
+
+          setProjectOverviewFileActivityState({
+            status: "ready",
+            error: "",
+            items: nextItems,
+          });
+        }, [
+          activeProjectAttachmentEnvironmentId,
+          agentsById,
+          backendUrl,
+          projectOverviewHistoryClient,
+          requestHeaders,
+          selectedProject?.defaultEnvironmentId,
+          selectedProjectId,
+          selectedProjectRecentThreads,
+          taskView,
+        ]);
+
+        useEffect(() => {
+          let cancelled = false;
+
+          void loadProjectOverviewFileActivity()
+            .catch((error) => {
+              if (cancelled) {
+                return;
+              }
+              setProjectOverviewFileActivityState({
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load project file activity.",
+                items: [],
+              });
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [loadProjectOverviewFileActivity, projectOverviewFileActivityReloadNonce]);
+
+        const loadProjectOverviewServerResources = useCallback(async function loadProjectOverviewServerResources() {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          if (!normalizedProjectId || taskView !== "overview") {
+            setProjectOverviewServerResourcesState((current) => ({
+              ...current,
+              status: normalizedProjectId ? current.status : "idle",
+              error: normalizedProjectId ? current.error : "",
+              items: normalizedProjectId ? current.items : [],
+            }));
+            return;
+          }
+
+          setProjectOverviewServerResourcesState((current) => ({
+            ...current,
+            status: "loading",
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(backendUrl + "/servers", {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load project resources.");
+            }
+
+            const nextItems = parsePlaygroundServerListResponse(data)
+              .filter((server) => String(server?.projectId || "").trim() === normalizedProjectId)
+              .filter((server) => canonicalizePlaygroundServerKind(server?.kind) !== "database")
+              .map((server) => {
+                const normalizedKind = canonicalizePlaygroundServerKind(server?.kind);
+                const endpoint = [
+                  typeof server?.customDomain === "string" ? server.customDomain.trim() : "",
+                  typeof server?.serviceUrl === "string" ? server.serviceUrl.trim() : "",
+                  typeof server?.cloudRunServiceName === "string" ? server.cloudRunServiceName.trim() : "",
+                ].find(Boolean) || "";
+                const updatedAt = String(server?.updatedAt || server?.createdAt || "").trim();
+                return {
+                  id: String(server?.id || "").trim(),
+                  title: String(server?.name || "").trim() || "Untitled Resource",
+                  type: formatPlaygroundServerKindLabel(normalizedKind),
+                  endpoint,
+                  status: String(server?.status || "").trim() || "draft",
+                  updatedAt,
+                  searchText: [
+                    server?.name || "",
+                    normalizedKind,
+                    formatPlaygroundServerKindLabel(normalizedKind),
+                    endpoint,
+                    server?.status || "",
+                    server?.id || "",
+                  ].join(" ").toLowerCase(),
+                };
+              })
+              .sort((left, right) => String(right.updatedAt || "").localeCompare(String(left.updatedAt || "")));
+
+            setProjectOverviewServerResourcesState({
+              status: "ready",
+              error: "",
+              items: nextItems,
+            });
+          } catch (error) {
+            setProjectOverviewServerResourcesState({
+              status: "error",
+              error: error instanceof Error ? error.message : "Failed to load project resources.",
+              items: [],
+            });
+          }
+        }, [backendUrl, requestHeaders, selectedProjectId, taskView]);
+
+        useEffect(() => {
+          let cancelled = false;
+
+          void loadProjectOverviewServerResources()
+            .catch((error) => {
+              if (cancelled) {
+                return;
+              }
+              setProjectOverviewServerResourcesState({
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load project resources.",
+                items: [],
+              });
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [loadProjectOverviewServerResources]);
+
+        useEffect(() => {
+          setProjectOverviewFileMenuState(null);
+          setProjectOverviewFileMutationState({
+            rowId: "",
+            action: "",
+            error: "",
+          });
+        }, [selectedProjectId, taskView]);
+
+        useEffect(() => {
+          if (!projectOverviewFileMenuState) {
+            return;
+          }
+
+          function handleKeyDown(event) {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setProjectOverviewFileMenuState(null);
+            }
+          }
+
+          function handleViewportChange() {
+            setProjectOverviewFileMenuState(null);
+          }
+
+          window.addEventListener("keydown", handleKeyDown);
+          window.addEventListener("resize", handleViewportChange);
+          window.addEventListener("scroll", handleViewportChange, true);
+          return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("resize", handleViewportChange);
+            window.removeEventListener("scroll", handleViewportChange, true);
+          };
+        }, [projectOverviewFileMenuState]);
+
+        function openProjectOverviewFileMenu(event, row) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const rect = event.currentTarget.getBoundingClientRect();
+          const menuWidth = 224;
+          const menuHeight = 176;
+          const openUpward = rect.bottom + menuHeight > window.innerHeight - 12 && rect.top - menuHeight >= 12;
+          const top = openUpward
+            ? Math.max(12, rect.top - menuHeight - 8)
+            : Math.min(window.innerHeight - menuHeight - 12, rect.bottom + 8);
+          const left = Math.min(
+            Math.max(12, rect.right - menuWidth),
+            Math.max(12, window.innerWidth - menuWidth - 12),
+          );
+
+          setProjectOverviewFileMenuState({
+            row,
+            top,
+            left,
+          });
+          setProjectOverviewFileMutationState((current) => ({
+            ...current,
+            error: "",
+          }));
+        }
+
+        function closeProjectOverviewFileMenu() {
+          setProjectOverviewFileMenuState(null);
+        }
+
+        function navigateProjectOverviewFileToFiles(row) {
+          const normalizedProjectId = String(selectedProjectId || row?.projectId || "").trim();
+          const normalizedEnvironmentId = String(
+            row?.environmentId
+            || selectedProject?.defaultEnvironmentId
+            || activeProjectAttachmentEnvironmentId
+            || ""
+          ).trim();
+          const normalizedPath = normalizeHistoryPath(row?.path || "");
+          if (!normalizedPath) {
+            return;
+          }
+          if (typeof onOpenFilesPage === "function") {
+            onOpenFilesPage({
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              projectId: normalizedProjectId,
+              environmentId: normalizedEnvironmentId,
+              path: normalizedPath,
+              isFolder: false,
+            });
+          }
+          closeProjectOverviewFileMenu();
+        }
+
+        async function handleProjectOverviewFileRename(row) {
+          const normalizedEnvironmentId = String(
+            row?.environmentId
+            || selectedProject?.defaultEnvironmentId
+            || activeProjectAttachmentEnvironmentId
+            || ""
+          ).trim();
+          const normalizedPath = normalizeHistoryPath(row?.path || "");
+          if (!normalizedEnvironmentId || !normalizedPath) {
+            window.alert("This file cannot be renamed because no project environment is available.");
+            return;
+          }
+
+          const currentName = getHistoryPathName(normalizedPath) || String(row?.title || "").trim() || "file";
+          const nextName = String(window.prompt("Rename file", currentName) || "").trim().replace(/[\\/]+/g, "-");
+          if (!nextName || nextName === currentName) {
+            return;
+          }
+
+          const parentPath = getPlaygroundEntryParentPath(normalizedPath);
+          const destPath = normalizeHistoryPath([parentPath, nextName].filter(Boolean).join("/"));
+          if (!destPath || destPath === normalizedPath) {
+            return;
+          }
+
+          closeProjectOverviewFileMenu();
+          setProjectOverviewFileMutationState({
+            rowId: row.id,
+            action: "rename",
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              backendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/files/move",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  sourcePath: normalizedPath,
+                  destPath,
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to rename file.");
+            }
+
+            setProjectOverviewFileActivityReloadNonce((current) => current + 1);
+          } catch (error) {
+            setProjectOverviewFileMutationState({
+              rowId: row.id,
+              action: "",
+              error: error instanceof Error ? error.message : "Failed to rename file.",
+            });
+            return;
+          }
+
+          setProjectOverviewFileMutationState({
+            rowId: "",
+            action: "",
+            error: "",
+          });
+        }
+
+        async function handleProjectOverviewFileRevert(row) {
+          const normalizedThreadId = String(row?.threadId || "").trim();
+          const normalizedStepId = String(row?.stepId || "").trim();
+          const normalizedRevertTargetStepId = String(row?.revertTargetStepId || "").trim();
+          if (!normalizedThreadId || !normalizedStepId || !normalizedRevertTargetStepId) {
+            window.alert("This change cannot be reverted.");
+            return;
+          }
+
+          closeProjectOverviewFileMenu();
+          setProjectOverviewFileMutationState({
+            rowId: row.id,
+            action: "revert",
+            error: "",
+          });
+
+          try {
+            await projectOverviewHistoryClient.revertThreadToStep({
+              backendUrl,
+              threadId: normalizedThreadId,
+              stepId: normalizedRevertTargetStepId,
+              headers: requestHeaders,
+              historyActionType: "revert",
+              revertedChangeStepId: normalizedStepId,
+              revertedFilePath: row.path || undefined,
+              revertedFileName: row.title || undefined,
+            });
+            setProjectOverviewFileActivityReloadNonce((current) => current + 1);
+            if (typeof refreshThreads === "function") {
+              await Promise.resolve(refreshThreads(undefined, normalizedThreadId));
+            }
+          } catch (error) {
+            setProjectOverviewFileMutationState({
+              rowId: row.id,
+              action: "",
+              error: error instanceof Error ? error.message : "Failed to revert file changes.",
+            });
+            return;
+          }
+
+          setProjectOverviewFileMutationState({
+            rowId: "",
+            action: "",
+            error: "",
+          });
+        }
 
         const fetchProjectCustomSkills = useCallback(async function fetchProjectCustomSkills() {
           const normalizeSkills = (items) => (items || [])
@@ -62041,6 +62897,17 @@ ${PROJECT_OVERVIEW_CSS}
             });
             return true;
           }
+          if (!projectComposerOpen && selectedProjectId) {
+            const nextAttachments = mergePlaygroundAttachmentLists(selectedProject?.attachments, normalizedAttachments);
+            await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+              projectOverrides: {
+                attachments: nextAttachments,
+              },
+              quiet: true,
+              successMessage: "",
+            });
+            return true;
+          }
           setProjectDraft((current) => ({
             ...current,
             attachments: mergePlaygroundAttachmentLists(current.attachments, normalizedAttachments),
@@ -62272,6 +63139,18 @@ ${PROJECT_OVERVIEW_CSS}
                 projectOverrides: {
                   attachments: currentProjectAttachments.filter((attachment) => attachment.id !== attachmentId),
                 },
+                successMessage: "",
+              });
+            } catch {}
+            return;
+          }
+          if (!projectComposerOpen && selectedProjectId) {
+            try {
+              await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+                projectOverrides: {
+                  attachments: currentProjectAttachments.filter((attachment) => attachment.id !== attachmentId),
+                },
+                quiet: true,
                 successMessage: "",
               });
             } catch {}
@@ -64118,6 +64997,10 @@ ${PROJECT_OVERVIEW_CSS}
             onNavigationRequestHandled(requestToken);
           }
         }, [isStandaloneCalendarMode, navigationRequest, onNavigationRequestHandled]);
+
+        useEffect(() => {
+          setProjectOverviewVisibleThreadCount(5);
+        }, [selectedProjectId, taskView]);
 
         useEffect(() => {
           const pendingRequestToken = String(pendingNavigationMissionControlRequest?.token || "").trim();
@@ -70194,8 +71077,7 @@ ${PROJECT_OVERVIEW_CSS}
                     : (projectComposerMode === "edit" ? "Save" : "Next"))
                 )
               )
-            ),
-            renderProjectEnvironmentFilePicker()
+            )
           );
         }
 
@@ -74468,7 +75350,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             renderTaskEnvironmentChangeDialog(),
             renderTaskDeleteDialog(),
             renderProjectComposerDialog(),
-            renderReleaseComposerDialog()
+            renderReleaseComposerDialog(),
+            renderProjectEnvironmentFilePicker()
           );
         }
 
@@ -74556,7 +75439,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           renderTaskEnvironmentChangeDialog(),
           renderTaskDeleteDialog(),
           renderProjectComposerDialog(),
-          renderReleaseComposerDialog()
+          renderReleaseComposerDialog(),
+          renderProjectEnvironmentFilePicker()
         );
       }
 
@@ -75116,6 +76000,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
         });
         const [tasksPageNavigationRequest, setTasksPageNavigationRequest] = useState(null);
+        const [filesPageNavigationRequest, setFilesPageNavigationRequest] = useState(null);
         const [welcomeWidgetsState, setWelcomeWidgetsState] = useState(() => (
           isDemoMode
             ? buildDemoWelcomeWidgetsState()
@@ -89132,6 +90017,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               onFileChatThreadMutated: () => {
                                 void refreshThreads();
                               },
+                              navigationRequest: filesPageNavigationRequest,
+                              onNavigationRequestHandled: (token) => {
+                                setFilesPageNavigationRequest((current) => (
+                                  current && current.token === token ? null : current
+                                ));
+                              },
                               onRequestSidebarCollapse: () => {
                                 setSidebarOpen(false);
                               },
@@ -89353,6 +90244,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               setLatestInteractedProjectId(normalizedProjectId);
                             },
                             onProjectRecordCommitted: handleThreadProjectRecordCommitted,
+                            onOpenFilesPage: (request) => {
+                              const normalizedEnvironmentId = String(request?.environmentId || "").trim();
+                              if (normalizedEnvironmentId) {
+                                setEnvironmentId(normalizedEnvironmentId);
+                              }
+                              setFilesPageNavigationRequest(request || null);
+                              setActivePage("files");
+                            },
                             onThreadOpen: (threadId, options = {}) => {
                               const normalizedThreadId = String(threadId || "").trim();
                               if (!normalizedThreadId) {
@@ -89672,6 +90571,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 setLatestInteractedProjectId(normalizedProjectId);
                               },
                               onProjectRecordCommitted: handleThreadProjectRecordCommitted,
+                              onOpenFilesPage: (request) => {
+                                const normalizedEnvironmentId = String(request?.environmentId || "").trim();
+                                if (normalizedEnvironmentId) {
+                                  setEnvironmentId(normalizedEnvironmentId);
+                                }
+                                setFilesPageNavigationRequest(request || null);
+                                setActivePage("files");
+                              },
                               onThreadOpen: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();
                                 if (!normalizedThreadId) {
@@ -91504,6 +92411,17 @@ async function proxyUpstreamStreamRequest(req, res, upstreamPath, method) {
         error: "Unauthorized",
         message: "Sign in with Computer Agents or provide an API key.",
       });
+    }
+
+    if (!upstream.ok) {
+      const text = await upstream.text().catch(() => "");
+      let parsed = {};
+      try {
+        parsed = text ? JSON.parse(text) : {};
+      } catch {
+        parsed = { message: text || `Upstream stream request failed with status ${upstream.status}` };
+      }
+      return sendJson(res, upstream.status, parsed);
     }
 
     if (!upstream.body) {
