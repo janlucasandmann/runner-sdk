@@ -1305,6 +1305,54 @@ const html = `<!doctype html>
         color: black;
       }
 
+      .sidebar-thread-project-picker-modal {
+        width: min(420px, 100%);
+      }
+
+      .sidebar-thread-project-picker-modal .sidebar-thread-rename-button {
+        font-size: 12px;
+      }
+
+      .sidebar-thread-project-picker-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: min(52vh, 360px);
+        overflow: auto;
+        padding-right: 2px;
+      }
+
+      .sidebar-thread-project-picker-row {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .sidebar-thread-project-picker-row .playground-tasks-project-row {
+        transition: border-color 160ms ease, background-color 160ms ease;
+      }
+
+      .sidebar-thread-project-picker-row:hover .playground-tasks-project-row,
+      .sidebar-thread-project-picker-row.is-selected .playground-tasks-project-row {
+        border-color: rgba(102, 166, 255, 0.45);
+        background: rgba(102, 166, 255, 0.09);
+      }
+
+      .sidebar-thread-project-picker-row:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+
+      .sidebar-thread-project-picker-empty {
+        padding: 16px 0 6px;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
       .sidebar-thread-section-actions {
         display: inline-flex;
         align-items: center;
@@ -9642,6 +9690,19 @@ const html = `<!doctype html>
 
       .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-header {
         min-height: var(--playground-files-preview-nav-height);
+        background: #000;
+      }
+
+      .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-inline {
+        background: #000;
+      }
+
+      .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-body,
+      .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-pdf,
+      .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-markdown-shell,
+      .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-text,
+      .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-docx-shell {
+        background: #000;
       }
 
       .playground-files-browser-minimized-toggle:hover {
@@ -10154,7 +10215,7 @@ const html = `<!doctype html>
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 10px 12px;
+        padding: 5px 12px;
         border: 0;
         border-radius: 14px;
         background: transparent;
@@ -10290,6 +10351,33 @@ const html = `<!doctype html>
       .playground-files-entry-size {
         min-width: 70px;
         text-align: right;
+      }
+
+      .playground-files-entry-options-button {
+        width: 28px;
+        height: 28px;
+        margin-left: 6px;
+        flex-shrink: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.52);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-files-entry-options-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-files-entry-options-icon {
+        width: 15px;
+        height: 15px;
+        display: block;
       }
 
       .playground-files-grid {
@@ -10620,7 +10708,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         padding: 0;
-        background: #0d1117;
+        background: #000;
       }
 
       .playground-code-preview-toolbar {
@@ -10631,7 +10719,7 @@ const html = `<!doctype html>
         gap: 12px;
         padding: 10px 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.03);
+        background: #000;
       }
 
       .playground-code-preview-toolbar-group {
@@ -10734,7 +10822,7 @@ const html = `<!doctype html>
         min-height: 0;
         flex: 1;
         display: flex;
-        background: #0d1117;
+        background: #000;
       }
 
       .playground-code-preview-editor-shell .monaco-editor,
@@ -10742,7 +10830,7 @@ const html = `<!doctype html>
       .playground-code-preview-editor-shell .monaco-scrollable-element,
       .playground-code-preview-editor-shell .margin,
       .playground-code-preview-editor-shell .overflow-guard {
-        background: #0d1117 !important;
+        background: #000 !important;
       }
 
       .playground-code-preview-editor-shell .monaco-editor .cursor {
@@ -19846,6 +19934,7 @@ ${PROJECT_OVERVIEW_CSS}
         bottom: auto;
         width: 280px;
         min-width: 280px;
+        max-height: min(440px, calc(100vh - 120px));
         transform-origin: top right;
       }
 
@@ -34894,6 +34983,14 @@ ${PROJECT_OVERVIEW_CSS}
         const [draggedPaths, setDraggedPaths] = useState([]);
         const [dragOverTargetPath, setDragOverTargetPath] = useState("");
         const [contextMenu, setContextMenu] = useState(null);
+        const [fileProjectPickerState, setFileProjectPickerState] = useState(null);
+        const [fileProjectPickerValue, setFileProjectPickerValue] = useState("");
+        const [fileProjectPickerError, setFileProjectPickerError] = useState("");
+        const [fileProjectMutationState, setFileProjectMutationState] = useState({
+          path: "",
+          action: "",
+          error: "",
+        });
 
         const loadEnvironmentFolder = useCallback(async (environmentId, folderPath = "", options = {}) => {
           const normalizedFolderPath = normalizeHistoryPath(folderPath);
@@ -35156,146 +35253,157 @@ ${PROJECT_OVERVIEW_CSS}
           selectedEnvironmentId,
         ]);
 
-        useEffect(() => {
-          const controller = new AbortController();
+        const loadProjectLinkedPaths = useCallback(async (signal = null) => {
+          try {
+            const [projectsResult, serversResult, tasksResult, threadsResult] = await Promise.allSettled([
+              fetch(backendUrl + "/projects", {
+                method: "GET",
+                headers: requestHeaders,
+                signal: signal || undefined,
+              }),
+              fetch(backendUrl + "/servers", {
+                method: "GET",
+                headers: requestHeaders,
+                signal: signal || undefined,
+              }),
+              fetch(backendUrl + "/tasks", {
+                method: "GET",
+                headers: requestHeaders,
+                signal: signal || undefined,
+              }),
+              fetch(backendUrl + "/threads?limit=240", {
+                method: "GET",
+                headers: requestHeaders,
+                signal: signal || undefined,
+              }),
+            ]);
 
-          async function loadProjectLinkedPaths() {
-            try {
-              const [projectsResult, serversResult, tasksResult, threadsResult] = await Promise.allSettled([
-                fetch(backendUrl + "/projects", {
-                  method: "GET",
+            let nextProjects = [];
+            let nextServers = [];
+            let nextTasks = [];
+            let nextThreads = [];
+
+            if (projectsResult.status === "fulfilled" && projectsResult.value.ok) {
+              const data = await projectsResult.value.json().catch(() => ({}));
+              nextProjects = parsePlaygroundProjectListResponse(data);
+            }
+
+            if (serversResult.status === "fulfilled" && serversResult.value.ok) {
+              const data = await serversResult.value.json().catch(() => ({}));
+              nextServers = parsePlaygroundServerListResponse(data);
+            }
+
+            if (tasksResult.status === "fulfilled" && tasksResult.value.ok) {
+              const data = await tasksResult.value.json().catch(() => ({}));
+              nextTasks = parsePlaygroundTaskListResponse(data);
+            }
+
+            if (threadsResult.status === "fulfilled" && threadsResult.value.ok) {
+              const data = await threadsResult.value.json().catch(() => ({}));
+              const items = Array.isArray(data?.data)
+                ? data.data
+                : Array.isArray(data?.threads)
+                  ? data.threads
+                  : [];
+              nextThreads = normalizeThreadList(items);
+            }
+
+            const baseLinkedIndex = buildPlaygroundProjectLinkedFilePathIndex(nextProjects, nextServers, nextTasks);
+
+            if (!(signal && signal.aborted)) {
+              setAvailableProjectFilters(
+                nextProjects.filter((project) => String(project?.id || "").trim())
+              );
+              setProjectLinkedPathsByEnvironmentId(baseLinkedIndex);
+            }
+
+            const projectDefaultEnvironmentIdsById = {};
+            nextProjects.forEach((project) => {
+              const normalizedProjectId = String(project?.id || "").trim();
+              if (!normalizedProjectId) {
+                return;
+              }
+              projectDefaultEnvironmentIdsById[normalizedProjectId] = String(project?.defaultEnvironmentId || "").trim();
+            });
+
+            const projectThreads = nextThreads
+              .filter((thread) => getPlaygroundThreadProjectId(thread))
+              .sort(compareThreadsByRecent)
+              .slice(0, 60);
+
+            if (projectThreads.length === 0) {
+              return {
+                projects: nextProjects,
+                linkedIndex: baseLinkedIndex,
+              };
+            }
+
+            const linkedActivityResults = await Promise.allSettled(projectThreads.map(async (thread) => {
+              const normalizedThreadId = String(thread?.id || "").trim();
+              if (!normalizedThreadId) {
+                return [];
+              }
+              const normalizedProjectId = getPlaygroundThreadProjectId(thread);
+              const [stepsResult, logsResult] = await Promise.allSettled([
+                projectLinkedHistoryClient.listThreadSteps({
+                  backendUrl,
+                  threadId: normalizedThreadId,
+                  limit: 250,
                   headers: requestHeaders,
-                  signal: controller.signal,
                 }),
-                fetch(backendUrl + "/servers", {
-                  method: "GET",
+                fetchHistoryThreadLogs({
+                  client: projectLinkedHistoryClient,
+                  backendUrl,
+                  threadId: normalizedThreadId,
                   headers: requestHeaders,
-                  signal: controller.signal,
-                }),
-                fetch(backendUrl + "/tasks", {
-                  method: "GET",
-                  headers: requestHeaders,
-                  signal: controller.signal,
-                }),
-                fetch(backendUrl + "/threads?limit=240", {
-                  method: "GET",
-                  headers: requestHeaders,
-                  signal: controller.signal,
                 }),
               ]);
 
-              let nextProjects = [];
-              let nextServers = [];
-              let nextTasks = [];
-              let nextThreads = [];
+              const steps = stepsResult.status === "fulfilled" && Array.isArray(stepsResult.value)
+                ? stepsResult.value
+                : [];
+              const threadLogs = logsResult.status === "fulfilled" && Array.isArray(logsResult.value)
+                ? logsResult.value
+                : [];
 
-              if (projectsResult.status === "fulfilled" && projectsResult.value.ok) {
-                const data = await projectsResult.value.json().catch(() => ({}));
-                nextProjects = parsePlaygroundProjectListResponse(data);
-              }
-
-              if (serversResult.status === "fulfilled" && serversResult.value.ok) {
-                const data = await serversResult.value.json().catch(() => ({}));
-                nextServers = parsePlaygroundServerListResponse(data);
-              }
-
-              if (tasksResult.status === "fulfilled" && tasksResult.value.ok) {
-                const data = await tasksResult.value.json().catch(() => ({}));
-                nextTasks = parsePlaygroundTaskListResponse(data);
-              }
-
-              if (threadsResult.status === "fulfilled" && threadsResult.value.ok) {
-                const data = await threadsResult.value.json().catch(() => ({}));
-                const items = Array.isArray(data?.data)
-                  ? data.data
-                  : Array.isArray(data?.threads)
-                    ? data.threads
-                    : [];
-                nextThreads = normalizeThreadList(items);
-              }
-
-              const baseLinkedIndex = buildPlaygroundProjectLinkedFilePathIndex(nextProjects, nextServers, nextTasks);
-
-              if (!controller.signal.aborted) {
-                setAvailableProjectFilters(
-                  nextProjects.filter((project) => String(project?.id || "").trim())
-                );
-                setProjectLinkedPathsByEnvironmentId(baseLinkedIndex);
-              }
-
-              const projectDefaultEnvironmentIdsById = {};
-              nextProjects.forEach((project) => {
-                const normalizedProjectId = String(project?.id || "").trim();
-                if (!normalizedProjectId) {
-                  return;
-                }
-                projectDefaultEnvironmentIdsById[normalizedProjectId] = String(project?.defaultEnvironmentId || "").trim();
+              return buildPlaygroundProjectFileActivityRowsForThreadHistory({
+                thread,
+                steps,
+                threadLogs,
+                fallbackEnvironmentId: projectDefaultEnvironmentIdsById[normalizedProjectId] || "",
               });
+            }));
 
-              const projectThreads = nextThreads
-                .filter((thread) => getPlaygroundThreadProjectId(thread))
-                .sort(compareThreadsByRecent)
-                .slice(0, 60);
+            const historyLinkedIndex = buildPlaygroundProjectLinkedFilePathIndexFromActivityRows(
+              linkedActivityResults.flatMap((result) => result.status === "fulfilled" && Array.isArray(result.value) ? result.value : [])
+            );
+            const mergedLinkedIndex = mergePlaygroundProjectLinkedFilePathIndexes(baseLinkedIndex, historyLinkedIndex);
 
-              if (projectThreads.length === 0) {
-                return;
-              }
-
-              const linkedActivityResults = await Promise.allSettled(projectThreads.map(async (thread) => {
-                const normalizedThreadId = String(thread?.id || "").trim();
-                if (!normalizedThreadId) {
-                  return [];
-                }
-                const normalizedProjectId = getPlaygroundThreadProjectId(thread);
-                const [stepsResult, logsResult] = await Promise.allSettled([
-                  projectLinkedHistoryClient.listThreadSteps({
-                    backendUrl,
-                    threadId: normalizedThreadId,
-                    limit: 250,
-                    headers: requestHeaders,
-                  }),
-                  fetchHistoryThreadLogs({
-                    client: projectLinkedHistoryClient,
-                    backendUrl,
-                    threadId: normalizedThreadId,
-                    headers: requestHeaders,
-                  }),
-                ]);
-
-                const steps = stepsResult.status === "fulfilled" && Array.isArray(stepsResult.value)
-                  ? stepsResult.value
-                  : [];
-                const threadLogs = logsResult.status === "fulfilled" && Array.isArray(logsResult.value)
-                  ? logsResult.value
-                  : [];
-
-                return buildPlaygroundProjectFileActivityRowsForThreadHistory({
-                  thread,
-                  steps,
-                  threadLogs,
-                  fallbackEnvironmentId: projectDefaultEnvironmentIdsById[normalizedProjectId] || "",
-                });
-              }));
-
-              if (!controller.signal.aborted) {
-                const historyLinkedIndex = buildPlaygroundProjectLinkedFilePathIndexFromActivityRows(
-                  linkedActivityResults.flatMap((result) => result.status === "fulfilled" && Array.isArray(result.value) ? result.value : [])
-                );
-                setProjectLinkedPathsByEnvironmentId(
-                  mergePlaygroundProjectLinkedFilePathIndexes(baseLinkedIndex, historyLinkedIndex)
-                );
-              }
-            } catch {
-              if (!controller.signal.aborted) {
-                setAvailableProjectFilters([]);
-                setProjectLinkedPathsByEnvironmentId({});
-              }
+            if (!(signal && signal.aborted)) {
+              setProjectLinkedPathsByEnvironmentId(mergedLinkedIndex);
             }
-          }
 
-          void loadProjectLinkedPaths();
-          return () => controller.abort();
+            return {
+              projects: nextProjects,
+              linkedIndex: mergedLinkedIndex,
+            };
+          } catch {
+            if (!(signal && signal.aborted)) {
+              setAvailableProjectFilters([]);
+              setProjectLinkedPathsByEnvironmentId({});
+            }
+            return {
+              projects: [],
+              linkedIndex: {},
+            };
+          }
         }, [backendUrl, projectLinkedHistoryClient, requestHeaders]);
+
+        useEffect(() => {
+          const controller = new AbortController();
+          void loadProjectLinkedPaths(controller.signal);
+          return () => controller.abort();
+        }, [loadProjectLinkedPaths]);
 
         useEffect(() => {
           if (!toolbarPopover) return;
@@ -35337,6 +35445,21 @@ ${PROJECT_OVERVIEW_CSS}
         }, [contextMenu]);
 
         useEffect(() => {
+          if (!fileProjectPickerState) return;
+
+          function handleKeyDown(event) {
+            if (event.key === "Escape") {
+              setFileProjectPickerState(null);
+              setFileProjectPickerValue("");
+              setFileProjectPickerError("");
+            }
+          }
+
+          window.addEventListener("keydown", handleKeyDown);
+          return () => window.removeEventListener("keydown", handleKeyDown);
+        }, [fileProjectPickerState]);
+
+        useEffect(() => {
           if (!renamingPath || !renameInputRef.current) return;
           const frame = window.requestAnimationFrame(() => {
             renameInputRef.current?.focus();
@@ -35357,6 +35480,51 @@ ${PROJECT_OVERVIEW_CSS}
           && (!loadedFolderPaths.has(normalizedCurrentPath) || loadingFolderPaths.has(normalizedCurrentPath))
         );
         const currentProjectLinkedRecord = projectLinkedPathsByEnvironmentId[selectedEnvironmentId] || null;
+        const projectAttachmentLinksByEnvironmentId = useMemo(() => {
+          const next = {};
+
+          function ensureEnvironmentRecord(environmentId) {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            if (!normalizedEnvironmentId) {
+              return null;
+            }
+            if (!next[normalizedEnvironmentId]) {
+              next[normalizedEnvironmentId] = {
+                byPath: {},
+              };
+            }
+            return next[normalizedEnvironmentId];
+          }
+
+          function addAttachmentLink(environmentId, path, projectId) {
+            const normalizedPath = normalizeHistoryPath(path);
+            const normalizedProjectId = String(projectId || "").trim();
+            const environmentRecord = ensureEnvironmentRecord(environmentId);
+            if (!environmentRecord || !normalizedPath || !normalizedProjectId) {
+              return;
+            }
+            if (!environmentRecord.byPath[normalizedPath]) {
+              environmentRecord.byPath[normalizedPath] = new Set();
+            }
+            environmentRecord.byPath[normalizedPath].add(normalizedProjectId);
+          }
+
+          availableProjectFilters.forEach((project) => {
+            const normalizedProjectId = String(project?.id || "").trim();
+            if (!normalizedProjectId) {
+              return;
+            }
+            normalizePlaygroundTaskAttachmentList(project?.attachments).forEach((attachment) => {
+              addAttachmentLink(
+                attachment?.environmentId,
+                attachment?.sourcePath || attachment?.workspacePath,
+                normalizedProjectId
+              );
+            });
+          });
+
+          return next;
+        }, [availableProjectFilters]);
         const currentProjectLinkedPaths = useMemo(() => {
           if (!currentProjectLinkedRecord) {
             return new Set();
@@ -35450,7 +35618,8 @@ ${PROJECT_OVERVIEW_CSS}
         }, [environmentTree, selectedPaths, selectionScopeEntries]);
 
         const singleSelectedEntry = selectedEntries.length === 1 ? selectedEntries[0] : null;
-        const hasPreviewPanel = selectedEntries.length > 0 && isPreviewOpen;
+        const hasFolderOnlySelection = selectedEntries.length === 1 && Boolean(singleSelectedEntry?.isFolder);
+        const hasPreviewPanel = selectedEntries.length > 0 && isPreviewOpen && !hasFolderOnlySelection;
         const singleSelectedEntryDownloadUrl = useMemo(() => {
           if (!singleSelectedEntry || singleSelectedEntry.isFolder || !selectedEnvironmentId) return "";
           return buildPlaygroundEnvironmentDownloadUrl(backendUrl, selectedEnvironmentId, singleSelectedEntry.path);
@@ -35498,6 +35667,27 @@ ${PROJECT_OVERVIEW_CSS}
           ].join("\\n");
         }, [hasSingleFilePreview, selectedEnvironmentId, singleSelectedEntry]);
         const contextTargetEntry = contextMenu?.targetPath ? environmentTree.nodesByPath.get(contextMenu.targetPath) || null : null;
+        const contextTargetAttachmentProjectIds = useMemo(() => {
+          if (!contextTargetEntry || contextTargetEntry.isFolder || !selectedEnvironmentId) {
+            return [];
+          }
+          const environmentRecord = projectAttachmentLinksByEnvironmentId[selectedEnvironmentId] || null;
+          const linkedProjectIds = environmentRecord?.byPath?.[normalizeHistoryPath(contextTargetEntry.path)];
+          return Array.from(linkedProjectIds instanceof Set ? linkedProjectIds : []);
+        }, [contextTargetEntry, projectAttachmentLinksByEnvironmentId, selectedEnvironmentId]);
+        const contextTargetAttachmentProjectId = useMemo(() => {
+          if (contextTargetAttachmentProjectIds.length === 0) {
+            return "";
+          }
+          if (projectFilterScope && contextTargetAttachmentProjectIds.includes(projectFilterScope)) {
+            return projectFilterScope;
+          }
+          return contextTargetAttachmentProjectIds[0] || "";
+        }, [contextTargetAttachmentProjectIds, projectFilterScope]);
+        const contextTargetAttachmentProject = useMemo(
+          () => availableProjectFilters.find((project) => project.id === contextTargetAttachmentProjectId) || null,
+          [availableProjectFilters, contextTargetAttachmentProjectId]
+        );
 
         const searchResults = useMemo(() => {
           const query = searchPopupQuery.trim().toLowerCase();
@@ -35932,12 +36122,19 @@ ${PROJECT_OVERVIEW_CSS}
           setContextMenu(null);
         }
 
-        function setSingleSelection(path) {
+        function closeFileProjectPickerDialog() {
+          setFileProjectPickerState(null);
+          setFileProjectPickerValue("");
+          setFileProjectPickerError("");
+        }
+
+        function setSingleSelection(path, options = {}) {
           const normalizedPath = normalizeHistoryPath(path);
           const next = normalizedPath ? new Set([normalizedPath]) : new Set();
+          const shouldOpenPreview = options.showPreview !== false;
           setSelectedPaths(next);
           setSelectionAnchorPath(normalizedPath);
-          setIsPreviewOpen(Boolean(normalizedPath));
+          setIsPreviewOpen(shouldOpenPreview && Boolean(normalizedPath));
         }
 
         function pushPath(nextPath, nextSelectionPaths = []) {
@@ -36012,6 +36209,18 @@ ${PROJECT_OVERVIEW_CSS}
           if (!targetPath) return;
 
           if (entry.isFolder && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
+            setSelectedPaths((current) => {
+              if (!current.has(targetPath)) {
+                return current;
+              }
+              const next = new Set(current);
+              next.delete(targetPath);
+              return next;
+            });
+            setSelectionAnchorPath((current) => current === targetPath ? "" : current);
+            if (singleSelectedEntry?.isFolder && normalizeHistoryPath(singleSelectedEntry.path) === targetPath) {
+              setIsPreviewOpen(false);
+            }
             toggleFolderExpansion(targetPath);
             setContextMenu(null);
             return;
@@ -36055,6 +36264,343 @@ ${PROJECT_OVERVIEW_CSS}
           if (entry?.isFolder) {
             navigateToPath(entry.path);
           }
+        }
+
+        function buildFilesProjectSavePayload(projectRecord) {
+          const normalizedProject = normalizePlaygroundProjectRecord(projectRecord);
+          const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(normalizedProject.attachments);
+          const projectIndex = Math.max(0, availableProjectFilters.findIndex((project) => project.id === normalizedProject.id));
+          return {
+            name: normalizedProject.name || "Project",
+            description: normalizedProject.description,
+            color: normalizedProject.color || getPlaygroundProjectAccent(normalizedProject, projectIndex),
+            defaultEnvironmentId: normalizedProject.defaultEnvironmentId || undefined,
+            attachments: normalizedProjectAttachments,
+            metadata: {
+              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
+              icon: getPlaygroundProjectIconId(normalizedProject.icon),
+              wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, ""),
+              useCardBackgroundAsWallpaper: normalizedProject.useCardBackgroundAsWallpaper !== false,
+              defaultEnvironmentId: normalizedProject.defaultEnvironmentId || null,
+              attachments: normalizedProjectAttachments,
+            },
+          };
+        }
+
+        async function persistFilesProjectAttachments(projectId, nextAttachments) {
+          const normalizedProjectId = String(projectId || "").trim();
+          if (!normalizedProjectId) {
+            throw new Error("Choose a project first.");
+          }
+          const baseProject = normalizePlaygroundProjectRecord(
+            availableProjectFilters.find((project) => project.id === normalizedProjectId)
+            || {
+              id: normalizedProjectId,
+              name: "Project",
+            }
+          );
+          const nextProjectRecord = normalizePlaygroundProjectRecord({
+            ...baseProject,
+            attachments: normalizePlaygroundTaskAttachmentList(nextAttachments),
+          });
+          const savePayload = buildFilesProjectSavePayload(nextProjectRecord);
+          const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
+            method: "PATCH",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(savePayload),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to update project attachments.");
+          }
+          const updatedProject = getPlaygroundProjectResponseRecord(data, {
+            ...nextProjectRecord,
+            metadata: savePayload.metadata,
+          });
+          if (updatedProject?.id) {
+            setAvailableProjectFilters((current) => {
+              const hasExisting = current.some((project) => project.id === updatedProject.id);
+              return hasExisting
+                ? current.map((project) => project.id === updatedProject.id ? updatedProject : project)
+                : current.concat(updatedProject);
+            });
+          }
+          await loadProjectLinkedPaths();
+          return updatedProject;
+        }
+
+        function mergeFilesProjectAttachmentLists(...lists) {
+          const mergedByKey = new Map();
+          lists.forEach((list) => {
+            normalizePlaygroundTaskAttachmentList(list).forEach((attachment) => {
+              const normalizedAttachment = normalizePlaygroundTaskAttachmentRecord(attachment);
+              const attachmentKey = [
+                normalizedAttachment.id,
+                normalizeHistoryPath(normalizedAttachment.workspacePath),
+                normalizeHistoryPath(normalizedAttachment.sourcePath),
+                normalizedAttachment.filename,
+              ].find((value) => typeof value === "string" && value.trim()) || generateId("attachment");
+              if (!mergedByKey.has(attachmentKey)) {
+                mergedByKey.set(attachmentKey, normalizedAttachment);
+              }
+            });
+          });
+          return Array.from(mergedByKey.values());
+        }
+
+        function buildUniqueEnvironmentFileName(existingEntries, filename) {
+          const normalizedFilename = String(filename || "").trim() || "file";
+          const lastDotIndex = normalizedFilename.lastIndexOf(".");
+          const hasExtension = lastDotIndex > 0;
+          const baseName = hasExtension ? normalizedFilename.slice(0, lastDotIndex) : normalizedFilename;
+          const extension = hasExtension ? normalizedFilename.slice(lastDotIndex) : "";
+          const existingNames = new Set(
+            (Array.isArray(existingEntries) ? existingEntries : []).map((entry) => String(entry?.name || "").trim()).filter(Boolean)
+          );
+          if (!existingNames.has(normalizedFilename)) {
+            return normalizedFilename;
+          }
+          let suffix = 2;
+          let nextName = normalizedFilename;
+          while (existingNames.has(nextName)) {
+            nextName = baseName + "-" + suffix + extension;
+            suffix += 1;
+          }
+          return nextName;
+        }
+
+        async function uploadFilesPageAttachment(file, options = {}) {
+          const normalizedEnvironmentId = String(options?.environmentId || "").trim();
+          const normalizedSourcePath = options?.sourcePath ? normalizeHistoryPath(options.sourcePath) : "";
+          const headers = new Headers(requestHeaders || {});
+          headers.set("Content-Type", "application/json");
+          const response = await fetch(backendUrl + "/attachments/upload", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              filename: file?.name || "attachment",
+              mimeType: file?.type || "application/octet-stream",
+              data: await readFileAsBase64(file),
+              ...(normalizedEnvironmentId ? { environmentId: normalizedEnvironmentId } : {}),
+            }),
+          });
+          const uploadResult = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(uploadResult?.message || uploadResult?.error || "Failed to upload attachment.");
+          }
+          const attachment = normalizePlaygroundTaskAttachmentRecord({
+            ...(uploadResult?.attachment && typeof uploadResult.attachment === "object" ? uploadResult.attachment : {}),
+            url: (
+              typeof uploadResult?.attachment?.url === "string" && uploadResult.attachment.url.trim()
+                ? uploadResult.attachment.url.trim()
+                : (uploadResult?.attachment?.id ? backendUrl + "/attachments/" + encodeURIComponent(uploadResult.attachment.id) : "")
+            ),
+            previewUrl: typeof uploadResult?.attachment?.previewUrl === "string" && uploadResult.attachment.previewUrl.trim()
+              ? uploadResult.attachment.previewUrl.trim()
+              : undefined,
+            environmentId: normalizedEnvironmentId || uploadResult?.attachment?.environmentId || uploadResult?.attachment?.sourceEnvironmentId,
+            sourcePath: normalizedSourcePath || uploadResult?.attachment?.sourcePath || uploadResult?.attachment?.workspacePath,
+          });
+          if (!attachment) {
+            throw new Error("Attachment upload succeeded but the attachment data is missing.");
+          }
+          return attachment;
+        }
+
+        async function buildProjectAttachmentForEntry(entry, targetProject) {
+          const normalizedSourceEnvironmentId = String(selectedEnvironmentId || "").trim();
+          const normalizedSourcePath = normalizeHistoryPath(entry?.path || "");
+          const normalizedTargetEnvironmentId = String(targetProject?.defaultEnvironmentId || "").trim();
+          if (!normalizedSourceEnvironmentId || !normalizedSourcePath || !normalizedTargetEnvironmentId) {
+            throw new Error("This file cannot be added because the project has no default environment.");
+          }
+
+          const downloadUrl = buildPlaygroundEnvironmentDownloadUrl(backendUrl, normalizedSourceEnvironmentId, normalizedSourcePath);
+          const response = await fetch(downloadUrl, {
+            method: "GET",
+            headers: requestHeaders,
+          });
+          if (!response.ok) {
+            throw new Error("Failed to load " + (entry?.name || "file") + " (" + response.status + ")");
+          }
+
+          const blob = await response.blob();
+          let attachmentFile = new globalThis.File([blob], entry?.name || "file", {
+            type: entry?.mimeType || blob.type || "application/octet-stream",
+          });
+          let attachmentSourcePath = normalizedSourcePath;
+
+          if (normalizedTargetEnvironmentId !== normalizedSourceEnvironmentId) {
+            const targetRootEntries = await loadEnvironmentFolder(normalizedTargetEnvironmentId, "", { force: true });
+            const nextFilename = buildUniqueEnvironmentFileName(targetRootEntries, attachmentFile.name);
+            attachmentFile = new globalThis.File([blob], nextFilename, {
+              type: entry?.mimeType || blob.type || "application/octet-stream",
+            });
+
+            const formData = new FormData();
+            formData.append("file", attachmentFile);
+            formData.append("path", "");
+            const uploadResponse = await fetch(
+              backendUrl + "/environments/" + encodeURIComponent(normalizedTargetEnvironmentId) + "/files/upload",
+              {
+                method: "POST",
+                headers: requestHeaders,
+                body: formData,
+              }
+            );
+            const uploadData = await uploadResponse.json().catch(() => ({}));
+            if (!uploadResponse.ok) {
+              throw new Error(uploadData?.message || uploadData?.error || "Failed to clone file into the project environment.");
+            }
+            attachmentSourcePath = normalizeHistoryPath(nextFilename);
+            await refreshEnvironmentFolders(normalizedTargetEnvironmentId, [""]);
+          }
+
+          return uploadFilesPageAttachment(attachmentFile, {
+            environmentId: normalizedTargetEnvironmentId,
+            sourcePath: attachmentSourcePath,
+          });
+        }
+
+        function openFileProjectPickerDialog(entry) {
+          if (!entry || entry.isFolder) {
+            return;
+          }
+          const normalizedPath = normalizeHistoryPath(entry.path);
+          const linkedProjectIds = Array.from(
+            (projectAttachmentLinksByEnvironmentId[selectedEnvironmentId]?.byPath?.[normalizedPath] instanceof Set
+              ? projectAttachmentLinksByEnvironmentId[selectedEnvironmentId].byPath[normalizedPath]
+              : [])
+          );
+          const defaultProjectId = linkedProjectIds[0]
+            || (projectFilterScope && projectFilterScope !== "__all__" ? projectFilterScope : "")
+            || String(availableProjectFilters[0]?.id || "").trim();
+          setFileProjectPickerState({
+            path: normalizedPath,
+            title: entry.name || normalizedPath || "file",
+          });
+          setFileProjectPickerValue(defaultProjectId);
+          setFileProjectPickerError("");
+          closeContextMenu();
+        }
+
+        async function handleRemoveFileFromProject(entry, projectIdOverride = "") {
+          const normalizedPath = normalizeHistoryPath(entry?.path || "");
+          const normalizedProjectId = String(projectIdOverride || contextTargetAttachmentProjectId || "").trim();
+          if (!normalizedPath || !normalizedProjectId || !selectedEnvironmentId) {
+            return;
+          }
+          const targetProject = availableProjectFilters.find((project) => project.id === normalizedProjectId) || null;
+          if (!targetProject) {
+            return;
+          }
+
+          closeContextMenu();
+          setFileProjectMutationState({
+            path: normalizedPath,
+            action: "project-remove",
+            error: "",
+          });
+
+          try {
+            const nextAttachments = normalizePlaygroundTaskAttachmentList(targetProject.attachments).filter((attachment) => {
+              return !(
+                String(attachment?.environmentId || "").trim() === String(selectedEnvironmentId || "").trim()
+                && normalizeHistoryPath(attachment?.sourcePath || attachment?.workspacePath) === normalizedPath
+              );
+            });
+            await persistFilesProjectAttachments(normalizedProjectId, nextAttachments);
+          } catch (error) {
+            setActionError(error instanceof Error ? error.message : "Failed to remove the file from the project.");
+            setFileProjectMutationState({
+              path: normalizedPath,
+              action: "",
+              error: error instanceof Error ? error.message : "Failed to remove the file from the project.",
+            });
+            return;
+          }
+
+          setFileProjectMutationState({
+            path: "",
+            action: "",
+            error: "",
+          });
+        }
+
+        async function handleFileProjectPickerSubmit(event) {
+          event.preventDefault();
+          if (!fileProjectPickerState?.path || !selectedEnvironmentId) {
+            return;
+          }
+          const normalizedProjectId = String(fileProjectPickerValue || "").trim();
+          if (!normalizedProjectId) {
+            setFileProjectPickerError("Choose a project first.");
+            return;
+          }
+          const targetProject = availableProjectFilters.find((project) => project.id === normalizedProjectId) || null;
+          const entry = environmentTree.nodesByPath.get(fileProjectPickerState.path) || null;
+          if (!entry || !targetProject) {
+            setFileProjectPickerError("The selected file is no longer available.");
+            return;
+          }
+
+          setFileProjectPickerError("");
+          setFileProjectMutationState({
+            path: fileProjectPickerState.path,
+            action: "project-add",
+            error: "",
+          });
+
+          try {
+            const uploadedAttachment = await buildProjectAttachmentForEntry(entry, targetProject);
+            const nextAttachments = mergeFilesProjectAttachmentLists(targetProject.attachments, [uploadedAttachment]);
+            await persistFilesProjectAttachments(normalizedProjectId, nextAttachments);
+            closeFileProjectPickerDialog();
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to add the file to the project.";
+            setFileProjectPickerError(errorMessage);
+            setFileProjectMutationState({
+              path: fileProjectPickerState.path,
+              action: "",
+              error: errorMessage,
+            });
+            return;
+          }
+
+          setFileProjectMutationState({
+            path: "",
+            action: "",
+            error: "",
+          });
+        }
+
+        function openContextMenuAt(targetEntry, nextX, nextY, options = {}) {
+          const shouldSelectTarget = options.selectTarget !== false;
+          if (shouldSelectTarget && targetEntry && !selectedPaths.has(targetEntry.path)) {
+            setSelectedPaths(new Set([targetEntry.path]));
+            setSelectionAnchorPath(targetEntry.path);
+          }
+
+          const menuWidth = 232;
+          const menuHeight = targetEntry ? 240 : 138;
+          const x = Math.min(nextX, window.innerWidth - menuWidth - 12);
+          const y = Math.min(nextY, window.innerHeight - menuHeight - 12);
+
+          setContextMenu({
+            x: Math.max(12, x),
+            y: Math.max(12, y),
+            targetPath: targetEntry ? targetEntry.path : "",
+          });
+        }
+
+        function handleEntryContextMenuButtonClick(entry, event) {
+          event.preventDefault();
+          event.stopPropagation();
+          const rect = event.currentTarget.getBoundingClientRect();
+          openContextMenuAt(entry, rect.right - 8, rect.bottom + 8, { selectTarget: false });
         }
 
         function handleSearchResultSelect(entry) {
@@ -36212,11 +36758,13 @@ ${PROJECT_OVERVIEW_CSS}
           }
         }
 
-        function startRename(entry) {
+        function startRename(entry, options = {}) {
           if (!entry) return;
           setRenamingPath(entry.path);
           setRenameValue(entry.name || "");
-          setSingleSelection(entry.path);
+          setSingleSelection(entry.path, {
+            showPreview: options.showPreview !== false,
+          });
           closeContextMenu();
         }
 
@@ -36336,22 +36884,7 @@ ${PROJECT_OVERVIEW_CSS}
         function handleContextMenu(event, targetEntry = null) {
           event.preventDefault();
           event.stopPropagation();
-
-          if (targetEntry && !selectedPaths.has(targetEntry.path)) {
-            setSelectedPaths(new Set([targetEntry.path]));
-            setSelectionAnchorPath(targetEntry.path);
-          }
-
-          const menuWidth = 212;
-          const menuHeight = targetEntry ? 196 : 138;
-          const x = Math.min(event.clientX, window.innerWidth - menuWidth - 12);
-          const y = Math.min(event.clientY, window.innerHeight - menuHeight - 12);
-
-          setContextMenu({
-            x: Math.max(12, x),
-            y: Math.max(12, y),
-            targetPath: targetEntry ? targetEntry.path : "",
-          });
+          openContextMenuAt(targetEntry, event.clientX, event.clientY);
         }
 
         function handleDragStart(event, entry) {
@@ -36535,7 +37068,16 @@ ${PROJECT_OVERVIEW_CSS}
               React.createElement("div", { className: "playground-files-entry-meta" },
                 React.createElement("span", { className: "playground-files-entry-date" }, formatPlaygroundFileDate(entry.modifiedTime)),
                 React.createElement("span", { className: "playground-files-entry-size" }, entry.isFolder ? "-" : formatPlaygroundFileSize(entry.size))
-              )
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-entry-options-button",
+                onClick: (event) => handleEntryContextMenuButtonClick(entry, event),
+                "aria-label": "Open file options",
+              }, React.createElement(Ellipsis, {
+                className: "playground-files-entry-options-icon",
+                strokeWidth: 1.8,
+              }))
             );
         }
 
@@ -36893,9 +37435,22 @@ ${PROJECT_OVERVIEW_CSS}
 
         function renderContextMenu() {
           if (!contextMenu) return null;
-          const hasRenameAction = selectedEntries.length === 1 && Boolean(contextTargetEntry);
-          const canDelete = selectedEntries.length > 0;
+          const contextSelectedEntries = contextTargetEntry
+            ? (
+                selectedEntries.some((entry) => normalizeHistoryPath(entry.path) === normalizeHistoryPath(contextTargetEntry.path))
+                  ? selectedEntries
+                  : [contextTargetEntry]
+              )
+            : selectedEntries;
+          const hasRenameAction = contextSelectedEntries.length === 1 && Boolean(contextTargetEntry);
+          const canDelete = contextSelectedEntries.length > 0;
           const basePath = getMoveTargetPathForContext();
+          const canToggleProjectAssignment = Boolean(contextTargetEntry && !contextTargetEntry.isFolder);
+          const isProjectMutationPending = Boolean(
+            contextTargetEntry
+            && fileProjectMutationState.path === normalizeHistoryPath(contextTargetEntry.path)
+            && fileProjectMutationState.action.startsWith("project-")
+          );
 
           return React.createElement(React.Fragment, null,
             React.createElement("div", {
@@ -36917,7 +37472,7 @@ ${PROJECT_OVERVIEW_CSS}
                 ? React.createElement("button", {
                     type: "button",
                     className: "playground-files-context-item",
-                    onClick: () => startRename(contextTargetEntry),
+                    onClick: () => startRename(contextTargetEntry, { showPreview: false }),
                   },
                     React.createElement(SquarePen, { width: 13, height: 13, strokeWidth: 1.8 }),
                     React.createElement("span", null, "Rename")
@@ -36945,20 +37500,109 @@ ${PROJECT_OVERVIEW_CSS}
                 React.createElement(ArrowUpFromLine, { width: 13, height: 13, strokeWidth: 1.8 }),
                 React.createElement("span", null, "Upload Files")
               ),
+              canToggleProjectAssignment
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-context-item",
+                    disabled: isProjectMutationPending,
+                    onClick: () => {
+                      if (contextTargetAttachmentProjectId) {
+                        void handleRemoveFileFromProject(contextTargetEntry, contextTargetAttachmentProjectId);
+                        return;
+                      }
+                      openFileProjectPickerDialog(contextTargetEntry);
+                    },
+                  },
+                    React.createElement(FolderOpen, { width: 13, height: 13, strokeWidth: 1.8 }),
+                    React.createElement("span", null,
+                      isProjectMutationPending
+                        ? (contextTargetAttachmentProjectId ? "Removing..." : "Saving...")
+                        : (contextTargetAttachmentProjectId ? "Remove from Project" : "Add to Project")
+                    )
+                  )
+                : null,
               canDelete
                 ? React.createElement("div", { className: "playground-files-context-divider" },
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-context-item is-danger",
-                      onClick: () => void handleDeleteEntries(selectedEntries),
+                      onClick: () => void handleDeleteEntries(contextSelectedEntries),
                     },
                       React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, selectedEntries.length > 1 ? "Delete " + selectedEntries.length + " Items" : "Delete")
+                      React.createElement("span", null, contextSelectedEntries.length > 1 ? "Delete " + contextSelectedEntries.length + " Items" : "Delete")
                     )
                   )
                 : null
             )
           );
+        }
+
+        function renderFileProjectPickerModal() {
+          if (!fileProjectPickerState) {
+            return null;
+          }
+
+          const isProjectAssignPending = fileProjectMutationState.action === "project-add"
+            && fileProjectMutationState.path === fileProjectPickerState.path;
+
+          return React.createElement("div", {
+              className: "sidebar-thread-rename-scrim",
+              onClick: closeFileProjectPickerDialog,
+            },
+              React.createElement("form", {
+                className: "sidebar-thread-rename-modal sidebar-thread-project-picker-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  void handleFileProjectPickerSubmit(event);
+                },
+              },
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Add to Project"),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" },
+                  "Attach ",
+                  React.createElement("strong", null, fileProjectPickerState.title || "this file"),
+                  " to a project. If the project uses a different environment, the file will be cloned into that workspace first."
+                ),
+                availableProjectFilters.length > 0
+                  ? React.createElement("div", { className: "sidebar-thread-project-picker-list" },
+                      availableProjectFilters.map((project) => {
+                        const projectId = String(project?.id || "").trim();
+                        const isSelected = projectId === fileProjectPickerValue;
+                        return React.createElement("button", {
+                            key: projectId,
+                            type: "button",
+                            className: "sidebar-thread-project-picker-row" + (isSelected ? " is-selected" : ""),
+                            disabled: isProjectAssignPending,
+                            onClick: () => setFileProjectPickerValue(projectId),
+                          },
+                            React.createElement("div", { className: "playground-tasks-project-row" },
+                              React.createElement("div", { className: "playground-tasks-project-row-main" },
+                                React.createElement("div", { className: "playground-tasks-project-row-title" }, project?.name || "Untitled Project")
+                              )
+                            )
+                          );
+                      })
+                    )
+                  : React.createElement("div", { className: "sidebar-thread-project-picker-empty" },
+                      "No projects are available yet."
+                    ),
+                fileProjectPickerError
+                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, fileProjectPickerError)
+                  : null,
+                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "sidebar-thread-rename-button is-secondary",
+                    onClick: closeFileProjectPickerDialog,
+                    disabled: isProjectAssignPending,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "sidebar-thread-rename-button is-primary",
+                    disabled: isProjectAssignPending || availableProjectFilters.length === 0 || !fileProjectPickerValue,
+                  }, isProjectAssignPending ? "Saving..." : "Add to Project")
+                )
+              )
+            );
         }
 
         const isBackgroundDropTarget = dragOverTargetPath === "__current__";
@@ -37395,7 +38039,8 @@ ${PROJECT_OVERVIEW_CSS}
               "aria-hidden": hasFileChatPanel ? "false" : "true",
             }, hasFileChatPanel ? renderFileChatSidebar() : null)
           ),
-          renderContextMenu()
+          renderContextMenu(),
+          renderFileProjectPickerModal()
         );
       }
 
@@ -75963,6 +76608,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [threadRenameState, setThreadRenameState] = useState(null);
         const [threadRenameValue, setThreadRenameValue] = useState("");
         const [threadRenameError, setThreadRenameError] = useState("");
+        const [threadProjectPickerState, setThreadProjectPickerState] = useState(null);
+        const [threadProjectPickerValue, setThreadProjectPickerValue] = useState("");
+        const [threadProjectPickerProjects, setThreadProjectPickerProjects] = useState([]);
+        const [threadProjectPickerLoading, setThreadProjectPickerLoading] = useState(false);
+        const [threadProjectPickerError, setThreadProjectPickerError] = useState("");
         const [threadMutationState, setThreadMutationState] = useState({
           threadId: "",
           action: "",
@@ -81914,7 +82564,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           const rect = event.currentTarget.getBoundingClientRect();
           const menuWidth = 220;
-          const menuHeight = 170;
+          const menuHeight = 214;
           const openUpward = rect.bottom + menuHeight > window.innerHeight - 12 && rect.top - menuHeight >= 12;
           const top = openUpward
             ? Math.max(12, rect.top - menuHeight - 8)
@@ -81955,6 +82605,50 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setThreadRenameError("");
         }
 
+        async function loadThreadProjectPickerProjects() {
+          if (!hasRealAccess) {
+            setThreadProjectPickerProjects([]);
+            return;
+          }
+
+          setThreadProjectPickerLoading(true);
+          try {
+            const response = await fetch(proxyBackendBase + "/projects", {
+              method: "GET",
+              headers: authRequestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load projects.");
+            }
+            const nextProjects = sortPlaygroundProjectsByRecent(parsePlaygroundProjectListResponse(data));
+            setThreadProjectPickerProjects(nextProjects);
+            setThreadProjectPickerValue((current) => current || (nextProjects[0]?.id || ""));
+          } catch (error) {
+            setThreadProjectPickerProjects([]);
+            setThreadProjectPickerError(error instanceof Error ? error.message : "Failed to load projects.");
+          } finally {
+            setThreadProjectPickerLoading(false);
+          }
+        }
+
+        function openThreadProjectPickerDialog(thread) {
+          if (!thread?.id) return;
+          const currentProjectId = typeof thread?.projectId === "string" ? thread.projectId.trim() : "";
+          const defaultProjectId = currentProjectId || String(latestInteractedProjectId || "").trim() || "";
+          setThreadActionMenuState(null);
+          setThreadNavMenuOpen(false);
+          setThreadProjectPickerState({
+            threadId: thread.id,
+            currentProjectId,
+            threadRecord: thread && typeof thread === "object" ? thread : null,
+          });
+          setThreadProjectPickerValue(defaultProjectId);
+          setThreadProjectPickerError("");
+          setThreadProjectPickerProjects([]);
+          void loadThreadProjectPickerProjects();
+        }
+
         function closeThreadRenameDialog() {
           if (threadMutationState.action === "rename") {
             return;
@@ -81962,6 +82656,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setThreadRenameState(null);
           setThreadRenameValue("");
           setThreadRenameError("");
+        }
+
+        function closeThreadProjectPickerDialog() {
+          if (threadMutationState.action === "project") {
+            return;
+          }
+          setThreadProjectPickerState(null);
+          setThreadProjectPickerValue("");
+          setThreadProjectPickerProjects([]);
+          setThreadProjectPickerError("");
         }
 
         function getThreadResponseRecord(data) {
@@ -81972,6 +82676,104 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return data.data;
           }
           return data && typeof data === "object" ? data : {};
+        }
+
+        async function persistThreadProjectAssignment(threadId, nextProjectId, threadRecord = null, nextProjectName = "") {
+          const normalizedThreadId = String(threadId || "").trim();
+          const normalizedProjectId = String(nextProjectId || "").trim();
+          if (!normalizedThreadId) {
+            return;
+          }
+
+          const originalThread = baseThreadItems.find((thread) => thread.id === normalizedThreadId)
+            || (threadRecord ? normalizeThreadItem(threadRecord) : null);
+
+          setThreadMutationState({
+            threadId: normalizedThreadId,
+            action: "project",
+          });
+
+          try {
+            const response = await fetch(proxyBackendBase + "/threads/" + encodeURIComponent(normalizedThreadId), {
+              method: "PATCH",
+              headers: {
+                ...authRequestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                projectId: normalizedProjectId || null,
+              }),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || (normalizedProjectId ? "Failed to add thread to project." : "Failed to remove thread from project."));
+            }
+
+            const threadResponseRecord = getThreadResponseRecord(data);
+            const normalizedUpdatedThread = normalizeThreadItem({
+              ...(originalThread || {}),
+              ...threadResponseRecord,
+              projectId: typeof threadResponseRecord?.projectId === "string"
+                ? threadResponseRecord.projectId.trim()
+                : normalizedProjectId,
+              metadata: threadResponseRecord?.metadata && typeof threadResponseRecord.metadata === "object"
+                ? threadResponseRecord.metadata
+                : originalThread?.metadata,
+            });
+
+            setRealThreads((current) => {
+              const existingIndex = current.findIndex((thread) => thread.id === normalizedThreadId);
+              if (existingIndex === -1) {
+                return [normalizedUpdatedThread].concat(current);
+              }
+              return current.map((thread) => (
+                thread.id === normalizedThreadId ? normalizedUpdatedThread : thread
+              ));
+            });
+
+            setThreadProjectContextById((current) => {
+              if (!normalizedProjectId) {
+                if (!Object.prototype.hasOwnProperty.call(current, normalizedThreadId)) {
+                  return current;
+                }
+                const next = { ...current };
+                delete next[normalizedThreadId];
+                return next;
+              }
+              return {
+                ...current,
+                [normalizedThreadId]: {
+                  projectId: normalizedProjectId,
+                  projectName: String(nextProjectName || threadProjectContextById[normalizedThreadId]?.projectName || "").trim(),
+                },
+              };
+            });
+
+            if (normalizedProjectId) {
+              setLatestInteractedProjectId(normalizedProjectId);
+            }
+
+            await refreshThreads();
+          } finally {
+            setThreadMutationState({
+              threadId: "",
+              action: "",
+            });
+          }
+        }
+
+        function handleOpenThreadProjectAction(thread) {
+          const currentProjectId = typeof thread?.projectId === "string" ? thread.projectId.trim() : "";
+          if (currentProjectId) {
+            setThreadActionMenuState(null);
+            setThreadNavMenuOpen(false);
+            void persistThreadProjectAssignment(thread.id, "", thread).catch((error) => {
+              window.alert(error instanceof Error ? error.message : "Failed to remove thread from project.");
+            });
+            return;
+          }
+          openThreadProjectPickerDialog(thread);
         }
 
         function buildThreadPinnedMetadata(thread, pinned) {
@@ -82130,6 +82932,46 @@ ${PROJECT_OVERVIEW_SCRIPT}
               threadId: "",
               action: "",
             });
+          }
+        }
+
+        async function handleThreadProjectPickerSubmit(event) {
+          event.preventDefault();
+          if (!threadProjectPickerState?.threadId) {
+            return;
+          }
+
+          const nextProjectId = String(threadProjectPickerValue || "").trim();
+          const nextProjectName = String(
+            threadProjectPickerProjects.find((project) => String(project?.id || "").trim() === nextProjectId)?.name || ""
+          ).trim();
+          if (!nextProjectId) {
+            setThreadProjectPickerError("Choose a project first.");
+            return;
+          }
+
+          if (nextProjectId === String(threadProjectPickerState.currentProjectId || "").trim()) {
+            closeThreadProjectPickerDialog();
+            return;
+          }
+
+          const originalThread = baseThreadItems.find((thread) => thread.id === threadProjectPickerState.threadId)
+            || (threadProjectPickerState.threadRecord ? normalizeThreadItem(threadProjectPickerState.threadRecord) : null);
+
+          setThreadMutationState({
+            threadId: threadProjectPickerState.threadId,
+            action: "project",
+          });
+          setThreadProjectPickerError("");
+
+          try {
+            await persistThreadProjectAssignment(threadProjectPickerState.threadId, nextProjectId, originalThread, nextProjectName);
+            setThreadProjectPickerState(null);
+            setThreadProjectPickerValue("");
+            setThreadProjectPickerProjects([]);
+            setThreadProjectPickerError("");
+          } catch (error) {
+            setThreadProjectPickerError(error instanceof Error ? error.message : "Failed to add thread to project.");
           }
         }
 
@@ -87972,6 +88814,53 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
         }, [baseThreadItems, threadRenameState]);
 
+        useEffect(() => {
+          if (!threadProjectPickerState) {
+            return;
+          }
+
+          function handleKeyDown(event) {
+            if (event.key === "Escape" && threadMutationState.action !== "project") {
+              event.preventDefault();
+              setThreadProjectPickerState(null);
+              setThreadProjectPickerValue("");
+              setThreadProjectPickerError("");
+            }
+          }
+
+          window.addEventListener("keydown", handleKeyDown);
+          return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+          };
+        }, [threadMutationState.action, threadProjectPickerState]);
+
+        useEffect(() => {
+          if (!threadProjectPickerState) {
+            return;
+          }
+
+          const targetStillExists = baseThreadItems.some((thread) => thread.id === threadProjectPickerState.threadId);
+          if (!targetStillExists) {
+            setThreadProjectPickerState(null);
+            setThreadProjectPickerValue("");
+            setThreadProjectPickerError("");
+          }
+        }, [baseThreadItems, threadProjectPickerState]);
+
+        useEffect(() => {
+          if (!threadProjectPickerState) {
+            return;
+          }
+          if (threadProjectPickerProjects.length === 0) {
+            return;
+          }
+          const currentValue = String(threadProjectPickerValue || "").trim();
+          const hasCurrentMatch = currentValue && threadProjectPickerProjects.some((project) => project.id === currentValue);
+          if (!hasCurrentMatch) {
+            setThreadProjectPickerValue(threadProjectPickerProjects[0]?.id || "");
+          }
+        }, [threadProjectPickerProjects, threadProjectPickerState, threadProjectPickerValue]);
+
         const pinnedThreadItems = useMemo(() => {
           if (hasDemoAccess) {
             return [];
@@ -88221,6 +89110,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           return null;
         }, [cachedSelectedThreadProjectRecord, selectedThreadProjectId, welcomeWidgetProject]);
+        const selectedThreadProjectName = useMemo(() => {
+          return String(
+            selectedThreadProjectRecord?.name
+            || selectedThreadCachedProjectContext?.projectName
+            || rawSelectedThreadMissionControlMetadata?.projectName
+            || selectedThreadTaskPreview?.projectName
+            || ""
+          ).trim();
+        }, [rawSelectedThreadMissionControlMetadata?.projectName, selectedThreadCachedProjectContext?.projectName, selectedThreadProjectRecord?.name, selectedThreadTaskPreview?.projectName]);
         const selectedThreadShellBackground = useMemo(() => {
           if (!selectedThreadProjectRecord) {
             return "";
@@ -89280,8 +90178,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
 
           const isPinned = Boolean(threadActionTarget.isPinned);
+          const hasProjectAssignment = Boolean(String(threadActionTarget.projectId || "").trim());
           const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === threadActionTarget.id;
           const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === threadActionTarget.id;
+          const isProjectMutating = threadMutationState.action === "project" && threadMutationState.threadId === threadActionTarget.id;
 
           return React.createElement("div", {
               className: "sidebar-thread-popup-scrim",
@@ -89300,7 +90200,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   type: "button",
                   className: "sidebar-thread-popup-row",
                   onClick: () => openThreadRenameDialog(threadActionTarget),
-                  disabled: isDeleting || isPinMutating,
+                  disabled: isDeleting || isPinMutating || isProjectMutating,
                 },
                   React.createElement(SquarePen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
                   React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Rename")
@@ -89308,10 +90208,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("button", {
                   type: "button",
                   className: "sidebar-thread-popup-row",
+                  onClick: () => handleOpenThreadProjectAction(threadActionTarget),
+                  disabled: isDeleting || isPinMutating || isProjectMutating,
+                },
+                  React.createElement(FolderOpen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" },
+                    isProjectMutating
+                      ? (hasProjectAssignment ? "Removing from project..." : "Adding to project...")
+                      : (hasProjectAssignment ? "Remove from Project" : "Add to Project")
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row",
                   onClick: () => {
                     void handleThreadPinToggle(threadActionTarget.id);
                   },
-                  disabled: isDeleting || isPinMutating,
+                  disabled: isDeleting || isPinMutating || isProjectMutating,
                 },
                   React.createElement(Pin, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
                   React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isPinMutating ? (isPinned ? "Unpinning..." : "Pinning...") : (isPinned ? "Unpin" : "Pin"))
@@ -89322,7 +90235,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   onClick: () => {
                     void handleThreadDelete(threadActionTarget.id);
                   },
-                  disabled: isDeleting || isPinMutating,
+                  disabled: isDeleting || isPinMutating || isProjectMutating,
                 },
                   React.createElement(Trash2, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
                   React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isDeleting ? "Deleting..." : "Delete")
@@ -89374,6 +90287,78 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     className: "sidebar-thread-rename-button is-primary",
                     disabled: isThreadRenamePending,
                   }, isThreadRenamePending ? "Saving..." : "Save")
+                )
+              )
+            );
+        }
+
+        function renderThreadProjectPickerModal() {
+          if (!threadProjectPickerState) {
+            return null;
+          }
+
+          const isProjectAssignPending = threadMutationState.action === "project"
+            && threadMutationState.threadId === threadProjectPickerState.threadId;
+          const availableProjects = threadProjectPickerProjects;
+
+          return React.createElement("div", {
+              className: "sidebar-thread-rename-scrim",
+              onClick: closeThreadProjectPickerDialog,
+            },
+              React.createElement("form", {
+                className: "sidebar-thread-rename-modal sidebar-thread-project-picker-modal",
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  void handleThreadProjectPickerSubmit(event);
+                },
+              },
+                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Add to Project"),
+                React.createElement("div", { className: "sidebar-thread-rename-copy" },
+                  "Attach this thread to a project so it appears in project scope, including files and activity."
+                ),
+                threadProjectPickerLoading
+                  ? React.createElement("div", { className: "sidebar-thread-project-picker-empty" }, "Loading projects...")
+                  : availableProjects.length > 0
+                  ? React.createElement("div", { className: "sidebar-thread-project-picker-list" },
+                    availableProjects.map((project) => {
+                        const projectId = String(project?.id || "").trim();
+                        const isSelected = projectId === threadProjectPickerValue;
+                        return React.createElement("button", {
+                            key: projectId,
+                            type: "button",
+                            className: "sidebar-thread-project-picker-row" + (isSelected ? " is-selected" : ""),
+                            disabled: isProjectAssignPending,
+                            onClick: () => setThreadProjectPickerValue(projectId),
+                          },
+                            React.createElement("div", { className: "playground-tasks-project-row" },
+                              React.createElement("div", { className: "playground-tasks-project-row-main" },
+                                React.createElement("div", { className: "playground-tasks-project-row-title" }, project?.name || "Untitled Project")
+                              ),
+                              isSelected
+                                ? React.createElement(Check, { width: 15, height: 15, strokeWidth: 1.9, "aria-hidden": "true" })
+                                : null
+                            )
+                          );
+                      })
+                    )
+                  : React.createElement("div", { className: "sidebar-thread-project-picker-empty" },
+                      "No projects are available yet."
+                    ),
+                threadProjectPickerError
+                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, threadProjectPickerError)
+                  : null,
+                React.createElement("div", { className: "sidebar-thread-rename-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "sidebar-thread-rename-button is-secondary",
+                    onClick: closeThreadProjectPickerDialog,
+                    disabled: isProjectAssignPending,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "sidebar-thread-rename-button is-primary",
+                    disabled: isProjectAssignPending || threadProjectPickerLoading || availableProjects.length === 0 || !threadProjectPickerValue,
+                  }, isProjectAssignPending ? "Saving..." : "Add to Project")
                 )
               )
             );
@@ -89732,6 +90717,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             renderThreadSearchPalette(),
             renderThreadActionMenu(),
             renderThreadRenameModal(),
+            renderThreadProjectPickerModal(),
             renderedAccountMenu
               ? React.createElement("div", {
                   className: "account-menu-scrim",
@@ -89984,6 +90970,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                           }, selectedKnownThread.id)
                                         )
                                       ),
+                                      selectedThreadProjectName
+                                        ? React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                                            React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                              React.createElement("span", null, "Project"),
+                                              React.createElement("span", {
+                                                className: "playground-thread-nav-popup-thread-id",
+                                                title: selectedThreadProjectName,
+                                              }, selectedThreadProjectName)
+                                            )
+                                          )
+                                        : null,
                                       React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
                                         React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
                                         React.createElement("div", { className: "playground-thread-nav-popup-fact" },
@@ -90050,6 +91048,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                         React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                                         React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                                           React.createElement("span", null, "Rename thread")
+                                        )
+                                      ),
+                                      React.createElement("button", {
+                                        type: "button",
+                                        className: "tb-popup-row",
+                                        onClick: () => handleOpenThreadProjectAction(selectedKnownThread),
+                                        disabled: threadMutationState.action === "project" && threadMutationState.threadId === selectedKnownThread.id,
+                                      },
+                                        React.createElement(FolderOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                          React.createElement("span", null,
+                                            threadMutationState.action === "project" && threadMutationState.threadId === selectedKnownThread.id
+                                              ? (selectedThreadProjectId ? "Removing from project..." : "Adding to project...")
+                                              : (selectedThreadProjectId ? "Remove from Project" : "Add to Project")
+                                          )
                                         )
                                       ),
                                       React.createElement("button", {
