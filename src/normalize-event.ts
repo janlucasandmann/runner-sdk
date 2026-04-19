@@ -318,13 +318,50 @@ export class RunnerEventNormalizer {
   private handleToolStarted(event: ToolStartedEvent): RunnerEventHandleResult {
     const metadata = this.asObject(event.metadata);
     if (!metadata) {
-      return { logs: [] };
+      const message = this.asString(event.description, this.asString(event.tool, "Tool"));
+      return message
+        ? {
+            logs: [
+              {
+                time: this.formatElapsed(),
+                message,
+                type: "info",
+                eventType: "action_summary",
+                isActionSummary: true,
+                metadata: {
+                  toolName: this.optionalString(event.tool),
+                  toolId: this.optionalString(event.toolId),
+                  status: "started",
+                  isToolStarted: true,
+                  toolInput: this.asObject(event.input) || undefined,
+                },
+              },
+            ],
+          }
+        : { logs: [] };
     }
 
     const delegatedTo = this.asObject(metadata.delegatedTo);
     const invocationMetadata = this.asObject(metadata.subagentInvocation);
     if (!delegatedTo || !invocationMetadata) {
-      return { logs: [] };
+      return {
+        logs: [
+          {
+            time: this.formatElapsed(),
+            message: this.asString(event.description, this.asString(event.tool, "Tool")),
+            type: "info",
+            eventType: "action_summary",
+            isActionSummary: true,
+            metadata: this.mergeMetadata(metadata, {
+              toolName: this.optionalString(event.tool),
+              toolId: this.optionalString(event.toolId),
+              status: "started",
+              isToolStarted: true,
+              toolInput: this.asObject(event.input) || undefined,
+            }),
+          },
+        ],
+      };
     }
 
     return {

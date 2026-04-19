@@ -20346,6 +20346,42 @@ ${PROJECT_OVERVIEW_CSS}
         font-weight: 400;
       }
 
+      .playground-tasks-backlog-assignee-shell {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .playground-tasks-backlog-assignee-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.88);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-backlog-assignee-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .playground-tasks-backlog-assignee-avatar-fallback {
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
       .playground-tasks-backlog-status.is-todo {
         color: rgba(102, 166, 255, 1);
         background: rgba(102, 166, 255, 0.15);
@@ -58634,6 +58670,7 @@ ${PROJECT_OVERVIEW_CSS}
           error: "",
           items: [],
         });
+        const [projectOverviewThreadRecords, setProjectOverviewThreadRecords] = useState([]);
         const [projectOverviewFileActivityReloadNonce, setProjectOverviewFileActivityReloadNonce] = useState(0);
         const [projectOverviewFileMenuState, setProjectOverviewFileMenuState] = useState(null);
         const [projectOverviewFileMutationState, setProjectOverviewFileMutationState] = useState({
@@ -59256,6 +59293,13 @@ ${PROJECT_OVERVIEW_CSS}
             ? selectedProjectDetail.recentThreads
             : [];
         }, [selectedProjectDetail, selectedProjectId]);
+        const projectOverviewThreads = useMemo(() => {
+          const mergedThreads = normalizeThreadList([
+            ...(Array.isArray(projectOverviewThreadRecords) ? projectOverviewThreadRecords : []),
+            ...(Array.isArray(selectedProjectRecentThreads) ? selectedProjectRecentThreads : []),
+          ]);
+          return mergedThreads.sort(compareThreadsByRecent);
+        }, [projectOverviewThreadRecords, selectedProjectRecentThreads]);
         const latestSelectedProjectMissionControlThreadId = useMemo(() => {
           const normalizedSelectedProjectId = String(selectedProjectId || "").trim();
           if (!normalizedSelectedProjectId) {
@@ -59316,6 +59360,7 @@ ${PROJECT_OVERVIEW_CSS}
         const loadProjectOverviewFileActivity = useCallback(async function loadProjectOverviewFileActivity() {
           const normalizedProjectId = String(selectedProjectId || "").trim();
           if (!normalizedProjectId || taskView !== "overview") {
+            setProjectOverviewThreadRecords([]);
             setProjectOverviewFileActivityState((current) => ({
               ...current,
               status: normalizedProjectId ? current.status : "idle",
@@ -59357,6 +59402,8 @@ ${PROJECT_OVERVIEW_CSS}
           } catch {
             projectThreads = projectThreads.slice(0, 12);
           }
+
+          setProjectOverviewThreadRecords(projectThreads);
 
           if (projectThreads.length === 0) {
             setProjectOverviewFileActivityState({
@@ -59555,6 +59602,9 @@ ${PROJECT_OVERVIEW_CSS}
             action: "",
             error: "",
           });
+          if (taskView !== "overview") {
+            setProjectOverviewThreadRecords([]);
+          }
         }, [selectedProjectId, taskView]);
 
         useEffect(() => {
@@ -60171,7 +60221,7 @@ ${PROJECT_OVERVIEW_CSS}
         const normalizedSearchQuery = searchQuery.trim().toLowerCase();
 
         const filteredProjectThreads = useMemo(() => {
-          return [...selectedProjectRecentThreads]
+          return [...projectOverviewThreads]
             .filter((thread) => {
               if (!normalizedSearchQuery) return true;
               const haystack = [
@@ -60184,7 +60234,7 @@ ${PROJECT_OVERVIEW_CSS}
               return haystack.includes(normalizedSearchQuery);
             })
             .sort((left, right) => String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || "")));
-        }, [normalizedSearchQuery, selectedProjectRecentThreads]);
+        }, [normalizedSearchQuery, projectOverviewThreads]);
 
         const selectedProjectAttachments = useMemo(() => {
           return normalizePlaygroundTaskAttachmentList(selectedProject?.attachments);
@@ -71666,7 +71716,10 @@ ${PROJECT_OVERVIEW_CSS}
                       )
                     ),
                     React.createElement("div", { className: "playground-tasks-backlog-meta" },
-                      React.createElement("span", { className: assigneeClassName, title: assigneeName }, assigneeName)
+                      React.createElement("div", { className: "playground-tasks-backlog-assignee-shell" },
+                        renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar"),
+                        React.createElement("span", { className: assigneeClassName, title: assigneeName }, assigneeName)
+                      )
                     ),
                     React.createElement("button", {
                       type: "button",
@@ -88059,6 +88112,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const effectiveUpdatedAt = updatedAt || fallbackStartedAt;
           return effectiveUpdatedAt ? formatPlaygroundFileDate(effectiveUpdatedAt) : "Unknown";
         }, [selectedKnownThread]);
+        const selectedThreadAgentCtLabel = useMemo(() => {
+          return formatSettingsComputeTokens(selectedKnownThread?.agentCT || 0);
+        }, [selectedKnownThread]);
+        const selectedThreadEnvironmentCtLabel = useMemo(() => {
+          return formatSettingsComputeTokens(selectedKnownThread?.environmentCT || 0);
+        }, [selectedKnownThread]);
         const rawSelectedThreadTaskPreview = useMemo(() => {
           if (!selectedKnownThread) {
             return null;
@@ -89943,6 +90002,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                             className: "playground-thread-nav-popup-fact-value",
                                             title: selectedThreadUpdatedLabel,
                                           }, selectedThreadUpdatedLabel)
+                                        )
+                                      ),
+                                      React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                                        React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                                        React.createElement("div", { className: "playground-thread-nav-popup-fact" },
+                                          React.createElement("span", { className: "playground-thread-nav-popup-fact-label" }, "LLM Inference"),
+                                          React.createElement("span", {
+                                            className: "playground-thread-nav-popup-fact-value",
+                                            title: selectedThreadAgentCtLabel,
+                                          }, selectedThreadAgentCtLabel)
+                                        )
+                                      ),
+                                      React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                                        React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                                        React.createElement("div", { className: "playground-thread-nav-popup-fact" },
+                                          React.createElement("span", { className: "playground-thread-nav-popup-fact-label" }, "Resources"),
+                                          React.createElement("span", {
+                                            className: "playground-thread-nav-popup-fact-value",
+                                            title: selectedThreadEnvironmentCtLabel,
+                                          }, selectedThreadEnvironmentCtLabel)
                                         )
                                       ),
                                       React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" }),

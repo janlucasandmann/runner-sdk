@@ -452,6 +452,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         margin-top: 0;
       }
 
+      .playground-project-overview-current-tasks-section > .playground-tasks-secondary-copy {
+        margin-bottom: 32px;
+      }
+
       .playground-project-overview-panel-plain .playground-plugins-section-title {
         font-size: 14px;
       }
@@ -545,6 +549,26 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         white-space: nowrap;
       }
 
+      .playground-project-overview-file-title-button,
+      .playground-project-overview-file-task-button {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .playground-project-overview-file-title-button:hover,
+      .playground-project-overview-file-task-button:hover {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-file-task-button {
+        color: rgba(255, 255, 255, 0.72);
+      }
+
       .playground-project-overview-file-cell.is-actions {
         display: flex;
         align-items: center;
@@ -554,6 +578,23 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-files-table .playground-plugin-row-title {
         font-size: 12px;
         line-height: 1.45;
+      }
+
+      .playground-project-overview-file-assignee {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .playground-project-overview-file-assignee-name {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.72);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .playground-project-overview-backlog-list {
@@ -632,6 +673,13 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         align-items: center;
         justify-content: flex-end;
+      }
+
+      .playground-project-overview-thread-assignee {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
       }
 
       .playground-project-overview-threads-table .playground-plugin-row-title {
@@ -897,8 +945,8 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-agent-avatar {
-        width: 34px;
-        height: 34px;
+        width: 24px;
+        height: 24px;
         border-radius: 999px;
         overflow: hidden;
         flex: 0 0 auto;
@@ -1035,6 +1083,37 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
         function formatProjectOverviewAxisCt(value) {
           return formatProjectOverviewCt(value) + " CT";
+        }
+
+        function getProjectOverviewLocalDayKey(dateLike) {
+          const date = dateLike instanceof Date ? new Date(dateLike) : new Date(dateLike);
+          if (Number.isNaN(date.getTime())) {
+            return "";
+          }
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return year + "-" + month + "-" + day;
+        }
+
+        function getProjectOverviewLocalWeekStartKey(dateLike) {
+          const date = dateLike instanceof Date ? new Date(dateLike) : new Date(dateLike);
+          if (Number.isNaN(date.getTime())) {
+            return "";
+          }
+          date.setHours(0, 0, 0, 0);
+          date.setDate(date.getDate() - date.getDay());
+          return getProjectOverviewLocalDayKey(date);
+        }
+
+        function getProjectOverviewLocalMonthStartKey(dateLike) {
+          const date = dateLike instanceof Date ? new Date(dateLike) : new Date(dateLike);
+          if (Number.isNaN(date.getTime())) {
+            return "";
+          }
+          date.setHours(0, 0, 0, 0);
+          date.setDate(1);
+          return getProjectOverviewLocalDayKey(date);
         }
 
         function PlaygroundProjectOverviewResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 960, ariaLabel, children }) {
@@ -1333,7 +1412,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const normalizedSelectedProjectId = String(selectedProjectId || selectedProject.id || "").trim();
           const projectOverviewDescription = String(selectedProject.description || "").trim()
             || "Track backlog execution, active resources, recent threads, and the current mission strategy in one project workspace.";
-          const projectThreads = Array.isArray(selectedProjectRecentThreads) ? selectedProjectRecentThreads : [];
+          const projectThreads = Array.isArray(projectOverviewThreads) ? projectOverviewThreads : [];
           const missionControlSummaryText = String(selectedProjectMissionControl.summary || "").trim()
             || (String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim()
               ? "Mission Control has generated a strategy snapshot for the current project state."
@@ -1384,7 +1463,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               for (let index = 0; index < projectOverviewTimescaleConfig.bucketCount; index += 1) {
                 const date = new Date(endDate);
                 date.setDate(endDate.getDate() - (projectOverviewTimescaleConfig.bucketCount - 1 - index));
-                const key = date.toISOString().split("T")[0];
+                const key = getProjectOverviewLocalDayKey(date);
                 const bucket = makeBucketBase(key, date.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
                 bucketIndexByKey.set(key, buckets.length);
                 buckets.push(bucket);
@@ -1396,7 +1475,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               for (let index = 0; index < projectOverviewTimescaleConfig.bucketCount; index += 1) {
                 const date = new Date(endWeek);
                 date.setDate(endWeek.getDate() - (7 * (projectOverviewTimescaleConfig.bucketCount - 1 - index)));
-                const key = date.toISOString().split("T")[0];
+                const key = getProjectOverviewLocalWeekStartKey(date);
                 const bucket = makeBucketBase(key, date.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
                 bucketIndexByKey.set(key, buckets.length);
                 buckets.push(bucket);
@@ -1405,7 +1484,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               const endMonth = new Date(now.getFullYear(), now.getMonth(), 1);
               for (let index = 0; index < projectOverviewTimescaleConfig.bucketCount; index += 1) {
                 const date = new Date(endMonth.getFullYear(), endMonth.getMonth() - (projectOverviewTimescaleConfig.bucketCount - 1 - index), 1);
-                const key = date.toISOString().split("T")[0];
+                const key = getProjectOverviewLocalMonthStartKey(date);
                 const bucket = makeBucketBase(key, date.toLocaleDateString("en-US", { month: "short", year: "numeric" }));
                 bucketIndexByKey.set(key, buckets.length);
                 buckets.push(bucket);
@@ -1413,22 +1492,18 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             }
 
             projectThreads.forEach((thread) => {
-              const timestamp = Date.parse(String(thread?.createdAt || thread?.updatedAt || ""));
+              const timestamp = Date.parse(String(thread?.updatedAt || thread?.createdAt || ""));
               if (!Number.isFinite(timestamp)) {
                 return;
               }
               const threadDate = new Date(timestamp);
               let bucketKey = "";
               if (projectOverviewTimescaleConfig.unit === "day") {
-                bucketKey = threadDate.toISOString().split("T")[0];
+                bucketKey = getProjectOverviewLocalDayKey(threadDate);
               } else if (projectOverviewTimescaleConfig.unit === "week") {
-                const weekStart = new Date(threadDate);
-                weekStart.setHours(0, 0, 0, 0);
-                weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-                bucketKey = weekStart.toISOString().split("T")[0];
+                bucketKey = getProjectOverviewLocalWeekStartKey(threadDate);
               } else {
-                const monthStart = new Date(threadDate.getFullYear(), threadDate.getMonth(), 1);
-                bucketKey = monthStart.toISOString().split("T")[0];
+                bucketKey = getProjectOverviewLocalMonthStartKey(threadDate);
               }
               const bucketIndex = bucketIndexByKey.get(bucketKey);
               if (typeof bucketIndex !== "number") {
@@ -1736,7 +1811,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-backlog-meta" },
-                  React.createElement("span", { className: "playground-tasks-backlog-assignee" + (task?.assigneeAgentId ? "" : " is-unassigned") }, assigneeLabel)
+                  React.createElement("div", { className: "playground-tasks-backlog-assignee-shell" },
+                    typeof renderTaskAssigneeAvatar === "function"
+                      ? renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar")
+                      : null,
+                    React.createElement("span", { className: "playground-tasks-backlog-assignee" + (task?.assigneeAgentId ? "" : " is-unassigned") }, assigneeLabel)
+                  )
                 ),
                 React.createElement("button", {
                   type: "button",
@@ -1769,10 +1849,20 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   displayThreadTitle: thread?.title || "Untitled thread",
                 };
             const threadId = String(safeThread?.id || thread?.id || "").trim();
+            const threadTaskPreview = typeof getThreadTaskPreview === "function"
+              ? getThreadTaskPreview(safeThread)
+              : null;
+            const threadTaskId = String(threadTaskPreview?.taskId || safeThread?.taskId || "").trim();
             const threadAgentId = String(safeThread?.agentId || "").trim();
+            const threadAgent = threadAgentId && agentsById && agentsById[threadAgentId]
+              ? agentsById[threadAgentId]
+              : null;
             const threadAgentName = threadAgentId && agentsById && agentsById[threadAgentId]
               ? (agentsById[threadAgentId]?.name || threadAgentId)
               : "No agent";
+            const threadAgentPhotoUrl = threadAgent
+              ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(threadAgent))
+              : "";
             const threadDateLabel = typeof formatThreadSearchTimestamp === "function"
               ? (formatThreadSearchTimestamp(typeof resolveThreadSortTimestamp === "function" ? resolveThreadSortTimestamp(safeThread) : (safeThread?.updatedAt || safeThread?.createdAt || "")) || "—")
               : (formatRelativeThreadTime(safeThread?.updatedAt || safeThread?.createdAt) || "—");
@@ -1814,9 +1904,25 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 React.createElement("div", { className: "playground-plugin-row-title" }, displayThreadTitle || "Untitled thread")
               ),
               React.createElement("div", { className: "playground-project-overview-thread-cell" },
-                React.createElement("div", { className: "playground-project-overview-thread-agent" }, threadAgentName)
+                React.createElement("div", { className: "playground-project-overview-thread-assignee" },
+                  threadAgentName && threadAgentName !== "No agent" && typeof renderAgentNameAvatar === "function"
+                    ? renderAgentNameAvatar(threadAgentName, "playground-project-overview-agent-avatar", threadAgentPhotoUrl)
+                    : null,
+                  React.createElement("div", { className: "playground-project-overview-thread-agent" }, threadAgentName)
+                )
               ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-task" }, taskTicketNumber || "—"),
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-task" },
+                threadTaskId
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-project-overview-file-task-button",
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        typeof handleSelectTask === "function" && handleSelectTask(threadTaskId);
+                      },
+                    }, taskTicketNumber || "—")
+                  : (taskTicketNumber || "—")
+              ),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, threadDateLabel),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
                 canManageThread
@@ -1893,6 +1999,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           function renderOverviewFileActivityRow(row) {
             const rowId = String(row?.id || "").trim();
             const taskLabel = String(row?.taskTicketNumber || "").trim() || "—";
+            const taskId = String(row?.taskId || "").trim();
+            const assigneeId = String(row?.assigneeId || "").trim();
+            const assigneeAgent = assigneeId && agentsById && agentsById[assigneeId]
+              ? agentsById[assigneeId]
+              : null;
+            const assigneePhotoUrl = assigneeAgent
+              ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(assigneeAgent))
+              : "";
             const isRowMutating = projectOverviewFileMutationState?.rowId === rowId;
             const isRenaming = isRowMutating && projectOverviewFileMutationState?.action === "rename";
             const isReverting = isRowMutating && projectOverviewFileMutationState?.action === "revert";
@@ -1902,13 +2016,32 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 className: "playground-project-overview-files-table-row",
               },
               React.createElement("div", { className: "playground-project-overview-file-cell" },
-                React.createElement("div", { className: "playground-plugin-row-title" }, row?.title || "Untitled file")
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-overview-file-title-button",
+                  onClick: () => typeof navigateProjectOverviewFileToFiles === "function" && navigateProjectOverviewFileToFiles(row),
+                },
+                  React.createElement("div", { className: "playground-plugin-row-title" }, row?.title || "Untitled file")
+                )
               ),
               React.createElement("div", { className: "playground-project-overview-file-cell is-operation" }, row?.operation || "Modified"),
               React.createElement("div", { className: "playground-project-overview-file-cell" },
-                React.createElement("div", { className: "playground-project-overview-thread-agent" }, row?.assignee || "No agent")
+                React.createElement("div", { className: "playground-project-overview-file-assignee" },
+                  row?.assignee
+                    ? renderAgentNameAvatar(row.assignee, "playground-project-overview-agent-avatar", assigneePhotoUrl)
+                    : null,
+                  React.createElement("div", { className: "playground-project-overview-file-assignee-name" }, row?.assignee || "No agent")
+                )
               ),
-              React.createElement("div", { className: "playground-project-overview-file-cell is-task" }, taskLabel),
+              React.createElement("div", { className: "playground-project-overview-file-cell is-task" },
+                taskId
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-project-overview-file-task-button",
+                      onClick: () => typeof handleSelectTask === "function" && handleSelectTask(taskId),
+                    }, taskLabel)
+                  : taskLabel
+              ),
               React.createElement("div", { className: "playground-project-overview-file-cell is-date" }, row?.dateLabel || "—"),
               React.createElement("div", { className: "playground-project-overview-file-cell is-actions" },
                 React.createElement("button", {
@@ -1976,6 +2109,20 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 },
                   React.createElement(FolderOpen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
                   React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Show in Files")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row",
+                  onClick: () => {
+                    if (String(targetRow?.taskId || "").trim() && typeof handleSelectTask === "function") {
+                      handleSelectTask(String(targetRow.taskId).trim());
+                    }
+                    typeof closeProjectOverviewFileMenu === "function" && closeProjectOverviewFileMenu();
+                  },
+                  disabled: !String(targetRow?.taskId || "").trim() || isRenaming || isReverting,
+                },
+                  React.createElement(ListTodo, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Show Task")
                 )
               )
             );

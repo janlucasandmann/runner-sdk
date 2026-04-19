@@ -73,6 +73,7 @@ export interface RunnerLog {
   message: string;
   type: RunnerLogType;
   eventType?: RunnerEventType;
+  isActionSummary?: boolean;
   isReasoning?: boolean;
   isPlanning?: boolean;
   isLLMResponse?: boolean;
@@ -87,6 +88,9 @@ export interface RunnerLog {
     output?: string;
     serverName?: string;
     toolName?: string;
+    toolId?: string;
+    isToolStarted?: boolean;
+    toolInput?: Record<string, unknown>;
     result?: unknown;
     error?: unknown;
     durationMs?: number;
