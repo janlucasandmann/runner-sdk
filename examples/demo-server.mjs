@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
 import { handleGithubApiRequest, isGithubApiRequestPath } from "./github-oauth-platform.mjs";
 import { PROJECT_OVERVIEW_CSS, PROJECT_OVERVIEW_SCRIPT } from "./demo-project-overview.mjs";
+import { ENVIRONMENT_CHANGES_CSS, ENVIRONMENT_CHANGES_SCRIPT } from "./demo-environment-changes.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -447,8 +448,8 @@ const html = `<!doctype html>
 
       .playground-shell.is-projects-page .playground-sidebar:not(.is-collapsed),
       .playground-shell.is-agents-page .playground-sidebar:not(.is-collapsed) {
-        backdrop-filter: blur(50px);
-        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .playground-shell.is-projects-page .playground-sidebar.is-collapsed,
@@ -5351,6 +5352,8 @@ const html = `<!doctype html>
 
       .playground-settings-list-pane {
         background: rgba(16, 16, 16, 0.86);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .playground-settings-page .playground-environments-list-pane {
@@ -10095,6 +10098,21 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.52);
       }
 
+      .playground-files-toolbar-menu-section-label {
+        padding: 8px 12px 6px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.38);
+      }
+
+      .playground-files-toolbar-menu-divider {
+        height: 1px;
+        margin: 6px 8px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
       .playground-files-toolbar-menu-item {
         width: 100%;
         display: flex;
@@ -10201,6 +10219,10 @@ const html = `<!doctype html>
       .playground-files-browser-body.is-drop-target {
         background: rgba(54, 120, 255, 0.08);
         box-shadow: inset 0 0 0 1px rgba(82, 146, 255, 0.26);
+      }
+
+      .playground-files-browser-body.is-changes-view {
+        overflow: hidden;
       }
 
       .playground-files-entry-list {
@@ -11222,6 +11244,8 @@ const html = `<!doctype html>
         z-index: 2;
         background: transparent;
         border-right: 0;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .playground-environments-list-header {
@@ -11853,6 +11877,53 @@ const html = `<!doctype html>
         color: rgba(255, 255, 255, 0.72);
       }
 
+      .playground-environments-home-summary {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        margin-top: 18px;
+        margin-bottom: 32px;
+      }
+
+      .playground-environments-home-summary-kpis {
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-environments-home-summary-kpi {
+        min-width: 0;
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-environments-home-summary-kpi:nth-child(3) {
+        align-items: center;
+        text-align: center;
+      }
+
+      .playground-environments-home-summary-kpi:nth-last-child(-n+2) {
+        align-items: flex-end;
+        text-align: right;
+      }
+
+      .playground-environments-home-summary-kpi-value {
+        font-size: 18px;
+        line-height: 1.1;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-environments-home-summary-kpi-label {
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
       .playground-environments-home-hero-actions {
         position: relative;
         z-index: 1;
@@ -11902,7 +11973,7 @@ const html = `<!doctype html>
         margin-top: 10px;
         margin-bottom: 16px;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
         gap: 16px;
         align-items: stretch;
       }
@@ -12022,6 +12093,8 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 10px;
+        flex: 1 1 auto;
+        min-width: 0;
       }
 
       .playground-environments-home-comparison-title {
@@ -12097,6 +12170,35 @@ const html = `<!doctype html>
         pointer-events: none;
       }
 
+      .playground-project-overview-chart-shell {
+        width: 100%;
+        overflow: hidden;
+      }
+
+      .playground-project-overview-chart-header {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-project-overview-chart-header-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-project-overview-chart-header .playground-environments-home-comparison-timescale-select {
+        border-radius: 999px;
+      }
+
+      .playground-project-overview-chart-title {
+        font-size: 14px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
       .playground-environments-home-comparison-header.is-simple {
         justify-content: flex-start;
       }
@@ -12118,7 +12220,8 @@ const html = `<!doctype html>
         -webkit-backdrop-filter: blur(24px);
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
+        min-height: 164px;
         cursor: pointer;
         transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
       }
@@ -12140,57 +12243,28 @@ const html = `<!doctype html>
         justify-content: flex-start;
         align-self: flex-start;
         color: rgba(255, 255, 255, 0.94);
+        margin-bottom: auto;
       }
 
       .playground-environments-home-card-icon {
-        width: 24px;
-        height: 24px;
+        width: 18px;
+        height: 18px;
       }
 
       .playground-environments-home-card-title {
-        font-size: 20px;
-        line-height: 1.1;
-        font-weight: 600;
+        margin-top: auto;
+        font-size: 14px;
+        line-height: 1.2;
+        font-weight: 500;
         color: rgba(255, 255, 255, 0.98);
-        letter-spacing: -0.02em;
+        letter-spacing: -0.01em;
       }
 
       .playground-environments-home-card-copy {
-        min-height: 64px;
         font-size: 12px;
-        line-height: 1.6;
+        line-height: 1.45;
         color: rgba(255, 255, 255, 0.54);
-      }
-
-      .playground-environments-home-card-meta {
-        font-size: 11px;
-        line-height: 1.4;
-        color: rgba(255, 255, 255, 0.72);
-      }
-
-      .playground-environments-home-card-button {
-        margin-top: auto;
-        min-height: 36px;
-        width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.96);
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-environments-home-card-button:hover {
-        background: rgba(255, 255, 255, 0.26);
-        color: #fff;
-      }
-
-      .playground-environments-home-card.is-command-active .playground-environments-home-card-button {
-        border-color: rgba(12, 111, 255, 0.42);
-        background: rgba(12, 111, 255, 0.18);
-        color: #fff;
+        max-width: 24ch;
       }
 
       .playground-environments-home-composer-shell,
@@ -12383,6 +12457,19 @@ const html = `<!doctype html>
         .playground-environments-home-metrics,
         .playground-environments-home-card-grid {
           grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-environments-home-summary-kpis {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 16px 12px;
+        }
+
+        .playground-environments-home-summary-kpi,
+        .playground-environments-home-summary-kpi:nth-child(3),
+        .playground-environments-home-summary-kpi:nth-last-child(-n+2) {
+          align-items: flex-start;
+          text-align: left;
         }
 
         .playground-environments-home-recent-row {
@@ -19386,6 +19473,7 @@ const html = `<!doctype html>
       }
 
 ${PROJECT_OVERVIEW_CSS}
+${ENVIRONMENT_CHANGES_CSS}
 
       .playground-tasks-project-panel-header {
         display: flex;
@@ -23007,7 +23095,7 @@ ${PROJECT_OVERVIEW_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -34937,6 +35025,8 @@ ${PROJECT_OVERVIEW_CSS}
         );
       }
 
+${ENVIRONMENT_CHANGES_SCRIPT}
+
       function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, onFileChatThreadMutated, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled }) {
         const FILE_CHAT_PANEL_DEFAULT_WIDTH = 420;
         const FILES_BROWSER_RESTORE_WIDTH = 320;
@@ -34963,12 +35053,16 @@ ${PROJECT_OVERVIEW_CSS}
         const [renamingPath, setRenamingPath] = useState("");
         const [renameValue, setRenameValue] = useState("");
         const [viewMode, setViewMode] = useState("list");
+        const [contentMode, setContentMode] = useState("files");
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [filterMode, setFilterMode] = useState("all");
+        const [changesOperationFilter, setChangesOperationFilter] = useState("all");
+        const [changesActorFilter, setChangesActorFilter] = useState("__all__");
         const [sortMode, setSortMode] = useState("name-asc");
         const [projectFilterScope, setProjectFilterScope] = useState("");
         const [availableProjectFilters, setAvailableProjectFilters] = useState([]);
+        const [availableChangeActors, setAvailableChangeActors] = useState([]);
         const [projectLinkedPathsByEnvironmentId, setProjectLinkedPathsByEnvironmentId] = useState({});
         const [isPreviewOpen, setIsPreviewOpen] = useState(true);
         const [isFileChatOpen, setIsFileChatOpen] = useState(false);
@@ -35148,8 +35242,11 @@ ${PROJECT_OVERVIEW_CSS}
           setToolbarPopover("");
           setSearchPopupQuery("");
           setFilterMode("all");
+          setChangesOperationFilter("all");
+          setChangesActorFilter("__all__");
           setSortMode("name-asc");
           setProjectFilterScope("");
+          setAvailableChangeActors([]);
           setIsPreviewOpen(true);
           setIsFileChatOpen(false);
           setBrowserPaneMode("expanded");
@@ -35252,6 +35349,16 @@ ${PROJECT_OVERVIEW_CSS}
           searchPopupQuery,
           selectedEnvironmentId,
         ]);
+
+        useEffect(() => {
+          if (changesActorFilter === "__all__") {
+            return;
+          }
+          if (availableChangeActors.some((option) => option.id === changesActorFilter)) {
+            return;
+          }
+          setChangesActorFilter("__all__");
+        }, [availableChangeActors, changesActorFilter]);
 
         const loadProjectLinkedPaths = useCallback(async (signal = null) => {
           try {
@@ -35538,11 +35645,14 @@ ${PROJECT_OVERVIEW_CSS}
           return new Set();
         }, [currentProjectLinkedRecord, projectFilterScope]);
         const activeProjectFilterOption = useMemo(() => {
+          const isChangesProjectMode = contentMode === "changes";
           if (projectFilterScope === "__all__") {
             return {
               id: "__all__",
-              label: "All Project Files",
-              description: "Show files linked to any project",
+              label: isChangesProjectMode ? "All Project Changes" : "All Project Files",
+              description: isChangesProjectMode
+                ? "Show changes made in the scope of any project"
+                : "Show files linked to any project",
             };
           }
           if (projectFilterScope) {
@@ -35550,15 +35660,19 @@ ${PROJECT_OVERVIEW_CSS}
             return {
               id: projectFilterScope,
               label: matchingProject?.name || "Project",
-              description: "Show only files linked to this project",
+              description: isChangesProjectMode
+                ? "Show only changes made in this project"
+                : "Show only files linked to this project",
             };
           }
           return {
             id: "",
-            label: "All Files",
-            description: "Show every file in this environment",
+            label: isChangesProjectMode ? "All Changes" : "All Files",
+            description: isChangesProjectMode
+              ? "Show every recorded change in this environment"
+              : "Show every file in this environment",
           };
-        }, [availableProjectFilters, projectFilterScope]);
+        }, [availableProjectFilters, contentMode, projectFilterScope]);
         const environmentTree = useMemo(() => buildPlaygroundEnvironmentTree(currentInventory), [currentInventory]);
         const currentFolderNode = (environmentTree.nodesByPath.get(normalizedCurrentPath || "") || environmentTree.root || null);
         const currentEntries = useMemo(
@@ -35619,7 +35733,7 @@ ${PROJECT_OVERVIEW_CSS}
 
         const singleSelectedEntry = selectedEntries.length === 1 ? selectedEntries[0] : null;
         const hasFolderOnlySelection = selectedEntries.length === 1 && Boolean(singleSelectedEntry?.isFolder);
-        const hasPreviewPanel = selectedEntries.length > 0 && isPreviewOpen && !hasFolderOnlySelection;
+        const hasPreviewPanel = contentMode === "files" && selectedEntries.length > 0 && isPreviewOpen && !hasFolderOnlySelection;
         const singleSelectedEntryDownloadUrl = useMemo(() => {
           if (!singleSelectedEntry || singleSelectedEntry.isFolder || !selectedEnvironmentId) return "";
           return buildPlaygroundEnvironmentDownloadUrl(backendUrl, selectedEnvironmentId, singleSelectedEntry.path);
@@ -35644,7 +35758,7 @@ ${PROJECT_OVERVIEW_CSS}
             htmlPreviewUrl,
           };
         }, [backendUrl, selectedEnvironmentId, singleSelectedEntry, singleSelectedEntryDownloadUrl]);
-        const hasSingleFilePreview = Boolean(singleSelectedEntryPreviewAttachment && singleSelectedEntry && !singleSelectedEntry.isFolder);
+        const hasSingleFilePreview = contentMode === "files" && Boolean(singleSelectedEntryPreviewAttachment && singleSelectedEntry && !singleSelectedEntry.isFolder);
         const hasFileChatPanel = hasPreviewPanel && hasSingleFilePreview && isFileChatOpen;
         const showBrowserMinimizeButton = hasPreviewPanel && hasSingleFilePreview;
         const isBrowserMinimized = browserPaneMode !== "expanded";
@@ -36161,6 +36275,39 @@ ${PROJECT_OVERVIEW_CSS}
 
         function navigateToPath(nextPath) {
           pushPath(nextPath, []);
+        }
+
+        function navigateToFilesSelection(request = null) {
+          const normalizedRequest = request && typeof request === "object" ? request : null;
+          const requestedEnvironmentId = String(normalizedRequest?.environmentId || selectedEnvironmentId || "").trim();
+          const requestedProjectId = String(normalizedRequest?.projectId || "").trim();
+          const requestedPath = normalizeHistoryPath(normalizedRequest?.path || "");
+          const requestedIsFolder = Boolean(normalizedRequest?.isFolder);
+          const targetFolderPath = requestedPath
+            ? (requestedIsFolder ? requestedPath : getPlaygroundEntryParentPath(requestedPath))
+            : "";
+          const targetSelectionPaths = requestedPath && !requestedIsFolder ? [requestedPath] : [];
+
+          setContentMode("files");
+          setToolbarPopover("");
+          setContextMenu(null);
+          setActionError("");
+          if (requestedProjectId) {
+            setProjectFilterScope(requestedProjectId);
+          }
+
+          const applySelection = async () => {
+            if (requestedEnvironmentId && requestedEnvironmentId !== selectedEnvironmentId) {
+              setSelectedEnvironmentId(requestedEnvironmentId);
+            }
+            if (requestedEnvironmentId) {
+              await loadEnvironmentFolder(requestedEnvironmentId, targetFolderPath);
+            }
+            pushPath(targetFolderPath, targetSelectionPaths);
+            setIsPreviewOpen(targetSelectionPaths.length > 0);
+          };
+
+          void applySelection();
         }
 
         function handleGoBack() {
@@ -36953,6 +37100,13 @@ ${PROJECT_OVERVIEW_CSS}
           { id: "folders", label: "Folders", description: "Only show folders" },
           { id: "files", label: "Files", description: "Only show files" },
         ];
+        const changesFilterOptions = [
+          { id: "all", label: "All Changes", description: "Show every file operation" },
+          { id: "created", label: "Created", description: "Files created by agents or users" },
+          { id: "uploaded", label: "Uploaded", description: "Files uploaded into the environment" },
+          { id: "modified", label: "Modified", description: "Existing files that were changed" },
+          { id: "deleted", label: "Deleted", description: "Files removed from the environment" },
+        ];
         const sortOptions = [
           { id: "name-asc", label: "Name (A-Z)" },
           { id: "name-desc", label: "Name (Z-A)" },
@@ -36962,7 +37116,28 @@ ${PROJECT_OVERVIEW_CSS}
           { id: "size-asc", label: "Smallest First" },
         ];
         const activeFilterOption = filterOptions.find((option) => option.id === filterMode) || filterOptions[0];
+        const activeChangesFilterOption = changesFilterOptions.find((option) => option.id === changesOperationFilter) || changesFilterOptions[0];
+        const activeChangeActorOption = changesActorFilter === "__all__"
+          ? { id: "__all__", label: "All Contributors" }
+          : availableChangeActors.find((option) => option.id === changesActorFilter) || { id: changesActorFilter, label: "Contributor" };
         const activeSortOption = sortOptions.find((option) => option.id === sortMode) || sortOptions[0];
+        const isChangesMode = contentMode === "changes";
+        const hasActiveChangesFilters = changesOperationFilter !== "all" || changesActorFilter !== "__all__";
+        const changesActorOptions = [
+          {
+            id: "__all__",
+            label: "All Contributors",
+            description: "Show changes from every agent and manual edit",
+          },
+        ].concat(
+          availableChangeActors.map((option) => ({
+            id: option.id,
+            label: option.label,
+            description: option.id === "__manual__"
+              ? "Show only direct edits made outside thread execution"
+              : "Show only changes made by this contributor",
+          }))
+        );
         const hasVisibleEntries = viewMode === "list" ? visibleRows.length > 0 : filteredCurrentEntries.length > 0;
         const selectedEnvironment = environments.find((environment) => environment.id === selectedEnvironmentId)
           || environments.find((environment) => environment.isDefault)
@@ -37605,6 +37780,162 @@ ${PROJECT_OVERVIEW_CSS}
             );
         }
 
+        function renderChangesFilterMenu() {
+          return React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
+            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, "Changes Filter"),
+            React.createElement("div", { className: "playground-files-toolbar-menu-section-label" }, "Operation"),
+            changesFilterOptions.map((option) =>
+              React.createElement("button", {
+                  key: option.id,
+                  type: "button",
+                  className: "playground-files-toolbar-menu-item" + (changesOperationFilter === option.id ? " is-active" : ""),
+                  onClick: () => {
+                    setChangesOperationFilter(option.id);
+                    setToolbarPopover("");
+                  },
+                },
+                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, changesOperationFilter === option.id ? "•" : ""),
+                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                    React.createElement("span", null, option.label),
+                    React.createElement("span", null, option.description)
+                  )
+                )
+            ),
+            React.createElement("div", { className: "playground-files-toolbar-menu-divider" }),
+            React.createElement("div", { className: "playground-files-toolbar-menu-section-label" }, "Contributor"),
+            changesActorOptions.map((option) =>
+              React.createElement("button", {
+                  key: option.id,
+                  type: "button",
+                  className: "playground-files-toolbar-menu-item" + (changesActorFilter === option.id ? " is-active" : ""),
+                  onClick: () => {
+                    setChangesActorFilter(option.id);
+                    setToolbarPopover("");
+                  },
+                },
+                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, changesActorFilter === option.id ? "•" : ""),
+                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                    React.createElement("span", null, option.label),
+                    React.createElement("span", null, option.description)
+                  )
+                )
+            )
+          );
+        }
+
+        function renderProjectScopeMenu() {
+          return React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
+            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeProjectFilterOption.label),
+            React.createElement("button", {
+              type: "button",
+              className: "playground-files-toolbar-menu-item" + (projectFilterScope === "" ? " is-active" : ""),
+              onClick: () => {
+                setProjectFilterScope("");
+                setToolbarPopover("");
+              },
+            },
+              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === "" ? "•" : ""),
+              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                React.createElement("span", null, isChangesMode ? "All Changes" : "All Files"),
+                React.createElement("span", null, isChangesMode ? "Show every recorded change in this environment" : "Show every file in this environment")
+              )
+            ),
+            React.createElement("button", {
+              type: "button",
+              className: "playground-files-toolbar-menu-item" + (projectFilterScope === "__all__" ? " is-active" : ""),
+              onClick: () => {
+                setProjectFilterScope("__all__");
+                setToolbarPopover("");
+              },
+            },
+              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === "__all__" ? "•" : ""),
+              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                React.createElement("span", null, isChangesMode ? "All Project Changes" : "All Project Files"),
+                React.createElement("span", null, isChangesMode ? "Show only changes made in the scope of a project" : "Show files created, updated, or attached through any project")
+              )
+            ),
+            availableProjectFilters.map((project) =>
+              React.createElement("button", {
+                  key: project.id,
+                  type: "button",
+                  className: "playground-files-toolbar-menu-item" + (projectFilterScope === project.id ? " is-active" : ""),
+                  onClick: () => {
+                    setProjectFilterScope(project.id);
+                    setToolbarPopover("");
+                  },
+                },
+                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === project.id ? "•" : ""),
+                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                    React.createElement("span", null, project.name || "Project"),
+                    React.createElement("span", null, isChangesMode ? "Show only changes made within this project" : "Show only files linked to this project")
+                  )
+                )
+            )
+          );
+        }
+
+        function renderFilesBrowserContent() {
+          return isCurrentEnvironmentLoading
+            ? React.createElement("div", { className: "playground-files-state" },
+                React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                React.createElement("span", null, "Loading files...")
+              )
+            : currentEnvironmentError
+              ? React.createElement("div", { className: "playground-files-state is-error" }, currentEnvironmentError)
+              : !selectedEnvironmentId
+                ? React.createElement("div", { className: "playground-files-state" }, "Select an environment to browse files.")
+                : !hasVisibleEntries
+                  ? isEmptyEnvironmentRoot
+                    ? React.createElement("div", { className: "playground-files-state playground-files-empty-state-card-wrap" },
+                        React.createElement("div", { className: "playground-tasks-empty playground-files-empty-state-card" },
+                          React.createElement(FolderOpen, { width: 28, height: 28, strokeWidth: 1.9 }),
+                          React.createElement("div", { className: "playground-tasks-empty-title" }, "Upload your first files"),
+                          React.createElement("div", { className: "playground-tasks-empty-copy" }, "Add reference docs, specs, or assets to this environment so they are ready to use in threads and tasks."),
+                          React.createElement("div", { className: "playground-tasks-empty-actions" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-tasks-empty-primary-button",
+                              onClick: () => openUploadPicker(currentPath),
+                              disabled: !selectedEnvironmentId || isUploadingFiles,
+                            },
+                              React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
+                              React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files")
+                            )
+                          )
+                        )
+                      )
+                    : React.createElement("div", { className: "playground-files-state" },
+                        projectFilterScope
+                          ? projectFilterScope === "__all__"
+                            ? "No project-linked files found in this location."
+                            : "No files linked to the selected project were found in this location."
+                          : currentEntries.length === 0
+                            ? "This folder is empty"
+                            : "No items match the current filter"
+                      )
+                  : viewMode === "list"
+                    ? React.createElement("div", { className: "playground-files-entry-list" }, visibleRows.map(renderEntryRow))
+                    : React.createElement("div", { className: "playground-files-grid" }, filteredCurrentEntries.map(renderGridItem));
+        }
+
+        function renderChangesBrowserContent() {
+          if (!selectedEnvironmentId) {
+            return React.createElement("div", { className: "playground-files-state" }, "Select an environment to inspect changes.");
+          }
+          return React.createElement(EnvironmentChangesPage, {
+            backendUrl,
+            requestHeaders,
+            environmentId: selectedEnvironmentId,
+            environmentName: selectedEnvironment?.name || "",
+            availableProjects: availableProjectFilters,
+            projectFilterScope,
+            operationFilter: changesOperationFilter,
+            actorFilter: changesActorFilter,
+            onAvailableActorsChange: setAvailableChangeActors,
+            onShowInFiles: navigateToFilesSelection,
+          });
+        }
+
         const isBackgroundDropTarget = dragOverTargetPath === "__current__";
 
         return React.createElement("div", { className: "playground-files-page" },
@@ -37691,6 +38022,26 @@ ${PROJECT_OVERVIEW_CSS}
                         )
                       : null
                   ),
+                  React.createElement("div", { className: "content-mode-switch playground-files-topbar-mode-switch" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "content-mode-button" + (contentMode === "files" ? " is-active" : ""),
+                      onClick: () => {
+                        setContentMode("files");
+                        setToolbarPopover("");
+                      },
+                    }, "Files"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "content-mode-button" + (contentMode === "changes" ? " is-active" : ""),
+                      onClick: () => {
+                        setContentMode("changes");
+                        setIsPreviewOpen(false);
+                        setIsFileChatOpen(false);
+                        setToolbarPopover("");
+                      },
+                    }, "Changes")
+                  ),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
                     showBrowserMinimizeButton
                       ? React.createElement("button", {
@@ -37759,42 +38110,44 @@ ${PROJECT_OVERVIEW_CSS}
                           )
                         : null
                     ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-header-icon-button" + (toolbarPopover === "create" ? " is-active" : ""),
-                        onClick: () => toggleToolbarPopover("create"),
-                        title: "Create or upload",
-                      }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
-                      toolbarPopover === "create"
-                        ? React.createElement("div", { className: "playground-files-toolbar-menu" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-toolbar-menu-item",
-                              onClick: () => void handleCreateFolder(currentPath),
-                              disabled: !selectedEnvironmentId || isCreatingFolder,
-                            },
-                              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                React.createElement("span", null, isCreatingFolder ? "Creating..." : "New Folder"),
-                                React.createElement("span", null, "Create in the current folder")
+                    !isChangesMode
+                      ? React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-files-header-icon-button" + (toolbarPopover === "create" ? " is-active" : ""),
+                            onClick: () => toggleToolbarPopover("create"),
+                            title: "Create or upload",
+                          }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
+                          toolbarPopover === "create"
+                            ? React.createElement("div", { className: "playground-files-toolbar-menu" },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-files-toolbar-menu-item",
+                                  onClick: () => void handleCreateFolder(currentPath),
+                                  disabled: !selectedEnvironmentId || isCreatingFolder,
+                                },
+                                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                    React.createElement("span", null, isCreatingFolder ? "Creating..." : "New Folder"),
+                                    React.createElement("span", null, "Create in the current folder")
+                                  )
+                                ),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-files-toolbar-menu-item",
+                                  onClick: () => openUploadPicker(currentPath),
+                                  disabled: !selectedEnvironmentId || isUploadingFiles,
+                                },
+                                  React.createElement(ArrowUpFromLine, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                    React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files"),
+                                    React.createElement("span", null, "Add files to this location")
+                                  )
+                                )
                               )
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-toolbar-menu-item",
-                              onClick: () => openUploadPicker(currentPath),
-                              disabled: !selectedEnvironmentId || isUploadingFiles,
-                            },
-                              React.createElement(ArrowUpFromLine, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files"),
-                                React.createElement("span", null, "Add files to this location")
-                              )
-                            )
-                          )
-                        : null
-                    )
+                            : null
+                        )
+                      : null
                   )
                 ),
                 React.createElement("div", { className: "playground-files-control-row" },
@@ -37802,232 +38155,159 @@ ${PROJECT_OVERVIEW_CSS}
                     React.createElement("div", { className: "playground-files-toolbar-anchor" },
                       React.createElement("button", {
                         type: "button",
-                        className: "playground-files-control-button" + (toolbarPopover === "filter" || filterMode !== "all" ? " is-active" : ""),
+                        className: "playground-files-control-button" + (toolbarPopover === "filter" || (isChangesMode ? hasActiveChangesFilters : filterMode !== "all") ? " is-active" : ""),
                         onClick: () => toggleToolbarPopover("filter"),
                       },
                         React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
                         React.createElement("span", null, "Filter")
                       ),
                       toolbarPopover === "filter"
-                        ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeFilterOption.label),
-                            filterOptions.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "playground-files-toolbar-menu-item" + (filterMode === option.id ? " is-active" : ""),
-                                  onClick: () => {
-                                    setFilterMode(option.id);
-                                    setToolbarPopover("");
+                        ? isChangesMode
+                          ? renderChangesFilterMenu()
+                          : React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
+                              React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeFilterOption.label),
+                              filterOptions.map((option) =>
+                                React.createElement("button", {
+                                    key: option.id,
+                                    type: "button",
+                                    className: "playground-files-toolbar-menu-item" + (filterMode === option.id ? " is-active" : ""),
+                                    onClick: () => {
+                                      setFilterMode(option.id);
+                                      setToolbarPopover("");
+                                    },
                                   },
-                                },
-                                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, filterMode === option.id ? "•" : ""),
-                                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                    React.createElement("span", null, option.label),
-                                    React.createElement("span", null, option.description)
+                                    React.createElement("span", { className: "playground-files-toolbar-menu-check" }, filterMode === option.id ? "•" : ""),
+                                    React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                      React.createElement("span", null, option.label),
+                                      React.createElement("span", null, option.description)
+                                    )
                                   )
-                                )
+                              )
                             )
-                          )
                         : null
                     ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button" + (toolbarPopover === "sort" || sortMode !== "name-asc" ? " is-active" : ""),
-                        onClick: () => toggleToolbarPopover("sort"),
-                      },
-                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Sort")
-                      ),
-                      toolbarPopover === "sort"
-                        ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeSortOption.label),
-                            sortOptions.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "playground-files-toolbar-menu-item" + (sortMode === option.id ? " is-active" : ""),
-                                  onClick: () => {
-                                    setSortMode(option.id);
-                                    setToolbarPopover("");
-                                  },
-                                },
-                                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, sortMode === option.id ? "•" : ""),
-                                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                    React.createElement("span", null, option.label)
-                                  )
+                    !isChangesMode
+                      ? React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-files-control-button" + (toolbarPopover === "sort" || sortMode !== "name-asc" ? " is-active" : ""),
+                            onClick: () => toggleToolbarPopover("sort"),
+                          },
+                            React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("span", null, "Sort")
+                          ),
+                          toolbarPopover === "sort"
+                            ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
+                                React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeSortOption.label),
+                                sortOptions.map((option) =>
+                                  React.createElement("button", {
+                                      key: option.id,
+                                      type: "button",
+                                      className: "playground-files-toolbar-menu-item" + (sortMode === option.id ? " is-active" : ""),
+                                      onClick: () => {
+                                        setSortMode(option.id);
+                                        setToolbarPopover("");
+                                      },
+                                    },
+                                      React.createElement("span", { className: "playground-files-toolbar-menu-check" }, sortMode === option.id ? "•" : ""),
+                                      React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                        React.createElement("span", null, option.label)
+                                      )
+                                    )
                                 )
-                            )
-                          )
-                        : null
-                    ),
+                              )
+                            : null
+                        )
+                      : null,
                     React.createElement("div", { className: "playground-files-toolbar-anchor" },
                       React.createElement("button", {
                         type: "button",
                         className: "playground-files-control-button" + (toolbarPopover === "projects" || projectFilterScope ? " is-active" : ""),
                         onClick: () => toggleToolbarPopover("projects"),
-                        title: "Filter files by project",
+                        title: isChangesMode ? "Filter changes by project" : "Filter files by project",
                       },
                         React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
                         React.createElement("span", null, "Projects")
                       ),
                       toolbarPopover === "projects"
-                        ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeProjectFilterOption.label),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-toolbar-menu-item" + (projectFilterScope === "" ? " is-active" : ""),
-                              onClick: () => {
-                                setProjectFilterScope("");
-                                setToolbarPopover("");
-                              },
-                            },
-                              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === "" ? "•" : ""),
-                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                React.createElement("span", null, "All Files"),
-                                React.createElement("span", null, "Show every file in this environment")
-                              )
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-files-toolbar-menu-item" + (projectFilterScope === "__all__" ? " is-active" : ""),
-                              onClick: () => {
-                                setProjectFilterScope("__all__");
-                                setToolbarPopover("");
-                              },
-                            },
-                              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === "__all__" ? "•" : ""),
-                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                React.createElement("span", null, "All Project Files"),
-                                React.createElement("span", null, "Show files created, updated, or attached through any project")
-                              )
-                            ),
-                            availableProjectFilters.map((project) =>
-                              React.createElement("button", {
-                                  key: project.id,
-                                  type: "button",
-                                  className: "playground-files-toolbar-menu-item" + (projectFilterScope === project.id ? " is-active" : ""),
-                                  onClick: () => {
-                                    setProjectFilterScope(project.id);
-                                    setToolbarPopover("");
-                                  },
-                                },
-                                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, projectFilterScope === project.id ? "•" : ""),
-                                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                    React.createElement("span", null, project.name || "Project"),
-                                    React.createElement("span", null, "Show only files linked to this project")
-                                  )
-                                )
-                            )
-                          )
+                        ? renderProjectScopeMenu()
                         : null
                     )
                   ),
                   React.createElement("div", { className: "playground-files-control-spacer" }),
-                  React.createElement("div", { className: "playground-files-path-strip" },
-                    React.createElement("div", { className: "playground-files-browser-nav" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-nav-button",
-                        onClick: handleGoBack,
-                        disabled: !canGoBack,
-                        title: "Go back",
-                      }, React.createElement(ChevronLeft, { strokeWidth: 1.8, width: 14, height: 14 })),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-nav-button",
-                        onClick: handleGoForward,
-                        disabled: !canGoForward,
-                        title: "Go forward",
-                      }, React.createElement(ChevronRight, { strokeWidth: 1.8, width: 14, height: 14 }))
-                    ),
-                    React.createElement("div", { className: "playground-files-breadcrumbs" },
-                      React.createElement("img", {
-                        className: "playground-files-breadcrumb-icon",
-                        src: PLAYGROUND_FOLDER_ICON_URL,
-                        alt: "",
-                        "aria-hidden": "true",
-                      }),
-                      breadcrumbs.map((crumb, index) =>
-                        React.createElement("button", {
-                            key: crumb.id || "root",
+                  !isChangesMode
+                    ? React.createElement("div", { className: "playground-files-path-strip" },
+                        React.createElement("div", { className: "playground-files-browser-nav" },
+                          React.createElement("button", {
                             type: "button",
-                            className: "playground-files-breadcrumb" + (index === breadcrumbs.length - 1 ? " is-active" : ""),
-                            onClick: () => handleBreadcrumbClick(crumb.id),
-                          },
-                            index > 0
-                              ? React.createElement("span", { className: "playground-files-breadcrumb-separator" }, "/")
-                              : null,
-                            React.createElement("span", null, index === 0 ? "/" : crumb.name)
-                          )
-                      ),
-                      React.createElement("span", { className: "playground-files-browser-summary" }, visibleEntryCount + " items")
-                    )
-                  )
+                            className: "playground-files-nav-button",
+                            onClick: handleGoBack,
+                            disabled: !canGoBack,
+                            title: "Go back",
+                          }, React.createElement(ChevronLeft, { strokeWidth: 1.8, width: 14, height: 14 })),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-files-nav-button",
+                            onClick: handleGoForward,
+                            disabled: !canGoForward,
+                            title: "Go forward",
+                          }, React.createElement(ChevronRight, { strokeWidth: 1.8, width: 14, height: 14 }))
+                        ),
+                        React.createElement("div", { className: "playground-files-breadcrumbs" },
+                          React.createElement("img", {
+                            className: "playground-files-breadcrumb-icon",
+                            src: PLAYGROUND_FOLDER_ICON_URL,
+                            alt: "",
+                            "aria-hidden": "true",
+                          }),
+                          breadcrumbs.map((crumb, index) =>
+                            React.createElement("button", {
+                                key: crumb.id || "root",
+                                type: "button",
+                                className: "playground-files-breadcrumb" + (index === breadcrumbs.length - 1 ? " is-active" : ""),
+                                onClick: () => handleBreadcrumbClick(crumb.id),
+                              },
+                                index > 0
+                                  ? React.createElement("span", { className: "playground-files-breadcrumb-separator" }, "/")
+                                  : null,
+                                React.createElement("span", null, index === 0 ? "/" : crumb.name)
+                              )
+                          ),
+                          React.createElement("span", { className: "playground-files-browser-summary" }, visibleEntryCount + " items")
+                        )
+                      )
+                    : null
                 ),
                 actionError
                   ? React.createElement("div", { className: "playground-files-action-error" }, actionError)
                   : null
               ),
               React.createElement("div", {
-                className: "playground-files-browser-body" + (isBackgroundDropTarget ? " is-drop-target" : ""),
-                onClick: (event) => {
-                  if (event.target === event.currentTarget) {
-                    clearSelection();
-                    closeContextMenu();
-                  }
-                },
-                onContextMenu: (event) => {
-                  if (event.target === event.currentTarget) {
-                    handleContextMenu(event, null);
-                  }
-                },
-                onDragOver: handleBrowserDragOver,
-                onDragLeave: handleDragLeave,
-                onDrop: (event) => void handleBrowserDrop(event),
+                className: "playground-files-browser-body"
+                  + (isChangesMode ? " is-changes-view" : "")
+                  + (!isChangesMode && isBackgroundDropTarget ? " is-drop-target" : ""),
+                onClick: !isChangesMode
+                  ? (event) => {
+                      if (event.target === event.currentTarget) {
+                        clearSelection();
+                        closeContextMenu();
+                      }
+                    }
+                  : undefined,
+                onContextMenu: !isChangesMode
+                  ? (event) => {
+                      if (event.target === event.currentTarget) {
+                        handleContextMenu(event, null);
+                      }
+                    }
+                  : undefined,
+                onDragOver: !isChangesMode ? handleBrowserDragOver : undefined,
+                onDragLeave: !isChangesMode ? handleDragLeave : undefined,
+                onDrop: !isChangesMode ? (event) => void handleBrowserDrop(event) : undefined,
               },
-                isCurrentEnvironmentLoading
-                  ? React.createElement("div", { className: "playground-files-state" },
-                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                      React.createElement("span", null, "Loading files...")
-                    )
-                  : currentEnvironmentError
-                    ? React.createElement("div", { className: "playground-files-state is-error" }, currentEnvironmentError)
-                    : !selectedEnvironmentId
-                      ? React.createElement("div", { className: "playground-files-state" }, "Select an environment to browse files.")
-                      : !hasVisibleEntries
-                        ? isEmptyEnvironmentRoot
-                          ? React.createElement("div", { className: "playground-files-state playground-files-empty-state-card-wrap" },
-                              React.createElement("div", { className: "playground-tasks-empty playground-files-empty-state-card" },
-                                React.createElement(FolderOpen, { width: 28, height: 28, strokeWidth: 1.9 }),
-                                React.createElement("div", { className: "playground-tasks-empty-title" }, "Upload your first files"),
-                                React.createElement("div", { className: "playground-tasks-empty-copy" }, "Add reference docs, specs, or assets to this environment so they are ready to use in threads and tasks."),
-                                React.createElement("div", { className: "playground-tasks-empty-actions" },
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-tasks-empty-primary-button",
-                                    onClick: () => openUploadPicker(currentPath),
-                                    disabled: !selectedEnvironmentId || isUploadingFiles,
-                                  },
-                                    React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
-                                    React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files")
-                                  )
-                                )
-                              )
-                            )
-                          : React.createElement("div", { className: "playground-files-state" },
-                              projectFilterScope
-                                ? projectFilterScope === "__all__"
-                                  ? "No project-linked files found in this location."
-                                  : "No files linked to the selected project were found in this location."
-                                : currentEntries.length === 0
-                                  ? "This folder is empty"
-                                  : "No items match the current filter"
-                            )
-                        : viewMode === "list"
-                          ? React.createElement("div", { className: "playground-files-entry-list" }, visibleRows.map(renderEntryRow))
-                          : React.createElement("div", { className: "playground-files-grid" }, filteredCurrentEntries.map(renderGridItem))
+                isChangesMode
+                  ? renderChangesBrowserContent()
+                  : renderFilesBrowserContent()
               )
             ),
             React.createElement("aside", {
@@ -51214,6 +51494,204 @@ ${PROJECT_OVERVIEW_CSS}
           return true;
         };
 
+        function EnvironmentsHomeResponsiveSvgShared({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
+          const frameRef = useRef(null);
+          const [measuredWidth, setMeasuredWidth] = useState(0);
+
+          useLayoutEffect(() => {
+            const node = frameRef.current;
+            if (!node) {
+              return undefined;
+            }
+
+            const updateWidth = () => {
+              const nextWidth = Math.max(1, Math.round(node.clientWidth || fallbackWidth));
+              setMeasuredWidth((current) => current === nextWidth ? current : nextWidth);
+            };
+
+            updateWidth();
+
+            if (typeof ResizeObserver === "undefined") {
+              window.addEventListener("resize", updateWidth);
+              return () => window.removeEventListener("resize", updateWidth);
+            }
+
+            const observer = new ResizeObserver(() => updateWidth());
+            observer.observe(node);
+            return () => observer.disconnect();
+          }, [fallbackWidth]);
+
+          const resolvedSvgWidth = Math.max(1, Math.round(measuredWidth || fallbackWidth));
+          const resolvedSvgHeight = Math.max(1, Math.round(svgHeight || frameHeight || 208));
+
+          return React.createElement("div", {
+              ref: frameRef,
+              className: frameClassName,
+              style: frameHeight ? { height: String(frameHeight) + "px" } : undefined,
+            },
+            React.createElement("svg", {
+              className: "playground-settings-usage-chart-svg",
+              width: resolvedSvgWidth,
+              height: resolvedSvgHeight,
+              role: "img",
+              "aria-label": ariaLabel || "Usage chart",
+            },
+              typeof children === "function"
+                ? children({
+                    svgWidth: resolvedSvgWidth,
+                    svgHeight: resolvedSvgHeight,
+                  })
+                : children
+            )
+          );
+        }
+
+        const renderHomeStackedUsageChartShared = ({ ariaLabel, labels, series, emptyText, title, timescaleControl, tickFormatter }) => {
+          const normalizedLabels = Array.isArray(labels) ? labels : [];
+          const normalizedSeries = Array.isArray(series)
+            ? series.filter((entry) => entry && Array.isArray(entry.values))
+            : [];
+          if (!normalizedLabels.length || !normalizedSeries.length) {
+            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet");
+          }
+
+          const frameHeight = 252;
+          const svgHeight = 252;
+          const marginTop = 12;
+          const marginRight = 14;
+          const marginBottom = 38;
+          const marginLeft = 40;
+          const totals = normalizedLabels.map((_, index) =>
+            normalizedSeries.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
+          );
+          const yMax = Math.max(1, ...totals, 1);
+          const gridLineCount = 4;
+          const formatTick = typeof tickFormatter === "function"
+            ? tickFormatter
+            : (value) => String(Math.round(value));
+          const labelStep = Math.max(1, Math.ceil(normalizedLabels.length / 7));
+          const visibleLabelIndexes = (() => {
+            const next = [];
+            for (let index = 0; index < normalizedLabels.length; index += labelStep) {
+              next.push(index);
+            }
+            const lastIndex = normalizedLabels.length - 1;
+            if (lastIndex >= 0 && !next.includes(lastIndex)) {
+              if (next.length > 0 && lastIndex - next[next.length - 1] < 2) {
+                next[next.length - 1] = lastIndex;
+              } else {
+                next.push(lastIndex);
+              }
+            }
+            return new Set(next);
+          })();
+
+          return React.createElement("div", { className: "playground-settings-usage-chart-card" },
+            React.createElement("div", { className: "playground-project-overview-chart-header" },
+              React.createElement("div", { className: "playground-project-overview-chart-header-main" },
+                React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
+                timescaleControl || null
+              )
+            ),
+            React.createElement(EnvironmentsHomeResponsiveSvgShared, {
+                frameClassName: "playground-project-overview-chart-shell",
+                frameHeight,
+                svgHeight,
+                fallbackWidth: 1200,
+                ariaLabel: ariaLabel || "Usage chart",
+              }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
+                const plotWidth = svgWidth - marginLeft - marginRight;
+                const plotHeight = measuredSvgHeight - marginTop - marginBottom;
+                const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
+                const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+                const baselineY = marginTop + plotHeight;
+
+                return React.createElement(React.Fragment, null,
+                  Array.from({ length: gridLineCount + 1 }).map((_, index) => {
+                    const y = marginTop + (plotHeight / gridLineCount) * index;
+                    const tickValue = yMax - (yMax / gridLineCount) * index;
+                    return React.createElement(React.Fragment, { key: "grid:" + index },
+                      React.createElement("line", {
+                        x1: marginLeft,
+                        y1: y,
+                        x2: svgWidth - marginRight,
+                        y2: y,
+                        stroke: "rgba(255,255,255,0.10)",
+                        strokeWidth: "1",
+                      }),
+                      React.createElement("text", {
+                        x: marginLeft - 8,
+                        y,
+                        textAnchor: "end",
+                        dominantBaseline: "middle",
+                        fill: "rgba(255,255,255,0.4)",
+                        fontSize: "12",
+                        fontFamily: "Inter, sans-serif",
+                        fontWeight: "400",
+                      }, formatTick(tickValue))
+                    );
+                  }),
+                  normalizedLabels.map((label, index) => {
+                    const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                    const isFirstLabel = index === 0;
+                    const isLastLabel = index === normalizedLabels.length - 1;
+                    const labelX = isFirstLabel
+                      ? marginLeft
+                      : isLastLabel
+                        ? svgWidth - marginRight
+                        : marginLeft + slotWidth * index + slotWidth / 2;
+                    let stackOffsetY = baselineY;
+                    return React.createElement(React.Fragment, { key: "stack:" + index },
+                      normalizedSeries.map((entry, seriesIndex) => {
+                        const rawValue = Math.max(0, Number(entry.values[index] || 0));
+                        if (rawValue <= 0) {
+                          return null;
+                        }
+                        const segmentHeight = (rawValue / yMax) * plotHeight;
+                        stackOffsetY -= segmentHeight;
+                        return React.createElement("rect", {
+                          key: "segment:" + seriesIndex,
+                          x,
+                          y: stackOffsetY,
+                          width: barWidth,
+                          height: Math.max(segmentHeight, 1),
+                          rx: "3",
+                          fill: entry.color || "rgba(255,255,255,0.8)",
+                        });
+                      }),
+                      visibleLabelIndexes.has(index)
+                        ? React.createElement("text", {
+                            x: labelX,
+                            y: measuredSvgHeight - 8,
+                            textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                            fill: "rgba(255,255,255,0.4)",
+                            fontSize: "12",
+                            fontFamily: "Inter, sans-serif",
+                            fontWeight: "400",
+                          }, label)
+                        : null
+                    );
+                  })
+                );
+              }
+            ),
+            React.createElement("div", {
+              className: "playground-settings-usage-inline-legend",
+              style: { justifyContent: "flex-start" },
+            },
+              normalizedSeries.map((entry) =>
+                React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
+                  React.createElement("span", {
+                    className: "playground-settings-usage-legend-swatch",
+                    style: { background: entry.color },
+                  }),
+                  React.createElement("span", null, entry.label)
+                )
+              )
+            )
+          );
+        };
+
         function renderEnvironmentsHome() {
           const renderHomeResourceIcon = (item, className) => {
             if (item?.resourceType === "computer") {
@@ -51299,8 +51777,8 @@ ${PROJECT_OVERVIEW_CSS}
               },
               React.createElement("svg", {
                 className: "playground-settings-usage-chart-svg",
-                viewBox: "0 0 " + resolvedSvgWidth + " " + resolvedSvgHeight,
-                preserveAspectRatio: "none",
+                width: resolvedSvgWidth,
+                height: resolvedSvgHeight,
                 role: "img",
                 "aria-label": ariaLabel || "Usage chart",
               },
@@ -51443,40 +51921,182 @@ ${PROJECT_OVERVIEW_CSS}
             );
           };
 
+          const renderHomeStackedUsageChart = ({ ariaLabel, labels, series, emptyText, title, timescaleControl, tickFormatter }) => {
+            const normalizedLabels = Array.isArray(labels) ? labels : [];
+            const normalizedSeries = Array.isArray(series)
+              ? series.filter((entry) => entry && Array.isArray(entry.values))
+              : [];
+            if (!normalizedLabels.length || !normalizedSeries.length) {
+              return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet");
+            }
+
+            const frameHeight = 252;
+            const svgHeight = 252;
+            const marginTop = 12;
+            const marginRight = 14;
+            const marginBottom = 38;
+            const marginLeft = 40;
+            const totals = normalizedLabels.map((_, index) =>
+              normalizedSeries.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
+            );
+            const yMax = Math.max(1, ...totals, 1);
+            const gridLineCount = 4;
+            const formatTick = typeof tickFormatter === "function"
+              ? tickFormatter
+              : (value) => String(Math.round(value));
+            const labelStep = Math.max(1, Math.ceil(normalizedLabels.length / 7));
+            const visibleLabelIndexes = (() => {
+              const next = [];
+              for (let index = 0; index < normalizedLabels.length; index += labelStep) {
+                next.push(index);
+              }
+              const lastIndex = normalizedLabels.length - 1;
+              if (lastIndex >= 0 && !next.includes(lastIndex)) {
+                if (next.length > 0 && lastIndex - next[next.length - 1] < 2) {
+                  next[next.length - 1] = lastIndex;
+                } else {
+                  next.push(lastIndex);
+                }
+              }
+              return new Set(next);
+            })();
+
+            return React.createElement("div", { className: "playground-settings-usage-chart-card" },
+              React.createElement("div", { className: "playground-project-overview-chart-header" },
+                React.createElement("div", { className: "playground-project-overview-chart-header-main" },
+                  React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
+                  timescaleControl || null
+                )
+              ),
+              React.createElement(EnvironmentsHomeResponsiveSvg, {
+                  frameClassName: "playground-project-overview-chart-shell",
+                  frameHeight,
+                  svgHeight,
+                  fallbackWidth: 1200,
+                  ariaLabel: ariaLabel || "Usage chart",
+                }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
+                  const plotWidth = svgWidth - marginLeft - marginRight;
+                  const plotHeight = measuredSvgHeight - marginTop - marginBottom;
+                  const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
+                  const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+                  const baselineY = marginTop + plotHeight;
+
+                  return React.createElement(React.Fragment, null,
+                    Array.from({ length: gridLineCount + 1 }).map((_, index) => {
+                      const y = marginTop + (plotHeight / gridLineCount) * index;
+                      const tickValue = yMax - (yMax / gridLineCount) * index;
+                      return React.createElement(React.Fragment, { key: "grid:" + index },
+                        React.createElement("line", {
+                          x1: marginLeft,
+                          y1: y,
+                          x2: svgWidth - marginRight,
+                          y2: y,
+                          stroke: "rgba(255,255,255,0.10)",
+                          strokeWidth: "1",
+                        }),
+                        React.createElement("text", {
+                          x: marginLeft - 8,
+                          y,
+                          textAnchor: "end",
+                          dominantBaseline: "middle",
+                          fill: "rgba(255,255,255,0.4)",
+                          fontSize: "12",
+                          fontFamily: "Inter, sans-serif",
+                          fontWeight: "400",
+                        }, formatTick(tickValue))
+                      );
+                    }),
+                    normalizedLabels.map((label, index) => {
+                      const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                      const isFirstLabel = index === 0;
+                      const isLastLabel = index === normalizedLabels.length - 1;
+                      const labelX = isFirstLabel
+                        ? marginLeft
+                        : isLastLabel
+                          ? svgWidth - marginRight
+                          : marginLeft + slotWidth * index + slotWidth / 2;
+                      let stackOffsetY = baselineY;
+                      return React.createElement(React.Fragment, { key: "stack:" + index },
+                        normalizedSeries.map((entry, seriesIndex) => {
+                          const rawValue = Math.max(0, Number(entry.values[index] || 0));
+                          if (rawValue <= 0) {
+                            return null;
+                          }
+                          const segmentHeight = (rawValue / yMax) * plotHeight;
+                          stackOffsetY -= segmentHeight;
+                          return React.createElement("rect", {
+                            key: "segment:" + seriesIndex,
+                            x,
+                            y: stackOffsetY,
+                            width: barWidth,
+                            height: Math.max(segmentHeight, 1),
+                            rx: "3",
+                            fill: entry.color || "rgba(255,255,255,0.8)",
+                          });
+                        }),
+                        visibleLabelIndexes.has(index)
+                          ? React.createElement("text", {
+                              x: labelX,
+                              y: measuredSvgHeight - 8,
+                              textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                              fill: "rgba(255,255,255,0.4)",
+                              fontSize: "12",
+                              fontFamily: "Inter, sans-serif",
+                              fontWeight: "400",
+                            }, label)
+                          : null
+                      );
+                    })
+                  );
+                }
+              ),
+              React.createElement("div", {
+                className: "playground-settings-usage-inline-legend",
+                style: { justifyContent: "flex-start" },
+              },
+                normalizedSeries.map((entry) =>
+                  React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
+                    React.createElement("span", {
+                      className: "playground-settings-usage-legend-swatch",
+                      style: { background: entry.color },
+                    }),
+                    React.createElement("span", null, entry.label)
+                  )
+                )
+              )
+            );
+          };
+
           const renderHomeUsageChart = ({ ariaLabel, labels, computerValues, resourceValues, emptyText }) => (
-            renderPlaygroundTelemetryTimeseriesChart({
+            renderHomeStackedUsageChart({
               ariaLabel: ariaLabel || "Overall environment activity",
               labels,
               series: [
                 {
-                  key: "computers",
-                  tone: "computers",
+                  id: "computers",
+                  label: "Computers",
+                  color: "rgb(143,196,255)",
                   values: computerValues,
                 },
                 {
-                  key: "resources",
-                  tone: "resources",
+                  id: "resources",
+                  label: "Resources",
+                  color: "rgb(103,80,255)",
                   values: resourceValues,
                 },
               ],
               emptyText: emptyText || "No usage data yet",
-              buildLinePath: buildHomeUsageLinePath,
-              getSeriesValue: (entry, _bucket, index) => entry?.values?.[index],
-              getXAxisLabel: (bucket) => String(bucket?.label || ""),
-              chartHeight: 194,
-              headerContent: React.createElement("div", { className: "playground-environments-home-comparison-header is-simple" },
-                React.createElement("div", { className: "playground-environments-home-comparison-copy" },
-                  React.createElement("div", { className: "playground-environments-home-comparison-title" }, "Activity comparison"),
-                  React.createElement("div", { className: "playground-environments-home-comparison-legend" },
-                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
-                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot is-count" }),
-                      React.createElement("span", null, "Computers")
-                    ),
-                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
-                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot", style: { background: "var(--playground-chart-green)" } }),
-                      React.createElement("span", null, "Resources")
-                    )
-                  )
+              title: "Daily CT by Resource Type",
+              timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+                React.createElement("select", {
+                  className: "playground-environments-home-comparison-timescale-select",
+                  value: environmentHomeChartTimescale,
+                  "aria-label": "Environment chart timescale",
+                  onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
+                },
+                  React.createElement("option", { value: "day" }, "Daily"),
+                  React.createElement("option", { value: "week" }, "Weekly"),
+                  React.createElement("option", { value: "month" }, "Monthly")
                 )
               ),
             })
@@ -51657,32 +52277,35 @@ ${PROJECT_OVERVIEW_CSS}
             totalFunctionRuntimeCT,
             totalManagedRuntimeCT,
           ];
+          const totalResourceRuntimeCT = totalWebAppRuntimeCT + totalFunctionRuntimeCT + totalManagedRuntimeCT;
+          const totalEnvironmentRuntimeCT = totalComputerRuntimeCT + totalResourceRuntimeCT;
+          const environmentsHomeKpis = [
+            { id: "computers", value: String(environmentsHomeSummary.computers), label: "Computers" },
+            { id: "resources", value: String(environmentsHomeSummary.totalResources), label: "Resources" },
+            { id: "computer-ct", value: formatSettingsComputeTokens(totalComputerRuntimeCT), label: "Spent on Computers" },
+            { id: "resource-ct", value: formatSettingsComputeTokens(totalResourceRuntimeCT), label: "Spent on Resources" },
+            { id: "total-ct", value: formatSettingsComputeTokens(totalEnvironmentRuntimeCT), label: "Total CT" },
+          ];
           const capabilityCards = [
             {
               id: "computer",
               command: "computer",
               title: "Computers",
-              copy: "Create durable computers with the right runtime, packages, GUI access, and toolchain for the job.",
-              countLabel: environmentsHomeSummary.computers + " configured",
-              actionLabel: "Use /computer",
+              copy: "Create durable runtimes for code, browsing, and execution.",
               Icon: HardDrive,
             },
             {
               id: "app",
               command: "app",
               title: "Apps",
-              copy: "Create web apps with the right runtime, bindings, and deployment shape for the product you want to ship.",
-              countLabel: environmentsHomeSummary.webApps + " deployed",
-              actionLabel: "Use /app",
+              copy: "Ship web apps with the runtime and bindings your product needs.",
               Icon: Globe,
             },
             {
               id: "function",
               command: "function",
               title: "Functions",
-              copy: "Create functions with the right runtime, request contract, dependencies, and connected resources.",
-              countLabel: environmentsHomeSummary.functions + " deployed",
-              actionLabel: "Use /function",
+              copy: "Deploy functions for automations, APIs, and background jobs.",
               Icon: FunctionSquare,
             },
           ];
@@ -51694,17 +52317,13 @@ ${PROJECT_OVERVIEW_CSS}
               React.createElement("div", { className: "playground-environments-home-hero-copy" },
                 "Create durable computers, publish web apps and functions, connect databases and auth, and power products with agent runtimes. Environments brings your full AI application stack together in one workspace."
               ),
-              React.createElement("div", { className: "playground-environments-home-metrics-toolbar" },
-                React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
-                  React.createElement("select", {
-                    className: "playground-environments-home-comparison-timescale-select",
-                    value: environmentHomeChartTimescale,
-                    "aria-label": "Environment chart timescale",
-                    onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
-                  },
-                    React.createElement("option", { value: "day" }, "Daily"),
-                    React.createElement("option", { value: "week" }, "Weekly"),
-                    React.createElement("option", { value: "month" }, "Monthly")
+              React.createElement("div", { className: "playground-environments-home-summary" },
+                React.createElement("div", { className: "playground-environments-home-summary-kpis" },
+                  environmentsHomeKpis.map((item) =>
+                    React.createElement("div", { key: item.id, className: "playground-environments-home-summary-kpi" },
+                      React.createElement("div", { className: "playground-environments-home-summary-kpi-value" }, item.value),
+                      React.createElement("div", { className: "playground-environments-home-summary-kpi-label" }, item.label)
+                    )
                   )
                 )
               ),
@@ -51713,24 +52332,9 @@ ${PROJECT_OVERVIEW_CSS}
                   React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                     React.createElement("div", { className: "playground-database-overview" },
                       React.createElement("div", { className: "playground-database-overview-chart-block" },
-                        renderHomeComparisonBarChart({
-                          ariaLabel: "Environment and resource comparison",
-                          labels: resourceBreakdownLabels,
-                          countValues: resourceBreakdownValues,
-                          costValues: resourceBreakdownCostValues,
-                          emptyText: "No environment data yet",
-                        })
-                      )
-                    )
-                  )
-                ),
-                React.createElement("section", { className: "playground-tasks-detail-facts" },
-                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                    React.createElement("div", { className: "playground-database-overview" },
-                      React.createElement("div", { className: "playground-database-overview-chart-block" },
                         renderHomeUsageChart({
                           ariaLabel: "Overall environment activity",
-                          labels: homeActivityBuckets,
+                          labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
                           computerValues: homeComputerUsage,
                           resourceValues: homeResourceUsage,
                           emptyText: "No usage data yet",
@@ -51754,21 +52358,13 @@ ${PROJECT_OVERVIEW_CSS}
                           event.preventDefault();
                           stageEnvironmentsHomeResourceCommand(card.command);
                         }
-                      },
                     },
+                  },
                   React.createElement("div", { className: "playground-environments-home-card-visual" },
                     React.createElement(card.Icon, { className: "playground-environments-home-card-icon", strokeWidth: 1.8 })
                   ),
                   React.createElement("div", { className: "playground-environments-home-card-title" }, card.title),
-                  React.createElement("div", { className: "playground-environments-home-card-copy" }, card.copy),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-home-card-button",
-                    onClick: (event) => {
-                      event.stopPropagation();
-                      stageEnvironmentsHomeResourceCommand(card.command);
-                    },
-                  }, card.actionLabel)
+                  React.createElement("div", { className: "playground-environments-home-card-copy" }, card.copy)
                   )
                 )
               ),
@@ -51966,7 +52562,6 @@ ${PROJECT_OVERVIEW_CSS}
                                   className: "playground-environments-list-item" + (isActive ? " is-active" : "") + (hasActions ? " has-actions" : ""),
                                   onClick: () => handleEnvironmentSelect(environment.id),
                                 },
-                                  React.createElement(HardDrive, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
                                   React.createElement("div", { className: "playground-environments-list-item-copy" },
                                     React.createElement("div", { className: "playground-environments-list-item-title" }, environment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID ? (draftEnvironment?.name || "New Computer") : (environment.name || "Untitled Computer"))
                                   ),
@@ -53702,6 +54297,204 @@ ${PROJECT_OVERVIEW_CSS}
           openAgentComposer("team");
         }
 
+        function EnvironmentsHomeResponsiveSvgShared({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
+          const frameRef = useRef(null);
+          const [measuredWidth, setMeasuredWidth] = useState(0);
+
+          useLayoutEffect(() => {
+            const node = frameRef.current;
+            if (!node) {
+              return undefined;
+            }
+
+            const updateWidth = () => {
+              const nextWidth = Math.max(1, Math.round(node.clientWidth || fallbackWidth));
+              setMeasuredWidth((current) => current === nextWidth ? current : nextWidth);
+            };
+
+            updateWidth();
+
+            if (typeof ResizeObserver === "undefined") {
+              window.addEventListener("resize", updateWidth);
+              return () => window.removeEventListener("resize", updateWidth);
+            }
+
+            const observer = new ResizeObserver(() => updateWidth());
+            observer.observe(node);
+            return () => observer.disconnect();
+          }, [fallbackWidth]);
+
+          const resolvedSvgWidth = Math.max(1, Math.round(measuredWidth || fallbackWidth));
+          const resolvedSvgHeight = Math.max(1, Math.round(svgHeight || frameHeight || 208));
+
+          return React.createElement("div", {
+              ref: frameRef,
+              className: frameClassName,
+              style: frameHeight ? { height: String(frameHeight) + "px" } : undefined,
+            },
+            React.createElement("svg", {
+              className: "playground-settings-usage-chart-svg",
+              width: resolvedSvgWidth,
+              height: resolvedSvgHeight,
+              role: "img",
+              "aria-label": ariaLabel || "Usage chart",
+            },
+              typeof children === "function"
+                ? children({
+                    svgWidth: resolvedSvgWidth,
+                    svgHeight: resolvedSvgHeight,
+                  })
+                : children
+            )
+          );
+        }
+
+        const renderHomeStackedUsageChartShared = ({ ariaLabel, labels, series, emptyText, title, timescaleControl, tickFormatter }) => {
+          const normalizedLabels = Array.isArray(labels) ? labels : [];
+          const normalizedSeries = Array.isArray(series)
+            ? series.filter((entry) => entry && Array.isArray(entry.values))
+            : [];
+          if (!normalizedLabels.length || !normalizedSeries.length) {
+            return React.createElement("div", { className: "playground-settings-usage-chart-empty" }, emptyText || "No usage data yet");
+          }
+
+          const frameHeight = 252;
+          const svgHeight = 252;
+          const marginTop = 12;
+          const marginRight = 14;
+          const marginBottom = 38;
+          const marginLeft = 40;
+          const totals = normalizedLabels.map((_, index) =>
+            normalizedSeries.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
+          );
+          const yMax = Math.max(1, ...totals, 1);
+          const gridLineCount = 4;
+          const formatTick = typeof tickFormatter === "function"
+            ? tickFormatter
+            : (value) => String(Math.round(value));
+          const labelStep = Math.max(1, Math.ceil(normalizedLabels.length / 7));
+          const visibleLabelIndexes = (() => {
+            const next = [];
+            for (let index = 0; index < normalizedLabels.length; index += labelStep) {
+              next.push(index);
+            }
+            const lastIndex = normalizedLabels.length - 1;
+            if (lastIndex >= 0 && !next.includes(lastIndex)) {
+              if (next.length > 0 && lastIndex - next[next.length - 1] < 2) {
+                next[next.length - 1] = lastIndex;
+              } else {
+                next.push(lastIndex);
+              }
+            }
+            return new Set(next);
+          })();
+
+          return React.createElement("div", { className: "playground-settings-usage-chart-card" },
+            React.createElement("div", { className: "playground-project-overview-chart-header" },
+              React.createElement("div", { className: "playground-project-overview-chart-header-main" },
+                React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
+                timescaleControl || null
+              )
+            ),
+            React.createElement(EnvironmentsHomeResponsiveSvgShared, {
+                frameClassName: "playground-project-overview-chart-shell",
+                frameHeight,
+                svgHeight,
+                fallbackWidth: 1200,
+                ariaLabel: ariaLabel || "Usage chart",
+              }, ({ svgWidth, svgHeight: measuredSvgHeight }) => {
+                const plotWidth = svgWidth - marginLeft - marginRight;
+                const plotHeight = measuredSvgHeight - marginTop - marginBottom;
+                const slotWidth = plotWidth / Math.max(normalizedLabels.length, 1);
+                const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
+                const baselineY = marginTop + plotHeight;
+
+                return React.createElement(React.Fragment, null,
+                  Array.from({ length: gridLineCount + 1 }).map((_, index) => {
+                    const y = marginTop + (plotHeight / gridLineCount) * index;
+                    const tickValue = yMax - (yMax / gridLineCount) * index;
+                    return React.createElement(React.Fragment, { key: "grid:" + index },
+                      React.createElement("line", {
+                        x1: marginLeft,
+                        y1: y,
+                        x2: svgWidth - marginRight,
+                        y2: y,
+                        stroke: "rgba(255,255,255,0.10)",
+                        strokeWidth: "1",
+                      }),
+                      React.createElement("text", {
+                        x: marginLeft - 8,
+                        y,
+                        textAnchor: "end",
+                        dominantBaseline: "middle",
+                        fill: "rgba(255,255,255,0.4)",
+                        fontSize: "12",
+                        fontFamily: "Inter, sans-serif",
+                        fontWeight: "400",
+                      }, formatTick(tickValue))
+                    );
+                  }),
+                  normalizedLabels.map((label, index) => {
+                    const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
+                    const isFirstLabel = index === 0;
+                    const isLastLabel = index === normalizedLabels.length - 1;
+                    const labelX = isFirstLabel
+                      ? marginLeft
+                      : isLastLabel
+                        ? svgWidth - marginRight
+                        : marginLeft + slotWidth * index + slotWidth / 2;
+                    let stackOffsetY = baselineY;
+                    return React.createElement(React.Fragment, { key: "stack:" + index },
+                      normalizedSeries.map((entry, seriesIndex) => {
+                        const rawValue = Math.max(0, Number(entry.values[index] || 0));
+                        if (rawValue <= 0) {
+                          return null;
+                        }
+                        const segmentHeight = (rawValue / yMax) * plotHeight;
+                        stackOffsetY -= segmentHeight;
+                        return React.createElement("rect", {
+                          key: "segment:" + seriesIndex,
+                          x,
+                          y: stackOffsetY,
+                          width: barWidth,
+                          height: Math.max(segmentHeight, 1),
+                          rx: "3",
+                          fill: entry.color || "rgba(255,255,255,0.8)",
+                        });
+                      }),
+                      visibleLabelIndexes.has(index)
+                        ? React.createElement("text", {
+                            x: labelX,
+                            y: measuredSvgHeight - 8,
+                            textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                            fill: "rgba(255,255,255,0.4)",
+                            fontSize: "12",
+                            fontFamily: "Inter, sans-serif",
+                            fontWeight: "400",
+                          }, label)
+                        : null
+                    );
+                  })
+                );
+              }
+            ),
+            React.createElement("div", {
+              className: "playground-settings-usage-inline-legend",
+              style: { justifyContent: "flex-start" },
+            },
+              normalizedSeries.map((entry) =>
+                React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
+                  React.createElement("span", {
+                    className: "playground-settings-usage-legend-swatch",
+                    style: { background: entry.color },
+                  }),
+                  React.createElement("span", null, entry.label)
+                )
+              )
+            )
+          );
+        };
+
         function renderAgentsHome() {
           const allAgents = allKnownAgents.filter((agent) => agent?.id && agent.id !== PLAYGROUND_AGENT_DRAFT_ID);
           const teamAgents = allAgents.filter((agent) => isPlaygroundTeamAgent(agent));
@@ -53747,6 +54540,14 @@ ${PROJECT_OVERVIEW_CSS}
             }
             totalSingleAgentCT += nextCost;
           });
+          const totalAgentsCT = totalSingleAgentCT + totalTeamAgentCT;
+          const agentsHomeKpis = [
+            { id: "agents", value: String(singleAgents.length), label: "Agents" },
+            { id: "teams", value: String(teamAgents.length), label: "Teams" },
+            { id: "agent-ct", value: formatSettingsComputeTokens(totalSingleAgentCT), label: "Spent on Agents" },
+            { id: "team-ct", value: formatSettingsComputeTokens(totalTeamAgentCT), label: "Spent on Teams" },
+            { id: "total-ct", value: formatSettingsComputeTokens(totalAgentsCT), label: "Total CT" },
+          ];
 
           const buildAgentsHomeActivityBuckets = (period) => {
             if (period === "day") {
@@ -53808,67 +54609,6 @@ ${PROJECT_OVERVIEW_CSS}
             const threadAgentId = readThreadAgentId(thread);
             return threadAgentId && teamAgentIds.has(threadAgentId) ? sum + 1 : sum;
           }, 0));
-
-          const buildAgentsHomeUsageLinePath = (points) => {
-            if (!Array.isArray(points) || points.length === 0) {
-              return "";
-            }
-            return points
-              .map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2))
-              .join(" ");
-          };
-
-          function AgentsHomeResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 640, ariaLabel, children }) {
-            const frameRef = useRef(null);
-            const [measuredWidth, setMeasuredWidth] = useState(0);
-
-            useLayoutEffect(() => {
-              const node = frameRef.current;
-              if (!node) {
-                return undefined;
-              }
-
-              const updateWidth = () => {
-                const nextWidth = Math.max(1, Math.round(node.clientWidth || fallbackWidth));
-                setMeasuredWidth((current) => current === nextWidth ? current : nextWidth);
-              };
-
-              updateWidth();
-
-              if (typeof ResizeObserver === "undefined") {
-                window.addEventListener("resize", updateWidth);
-                return () => window.removeEventListener("resize", updateWidth);
-              }
-
-              const observer = new ResizeObserver(() => updateWidth());
-              observer.observe(node);
-              return () => observer.disconnect();
-            }, [fallbackWidth]);
-
-            const resolvedSvgWidth = Math.max(1, Math.round(measuredWidth || fallbackWidth));
-            const resolvedSvgHeight = Math.max(1, Math.round(svgHeight || frameHeight || 208));
-
-            return React.createElement("div", {
-                ref: frameRef,
-                className: frameClassName,
-                style: frameHeight ? { height: String(frameHeight) + "px" } : undefined,
-              },
-              React.createElement("svg", {
-                  className: "playground-settings-usage-chart-svg",
-                  viewBox: "0 0 " + resolvedSvgWidth + " " + resolvedSvgHeight,
-                  preserveAspectRatio: "none",
-                  role: "img",
-                  "aria-label": ariaLabel || "Usage chart",
-                },
-                typeof children === "function"
-                  ? children({
-                      svgWidth: resolvedSvgWidth,
-                      svgHeight: resolvedSvgHeight,
-                    })
-                  : children
-              )
-            );
-          }
 
           const renderAgentsHomeComparisonBarChart = ({ ariaLabel, labels, countValues, costValues, emptyText }) => {
             const normalizedLabels = Array.isArray(labels) ? labels : [];
@@ -54000,39 +54740,34 @@ ${PROJECT_OVERVIEW_CSS}
           };
 
           const renderAgentsHomeUsageChart = ({ ariaLabel, labels, singleValues, teamValues, emptyText }) => (
-            renderPlaygroundTelemetryTimeseriesChart({
+            renderHomeStackedUsageChartShared({
               ariaLabel: ariaLabel || "Overall agent activity",
               labels,
               series: [
                 {
-                  key: "agents",
-                  tone: "computers",
+                  id: "agents",
+                  label: "Agents",
+                  color: "rgb(143,196,255)",
                   values: singleValues,
                 },
                 {
-                  key: "teams",
-                  tone: "resources",
+                  id: "teams",
+                  label: "Teams",
+                  color: "rgb(103,80,255)",
                   values: teamValues,
                 },
               ],
               emptyText: emptyText || "No activity data yet",
-              buildLinePath: buildAgentsHomeUsageLinePath,
-              getSeriesValue: (entry, _bucket, index) => entry?.values?.[index],
-              getXAxisLabel: (bucket) => String(bucket?.label || ""),
-              chartHeight: 194,
-              headerContent: React.createElement("div", { className: "playground-environments-home-comparison-header is-simple" },
-                React.createElement("div", { className: "playground-environments-home-comparison-copy" },
-                  React.createElement("div", { className: "playground-environments-home-comparison-title" }, "Activity comparison"),
-                  React.createElement("div", { className: "playground-environments-home-comparison-legend" },
-                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
-                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot is-count" }),
-                      React.createElement("span", null, "Agents")
-                    ),
-                    React.createElement("span", { className: "playground-environments-home-comparison-legend-item" },
-                      React.createElement("span", { className: "playground-environments-home-comparison-legend-dot", style: { background: "var(--playground-chart-green)" } }),
-                      React.createElement("span", null, "Teams")
-                    )
-                  )
+              title: "Daily CT by Agent Type",
+              timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+                React.createElement("select", {
+                  className: "playground-environments-home-comparison-timescale-select",
+                  value: agentsHomeChartTimescale,
+                  onChange: (event) => setAgentsHomeChartTimescale(String(event.target.value || "month")),
+                },
+                  React.createElement("option", { value: "day" }, "Daily"),
+                  React.createElement("option", { value: "week" }, "Weekly"),
+                  React.createElement("option", { value: "month" }, "Monthly")
                 )
               ),
             })
@@ -54042,15 +54777,13 @@ ${PROJECT_OVERVIEW_CSS}
             {
               command: "agent",
               title: "Agents",
-              copy: "Create specialist agents with the right model, skills, instructions, and tools.",
-              actionLabel: "Create /agent",
+              copy: "Create specialist agents with the right model, tools, and skills.",
               Icon: Bot,
             },
             {
               command: "team",
               title: "Teams",
-              copy: "Compose orchestrators and subagents into reusable multi-agent teams.",
-              actionLabel: "Create /team",
+              copy: "Compose orchestrators and subagents into reusable teams.",
               Icon: Layers,
             },
           ];
@@ -54058,46 +54791,28 @@ ${PROJECT_OVERVIEW_CSS}
           return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll" },
             React.createElement("div", { className: "playground-environments-home-content" },
               React.createElement("section", { className: "playground-environments-home-hero" },
-                React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your AI workforce."),
-                React.createElement("div", { className: "playground-environments-home-hero-copy" },
-                  "Design specialist agents, compose orchestration teams, and launch new collaborators directly from one workspace."
-                ),
-                React.createElement("div", { className: "playground-environments-home-metrics-toolbar" },
-                  React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
-                    React.createElement("select", {
-                      className: "playground-environments-home-comparison-timescale-select",
-                      value: agentsHomeChartTimescale,
-                      onChange: (event) => setAgentsHomeChartTimescale(String(event.target.value || "month")),
-                    },
-                      React.createElement("option", { value: "day" }, "Daily"),
-                      React.createElement("option", { value: "week" }, "Weekly"),
-                      React.createElement("option", { value: "month" }, "Monthly")
+              React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your AI workforce."),
+              React.createElement("div", { className: "playground-environments-home-hero-copy" },
+                "Design specialist agents, compose orchestration teams, and launch new collaborators directly from one workspace."
+              ),
+              React.createElement("div", { className: "playground-environments-home-summary" },
+                React.createElement("div", { className: "playground-environments-home-summary-kpis" },
+                  agentsHomeKpis.map((item) =>
+                    React.createElement("div", { key: item.id, className: "playground-environments-home-summary-kpi" },
+                      React.createElement("div", { className: "playground-environments-home-summary-kpi-value" }, item.value),
+                      React.createElement("div", { className: "playground-environments-home-summary-kpi-label" }, item.label)
                     )
                   )
-                ),
+                )
+              ),
                 React.createElement("div", { className: "playground-environments-home-metrics" },
-                  React.createElement("div", { className: "playground-tasks-detail-facts" },
-                    React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                      React.createElement("div", { className: "playground-database-overview" },
-                        React.createElement("div", { className: "playground-database-overview-chart-block" },
-                          renderAgentsHomeComparisonBarChart({
-                            ariaLabel: "Agent and team count compared with compute cost",
-                            labels: ["Agents", "Teams"],
-                            countValues: [singleAgents.length, teamAgents.length],
-                            costValues: [totalSingleAgentCT, totalTeamAgentCT],
-                            emptyText: agentsHomeThreadsLoading ? "Loading agent data..." : (agentsHomeThreadsError || "No agent data yet"),
-                          })
-                        )
-                      )
-                    )
-                  ),
                   React.createElement("div", { className: "playground-tasks-detail-facts" },
                     React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                       React.createElement("div", { className: "playground-database-overview" },
                         React.createElement("div", { className: "playground-database-overview-chart-block" },
                           renderAgentsHomeUsageChart({
                             ariaLabel: "Agent and team activity over time",
-                            labels: activityBuckets,
+                            labels: activityBuckets.map((bucket) => String(bucket?.label || "")),
                             singleValues: singleAgentActivity,
                             teamValues: teamActivity,
                             emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
@@ -54118,19 +54833,11 @@ ${PROJECT_OVERVIEW_CSS}
                         className: "playground-environments-home-card" + (agentsHomeActiveCreationCommand === card.command ? " is-command-active" : ""),
                         onClick: () => stageAgentsHomeCreationCommand(card.command),
                       },
-                      React.createElement("div", { className: "playground-environments-home-card-visual" },
+                    React.createElement("div", { className: "playground-environments-home-card-visual" },
                         React.createElement(card.Icon, { className: "playground-environments-home-card-icon", strokeWidth: 1.8 })
                       ),
                       React.createElement("div", { className: "playground-environments-home-card-title" }, card.title),
-                      React.createElement("div", { className: "playground-environments-home-card-copy" }, card.copy),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-home-card-button",
-                        onClick: (event) => {
-                          event.stopPropagation();
-                          stageAgentsHomeCreationCommand(card.command);
-                        },
-                      }, card.actionLabel)
+                      React.createElement("div", { className: "playground-environments-home-card-copy" }, card.copy)
                     )
                   )
                 )
@@ -95858,6 +96565,88 @@ const server = http.createServer((req, res) => {
   const environmentFilesMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/files$/);
   if (req.method === "GET" && environmentFilesMatch) {
     void proxyUpstreamGet(req, res, `/environments/${encodeURIComponent(decodeURIComponent(environmentFilesMatch[1]))}/files`);
+    return;
+  }
+
+  const environmentSnapshotsMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/snapshots$/);
+  if (req.method === "GET" && environmentSnapshotsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentSnapshotsMatch[1]))}/snapshots`,
+    );
+    return;
+  }
+
+  const environmentSnapshotDiffMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/snapshots\/([^/]+)\/diff$/);
+  if (req.method === "GET" && environmentSnapshotDiffMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentSnapshotDiffMatch[1]))}/snapshots/${encodeURIComponent(decodeURIComponent(environmentSnapshotDiffMatch[2]))}/diff`,
+    );
+    return;
+  }
+
+  const environmentSnapshotFileMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/snapshots\/([^/]+)\/file$/);
+  if (req.method === "GET" && environmentSnapshotFileMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentSnapshotFileMatch[1]))}/snapshots/${encodeURIComponent(decodeURIComponent(environmentSnapshotFileMatch[2]))}/file`,
+    );
+    return;
+  }
+
+  const environmentSnapshotForkMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/snapshots\/([^/]+)\/fork$/);
+  if (req.method === "POST" && environmentSnapshotForkMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentSnapshotForkMatch[1]))}/snapshots/${encodeURIComponent(decodeURIComponent(environmentSnapshotForkMatch[2]))}/fork`,
+      "POST",
+    );
+    return;
+  }
+
+  const environmentChangesMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/changes$/);
+  if (req.method === "GET" && environmentChangesMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentChangesMatch[1]))}/changes`,
+    );
+    return;
+  }
+
+  const environmentChangeDiffMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/changes\/([^/]+)\/diff$/);
+  if (req.method === "GET" && environmentChangeDiffMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentChangeDiffMatch[1]))}/changes/${encodeURIComponent(decodeURIComponent(environmentChangeDiffMatch[2]))}/diff`,
+    );
+    return;
+  }
+
+  const environmentChangeFileMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/changes\/([^/]+)\/file$/);
+  if (req.method === "GET" && environmentChangeFileMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentChangeFileMatch[1]))}/changes/${encodeURIComponent(decodeURIComponent(environmentChangeFileMatch[2]))}/file`,
+    );
+    return;
+  }
+
+  const environmentChangeForkMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/changes\/([^/]+)\/fork$/);
+  if (req.method === "POST" && environmentChangeForkMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/environments/${encodeURIComponent(decodeURIComponent(environmentChangeForkMatch[1]))}/changes/${encodeURIComponent(decodeURIComponent(environmentChangeForkMatch[2]))}/fork`,
+      "POST",
+    );
     return;
   }
 
