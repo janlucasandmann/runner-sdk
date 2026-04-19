@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
 import { handleGithubApiRequest, isGithubApiRequestPath } from "./github-oauth-platform.mjs";
+import { PROJECT_OVERVIEW_CSS, PROJECT_OVERVIEW_SCRIPT } from "./demo-project-overview.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19276,6 +19277,8 @@ const html = `<!doctype html>
         min-width: 0;
       }
 
+${PROJECT_OVERVIEW_CSS}
+
       .playground-tasks-project-panel-header {
         display: flex;
         align-items: flex-start;
@@ -22859,7 +22862,7 @@ const html = `<!doctype html>
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowLeft, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, GitCommitHorizontal, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -25239,6 +25242,14 @@ const html = `<!doctype html>
           updatedAt: rawUpdatedAt,
           nextRunAt: rawNextRunAt,
           isScheduled: Boolean(rawNextRunAt),
+          totalCT: readSettingsComputeTokens(thread, "totalCT", "totalCost"),
+          agentCT: readSettingsComputeTokens(thread, "agentCT", "agentCost"),
+          environmentCT: readSettingsComputeTokens(thread, "environmentCT", "environmentCost"),
+          totalCost: Number.isFinite(Number(thread?.totalCost)) ? Number(thread.totalCost) : 0,
+          agentCost: Number.isFinite(Number(thread?.agentCost)) ? Number(thread.agentCost) : 0,
+          environmentCost: Number.isFinite(Number(thread?.environmentCost)) ? Number(thread.environmentCost) : 0,
+          inputTokens: Number.isFinite(Number(thread?.inputTokens)) ? Number(thread.inputTokens) : 0,
+          outputTokens: Number.isFinite(Number(thread?.outputTokens)) ? Number(thread.outputTokens) : 0,
           metadata,
           isPinned: Boolean(runnerPlaygroundMetadata.pinnedInSidebar),
           pinnedAt: typeof runnerPlaygroundMetadata.pinnedAt === "string" ? runnerPlaygroundMetadata.pinnedAt : "",
@@ -26596,6 +26607,7 @@ const html = `<!doctype html>
 
       const PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID = "__playground_unscheduled_sprint__";
       const PLAYGROUND_PROJECT_VIEW_OPTIONS = [
+        { id: "overview", label: "Overview", icon: LayoutDashboard },
         { id: "backlog", label: "Backlog", icon: ListTodo },
         { id: "board", label: "Board", icon: LayoutGrid },
         { id: "calendar", label: "Calendar", icon: Clock },
@@ -58111,6 +58123,8 @@ const html = `<!doctype html>
         currentUserAvatarUrl,
         canStartThreads,
         taskRunStates,
+        onThreadOpen,
+        onThreadOptionsOpen,
         onThreadStarted,
         onTaskRunStateChange,
         onStatusIndicatorItemChange,
@@ -58180,6 +58194,7 @@ const html = `<!doctype html>
           summary: buildEmptyPlaygroundProjectSummary(),
           environments: [],
           recentThreads: [],
+          threads: [],
         });
         const [projectLoadState, setProjectLoadState] = useState({
           status: "loading",
@@ -58216,7 +58231,8 @@ const html = `<!doctype html>
         const [projectEnvironmentFilePickerSearch, setProjectEnvironmentFilePickerSearch] = useState("");
         const [projectEnvironmentFilePickerExpandedFolders, setProjectEnvironmentFilePickerExpandedFolders] = useState([]);
         const [projectEnvironmentFilePickerSelectedPaths, setProjectEnvironmentFilePickerSelectedPaths] = useState([]);
-        const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "backlog");
+        const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "overview");
+        const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
         const isCalendarContext = isStandaloneCalendarMode || taskView === "calendar";
         const [backlogToolbarPopover, setBacklogToolbarPopover] = useState("");
         const [backlogFilterMode, setBacklogFilterMode] = useState("open");
@@ -58507,7 +58523,7 @@ const html = `<!doctype html>
           }
           const selectedProjectIndex = projects.findIndex((project) => project.id === selectedProject.id);
           const projectWallpaper = getPlaygroundProjectWallpaperConfig(selectedProject, selectedProjectIndex >= 0 ? selectedProjectIndex : 0);
-          return "linear-gradient(180deg, rgba(10, 10, 14, 0.52), rgba(10, 10, 14, 0.82)), url(" + projectWallpaper.url + ")";
+          return "linear-gradient(180deg, rgba(6, 6, 10, 0.72), rgba(6, 6, 10, 0.92)), url(" + projectWallpaper.url + ")";
         }, [projects, selectedProject]);
 
         const selectedProjectSummary = useMemo(() => {
@@ -58815,7 +58831,13 @@ const html = `<!doctype html>
         }, [assignableActors, backlogComposerAgentId]);
 
         const selectedProjectRecentThreads = useMemo(() => {
-          return selectedProjectDetail?.project?.id === selectedProjectId
+          if (selectedProjectDetail?.project?.id !== selectedProjectId) {
+            return [];
+          }
+          if (Array.isArray(selectedProjectDetail.threads) && selectedProjectDetail.threads.length > 0) {
+            return selectedProjectDetail.threads;
+          }
+          return Array.isArray(selectedProjectDetail.recentThreads)
             ? selectedProjectDetail.recentThreads
             : [];
         }, [selectedProjectDetail, selectedProjectId]);
@@ -59307,6 +59329,95 @@ const html = `<!doctype html>
             })
             .sort((left, right) => String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || "")));
         }, [normalizedSearchQuery, selectedProjectRecentThreads]);
+
+        const selectedProjectAttachments = useMemo(() => {
+          return normalizePlaygroundTaskAttachmentList(selectedProject?.attachments);
+        }, [selectedProject?.attachments]);
+
+        const filteredProjectAttachments = useMemo(() => {
+          return [...selectedProjectAttachments]
+            .filter((attachment) => {
+              if (!normalizedSearchQuery) return true;
+              const haystack = [
+                attachment.filename || attachment.name || "",
+                attachment.sourcePath || attachment.workspacePath || "",
+                attachment.environmentName || "",
+              ]
+                .join(" ")
+                .toLowerCase();
+              return haystack.includes(normalizedSearchQuery);
+            })
+            .sort((left, right) => String(right.createdAt || "").localeCompare(String(left.createdAt || "")));
+        }, [normalizedSearchQuery, selectedProjectAttachments]);
+
+        const overviewVisibleEnvironments = useMemo(() => {
+          return selectedProjectEnvironments.filter((environment) => {
+            if (!normalizedSearchQuery) return true;
+            const haystack = [
+              environment.name || "",
+              environment.description || "",
+            ]
+              .join(" ")
+              .toLowerCase();
+            return haystack.includes(normalizedSearchQuery);
+          });
+        }, [normalizedSearchQuery, selectedProjectEnvironments]);
+
+        const overviewPluginItems = useMemo(() => {
+          const items = [
+            {
+              id: "github",
+              label: "GitHub",
+              logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
+              description: "Browse repos and attach code directly to project work.",
+              statusLabel: taskConnectorConfigByKey.github ? "Available" : "Not configured",
+              isActive: Boolean(taskConnectorConfigByKey.github),
+            },
+            {
+              id: "gitlab",
+              label: "GitLab",
+              logoUrl: "/img/04-skills/gitlab.svg",
+              description: "Route merge request and push events into project threads.",
+              statusLabel: "Via Actions",
+              isActive: true,
+            },
+            {
+              id: "google-drive",
+              label: "Google Drive",
+              logoUrl: PLAYGROUND_GOOGLE_DRIVE_LOGO_URL,
+              description: "Use Drive files as shared project context for tasks and threads.",
+              statusLabel: taskConnectorConfigByKey.googleDrive ? "Available" : "Not configured",
+              isActive: Boolean(taskConnectorConfigByKey.googleDrive),
+            },
+            {
+              id: "one-drive",
+              label: "OneDrive",
+              logoUrl: PLAYGROUND_ONEDRIVE_LOGO_URL,
+              description: "Keep Microsoft-hosted docs available inside the project workspace.",
+              statusLabel: taskConnectorConfigByKey.oneDrive ? "Available" : "Not configured",
+              isActive: Boolean(taskConnectorConfigByKey.oneDrive),
+            },
+            {
+              id: "notion",
+              label: "Notion",
+              logoUrl: PLAYGROUND_NOTION_LOGO_URL,
+              description: "Reference workspace docs and databases while planning delivery.",
+              statusLabel: taskConnectorConfigByKey.notion ? "Available" : "Not configured",
+              isActive: Boolean(taskConnectorConfigByKey.notion),
+            },
+          ];
+          return items.filter((item) => {
+            if (!normalizedSearchQuery) return true;
+            const haystack = [
+              item.label || "",
+              item.description || "",
+              item.statusLabel || "",
+            ]
+              .join(" ")
+              .toLowerCase();
+            return haystack.includes(normalizedSearchQuery);
+          });
+        }, [normalizedSearchQuery, taskConnectorConfigByKey]);
 
         const tasksById = useMemo(() => {
           const next = {};
@@ -60690,6 +60801,9 @@ const html = `<!doctype html>
           if (selectedReleaseId && (taskView === "backlog" || taskView === "board")) {
             return "Search release tasks, ticket numbers, assignees, or environments...";
           }
+          if (taskView === "overview") {
+            return "Search tasks, threads, files, environments, or plugins...";
+          }
           return taskView === "calendar"
             ? "Search tasks, schedules, agents, or environments..."
             : "Search tasks, ticket numbers, assignees, or sprints...";
@@ -60741,6 +60855,65 @@ const html = `<!doctype html>
             .filter((task) => matchesTaskSearch(task))
             .sort(compareWorkspaceTaskOrder);
         }, [agentsById, environmentsById, normalizedSearchQuery, sprintsById, taskTicketNumbersById, tasks]);
+
+        const overviewVisibleTasks = useMemo(() => {
+          return sortedTasks
+            .filter((task) => !isPlaygroundSubtaskRecord(task))
+            .filter((task) => String(task?.status || "").trim() !== "done")
+            .slice(0, 8);
+        }, [sortedTasks]);
+
+        const overviewAssignedActors = useMemo(() => {
+          const nextById = new Map();
+          sortedTasks.forEach((task) => {
+            const normalizedAssigneeId = String(task?.assigneeAgentId || "").trim();
+            if (!normalizedAssigneeId) {
+              return;
+            }
+            const existing = nextById.get(normalizedAssigneeId) || {
+              id: normalizedAssigneeId,
+              name: getTaskAssigneeName(normalizedAssigneeId, "Unassigned") || "Unassigned",
+              isHuman: isPlaygroundHumanAssigneeId(normalizedAssigneeId),
+              photoUrl: "",
+              totalCount: 0,
+              openCount: 0,
+            };
+            existing.totalCount += 1;
+            if (String(task?.status || "").trim() !== "done") {
+              existing.openCount += 1;
+            }
+            if (existing.isHuman) {
+              existing.photoUrl = canRenderAvatarImage(currentUserAvatarUrl) ? currentUserAvatarUrl : "";
+            } else {
+              const assigneeAgent = agentsById[normalizedAssigneeId] || null;
+              existing.photoUrl = assigneeAgent
+                ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(assigneeAgent))
+                : "";
+            }
+            nextById.set(normalizedAssigneeId, existing);
+          });
+          return [...nextById.values()]
+            .filter((entry) => {
+              if (!normalizedSearchQuery) return true;
+              const haystack = [
+                entry.name || "",
+                String(entry.openCount || ""),
+                String(entry.totalCount || ""),
+              ]
+                .join(" ")
+                .toLowerCase();
+              return haystack.includes(normalizedSearchQuery);
+            })
+            .sort((left, right) => {
+              if (right.openCount !== left.openCount) {
+                return right.openCount - left.openCount;
+              }
+              if (right.totalCount !== left.totalCount) {
+                return right.totalCount - left.totalCount;
+              }
+              return String(left.name || "").localeCompare(String(right.name || ""));
+            });
+        }, [agentsById, currentUserAvatarUrl, normalizedSearchQuery, sortedTasks]);
 
         const taskChildrenByParentId = useMemo(() => {
           const next = {};
@@ -62364,6 +62537,7 @@ const html = `<!doctype html>
             summary: buildEmptyPlaygroundProjectSummary(),
             environments: [],
             recentThreads: [],
+            threads: [],
           });
           editorDirtyRef.current = false;
           resetSaveState("");
@@ -62397,7 +62571,7 @@ const html = `<!doctype html>
             error: "",
           });
           setSearchQuery("");
-          setTaskView(isStandaloneCalendarMode ? "calendar" : "backlog");
+          setTaskView(isStandaloneCalendarMode ? "calendar" : "overview");
           setBoardSprintId(PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID);
           setSprintComposerOpen(false);
           setSprintDraft(buildPlaygroundDefaultSprintDraft());
@@ -62548,6 +62722,7 @@ const html = `<!doctype html>
               summary: normalized.summary || current.summary || buildEmptyPlaygroundProjectSummary(),
               environments: Array.isArray(extra.environments) ? extra.environments : current.environments || [],
               recentThreads: Array.isArray(extra.recentThreads) ? extra.recentThreads : current.recentThreads || [],
+              threads: Array.isArray(extra.threads) ? extra.threads : current.threads || [],
             }));
           }
 
@@ -63057,7 +63232,11 @@ const html = `<!doctype html>
           }));
 
           try {
-            const [projectResponse, tasksResponse, releasesResponse, sprintsResponse] = await Promise.all([
+            const threadsRequestTarget = new URL(backendUrl + "/threads", window.location.origin);
+            threadsRequestTarget.searchParams.set("projectId", projectId);
+            threadsRequestTarget.searchParams.set("limit", "500");
+
+            const [projectResponse, tasksResponse, releasesResponse, sprintsResponse, threadsResponse] = await Promise.all([
               fetch(backendUrl + "/projects/" + encodeURIComponent(projectId), {
                 method: "GET",
                 headers: requestHeaders,
@@ -63074,19 +63253,25 @@ const html = `<!doctype html>
                 method: "GET",
                 headers: requestHeaders,
               }),
+              fetch(threadsRequestTarget.toString(), {
+                method: "GET",
+                headers: requestHeaders,
+              }),
             ]);
 
             const projectData = await projectResponse.json().catch(() => ({}));
             const tasksData = await tasksResponse.json().catch(() => ({}));
             const releasesData = await releasesResponse.json().catch(() => ({}));
             const sprintsData = await sprintsResponse.json().catch(() => ({}));
+            const threadsData = await threadsResponse.json().catch(() => ({}));
 
-            if (!projectResponse.ok || !tasksResponse.ok || !releasesResponse.ok || !sprintsResponse.ok) {
+            if (!projectResponse.ok || !tasksResponse.ok || !releasesResponse.ok || !sprintsResponse.ok || !threadsResponse.ok) {
               throw new Error(
                 projectData?.message || projectData?.error
                 || tasksData?.message || tasksData?.error
                 || releasesData?.message || releasesData?.error
                 || sprintsData?.message || sprintsData?.error
+                || threadsData?.message || threadsData?.error
                 || "Project workspace unavailable."
               );
             }
@@ -63105,9 +63290,14 @@ const html = `<!doctype html>
               ...(projectData?.summary && typeof projectData.summary === "object" ? projectData.summary : {}),
             };
             const nextEnvironments = parsePlaygroundEnvironmentListResponse(projectData);
+            const nextThreads = Array.isArray(threadsData?.data)
+              ? threadsData.data.map(normalizeThreadItem)
+              : Array.isArray(threadsData?.threads)
+                ? threadsData.threads.map(normalizeThreadItem)
+                : [];
             const nextRecentThreads = Array.isArray(projectData?.recentThreads)
               ? projectData.recentThreads.map(normalizeThreadItem)
-              : [];
+              : nextThreads.slice(0, 10);
 
             commitLocalProjectRecord({
               ...projectRecord,
@@ -63116,6 +63306,7 @@ const html = `<!doctype html>
               summary: nextSummary,
               environments: nextEnvironments,
               recentThreads: nextRecentThreads,
+              threads: nextThreads,
               selectImmediately: true,
             });
 
@@ -66283,6 +66474,7 @@ const html = `<!doctype html>
               summary: createdProject.summary,
               environments: parsePlaygroundEnvironmentListResponse(data),
               recentThreads: [],
+              threads: [],
             });
             closeProjectComposer();
             handleSelectProject(createdProject.id);
@@ -66351,6 +66543,7 @@ const html = `<!doctype html>
               summary: updatedProject.summary || selectedProjectSummary,
               environments: selectedProjectEnvironments,
               recentThreads: selectedProjectRecentThreads,
+              threads: selectedProjectRecentThreads,
               selectImmediately: true,
             });
             closeProjectComposer();
@@ -66732,6 +66925,7 @@ const html = `<!doctype html>
               summary: updatedProject.summary || selectedProjectSummary,
               environments: selectedProjectEnvironments,
               recentThreads: selectedProjectRecentThreads,
+              threads: selectedProjectRecentThreads,
               selectImmediately: true,
             });
             setProjectDraft((current) => current?.id === updatedProject.id
@@ -72451,6 +72645,8 @@ const html = `<!doctype html>
           );
         }
 
+${PROJECT_OVERVIEW_SCRIPT}
+
         function renderSelectedProjectWorkspace() {
           if (!selectedProject) {
             return null;
@@ -72521,7 +72717,9 @@ const html = `<!doctype html>
                               })
                             ),
                             React.createElement("div", { className: "playground-tasks-project-search-hint" },
-                              taskView === "calendar"
+                              taskView === "overview"
+                                ? "Search across tasks, threads, files, environments, assigned agents, and project plugins."
+                                : taskView === "calendar"
                                 ? "Filter tasks and schedules by title, task, agent, or environment."
                                 : taskView === "backlog" && selectedReleaseId
                                   ? "Filter release tasks by title, ticket number, assignee, environment, or release."
@@ -72618,9 +72816,11 @@ const html = `<!doctype html>
                         }, "Retry")
                       )
                     : React.createElement(React.Fragment, null,
-                        taskView === "board"
-                          ? renderBoardView()
-                          : renderBacklogView()
+                        taskView === "overview"
+                          ? renderProjectOverviewView()
+                          : taskView === "board"
+                            ? renderBoardView()
+                            : renderBacklogView()
                       )
               )
             )
@@ -80770,7 +80970,7 @@ const html = `<!doctype html>
           setThreadActionMenuState(null);
         }
 
-        function openThreadActionMenu(event, threadId) {
+        function openThreadActionMenu(event, threadId, threadRecord = null) {
           event.preventDefault();
           event.stopPropagation();
 
@@ -80791,6 +80991,7 @@ const html = `<!doctype html>
             threadId,
             top,
             left,
+            threadRecord: threadRecord && typeof threadRecord === "object" ? threadRecord : null,
           });
         }
 
@@ -82212,6 +82413,9 @@ const html = `<!doctype html>
           const items = Array.isArray(config?.items) ? config.items.filter(Boolean) : [];
           const totalValue = Math.max(0, items.reduce((sum, item) => sum + Math.max(0, Number(item.value || 0)), 0));
           const hasData = items.length > 0 && totalValue > 0;
+          const valueFormatter = typeof config?.valueFormatter === "function"
+            ? config.valueFormatter
+            : formatSettingsComputeTokens;
 
           const renderArcPath = (cx, cy, innerRadius, outerRadius, startAngle, endAngle) => {
             const startOuterX = cx + outerRadius * Math.cos(startAngle);
@@ -82241,7 +82445,7 @@ const html = `<!doctype html>
                 }),
                 React.createElement("div", { className: "playground-settings-usage-donut-legend-copy" },
                   React.createElement("div", { className: "playground-settings-usage-donut-label" }, item.label),
-                  React.createElement("div", { className: "playground-settings-usage-donut-value" }, formatSettingsComputeTokens(item.value || 0))
+                  React.createElement("div", { className: "playground-settings-usage-donut-value" }, valueFormatter(item.value || 0))
                 )
               )
             ));
@@ -87084,7 +87288,7 @@ const html = `<!doctype html>
             return "";
           }
           const projectWallpaper = getPlaygroundProjectWallpaperConfig(selectedThreadProjectRecord, 0);
-          return "linear-gradient(180deg, rgba(10, 10, 14, 0.52), rgba(10, 10, 14, 0.82)), url(" + projectWallpaper.url + ")";
+          return "linear-gradient(180deg, rgba(6, 6, 10, 0.72), rgba(6, 6, 10, 0.92)), url(" + projectWallpaper.url + ")";
         }, [selectedThreadProjectRecord]);
         const selectedThreadMissionControlPreview = useMemo(() => {
           if (!rawSelectedThreadMissionControlMetadata) {
@@ -87400,7 +87604,12 @@ const html = `<!doctype html>
           if (!threadActionMenuState?.threadId) {
             return null;
           }
-          return baseThreadItems.find((thread) => thread.id === threadActionMenuState.threadId) || null;
+          return baseThreadItems.find((thread) => thread.id === threadActionMenuState.threadId)
+            || (threadActionMenuState.threadRecord ? normalizeThreadItem(threadActionMenuState.threadRecord) : null)
+            || normalizeThreadItem({
+              id: threadActionMenuState.threadId,
+              title: "Thread",
+            });
         }, [baseThreadItems, threadActionMenuState]);
         const isThreadRenamePending = threadMutationState.action === "rename"
           && threadMutationState.threadId === threadRenameState?.threadId;
@@ -89144,6 +89353,35 @@ const html = `<!doctype html>
                               setLatestInteractedProjectId(normalizedProjectId);
                             },
                             onProjectRecordCommitted: handleThreadProjectRecordCommitted,
+                            onThreadOpen: (threadId, options = {}) => {
+                              const normalizedThreadId = String(threadId || "").trim();
+                              if (!normalizedThreadId) {
+                                return;
+                              }
+                              if (options?.threadRecord?.id) {
+                                upsertRealThreadRecord(options.threadRecord);
+                              }
+                              setThreadAgentSelectionOverride(null);
+                              setPendingThreadRunRequest(null);
+                              setThreadTaskOpenRequest(null);
+                              setActivePage("thread");
+                              setCurrentThreadId(normalizedThreadId);
+                              setContentMode("chat");
+                              setThreadListMode("threads");
+                              setChangesNavigationTarget(null);
+                              setRunnerRenderKey((current) => current + 1);
+                              void refreshThreads(undefined, normalizedThreadId);
+                            },
+                            onThreadOptionsOpen: (event, threadId, options = {}) => {
+                              const normalizedThreadId = String(threadId || "").trim();
+                              if (!normalizedThreadId) {
+                                return;
+                              }
+                              if (options?.threadRecord?.id) {
+                                upsertRealThreadRecord(options.threadRecord);
+                              }
+                              openThreadActionMenu(event, normalizedThreadId, options?.threadRecord || null);
+                            },
                             onThreadStarted: (threadId, options = {}) => {
                               const normalizedThreadId = String(threadId || "").trim();
                               if (!normalizedThreadId) {
@@ -89434,6 +89672,34 @@ const html = `<!doctype html>
                                 setLatestInteractedProjectId(normalizedProjectId);
                               },
                               onProjectRecordCommitted: handleThreadProjectRecordCommitted,
+                              onThreadOpen: (threadId, options = {}) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                if (options?.threadRecord?.id) {
+                                  upsertRealThreadRecord(options.threadRecord);
+                                }
+                                setThreadAgentSelectionOverride(null);
+                                setPendingThreadRunRequest(null);
+                                setActivePage("thread");
+                                setCurrentThreadId(normalizedThreadId);
+                                setContentMode("chat");
+                                setThreadListMode("threads");
+                                setChangesNavigationTarget(null);
+                                setRunnerRenderKey((current) => current + 1);
+                                void refreshThreads(undefined, normalizedThreadId);
+                              },
+                              onThreadOptionsOpen: (event, threadId, options = {}) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                if (options?.threadRecord?.id) {
+                                  upsertRealThreadRecord(options.threadRecord);
+                                }
+                                openThreadActionMenu(event, normalizedThreadId, options?.threadRecord || null);
+                              },
                               onThreadStarted: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();
                                 if (!normalizedThreadId) {
