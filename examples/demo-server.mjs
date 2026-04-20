@@ -20766,6 +20766,10 @@ ${ENVIRONMENT_CHANGES_CSS}
         --tb-task-input-base-bg: transparent;
       }
 
+      .playground-environments-home-composer-shell .tb-runner-chat.playground-environments-home-runner .task-input-box {
+        --tb-task-input-base-bg: transparent;
+      }
+
       .tb-runner-chat.playground-environments-home-runner,
       .tb-runner-chat.playground-tasks-backlog-runner {
         width: 100%;
@@ -52656,7 +52660,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                           agentId: preferredAgentId || undefined,
                           keepFocusOnSubmit: true,
                           showUsageInStatus: false,
-                          placeholder: "Type /computer, /app, or /function and describe what you want to create",
+                          placeholder: "Type /computer, /app or /function",
                           enableResourceCreationCommand: true,
                           resourceCreationCommand: environmentsHomeResourceCommandRequest,
                           resourceCreationCommandHiddenPrompt: buildEnvironmentsHomeResourceHiddenPrompt,
@@ -56746,7 +56750,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                           agentId: preferredAgentId || undefined,
                           keepFocusOnSubmit: true,
                           showUsageInStatus: false,
-                          placeholder: "Type /agent or /team and describe what you want to create",
+                          placeholder: "Type /agent or /team",
                           enableAgentCreationCommand: true,
                           agentCreationCommand: agentsHomeCreationCommandRequest,
                           agentCreationCommandHiddenPrompt: buildAgentsHomeCreationHiddenPrompt,
@@ -92165,10 +92169,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     skills: computerAgentsMode ? demoSkills : undefined,
                                     environmentId: resolvedEnvironmentId || undefined,
                                     agentId: resolvedTaskInputAgentId || undefined,
-                                    autoFocusComposer: !showInitialThreadWelcome,
+                                    autoFocusComposer: true,
                                     keepFocusOnSubmit: true,
                                     showUsageInStatus: false,
-                                    placeholder: "What would you like me to do?",
+                                    placeholder: "Ask anything",
                                     enableResourceCreationCommand: true,
                                     resourceCreationCommandHiddenPrompt: buildThreadRunnerResourceHiddenPrompt,
                                     enableAgentCreationCommand: true,
