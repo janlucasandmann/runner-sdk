@@ -126,9 +126,8 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-summary-kpis {
         width: 100%;
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 12px;
       }
 
@@ -136,18 +135,29 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        flex: 1 1 0;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.03);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        text-align: left;
       }
 
-      .playground-project-overview-summary-kpi:nth-child(3) {
+      .playground-project-overview-summary-kpi-heading {
+        display: inline-flex;
         align-items: center;
-        text-align: center;
+        gap: 8px;
+        min-width: 0;
       }
 
-      .playground-project-overview-summary-kpi:nth-last-child(-n+2) {
-        align-items: flex-end;
-        text-align: right;
+      .playground-project-overview-summary-kpi-icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.64);
       }
 
       .playground-project-overview-summary-kpi-value {
@@ -250,6 +260,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         .playground-project-overview-summary-description-row {
           flex-direction: column;
           align-items: flex-start;
+        }
+
+        .playground-project-overview-summary-kpis {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
 
@@ -385,6 +399,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-chart-shell {
+        position: relative;
         width: 100%;
         overflow: hidden;
       }
@@ -417,10 +432,105 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.96);
       }
 
+      .playground-project-overview-chart-tabs {
+        display: inline-flex;
+        align-items: center;
+        gap: 18px;
+        min-width: 0;
+      }
+
+      .playground-project-overview-chart-tab {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 0 6px;
+        border: 0;
+        border-bottom: 1px solid transparent;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-chart-tab.is-active {
+        border-bottom-color: #4da3ff;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-chart-tab:hover {
+        color: rgba(255, 255, 255, 0.82);
+      }
+
       .playground-project-overview-chart-copy {
         font-size: 12px;
         line-height: 1.5;
         color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-project-overview-activity-map {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .playground-project-overview-activity-map-cell {
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-project-overview-activity-map-cell.level-1 {
+        background: rgba(77, 163, 255, 0.18);
+      }
+
+      .playground-project-overview-activity-map-cell.level-2 {
+        background: rgba(77, 163, 255, 0.34);
+      }
+
+      .playground-project-overview-activity-map-cell.level-3 {
+        background: rgba(77, 163, 255, 0.56);
+      }
+
+      .playground-project-overview-activity-map-cell.level-4 {
+        background: rgba(77, 163, 255, 0.82);
+      }
+
+      .playground-project-overview-activity-map-backdrop {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+
+      .playground-project-overview-chart-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 24px;
+        margin-top: 12px;
+      }
+
+      .playground-project-overview-chart-footer-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #4da3ff;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-chart-footer-link:hover {
+        color: #7bb8ff;
       }
 
       .playground-project-overview-view .playground-tasks-project-panel-grid > * {
@@ -1116,7 +1226,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           return getProjectOverviewLocalDayKey(date);
         }
 
-        function PlaygroundProjectOverviewResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 960, ariaLabel, children }) {
+        function PlaygroundProjectOverviewResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 960, ariaLabel, renderOverlay, children }) {
           const frameRef = useRef(null);
           const [measuredWidth, setMeasuredWidth] = useState(0);
 
@@ -1151,6 +1261,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               className: frameClassName,
               style: frameHeight ? { height: String(frameHeight) + "px" } : undefined,
             },
+            typeof renderOverlay === "function"
+              ? renderOverlay({
+                  svgWidth: resolvedSvgWidth,
+                  svgHeight: resolvedSvgHeight,
+                })
+              : renderOverlay || null,
             React.createElement("svg", {
               className: "playground-project-overview-chart-svg",
               width: resolvedSvgWidth,
@@ -1292,6 +1408,188 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           );
         }
 
+        function renderProjectOverviewActivityMap(config) {
+          const cells = Array.isArray(config?.cells) ? config.cells : [];
+          const rowCount = Math.max(1, Number(config?.rowCount || 7));
+          if (!cells.length) {
+            return React.createElement("div", { className: "playground-project-overview-chart-empty" }, config?.emptyText || "No project activity yet");
+          }
+
+          const columns = [];
+          for (let index = 0; index < cells.length; index += rowCount) {
+            columns.push(cells.slice(index, index + rowCount));
+          }
+          const maxCount = Math.max(0, ...cells.map((cell) => Math.max(0, Number(cell?.count || 0))));
+
+          function resolveLevel(count) {
+            const value = Math.max(0, Number(count || 0));
+            if (value <= 0 || maxCount <= 0) {
+              return 0;
+            }
+            const ratio = value / maxCount;
+            if (ratio >= 0.8) return 4;
+            if (ratio >= 0.55) return 3;
+            if (ratio >= 0.25) return 2;
+            return 1;
+          }
+
+          function resolveFill(count) {
+            const level = resolveLevel(count);
+            if (level === 4) return "rgba(77, 163, 255, 0.9)";
+            if (level === 3) return "rgba(77, 163, 255, 0.68)";
+            if (level === 2) return "rgba(77, 163, 255, 0.44)";
+            if (level === 1) return "rgba(77, 163, 255, 0.24)";
+            return "rgba(255, 255, 255, 0.05)";
+          }
+
+          const frameHeight = 252;
+          const labelBandHeight = 26;
+          const outerPaddingX = 0;
+          const outerPaddingTop = 8;
+          const outerPaddingBottom = 4;
+          const gridGapY = 8;
+          const labelColumnIndexes = (() => {
+            const next = [];
+            let previousLabel = "";
+            columns.forEach((column, columnIndex) => {
+              const label = String(column?.[0]?.label || "").trim();
+              if (label && label !== previousLabel) {
+                next.push(columnIndex);
+                previousLabel = label;
+              }
+            });
+            if (columns.length > 0 && !next.includes(0)) {
+              next.unshift(0);
+            }
+            if (columns.length > 1 && !next.includes(columns.length - 1)) {
+              next.push(columns.length - 1);
+            }
+            return new Set(next);
+          })();
+
+          function computeActivityMapLayout(svgWidth, svgHeight) {
+            const availableWidth = Math.max(1, svgWidth - (outerPaddingX * 2));
+            const gridTop = outerPaddingTop;
+            const gridHeight = Math.max(1, svgHeight - gridTop - labelBandHeight - outerPaddingBottom);
+            const columnCount = Math.max(1, columns.length);
+            const horizontalSize = columnCount > 0 ? availableWidth / columnCount : availableWidth;
+            const verticalSize = Math.max(1, (gridHeight - (gridGapY * Math.max(0, rowCount - 1))) / rowCount);
+            const cellSize = Math.max(4, Math.min(horizontalSize, verticalSize) - 3);
+            const cellRadius = cellSize / 2;
+            const stepX = columnCount > 1 ? Math.max(cellSize, (availableWidth - cellSize) / (columnCount - 1)) : 0;
+            const verticalContentHeight = (cellSize * rowCount) + (gridGapY * Math.max(0, rowCount - 1));
+            const gridOffsetY = gridTop + Math.max(0, (gridHeight - verticalContentHeight) / 2);
+            const labelY = gridTop + gridHeight + 8;
+            return {
+              availableWidth,
+              gridTop,
+              gridHeight,
+              columnCount,
+              cellSize,
+              cellRadius,
+              stepX,
+              gridOffsetY,
+              labelY,
+            };
+          }
+
+          return React.createElement("div", { className: "playground-project-overview-activity-map" },
+            React.createElement(PlaygroundProjectOverviewResponsiveSvg, {
+              frameClassName: "playground-project-overview-chart-shell",
+              frameHeight,
+              svgHeight: frameHeight,
+              fallbackWidth: 1200,
+              ariaLabel: config?.ariaLabel || "Project activity map",
+              renderOverlay: ({ svgWidth, svgHeight }) => {
+                const { columnCount, cellRadius, stepX, gridOffsetY } = computeActivityMapLayout(svgWidth, svgHeight);
+                const radialStops = [];
+                columns.forEach((column, columnIndex) => {
+                  const cellCenterX = columnCount > 1
+                    ? outerPaddingX + cellRadius + (stepX * columnIndex)
+                    : outerPaddingX + ((Math.max(1, svgWidth - (outerPaddingX * 2))) / 2);
+                  column.forEach((cell, rowIndex) => {
+                    const count = Math.max(0, Number(cell?.count || 0));
+                    if (count > 0) {
+                      return;
+                    }
+                    const centerY = gridOffsetY + cellRadius + (rowIndex * ((cellRadius * 2) + gridGapY));
+                    radialStops.push(
+                      "radial-gradient(circle " + cellRadius + "px at " + cellCenterX + "px " + centerY + "px, rgba(0, 0, 0, 1) 98%, rgba(0, 0, 0, 0) 100%)"
+                    );
+                  });
+                });
+                if (radialStops.length === 0) {
+                  return null;
+                }
+                const maskImage = radialStops.join(", ");
+                return React.createElement("div", {
+                  className: "playground-project-overview-activity-map-backdrop",
+                  style: {
+                    maskImage,
+                    WebkitMaskImage: maskImage,
+                    maskRepeat: "no-repeat",
+                    WebkitMaskRepeat: "no-repeat",
+                  },
+                });
+              },
+            }, ({ svgWidth, svgHeight }) => {
+              const {
+                availableWidth,
+                gridHeight,
+                columnCount,
+                cellRadius,
+                stepX,
+                gridOffsetY,
+                labelY,
+              } = computeActivityMapLayout(svgWidth, svgHeight);
+              const cellDiameter = cellRadius * 2;
+
+              return React.createElement(React.Fragment, null,
+                columns.map((column, columnIndex) => {
+                  const firstCell = column[0] || {};
+                  const rawLabelText = labelColumnIndexes.has(columnIndex) ? String(firstCell.label || "") : "";
+                  const previousColumn = columnIndex > 0 ? columns[columnIndex - 1] || null : null;
+                  const previousLabelText = String(previousColumn?.[0]?.label || "").trim();
+                  const labelText = rawLabelText && rawLabelText === previousLabelText ? "" : rawLabelText;
+                  const cellCenterX = columnCount > 1
+                    ? outerPaddingX + cellRadius + (stepX * columnIndex)
+                    : outerPaddingX + (availableWidth / 2);
+                  const isFirstLabel = columnIndex === 0;
+                  const isLastLabel = columnIndex === columnCount - 1;
+                  const labelX = isFirstLabel
+                    ? 0
+                    : isLastLabel
+                      ? svgWidth
+                      : cellCenterX;
+                  return React.createElement(React.Fragment, { key: "activity-column:" + columnIndex },
+                    labelText
+                      ? React.createElement("text", {
+                          x: labelX,
+                          y: labelY,
+                          textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
+                          dominantBaseline: "hanging",
+                          fill: "rgba(255,255,255,0.42)",
+                          fontSize: "12",
+                          fontFamily: "Inter, sans-serif",
+                          fontWeight: "400",
+                        }, labelText)
+                      : null,
+                    column.map((cell, rowIndex) =>
+                      React.createElement("circle", {
+                        key: "cell:" + columnIndex + ":" + rowIndex,
+                        cx: cellCenterX,
+                        cy: gridOffsetY + cellRadius + (rowIndex * (cellDiameter + gridGapY)),
+                        r: cellRadius,
+                        fill: resolveFill(cell?.count || 0),
+                      })
+                    )
+                  );
+                })
+              );
+            })
+          );
+        }
+
         function renderProjectOverviewDonutChart(config) {
           const items = Array.isArray(config?.items) ? config.items.filter(Boolean) : [];
           const totalValue = Math.max(0, items.reduce((sum, item) => sum + Math.max(0, Number(item.value || 0)), 0));
@@ -1413,6 +1711,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const projectOverviewDescription = String(selectedProject.description || "").trim()
             || "Track backlog execution, active resources, recent threads, and the current mission strategy in one project workspace.";
           const projectThreads = Array.isArray(projectOverviewThreads) ? projectOverviewThreads : [];
+          const normalizedOverviewTasks = Array.isArray(tasks)
+            ? tasks.map((task) => normalizePlaygroundTaskRecord(task))
+            : [];
           const missionControlSummaryText = String(selectedProjectMissionControl.summary || "").trim()
             || (String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim()
               ? "Mission Control has generated a strategy snapshot for the current project state."
@@ -1554,9 +1855,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             .filter((item) => !normalizedSearchQuery || String(item?.searchText || "").includes(normalizedSearchQuery));
           const allOverviewPluginItems = (() => {
             const next = new Map();
-            const normalizedProjectTasks = Array.isArray(tasks)
-              ? tasks.map((task) => normalizePlaygroundTaskRecord(task))
-              : [];
 
             function upsertPluginUsage(source, usageLabel, taskRecord) {
               const option = typeof getPlaygroundTaskConnectorOption === "function"
@@ -1591,7 +1889,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               next.set(option.key, existing);
             }
 
-            normalizedProjectTasks.forEach((taskRecord) => {
+            normalizedOverviewTasks.forEach((taskRecord) => {
               const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
               normalizePlaygroundTaskAttachmentList(normalizedTask.attachments).forEach((attachment) => {
                 const source = getPlaygroundTaskAttachmentConnectorSource(attachment);
@@ -1686,6 +1984,121 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             });
             return next.size;
           })();
+          const projectActivityMapConfig = (() => {
+            const now = new Date();
+            const unit = projectOverviewTimescaleConfig.unit;
+            const cellCount = unit === "day" ? 140 : unit === "week" ? 52 : 24;
+            const rowCount = unit === "day" ? 7 : unit === "week" ? 4 : 3;
+            const buckets = [];
+            const bucketIndexByKey = new Map();
+            const activityEvents = [];
+
+            if (unit === "day") {
+              const endDate = new Date(now);
+              endDate.setHours(0, 0, 0, 0);
+              for (let index = 0; index < cellCount; index += 1) {
+                const date = new Date(endDate);
+                date.setDate(endDate.getDate() - (cellCount - 1 - index));
+                const key = getProjectOverviewLocalDayKey(date);
+                const bucket = {
+                  key,
+                  label: date.toLocaleDateString("en-US", { month: "short" }),
+                  count: 0,
+                };
+                bucketIndexByKey.set(key, buckets.length);
+                buckets.push(bucket);
+              }
+            } else if (unit === "week") {
+              const endWeek = new Date(now);
+              endWeek.setHours(0, 0, 0, 0);
+              endWeek.setDate(endWeek.getDate() - endWeek.getDay());
+              for (let index = 0; index < cellCount; index += 1) {
+                const date = new Date(endWeek);
+                date.setDate(endWeek.getDate() - (7 * (cellCount - 1 - index)));
+                const key = getProjectOverviewLocalWeekStartKey(date);
+                const bucket = {
+                  key,
+                  label: date.toLocaleDateString("en-US", { month: "short" }),
+                  count: 0,
+                };
+                bucketIndexByKey.set(key, buckets.length);
+                buckets.push(bucket);
+              }
+            } else {
+              const endMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+              for (let index = 0; index < cellCount; index += 1) {
+                const date = new Date(endMonth.getFullYear(), endMonth.getMonth() - (cellCount - 1 - index), 1);
+                const key = getProjectOverviewLocalMonthStartKey(date);
+                const bucket = {
+                  key,
+                  label: date.toLocaleDateString("en-US", { month: "short" }),
+                  count: 0,
+                };
+                bucketIndexByKey.set(key, buckets.length);
+                buckets.push(bucket);
+              }
+            }
+
+            function pushActivityTimestamp(value) {
+              const timestamp = Date.parse(String(value || ""));
+              if (Number.isFinite(timestamp)) {
+                activityEvents.push(timestamp);
+              }
+            }
+
+            projectThreads.forEach((thread) => {
+              pushActivityTimestamp(thread?.updatedAt || thread?.createdAt || "");
+            });
+
+            normalizedOverviewTasks.forEach((task) => {
+              pushActivityTimestamp(task?.updatedAt || task?.createdAt || "");
+            });
+
+            (projectOverviewFileActivityState?.items || []).forEach((item) => {
+              const numericTimestamp = Number(item?.timestamp || 0);
+              if (Number.isFinite(numericTimestamp) && numericTimestamp > 0) {
+                activityEvents.push(numericTimestamp);
+              }
+            });
+
+            allOverviewResourceItems.forEach((resource) => {
+              pushActivityTimestamp(resource?.updatedAt || resource?.createdAt || "");
+            });
+
+            activityEvents.forEach((timestamp) => {
+              const date = new Date(timestamp);
+              const bucketKey = unit === "day"
+                ? getProjectOverviewLocalDayKey(date)
+                : unit === "week"
+                  ? getProjectOverviewLocalWeekStartKey(date)
+                  : getProjectOverviewLocalMonthStartKey(date);
+              const bucketIndex = bucketIndexByKey.get(bucketKey);
+              if (typeof bucketIndex === "number") {
+                buckets[bucketIndex].count += 1;
+              }
+            });
+
+            const labelIndexes = [];
+            let previousLabel = "";
+            buckets.forEach((bucket, index) => {
+              if (bucket.label && bucket.label !== previousLabel) {
+                labelIndexes.push(index);
+                previousLabel = bucket.label;
+              }
+            });
+            if (buckets.length > 0 && !labelIndexes.includes(0)) {
+              labelIndexes.unshift(0);
+            }
+            if (buckets.length > 1 && !labelIndexes.includes(buckets.length - 1)) {
+              labelIndexes.push(buckets.length - 1);
+            }
+
+            return {
+              cells: buckets,
+              rowCount,
+              labelIndexes: Array.from(new Set(labelIndexes)).sort((left, right) => left - right),
+            };
+          })();
           const visibleOverviewTasks = overviewVisibleTasks.slice(0, 5);
           const visibleProjectThreads = filteredProjectThreads.slice(0, Math.max(5, Number(projectOverviewVisibleThreadCount) || 5));
           const hasMoreProjectThreads = filteredProjectThreads.length > visibleProjectThreads.length;
@@ -1711,26 +2124,31 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               id: "tasks",
               value: String(Number(selectedProjectSummary.tasksCount) || Number(selectedProjectTaskStatusOverview.total) || 0),
               label: "Tasks",
+              Icon: ListTodo,
             },
             {
               id: "open",
               value: String(Number(selectedProjectSummary.openTasksCount) || 0),
               label: "Open Tasks",
+              Icon: Clock,
             },
             {
               id: "ct",
               value: formatProjectOverviewCt(projectTotalCt) + " CT",
               label: "Spent on Project",
+              Icon: Coins,
             },
             {
               id: "resources",
               value: String(allOverviewResourceItems.length),
               label: "Resources",
+              Icon: Server,
             },
             {
               id: "files",
               value: String(allOverviewProjectFileCount),
               label: "Files",
+              Icon: File,
             },
           ];
 
@@ -2176,8 +2594,13 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   React.createElement("div", { className: "playground-project-overview-summary-kpis" },
                     projectOverviewKpis.map((item) =>
                       React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                        React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value),
-                        React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                        React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                          item.Icon
+                            ? React.createElement(item.Icon, { className: "playground-project-overview-summary-kpi-icon", strokeWidth: 1.85 })
+                            : null,
+                          React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                        ),
+                        React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
                       )
                     )
                   )
@@ -2188,7 +2611,18 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   React.createElement("section", { className: "playground-settings-usage-chart-card playground-project-overview-chart-card" },
                     React.createElement("div", { className: "playground-project-overview-chart-header" },
                       React.createElement("div", { className: "playground-project-overview-chart-header-main" },
-                        React.createElement("div", { className: "playground-project-overview-chart-title" }, projectOverviewTimescaleConfig.title),
+                        React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-project-overview-chart-tab" + (projectOverviewChartMode === "activity" ? " is-active" : ""),
+                            onClick: () => typeof setProjectOverviewChartMode === "function" && setProjectOverviewChartMode("activity"),
+                          }, "Activity"),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-project-overview-chart-tab" + (projectOverviewChartMode === "cost" ? " is-active" : ""),
+                            onClick: () => typeof setProjectOverviewChartMode === "function" && setProjectOverviewChartMode("cost"),
+                          }, "Cost by Resource")
+                        ),
                         React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
                           React.createElement("select", {
                             className: "playground-environments-home-comparison-timescale-select",
@@ -2203,29 +2637,62 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         )
                       )
                     ),
-                    renderProjectOverviewMultiStackedChart({
-                      labels: projectThreadTimeline.map((bucket) => bucket.label),
-                      series: projectComputeSeries,
-                      yMax: maxProjectDailyCt,
-                      tickFormatter: formatProjectOverviewAxisCt,
-                      tall: true,
-                      ariaLabel: "Project compute token usage by resource type",
-                      emptyText: "No project compute usage yet",
-                    }),
-                    React.createElement("div", {
-                      className: "playground-settings-usage-inline-legend",
-                      style: { justifyContent: "flex-start" },
-                    },
-                      projectComputeSeries.map((entry) =>
-                        React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
-                          React.createElement("span", {
-                            className: "playground-settings-usage-legend-swatch",
-                            style: { background: entry.color },
+                    projectOverviewChartMode === "activity"
+                      ? React.createElement(React.Fragment, null,
+                          renderProjectOverviewActivityMap({
+                            cells: projectActivityMapConfig.cells,
+                            rowCount: projectActivityMapConfig.rowCount,
+                            labelIndexes: projectActivityMapConfig.labelIndexes,
+                            emptyText: "No project activity yet",
                           }),
-                          React.createElement("span", null, entry.label)
+                          React.createElement("div", { className: "playground-project-overview-chart-footer" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-project-overview-chart-footer-link",
+                              onClick: () => {
+                                const normalizedProjectId = String(selectedProjectId || "").trim();
+                                const normalizedEnvironmentId = String(
+                                  selectedProject?.defaultEnvironmentId
+                                  || activeProjectAttachmentEnvironmentId
+                                  || ""
+                                ).trim();
+                                if (typeof onOpenFilesPage === "function") {
+                                  onOpenFilesPage({
+                                    token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                                    projectId: normalizedProjectId,
+                                    environmentId: normalizedEnvironmentId,
+                                    contentMode: "changes",
+                                  });
+                                }
+                              },
+                            }, "View Changes")
+                          )
                         )
-                      )
-                    )
+                      : React.createElement(React.Fragment, null,
+                          renderProjectOverviewMultiStackedChart({
+                            labels: projectThreadTimeline.map((bucket) => bucket.label),
+                            series: projectComputeSeries,
+                            yMax: maxProjectDailyCt,
+                            tickFormatter: formatProjectOverviewAxisCt,
+                            tall: true,
+                            ariaLabel: "Project compute token usage by resource type",
+                            emptyText: "No project compute usage yet",
+                          }),
+                          React.createElement("div", {
+                            className: "playground-settings-usage-inline-legend",
+                            style: { justifyContent: "flex-start" },
+                          },
+                            projectComputeSeries.map((entry) =>
+                              React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
+                                React.createElement("span", {
+                                  className: "playground-settings-usage-legend-swatch",
+                                  style: { background: entry.color },
+                                }),
+                                React.createElement("span", null, entry.label)
+                              )
+                            )
+                          )
+                        )
                   )
                 )
               )

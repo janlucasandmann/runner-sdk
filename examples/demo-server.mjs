@@ -31407,6 +31407,11 @@ ${ENVIRONMENT_CHANGES_CSS}
         return normalized;
       }
 
+      function shouldHideHistoryChangePath(value) {
+        const normalized = normalizeHistoryPath(value);
+        return Boolean(normalized) && /\\.jsonl$/i.test(normalized);
+      }
+
       function historyPathsMatch(left, right) {
         return normalizeHistoryPath(left) === normalizeHistoryPath(right);
       }
@@ -31586,7 +31591,7 @@ ${ENVIRONMENT_CHANGES_CSS}
         if (Array.isArray(metadata.filePaths)) values.push(...metadata.filePaths);
         if (metadata.diffs && typeof metadata.diffs === "object") values.push(...Object.keys(metadata.diffs));
         if (typeof metadata.path === "string") values.push(metadata.path);
-        return uniqueHistoryPaths(values);
+        return uniqueHistoryPaths(values).filter((value) => !shouldHideHistoryChangePath(value));
       }
 
       function getHistoryPathName(value) {
@@ -32668,6 +32673,7 @@ ${ENVIRONMENT_CHANGES_CSS}
               .filter((log) => log && typeof log.createdAt === "string" && log.createdAt)
               .sort((left, right) => String(left.createdAt).localeCompare(String(right.createdAt)))
           : [];
+        const assignedLogIds = new Set();
 
         function appendEntries(stepId, entries) {
           if (!stepId || !Array.isArray(entries) || entries.length === 0) {
@@ -32695,9 +32701,40 @@ ${ENVIRONMENT_CHANGES_CSS}
           nextMap.set(stepId, Array.from(entriesByPath.values()));
         }
 
-        for (let index = 0; index < orderedTurnSteps.length; index += 1) {
-          const step = orderedTurnSteps[index];
-          const windowStart = index > 0 ? String(orderedTurnSteps[index - 1].createdAt || "") : "";
+        const stepsBySourceMessageId = new Map();
+        for (const step of orderedSteps) {
+          if (step && typeof step.sourceMessageId === "string" && step.sourceMessageId) {
+            stepsBySourceMessageId.set(step.sourceMessageId, step);
+          }
+        }
+
+        for (const log of orderedLogs) {
+          if (!log || typeof log.id !== "string" || !log.id) {
+            continue;
+          }
+          const targetStep = stepsBySourceMessageId.get(log.id);
+          if (!targetStep) {
+            continue;
+          }
+          const supplementalEntries = [
+            ...extractGeneratedImageEntriesFromHistoryLog(log),
+            ...extractLoggedFileChangeEntriesFromHistoryLog(log),
+            ...extractComputerAgentsResourceEntriesFromHistoryLog(log),
+            ...extractTaskManagementTaskEntriesFromHistoryLog(log),
+            ...extractTaskManagementReleaseEntriesFromHistoryLog(log),
+          ];
+          if (supplementalEntries.length === 0) {
+            continue;
+          }
+          assignedLogIds.add(log.id);
+          appendEntries(targetStep.id, supplementalEntries);
+        }
+
+        const timelineAnchorSteps = orderedTurnSteps.length > 0 ? orderedTurnSteps : orderedSteps;
+
+        for (let index = 0; index < timelineAnchorSteps.length; index += 1) {
+          const step = timelineAnchorSteps[index];
+          const windowStart = index > 0 ? String(timelineAnchorSteps[index - 1].createdAt || "") : "";
           const windowEnd = String(step.createdAt || "");
           const explicitChangedSteps = orderedSteps.filter((candidate) => {
             if (!candidate) return false;
@@ -32709,6 +32746,9 @@ ${ENVIRONMENT_CHANGES_CSS}
           });
 
           for (const log of orderedLogs) {
+            if (typeof log?.id === "string" && assignedLogIds.has(log.id)) {
+              continue;
+            }
             const createdAt = String(log.createdAt || "");
             if (!createdAt || createdAt > windowEnd || (windowStart && createdAt <= windowStart)) {
               continue;
@@ -32778,7 +32818,7 @@ ${ENVIRONMENT_CHANGES_CSS}
 
         function upsertEntry(rawPath, extra) {
           const normalizedPath = normalizeHistoryPath(rawPath);
-          if (!normalizedPath) return;
+          if (!normalizedPath || shouldHideHistoryChangePath(normalizedPath)) return;
           const existing = entries.get(normalizedPath) || {
             path: normalizedPath,
             name: getHistoryPathName(normalizedPath),
@@ -32856,7 +32896,7 @@ ${ENVIRONMENT_CHANGES_CSS}
 
         function upsertEntry(rawPath, extra) {
           const normalizedPath = normalizeHistoryPath(rawPath);
-          if (!normalizedPath) return;
+          if (!normalizedPath || shouldHideHistoryChangePath(normalizedPath)) return;
           const existing = entries.get(normalizedPath) || {
             path: normalizedPath,
             name: getHistoryPathName(normalizedPath),
@@ -32934,7 +32974,7 @@ ${ENVIRONMENT_CHANGES_CSS}
 
         function upsertEntry(rawPath, extra) {
           const normalizedPath = normalizeHistoryPath(rawPath);
-          if (!normalizedPath) return;
+          if (!normalizedPath || shouldHideHistoryChangePath(normalizedPath)) return;
           const existing = entries.get(normalizedPath) || {
             path: normalizedPath,
             name: getHistoryPathName(normalizedPath),
@@ -35295,6 +35335,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const requestToken = typeof navigationRequest?.token === "string" ? navigationRequest.token : "";
           const requestedProjectId = String(navigationRequest?.projectId || "").trim();
           const requestedEnvironmentId = String(navigationRequest?.environmentId || "").trim();
+          const requestedContentMode = navigationRequest?.contentMode === "changes" ? "changes" : "files";
           const requestedPath = normalizeHistoryPath(navigationRequest?.path || "");
           const requestedIsFolder = Boolean(navigationRequest?.isFolder);
           const targetEnvironmentId = requestedEnvironmentId || selectedEnvironmentId;
@@ -35314,6 +35355,17 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             try {
               if (requestedProjectId) {
                 setProjectFilterScope(requestedProjectId);
+              }
+              setContentMode(requestedContentMode);
+              if (requestedContentMode === "changes") {
+                setToolbarPopover("");
+                setContextMenu(null);
+                setSelectedPaths(new Set());
+                setSelectionAnchorPath("");
+                setRenamingPath("");
+                setRenameValue("");
+                setIsPreviewOpen(false);
+                return;
               }
               if (targetEnvironmentId) {
                 await loadEnvironmentFolder(targetEnvironmentId, targetFolderPath);
@@ -36285,6 +36337,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const normalizedRequest = request && typeof request === "object" ? request : null;
           const requestedEnvironmentId = String(normalizedRequest?.environmentId || selectedEnvironmentId || "").trim();
           const requestedProjectId = String(normalizedRequest?.projectId || "").trim();
+          const requestedContentMode = normalizedRequest?.contentMode === "changes" ? "changes" : "files";
           const requestedPath = normalizeHistoryPath(normalizedRequest?.path || "");
           const requestedIsFolder = Boolean(normalizedRequest?.isFolder);
           const targetFolderPath = requestedPath
@@ -36292,12 +36345,23 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             : "";
           const targetSelectionPaths = requestedPath && !requestedIsFolder ? [requestedPath] : [];
 
-          setContentMode("files");
+          setContentMode(requestedContentMode);
           setToolbarPopover("");
           setContextMenu(null);
           setActionError("");
           if (requestedProjectId) {
             setProjectFilterScope(requestedProjectId);
+          }
+          if (requestedContentMode === "changes") {
+            if (requestedEnvironmentId && requestedEnvironmentId !== selectedEnvironmentId) {
+              setSelectedEnvironmentId(requestedEnvironmentId);
+            }
+            setSelectedPaths(new Set());
+            setSelectionAnchorPath("");
+            setRenamingPath("");
+            setRenameValue("");
+            setIsPreviewOpen(false);
+            return;
           }
 
           const applySelection = async () => {
@@ -60021,6 +60085,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [projectEnvironmentFilePickerSelectedPaths, setProjectEnvironmentFilePickerSelectedPaths] = useState([]);
         const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "overview");
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
+        const [projectOverviewChartMode, setProjectOverviewChartMode] = useState("activity");
         const [projectOverviewFileActivityState, setProjectOverviewFileActivityState] = useState({
           status: "idle",
           error: "",
@@ -96594,11 +96659,12 @@ const server = http.createServer((req, res) => {
 
   const environmentSnapshotFileMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/snapshots\/([^/]+)\/file$/);
   if (req.method === "GET" && environmentSnapshotFileMatch) {
-    void proxyUpstreamGet(
-      req,
-      res,
-      `/environments/${encodeURIComponent(decodeURIComponent(environmentSnapshotFileMatch[1]))}/snapshots/${encodeURIComponent(decodeURIComponent(environmentSnapshotFileMatch[2]))}/file`,
-    );
+    const proxySnapshotFilePath = `/environments/${encodeURIComponent(decodeURIComponent(environmentSnapshotFileMatch[1]))}/snapshots/${encodeURIComponent(decodeURIComponent(environmentSnapshotFileMatch[2]))}/file`;
+    if (url.searchParams.get("format") === "raw") {
+      void proxyUpstreamBinaryGet(req, res, proxySnapshotFilePath);
+    } else {
+      void proxyUpstreamGet(req, res, proxySnapshotFilePath);
+    }
     return;
   }
 
@@ -96635,11 +96701,12 @@ const server = http.createServer((req, res) => {
 
   const environmentChangeFileMatch = url.pathname.match(/^\/api\/real\/environments\/([^/]+)\/changes\/([^/]+)\/file$/);
   if (req.method === "GET" && environmentChangeFileMatch) {
-    void proxyUpstreamGet(
-      req,
-      res,
-      `/environments/${encodeURIComponent(decodeURIComponent(environmentChangeFileMatch[1]))}/changes/${encodeURIComponent(decodeURIComponent(environmentChangeFileMatch[2]))}/file`,
-    );
+    const proxyChangeFilePath = `/environments/${encodeURIComponent(decodeURIComponent(environmentChangeFileMatch[1]))}/changes/${encodeURIComponent(decodeURIComponent(environmentChangeFileMatch[2]))}/file`;
+    if (url.searchParams.get("format") === "raw") {
+      void proxyUpstreamBinaryGet(req, res, proxyChangeFilePath);
+    } else {
+      void proxyUpstreamGet(req, res, proxyChangeFilePath);
+    }
     return;
   }
 

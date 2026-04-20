@@ -6,15 +6,12 @@ export const ENVIRONMENT_CHANGES_CSS = String.raw`
       }
 
       .playground-environment-changes-view {
-        display: grid;
-        grid-template-columns: minmax(360px, 0.92fr) minmax(0, 1.08fr);
-        gap: 16px;
         min-height: 0;
         height: 100%;
       }
 
-      .playground-environment-changes-column {
-        min-height: 0;
+      .playground-environment-changes-view.is-timeline,
+      .playground-environment-changes-view.is-detail {
         display: flex;
         flex-direction: column;
       }
@@ -32,6 +29,10 @@ export const ENVIRONMENT_CHANGES_CSS = String.raw`
         background: transparent;
         box-shadow: none;
         border-radius: 0;
+      }
+
+      .playground-environment-changes-panel.is-plain .playground-environment-changes-list {
+        padding: 0;
       }
 
       .playground-environment-changes-empty,
@@ -56,6 +57,34 @@ export const ENVIRONMENT_CHANGES_CSS = String.raw`
         height: 100%;
         overflow: auto;
         padding: 12px;
+      }
+
+      .playground-environment-changes-list-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px 0 6px;
+      }
+
+      .playground-environment-changes-load-more {
+        min-height: 32px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.88);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: opacity 120ms ease;
+      }
+
+      .playground-environment-changes-load-more:disabled {
+        opacity: 0.5;
+        cursor: default;
       }
 
       .playground-environment-changes-group {
@@ -259,6 +288,19 @@ export const ENVIRONMENT_CHANGES_CSS = String.raw`
         overflow: hidden;
       }
 
+      .playground-environment-changes-detail-back {
+        min-height: 30px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.88);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
       .playground-environment-changes-detail-header {
         display: flex;
         flex-direction: column;
@@ -322,6 +364,18 @@ export const ENVIRONMENT_CHANGES_CSS = String.raw`
         padding: 18px;
       }
 
+      .playground-environment-changes-detail-preview {
+        min-height: 0;
+        height: 100%;
+      }
+
+      .playground-environment-changes-detail-preview .tb-runner-document-preview-host,
+      .playground-environment-changes-detail-preview .tb-runner-document-preview-host-inline,
+      .playground-environment-changes-detail-preview .tb-attachment-preview-drawer-inline {
+        min-height: 0;
+        height: 100%;
+      }
+
       .playground-environment-changes-detail-context {
         display: flex;
         flex-wrap: wrap;
@@ -357,7 +411,11 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
         if (typeof value !== "string") {
           return "";
         }
-        return value.replace(/^\/+|\/+$/g, "").trim();
+        return value
+          .trim()
+          .replace(/^\/workspace(?=\/|$)/, "")
+          .replace(/^workspace(?=\/|$)/, "")
+          .replace(/^\/+|\/+$/g, "");
       }
 
       function normalizeEnvironmentChangeKind(value) {
@@ -482,15 +540,133 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
         if (entry?.projectName) {
           parts.push(entry.projectName);
         }
-        if (entry?.threadTitle) {
-          parts.push(entry.threadTitle);
+        if (entry?.sourceThreadId) {
+          parts.push(entry.sourceThreadId);
         }
         return parts.join(" · ");
       }
 
-      async function fetchEnvironmentChangesListViaApi({ backendUrl, environmentId, headers }) {
+      function buildEnvironmentChangeFileCountLabel(entry) {
+        const fileCount = Array.isArray(entry?.files) ? entry.files.length : 0;
+        if (fileCount <= 1) {
+          return "";
+        }
+        return fileCount === 1 ? "1 file changed" : String(fileCount) + " files changed";
+      }
+
+      function normalizeEnvironmentChangeEntries(items, environmentId) {
+        const safeItems = Array.isArray(items) ? items : [];
+        return safeItems.flatMap((entry) => {
+          const snapshotId = String(entry?.snapshotId || entry?.id || "");
+          const mappedFiles = Array.isArray(entry?.files) ? entry.files.map((file) => ({
+            path: normalizeEnvironmentChangePath(file?.path),
+            name: typeof file?.name === "string" && file.name.trim() ? file.name.trim() : (normalizeEnvironmentChangePath(file?.path).split("/").pop() || "File"),
+            changeKind: normalizeEnvironmentChangeKind(file?.changeKind),
+            operation: normalizeEnvironmentChangeOperation(file?.operation),
+            entryType: file?.entryType === "directory" ? "directory" : "file",
+            previousPath: normalizeEnvironmentChangePath(file?.previousPath),
+            additions: Number.isFinite(Number(file?.additions)) ? Number(file.additions) : 0,
+            deletions: Number.isFinite(Number(file?.deletions)) ? Number(file.deletions) : 0,
+            diff: typeof file?.diff === "string" ? file.diff : "",
+            fileContent: typeof file?.fileContent === "string" ? file.fileContent : "",
+          })).filter((file) => file.path) : [];
+
+          if (mappedFiles.length <= 1) {
+            return [{
+              id: String(entry?.id || snapshotId || ""),
+              snapshotId,
+              environmentId: String(entry?.environmentId || environmentId),
+              createdAt: String(entry?.createdAt || ""),
+              title: typeof entry?.title === "string" && entry.title.trim()
+                ? entry.title
+                : (mappedFiles[0] ? buildEnvironmentChangeTitle({ files: mappedFiles }) : "Environment change"),
+              routeSource: typeof entry?.routeSource === "string" ? entry.routeSource : "",
+              sourceKind: entry?.sourceKind === "manual" ? "manual" : "thread",
+              sourceThreadId: typeof entry?.sourceThreadId === "string" ? entry.sourceThreadId : "",
+              sourceStepId: typeof entry?.sourceStepId === "string" ? entry.sourceStepId : "",
+              threadTitle: typeof entry?.threadTitle === "string" ? entry.threadTitle : "",
+              projectId: typeof entry?.projectId === "string" ? entry.projectId : "",
+              projectName: typeof entry?.projectName === "string" ? entry.projectName : "",
+              agentId: typeof entry?.agentId === "string" ? entry.agentId : "",
+              agentName: typeof entry?.agentName === "string" ? entry.agentName : "",
+              additions: Number.isFinite(Number(entry?.additions)) ? Number(entry.additions) : (mappedFiles[0]?.additions || 0),
+              deletions: Number.isFinite(Number(entry?.deletions)) ? Number(entry.deletions) : (mappedFiles[0]?.deletions || 0),
+              files: mappedFiles,
+            }];
+          }
+
+          return mappedFiles.map((file, index) => ({
+            id: snapshotId + ":" + file.path + ":" + index,
+            snapshotId,
+            environmentId: String(entry?.environmentId || environmentId),
+            createdAt: String(entry?.createdAt || ""),
+            title: buildEnvironmentChangeTitle({ files: [file] }),
+            routeSource: typeof entry?.routeSource === "string" ? entry.routeSource : "",
+            sourceKind: entry?.sourceKind === "manual" ? "manual" : "thread",
+            sourceThreadId: typeof entry?.sourceThreadId === "string" ? entry.sourceThreadId : "",
+            sourceStepId: typeof entry?.sourceStepId === "string" ? entry.sourceStepId : "",
+            threadTitle: typeof entry?.threadTitle === "string" ? entry.threadTitle : "",
+            projectId: typeof entry?.projectId === "string" ? entry.projectId : "",
+            projectName: typeof entry?.projectName === "string" ? entry.projectName : "",
+            agentId: typeof entry?.agentId === "string" ? entry.agentId : "",
+            agentName: typeof entry?.agentName === "string" ? entry.agentName : "",
+            additions: file.additions,
+            deletions: file.deletions,
+            files: [file],
+          }));
+        });
+      }
+
+      const ENVIRONMENT_CHANGES_BATCH_SIZE = 25;
+
+      function applyEnvironmentChangeClientFilters(items, { projectFilterScope, actorFilter }) {
+        const safeItems = Array.isArray(items) ? items : [];
+        return safeItems.filter((change) => {
+          if (projectFilterScope === "__all__" && !change?.projectId) {
+            return false;
+          }
+          if (actorFilter === "__manual__" && change?.sourceKind !== "manual") {
+            return false;
+          }
+          return true;
+        });
+      }
+
+      function buildEnvironmentChangesQueryString({ limit, offset, projectFilterScope, operationFilter, actorFilter }) {
+        const params = new URLSearchParams();
+        params.set("limit", String(Math.max(1, Number(limit || ENVIRONMENT_CHANGES_BATCH_SIZE) || ENVIRONMENT_CHANGES_BATCH_SIZE)));
+        params.set("offset", String(Math.max(0, Number(offset || 0) || 0)));
+        if (projectFilterScope && projectFilterScope !== "__all__") {
+          params.set("projectId", projectFilterScope);
+        }
+        if (operationFilter && operationFilter !== "all") {
+          params.set("operation", operationFilter);
+        }
+        if (actorFilter && actorFilter !== "__all__" && actorFilter !== "__manual__") {
+          params.set("agentId", actorFilter);
+        }
+        return params.toString();
+      }
+
+      async function fetchEnvironmentChangesListViaApi({
+        backendUrl,
+        environmentId,
+        headers,
+        limit,
+        offset,
+        projectFilterScope,
+        operationFilter,
+        actorFilter,
+      }) {
+        const query = buildEnvironmentChangesQueryString({
+          limit,
+          offset,
+          projectFilterScope,
+          operationFilter,
+          actorFilter,
+        });
         const response = await fetch(
-          backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/changes?limit=500",
+          backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/changes?" + query,
           {
             method: "GET",
             headers,
@@ -503,42 +679,30 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
           throw error;
         }
         const items = Array.isArray(data?.data) ? data.data : [];
-        return items.map((entry) => ({
-          id: String(entry?.id || entry?.snapshotId || ""),
-          snapshotId: String(entry?.snapshotId || entry?.id || ""),
-          environmentId: String(entry?.environmentId || environmentId),
-          createdAt: String(entry?.createdAt || ""),
-          title: buildEnvironmentChangeTitle(entry),
-          routeSource: typeof entry?.routeSource === "string" ? entry.routeSource : "",
-          sourceKind: entry?.sourceKind === "manual" ? "manual" : "thread",
-          sourceThreadId: typeof entry?.sourceThreadId === "string" ? entry.sourceThreadId : "",
-          sourceStepId: typeof entry?.sourceStepId === "string" ? entry.sourceStepId : "",
-          threadTitle: typeof entry?.threadTitle === "string" ? entry.threadTitle : "",
-          projectId: typeof entry?.projectId === "string" ? entry.projectId : "",
-          projectName: typeof entry?.projectName === "string" ? entry.projectName : "",
-          agentId: typeof entry?.agentId === "string" ? entry.agentId : "",
-          agentName: typeof entry?.agentName === "string" ? entry.agentName : "",
-          additions: Number.isFinite(Number(entry?.additions)) ? Number(entry.additions) : 0,
-          deletions: Number.isFinite(Number(entry?.deletions)) ? Number(entry.deletions) : 0,
-          files: Array.isArray(entry?.files) ? entry.files.map((file) => ({
-            path: normalizeEnvironmentChangePath(file?.path),
-            name: typeof file?.name === "string" && file.name.trim() ? file.name.trim() : (normalizeEnvironmentChangePath(file?.path).split("/").pop() || "File"),
-            changeKind: normalizeEnvironmentChangeKind(file?.changeKind),
-            operation: normalizeEnvironmentChangeOperation(file?.operation),
-            entryType: file?.entryType === "directory" ? "directory" : "file",
-            previousPath: normalizeEnvironmentChangePath(file?.previousPath),
-            additions: Number.isFinite(Number(file?.additions)) ? Number(file.additions) : 0,
-            deletions: Number.isFinite(Number(file?.deletions)) ? Number(file.deletions) : 0,
-          })) : [],
-        }));
+        const mapped = normalizeEnvironmentChangeEntries(items, environmentId);
+        const total = Number.isFinite(Number(data?.total)) ? Number(data.total) : mapped.length;
+        const nextOffset = Math.max(0, Number(offset || 0) || 0) + items.length;
+        return {
+          data: mapped,
+          total,
+          nextOffset,
+          hasMore: nextOffset < total,
+        };
       }
 
-      async function fetchEnvironmentChangesListFromSnapshots({ backendUrl, environmentId, headers, projects }) {
-        const [snapshotsResponse, threadsResponse, agentsResponse] = await Promise.all([
-          fetch(backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/snapshots?limit=500", {
-            method: "GET",
-            headers,
-          }),
+      async function fetchEnvironmentChangesListFromSnapshots({
+        backendUrl,
+        environmentId,
+        headers,
+        projects,
+        limit,
+        offset,
+        projectFilterScope,
+        operationFilter,
+        actorFilter,
+      }) {
+        const batchSize = Math.max(1, Number(limit || ENVIRONMENT_CHANGES_BATCH_SIZE) || ENVIRONMENT_CHANGES_BATCH_SIZE);
+        const [threadsResponse, agentsResponse] = await Promise.all([
           fetch(backendUrl + "/threads?limit=500", {
             method: "GET",
             headers,
@@ -549,70 +713,149 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
           }),
         ]);
 
-        const [snapshotsData, threadsData, agentsData] = await Promise.all([
-          snapshotsResponse.json().catch(() => ({})),
+        const [threadsData, agentsData] = await Promise.all([
           threadsResponse.json().catch(() => ({})),
           agentsResponse.json().catch(() => ({})),
         ]);
 
-        if (!snapshotsResponse.ok) {
-          throw new Error(snapshotsData?.message || snapshotsData?.error || "Failed to load environment snapshots.");
-        }
-
-        const snapshots = Array.isArray(snapshotsData?.data) ? snapshotsData.data : [];
         const threads = normalizeThreadList(Array.isArray(threadsData?.data) ? threadsData.data : Array.isArray(threadsData?.threads) ? threadsData.threads : []);
         const agents = parsePlaygroundAgentListResponse(agentsData);
         const threadsById = new Map(threads.map((thread) => [thread.id, thread]));
         const agentsById = new Map(agents.map((agent) => [agent.id, agent]));
         const projectsById = new Map((Array.isArray(projects) ? projects : []).map((project) => [String(project?.id || ""), project]));
 
-        return snapshots
-          .filter((snapshot) => {
-            const metadata = snapshot?.metadata && typeof snapshot.metadata === "object" && !Array.isArray(snapshot.metadata)
-              ? snapshot.metadata
+        const collected = [];
+        let nextOffset = Math.max(0, Number(offset || 0) || 0);
+        let hasMore = true;
+
+        while (collected.length < batchSize && hasMore) {
+          const snapshotsResponse = await fetch(
+            backendUrl + "/environments/" + encodeURIComponent(environmentId) + "/snapshots?limit=" + encodeURIComponent(String(batchSize)) + "&offset=" + encodeURIComponent(String(nextOffset)),
+            {
+              method: "GET",
+              headers,
+            }
+          );
+          const snapshotsData = await snapshotsResponse.json().catch(() => ({}));
+          if (!snapshotsResponse.ok) {
+            throw new Error(snapshotsData?.message || snapshotsData?.error || "Failed to load environment snapshots.");
+          }
+          const snapshots = Array.isArray(snapshotsData?.data) ? snapshotsData.data : [];
+          const mappedPage = normalizeEnvironmentChangeEntries(snapshots
+            .filter((snapshot) => {
+              const metadata = snapshot?.metadata && typeof snapshot.metadata === "object" && !Array.isArray(snapshot.metadata)
+                ? snapshot.metadata
               : null;
-            return metadata?.baseline !== true;
-          })
-          .map((snapshot) => {
-            const safeThread = snapshot?.sourceThreadId ? threadsById.get(String(snapshot.sourceThreadId || "")) || null : null;
-            const projectId = safeThread?.projectId || "";
-            const agentId = safeThread?.agentId || "";
-            const safeProject = projectId ? projectsById.get(projectId) || null : null;
-            const safeAgent = agentId ? agentsById.get(agentId) || null : null;
-            const files = readEnvironmentChangeFilesFromSnapshot(snapshot);
-            return {
-              id: String(snapshot?.id || ""),
-              snapshotId: String(snapshot?.id || ""),
-              environmentId: String(snapshot?.environmentId || environmentId),
-              createdAt: String(snapshot?.createdAt || ""),
-              title: buildEnvironmentChangeTitle({
+              return metadata?.baseline !== true;
+            })
+            .map((snapshot) => {
+              const safeThread = snapshot?.sourceThreadId ? threadsById.get(String(snapshot.sourceThreadId || "")) || null : null;
+              const projectId = safeThread?.projectId || "";
+              const agentId = safeThread?.agentId || "";
+              const safeProject = projectId ? projectsById.get(projectId) || null : null;
+              const safeAgent = agentId ? agentsById.get(agentId) || null : null;
+              const files = readEnvironmentChangeFilesFromSnapshot(snapshot);
+              return {
+                id: String(snapshot?.id || ""),
+                snapshotId: String(snapshot?.id || ""),
+                environmentId: String(snapshot?.environmentId || environmentId),
+                createdAt: String(snapshot?.createdAt || ""),
+                title: buildEnvironmentChangeTitle({
+                  files,
+                  title: safeThread?.title || "",
+                }),
+                routeSource: typeof snapshot?.metadata?.routeSource === "string" ? snapshot.metadata.routeSource : "",
+                sourceKind: snapshot?.sourceThreadId ? "thread" : "manual",
+                sourceThreadId: typeof snapshot?.sourceThreadId === "string" ? snapshot.sourceThreadId : "",
+                sourceStepId: typeof snapshot?.sourceStepId === "string" ? snapshot.sourceStepId : "",
+                threadTitle: safeThread?.title || "",
+                projectId,
+                projectName: safeProject?.name || "",
+                agentId,
+                agentName: safeAgent?.name || "",
+                additions: Number.isFinite(Number(snapshot?.additions)) ? Number(snapshot.additions) : 0,
+                deletions: Number.isFinite(Number(snapshot?.deletions)) ? Number(snapshot.deletions) : 0,
                 files,
-                title: safeThread?.title || "",
-              }),
-              routeSource: typeof snapshot?.metadata?.routeSource === "string" ? snapshot.metadata.routeSource : "",
-              sourceKind: snapshot?.sourceThreadId ? "thread" : "manual",
-              sourceThreadId: typeof snapshot?.sourceThreadId === "string" ? snapshot.sourceThreadId : "",
-              sourceStepId: typeof snapshot?.sourceStepId === "string" ? snapshot.sourceStepId : "",
-              threadTitle: safeThread?.title || "",
-              projectId,
-              projectName: safeProject?.name || "",
-              agentId,
-              agentName: safeAgent?.name || "",
-              additions: Number.isFinite(Number(snapshot?.additions)) ? Number(snapshot.additions) : 0,
-              deletions: Number.isFinite(Number(snapshot?.deletions)) ? Number(snapshot.deletions) : 0,
-              files,
-            };
-          });
+              };
+            }),
+            environmentId)
+            .filter((change) => {
+              if (projectFilterScope) {
+                if (projectFilterScope === "__all__") {
+                  if (!change.projectId) {
+                    return false;
+                  }
+                } else if (change.projectId !== projectFilterScope) {
+                  return false;
+                }
+              }
+              if (operationFilter && operationFilter !== "all" && !change.files.some((file) => file.operation === operationFilter)) {
+                return false;
+              }
+              if (actorFilter && actorFilter !== "__all__") {
+                if (actorFilter === "__manual__") {
+                  if (change.sourceKind !== "manual") {
+                    return false;
+                  }
+                } else if (change.agentId !== actorFilter) {
+                  return false;
+                }
+              }
+              return true;
+            });
+          collected.push(...mappedPage);
+          nextOffset += snapshots.length;
+          hasMore = snapshots.length >= batchSize;
+          if (snapshots.length === 0) {
+            break;
+          }
+        }
+
+        return {
+          data: collected,
+          nextOffset,
+          hasMore,
+          total: null,
+        };
       }
 
       async function fetchEnvironmentChangesList(params) {
+        const batchSize = Math.max(1, Number(params?.limit || ENVIRONMENT_CHANGES_BATCH_SIZE) || ENVIRONMENT_CHANGES_BATCH_SIZE);
+        let nextOffset = Math.max(0, Number(params?.offset || 0) || 0);
+        let hasMore = true;
+        const collected = [];
+
+        async function runLoader(loader) {
+          while (collected.length < batchSize && hasMore) {
+            const page = await loader({
+              ...params,
+              limit: batchSize,
+              offset: nextOffset,
+            });
+            const rawItems = Array.isArray(page?.data) ? page.data : [];
+            const filteredItems = applyEnvironmentChangeClientFilters(rawItems, params || {});
+            collected.push(...filteredItems);
+            nextOffset = Math.max(nextOffset, Number(page?.nextOffset || 0) || 0);
+            hasMore = Boolean(page?.hasMore);
+            if (rawItems.length === 0) {
+              hasMore = false;
+              break;
+            }
+          }
+          return {
+            data: collected,
+            nextOffset,
+            hasMore,
+          };
+        }
+
         try {
-          return await fetchEnvironmentChangesListViaApi(params);
+          return await runLoader(fetchEnvironmentChangesListViaApi);
         } catch (error) {
           if (Number(error?.status || 0) !== 404) {
-            return await fetchEnvironmentChangesListFromSnapshots(params);
+            return await runLoader(fetchEnvironmentChangesListFromSnapshots);
           }
-          return await fetchEnvironmentChangesListFromSnapshots(params);
+          return await runLoader(fetchEnvironmentChangesListFromSnapshots);
         }
       }
 
@@ -650,6 +893,111 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
         return "";
       }
 
+      function inferEnvironmentChangePreviewMimeType(file) {
+        const normalizedPath = String(file?.path || file?.name || "").trim().toLowerCase();
+        const extension = normalizedPath.includes(".")
+          ? normalizedPath.split(".").pop().toLowerCase()
+          : "";
+
+        if (["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "avif"].includes(extension)) {
+          if (extension === "jpg") return "image/jpeg";
+          if (extension === "svg") return "image/svg+xml";
+          return "image/" + extension;
+        }
+        if (extension === "pdf") return "application/pdf";
+        if (extension === "html" || extension === "htm") return "text/html";
+        if (extension === "md" || extension === "markdown") return "text/markdown";
+        if (extension === "docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if (
+          [
+            "txt",
+            "log",
+            "json",
+            "js",
+            "jsx",
+            "ts",
+            "tsx",
+            "css",
+            "xml",
+            "yaml",
+            "yml",
+            "py",
+            "sh",
+            "sql",
+            "toml",
+            "ini",
+            "c",
+            "cpp",
+            "h",
+            "hpp",
+            "java",
+            "go",
+            "rs",
+            "php",
+            "rb",
+            "swift",
+            "kt",
+            "kts",
+            "lua",
+            "pl",
+            "r",
+            "scala",
+          ].includes(extension)
+        ) {
+          return "text/plain";
+        }
+        return "application/octet-stream";
+      }
+
+      function getEnvironmentChangePreviewMode(file) {
+        const previewEntry = {
+          path: file?.path || "",
+          name: file?.name || "",
+          mimeType: inferEnvironmentChangePreviewMimeType(file),
+          isFolder: false,
+        };
+        const fileKind = getPlaygroundFileKind(previewEntry);
+        if (fileKind === "image" || fileKind === "pdf") {
+          return "preview";
+        }
+        if (previewEntry.mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+          return "preview";
+        }
+        if (fileKind === "html" || fileKind === "markdown") {
+          return "fallback";
+        }
+        return "diff";
+      }
+
+      function buildEnvironmentChangePreviewAttachment({ backendUrl, environmentId, change, file }) {
+        if (!backendUrl || !environmentId || !change?.id || !file?.path) {
+          return null;
+        }
+        const mimeType = inferEnvironmentChangePreviewMimeType(file);
+        const encodedPath = encodeURIComponent(normalizeEnvironmentChangePath(file.path));
+        const previewEntry = {
+          path: file.path,
+          name: file.name || file.path.split("/").pop() || "File",
+          mimeType,
+          isFolder: false,
+        };
+        const fileKind = getPlaygroundFileKind(previewEntry);
+        const rawFileUrl = backendUrl
+          + "/environments/" + encodeURIComponent(environmentId)
+          + "/changes/" + encodeURIComponent(change.id)
+          + "/file?path=" + encodedPath
+          + "&format=raw";
+        return {
+          id: "playground-environment-change-preview:" + environmentId + ":" + change.id + ":" + file.path,
+          filename: previewEntry.name,
+          mimeType,
+          type: fileKind === "image" ? "image" : "document",
+          url: rawFileUrl,
+          previewUrl: rawFileUrl,
+          htmlPreviewUrl: fileKind === "html" ? rawFileUrl : undefined,
+        };
+      }
+
       function EnvironmentChangesPage({
         backendUrl,
         requestHeaders,
@@ -664,7 +1012,10 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
       }) {
         const [changes, setChanges] = useState([]);
         const [loading, setLoading] = useState(false);
+        const [loadingMore, setLoadingMore] = useState(false);
         const [error, setError] = useState("");
+        const [hasMore, setHasMore] = useState(false);
+        const [nextOffset, setNextOffset] = useState(0);
         const [selectedChangeId, setSelectedChangeId] = useState("");
         const [selectedFilePath, setSelectedFilePath] = useState("");
         const [detailDiff, setDetailDiff] = useState(null);
@@ -672,18 +1023,23 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
         const [detailLoading, setDetailLoading] = useState(false);
         const [detailError, setDetailError] = useState("");
         const [forkState, setForkState] = useState({ status: "", message: "" });
+        const [changesScreenMode, setChangesScreenMode] = useState("timeline");
 
         useEffect(() => {
           let cancelled = false;
           setLoading(true);
+          setLoadingMore(false);
           setError("");
           setChanges([]);
+          setHasMore(false);
+          setNextOffset(0);
           setSelectedChangeId("");
           setSelectedFilePath("");
           setDetailDiff(null);
           setDetailFileContent("");
           setDetailError("");
           setForkState({ status: "", message: "" });
+          setChangesScreenMode("timeline");
 
           if (!environmentId) {
             setLoading(false);
@@ -697,22 +1053,31 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
             environmentId,
             headers: requestHeaders,
             projects: availableProjects,
-          }).then((items) => {
+            limit: ENVIRONMENT_CHANGES_BATCH_SIZE,
+            offset: 0,
+            projectFilterScope,
+            operationFilter,
+            actorFilter,
+          }).then((result) => {
             if (cancelled) {
               return;
             }
-            const nextItems = (Array.isArray(items) ? items : []).slice().sort((left, right) => {
+            const nextItems = (Array.isArray(result?.data) ? result.data : []).slice().sort((left, right) => {
               const leftTime = Date.parse(left?.createdAt || "") || 0;
               const rightTime = Date.parse(right?.createdAt || "") || 0;
               return rightTime - leftTime;
             });
             setChanges(nextItems);
+            setHasMore(Boolean(result?.hasMore));
+            setNextOffset(Math.max(0, Number(result?.nextOffset || 0) || 0));
             setError("");
           }).catch((nextError) => {
             if (cancelled) {
               return;
             }
             setChanges([]);
+            setHasMore(false);
+            setNextOffset(0);
             setError(nextError instanceof Error ? nextError.message : "Failed to load environment changes.");
           }).finally(() => {
             if (!cancelled) {
@@ -723,7 +1088,57 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
           return () => {
             cancelled = true;
           };
-        }, [availableProjects, backendUrl, environmentId, requestHeaders]);
+        }, [actorFilter, availableProjects, backendUrl, environmentId, operationFilter, projectFilterScope, requestHeaders]);
+
+        async function handleLoadMoreChanges() {
+          if (loading || loadingMore || !hasMore || !environmentId) {
+            return;
+          }
+          setLoadingMore(true);
+          try {
+            const result = await fetchEnvironmentChangesList({
+              backendUrl,
+              environmentId,
+              headers: requestHeaders,
+              projects: availableProjects,
+              limit: ENVIRONMENT_CHANGES_BATCH_SIZE,
+              offset: nextOffset,
+              projectFilterScope,
+              operationFilter,
+              actorFilter,
+            });
+            const incomingItems = (Array.isArray(result?.data) ? result.data : []).slice().sort((left, right) => {
+              const leftTime = Date.parse(left?.createdAt || "") || 0;
+              const rightTime = Date.parse(right?.createdAt || "") || 0;
+              return rightTime - leftTime;
+            });
+            setChanges((current) => {
+              const seenIds = new Set((Array.isArray(current) ? current : []).map((entry) => String(entry?.id || "")));
+              const merged = Array.isArray(current) ? current.slice() : [];
+              incomingItems.forEach((entry) => {
+                const entryId = String(entry?.id || "");
+                if (!entryId || seenIds.has(entryId)) {
+                  return;
+                }
+                seenIds.add(entryId);
+                merged.push(entry);
+              });
+              merged.sort((left, right) => {
+                const leftTime = Date.parse(left?.createdAt || "") || 0;
+                const rightTime = Date.parse(right?.createdAt || "") || 0;
+                return rightTime - leftTime;
+              });
+              return merged;
+            });
+            setHasMore(Boolean(result?.hasMore));
+            setNextOffset(Math.max(nextOffset, Number(result?.nextOffset || 0) || 0));
+            setError("");
+          } catch (nextError) {
+            setError(nextError instanceof Error ? nextError.message : "Failed to load additional environment changes.");
+          } finally {
+            setLoadingMore(false);
+          }
+        }
 
         const scopedChanges = useMemo(() => {
           return changes.filter((change) => {
@@ -809,11 +1224,25 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
           () => (selectedChange?.files || []).find((file) => normalizeHistoryPath(file.path) === normalizeHistoryPath(selectedFilePath)) || null,
           [selectedChange, selectedFilePath]
         );
+        const selectedFilePreviewMode = useMemo(
+          () => getEnvironmentChangePreviewMode(selectedFile),
+          [selectedFile]
+        );
+        const selectedFilePreviewAttachment = useMemo(
+          () => buildEnvironmentChangePreviewAttachment({
+            backendUrl,
+            environmentId,
+            change: selectedChange,
+            file: selectedFile,
+          }),
+          [backendUrl, environmentId, selectedChange, selectedFile]
+        );
 
         useEffect(() => {
           if (filteredChanges.length === 0) {
             setSelectedChangeId("");
             setSelectedFilePath("");
+            setChangesScreenMode("timeline");
             return;
           }
           if (selectedChangeId && filteredChanges.some((change) => change.id === selectedChangeId)) {
@@ -852,26 +1281,46 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
 
           void (async () => {
             try {
-              const nextDiff = await fetchEnvironmentChangeDiff({
-                backendUrl,
-                environmentId,
-                changeId: selectedChange.id,
-                path: selectedFile.path,
-                headers: requestHeaders,
-              });
-              const nextFileContent = selectedFile.changeKind === "deleted"
-                ? ""
-                : await fetchEnvironmentChangeFile({
+              const inlineDiff = typeof selectedFile.diff === "string" && selectedFile.diff.trim()
+                ? {
+                    diff: selectedFile.diff,
+                    additions: selectedFile.additions,
+                    deletions: selectedFile.deletions,
+                    changedPaths: [selectedFile.path],
+                  }
+                : null;
+              const resolvedChangeId = String(selectedChange.id || "").trim();
+              const nextDiff = selectedFilePreviewMode === "preview"
+                ? null
+                : inlineDiff || !resolvedChangeId
+                ? null
+                : await fetchEnvironmentChangeDiff({
                     backendUrl,
                     environmentId,
-                    changeId: selectedChange.id,
+                    changeId: resolvedChangeId,
                     path: selectedFile.path,
                     headers: requestHeaders,
                   });
+              const nextResolvedDiff = inlineDiff || nextDiff;
+              const nextFileContent = selectedFilePreviewMode === "preview"
+                ? ""
+                : selectedFile.changeKind === "deleted"
+                ? ""
+                : (typeof selectedFile.fileContent === "string" && selectedFile.fileContent
+                  ? selectedFile.fileContent
+                  : !resolvedChangeId
+                    ? ""
+                    : await fetchEnvironmentChangeFile({
+                        backendUrl,
+                        environmentId,
+                        changeId: resolvedChangeId,
+                        path: selectedFile.path,
+                        headers: requestHeaders,
+                      }));
               if (cancelled) {
                 return;
               }
-              setDetailDiff(nextDiff);
+              setDetailDiff(nextResolvedDiff);
               setDetailFileContent(nextFileContent);
               setDetailError("");
             } catch (nextError) {
@@ -891,7 +1340,7 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
           return () => {
             cancelled = true;
           };
-        }, [backendUrl, environmentId, requestHeaders, selectedChange, selectedFile]);
+        }, [backendUrl, environmentId, requestHeaders, selectedChange, selectedFile, selectedFilePreviewMode]);
 
         async function handleForkFromChange() {
           if (!selectedChange || !environmentId || forkState.status === "loading") {
@@ -948,86 +1397,40 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
           : Number.isFinite(Number(selectedFile?.deletions)) && Number(selectedFile?.deletions) > 0
             ? Number(selectedFile.deletions)
             : diffStats.deletions;
+        const shouldRenderDocumentPreview = Boolean(
+          selectedFilePreviewAttachment
+          && selectedFile?.changeKind !== "deleted"
+          && (
+            selectedFilePreviewMode === "preview"
+            || (selectedFilePreviewMode === "fallback" && (!detailDiffText || detailError))
+            || (selectedFilePreviewMode === "diff" && detailError)
+          )
+        );
+        function openChangeDetail(change, preferredPath = "") {
+          const normalizedChangeId = String(change?.id || "").trim();
+          if (!normalizedChangeId) {
+            return;
+          }
+          setSelectedChangeId(normalizedChangeId);
+          setSelectedFilePath(preferredPath || change?.files?.[0]?.path || "");
+          setChangesScreenMode("detail");
+        }
 
-        return React.createElement("div", { className: "playground-environment-changes-view" },
-          React.createElement("div", { className: "playground-environment-changes-column" },
-            React.createElement("section", { className: "playground-environment-changes-panel" },
-              loading
-                ? React.createElement("div", { className: "playground-environment-changes-loading" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                    React.createElement("span", null, "Loading environment changes...")
-                  )
-                : error
-                  ? React.createElement("div", { className: "playground-environment-changes-empty" }, error)
-                  : filteredChanges.length === 0
-                    ? React.createElement("div", { className: "playground-environment-changes-empty" }, "No file changes have been recorded for this environment yet.")
-                    : React.createElement("div", { className: "playground-environment-changes-list" },
-                        groupedChanges.map((group) =>
-                          React.createElement("section", { key: group.key, className: "playground-environment-changes-group" },
-                            React.createElement("div", { className: "playground-environment-changes-group-heading" }, group.label),
-                            group.items.map((change) =>
-                              React.createElement("article", {
-                                  key: change.id,
-                                  className: "playground-environment-change-card" + (selectedChange?.id === change.id ? " is-active" : ""),
-                                },
-                                  React.createElement("div", { className: "playground-environment-change-card-header" },
-                                    React.createElement("div", { className: "playground-environment-change-card-copy" },
-                                      React.createElement("h3", { className: "playground-environment-change-card-title" }, buildEnvironmentChangeTitle(change)),
-                                      buildEnvironmentChangeSummary(change)
-                                        ? React.createElement("div", { className: "playground-environment-change-card-meta" }, buildEnvironmentChangeSummary(change))
-                                        : null
-                                    ),
-                                    React.createElement("div", { className: "playground-environment-change-card-time" }, formatHistoryTimestamp(change.createdAt))
-                                  ),
-                                  React.createElement("div", { className: "playground-environment-change-file-list" },
-                                    (Array.isArray(change.files) ? change.files : []).map((file) =>
-                                      React.createElement("button", {
-                                          key: change.id + ":" + file.path,
-                                          type: "button",
-                                          className: "playground-environment-change-file-row" + (selectedChange?.id === change.id && selectedFile && historyPathsMatch(selectedFile.path, file.path) ? " is-active" : ""),
-                                          onClick: () => {
-                                            setSelectedChangeId(change.id);
-                                            setSelectedFilePath(file.path);
-                                          },
-                                        },
-                                          React.createElement("div", { className: "playground-environment-change-file-main" },
-                                            React.createElement(PlaygroundFileIcon, {
-                                              entry: {
-                                                path: file.path,
-                                                name: file.name,
-                                                isFolder: file.entryType === "directory",
-                                              },
-                                            }),
-                                            React.createElement("div", { className: "playground-environment-change-file-copy" },
-                                              React.createElement("div", { className: "playground-environment-change-file-title" }, file.name || file.path),
-                                              React.createElement("div", { className: "playground-environment-change-file-path" }, "/" + file.path)
-                                            )
-                                          ),
-                                          React.createElement("span", { className: "playground-environment-change-badge is-" + file.operation }, file.operation),
-                                          React.createElement("span", { className: "playground-environment-change-file-stats" },
-                                            typeof file.additions === "number" && file.additions > 0
-                                              ? React.createElement("span", { className: "playground-environment-change-file-stat is-added" }, "+" + file.additions)
-                                              : null,
-                                            typeof file.deletions === "number" && file.deletions > 0
-                                              ? React.createElement("span", { className: "playground-environment-change-file-stat is-removed" }, "-" + file.deletions)
-                                              : null
-                                          )
-                                        )
-                                    )
-                                  )
-                                )
-                            )
-                          )
-                        )
-                      )
-            )
-          ),
-          React.createElement("div", { className: "playground-environment-changes-column" },
+        if (changesScreenMode === "detail") {
+          return React.createElement("div", { className: "playground-environment-changes-view is-detail" },
             React.createElement("section", { className: "playground-environment-changes-panel playground-environment-changes-detail" },
               !selectedChange || !selectedFile
                 ? React.createElement("div", { className: "playground-environment-changes-empty" }, "Select a change to inspect its diff and file state.")
                 : React.createElement(React.Fragment, null,
                     React.createElement("div", { className: "playground-environment-changes-detail-header" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environment-changes-detail-back",
+                        onClick: () => setChangesScreenMode("timeline"),
+                      },
+                        React.createElement(ArrowLeft, { width: 14, height: 14, strokeWidth: 1.75 }),
+                        React.createElement("span", null, "Back")
+                      ),
                       React.createElement("div", { className: "playground-environment-changes-detail-title-row" },
                         React.createElement("div", null,
                           React.createElement("h3", { className: "playground-environment-changes-detail-title" }, selectedFile.name || selectedFile.path),
@@ -1083,6 +1486,17 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
                             React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
                             React.createElement("span", null, "Loading file diff...")
                           )
+                        : shouldRenderDocumentPreview
+                          ? React.createElement("div", { className: "playground-environment-changes-detail-preview" },
+                              React.createElement(RunnerDocumentPreviewDrawer, {
+                                attachment: selectedFilePreviewAttachment,
+                                backendUrl,
+                                requestHeaders,
+                                inline: true,
+                                showCloseButton: false,
+                                className: "playground-environment-changes-detail-preview-drawer",
+                              })
+                            )
                         : detailError
                           ? React.createElement("div", { className: "playground-environment-changes-empty" }, detailError)
                           : selectedFile.changeKind === "deleted"
@@ -1098,6 +1512,65 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
                     )
                   )
             )
+          );
+        }
+
+        return React.createElement("div", { className: "playground-environment-changes-view is-timeline" },
+          React.createElement("section", { className: "playground-environment-changes-panel is-plain" },
+            loading
+              ? React.createElement("div", { className: "playground-environment-changes-loading" },
+                  React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                  React.createElement("span", null, "Loading environment changes...")
+                )
+              : error
+                ? React.createElement("div", { className: "playground-environment-changes-empty" }, error)
+                : filteredChanges.length === 0
+                  ? React.createElement("div", { className: "playground-environment-changes-empty" }, "No file changes have been recorded for this environment yet.")
+                  : React.createElement("div", { className: "playground-environment-changes-list" },
+                      groupedChanges.map((group) =>
+                        React.createElement("section", { key: group.key, className: "playground-environment-changes-group" },
+                          React.createElement("div", { className: "playground-environment-changes-group-heading" }, group.label),
+                          group.items.map((change) =>
+                            React.createElement("article", {
+                                key: change.id,
+                                className: "playground-environment-change-card" + (selectedChange?.id === change.id ? " is-active" : ""),
+                              },
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-environment-change-file-row",
+                                  onClick: () => openChangeDetail(change),
+                                },
+                                  React.createElement("div", { className: "playground-environment-change-card-header" },
+                                    React.createElement("div", { className: "playground-environment-change-card-copy" },
+                                      React.createElement("h3", { className: "playground-environment-change-card-title" }, buildEnvironmentChangeTitle(change)),
+                                      buildEnvironmentChangeSummary(change)
+                                        ? React.createElement("div", { className: "playground-environment-change-card-meta" }, buildEnvironmentChangeSummary(change))
+                                        : null,
+                                      buildEnvironmentChangeFileCountLabel(change)
+                                        ? React.createElement("div", { className: "playground-environment-change-card-meta" }, buildEnvironmentChangeFileCountLabel(change))
+                                        : null
+                                    ),
+                                    React.createElement("div", { className: "playground-environment-change-card-time" }, formatHistoryTimestamp(change.createdAt))
+                                  )
+                                )
+                              )
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-environment-changes-list-footer" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environment-changes-load-more",
+                          onClick: () => void handleLoadMoreChanges(),
+                          disabled: loadingMore || !hasMore,
+                        },
+                          loadingMore
+                            ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.75 })
+                            : React.createElement(List, { width: 14, height: 14, strokeWidth: 1.75 }),
+                          React.createElement("span", null, loadingMore ? "Loading..." : "Show more")
+                        )
+                      )
+                    )
           )
         );
       }

@@ -1180,6 +1180,40 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   font-weight: 500;
 }
 
+.tb-runner-chat .tb-user-turn-collapsible-copy {
+  --tb-user-turn-collapsed-lines: 10;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.tb-runner-chat .tb-user-turn-collapsible-copy:not(.is-expanded) {
+  max-height: calc(1.5em * var(--tb-user-turn-collapsed-lines));
+}
+
+.tb-runner-chat .tb-user-turn-show-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-user-turn-show-more:hover {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.tb-runner-chat .tb-user-turn-show-more-icon {
+  width: 12px;
+  height: 12px;
+}
+
 .tb-runner-chat .tb-task-preview-card {
   width: fit-content;
   max-width: 100%;

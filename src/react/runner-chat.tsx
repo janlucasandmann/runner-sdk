@@ -120,6 +120,86 @@ interface LocalAttachment {
   uploadError?: string | null;
 }
 
+function CollapsibleRunnerUserPrompt({
+  content,
+  className,
+  maxLines = 10,
+}: {
+  content: string;
+  className?: string;
+  maxLines?: number;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [content]);
+
+  useLayoutEffect(() => {
+    const node = containerRef.current;
+    if (!node) {
+      return;
+    }
+
+    const measure = () => {
+      const computedStyle = window.getComputedStyle(node);
+      const lineHeight = Number.parseFloat(computedStyle.lineHeight);
+      const collapsedHeight = Number.isFinite(lineHeight) ? lineHeight * maxLines : 0;
+      if (collapsedHeight > 0) {
+        setIsOverflowing(node.scrollHeight > collapsedHeight + 1);
+        return;
+      }
+      setIsOverflowing(node.scrollHeight > node.clientHeight + 1);
+    };
+
+    measure();
+
+    if (typeof ResizeObserver === "function") {
+      const observer = new ResizeObserver(() => {
+        measure();
+      });
+      observer.observe(node);
+      return () => observer.disconnect();
+    }
+
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [content, maxLines]);
+
+  return (
+    <>
+      <div
+        ref={containerRef}
+        className={`tb-user-turn-collapsible-copy ${isExpanded ? "is-expanded" : ""}`.trim()}
+        style={!isExpanded ? { ["--tb-user-turn-collapsed-lines" as string]: String(maxLines) } : undefined}
+      >
+        <RunnerMarkdown
+          content={content}
+          className={className}
+          softBreaks
+          disallowHeadings
+        />
+      </div>
+      {isOverflowing ? (
+        <button
+          type="button"
+          className="tb-user-turn-show-more"
+          onClick={() => setIsExpanded((current) => !current)}
+        >
+          <span>{isExpanded ? "Show less" : "Show more"}</span>
+          {isExpanded ? (
+            <LucideChevronUp className="tb-user-turn-show-more-icon" strokeWidth={1.8} />
+          ) : (
+            <LucideChevronDown className="tb-user-turn-show-more-icon" strokeWidth={1.8} />
+          )}
+        </button>
+      ) : null}
+    </>
+  );
+}
+
 type RunnerTurnStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
 type RunnerFileBrowserSource = "workspace" | "google-drive" | "one-drive" | "github" | "notion";
 type RunnerQuotedSelectionSource = "working_log" | "run_summary";
@@ -13527,11 +13607,9 @@ export function RunnerChat({
                         className="task-prompt-in-session-context tb-thread-history-anchor"
                         style={promptStyle}
                       >
-                        <RunnerMarkdown
+                        <CollapsibleRunnerUserPrompt
                           content={stripSystemTags(turn.prompt)}
                           className="tb-message-markdown tb-message-markdown-user"
-                          softBreaks
-                          disallowHeadings
                         />
                       </div>
                     ) : null}
@@ -13556,11 +13634,9 @@ export function RunnerChat({
                         ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
                         className="tb-btw-turn-prompt tb-thread-history-anchor"
                       >
-                        <RunnerMarkdown
+                        <CollapsibleRunnerUserPrompt
                           content={stripSystemTags(turn.prompt)}
                           className="tb-message-markdown tb-message-markdown-user"
-                          softBreaks
-                          disallowHeadings
                         />
                       </div>
                       {isTurnRunning && !agentMessage?.message ? (
@@ -13734,11 +13810,9 @@ export function RunnerChat({
                       ) : missionControlPreviewForTurn ? (
                         renderRunnerMissionControlPreviewCard(missionControlPreviewForTurn)
                       ) : (
-                        <RunnerMarkdown
+                        <CollapsibleRunnerUserPrompt
                           content={stripSystemTags(turn.prompt)}
                           className="tb-message-markdown tb-message-markdown-user"
-                          softBreaks
-                          disallowHeadings
                         />
                       )}
                     </div>
