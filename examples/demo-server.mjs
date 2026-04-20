@@ -9748,6 +9748,7 @@ const html = `<!doctype html>
       .playground-files-environment-select-shell {
         display: flex;
         align-items: center;
+        gap: 8px;
         min-height: var(--playground-files-nav-row-height);
         min-width: 0;
         max-width: 320px;
@@ -9809,6 +9810,15 @@ const html = `<!doctype html>
         backdrop-filter: blur(10px);
       }
 
+      .playground-files-environment-actions-menu {
+        width: 280px;
+        max-height: none;
+      }
+
+      .playground-files-environment-actions-menu .playground-files-environment-menu-body {
+        overflow: visible;
+      }
+
       .playground-files-environment-menu-title {
         padding: 12px 16px;
         color: rgba(255, 255, 255, 0.65);
@@ -9864,6 +9874,61 @@ const html = `<!doctype html>
 
       .playground-files-environment-menu-check {
         color: white;
+      }
+
+      .playground-files-environment-action-row {
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+        border: 0;
+        background: transparent;
+        color: white;
+        cursor: pointer;
+        text-align: left;
+        transition: background-color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-files-environment-action-row:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-files-environment-action-row:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .playground-files-environment-action-icon {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .playground-files-environment-action-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-files-environment-action-copy span:first-child {
+        font-size: 12px;
+        font-weight: 500;
+        color: white;
+      }
+
+      .playground-files-environment-action-copy span + span {
+        font-size: 12px;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-files-environment-action-divider {
+        height: 1px;
+        margin: 4px 16px;
+        background: rgba(255, 255, 255, 0.08);
       }
 
       .playground-files-header-icon-button {
@@ -35071,7 +35136,7 @@ ${ENVIRONMENT_CHANGES_CSS}
 
 ${ENVIRONMENT_CHANGES_SCRIPT}
 
-      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, onFileChatThreadMutated, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled }) {
+      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, onFileChatThreadMutated, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled, onOpenEnvironmentSettings, onEnvironmentMutated }) {
         const FILE_CHAT_PANEL_DEFAULT_WIDTH = 420;
         const FILES_BROWSER_RESTORE_WIDTH = 320;
         const FILES_PANE_CLOSE_THRESHOLD = 100;
@@ -35098,6 +35163,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [renameValue, setRenameValue] = useState("");
         const [viewMode, setViewMode] = useState("list");
         const [contentMode, setContentMode] = useState("files");
+        const [changesViewMode, setChangesViewMode] = useState("timeline");
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
         const [filterMode, setFilterMode] = useState("all");
@@ -35128,6 +35194,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           path: "",
           action: "",
           error: "",
+        });
+        const [fileEnvironmentMutationState, setFileEnvironmentMutationState] = useState({
+          environmentId: "",
+          action: "",
         });
 
         const loadEnvironmentFolder = useCallback(async (environmentId, folderPath = "", options = {}) => {
@@ -37230,6 +37300,229 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setSelectedEnvironmentId(nextEnvironmentId);
         }
 
+        function buildFilesEnvironmentClonePayload(environment, nextName) {
+          const normalizedEnvironment = normalizePlaygroundEnvironmentRecord({
+            ...environment,
+            name: nextName,
+          });
+          const profile = getPlaygroundEnvironmentComputeProfileConfig(normalizedEnvironment.computeProfile);
+          const runtimes = Object.fromEntries(
+            Object.entries(normalizedEnvironment?.runtimes || {}).filter(([, value]) => typeof value === "string" && value.trim())
+          );
+          const packages = {
+            system: (normalizedEnvironment?.packages?.system || []).map((value) => String(value || "").trim()).filter(Boolean),
+            python: (normalizedEnvironment?.packages?.python || []).map((value) => String(value || "").trim()).filter(Boolean),
+            node: (normalizedEnvironment?.packages?.node || []).map((value) => String(value || "").trim()).filter(Boolean),
+          };
+          const environmentVariables = (normalizedEnvironment?.environmentVariables || [])
+            .map((item) => ({
+              key: String(item?.key || "").trim(),
+              value: typeof item?.value === "string" ? item.value : "",
+            }))
+            .filter((item) => item.key);
+          const secrets = (normalizedEnvironment?.secrets || [])
+            .map((secret) => ({
+              key: String(secret?.key || "").trim(),
+              value: typeof secret?.value === "string" ? secret.value : "",
+            }))
+            .filter((secret) => secret.key);
+          const mcpServers = (normalizedEnvironment?.mcpServers || [])
+            .map((server) => ({
+              id: server?.id,
+              name: String(server?.name || "").trim(),
+              enabled: server?.enabled !== false,
+              type: server?.type === "http" ? "http" : "stdio",
+              command: typeof server?.command === "string" ? server.command : "",
+              url: typeof server?.url === "string" ? server.url : "",
+              bearerToken: typeof server?.bearerToken === "string" ? server.bearerToken : "",
+            }))
+            .filter((server) => server.name);
+          const documentation = (normalizedEnvironment?.documentation || [])
+            .map((document, index) => ({
+              id: typeof document?.id === "string" && document.id.trim() ? document.id : "doc-" + index,
+              name: String(document?.name || "").trim() || ("Document " + (index + 1)),
+              content: typeof document?.content === "string" ? document.content : "",
+              mimeType: typeof document?.mimeType === "string" && document.mimeType.trim() ? document.mimeType : "text/plain",
+            }))
+            .filter((document) => document.name || document.content);
+          const metadata = clonePlaygroundEnvironmentMetadata(normalizedEnvironment?.metadata);
+          const pricing = metadata.pricing && typeof metadata.pricing === "object" && !Array.isArray(metadata.pricing)
+            ? { ...metadata.pricing }
+            : {};
+          pricing.minutePrice = profile.minutePrice;
+          return {
+            name: String(nextName || "").trim() || "Forked Computer",
+            description: typeof normalizedEnvironment?.description === "string" ? normalizedEnvironment.description : "",
+            runtimes,
+            packages,
+            dockerfileExtensions: typeof normalizedEnvironment?.dockerfileExtensions === "string" ? normalizedEnvironment.dockerfileExtensions : "",
+            environmentVariables,
+            secrets,
+            setupScripts: (normalizedEnvironment?.setupScripts || []).map((value) => String(value || "")).filter((value) => value.trim()),
+            mcpServers,
+            documentation,
+            internetAccess: normalizedEnvironment?.internetAccess !== false,
+            metadata: {
+              ...metadata,
+              computeProfile: profile.id,
+              computeResources: {
+                cpuCores: profile.cpuCores,
+                memoryMb: profile.memoryMb,
+              },
+              pricing,
+              guiEnabled: profile.guiEnabled,
+              officeAppsEnabled: normalizedEnvironment?.officeAppsEnabled === true && profile.id === "desktop",
+            },
+          };
+        }
+
+        async function createFilesEnvironmentClone(environment, nextName) {
+          const payload = buildFilesEnvironmentClonePayload(environment, nextName);
+          const createResponse = await fetch(backendUrl + "/environments", {
+            method: "POST",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: payload.name,
+              description: payload.description,
+              environmentVariables: payload.environmentVariables,
+              secrets: payload.secrets,
+              setupScripts: payload.setupScripts,
+              mcpServers: payload.mcpServers,
+              documentation: payload.documentation,
+              internetAccess: payload.internetAccess,
+              metadata: payload.metadata,
+            }),
+          });
+          const createData = await createResponse.json().catch(() => ({}));
+          if (!createResponse.ok) {
+            throw new Error(createData?.message || createData?.error || "Failed to fork computer.");
+          }
+
+          const createdEnvironment = getPlaygroundEnvironmentResponseRecord(createData);
+          if (!createdEnvironment?.id) {
+            throw new Error("Computer creation response did not include an id.");
+          }
+
+          const updateResponse = await fetch(backendUrl + "/environments/" + encodeURIComponent(createdEnvironment.id), {
+            method: "PUT",
+            headers: {
+              ...requestHeaders,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          const updateData = await updateResponse.json().catch(() => ({}));
+          if (!updateResponse.ok) {
+            throw new Error(updateData?.message || updateData?.error || "Failed to configure the forked computer.");
+          }
+
+          return getPlaygroundEnvironmentResponseRecord(updateData) || normalizePlaygroundEnvironmentRecord({
+            ...createdEnvironment,
+            ...payload,
+          });
+        }
+
+        function handleOpenCurrentEnvironmentSettings() {
+          const normalizedEnvironmentId = String(selectedEnvironment?.id || "").trim();
+          if (!normalizedEnvironmentId) {
+            return;
+          }
+          setToolbarPopover("");
+          if (typeof onOpenEnvironmentSettings === "function") {
+            onOpenEnvironmentSettings(normalizedEnvironmentId);
+          }
+        }
+
+        async function handleForkCurrentEnvironment() {
+          const targetEnvironment = selectedEnvironment;
+          const normalizedEnvironmentId = String(targetEnvironment?.id || "").trim();
+          if (!normalizedEnvironmentId) {
+            return;
+          }
+
+          const suggestedName = ((targetEnvironment?.name || "Computer").trim() || "Computer") + " Copy";
+          const requestedName = window.prompt("Fork computer name", suggestedName);
+          const nextName = String(requestedName || "").trim().replace(/\s+/g, " ");
+          if (!nextName) {
+            return;
+          }
+
+          setToolbarPopover("");
+          setActionError("");
+          setFileEnvironmentMutationState({
+            environmentId: normalizedEnvironmentId,
+            action: "fork",
+          });
+
+          try {
+            const savedEnvironment = await createFilesEnvironmentClone(targetEnvironment, nextName);
+            if (typeof onEnvironmentMutated === "function") {
+              await onEnvironmentMutated();
+            }
+            if (savedEnvironment?.id && typeof onOpenEnvironmentSettings === "function") {
+              onOpenEnvironmentSettings(savedEnvironment.id);
+            } else if (savedEnvironment?.id) {
+              setSelectedEnvironmentId(savedEnvironment.id);
+            }
+          } catch (error) {
+            setActionError(error instanceof Error ? error.message : "Failed to fork computer.");
+          } finally {
+            setFileEnvironmentMutationState({
+              environmentId: "",
+              action: "",
+            });
+          }
+        }
+
+        async function handleDeleteCurrentEnvironment() {
+          const targetEnvironment = selectedEnvironment;
+          const normalizedEnvironmentId = String(targetEnvironment?.id || "").trim();
+          if (!normalizedEnvironmentId) {
+            return;
+          }
+          if (targetEnvironment?.isSystem || targetEnvironment?.isDefault) {
+            setToolbarPopover("");
+            setActionError("Default and system computers cannot be deleted.");
+            return;
+          }
+          if (!window.confirm("Delete this computer?")) {
+            return;
+          }
+
+          const fallbackEnvironment = orderedEnvironments.find((environment) => environment.id !== normalizedEnvironmentId) || null;
+          setToolbarPopover("");
+          setActionError("");
+          setFileEnvironmentMutationState({
+            environmentId: normalizedEnvironmentId,
+            action: "delete",
+          });
+
+          try {
+            const response = await fetch(backendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId), {
+              method: "DELETE",
+              headers: requestHeaders,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to delete computer.");
+            }
+            setSelectedEnvironmentId(String(fallbackEnvironment?.id || "").trim());
+            if (typeof onEnvironmentMutated === "function") {
+              await onEnvironmentMutated();
+            }
+          } catch (error) {
+            setActionError(error instanceof Error ? error.message : "Failed to delete computer.");
+          } finally {
+            setFileEnvironmentMutationState({
+              environmentId: "",
+              action: "",
+            });
+          }
+        }
+
         function renderEntryName(entry) {
           if (renamingPath !== entry.path) {
             return React.createElement("div", { className: "playground-files-entry-name" }, entry.name);
@@ -37942,6 +38235,64 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           );
         }
 
+        function renderEnvironmentActionsMenu() {
+          const normalizedEnvironmentId = String(selectedEnvironment?.id || "").trim();
+          const isForkingEnvironment = fileEnvironmentMutationState.action === "fork" && fileEnvironmentMutationState.environmentId === normalizedEnvironmentId;
+          const isDeletingEnvironment = fileEnvironmentMutationState.action === "delete" && fileEnvironmentMutationState.environmentId === normalizedEnvironmentId;
+          const isDeleteBlocked = !normalizedEnvironmentId || selectedEnvironment?.isSystem || selectedEnvironment?.isDefault;
+
+          return React.createElement("div", { className: "playground-files-environment-menu playground-files-environment-actions-menu" },
+            React.createElement("div", { className: "playground-files-environment-menu-title" }, selectedEnvironment?.name || "Computer"),
+            React.createElement("div", { className: "playground-files-environment-menu-body" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-environment-action-row",
+                onClick: handleOpenCurrentEnvironmentSettings,
+                disabled: !normalizedEnvironmentId || isForkingEnvironment || isDeletingEnvironment,
+              },
+                React.createElement(Settings2, { className: "playground-files-environment-action-icon", strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-files-environment-action-copy" },
+                  React.createElement("span", null, "Computer Settings"),
+                  React.createElement("span", null, "Open this computer in Environments")
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-environment-action-row",
+                onClick: () => {
+                  void handleForkCurrentEnvironment();
+                },
+                disabled: !normalizedEnvironmentId || isForkingEnvironment || isDeletingEnvironment,
+              },
+                React.createElement(GitFork, { className: "playground-files-environment-action-icon", strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-files-environment-action-copy" },
+                  React.createElement("span", null, isForkingEnvironment ? "Forking Computer..." : "Fork Computer"),
+                  React.createElement("span", null, "Create a copy of this computer")
+                )
+              ),
+              React.createElement("div", { className: "playground-files-environment-action-divider" }),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-environment-action-row",
+                onClick: () => {
+                  void handleDeleteCurrentEnvironment();
+                },
+                disabled: isDeleteBlocked || isForkingEnvironment || isDeletingEnvironment,
+              },
+                React.createElement(Trash2, { className: "playground-files-environment-action-icon", strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-files-environment-action-copy" },
+                  React.createElement("span", null, isDeletingEnvironment ? "Deleting Computer..." : "Delete Computer"),
+                  React.createElement("span", null,
+                    isDeleteBlocked
+                      ? "Default and system computers cannot be deleted"
+                      : "Permanently remove this computer"
+                  )
+                )
+              )
+            )
+          );
+        }
+
         function renderFilesBrowserContent() {
           return isCurrentEnvironmentLoading
             ? React.createElement("div", { className: "playground-files-state" },
@@ -38001,6 +38352,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             actorFilter: changesActorFilter,
             onAvailableActorsChange: setAvailableChangeActors,
             onShowInFiles: navigateToFilesSelection,
+            onScreenModeChange: setChangesViewMode,
           });
         }
 
@@ -38088,7 +38440,20 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                             )
                           )
                         )
-                      : null
+                      : null,
+                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "environment-actions" ? " is-active" : ""),
+                        onClick: () => toggleToolbarPopover("environment-actions"),
+                        disabled: !selectedEnvironmentId,
+                        title: "Computer actions",
+                        "aria-label": "Computer actions",
+                      }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
+                      toolbarPopover === "environment-actions"
+                        ? renderEnvironmentActionsMenu()
+                        : null
+                    )
                   ),
                   React.createElement("div", { className: "content-mode-switch playground-files-topbar-mode-switch" },
                     React.createElement("button", {
@@ -38096,6 +38461,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       className: "content-mode-button" + (contentMode === "files" ? " is-active" : ""),
                       onClick: () => {
                         setContentMode("files");
+                        setChangesViewMode("timeline");
                         setToolbarPopover("");
                       },
                     }, "Files"),
@@ -38106,6 +38472,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                         setContentMode("changes");
                         setIsPreviewOpen(false);
                         setIsFileChatOpen(false);
+                        setChangesViewMode("timeline");
                         setToolbarPopover("");
                       },
                     }, "Changes")
@@ -38218,134 +38585,136 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       : null
                   )
                 ),
-                React.createElement("div", { className: "playground-files-control-row" },
-                  React.createElement("div", { className: "playground-files-control-actions" },
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button" + (toolbarPopover === "filter" || (isChangesMode ? hasActiveChangesFilters : filterMode !== "all") ? " is-active" : ""),
-                        onClick: () => toggleToolbarPopover("filter"),
-                      },
-                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Filter")
-                      ),
-                      toolbarPopover === "filter"
-                        ? isChangesMode
-                          ? renderChangesFilterMenu()
-                          : React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                              React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeFilterOption.label),
-                              filterOptions.map((option) =>
-                                React.createElement("button", {
-                                    key: option.id,
-                                    type: "button",
-                                    className: "playground-files-toolbar-menu-item" + (filterMode === option.id ? " is-active" : ""),
-                                    onClick: () => {
-                                      setFilterMode(option.id);
-                                      setToolbarPopover("");
-                                    },
-                                  },
-                                    React.createElement("span", { className: "playground-files-toolbar-menu-check" }, filterMode === option.id ? "•" : ""),
-                                    React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                      React.createElement("span", null, option.label),
-                                      React.createElement("span", null, option.description)
+                !(isChangesMode && changesViewMode === "detail")
+                  ? React.createElement("div", { className: "playground-files-control-row" },
+                      React.createElement("div", { className: "playground-files-control-actions" },
+                        React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-files-control-button" + (toolbarPopover === "filter" || (isChangesMode ? hasActiveChangesFilters : filterMode !== "all") ? " is-active" : ""),
+                            onClick: () => toggleToolbarPopover("filter"),
+                          },
+                            React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("span", null, "Filter")
+                          ),
+                          toolbarPopover === "filter"
+                            ? isChangesMode
+                              ? renderChangesFilterMenu()
+                              : React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
+                                  React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeFilterOption.label),
+                                  filterOptions.map((option) =>
+                                    React.createElement("button", {
+                                        key: option.id,
+                                        type: "button",
+                                        className: "playground-files-toolbar-menu-item" + (filterMode === option.id ? " is-active" : ""),
+                                        onClick: () => {
+                                          setFilterMode(option.id);
+                                          setToolbarPopover("");
+                                        },
+                                      },
+                                        React.createElement("span", { className: "playground-files-toolbar-menu-check" }, filterMode === option.id ? "•" : ""),
+                                        React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                          React.createElement("span", null, option.label),
+                                          React.createElement("span", null, option.description)
+                                        )
+                                      )
+                                  )
+                                )
+                            : null
+                        ),
+                        !isChangesMode
+                          ? React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-control-button" + (toolbarPopover === "sort" || sortMode !== "name-asc" ? " is-active" : ""),
+                                onClick: () => toggleToolbarPopover("sort"),
+                              },
+                                React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("span", null, "Sort")
+                              ),
+                              toolbarPopover === "sort"
+                                ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
+                                    React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeSortOption.label),
+                                    sortOptions.map((option) =>
+                                      React.createElement("button", {
+                                          key: option.id,
+                                          type: "button",
+                                          className: "playground-files-toolbar-menu-item" + (sortMode === option.id ? " is-active" : ""),
+                                          onClick: () => {
+                                            setSortMode(option.id);
+                                            setToolbarPopover("");
+                                          },
+                                        },
+                                          React.createElement("span", { className: "playground-files-toolbar-menu-check" }, sortMode === option.id ? "•" : ""),
+                                          React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                                            React.createElement("span", null, option.label)
+                                          )
+                                        )
                                     )
                                   )
-                              )
+                                : null
                             )
-                        : null
-                    ),
-                    !isChangesMode
-                      ? React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                          : null,
+                        React.createElement("div", { className: "playground-files-toolbar-anchor" },
                           React.createElement("button", {
                             type: "button",
-                            className: "playground-files-control-button" + (toolbarPopover === "sort" || sortMode !== "name-asc" ? " is-active" : ""),
-                            onClick: () => toggleToolbarPopover("sort"),
+                            className: "playground-files-control-button" + (toolbarPopover === "projects" || projectFilterScope ? " is-active" : ""),
+                            onClick: () => toggleToolbarPopover("projects"),
+                            title: isChangesMode ? "Filter changes by project" : "Filter files by project",
                           },
-                            React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Sort")
+                            React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("span", null, "Projects")
                           ),
-                          toolbarPopover === "sort"
-                            ? React.createElement("div", { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                                React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeSortOption.label),
-                                sortOptions.map((option) =>
-                                  React.createElement("button", {
-                                      key: option.id,
-                                      type: "button",
-                                      className: "playground-files-toolbar-menu-item" + (sortMode === option.id ? " is-active" : ""),
-                                      onClick: () => {
-                                        setSortMode(option.id);
-                                        setToolbarPopover("");
-                                      },
-                                    },
-                                      React.createElement("span", { className: "playground-files-toolbar-menu-check" }, sortMode === option.id ? "•" : ""),
-                                      React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                        React.createElement("span", null, option.label)
-                                      )
-                                    )
-                                )
-                              )
+                          toolbarPopover === "projects"
+                            ? renderProjectScopeMenu()
                             : null
                         )
-                      : null,
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button" + (toolbarPopover === "projects" || projectFilterScope ? " is-active" : ""),
-                        onClick: () => toggleToolbarPopover("projects"),
-                        title: isChangesMode ? "Filter changes by project" : "Filter files by project",
-                      },
-                        React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Projects")
                       ),
-                      toolbarPopover === "projects"
-                        ? renderProjectScopeMenu()
+                      React.createElement("div", { className: "playground-files-control-spacer" }),
+                      !isChangesMode
+                        ? React.createElement("div", { className: "playground-files-path-strip" },
+                            React.createElement("div", { className: "playground-files-browser-nav" },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-nav-button",
+                                onClick: handleGoBack,
+                                disabled: !canGoBack,
+                                title: "Go back",
+                              }, React.createElement(ChevronLeft, { strokeWidth: 1.8, width: 14, height: 14 })),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-nav-button",
+                                onClick: handleGoForward,
+                                disabled: !canGoForward,
+                                title: "Go forward",
+                              }, React.createElement(ChevronRight, { strokeWidth: 1.8, width: 14, height: 14 }))
+                            ),
+                            React.createElement("div", { className: "playground-files-breadcrumbs" },
+                              React.createElement("img", {
+                                className: "playground-files-breadcrumb-icon",
+                                src: PLAYGROUND_FOLDER_ICON_URL,
+                                alt: "",
+                                "aria-hidden": "true",
+                              }),
+                              breadcrumbs.map((crumb, index) =>
+                                React.createElement("button", {
+                                    key: crumb.id || "root",
+                                    type: "button",
+                                    className: "playground-files-breadcrumb" + (index === breadcrumbs.length - 1 ? " is-active" : ""),
+                                    onClick: () => handleBreadcrumbClick(crumb.id),
+                                  },
+                                    index > 0
+                                      ? React.createElement("span", { className: "playground-files-breadcrumb-separator" }, "/")
+                                      : null,
+                                    React.createElement("span", null, index === 0 ? "/" : crumb.name)
+                                  )
+                              ),
+                              React.createElement("span", { className: "playground-files-browser-summary" }, visibleEntryCount + " items")
+                            )
+                          )
                         : null
                     )
-                  ),
-                  React.createElement("div", { className: "playground-files-control-spacer" }),
-                  !isChangesMode
-                    ? React.createElement("div", { className: "playground-files-path-strip" },
-                        React.createElement("div", { className: "playground-files-browser-nav" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-nav-button",
-                            onClick: handleGoBack,
-                            disabled: !canGoBack,
-                            title: "Go back",
-                          }, React.createElement(ChevronLeft, { strokeWidth: 1.8, width: 14, height: 14 })),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-nav-button",
-                            onClick: handleGoForward,
-                            disabled: !canGoForward,
-                            title: "Go forward",
-                          }, React.createElement(ChevronRight, { strokeWidth: 1.8, width: 14, height: 14 }))
-                        ),
-                        React.createElement("div", { className: "playground-files-breadcrumbs" },
-                          React.createElement("img", {
-                            className: "playground-files-breadcrumb-icon",
-                            src: PLAYGROUND_FOLDER_ICON_URL,
-                            alt: "",
-                            "aria-hidden": "true",
-                          }),
-                          breadcrumbs.map((crumb, index) =>
-                            React.createElement("button", {
-                                key: crumb.id || "root",
-                                type: "button",
-                                className: "playground-files-breadcrumb" + (index === breadcrumbs.length - 1 ? " is-active" : ""),
-                                onClick: () => handleBreadcrumbClick(crumb.id),
-                              },
-                                index > 0
-                                  ? React.createElement("span", { className: "playground-files-breadcrumb-separator" }, "/")
-                                  : null,
-                                React.createElement("span", null, index === 0 ? "/" : crumb.name)
-                              )
-                          ),
-                          React.createElement("span", { className: "playground-files-browser-summary" }, visibleEntryCount + " items")
-                        )
-                      )
-                    : null
-                ),
+                  : null,
                 actionError
                   ? React.createElement("div", { className: "playground-files-action-error" }, actionError)
                   : null
@@ -38409,6 +38778,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         environments,
         initialEnvironmentId,
         navigationToken = 0,
+        navigationTargetEnvironmentId = "",
         onEnvironmentMutated,
         onRequestSidebarCollapse,
         apiKey = "",
@@ -41295,8 +41665,30 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }, [resourceMode]);
 
         useEffect(() => {
+          const normalizedTargetEnvironmentId = String(navigationTargetEnvironmentId || "").trim();
+          if (normalizedTargetEnvironmentId && orderedEnvironments.some((environment) => environment.id === normalizedTargetEnvironmentId)) {
+            commitDraftEnvironmentIfDirty();
+            void commitDraftServerIfDirty();
+            setToolbarPopover("");
+            setSearchPopupQuery("");
+            setEnvironmentsHomeActiveResourceCommand("");
+            setEnvironmentsHomeResourceCommandRequest(null);
+            setEnvironmentListActionMenuState(null);
+            setEnvironmentActionsPopoverOpen(false);
+            setServerActionsPopoverOpen(false);
+            setServerFileActionsPopoverOpen(false);
+            setDatabaseActionsPopoverOpen(false);
+            setResourceMode("computers");
+            setIsHomeViewActive(false);
+            setSelectedEnvironmentId(normalizedTargetEnvironmentId);
+            setSelectedServerId("");
+            setSelectedDatabaseId("");
+            setSelectedDatabaseCollectionId("");
+            setSelectedDatabaseDocumentId("");
+            return;
+          }
           showEnvironmentsHome();
-        }, [navigationToken]);
+        }, [navigationTargetEnvironmentId, navigationToken, orderedEnvironments]);
 
         useEffect(() => {
           setServerAuthSearchQuery("");
@@ -60155,6 +60547,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           isSaving: false,
           error: "",
         });
+        const [releaseDeletePending, setReleaseDeletePending] = useState(false);
         const releaseDescriptionTextareaRef = useRef(null);
         const [isReleaseDescriptionEditing, setIsReleaseDescriptionEditing] = useState(false);
         const [selectedTaskId, setSelectedTaskId] = useState("");
@@ -68942,6 +69335,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setReleaseComposerMode("create");
           setReleaseDraft(buildProjectReleaseDraft(selectedProject));
           setIsReleaseDescriptionEditing(false);
+          setReleaseDeletePending(false);
           setReleaseSaveState({
             isSaving: false,
             error: "",
@@ -68960,6 +69354,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setReleaseComposerMode("edit");
           setReleaseDraft(normalizedRelease);
           setIsReleaseDescriptionEditing(false);
+          setReleaseDeletePending(false);
           setReleaseSaveState({
             isSaving: false,
             error: "",
@@ -68975,6 +69370,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setReleaseComposerMode("create");
           setReleaseDraft(buildPlaygroundDefaultReleaseDraft());
           setIsReleaseDescriptionEditing(false);
+          setReleaseDeletePending(false);
           setReleaseSaveState({
             isSaving: false,
             error: "",
@@ -69024,6 +69420,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             isSaving: true,
             error: "",
           });
+          setReleaseDeletePending(false);
 
           try {
             const response = await fetch(
@@ -69070,6 +69467,62 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             setReleaseSaveState({
               isSaving: false,
               error: error instanceof Error ? error.message : (isEditingRelease ? "Failed to update release." : "Failed to create release."),
+            });
+          }
+        }
+
+        async function handleDeleteRelease(releaseId) {
+          const resolvedReleaseId = String(releaseId || "").trim();
+          if (!resolvedReleaseId) {
+            return;
+          }
+          if (!window.confirm("Delete this release? Tickets will stay in the project and simply lose their release assignment.")) {
+            return;
+          }
+
+          setReleaseDeletePending(true);
+          setReleaseSaveState({
+            isSaving: false,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              backendUrl + "/tasks/releases/" + encodeURIComponent(resolvedReleaseId),
+              {
+                method: "DELETE",
+                headers: requestHeaders,
+              },
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to delete release.");
+            }
+
+            const nextReleases = releases.filter((release) => release.id !== resolvedReleaseId);
+            const nextTasks = tasks.map((task) =>
+              task?.releaseId === resolvedReleaseId
+                ? { ...task, releaseId: null }
+                : task
+            );
+
+            setReleases(nextReleases);
+            setTasks(nextTasks);
+            setDraftTask((current) =>
+              current && current.releaseId === resolvedReleaseId
+                ? { ...current, releaseId: null }
+                : current
+            );
+            if (selectedReleaseId === resolvedReleaseId) {
+              setSelectedReleaseId("");
+            }
+            syncProjectSummary(selectedProjectId, nextTasks, sprints, nextReleases, selectedProjectSummary);
+            closeReleaseComposer();
+          } catch (error) {
+            setReleaseDeletePending(false);
+            setReleaseSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to delete release.",
             });
           }
         }
@@ -72558,6 +73011,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
 
           const isEditingRelease = releaseComposerMode === "edit" && Boolean(releaseDraft?.id);
+          const isReleaseActionPending = releaseSaveState.isSaving || releaseDeletePending;
 
           return React.createElement("div", {
               className: "playground-tasks-project-modal-backdrop",
@@ -72668,15 +73122,25 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, releaseSaveState.error)
                   : null,
                 React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  isEditingRelease
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        style: { marginRight: "auto" },
+                        onClick: () => void handleDeleteRelease(releaseDraft.id),
+                        disabled: isReleaseActionPending,
+                      }, releaseDeletePending ? "Deleting..." : "Delete")
+                    : null,
                   React.createElement("button", {
                     type: "button",
                     className: "playground-environments-action-button",
                     onClick: () => closeReleaseComposer(),
+                    disabled: isReleaseActionPending,
                   }, "Cancel"),
                   React.createElement("button", {
                     type: "submit",
                     className: "playground-environments-action-button is-primary",
-                    disabled: releaseSaveState.isSaving || !String(releaseDraft.name || "").trim(),
+                    disabled: isReleaseActionPending || !String(releaseDraft.name || "").trim(),
                   }, releaseSaveState.isSaving
                     ? (isEditingRelease ? "Saving..." : "Creating...")
                     : (isEditingRelease ? "Save Release" : "Create Release"))
@@ -72797,6 +73261,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           headerTitle,
           openTaskCount,
           headerDescription,
+          headerAction = null,
           primaryActions,
           toolbarRef,
           toolbarPopover,
@@ -73218,7 +73683,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("div", { className: "playground-tasks-backlog-header-row" },
                   React.createElement("div", { className: "playground-tasks-backlog-header-main" },
                     React.createElement("div", { className: "playground-tasks-backlog-heading" }, headerTitle)
-                  )
+                  ),
+                  headerAction || null
                 ),
                 React.createElement("div", { className: "playground-tasks-backlog-header-row is-secondary" },
                   React.createElement(PlaygroundTaskDescriptionMarkdown, {
@@ -73380,10 +73846,21 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               ? (selectedRelease.description || formatPlaygroundTaskReleaseDateRange(selectedRelease) || "No release description yet.")
               : (selectedProject.description || selectedProject.instructions || "No project instructions yet.")
           ).trim();
+          const backlogHeaderAction = isReleaseBacklogView && selectedRelease
+            ? React.createElement("button", {
+                type: "button",
+                className: "playground-files-control-button",
+                onClick: () => openReleaseComposerForEdit(selectedRelease),
+              },
+                React.createElement(Settings2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Settings")
+              )
+            : null;
           return renderBacklogTaskListView({
             headerTitle: backlogHeaderTitle,
             openTaskCount: openScopedBacklogTaskCount,
             headerDescription: backlogHeaderDescription,
+            headerAction: backlogHeaderAction,
             primaryActions: React.createElement(React.Fragment, null,
               React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
                 React.createElement("button", {
@@ -77367,6 +77844,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [sidebarOpen, setSidebarOpen] = useState(true);
         const [activePage, setActivePage] = useState("thread");
         const [environmentsOpenToken, setEnvironmentsOpenToken] = useState(0);
+        const [environmentsNavigationTargetId, setEnvironmentsNavigationTargetId] = useState("");
         const [accountMenuOpen, setAccountMenuOpen] = useState(false);
         const [renderedAccountMenu, setRenderedAccountMenu] = useState(false);
         const [accountMenuPhase, setAccountMenuPhase] = useState("idle");
@@ -83803,6 +84281,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function handleOpenEnvironmentsShortcut() {
+          setEnvironmentsNavigationTargetId("");
           setActivePage("environments");
           setEnvironmentsOpenToken((current) => current + 1);
         }
@@ -91891,6 +92370,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                   current && current.token === token ? null : current
                                 ));
                               },
+                              onOpenEnvironmentSettings: (nextEnvironmentId) => {
+                                const normalizedEnvironmentId = String(nextEnvironmentId || "").trim();
+                                if (normalizedEnvironmentId) {
+                                  setEnvironmentsNavigationTargetId(normalizedEnvironmentId);
+                                  setEnvironmentId(normalizedEnvironmentId);
+                                }
+                                setActivePage("environments");
+                                setEnvironmentsOpenToken((current) => current + 1);
+                              },
+                              onEnvironmentMutated: async () => {
+                                await refreshEnvironments();
+                              },
                               onRequestSidebarCollapse: () => {
                                 setSidebarOpen(false);
                               },
@@ -91914,6 +92405,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               preferredEnvironmentId: resolvedEnvironmentId || "",
                               preferredAgentId: resolvedPreferredAgentId || "",
                               navigationToken: environmentsOpenToken,
+                              navigationTargetEnvironmentId: environmentsNavigationTargetId,
                               onPreferredAgentChange: (nextAgentId) => {
                                 setPreferredAgentId(String(nextAgentId || "").trim());
                               },

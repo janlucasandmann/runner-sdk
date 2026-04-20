@@ -24,7 +24,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         align-items: center;
         gap: 18px;
-        padding-top: 32px;
+        padding-top: 20px;
       }
 
       .playground-project-overview-summary-icon {
@@ -83,7 +83,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-summary-title {
         margin: 0;
-        font-size: 26px;
+        font-size: 24px;
         line-height: 1;
         font-weight: 500;
         letter-spacing: -0.04em;
@@ -448,14 +448,14 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         border-bottom: 1px solid transparent;
         background: transparent;
         color: rgba(255, 255, 255, 0.5);
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1;
-        font-weight: 500;
+        font-weight: 400;
         cursor: pointer;
       }
 
       .playground-project-overview-chart-tab.is-active {
-        border-bottom-color: #4da3ff;
+        border-bottom-color: rgba(255, 255, 255, 0.5);
         color: rgba(255, 255, 255, 0.96);
       }
 
@@ -512,7 +512,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         align-items: center;
         justify-content: flex-start;
         min-height: 24px;
-        margin-top: 12px;
+        margin-top: -10px;
       }
 
       .playground-project-overview-chart-footer-link {
@@ -522,7 +522,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         padding: 0;
         border: 0;
         background: transparent;
-        color: #4da3ff;
+        color: rgba(255, 255, 255, 0.96);
         font-size: 12px;
         line-height: 1;
         font-weight: 500;
@@ -530,7 +530,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-chart-footer-link:hover {
-        color: #7bb8ff;
+        color: rgba(255, 255, 255, 0.76);
       }
 
       .playground-project-overview-view .playground-tasks-project-panel-grid > * {
@@ -566,8 +566,53 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         margin-bottom: 32px;
       }
 
+      .playground-project-overview-empty-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        min-height: 180px;
+        padding: 20px 18px;
+        margin-bottom: 32px;
+        border-radius: 15px;
+        border: 1px dashed rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.025);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+        text-align: center;
+      }
+
+      .playground-project-overview-empty-card.is-compact {
+        min-height: 156px;
+      }
+
+      .playground-project-overview-empty-icon {
+        width: 24px;
+        height: 24px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-project-overview-empty-title {
+        font-size: 13px;
+        line-height: 1.3;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-empty-copy {
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-project-overview-empty-action {
+        margin-top: 4px;
+      }
+
       .playground-project-overview-panel-plain .playground-plugins-section-title {
-        font-size: 14px;
+        font-size: 13px;
+        font-weight: 400;
       }
 
       .playground-project-overview-files-section {
@@ -586,7 +631,13 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-files-section .playground-plugins-section-title {
-        font-size: 14px;
+        font-size: 13px;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-files-section .playground-tasks-detail-section-title {
+        font-size: 13px;
+        font-weight: 400;
       }
 
       .playground-project-overview-files-section .playground-tasks-attachments {
@@ -712,6 +763,49 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         flex-direction: column;
         gap: 10px;
         margin-bottom: 32px;
+      }
+
+      .playground-project-overview-release-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+
+      .playground-project-overview-release-card {
+        width: 100%;
+      }
+
+      .playground-project-overview-release-card .playground-tasks-backlog-title {
+        font-size: 12px;
+        margin-left: 5px;
+      }
+
+      .playground-project-overview-release-icon {
+        background: linear-gradient(180deg, rgb(103, 80, 255) 0%, rgba(80, 58, 220, 1) 100%);
+      }
+
+      .playground-project-overview-release-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+        min-width: 0;
+        flex: 0 0 auto;
+      }
+
+      .playground-project-overview-release-dates {
+        font-size: 12px;
+        line-height: 1.35;
+        color: rgba(255, 255, 255, 0.56);
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-release-settings-button {
+        width: 24px;
+        min-width: 24px;
+        height: 24px;
+        padding: 0;
       }
 
       .playground-project-overview-plugins-list {
@@ -1356,7 +1450,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     textAnchor: "end",
                     dominantBaseline: "middle",
                     fill: "rgba(255,255,255,0.4)",
-                    fontSize: "12",
+                    fontSize: "10",
                     fontFamily: "Inter, sans-serif",
                     fontWeight: "400",
                   }, tickFormatter(tickValue))
@@ -1396,7 +1490,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         y: svgHeight - 8,
                         textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
                         fill: "rgba(255,255,255,0.4)",
-                        fontSize: "12",
+                        fontSize: "10",
                         fontFamily: "Inter, sans-serif",
                         fontWeight: "400",
                       }, label)
@@ -1445,7 +1539,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const frameHeight = 252;
           const labelBandHeight = 26;
           const outerPaddingX = 0;
-          const outerPaddingTop = 8;
+          const outerPaddingTop = 0;
           const outerPaddingBottom = 4;
           const gridGapY = 8;
           const labelColumnIndexes = (() => {
@@ -1569,7 +1663,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                           textAnchor: isFirstLabel ? "start" : (isLastLabel ? "end" : "middle"),
                           dominantBaseline: "hanging",
                           fill: "rgba(255,255,255,0.42)",
-                          fontSize: "12",
+                          fontSize: "10",
                           fontFamily: "Inter, sans-serif",
                           fontWeight: "400",
                         }, labelText)
@@ -2100,6 +2194,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             };
           })();
           const visibleOverviewTasks = overviewVisibleTasks.slice(0, 5);
+          const overviewVisibleReleases = Array.isArray(filteredReleases)
+            ? filteredReleases.slice(0, 5)
+            : [];
           const visibleProjectThreads = filteredProjectThreads.slice(0, Math.max(5, Number(projectOverviewVisibleThreadCount) || 5));
           const hasMoreProjectThreads = filteredProjectThreads.length > visibleProjectThreads.length;
           const filteredProjectFileActivityItems = (projectOverviewFileActivityState?.items || [])
@@ -2270,6 +2367,74 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     fill: "currentColor",
                     "aria-hidden": "true",
                   })
+                )
+              )
+            );
+          }
+
+          function renderOverviewReleaseRow(release) {
+            const releaseId = String(release?.id || "").trim();
+            const deadlineLabel = typeof formatPlaygroundTaskReleaseDateRange === "function"
+              ? formatPlaygroundTaskReleaseDateRange(release)
+              : "";
+            const dateLabel = deadlineLabel && deadlineLabel !== "No dates" ? deadlineLabel : "No deadlines";
+            const openReleaseBacklog = () => {
+              if (typeof handleSelectRelease === "function") {
+                handleSelectRelease(releaseId);
+              } else if (typeof setSelectedReleaseId === "function") {
+                setSelectedReleaseId(releaseId);
+              }
+              if (typeof setTaskView === "function") {
+                setTaskView("backlog");
+              }
+            };
+
+            return React.createElement("div", {
+                key: releaseId || String(release?.name || "release"),
+                className: "playground-tasks-backlog-item playground-project-overview-release-card",
+                role: "button",
+                tabIndex: 0,
+                onClick: openReleaseBacklog,
+                onKeyDown: (event) => {
+                  if ((event.key === "Enter" || event.key === " ") && releaseId) {
+                    event.preventDefault();
+                    openReleaseBacklog();
+                  }
+                },
+              },
+              React.createElement("div", { className: "playground-tasks-backlog-item-content" },
+                React.createElement("div", { className: "playground-tasks-backlog-leading" },
+                  React.createElement("div", {
+                    className: "playground-tasks-backlog-project-icon playground-project-overview-release-icon",
+                    "aria-hidden": "true",
+                  },
+                    React.createElement(History, { width: 14, height: 14, strokeWidth: 1.9 })
+                  ),
+                  React.createElement("div", { className: "playground-tasks-backlog-main" },
+                    React.createElement("span", { className: "playground-tasks-backlog-title" }, release?.name || "Untitled Release")
+                  )
+                ),
+                React.createElement("div", { className: "playground-project-overview-release-meta" },
+                  React.createElement("span", { className: "playground-project-overview-release-dates" }, dateLabel),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-backlog-run-button playground-project-overview-release-settings-button",
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      if (typeof openReleaseComposerForEdit === "function") {
+                        openReleaseComposerForEdit(release);
+                      }
+                    },
+                    "aria-label": "Edit release",
+                    title: "Edit release",
+                  },
+                    React.createElement(Settings2, {
+                      width: 13,
+                      height: 13,
+                      strokeWidth: 1.9,
+                      "aria-hidden": "true",
+                    })
+                  )
                 )
               )
             );
@@ -2665,7 +2830,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                                   });
                                 }
                               },
-                            }, "View Changes")
+                            }, "View all Changes")
                           )
                         )
                       : React.createElement(React.Fragment, null,
@@ -2698,6 +2863,49 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               )
             ),
             React.createElement("div", { className: "playground-tasks-project-panel-grid" },
+              React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-releases-section" },
+                renderOverviewSectionHeader(
+                  "Releases",
+                  null,
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button",
+                    onClick: () => {
+                      if (typeof handleSelectRelease === "function") {
+                        handleSelectRelease("");
+                      } else if (typeof setSelectedReleaseId === "function") {
+                        setSelectedReleaseId("");
+                      }
+                      if (typeof setTaskView === "function") {
+                        setTaskView("backlog");
+                      }
+                    },
+                  },
+                    React.createElement(ListTodo, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "See all")
+                  )
+                ),
+                overviewVisibleReleases.length > 0
+                  ? React.createElement("div", { className: "playground-project-overview-release-list" },
+                      overviewVisibleReleases.map((release) => renderOverviewReleaseRow(release))
+                    )
+                  : normalizedSearchQuery
+                    ? React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                        "No matching releases."
+                      )
+                    : React.createElement("div", { className: "playground-project-overview-empty-card is-compact" },
+                        React.createElement("div", { className: "playground-project-overview-empty-title" }, "Create your first release"),
+                        React.createElement("div", { className: "playground-project-overview-empty-copy" }, "Group tickets into milestones and plan work by release."),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-tasks-empty-primary-button playground-project-overview-empty-action",
+                          onClick: () => typeof openReleaseComposer === "function" && openReleaseComposer(),
+                        },
+                          React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
+                          React.createElement("span", null, "New Release")
+                        )
+                      )
+              ),
               React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section" },
                 renderOverviewSectionHeader(
                   "Current Tasks",
@@ -2715,9 +2923,22 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   ? React.createElement("div", { className: "playground-project-overview-backlog-list" },
                       visibleOverviewTasks.map((task) => renderOverviewTaskRow(task))
                     )
-                  : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                      normalizedSearchQuery ? "No matching active tasks." : "No active tasks in this project."
-                    )
+                  : normalizedSearchQuery
+                    ? React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                        "No matching active tasks."
+                      )
+                    : React.createElement("div", { className: "playground-project-overview-empty-card is-compact" },
+                        React.createElement("div", { className: "playground-project-overview-empty-title" }, "Create your first task"),
+                        React.createElement("div", { className: "playground-project-overview-empty-copy" }, "Start the backlog and define the first ticket for this project."),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-tasks-empty-primary-button playground-project-overview-empty-action",
+                          onClick: () => typeof setTaskView === "function" && setTaskView("backlog"),
+                        },
+                          React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
+                          React.createElement("span", null, "New Task")
+                        )
+                      )
               ),
               React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section" },
                 renderOverviewSectionHeader(

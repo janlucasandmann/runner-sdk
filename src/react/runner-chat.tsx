@@ -611,6 +611,11 @@ type RunnerAgentSelectorMode = "agents" | "teams" | "humans";
 
 type RunnerAgentOptionRecord = RunnerChatOption & {
   agentType?: string | null;
+  photoUrl?: string | null;
+  photoURL?: string | null;
+  avatarUrl?: string | null;
+  avatarURL?: string | null;
+  profile?: unknown;
   metadata?: unknown;
 };
 
@@ -680,6 +685,76 @@ function isRunnerHumanAgentOption(option: RunnerChatOption | null | undefined): 
 
   const kind = "kind" in metadata && typeof metadata.kind === "string" ? metadata.kind.trim() : "";
   return kind === "human";
+}
+
+function getRunnerAgentOptionPhotoUrl(option: RunnerChatOption | null | undefined): string {
+  if (!option) {
+    return "";
+  }
+
+  const candidate = option as RunnerAgentOptionRecord;
+  const directPhotoUrl =
+    typeof candidate.photoUrl === "string" && candidate.photoUrl.trim()
+      ? candidate.photoUrl.trim()
+      : typeof candidate.photoURL === "string" && candidate.photoURL.trim()
+        ? candidate.photoURL.trim()
+        : typeof candidate.avatarUrl === "string" && candidate.avatarUrl.trim()
+          ? candidate.avatarUrl.trim()
+          : typeof candidate.avatarURL === "string" && candidate.avatarURL.trim()
+            ? candidate.avatarURL.trim()
+            : "";
+  if (directPhotoUrl) {
+    return directPhotoUrl;
+  }
+
+  const profile = candidate.profile;
+  if (profile && typeof profile === "object" && !Array.isArray(profile)) {
+    const profilePhotoUrl =
+      "photoUrl" in profile && typeof profile.photoUrl === "string" && profile.photoUrl.trim()
+        ? profile.photoUrl.trim()
+        : "photoURL" in profile && typeof profile.photoURL === "string" && profile.photoURL.trim()
+          ? profile.photoURL.trim()
+          : "avatarUrl" in profile && typeof profile.avatarUrl === "string" && profile.avatarUrl.trim()
+            ? profile.avatarUrl.trim()
+            : "";
+    if (profilePhotoUrl) {
+      return profilePhotoUrl;
+    }
+  }
+
+  const metadata = candidate.metadata;
+  if (metadata && typeof metadata === "object" && !Array.isArray(metadata)) {
+    const metadataPhotoUrl =
+      "photoUrl" in metadata && typeof metadata.photoUrl === "string" && metadata.photoUrl.trim()
+        ? metadata.photoUrl.trim()
+        : "photoURL" in metadata && typeof metadata.photoURL === "string" && metadata.photoURL.trim()
+          ? metadata.photoURL.trim()
+          : "avatarUrl" in metadata && typeof metadata.avatarUrl === "string" && metadata.avatarUrl.trim()
+            ? metadata.avatarUrl.trim()
+            : "";
+    if (metadataPhotoUrl) {
+      return metadataPhotoUrl;
+    }
+    const metadataProfile =
+      "profile" in metadata && metadata.profile && typeof metadata.profile === "object" && !Array.isArray(metadata.profile)
+        ? metadata.profile
+        : null;
+    if (metadataProfile) {
+      const metadataProfilePhotoUrl =
+        "photoUrl" in metadataProfile && typeof metadataProfile.photoUrl === "string" && metadataProfile.photoUrl.trim()
+          ? metadataProfile.photoUrl.trim()
+          : "photoURL" in metadataProfile && typeof metadataProfile.photoURL === "string" && metadataProfile.photoURL.trim()
+            ? metadataProfile.photoURL.trim()
+            : "avatarUrl" in metadataProfile && typeof metadataProfile.avatarUrl === "string" && metadataProfile.avatarUrl.trim()
+              ? metadataProfile.avatarUrl.trim()
+              : "";
+      if (metadataProfilePhotoUrl) {
+        return metadataProfilePhotoUrl;
+      }
+    }
+  }
+
+  return "";
 }
 
 function getRunnerAgentSelectorMode(option: RunnerChatOption | null | undefined): RunnerAgentSelectorMode {
@@ -1454,6 +1529,27 @@ function renderRunnerTaskPreviewAssigneeAvatar(taskPreview: RunnerTaskPreview) {
           />
         : <span className="tb-task-preview-assignee-avatar-fallback">
             {assigneeName.charAt(0).toUpperCase()}
+          </span>}
+    </span>
+  );
+}
+
+function renderTurnAgentAvatar(name: string, photoUrl?: string | null) {
+  const normalizedName = String(name || "").trim();
+  if (!normalizedName) {
+    return null;
+  }
+  const normalizedPhotoUrl = String(photoUrl || "").trim();
+  return (
+    <span className="tb-turn-agent-avatar" aria-hidden="true" title={normalizedName}>
+      {normalizedPhotoUrl
+        ? <img
+            className="tb-turn-agent-avatar-image"
+            src={normalizedPhotoUrl}
+            alt={normalizedName.charAt(0).toUpperCase()}
+          />
+        : <span className="tb-turn-agent-avatar-fallback">
+            {normalizedName.charAt(0).toUpperCase()}
           </span>}
     </span>
   );
@@ -11767,6 +11863,30 @@ export function RunnerChat({
     availableEnvironments[0];
   const displayedAgentLabel = hasApiKey ? selectedAgent?.name || "Agent" : "Default Agent";
   const displayedEnvironmentLabel = hasApiKey ? selectedEnvironment?.name || "Default" : "Default";
+  const availableAgentPhotoEntries = useMemo(
+    () =>
+      agents
+        .map((agent) => ({
+          label: String(agent?.name || "").trim(),
+          photoUrl: getRunnerAgentOptionPhotoUrl(agent),
+        }))
+        .filter((entry) => entry.label),
+    [agents]
+  );
+  const selectedAgentPhotoUrl = getRunnerAgentOptionPhotoUrl(selectedAgent);
+  const resolveTurnAgentPhotoUrl = useCallback((agentLabel: string | null | undefined) => {
+    const normalizedLabel = String(agentLabel || "").trim().toLowerCase();
+    if (!normalizedLabel) {
+      return "";
+    }
+    const exactMatch = availableAgentPhotoEntries.find((entry) => entry.label.trim().toLowerCase() === normalizedLabel);
+    if (exactMatch?.photoUrl) {
+      return exactMatch.photoUrl;
+    }
+    return String(displayedAgentLabel || "").trim().toLowerCase() === normalizedLabel
+      ? selectedAgentPhotoUrl
+      : "";
+  }, [availableAgentPhotoEntries, displayedAgentLabel, selectedAgentPhotoUrl]);
   const threadHistoryItems = useMemo<RunnerThreadHistoryItem[]>(() => {
     return turns.flatMap((turn, turnIndex) => {
       const items: RunnerThreadHistoryItem[] = [];
