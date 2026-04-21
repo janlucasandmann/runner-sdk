@@ -69,7 +69,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -592,7 +592,7 @@ interface RunnerParsedThreadStep {
 
 interface RunnerTurnFilePreview {
   path: string;
-  kind: "created" | "modified";
+  kind: "created" | "modified" | "deleted";
   content?: string;
   diff?: string;
   additions?: number;
@@ -1901,49 +1901,60 @@ function resolveTurnPreviewMapValue<T>(source: Record<string, T> | undefined, fi
   );
 }
 
+function buildDeletedThreadPreviewDiff(filePath: string, content: string): string {
+  const normalizedContent = content.replace(/\r\n/g, "\n");
+  const lines = normalizedContent.split("\n");
+  const body = lines.map((line) => `-${line}`).join("\n");
+  return `--- a/${filePath}\n+++ /dev/null\n@@ -1,${lines.length} +0,0 @@\n${body}`;
+}
+
 function collectTurnFilePreviews(logs: RunnerLog[]): RunnerTurnFilePreview[] {
   const previewEntries = new Map<string, RunnerTurnFilePreview & { order: number }>();
   let order = 0;
 
   for (const log of logs) {
-    if (log.eventType !== "file_change") continue;
+    const previews = collectRunnerLogFileChangePreviews(log);
+    if (previews.length === 0) continue;
 
-    const filePaths = Array.isArray(log.metadata?.filePaths)
-      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-      : [];
-    if (filePaths.length === 0) continue;
-
-    const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
-    const fileContents =
-      log.metadata?.fileContents && typeof log.metadata.fileContents === "object"
-        ? (log.metadata.fileContents as Record<string, string>)
-        : undefined;
-    const diffs =
-      log.metadata?.diffs && typeof log.metadata.diffs === "object"
-        ? (log.metadata.diffs as Record<string, { diff?: string; changes?: string; additions?: number; deletions?: number }>)
-        : undefined;
-
-    for (let index = 0; index < filePaths.length; index += 1) {
-      const normalizedPath = normalizeRunnerPreviewPath(filePaths[index]);
+    for (const preview of previews) {
+      const normalizedPath = normalizeRunnerPreviewPath(preview.path);
       if (!normalizedPath || isInternalTurnPreviewPath(normalizedPath)) continue;
-
-      const rawKind = typeof changeKinds[index] === "string" ? changeKinds[index].trim().toLowerCase() : "modified";
-      const changeKind: "created" | "modified" | "deleted" =
-        rawKind === "created" ? "created" : rawKind === "deleted" ? "deleted" : "modified";
+      const changeKind = preview.kind;
 
       if (changeKind === "deleted") {
-        previewEntries.delete(normalizedPath);
+        const existing = previewEntries.get(normalizedPath);
+        const deletedContent = typeof existing?.content === "string" ? existing.content : undefined;
+        const deletedDiff =
+          typeof preview.diff === "string" && preview.diff.trim().length > 0
+            ? preview.diff
+            : deletedContent
+              ? buildDeletedThreadPreviewDiff(normalizedPath, deletedContent)
+              : undefined;
+        previewEntries.set(normalizedPath, {
+          ...(existing || {}),
+          path: normalizedPath,
+          kind: "deleted",
+          content: deletedContent,
+          diff: deletedDiff,
+          additions: typeof preview.additions === "number" ? preview.additions : 0,
+          deletions:
+            typeof preview.deletions === "number"
+              ? preview.deletions
+              : deletedContent
+                ? deletedContent.replace(/\r\n/g, "\n").split("\n").length
+                : undefined,
+          order,
+        });
+        order += 1;
         continue;
       }
-
-      const diffEntry = resolveTurnPreviewMapValue(diffs, normalizedPath);
       const nextPreview: RunnerTurnFilePreview & { order: number } = {
         path: normalizedPath,
         kind: changeKind,
-        content: resolveTurnPreviewMapValue(fileContents, normalizedPath),
-        diff: diffEntry?.diff || diffEntry?.changes,
-        additions: typeof diffEntry?.additions === "number" ? diffEntry.additions : undefined,
-        deletions: typeof diffEntry?.deletions === "number" ? diffEntry.deletions : undefined,
+        content: preview.content,
+        diff: preview.diff,
+        additions: typeof preview.additions === "number" ? preview.additions : undefined,
+        deletions: typeof preview.deletions === "number" ? preview.deletions : undefined,
         order,
       };
 
@@ -2028,22 +2039,13 @@ function collectThreadRetainedSummaryPreviewPaths(turns: RunnerTurn[]): Set<stri
 
   for (const turn of turns) {
     for (const log of turn.logs) {
-      if (log.eventType !== "file_change") continue;
+      const previews = collectRunnerLogFileChangePreviews(log);
+      if (previews.length === 0) continue;
 
-      const filePaths = Array.isArray(log.metadata?.filePaths)
-        ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-        : [];
-      if (filePaths.length === 0) continue;
-
-      const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
-
-      for (let index = 0; index < filePaths.length; index += 1) {
-        const normalizedPath = normalizeRunnerPreviewPath(filePaths[index]);
+      for (const preview of previews) {
+        const normalizedPath = normalizeRunnerPreviewPath(preview.path);
         if (!normalizedPath || isInternalTurnPreviewPath(normalizedPath)) continue;
-
-        const rawKind = typeof changeKinds[index] === "string" ? changeKinds[index].trim().toLowerCase() : "modified";
-        const changeKind: "created" | "modified" | "deleted" =
-          rawKind === "created" ? "created" : rawKind === "deleted" ? "deleted" : "modified";
+        const changeKind = preview.kind;
 
         if (changeKind === "deleted") {
           retainedPaths.delete(normalizedPath);
@@ -2074,33 +2076,18 @@ function collectTurnChangedFiles(logs: RunnerLog[]): Array<{
   let order = 0;
 
   for (const log of logs) {
-    if (log.eventType !== "file_change") continue;
+    const previews = collectRunnerLogFileChangePreviews(log);
+    if (previews.length === 0) continue;
 
-    const filePaths = Array.isArray(log.metadata?.filePaths)
-      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-      : [];
-    if (filePaths.length === 0) continue;
-
-    const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
-    const diffs =
-      log.metadata?.diffs && typeof log.metadata.diffs === "object"
-        ? (log.metadata.diffs as Record<string, { diff?: string; additions?: number; deletions?: number }>)
-        : undefined;
-
-    for (let index = 0; index < filePaths.length; index += 1) {
-      const normalizedPath = normalizeRunnerPreviewPath(filePaths[index]);
+    for (const preview of previews) {
+      const normalizedPath = normalizeRunnerPreviewPath(preview.path);
       if (!normalizedPath || isInternalTurnPreviewPath(normalizedPath)) continue;
-
-      const rawKind = typeof changeKinds[index] === "string" ? changeKinds[index].trim().toLowerCase() : "modified";
-      const changeKind: "created" | "modified" | "deleted" =
-        rawKind === "created" ? "created" : rawKind === "deleted" ? "deleted" : "modified";
-
-      const diffEntry = resolveTurnPreviewMapValue(diffs, normalizedPath);
+      const changeKind = preview.kind;
       changedFiles.set(normalizedPath, {
         path: normalizedPath,
         kind: changeKind,
-        additions: typeof diffEntry?.additions === "number" ? diffEntry.additions : undefined,
-        deletions: typeof diffEntry?.deletions === "number" ? diffEntry.deletions : undefined,
+        additions: typeof preview.additions === "number" ? preview.additions : undefined,
+        deletions: typeof preview.deletions === "number" ? preview.deletions : undefined,
         order,
       });
       order += 1;
@@ -5177,6 +5164,11 @@ async function fetchThreadLiveRefreshPayload(params: {
   };
 }
 
+function isGenericShellRunnerCommand(command: string): boolean {
+  const normalized = String(command || "").trim().replace(/^\$\s*/, "").toLowerCase();
+  return normalized === "bash" || normalized === "sh" || normalized === "zsh" || normalized === "/bin/bash" || normalized === "/bin/sh";
+}
+
 function normalizeHydratedLog(log: RunnerLog): RunnerLog {
   if (typeof (log.metadata as { duration_ms?: unknown } | undefined)?.duration_ms === "number" && typeof log.metadata?.durationMs !== "number") {
     return {
@@ -5209,6 +5201,15 @@ function normalizedToolLogIdentity(log: RunnerLog): string | null {
     const normalizedCommand = command || log.message.replace(/^Executed:\s*/i, "").trim();
     if (!normalizedCommand) {
       return null;
+    }
+    if (isGenericShellRunnerCommand(normalizedCommand)) {
+      const shellSignature = stableRunnerLogValue({
+        output: typeof log.metadata?.output === "string" ? log.metadata.output.trim() : "",
+        filePaths: Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [],
+        changeKinds: Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [],
+        toolInput: log.metadata?.toolInput,
+      });
+      return `command:${normalizedCommand}:${shellSignature}`;
     }
     return `command:${normalizedCommand}`;
   }
@@ -5666,7 +5667,7 @@ export function RunnerChat({
   const [selectedComputerUseDetail, setSelectedComputerUseDetail] = useState<RunnerSelectedComputerUseDetail | null>(null);
   const [documentPreviewDrawerWidth, setDocumentPreviewDrawerWidth] = useState<number | null>(null);
   const [isThreadHistoryLoading, setIsThreadHistoryLoading] = useState(false);
-  const [inlineError, setInlineError] = useState<string | null>(null);
+  const [, setInlineError] = useState<string | null>(null);
   const [isPreparingRun, setIsPreparingRun] = useState(false);
   const [turns, setTurns] = useState<RunnerTurn[]>([]);
   const [visibleTimelineItemCountsByTurn, setVisibleTimelineItemCountsByTurn] = useState<Record<string, number>>({});
@@ -6090,13 +6091,46 @@ export function RunnerChat({
     });
   }
 
-  function consumeIntentionalStopAbort(error: Error, threadIdToMatch?: string | null): boolean {
-    if (error.name !== "AbortError") {
-      return false;
-    }
+  function isStopRequestedThread(threadIdToMatch?: string | null): boolean {
     const requestedThreadId = String(stopRequestedThreadIdRef.current || "").trim();
     const normalizedThreadId = String(threadIdToMatch || "").trim();
-    if (!requestedThreadId || !normalizedThreadId || requestedThreadId !== normalizedThreadId) {
+    return Boolean(requestedThreadId && normalizedThreadId && requestedThreadId === normalizedThreadId);
+  }
+
+  function isIntentionalStopError(error: Error, threadIdToMatch?: string | null): boolean {
+    if (!isStopRequestedThread(threadIdToMatch)) {
+      return false;
+    }
+    if (error.name === "AbortError") {
+      return true;
+    }
+    const message = String(error?.message || "").trim();
+    if (!message) {
+      return false;
+    }
+    return (
+      /runner stream failed \((?:499|500|502|503|504)\)/i.test(message)
+      || /<title>\s*502 Server Error\s*<\/title>/i.test(message)
+      || /temporary error and could not complete your request/i.test(message)
+      || /the server encountered a temporary error/i.test(message)
+      || /failed to fetch/i.test(message)
+    );
+  }
+
+  function normalizeIntentionalStopError(error: Error, threadIdToMatch?: string | null): Error {
+    if (!isIntentionalStopError(error, threadIdToMatch)) {
+      return error;
+    }
+    if (error.name === "AbortError") {
+      return error;
+    }
+    const abortError = new Error("Execution cancelled");
+    abortError.name = "AbortError";
+    return abortError;
+  }
+
+  function consumeIntentionalStopAbort(error: Error, threadIdToMatch?: string | null): boolean {
+    if (!isIntentionalStopError(error, threadIdToMatch)) {
       return false;
     }
     stopRequestedThreadIdRef.current = null;
@@ -7879,7 +7913,10 @@ export function RunnerChat({
       return { threadId, executionResult, turnId };
     } catch (error) {
       releasePreparationState();
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      const normalizedError = normalizeIntentionalStopError(
+        error instanceof Error ? error : new Error(String(error)),
+        threadId
+      );
       updateTurn(turnId, (turn) => ({
         ...turn,
         status: normalizedError.name === "AbortError" ? "cancelled" : "failed",
@@ -13635,13 +13672,18 @@ export function RunnerChat({
                 turn.presentation === "context-action-notice"
                   ? turn.logs.find((log) => log.eventType === "action_summary") || null
                   : null;
+              const changedFilePathsForTurn = new Set(
+                collectTurnChangedFiles(turn.logs)
+                  .map((file) => normalizeRunnerPreviewPath(file.path))
+                  .filter((value): value is string => Boolean(value))
+              );
               const summaryPreviewItems = collectTurnSummaryPreviewItems(turn.logs, {
                 backendUrl: normalizedBackendUrl,
                 environmentId: summaryPreviewEnvironmentId,
               }).filter((item) => {
                 if (item.kind !== "attachment") return true;
                 const normalizedPath = normalizeRunnerPreviewPath(item.attachment.workspacePath || "");
-                return !normalizedPath || retainedSummaryPreviewPaths.has(normalizedPath);
+                return !normalizedPath || retainedSummaryPreviewPaths.has(normalizedPath) || changedFilePathsForTurn.has(normalizedPath);
               });
               const visibleTimelineItemCount = visibleTimelineItemCountsByTurn[turn.id];
               const displayedTimelineItems =
@@ -14797,8 +14839,6 @@ export function RunnerChat({
                   </div>
                 )}
               </div>
-
-            {inlineError ? <div className="runner-inline-error">{inlineError}</div> : null}
           </div>
         </div>
       </div>

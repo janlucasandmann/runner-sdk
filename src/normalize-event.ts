@@ -456,11 +456,18 @@ export class RunnerEventNormalizer {
         logs: [
           {
             time: this.formatElapsed(),
-            message: this.asString(tool.command, "Read"),
+            message: filePath ? `Read: ${filePath}` : this.asString(tool.command, "Read"),
             type: exitCode === 0 ? "success" : "error",
             eventType: "command_execution",
             metadata: this.mergeMetadata(metadata, {
               command: filePath ? `cat "${filePath}"` : this.asString(tool.command),
+              filePaths: filePath ? [filePath] : [],
+              fileContents:
+                filePath && fileContent
+                  ? {
+                      [filePath]: fileContent,
+                    }
+                  : {},
               exitCode,
               status: this.asCommandStatus(item.status),
               output: fileContent || output?.trim(),

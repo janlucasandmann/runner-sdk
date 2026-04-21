@@ -892,6 +892,15 @@ type RunnerFileDiffMetadata = {
   deletions?: number;
 };
 
+export type RunnerLogFileChangePreview = {
+  path: string;
+  kind: "created" | "modified" | "deleted";
+  content?: string;
+  diff?: string;
+  additions?: number;
+  deletions?: number;
+};
+
 function resolveFileMapValue<T>(map: Record<string, T> | undefined, filePath?: string): T | undefined {
   if (!map || !filePath) return undefined;
   if (map[filePath] !== undefined) return map[filePath];
@@ -917,6 +926,36 @@ function countDiffStats(diffText: string): { additions: number; deletions: numbe
   };
 }
 
+function buildStructuredPatchDiff(
+  filePath: string,
+  patches: Array<{
+    oldStart?: number;
+    oldLines?: number;
+    newStart?: number;
+    newLines?: number;
+    lines?: string[];
+  }>,
+  operation: "created" | "modified" | "deleted"
+): string {
+  const normalizedPath = String(filePath || "").replace(/^\/+/, "");
+  const oldHeaderPath = operation === "created" ? "/dev/null" : `a/${normalizedPath}`;
+  const newHeaderPath = operation === "deleted" ? "/dev/null" : `b/${normalizedPath}`;
+  const lines = [`--- ${oldHeaderPath}`, `+++ ${newHeaderPath}`];
+
+  for (const patch of patches) {
+    const oldStart = Number.isFinite(patch.oldStart) ? Number(patch.oldStart) : 1;
+    const oldLines = Number.isFinite(patch.oldLines) ? Number(patch.oldLines) : 0;
+    const newStart = Number.isFinite(patch.newStart) ? Number(patch.newStart) : 1;
+    const newLines = Number.isFinite(patch.newLines) ? Number(patch.newLines) : 0;
+    lines.push(`@@ -${oldStart},${oldLines} +${newStart},${newLines} @@`);
+    if (Array.isArray(patch.lines)) {
+      lines.push(...patch.lines.map((entry) => String(entry)));
+    }
+  }
+
+  return lines.join("\n");
+}
+
 function buildCreatedFileDiff(filePath: string, content: string): string {
   const normalizedContent = content.replace(/\r\n/g, "\n");
   const lines = normalizedContent.split("\n");
@@ -924,13 +963,24 @@ function buildCreatedFileDiff(filePath: string, content: string): string {
   return `--- /dev/null\n+++ b/${filePath}\n@@ -0,0 +1,${lines.length} @@\n${body}`;
 }
 
-function resolveWriteDiffPreview(log: RunnerLog, filePath: string | undefined, output: string, operation: "created" | "modified") {
+function buildDeletedFileDiff(filePath: string, content: string): string {
+  const normalizedContent = content.replace(/\r\n/g, "\n");
+  const lines = normalizedContent.split("\n");
+  const body = lines.map((line) => `-${line}`).join("\n");
+  return `--- a/${filePath}\n+++ /dev/null\n@@ -1,${lines.length} +0,0 @@\n${body}`;
+}
+
+function resolveWriteDiffPreview(log: RunnerLog, filePath: string | undefined, output: string, operation: "created" | "modified" | "deleted") {
   const diffMetadata = resolveFileDiffMetadata(log, filePath);
   const diffText = stripRunnerSystemTags(
     String(
       diffMetadata?.diff ||
         diffMetadata?.changes ||
-        (operation === "created" && filePath && output ? buildCreatedFileDiff(filePath, output) : "")
+        (operation === "created" && filePath && output
+          ? buildCreatedFileDiff(filePath, output)
+          : operation === "deleted" && filePath && output
+            ? buildDeletedFileDiff(filePath, output)
+            : "")
     )
   ).trim();
   const fallbackStats = diffText ? countDiffStats(diffText) : null;
@@ -2652,6 +2702,21 @@ function isReadFileCommand(command?: string): boolean {
   ].some((pattern) => pattern.test(command));
 }
 
+export function isReadFileLog(log?: RunnerLog): boolean {
+  if (!log) return false;
+  const command = String(log.metadata?.command || "");
+  const message = String(log.message || "");
+  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+
+  return (
+    isReadFileCommand(command) ||
+    /^Read:\s+/i.test(message) ||
+    Boolean(log.metadata?.fileContents && typeof log.metadata.fileContents === "object") ||
+    /"filePath"\s*:/.test(output) ||
+    /"content"\s*:/.test(output)
+  );
+}
+
 function extractReadFilePath(command?: string): string | null {
   if (!command) return null;
   const patterns = [
@@ -2959,8 +3024,15 @@ function extractStructuredReadFilePayload(output: string): { filePath?: string; 
   return null;
 }
 
-function extractStructuredWriteFilePayload(output: string): { filePath?: string; content?: string; operation?: "created" | "modified" } | null {
-  const normalizeOperation = (value: unknown): "created" | "modified" | undefined => {
+function extractStructuredWriteFilePayload(output: string): {
+  filePath?: string;
+  content?: string;
+  operation?: "created" | "modified" | "deleted";
+  diffText?: string;
+  additions?: number;
+  deletions?: number;
+} | null {
+  const normalizeOperation = (value: unknown): "created" | "modified" | "deleted" | undefined => {
     const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
     if (!normalized) return undefined;
     if (normalized === "created" || normalized === "create" || normalized === "new" || normalized === "write") {
@@ -2977,10 +3049,20 @@ function extractStructuredWriteFilePayload(output: string): { filePath?: string;
     ) {
       return "modified";
     }
+    if (normalized === "delete" || normalized === "deleted" || normalized === "remove" || normalized === "removed") {
+      return "deleted" as const;
+    }
     return undefined;
   };
 
-  const visit = (value: unknown): { filePath?: string; content?: string; operation?: "created" | "modified" } | null => {
+  const visit = (value: unknown): {
+    filePath?: string;
+    content?: string;
+    operation?: "created" | "modified" | "deleted";
+    diffText?: string;
+    additions?: number;
+    deletions?: number;
+  } | null => {
     if (value == null) {
       return null;
     }
@@ -3017,6 +3099,8 @@ function extractStructuredWriteFilePayload(output: string): { filePath?: string;
     const contentCandidate =
       typeof record.content === "string" ? record.content
       : typeof record.text === "string" ? record.text
+      : typeof record.newContent === "string" ? record.newContent
+      : typeof record.newString === "string" ? record.newString
       : undefined;
     const operationCandidate =
       normalizeOperation(record.operationKind)
@@ -3024,12 +3108,33 @@ function extractStructuredWriteFilePayload(output: string): { filePath?: string;
       || normalizeOperation(record.operation)
       || normalizeOperation(record.type)
       || normalizeOperation(record.mode);
+    const structuredPatch = Array.isArray(record.structuredPatch)
+      ? (record.structuredPatch as Array<{ oldStart?: number; oldLines?: number; newStart?: number; newLines?: number; lines?: string[] }>)
+      : Array.isArray(record.structured_patch)
+        ? (record.structured_patch as Array<{ oldStart?: number; oldLines?: number; newStart?: number; newLines?: number; lines?: string[] }>)
+        : [];
+    const gitDiff =
+      typeof record.gitDiff === "string" && record.gitDiff.trim()
+        ? record.gitDiff
+        : typeof record.diff === "string" && record.diff.trim()
+          ? record.diff
+          : typeof record.changes === "string" && record.changes.trim()
+            ? record.changes
+            : "";
+    const diffText =
+      gitDiff ||
+      (filePathCandidate && structuredPatch.length > 0
+        ? buildStructuredPatchDiff(filePathCandidate, structuredPatch, operationCandidate || "modified")
+        : "");
+    const stats = diffText ? countDiffStats(diffText) : null;
 
-    if (filePathCandidate || contentCandidate !== undefined || operationCandidate) {
+    if (filePathCandidate || contentCandidate !== undefined || operationCandidate || diffText) {
       return {
         ...(filePathCandidate ? { filePath: filePathCandidate } : {}),
         ...(contentCandidate !== undefined ? { content: contentCandidate } : {}),
         ...(operationCandidate ? { operation: operationCandidate } : {}),
+        ...(diffText ? { diffText } : {}),
+        ...(stats ? { additions: stats.additions, deletions: stats.deletions } : {}),
       };
     }
 
@@ -3068,6 +3173,164 @@ function extractStructuredWriteFilePayload(output: string): { filePath?: string;
   }
 
   return null;
+}
+
+export function isWriteFileLog(log?: RunnerLog): boolean {
+  if (!log) return false;
+  const command = String(log.metadata?.command || "");
+  const message = String(log.message || "");
+  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+
+  return (
+    isWriteFileCommand(command) ||
+    /^Write:\s+/i.test(message) ||
+    /^Edit:\s+/i.test(message) ||
+    /^Delete:\s+/i.test(message) ||
+    /"structuredPatch"\s*:/.test(output) ||
+    /"gitDiff"\s*:/.test(output)
+  );
+}
+
+export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFileChangePreview[] {
+  if (!log) {
+    return [];
+  }
+
+  if (log.eventType === "file_change") {
+    const filePaths = Array.isArray(log.metadata?.filePaths)
+      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      : [];
+    if (filePaths.length === 0) {
+      return [];
+    }
+
+    const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
+    const fileContents =
+      log.metadata?.fileContents && typeof log.metadata.fileContents === "object"
+        ? (log.metadata.fileContents as Record<string, string>)
+        : undefined;
+    const diffs =
+      log.metadata?.diffs && typeof log.metadata.diffs === "object"
+        ? (log.metadata.diffs as Record<string, RunnerFileDiffMetadata>)
+        : undefined;
+
+    return filePaths.map((filePath, index) => {
+      const resolvedDiff = resolveFileMapValue(diffs, filePath);
+      const normalizedKind = String(changeKinds[index] || "").trim().toLowerCase();
+      const kind: "created" | "modified" | "deleted" =
+        normalizedKind === "created"
+          ? "created"
+          : normalizedKind === "deleted"
+            ? "deleted"
+            : "modified";
+      const content = resolveFileMapValue(fileContents, filePath);
+      const diffText = stripRunnerSystemTags(
+        String(
+          resolvedDiff?.diff ||
+            resolvedDiff?.changes ||
+            (kind === "created" && filePath && content ? buildCreatedFileDiff(filePath, content) : "")
+        )
+      ).trim();
+      const fallbackStats = diffText ? countDiffStats(diffText) : null;
+
+      return {
+        path: filePath,
+        kind,
+        ...(typeof content === "string" ? { content } : {}),
+        ...(diffText ? { diff: diffText } : {}),
+        ...(typeof resolvedDiff?.additions === "number"
+          ? { additions: resolvedDiff.additions }
+          : fallbackStats
+            ? { additions: fallbackStats.additions }
+            : {}),
+        ...(typeof resolvedDiff?.deletions === "number"
+          ? { deletions: resolvedDiff.deletions }
+          : fallbackStats
+            ? { deletions: fallbackStats.deletions }
+            : {}),
+      };
+    });
+  }
+
+  if (log.eventType !== "command_execution") {
+    return [];
+  }
+
+  if (!isWriteFileLog(log)) {
+    const deletedFilePath = extractDeletedFilePathFromCommandOutput(log);
+    if (!deletedFilePath) {
+      return [];
+    }
+    return [{
+      path: deletedFilePath,
+      kind: "deleted",
+    }];
+  }
+
+  const command = String(log.metadata?.command || "");
+  const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
+  const structuredWrite = extractStructuredWriteFilePayload(output);
+  const filePath =
+    (log.metadata?.filePaths?.[0] as string | undefined) ||
+    structuredWrite?.filePath ||
+    extractWriteFilePath(command) ||
+    extractWorkspacePathFromText(log.message) ||
+    undefined;
+  if (!filePath) {
+    return [];
+  }
+
+  const fileContents = log.metadata?.fileContents as Record<string, string> | undefined;
+  const content = resolveFileMapValue(fileContents, filePath) ?? structuredWrite?.content;
+  const operation = structuredWrite?.operation || deriveWriteOperation(command, log.metadata?.changeKinds?.[0]);
+  const previewSource = typeof content === "string" ? content : output;
+  const diffPreview = resolveWriteDiffPreview(log, filePath, previewSource, operation);
+  const effectiveDiffText = String(structuredWrite?.diffText || diffPreview.diffText || "").trim();
+
+  return [{
+    path: filePath,
+    kind: operation,
+    ...(typeof content === "string" ? { content } : {}),
+    ...(effectiveDiffText ? { diff: effectiveDiffText } : {}),
+    ...(typeof structuredWrite?.additions === "number"
+      ? { additions: structuredWrite.additions }
+      : typeof diffPreview.additions === "number"
+        ? { additions: diffPreview.additions }
+        : {}),
+    ...(typeof structuredWrite?.deletions === "number"
+      ? { deletions: structuredWrite.deletions }
+      : typeof diffPreview.deletions === "number"
+        ? { deletions: diffPreview.deletions }
+        : {}),
+  }];
+}
+
+function extractDeletedFilePathFromCommandOutput(log: RunnerLog): string | null {
+  if (log.eventType !== "command_execution") {
+    return null;
+  }
+
+  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const outputText = [
+    parsedOutput?.stdout || "",
+    parsedOutput?.stderr || "",
+    stripRunnerSystemTags(String(log.metadata?.output || "")),
+  ]
+    .filter((value) => typeof value === "string" && value.trim().length > 0)
+    .join("\n");
+  if (!/no such file or directory/i.test(outputText)) {
+    return null;
+  }
+
+  const pathMatch =
+    /cannot access ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(outputText) ||
+    /cannot remove ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(outputText) ||
+    /no such file or directory[^\n]*['"`]([^'"`\n]+)['"`]/i.exec(outputText);
+  const resolvedPath = normalizeRunnerFilePath(pathMatch?.[1] || "");
+  if (!resolvedPath) {
+    return null;
+  }
+  return resolvedPath;
 }
 
 function resolveReadDocumentPreviewAttachment(
@@ -3380,13 +3643,27 @@ function WriteFileSingleLogBox({
     (log.metadata?.filePaths?.[0] as string | undefined)
     || structuredWrite?.filePath
     || extractWriteFilePath(command)
+    || extractWorkspacePathFromText(log.message)
     || undefined;
   const fileContents = log.metadata?.fileContents as Record<string, string> | undefined;
   const fileContent = resolveFileMapValue(fileContents, filePath) ?? structuredWrite?.content;
   const output = stripRunnerSystemTags(String(fileContent || log.metadata?.output || ""));
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
   const operation = structuredWrite?.operation || deriveWriteOperation(command, log.metadata?.changeKinds?.[0]);
-  const { diffText, additions, deletions, hasKnownCounts } = resolveWriteDiffPreview(log, filePath, output, operation);
+  const diffPreview = resolveWriteDiffPreview(log, filePath, output, operation);
+  const diffText = String(structuredWrite?.diffText || diffPreview.diffText || "").trim();
+  const additions =
+    typeof structuredWrite?.additions === "number"
+      ? structuredWrite.additions
+      : diffPreview.additions;
+  const deletions =
+    typeof structuredWrite?.deletions === "number"
+      ? structuredWrite.deletions
+      : diffPreview.deletions;
+  const hasKnownCounts =
+    typeof structuredWrite?.additions === "number" ||
+    typeof structuredWrite?.deletions === "number" ||
+    diffPreview.hasKnownCounts;
   const imagePreviewUrl = isRunnerLogImageFilePath(filePath)
     ? buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath)
     : null;
@@ -3413,7 +3690,15 @@ function WriteFileSingleLogBox({
     <div className="tb-log-card">
       <LogHeader
         icon={(imagePreviewUrl ? <FileImage className="tb-log-card-small-icon" strokeWidth={1.5} /> : <FilePlus className="tb-log-card-small-icon" strokeWidth={1.5} />)}
-        label={imagePreviewUrl ? imageLabel : (operation === "created" ? "Create File" : "Edit File")}
+        label={
+          imagePreviewUrl
+            ? imageLabel
+            : operation === "created"
+              ? "Create File"
+              : operation === "deleted"
+                ? "Delete File"
+                : "Edit File"
+        }
         title={filePath || "file"}
         timeLabel={timeLabel}
         collapsed={collapsed}
@@ -3475,18 +3760,13 @@ function WriteFileSingleLogBox({
                     deletions={hasKnownCounts ? deletions : undefined}
                     emptyMessage="Diff unavailable for this log."
                     maxHeight={500}
-                    defaultExpanded
                     hideTopbar
                     embedded
                   />
                 ) : (
-                  <RunnerCodeViewer
-                    key={`${filePath || "inline"}:${detectedLanguage}:write-file-preview`}
+                  <RunnerStaticCodeViewer
                     content={output}
-                    filePath={filePath}
                     language={detectedLanguage}
-                    maxHeight={500}
-                    showLineNumbers
                     className="tb-log-card-code-hide-scrollbars"
                   />
                 )}
@@ -6841,7 +7121,7 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
     if (shouldRenderComputerAgentsCreateLog(log)) return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementReleaseCreateLog(log)) return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementCreateLog(log)) return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
-    if (isReadFileCommand(command)) {
+    if (isReadFileLog(log)) {
       return (
         <ReadFileLogBox
           log={log}
@@ -6854,7 +7134,7 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
       );
     }
     if (isListFilesCommand(command)) return <ListFilesLogBox log={log} timeLabel={timeLabel} />;
-    if (isWriteFileCommand(command)) {
+    if (isWriteFileLog(log)) {
       return (
         <WriteFileLogGroup
           log={log}
