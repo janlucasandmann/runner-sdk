@@ -1,4 +1,4 @@
-import { CSSProperties, ChangeEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, ChangeEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Bookmark as LucideBookmark,
@@ -13670,6 +13670,7 @@ export function RunnerChat({
                 ? getRunnerChatEnterAnimationStyle(baseDelay + 150 + displayedTimelineItems.length * 45)
                 : undefined;
               const turnAgentLabel = turn.agentName || displayedAgentLabel || "Agent";
+              const turnAgentPhotoUrl = resolveTurnAgentPhotoUrl(turnAgentLabel);
               const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
               const workLabel = isWorkLogsLoading
                 ? "Loading Working Logs..."
@@ -13798,7 +13799,10 @@ export function RunnerChat({
 
                     {!isQueuedTurn ? (
                       <div className="tb-turn-meta" style={metaHeaderStyle}>
-                        <span className="tb-turn-agent-name">{turnAgentLabel}</span>
+                        <div className="tb-turn-agent">
+                          {renderTurnAgentAvatar(turnAgentLabel, turnAgentPhotoUrl)}
+                          <span className="tb-turn-agent-name">{turnAgentLabel}</span>
+                        </div>
                         <div className="tb-turn-environment-pill">
                           <LucideCloud className="tb-turn-environment-icon" />
                           <span className="tb-turn-environment-label">{turnEnvironmentLabel}</span>
@@ -13814,7 +13818,6 @@ export function RunnerChat({
                           style={workHeaderStyle}
                           onClick={() => setExpandedTurns((prev) => ({ ...prev, [turn.id]: !isExpanded }))}
                         >
-                          <LucideRoute className="tb-step-row-icon" strokeWidth={1.5} />
                           <span className="tb-work-label">{workLabel}</span>
                           {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
                         </button>
@@ -13966,7 +13969,10 @@ export function RunnerChat({
 
                   {!isQueuedTurn ? (
                     <div className="tb-turn-meta" style={metaHeaderStyle}>
-                      <span className="tb-turn-agent-name">{turnAgentLabel}</span>
+                      <div className="tb-turn-agent">
+                        {renderTurnAgentAvatar(turnAgentLabel, turnAgentPhotoUrl)}
+                        <span className="tb-turn-agent-name">{turnAgentLabel}</span>
+                      </div>
                       <div className="tb-turn-environment-pill">
                         <LucideCloud className="tb-turn-environment-icon" />
                         <span className="tb-turn-environment-label">{turnEnvironmentLabel}</span>
@@ -13974,18 +13980,17 @@ export function RunnerChat({
                     </div>
                   ) : null}
 
-                  {shouldRenderWorkSection ? (
-                    <>
-                      <button
-                        type="button"
-                        className="tb-work-header"
-                        style={workHeaderStyle}
-                        onClick={() => setExpandedTurns((prev) => ({ ...prev, [turn.id]: !isExpanded }))}
-                      >
-                        <LucideRoute className="tb-step-row-icon" strokeWidth={1.5} />
-                        <span className="tb-work-label">{workLabel}</span>
-                        {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
-                      </button>
+                    {shouldRenderWorkSection ? (
+                      <>
+                        <button
+                          type="button"
+                          className="tb-work-header"
+                          style={workHeaderStyle}
+                          onClick={() => setExpandedTurns((prev) => ({ ...prev, [turn.id]: !isExpanded }))}
+                        >
+                          <span className="tb-work-label">{workLabel}</span>
+                          {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
+                        </button>
 
                       <div className={`tb-work-collapse ${isExpanded ? "" : "collapsed"}`}>
                         {isExpanded ? (

@@ -1692,6 +1692,42 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   margin-bottom: 14px;
 }
 
+.tb-runner-chat .tb-turn-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-turn-agent-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.88);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-turn-agent-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tb-runner-chat .tb-turn-agent-avatar-fallback {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .tb-runner-chat .tb-context-action-notice {
   display: flex;
   align-items: center;

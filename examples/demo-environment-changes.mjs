@@ -16,6 +16,11 @@ export const ENVIRONMENT_CHANGES_CSS = String.raw`
         flex-direction: column;
       }
 
+      .playground-environment-changes-view .changes-timeline-panel {
+        width: 100%;
+        max-width: none;
+      }
+
       .playground-environment-changes-panel {
         min-height: 0;
         flex: 1 1 auto;
@@ -424,6 +429,44 @@ export const ENVIRONMENT_CHANGES_CSS = String.raw`
         margin-left: 12px;
       }
 
+      .playground-environment-changes-step-summary-head {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-environment-changes-step-summary-title {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .playground-environment-changes-step-summary-meta {
+        min-width: 0;
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+        text-align: right;
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.58);
+        white-space: nowrap;
+      }
+
+      .playground-environment-changes-step-summary-agent {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-environment-changes-step-summary-date {
+        margin-left: 12px;
+      }
+
       .playground-environment-changes-agent-avatar {
         width: 24px;
         height: 24px;
@@ -621,6 +664,15 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
           return threadTitle;
         }
         return buildEnvironmentChangeTitle(entry);
+      }
+
+      function resolveEnvironmentChangeAgentRecord(change, availableAgentsById, availableAgentsByName) {
+        const normalizedAgentId = String(change?.agentId || "").trim();
+        if (normalizedAgentId) {
+          return availableAgentsById.get(normalizedAgentId) || null;
+        }
+        const normalizedAgentName = String(change?.agentName || "").trim().toLowerCase();
+        return normalizedAgentName ? (availableAgentsByName.get(normalizedAgentName) || null) : null;
       }
 
       function getEnvironmentChangeKindLabel(value) {
@@ -1741,14 +1793,6 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
 
         return React.createElement("div", { className: "playground-environment-changes-view is-timeline" },
           React.createElement("section", { className: "changes-panel changes-timeline-panel" },
-            React.createElement("div", { className: "changes-panel-header" },
-              React.createElement("div", { className: "changes-panel-title" }, "Changes"),
-              React.createElement("div", { className: "changes-panel-subtitle" },
-                filteredChanges.length > 0
-                  ? filteredChanges.length + " " + (filteredChanges.length === 1 ? "change" : "changes")
-                  : ""
-              )
-            ),
             loading
               ? React.createElement("div", { className: "changes-panel-body changes-timeline-body" },
                   React.createElement("div", { className: "changes-loading-state" },
@@ -1772,8 +1816,14 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
                               group.items.map((change) => {
                                 const isActiveChange = selectedChange?.id === change.id;
                                 const primaryFile = Array.isArray(change?.files) && change.files.length > 0 ? change.files[0] : null;
-                                const changeSummary = buildEnvironmentChangeSummary(change);
                                 const changeKindLabel = primaryFile ? getEnvironmentChangeKindLabel(primaryFile.operation || primaryFile.changeKind) : "";
+                                const changeAgent = resolveEnvironmentChangeAgentRecord(change, availableAgentsById, availableAgentsByName);
+                                const changeAgentPhotoUrl = changeAgent
+                                  ? (typeof getPlaygroundAgentProfilePhotoUrl === "function"
+                                      ? normalizeEnvironmentChangesPhotoUrl(getPlaygroundAgentProfilePhotoUrl(changeAgent)) || readEnvironmentChangesAgentPhotoUrl(changeAgent)
+                                      : readEnvironmentChangesAgentPhotoUrl(changeAgent))
+                                  : "";
+                                const changeAgentName = String(change?.agentName || changeAgent?.name || "").trim();
                                 return React.createElement("article", {
                                     key: change.id,
                                     className: "changes-step-card" + (isActiveChange ? " is-active" : ""),
@@ -1788,12 +1838,21 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
                                         className: "changes-step-card-summary",
                                         onClick: () => openChangeDetail(change),
                                       },
-                                        React.createElement("div", { className: "changes-step-card-title" }, buildEnvironmentChangeTimelineTitle(change)),
-                                        React.createElement("div", { className: "changes-step-card-meta" },
-                                          React.createElement("span", null, formatHistoryTimestamp(change.createdAt)),
-                                          changeSummary
-                                            ? React.createElement("span", null, changeSummary)
-                                            : null
+                                        React.createElement("div", { className: "playground-environment-changes-step-summary-head" },
+                                          React.createElement("div", { className: "changes-step-card-title playground-environment-changes-step-summary-title" }, buildEnvironmentChangeTimelineTitle(change)),
+                                          React.createElement("div", { className: "playground-environment-changes-step-summary-meta" },
+                                            changeAgentName
+                                              ? React.createElement("span", { className: "playground-environment-changes-step-summary-agent" },
+                                                  renderEnvironmentChangesAgentAvatar(
+                                                    changeAgentName,
+                                                    "playground-environment-changes-agent-avatar",
+                                                    changeAgentPhotoUrl
+                                                  ),
+                                                  React.createElement("span", null, changeAgentName)
+                                                )
+                                              : null,
+                                            React.createElement("span", { className: "playground-environment-changes-step-summary-date" }, formatHistoryTimestamp(change.createdAt))
+                                          )
                                         )
                                       )
                                     ),
