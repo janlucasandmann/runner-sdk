@@ -121,7 +121,9 @@ export interface RunnerLog {
       topic?: string;
       interactionId?: string;
       thinkingSummary?: string;
+      thinkingPhase?: string;
       reportFile?: string;
+      reportManifestFile?: string;
       sourcesCount?: number;
       sources?: string[];
       elapsedSeconds?: number;
@@ -141,6 +143,33 @@ export interface RunnerLog {
       sourceType: "working_log" | "run_summary";
     };
   };
+}
+
+export interface RunnerDeepResearchThinkingSummary {
+  timestamp: string;
+  phase: string;
+  summary: string;
+}
+
+export interface RunnerDeepResearchSession {
+  id: string;
+  threadId: string;
+  userId: string;
+  interactionId: string | null;
+  topic: string;
+  status: string;
+  createdAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  elapsedSeconds: number | null;
+  thinkingSummaries: RunnerDeepResearchThinkingSummary[];
+  reportPath: string | null;
+  reportLength: number | null;
+  sourcesCount: number | null;
+  reportManifestPath?: string | null;
+  sources?: string[];
+  errorMessage: string | null;
+  metadata: Record<string, unknown> | null;
 }
 
 export interface RunnerRunRequest {

@@ -51,7 +51,7 @@ import {
   X as LucideX,
   Zap as LucideZap,
 } from "lucide-react";
-import { RunnerExecuteResult, RunnerLog, RunnerThreadStep, RunnerThreadStepDiffResult } from "../types.js";
+import { RunnerDeepResearchSession, RunnerExecuteResult, RunnerLog, RunnerThreadStep, RunnerThreadStepDiffResult } from "../types.js";
 import { iterateSseData } from "../sse.js";
 import { useRunnerExecution } from "./use-runner-execution.js";
 import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
@@ -361,6 +361,63 @@ interface PendingForkConfiguration {
   quotedSelection?: RunnerQuotedSelection | null;
   turn?: RunnerTurn;
   restoreSelectedEnvironmentId?: string | null;
+}
+
+function extractDeepResearchSessionIdFromLogs(logs: RunnerLog[], runningCommandLog?: RunnerLog): string | null {
+  const sessionIdFromLogs = logs.find(
+    (log) => typeof log.metadata?.deepResearch?.sessionId === "string" && log.metadata.deepResearch.sessionId.trim()
+  )?.metadata?.deepResearch?.sessionId;
+  if (typeof sessionIdFromLogs === "string" && sessionIdFromLogs.trim()) {
+    return sessionIdFromLogs.trim();
+  }
+  const commandSessionId = runningCommandLog?.metadata?.deepResearch?.sessionId;
+  return typeof commandSessionId === "string" && commandSessionId.trim() ? commandSessionId.trim() : null;
+}
+
+function extractDeepResearchTopicFromGroup(logs: RunnerLog[], runningCommandLog?: RunnerLog): string {
+  const topicFromLogs = logs.find(
+    (log) => typeof log.metadata?.deepResearch?.topic === "string" && log.metadata.deepResearch.topic.trim()
+  )?.metadata?.deepResearch?.topic;
+  if (typeof topicFromLogs === "string" && topicFromLogs.trim()) {
+    return topicFromLogs.trim();
+  }
+  const command = typeof runningCommandLog?.metadata?.command === "string" ? runningCommandLog.metadata.command : "";
+  const match = command.match(/deep-research\.py\s+["']([^"']+)["']/i);
+  return match?.[1]?.trim() || "";
+}
+
+function resolveDeepResearchSessionForGroup(params: {
+  logs: RunnerLog[];
+  runningCommandLog?: RunnerLog;
+  turn: RunnerTurn;
+  sessions: RunnerDeepResearchSession[];
+}): RunnerDeepResearchSession | null {
+  const sessionId = extractDeepResearchSessionIdFromLogs(params.logs, params.runningCommandLog);
+  if (sessionId) {
+    return params.sessions.find((session) => session.id === sessionId) || null;
+  }
+
+  const topic = extractDeepResearchTopicFromGroup(params.logs, params.runningCommandLog).toLowerCase();
+  const turnStartedAt = params.turn.startedAtMs;
+  const candidateSessions = params.sessions.filter((session) => {
+    if (topic && session.topic.trim().toLowerCase() === topic) {
+      return true;
+    }
+    const createdAtMs = parseIsoTimestampMs(session.startedAt) ?? parseIsoTimestampMs(session.createdAt);
+    return createdAtMs !== null && Math.abs(createdAtMs - turnStartedAt) <= 15 * 60 * 1000;
+  });
+
+  if (candidateSessions.length <= 1) {
+    return candidateSessions[0] || null;
+  }
+
+  return candidateSessions
+    .slice()
+    .sort((left, right) => {
+      const leftMs = parseIsoTimestampMs(left.startedAt) ?? parseIsoTimestampMs(left.createdAt) ?? 0;
+      const rightMs = parseIsoTimestampMs(right.startedAt) ?? parseIsoTimestampMs(right.createdAt) ?? 0;
+      return Math.abs(leftMs - turnStartedAt) - Math.abs(rightMs - turnStartedAt);
+    })[0] || null;
 }
 
 interface RunnerConversationMessage {
@@ -4098,6 +4155,94 @@ async function fetchThreadStatusSnapshot(params: {
   };
 }
 
+function normalizeRunnerDeepResearchSession(value: unknown): RunnerDeepResearchSession | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  const session = value as Record<string, unknown>;
+  const metadata =
+    session.metadata && typeof session.metadata === "object" && !Array.isArray(session.metadata)
+      ? (session.metadata as Record<string, unknown>)
+      : null;
+  const metadataSources = Array.isArray(metadata?.sources)
+    ? metadata.sources.filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0)
+    : [];
+  const reportManifestPath =
+    typeof metadata?.reportManifestPath === "string" && metadata.reportManifestPath.trim()
+      ? metadata.reportManifestPath.trim()
+      : null;
+
+  return {
+    id: typeof session.id === "string" ? session.id : "",
+    threadId: typeof session.threadId === "string" ? session.threadId : "",
+    userId: typeof session.userId === "string" ? session.userId : "",
+    interactionId: typeof session.interactionId === "string" ? session.interactionId : null,
+    topic: typeof session.topic === "string" ? session.topic : "",
+    status: typeof session.status === "string" ? session.status : "starting",
+    createdAt: typeof session.createdAt === "string" ? session.createdAt : "",
+    startedAt: typeof session.startedAt === "string" ? session.startedAt : null,
+    completedAt: typeof session.completedAt === "string" ? session.completedAt : null,
+    elapsedSeconds: typeof session.elapsedSeconds === "number" ? session.elapsedSeconds : null,
+    thinkingSummaries: Array.isArray(session.thinkingSummaries)
+      ? session.thinkingSummaries
+          .map((entry) => {
+            if (!entry || typeof entry !== "object") return null;
+            const summary = entry as Record<string, unknown>;
+            const summaryText = typeof summary.summary === "string" ? summary.summary : "";
+            if (!summaryText.trim()) return null;
+            return {
+              timestamp: typeof summary.timestamp === "string" ? summary.timestamp : "",
+              phase: typeof summary.phase === "string" ? summary.phase : "Thinking",
+              summary: summaryText,
+            };
+          })
+          .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+      : [],
+    reportPath: typeof session.reportPath === "string" ? session.reportPath : null,
+    reportLength: typeof session.reportLength === "number" ? session.reportLength : null,
+    sourcesCount: typeof session.sourcesCount === "number" ? session.sourcesCount : null,
+    reportManifestPath,
+    sources: metadataSources,
+    errorMessage: typeof session.errorMessage === "string" ? session.errorMessage : null,
+    metadata,
+  };
+}
+
+async function fetchThreadResearchSessions(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  requestHeaders?: HeadersInit;
+}): Promise<RunnerDeepResearchSession[]> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/research`, {
+    method: "GET",
+    headers: buildRunnerHeaders(params.requestHeaders, params.apiKey),
+    cache: "no-store",
+  });
+
+  const bodyText = await response.text();
+  let parsed: {
+    data?: unknown[];
+    message?: string;
+    error?: string;
+  } = {};
+
+  try {
+    parsed = bodyText ? JSON.parse(bodyText) : {};
+  } catch {
+    parsed = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(parsed.message || parsed.error || `Failed to load deep research sessions (${response.status})`);
+  }
+
+  return Array.isArray(parsed.data)
+    ? parsed.data.map((entry) => normalizeRunnerDeepResearchSession(entry)).filter((entry): entry is RunnerDeepResearchSession => Boolean(entry?.id))
+    : [];
+}
+
 function normalizeThreadLifecycleStatus(status: string | null | undefined): string {
   return typeof status === "string" ? status.trim().toLowerCase() : "";
 }
@@ -5670,6 +5815,7 @@ export function RunnerChat({
   const [, setInlineError] = useState<string | null>(null);
   const [isPreparingRun, setIsPreparingRun] = useState(false);
   const [turns, setTurns] = useState<RunnerTurn[]>([]);
+  const [deepResearchSessions, setDeepResearchSessions] = useState<RunnerDeepResearchSession[]>([]);
   const [visibleTimelineItemCountsByTurn, setVisibleTimelineItemCountsByTurn] = useState<Record<string, number>>({});
   const [thinkingStatusPhaseByTurn, setThinkingStatusPhaseByTurn] = useState<Record<string, RunnerThinkingStatusPhase>>({});
   const [pendingQueuedMessages, setPendingQueuedMessages] = useState<PendingRunnerMessage[]>([]);
@@ -6472,6 +6618,25 @@ export function RunnerChat({
 
   function refreshThreadContextDetailsInBackground(nextThreadId?: string) {
     void refreshThreadContextDetails(nextThreadId).catch(() => undefined);
+  }
+
+  async function refreshDeepResearchSessions(nextThreadId?: string): Promise<void> {
+    const resolvedThreadId = String(nextThreadId || currentThreadId || "").trim();
+    if (!resolvedThreadId || !hasApiKey || !normalizedBackendUrl) {
+      setDeepResearchSessions([]);
+      return;
+    }
+    try {
+      const sessions = await fetchThreadResearchSessions({
+        backendUrl: normalizedBackendUrl,
+        apiKey: apiKey.trim(),
+        threadId: resolvedThreadId,
+        requestHeaders,
+      });
+      setDeepResearchSessions(sessions);
+    } catch {
+      // Keep the last known sessions during transient polling failures.
+    }
   }
 
   function handleContextIndicatorClick() {
@@ -8382,6 +8547,7 @@ export function RunnerChat({
     setThreadContextDetailsError(null);
     setThreadContextNativeError(null);
     setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
+    setDeepResearchSessions([]);
     setPendingQueuedMessages([]);
     stopRequestedThreadIdRef.current = null;
     setIsStoppingRun(false);
@@ -8394,6 +8560,40 @@ export function RunnerChat({
       locallyOwnedExecutionThreadIdRef.current = null;
     }
   }, [currentThreadId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let pollTimer: number | null = null;
+    const resolvedThreadId = String(currentThreadId || "").trim();
+
+    if (!resolvedThreadId || !hasApiKey || !normalizedBackendUrl) {
+      setDeepResearchSessions([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const poll = async () => {
+      try {
+        await refreshDeepResearchSessions(resolvedThreadId);
+      } catch {
+        // Keep existing session state on transient fetch failures.
+      } finally {
+        if (!cancelled) {
+          pollTimer = window.setTimeout(poll, 3000);
+        }
+      }
+    };
+
+    void poll();
+
+    return () => {
+      cancelled = true;
+      if (pollTimer !== null) {
+        window.clearTimeout(pollTimer);
+      }
+    };
+  }, [apiKey, currentThreadId, hasApiKey, normalizedBackendUrl, requestHeaders]);
 
   useEffect(() => {
     let cancelled = false;
@@ -11683,11 +11883,18 @@ export function RunnerChat({
 
     if (item.kind === "deep_research_group") {
       const firstLog = item.logs[0] || item.runningCommandLog;
+      const deepResearchSession = resolveDeepResearchSessionForGroup({
+        logs: item.logs,
+        runningCommandLog: item.runningCommandLog,
+        turn,
+        sessions: deepResearchSessions,
+      });
       return (
         <DeepResearchLogBox
           log={item.runningCommandLog}
           logs={item.logs}
           runningCommandLog={item.runningCommandLog}
+          session={deepResearchSession}
           timeLabel={firstLog ? toDurationLabel(firstLog) : undefined}
           isDetailOpen={selectedDeepResearchDetail?.turnId === turn.id}
           onOpenDetails={() => openDeepResearchDetailDrawer(turn.id)}
@@ -12207,13 +12414,20 @@ export function RunnerChat({
     }
 
     const firstLog = deepResearchGroup.logs[0] || deepResearchGroup.runningCommandLog;
+    const session = resolveDeepResearchSessionForGroup({
+      logs: deepResearchGroup.logs,
+      runningCommandLog: deepResearchGroup.runningCommandLog,
+      turn: selectedTurn,
+      sessions: deepResearchSessions,
+    });
     return {
       turn: selectedTurn,
       logs: deepResearchGroup.logs,
       runningCommandLog: deepResearchGroup.runningCommandLog,
+      session,
       timeLabel: firstLog ? toDurationLabel(firstLog) : undefined,
     };
-  }, [selectedDeepResearchDetail, turns]);
+  }, [deepResearchSessions, selectedDeepResearchDetail, turns]);
 
   const selectedComputerUseDetailPresentation = useMemo(() => {
     if (!selectedComputerUseDetail) {
@@ -12477,6 +12691,7 @@ export function RunnerChat({
       log={selectedDeepResearchDetailPresentation.runningCommandLog}
       logs={selectedDeepResearchDetailPresentation.logs}
       runningCommandLog={selectedDeepResearchDetailPresentation.runningCommandLog}
+      session={selectedDeepResearchDetailPresentation.session}
       timeLabel={selectedDeepResearchDetailPresentation.timeLabel}
       onClose={closeDeepResearchDetailDrawer}
     />

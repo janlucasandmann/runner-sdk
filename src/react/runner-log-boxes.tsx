@@ -44,7 +44,7 @@ import {
   Video,
   X,
 } from "lucide-react";
-import type { RunnerLog } from "../types.js";
+import type { RunnerDeepResearchSession, RunnerLog } from "../types.js";
 import {
   buildRunnerPreviewAttachmentFromPath,
   buildRunnerPreviewDownloadUrl,
@@ -4947,6 +4947,7 @@ function parseDeepResearchOutput(output?: string) {
     interactionId: null as string | null,
     thinkingSummaries: [] as string[],
     reportFile: null as string | null,
+    reportManifestFile: null as string | null,
     sourcesCount: 0,
     sources: [] as string[],
     elapsedSeconds: 0,
@@ -4972,6 +4973,9 @@ function parseDeepResearchOutput(output?: string) {
         result.reportFile = event.report_file;
         result.status = "complete";
       }
+      if ((event.event === "research_complete" || event.event === "complete") && typeof event.report_manifest_file === "string") {
+        result.reportManifestFile = event.report_manifest_file;
+      }
       if ((event.event === "research_complete" || event.event === "complete") && typeof event.sources_count === "number") {
         result.sourcesCount = event.sources_count;
       }
@@ -4995,6 +4999,7 @@ function buildDeepResearchFromStreamingLogs(logs: RunnerLog[]) {
     interactionId: null as string | null,
     thinkingSummaries: [] as string[],
     reportFile: null as string | null,
+    reportManifestFile: null as string | null,
     sourcesCount: 0,
     sources: [] as string[],
     elapsedSeconds: 0,
@@ -5036,6 +5041,7 @@ function buildDeepResearchFromStreamingLogs(logs: RunnerLog[]) {
       case "complete":
         result.status = "complete";
         result.reportFile = deepResearch.reportFile || result.reportFile;
+        result.reportManifestFile = deepResearch.reportManifestFile || result.reportManifestFile;
         if (typeof deepResearch.sourcesCount === "number") {
           result.sourcesCount = deepResearch.sourcesCount;
         }
@@ -5079,6 +5085,65 @@ function buildDeepResearchFromStreamingLogs(logs: RunnerLog[]) {
   return result;
 }
 
+function buildDeepResearchFromSession(session?: RunnerDeepResearchSession | null) {
+  const metadata = session?.metadata && typeof session.metadata === "object" ? session.metadata : null;
+  const rawSources = metadata && Array.isArray((metadata as { sources?: unknown }).sources)
+    ? (metadata as { sources?: unknown[] }).sources
+    : null;
+  const reportManifestPath =
+    metadata && typeof (metadata as { reportManifestPath?: unknown }).reportManifestPath === "string"
+      ? String((metadata as { reportManifestPath?: unknown }).reportManifestPath || "").trim() || null
+      : null;
+  return {
+    status:
+      session?.status === "completed"
+        ? ("complete" as const)
+        : session?.status === "failed" || session?.status === "timeout" || session?.status === "cancelled"
+          ? ("error" as const)
+          : session?.thinkingSummaries?.length
+            ? ("thinking" as const)
+            : session
+              ? ("researching" as const)
+              : ("starting" as const),
+    topic: session?.topic || null,
+    interactionId: session?.interactionId || null,
+    thinkingSummaries: Array.isArray(session?.thinkingSummaries)
+      ? session!.thinkingSummaries
+          .map((entry) => String(entry?.summary || "").trim())
+          .filter(Boolean)
+      : [],
+    reportFile: session?.reportPath || null,
+    reportManifestFile: reportManifestPath,
+    sourcesCount: typeof session?.sourcesCount === "number" ? session.sourcesCount : 0,
+    sources: Array.isArray(rawSources)
+      ? rawSources.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      : [],
+    elapsedSeconds: typeof session?.elapsedSeconds === "number" ? session.elapsedSeconds : 0,
+    errorMessage: session?.errorMessage || null,
+  };
+}
+
+function mergeDeepResearchState(
+  base: ReturnType<typeof buildDeepResearchFromSession>,
+  override: ReturnType<typeof buildDeepResearchFromStreamingLogs>
+) {
+  return {
+    status: override.status || base.status,
+    topic: override.topic || base.topic,
+    interactionId: override.interactionId || base.interactionId,
+    thinkingSummaries:
+      override.thinkingSummaries.length > 0
+        ? override.thinkingSummaries
+        : base.thinkingSummaries,
+    reportFile: override.reportFile || base.reportFile,
+    reportManifestFile: override.reportManifestFile || base.reportManifestFile,
+    sourcesCount: override.sourcesCount > 0 ? override.sourcesCount : base.sourcesCount,
+    sources: override.sources.length > 0 ? override.sources : base.sources,
+    elapsedSeconds: override.elapsedSeconds > 0 ? override.elapsedSeconds : base.elapsedSeconds,
+    errorMessage: override.errorMessage || base.errorMessage,
+  };
+}
+
 function isDeepResearchCommandStatusActive(status: unknown): boolean {
   const normalizedStatus = typeof status === "string" ? status.trim().toLowerCase() : "";
   return normalizedStatus === "running" || normalizedStatus === "started" || normalizedStatus === "output";
@@ -5088,6 +5153,7 @@ type RunnerDeepResearchDerivedState = {
   streamingLogs: RunnerLog[];
   hasStreamingLogs: boolean;
   effectiveCommandLog?: RunnerLog;
+  session?: RunnerDeepResearchSession | null;
   parsed: ReturnType<typeof buildDeepResearchFromStreamingLogs>;
   topic: string | null;
   isError: boolean;
@@ -5100,10 +5166,12 @@ export function getDeepResearchLogState({
   log,
   logs,
   runningCommandLog,
+  session,
 }: {
   log?: RunnerLog;
   logs?: RunnerLog[];
   runningCommandLog?: RunnerLog;
+  session?: RunnerDeepResearchSession | null;
 }): RunnerDeepResearchDerivedState {
   const streamingLogs = Array.isArray(logs) ? logs : [];
   const hasStreamingLogs = streamingLogs.length > 0;
@@ -5113,7 +5181,9 @@ export function getDeepResearchLogState({
   const commandExitCode = effectiveCommandLog?.metadata?.exitCode;
   const commandOutput = typeof effectiveCommandLog?.metadata?.output === "string" ? effectiveCommandLog.metadata.output : "";
 
-  const parsed = hasStreamingLogs ? buildDeepResearchFromStreamingLogs(streamingLogs) : parseDeepResearchOutput(commandOutput);
+  const sessionParsed = buildDeepResearchFromSession(session);
+  const streamingParsed = hasStreamingLogs ? buildDeepResearchFromStreamingLogs(streamingLogs) : parseDeepResearchOutput(commandOutput);
+  const parsed = mergeDeepResearchState(sessionParsed, streamingParsed);
 
   const topicFromStreamingLogs =
     streamingLogs.find((entry) => entry.metadata?.deepResearch?.topic)?.metadata?.deepResearch?.topic || null;
@@ -5136,11 +5206,19 @@ export function getDeepResearchLogState({
     ) ||
       streamingLogs.some((entry) => Boolean(entry.metadata?.deepResearch?.reportFile)) ||
       Boolean(parsed.reportFile));
+  const isSessionComplete = session?.status === "completed";
   const isCommandComplete = commandStatus === "completed" && !hasCommandError;
   const isParsedComplete = parsed.status === "complete" || Boolean(parsed.reportFile);
-  const isComplete = !isError && (isStreamingComplete || isCommandComplete || isParsedComplete);
+  const isComplete = !isError && (isStreamingComplete || isSessionComplete || isCommandComplete || isParsedComplete);
   const isCommandRunning = isDeepResearchCommandStatusActive(commandStatus);
-  const isLoading = !isError && !isComplete && (hasStreamingLogs || isCommandRunning);
+  const isSessionRunning = Boolean(
+    session &&
+      session.status !== "completed" &&
+      session.status !== "failed" &&
+      session.status !== "timeout" &&
+      session.status !== "cancelled"
+  );
+  const isLoading = !isError && !isComplete && (hasStreamingLogs || isCommandRunning || isSessionRunning);
   const statusLabel = isError
     ? "error"
     : isComplete
@@ -5155,6 +5233,7 @@ export function getDeepResearchLogState({
     streamingLogs,
     hasStreamingLogs,
     effectiveCommandLog,
+    session,
     parsed,
     topic,
     isError,
@@ -5479,6 +5558,7 @@ export function DeepResearchLogBox({
   log,
   logs,
   runningCommandLog,
+  session,
   timeLabel,
   onOpenDetails,
   isDetailOpen = false,
@@ -5486,6 +5566,7 @@ export function DeepResearchLogBox({
   log?: RunnerLog;
   logs?: RunnerLog[];
   runningCommandLog?: RunnerLog;
+  session?: RunnerDeepResearchSession | null;
   timeLabel?: string;
   onOpenDetails?: () => void;
   isDetailOpen?: boolean;
@@ -5502,8 +5583,8 @@ export function DeepResearchLogBox({
     isLoading,
     statusLabel,
   } = useMemo(
-    () => getDeepResearchLogState({ log, logs, runningCommandLog }),
-    [log, logs, runningCommandLog]
+      () => getDeepResearchLogState({ log, logs, runningCommandLog, session }),
+    [log, logs, runningCommandLog, session]
   );
   const taskCopy = truncateSubagentPreviewText(topic || parsed.topic || "Deep research task", 280);
   const previewLogs = useMemo(
@@ -5583,12 +5664,14 @@ export function DeepResearchDetailDrawer({
   log,
   logs,
   runningCommandLog,
+  session,
   timeLabel,
   onClose,
 }: {
   log?: RunnerLog;
   logs?: RunnerLog[];
   runningCommandLog?: RunnerLog;
+  session?: RunnerDeepResearchSession | null;
   timeLabel?: string;
   onClose: () => void;
 }) {
@@ -5601,8 +5684,8 @@ export function DeepResearchDetailDrawer({
     isLoading,
     statusLabel,
   } = useMemo(
-    () => getDeepResearchLogState({ log, logs, runningCommandLog }),
-    [log, logs, runningCommandLog]
+      () => getDeepResearchLogState({ log, logs, runningCommandLog, session }),
+    [log, logs, runningCommandLog, session]
   );
 
   const displayLogs = useMemo(
