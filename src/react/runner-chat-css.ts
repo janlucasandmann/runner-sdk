@@ -857,6 +857,14 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   -ms-overflow-style: none;
 }
 
+.tb-runner-chat .tb-log-scroll .tb-log-card,
+.tb-runner-chat .tb-log-scroll .tb-log-card-panel,
+.tb-runner-chat .tb-log-scroll .tb-runner-diff-surface,
+.tb-runner-chat .tb-log-scroll .tb-runner-diff-surface-body {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
 .tb-runner-chat .tb-log-scroll.is-custom-empty-state {
   flex-direction: column;
   justify-content: center;
@@ -1174,7 +1182,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   border-bottom-right-radius: 3px;
   overflow: hidden;
   color: white;
-  background: #323232;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   font-size: 14px;
   line-height: 1.5;
   font-weight: 500;
@@ -2442,16 +2451,16 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-log-card-panel {
   position: relative;
   margin-top: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 15px;
   padding: 12px 12px 0;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   color: inherit;
   box-shadow: none;
   overflow: hidden;
   isolation: isolate;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .tb-runner-chat .tb-log-card-panel > * {
@@ -2487,7 +2496,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-log-card.tb-log-card-deep-research.is-detail-open .tb-log-card-panel {
-  padding: 12px;
+  padding: 12px 12px 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.1);
 }
@@ -2527,6 +2536,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-log-card-empty {
+  margin-bottom: 12px;
   color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
   line-height: 1.45;
@@ -2689,7 +2699,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 0 12px;
   border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
   font-size: 12px;
   line-height: 1;
@@ -2712,7 +2722,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-subagent-log-prompt {
   padding: 14px 16px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  border-bottom-right-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   width: fit-content;
   max-width: 85%;
   margin: 0 0 20px auto;
@@ -3783,8 +3795,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-diff-surface-body {
   background: rgba(15, 17, 21, 0.38);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -3818,8 +3830,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-diff-surface-body .diff-tailwindcss-wrapper {
   background: transparent;
-  backdrop-filter: blur(50px);
-  -webkit-backdrop-filter: blur(50px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .tb-runner-diff-surface-body .diff-tailwindcss-wrapper[data-theme="dark"] .diff-style-root {

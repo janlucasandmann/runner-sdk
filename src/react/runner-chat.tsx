@@ -69,7 +69,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, hasDeepResearchOutput, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -442,6 +442,18 @@ function resolveDeepResearchSessionForGroup(params: {
       const rightMs = parseIsoTimestampMs(right.startedAt) ?? parseIsoTimestampMs(right.createdAt) ?? 0;
       return Math.abs(leftMs - turnStartedAt) - Math.abs(rightMs - turnStartedAt);
     })[0] || null;
+}
+
+function isDeepResearchSessionActive(session: RunnerDeepResearchSession | null | undefined): boolean {
+  if (!session) {
+    return false;
+  }
+  const normalizedStatus = typeof session.status === "string" ? session.status.trim().toLowerCase() : "";
+  return Boolean(normalizedStatus) &&
+    normalizedStatus !== "completed" &&
+    normalizedStatus !== "failed" &&
+    normalizedStatus !== "timeout" &&
+    normalizedStatus !== "cancelled";
 }
 
 interface RunnerConversationMessage {
@@ -4465,9 +4477,12 @@ function hydratedThreadStatusIsRunning(meta?: {
   threadStatus?: string | null;
   completedAtMs?: number | null;
 }): boolean {
+  if (isRunningThreadLifecycleStatus(meta?.threadStatus)) {
+    return true;
+  }
   const normalizedStatus = typeof meta?.threadStatus === "string" ? meta.threadStatus.trim().toLowerCase() : "";
   if (normalizedStatus) {
-    return normalizedStatus === "running";
+    return false;
   }
   if (!meta || !Object.prototype.hasOwnProperty.call(meta, "completedAtMs")) {
     return false;
@@ -5327,6 +5342,33 @@ async function fetchThreadLiveRefreshPayload(params: {
   });
 
   const cachedPayload = params.cachedPayload || null;
+  const conversationMessages =
+    Array.isArray(cachedPayload?.messages) && cachedPayload.messages.length > 0
+      ? cachedPayload.messages
+      : await fetchAllThreadMessages({
+          backendUrl: params.backendUrl,
+          apiKey: params.apiKey,
+          threadId: params.threadId,
+          requestHeaders: params.requestHeaders,
+        }).catch(() => []);
+  const canonicalConversationMessages = conversationMessages.filter(
+    (message) =>
+      (message.role === "user" || message.role === "assistant") &&
+      typeof message.content === "string" &&
+      message.content.trim().length > 0
+  );
+  const hydrationLogs = logsSnapshot.logs.filter((log) => {
+    if (canonicalConversationMessages.length === 0) {
+      return log.eventType !== "user_message" && log.eventType !== "agent_message" && log.eventType !== "llm_response";
+    }
+    if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
+      return false;
+    }
+    if (log.eventType === "agent_message" || log.eventType === "llm_response") {
+      return false;
+    }
+    return true;
+  });
 
   return {
     threadId: params.threadId,
@@ -5339,8 +5381,8 @@ async function fetchThreadLiveRefreshPayload(params: {
       ?? cachedPayload?.environmentName
       ?? null,
     initialPrompt: resolveHydrationInitialPrompt(params.existingTurns, cachedPayload),
-    logs: logsSnapshot.logs,
-    messages: cachedPayload?.messages || [],
+    logs: hydrationLogs,
+    messages: conversationMessages,
     durationSeconds: logsSnapshot.durationSeconds ?? cachedPayload?.durationSeconds ?? null,
     startedAtMs: cachedPayload?.startedAtMs ?? null,
     completedAtMs: parseIsoTimestampMs(params.statusSnapshot.completedAt) ?? cachedPayload?.completedAtMs ?? null,
@@ -5557,6 +5599,11 @@ function dedupeAdjacentRunnerLogs(logs: RunnerLog[]): RunnerLog[] {
   let lastSignature = "";
 
   for (const log of prunedLogs) {
+    if (log.eventType === "deep_research") {
+      deduped.push(log);
+      lastSignature = "";
+      continue;
+    }
     const signature = runnerLogSignature(log);
     if (signature === lastSignature) {
       const previousLog = deduped[deduped.length - 1];
@@ -5601,6 +5648,7 @@ function isSyntheticProgressReasoningLog(log: RunnerLog): boolean {
 function shouldDisplayTimelineLog(log: RunnerLog): boolean {
   const normalizedMessage = stripSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
   if (log.eventType === "turn_completed") return false;
+  if (log.eventType === "action_summary") return false;
   if (log.eventType === "agent_message" || log.eventType === "llm_response") return false;
   if (log.eventType === "setup" || log.eventType === "startup") return false;
   if (isInternalFileChangeLog(log)) return false;
@@ -5866,6 +5914,7 @@ function defaultAttachmentFromFile(file: File): RunnerAttachment {
 }
 
 const LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 24;
+const LOGS_AUTO_SCROLL_SETTLE_FRAME_COUNT = 3;
 const REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS = 900;
 const REATTACH_THREAD_RETRY_DELAY_MS = 1500;
 const REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT = 2;
@@ -6150,8 +6199,10 @@ export function RunnerChat({
   const [isThreadHistoryRailHovered, setIsThreadHistoryRailHovered] = useState(false);
   const [isThreadHistoryAtMaxWidth, setIsThreadHistoryAtMaxWidth] = useState(true);
   const shouldAutoScrollLogsRef = useRef(true);
+  const isProgrammaticLogsAutoScrollRef = useRef(false);
   const autoScrollAnimationFrameRef = useRef<number | null>(null);
   const previousLogsScrollHeightRef = useRef(0);
+  const autoScrollSettleFramesRef = useRef(0);
   const screenFileDragActiveRef = useRef(false);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
@@ -6195,13 +6246,29 @@ export function RunnerChat({
       (turn) => turn.status === "running" && turn.presentation !== "btw" && turn.presentation !== "context-action-notice"
     ) || null;
   const hasRunningTurn = Boolean(activeRunningTurn);
+  const activeDeepResearchThreadSession = useMemo(() => {
+    const activeSessions = deepResearchSessions.filter((session) => isDeepResearchSessionActive(session));
+    if (activeSessions.length === 0) {
+      return null;
+    }
+    return activeSessions
+      .slice()
+      .sort((left, right) => {
+        const leftMs = parseIsoTimestampMs(left.startedAt) ?? parseIsoTimestampMs(left.createdAt) ?? 0;
+        const rightMs = parseIsoTimestampMs(right.startedAt) ?? parseIsoTimestampMs(right.createdAt) ?? 0;
+        return rightMs - leftMs;
+      })[0] || null;
+  }, [deepResearchSessions]);
+  const hasActiveDeepResearchSession = Boolean(activeDeepResearchThreadSession);
   const hasHydratedReattachActivity = useMemo(
-    () => turns.some((turn) => turn.status === "running" || hasActiveDeepResearchLogGroup(turn.logs)),
-    [turns]
+    () => hasActiveDeepResearchSession || turns.some((turn) => turn.status === "running" || hasActiveDeepResearchLogGroup(turn.logs)),
+    [hasActiveDeepResearchSession, turns]
   );
   const hasRunningTurnLogs = Boolean(activeRunningTurn && activeRunningTurn.logs.length > 0);
-  const showRunPreparationIndicator = isPreparingRun || (hasRunningTurn && !hasRunningTurnLogs);
-  const showActiveRunStopButton = !showRunPreparationIndicator && (hasRunningTurn || isRunning || isStoppingRun);
+  const showRunPreparationIndicator = isPreparingRun && !hasRunningTurn && !isRunning && !isStoppingRun;
+  const showActiveRunStopButton =
+    !showRunPreparationIndicator &&
+    (hasRunningTurn || hasActiveDeepResearchSession || isRunning || isStoppingRun);
   const trimmedInput = input.trim();
   const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
   const stagedThreadContextCommandLabel = stagedThreadContextCommand ? `/${stagedThreadContextCommand}` : "";
@@ -8593,7 +8660,7 @@ export function RunnerChat({
       locallyOwnedExecutionThreadIdRef.current === threadId &&
       (isPreparingRun || isRunning || pendingQueuedMessages.length > 0);
 
-    if (!threadId || !hasApiKey || isRunning || hasPendingExternalRunForThread || isLocallyOwnedExecutionForRequestedThread) {
+    if (!threadId || !hasApiKey || hasPendingExternalRunForThread || isLocallyOwnedExecutionForRequestedThread) {
       setIsThreadHistoryLoading(false);
       return () => {
         cancelled = true;
@@ -8708,7 +8775,6 @@ export function RunnerChat({
     hasApiKey,
     hasRunningTurn,
     isPreparingRun,
-    isRunning,
     normalizedBackendUrl,
     pendingQueuedMessages.length,
     requestHeaders,
@@ -9119,7 +9185,9 @@ export function RunnerChat({
 
   useLayoutEffect(() => {
     shouldAutoScrollLogsRef.current = true;
+    isProgrammaticLogsAutoScrollRef.current = false;
     previousLogsScrollHeightRef.current = 0;
+    autoScrollSettleFramesRef.current = 0;
     threadHydrationCacheRef.current = null;
     if (autoScrollAnimationFrameRef.current !== null) {
       window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
@@ -9135,55 +9203,108 @@ export function RunnerChat({
     const resolvedScrollElement = scrollElement;
 
     function handleLogViewportScroll() {
-      shouldAutoScrollLogsRef.current = isLogViewportPinnedToBottom(resolvedScrollElement);
+      const isPinnedToBottom = isLogViewportPinnedToBottom(resolvedScrollElement);
+      if (isProgrammaticLogsAutoScrollRef.current) {
+        shouldAutoScrollLogsRef.current = true;
+        if (isPinnedToBottom) {
+          isProgrammaticLogsAutoScrollRef.current = false;
+        }
+        return;
+      }
+      shouldAutoScrollLogsRef.current = isPinnedToBottom;
+    }
+
+    function handleLogViewportUserIntent() {
+      if (!isLogViewportPinnedToBottom(resolvedScrollElement)) {
+        isProgrammaticLogsAutoScrollRef.current = false;
+      }
     }
 
     handleLogViewportScroll();
     resolvedScrollElement.addEventListener("scroll", handleLogViewportScroll, { passive: true });
+    resolvedScrollElement.addEventListener("wheel", handleLogViewportUserIntent, { passive: true });
+    resolvedScrollElement.addEventListener("touchmove", handleLogViewportUserIntent, { passive: true });
 
     return () => {
       resolvedScrollElement.removeEventListener("scroll", handleLogViewportScroll);
+      resolvedScrollElement.removeEventListener("wheel", handleLogViewportUserIntent);
+      resolvedScrollElement.removeEventListener("touchmove", handleLogViewportUserIntent);
     };
   }, [currentThreadId]);
+
+  const scheduleLogsAutoScrollToBottom = useCallback((settleFrames = LOGS_AUTO_SCROLL_SETTLE_FRAME_COUNT) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (autoScrollAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
+    }
+    isProgrammaticLogsAutoScrollRef.current = true;
+    autoScrollSettleFramesRef.current = Math.max(settleFrames, 0);
+
+    const applyPinnedLogsAutoScroll = () => {
+      const scrollElement = logsRef.current;
+      if (!scrollElement || !shouldAutoScrollLogsRef.current) {
+        autoScrollAnimationFrameRef.current = null;
+        autoScrollSettleFramesRef.current = 0;
+        return;
+      }
+
+      const prefersReducedMotion =
+        typeof window !== "undefined"
+        && typeof window.matchMedia === "function"
+        && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (typeof scrollElement.scrollTo === "function") {
+        scrollElement.scrollTo({
+          top: scrollElement.scrollHeight,
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+        });
+      } else {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+      previousLogsScrollHeightRef.current = scrollElement.scrollHeight;
+
+      if (autoScrollSettleFramesRef.current > 0) {
+        autoScrollSettleFramesRef.current -= 1;
+        autoScrollAnimationFrameRef.current = window.requestAnimationFrame(applyPinnedLogsAutoScroll);
+        return;
+      }
+
+      if (isLogViewportPinnedToBottom(scrollElement)) {
+        isProgrammaticLogsAutoScrollRef.current = false;
+      }
+      autoScrollAnimationFrameRef.current = null;
+    };
+
+    autoScrollAnimationFrameRef.current = window.requestAnimationFrame(applyPinnedLogsAutoScroll);
+  }, []);
 
   useLayoutEffect(() => {
     if (!logsRef.current) return;
     if (!shouldAutoScrollLogsRef.current) return;
     const scrollElement = logsRef.current;
     const nextScrollHeight = scrollElement.scrollHeight;
-    const previousScrollHeight = previousLogsScrollHeightRef.current;
     previousLogsScrollHeightRef.current = nextScrollHeight;
+    scheduleLogsAutoScrollToBottom();
+  }, [logs, scheduleLogsAutoScrollToBottom, turns]);
 
-    const prefersReducedMotion =
-      typeof window !== "undefined"
-      && typeof window.matchMedia === "function"
-      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const shouldAnimateSmoothly =
-      !prefersReducedMotion
-      && previousScrollHeight > 0
-      && nextScrollHeight > previousScrollHeight
-      && (nextScrollHeight - previousScrollHeight) <= Math.max(scrollElement.clientHeight * 1.5, 640);
-
-    if (autoScrollAnimationFrameRef.current !== null) {
-      window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
+  useLayoutEffect(() => {
+    const contentElement = contentWidthRef.current;
+    if (!contentElement || typeof ResizeObserver === "undefined") {
+      return;
     }
-
-    autoScrollAnimationFrameRef.current = window.requestAnimationFrame(() => {
-      if (!logsRef.current || !shouldAutoScrollLogsRef.current) {
-        autoScrollAnimationFrameRef.current = null;
+    const resolvedContentElement = contentElement;
+    const resizeObserver = new ResizeObserver(() => {
+      if (!shouldAutoScrollLogsRef.current) {
         return;
       }
-      if (shouldAnimateSmoothly && typeof logsRef.current.scrollTo === "function") {
-        logsRef.current.scrollTo({
-          top: logsRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      } else {
-        logsRef.current.scrollTop = logsRef.current.scrollHeight;
-      }
-      autoScrollAnimationFrameRef.current = null;
+      scheduleLogsAutoScrollToBottom();
     });
-  }, [logs, turns]);
+    resizeObserver.observe(resolvedContentElement);
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [currentThreadId, scheduleLogsAutoScrollToBottom]);
 
   useEffect(() => {
     return () => {
@@ -11711,10 +11832,7 @@ export function RunnerChat({
   function isDeepResearchTimelineCommand(log: RunnerLog): boolean {
     return (
       log.eventType === "command_execution" &&
-      (
-        isDeepResearchCommand(log.metadata?.command || log.message || "") ||
-        hasDeepResearchOutput(typeof log.metadata?.output === "string" ? log.metadata.output : "")
-      )
+      isDeepResearchCommand(log.metadata?.command || log.message || "")
     );
   }
 
@@ -11940,10 +12058,35 @@ export function RunnerChat({
             },
           ]
         : timelineLogs;
+    const displayedTimelineItems = buildTimelineItems(displayedTimelineLogs);
+    const hasDeepResearchGroup = displayedTimelineItems.some((item) => item.kind === "deep_research_group");
+    const fallbackDeepResearchCommandLog = displayedTimelineLogs.find((log) => isDeepResearchTimelineCommand(log));
+    const activeDeepResearchSession = resolveDeepResearchSessionForGroup({
+      logs: [],
+      runningCommandLog: fallbackDeepResearchCommandLog,
+      turn,
+      sessions: deepResearchSessions,
+    });
+    const latestPrimaryTurn =
+      [...turns].reverse().find(
+        (candidateTurn) => candidateTurn.presentation !== "btw" && candidateTurn.presentation !== "context-action-notice"
+      ) || null;
+    const fallbackSessionForLatestTurn =
+      !activeDeepResearchSession &&
+      latestPrimaryTurn?.id === turn.id
+        ? activeDeepResearchThreadSession
+        : null;
+    const effectiveDeepResearchSession = activeDeepResearchSession || fallbackSessionForLatestTurn;
+    const shouldInjectSessionBackedDeepResearchGroup =
+      !hasDeepResearchGroup &&
+      isDeepResearchSessionActive(effectiveDeepResearchSession);
 
     return {
       agentMessage,
-      displayedTimelineItems: buildTimelineItems(displayedTimelineLogs),
+      displayedTimelineItems:
+        shouldInjectSessionBackedDeepResearchGroup
+          ? [{ kind: "deep_research_group", logs: [], runningCommandLog: fallbackDeepResearchCommandLog }, ...displayedTimelineItems]
+          : displayedTimelineItems,
     };
   }
 
@@ -13350,12 +13493,7 @@ export function RunnerChat({
   }, [onDeepResearchDetailOpenChange]);
 
   useEffect(() => {
-    const hasLocalExecutionStateForCurrentThread =
-      Boolean(currentThreadId) &&
-      locallyOwnedExecutionThreadIdRef.current === currentThreadId &&
-      (isPreparingRun || isRunning || pendingQueuedMessages.length > 0);
-
-    if (!currentThreadId || !hasApiKey || !normalizedBackendUrl || isRunning || hasLocalExecutionStateForCurrentThread) {
+    if (!currentThreadId || !hasApiKey || !normalizedBackendUrl) {
       return;
     }
 
@@ -13503,10 +13641,7 @@ export function RunnerChat({
     hasApiKey,
     hasHydratedReattachActivity,
     hasRunningTurn,
-    isPreparingRun,
-    isRunning,
     normalizedBackendUrl,
-    pendingQueuedMessages.length,
     requestHeaders,
   ]);
 

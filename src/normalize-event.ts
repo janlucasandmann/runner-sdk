@@ -141,6 +141,11 @@ function isDeepResearchCommandOutput(output?: string | null): boolean {
   );
 }
 
+function isDeepResearchCommand(command?: string | null): boolean {
+  if (!command) return false;
+  return command.includes("/workspace/.scripts/deep-research.py") || command.includes("deep-research.py") || command.includes(".claude/skills/deep-research/");
+}
+
 export class RunnerEventNormalizer {
   private readonly startTimeMs: number;
   private readonly now: TimeProvider;
@@ -435,49 +440,13 @@ export class RunnerEventNormalizer {
     }
 
     if (!metadata) {
-      return resolvedDescription
-        ? {
-            logs: [
-              {
-                time: this.formatElapsed(),
-                message: resolvedDescription,
-                type: "info",
-                eventType: "action_summary",
-                isActionSummary: true,
-                metadata: {
-                  toolName: this.optionalString(event.tool),
-                  toolId: this.optionalString(event.toolId),
-                  status: "started",
-                  isToolStarted: true,
-                  toolInput: input || undefined,
-                },
-              },
-            ],
-          }
-        : { logs: [] };
+      return { logs: [] };
     }
 
     const delegatedTo = this.asObject(metadata.delegatedTo);
     const invocationMetadata = this.asObject(metadata.subagentInvocation);
     if (!delegatedTo || !invocationMetadata) {
-      return {
-        logs: [
-          {
-            time: this.formatElapsed(),
-            message: resolvedDescription,
-            type: "info",
-            eventType: "action_summary",
-            isActionSummary: true,
-            metadata: this.mergeMetadata(metadata, {
-              toolName: this.optionalString(event.tool),
-              toolId: this.optionalString(event.toolId),
-              status: "started",
-              isToolStarted: true,
-              toolInput: input || undefined,
-            }),
-          },
-        ],
-      };
+      return { logs: [] };
     }
 
     return {
@@ -600,7 +569,7 @@ export class RunnerEventNormalizer {
       if (isBrowserSkillLaunchCommand(command)) {
         return { logs: [] };
       }
-      if (!isImageGeneration && isDeepResearchCommandOutput(output)) {
+      if (!isImageGeneration && isDeepResearchCommand(command) && isDeepResearchCommandOutput(output)) {
         const parsed = extractDeepResearchCommandResult(output);
         const event =
           parsed.errorMessage

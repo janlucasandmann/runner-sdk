@@ -5642,7 +5642,7 @@ export function hasActiveDeepResearchLogGroup(logs: RunnerLog[]): boolean {
   const commandLog = logs.find(
     (entry) =>
       entry.eventType === "command_execution" &&
-      (isDeepResearchCommand(entry.metadata?.command || entry.message || "") || hasDeepResearchOutput(typeof entry.metadata?.output === "string" ? entry.metadata.output : ""))
+      isDeepResearchCommand(entry.metadata?.command || entry.message || "")
   );
   if (!commandLog && streamingLogs.length === 0) {
     return false;
