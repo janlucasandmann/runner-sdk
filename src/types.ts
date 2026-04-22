@@ -128,6 +128,7 @@ export interface RunnerLog {
       sources?: string[];
       elapsedSeconds?: number;
       errorMessage?: string;
+      runtimePath?: string;
       resumeAttempt?: number;
       reportLength?: number;
       timestamp?: string;

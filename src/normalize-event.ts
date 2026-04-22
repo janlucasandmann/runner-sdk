@@ -53,6 +53,94 @@ function isBrowserSkillLaunchCommand(command?: string | null): boolean {
   return /\bbrowser\.mjs\s+launch(?:\s|$)/i.test(String(command || ""));
 }
 
+function extractDeepResearchCommandResult(output?: string | null) {
+  const result = {
+    topic: null as string | null,
+    interactionId: null as string | null,
+    thinkingSummaries: [] as string[],
+    reportFile: null as string | null,
+    reportManifestFile: null as string | null,
+    sourcesCount: 0,
+    sources: [] as string[],
+    elapsedSeconds: 0,
+    errorMessage: null as string | null,
+    runtimePath: null as string | null,
+  };
+  if (!output) {
+    return result;
+  }
+
+  const segments: string[] = [];
+  const pushSegment = (value: unknown) => {
+    if (typeof value !== "string") return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    segments.push(trimmed);
+  };
+
+  pushSegment(output);
+  try {
+    const parsed = JSON.parse(output) as Record<string, unknown>;
+    pushSegment(parsed?.stdout);
+    pushSegment(parsed?.stderr);
+    pushSegment(parsed?.output);
+  } catch {}
+
+  for (const line of segments.flatMap((segment) => segment.split("\n"))) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("{")) continue;
+    try {
+      const event = JSON.parse(trimmed) as Record<string, unknown>;
+      if (event.event === "start" && typeof event.topic === "string") {
+        result.topic = event.topic;
+      }
+      if (event.event === "interaction_started" && typeof event.interaction_id === "string") {
+        result.interactionId = event.interaction_id;
+      }
+      if (event.event === "thinking" && typeof event.summary === "string" && event.summary.trim()) {
+        result.thinkingSummaries.push(event.summary.trim());
+      }
+      if ((event.event === "research_complete" || event.event === "complete") && typeof event.report_file === "string") {
+        result.reportFile = event.report_file;
+      }
+      if ((event.event === "research_complete" || event.event === "complete") && typeof event.report_manifest_file === "string") {
+        result.reportManifestFile = event.report_manifest_file;
+      }
+      if ((event.event === "research_complete" || event.event === "complete") && typeof event.sources_count === "number") {
+        result.sourcesCount = event.sources_count;
+      }
+      if ((event.event === "research_complete" || event.event === "complete") && Array.isArray(event.sources)) {
+        result.sources = event.sources.filter((source): source is string => typeof source === "string");
+      }
+      if (typeof event.elapsed_seconds === "number") {
+        result.elapsedSeconds = event.elapsed_seconds;
+      }
+      if (event.event === "resolved_runtime" && typeof event.path === "string") {
+        result.runtimePath = event.path;
+      }
+      if (event.event === "error" && typeof event.message === "string") {
+        result.errorMessage = event.message;
+      }
+    } catch {}
+  }
+
+  return result;
+}
+
+function isDeepResearchCommandOutput(output?: string | null): boolean {
+  const parsed = extractDeepResearchCommandResult(output);
+  return Boolean(
+    parsed.topic ||
+      parsed.interactionId ||
+      parsed.reportFile ||
+      parsed.reportManifestFile ||
+      parsed.runtimePath ||
+      parsed.errorMessage ||
+      parsed.thinkingSummaries.length > 0 ||
+      parsed.sourcesCount > 0
+  );
+}
+
 export class RunnerEventNormalizer {
   private readonly startTimeMs: number;
   private readonly now: TimeProvider;
@@ -129,10 +217,12 @@ export class RunnerEventNormalizer {
                 interactionId: this.optionalString(event.interactionId),
                 thinkingSummary: this.optionalString(event.thinkingSummary),
                 reportFile: this.optionalString(event.reportFile),
+                reportManifestFile: this.optionalString(event.reportManifestFile),
                 sourcesCount: this.optionalNumber(event.sourcesCount),
                 sources: this.optionalStringArray(event.sources),
                 elapsedSeconds: this.optionalNumber(event.elapsedSeconds),
                 errorMessage: this.optionalString(event.errorMessage),
+                runtimePath: this.optionalString(event.runtimePath),
                 resumeAttempt: this.optionalNumber(event.resumeAttempt),
                 reportLength: this.optionalNumber(event.reportLength),
                 timestamp: this.optionalString(event.timestamp),
@@ -197,11 +287,13 @@ export class RunnerEventNormalizer {
 
     if (itemType === "reasoning") {
       const metadata = this.asObject(item.metadata);
+      const reasoningText = this.contentText(item.content) || this.asString(item.text);
+      if (!reasoningText) return { logs: [] };
       return {
         logs: [
           {
             time: this.formatElapsed(),
-            message: this.contentText(item.content),
+            message: reasoningText,
             type: "info",
             eventType: "reasoning",
             isReasoning: true,
@@ -317,14 +409,38 @@ export class RunnerEventNormalizer {
 
   private handleToolStarted(event: ToolStartedEvent): RunnerEventHandleResult {
     const metadata = this.asObject(event.metadata);
+    const input = this.asObject(event.input);
+    const rawDescription = this.asString(event.description, this.asString(event.tool, "Tool"));
+    const resolvedDescription = (() => {
+      const toolName = this.asString(event.tool).trim().toLowerCase();
+      if (toolName !== "bash") {
+        return rawDescription;
+      }
+      const commandCandidate =
+        this.optionalString(input?.command) ||
+        this.optionalString(input?.cmd) ||
+        this.optionalString(input?.script);
+      return commandCandidate ? `$ ${commandCandidate}` : rawDescription;
+    })();
+    const normalizedShellDescription = resolvedDescription.replace(/^\$\s*/, "").trim().toLowerCase();
+    const shouldSuppressGenericShellStart =
+      this.asString(event.tool).trim().toLowerCase() === "bash" &&
+      (normalizedShellDescription === "bash" ||
+        normalizedShellDescription === "sh" ||
+        normalizedShellDescription === "zsh" ||
+        normalizedShellDescription === "/bin/bash" ||
+        normalizedShellDescription === "/bin/sh");
+    if (shouldSuppressGenericShellStart) {
+      return { logs: [] };
+    }
+
     if (!metadata) {
-      const message = this.asString(event.description, this.asString(event.tool, "Tool"));
-      return message
+      return resolvedDescription
         ? {
             logs: [
               {
                 time: this.formatElapsed(),
-                message,
+                message: resolvedDescription,
                 type: "info",
                 eventType: "action_summary",
                 isActionSummary: true,
@@ -333,7 +449,7 @@ export class RunnerEventNormalizer {
                   toolId: this.optionalString(event.toolId),
                   status: "started",
                   isToolStarted: true,
-                  toolInput: this.asObject(event.input) || undefined,
+                  toolInput: input || undefined,
                 },
               },
             ],
@@ -348,7 +464,7 @@ export class RunnerEventNormalizer {
         logs: [
           {
             time: this.formatElapsed(),
-            message: this.asString(event.description, this.asString(event.tool, "Tool")),
+            message: resolvedDescription,
             type: "info",
             eventType: "action_summary",
             isActionSummary: true,
@@ -357,7 +473,7 @@ export class RunnerEventNormalizer {
               toolId: this.optionalString(event.toolId),
               status: "started",
               isToolStarted: true,
-              toolInput: this.asObject(event.input) || undefined,
+              toolInput: input || undefined,
             }),
           },
         ],
@@ -480,8 +596,57 @@ export class RunnerEventNormalizer {
     if (toolType === "command_execution" || toolType === "image_generation_skill") {
       const isImageGeneration = toolType === "image_generation_skill" || Boolean(metadata?.isImageGeneration);
       const command = this.optionalString(tool.command);
+      const output = this.optionalString(tool.output)?.trim();
       if (isBrowserSkillLaunchCommand(command)) {
         return { logs: [] };
+      }
+      if (!isImageGeneration && isDeepResearchCommandOutput(output)) {
+        const parsed = extractDeepResearchCommandResult(output);
+        const event =
+          parsed.errorMessage
+            ? "error"
+            : parsed.reportFile
+              ? "complete"
+              : parsed.thinkingSummaries.length > 0
+                ? "thinking"
+                : parsed.interactionId
+                  ? "interaction_started"
+                  : parsed.runtimePath
+                    ? "resolved_runtime"
+                    : "start";
+        return {
+          logs: [
+            {
+              time: this.formatElapsed(),
+              message: parsed.topic || this.asString(tool.command, "Deep research"),
+              type: parsed.errorMessage ? "error" : "info",
+              eventType: "deep_research",
+              metadata: this.mergeMetadata(metadata, {
+                deepResearch: {
+                  sessionId: parsed.interactionId || undefined,
+                  event,
+                  topic: parsed.topic || undefined,
+                  interactionId: parsed.interactionId || undefined,
+                  thinkingSummary:
+                    parsed.thinkingSummaries.length > 0
+                      ? parsed.thinkingSummaries[parsed.thinkingSummaries.length - 1]
+                      : undefined,
+                  reportFile: parsed.reportFile || undefined,
+                  reportManifestFile: parsed.reportManifestFile || undefined,
+                  sourcesCount: parsed.sourcesCount || undefined,
+                  sources: parsed.sources.length > 0 ? parsed.sources : undefined,
+                  elapsedSeconds: parsed.elapsedSeconds || undefined,
+                  errorMessage: parsed.errorMessage || undefined,
+                  runtimePath: parsed.runtimePath || undefined,
+                },
+                command,
+                exitCode: this.optionalNumber(tool.exit_code),
+                status: this.asCommandStatus(metadata?.status) ?? this.asCommandStatus(item.status),
+                output,
+              }),
+            },
+          ],
+        };
       }
       return {
         logs: [
@@ -494,7 +659,7 @@ export class RunnerEventNormalizer {
               command,
               exitCode: this.optionalNumber(tool.exit_code),
               status: this.asCommandStatus(metadata?.status) ?? this.asCommandStatus(item.status),
-              output: this.optionalString(tool.output)?.trim(),
+              output,
               ...(isImageGeneration
                 ? {
                     isImageGeneration: true,

@@ -1,4 +1,4 @@
-import { CSSProperties, ChangeEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, ChangeEvent, DragEvent as ReactDragEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Bookmark as LucideBookmark,
@@ -69,7 +69,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, hasDeepResearchOutput, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
@@ -234,6 +234,21 @@ interface RunnerTurn {
   attachments?: RunnerTurnAttachment[] | null;
 }
 
+export interface RunnerChatAgentTurnClickPayload {
+  turnId: string;
+  agentId?: string;
+  agentName?: string;
+}
+
+export interface RunnerChatSummaryWorkspacePathClickPayload {
+  path: string;
+  turnId: string;
+  threadId?: string | null;
+  environmentId?: string | null;
+  agentName?: string | null;
+  sourceType: "run_summary" | "working_log";
+}
+
 type RunnerThreadHistoryRole = "user" | "assistant";
 
 interface RunnerThreadHistoryItem {
@@ -347,6 +362,15 @@ interface RunnerSelectedDeepResearchDetail {
 interface RunnerSelectedComputerUseDetail {
   turnId: string;
   groupId: string;
+}
+
+interface RunnerSelectedDeepResearchDetailPresentation {
+  turn: RunnerTurn;
+  logs: RunnerLog[];
+  runningCommandLog?: RunnerLog;
+  session: RunnerDeepResearchSession | null;
+  timeLabel?: string;
+  fallbackTopic?: string | null;
 }
 
 type RunnerForkFileCopyMode = "all" | "thread_only" | "none";
@@ -991,6 +1015,8 @@ export interface RunnerChatProps {
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
   onResourcePreviewClick?: (resource: RunnerCreatedResourcePreview) => void;
+  onAgentTurnClick?: (payload: RunnerChatAgentTurnClickPayload) => void;
+  onSummaryWorkspacePathClick?: (payload: RunnerChatSummaryWorkspacePathClickPayload) => void;
   subagentDetailPortalTarget?: Element | null;
   disableSubagentDetailDrawer?: boolean;
   externalRunRequest?: RunnerChatExternalRunRequest | null;
@@ -4008,7 +4034,26 @@ async function fetchThreadHydrationPayload(params: {
   const startedAtMs = parseIsoTimestampMs(parsedThread.thread?.startedAt);
   const parsedStepsData = parseThreadSteps(parsedSteps.data);
   let diffEntries = parseThreadDiffEntries(parsedDiffs.diffs);
-  if (!Array.isArray(parsedLogs.logs) || !parsedLogs.logs.some((log) => log.eventType === "file_change")) {
+  const canonicalConversationMessages = messages.filter(
+    (message) =>
+      (message.role === "user" || message.role === "assistant") &&
+      typeof message.content === "string" &&
+      message.content.trim().length > 0
+  );
+  const hydrationLogs = (Array.isArray(parsedLogs.logs) ? parsedLogs.logs : []).filter((log) => {
+    if (canonicalConversationMessages.length === 0) {
+      return true;
+    }
+    if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
+      return false;
+    }
+    if (log.eventType === "agent_message" || log.eventType === "llm_response") {
+      return false;
+    }
+    return true;
+  });
+
+  if (hydrationLogs.length === 0 || !hydrationLogs.some((log) => log.eventType === "file_change")) {
     if (diffEntries.length === 0 && parsedStepsData.length > 0) {
       diffEntries = await fetchHydratedStepDiffEntries({
         backendUrl,
@@ -4019,7 +4064,7 @@ async function fetchThreadHydrationPayload(params: {
     }
   }
   const mergedLogs = mergeThreadStepsIntoLogs(
-    mergeThreadDiffsIntoLogs(Array.isArray(parsedLogs.logs) ? parsedLogs.logs : [], diffEntries),
+    mergeThreadDiffsIntoLogs(hydrationLogs, diffEntries),
     parsedStepsData,
     diffEntries,
     startedAtMs
@@ -5141,19 +5186,18 @@ function mergeHydratedTurns(existingTurns: RunnerTurn[], hydratedTurns: RunnerTu
 
   for (const localTurn of existingTurns) {
     const localPresentation = turnPresentation(localTurn);
-    const shouldCarryForward =
+    const shouldCarryForwardIfUnmatched =
       localTurn.status === "queued" ||
+      !isTerminalTurnStatus(localTurn.status) ||
       localPresentation === "btw" ||
       Boolean(localTurn.quotedSelection) ||
       Boolean(localTurn.attachments?.length);
 
-    if (!shouldCarryForward) {
-      continue;
-    }
-
     const hydratedIndex = mergedTurns.findIndex((hydratedTurn) => turnsLikelyMatch(localTurn, hydratedTurn));
     if (hydratedIndex === -1) {
-      mergedTurns.push(localTurn);
+      if (shouldCarryForwardIfUnmatched) {
+        mergedTurns.push(localTurn);
+      }
       continue;
     }
 
@@ -5314,6 +5358,53 @@ function isGenericShellRunnerCommand(command: string): boolean {
   return normalized === "bash" || normalized === "sh" || normalized === "zsh" || normalized === "/bin/bash" || normalized === "/bin/sh";
 }
 
+function extractImageGenerationPromptIdentity(log: RunnerLog): string {
+  const metadataPrompt =
+    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).prompt === "string"
+      ? String((log.metadata.args as Record<string, unknown>).prompt).trim()
+      : "";
+  if (metadataPrompt) {
+    return metadataPrompt;
+  }
+
+  const output = typeof log.metadata?.output === "string" ? log.metadata.output : log.message;
+  const promptMatch = String(output || "").match(/(?:Generating|Editing) image with [^:]+:\s*(.+?)(?:\.\.\.)?(?:\r?\n|$)/i);
+  return String(promptMatch?.[1] || "").trim();
+}
+
+function normalizedImageGenerationLogIdentity(log: RunnerLog): string | null {
+  const command = typeof log.metadata?.command === "string" ? log.metadata.command.trim() : "";
+  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const savedImagePath = typeof log.metadata?.savedImagePath === "string" ? log.metadata.savedImagePath.trim() : "";
+  const metadataFilePaths = Array.isArray(log.metadata?.filePaths)
+    ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    : [];
+  const looksLikeImageGeneration =
+    log.metadata?.isImageGeneration
+    || Boolean(savedImagePath)
+    || metadataFilePaths.some((filePath) => /\.(?:png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(filePath))
+    || /(?:Generating|Editing) image with|Generated with|Image saved to:/i.test(output)
+    || /(?:Generating|Editing) image with|Generated with|Image saved to:/i.test(log.message || "")
+    || command.includes("generate-image.py")
+    || command.includes(".claude/skills/image-generation/");
+  if (!looksLikeImageGeneration) {
+    return null;
+  }
+
+  const prompt = extractImageGenerationPromptIdentity(log);
+  const inputPath =
+    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).inputPath === "string"
+      ? String((log.metadata.args as Record<string, unknown>).inputPath).trim()
+      : "";
+
+  return stableRunnerLogValue({
+    kind: "image_generation",
+    prompt,
+    inputPath,
+    command: command || String(log.message || "").trim(),
+  });
+}
+
 function normalizeHydratedLog(log: RunnerLog): RunnerLog {
   if (typeof (log.metadata as { duration_ms?: unknown } | undefined)?.duration_ms === "number" && typeof log.metadata?.durationMs !== "number") {
     return {
@@ -5341,6 +5432,11 @@ function stableRunnerLogValue(value: unknown): string {
 }
 
 function normalizedToolLogIdentity(log: RunnerLog): string | null {
+  const normalizedImageIdentity = normalizedImageGenerationLogIdentity(log);
+  if (normalizedImageIdentity) {
+    return normalizedImageIdentity;
+  }
+
   if (log.eventType === "command_execution") {
     const command = typeof log.metadata?.command === "string" ? log.metadata.command.trim() : "";
     const normalizedCommand = command || log.message.replace(/^Executed:\s*/i, "").trim();
@@ -5406,15 +5502,65 @@ function runnerLogMetadataWeight(log: RunnerLog): number {
   return Object.keys(log.metadata).length;
 }
 
+function runnerLogReplacementScore(log: RunnerLog): number {
+  let score = runnerLogMetadataWeight(log);
+  const imageIdentity = normalizedImageGenerationLogIdentity(log);
+  if (imageIdentity) {
+    const savedImagePath = typeof log.metadata?.savedImagePath === "string" ? log.metadata.savedImagePath.trim() : "";
+    const filePaths = Array.isArray(log.metadata?.filePaths)
+      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      : [];
+    if (savedImagePath || filePaths.length > 0) {
+      score += 100;
+    }
+    if (log.metadata?.status === "completed") {
+      score += 10;
+    }
+    if (typeof log.metadata?.output === "string" && /Image saved to:/i.test(log.metadata.output)) {
+      score += 20;
+    }
+    if (log.metadata?.error) {
+      score += 30;
+    }
+  }
+  return score;
+}
+
+function pruneSupersededImageGenerationLogs(logs: RunnerLog[]): RunnerLog[] {
+  const bestScoreByIdentity = new Map<string, number>();
+  const keptFromEnd: RunnerLog[] = [];
+
+  for (let index = logs.length - 1; index >= 0; index -= 1) {
+    const log = logs[index];
+    const identity = normalizedImageGenerationLogIdentity(log);
+    if (!identity) {
+      keptFromEnd.push(log);
+      continue;
+    }
+
+    const score = runnerLogReplacementScore(log);
+    const bestSeenScore = bestScoreByIdentity.get(identity);
+    if (typeof bestSeenScore === "number" && bestSeenScore > score) {
+      continue;
+    }
+
+    bestScoreByIdentity.set(identity, score);
+    keptFromEnd.push(log);
+  }
+
+  return keptFromEnd.reverse();
+}
+
 function dedupeAdjacentRunnerLogs(logs: RunnerLog[]): RunnerLog[] {
+  const prunedLogs = pruneSupersededImageGenerationLogs(logs);
   const deduped: RunnerLog[] = [];
   let lastSignature = "";
 
-  for (const log of logs) {
+  for (const log of prunedLogs) {
     const signature = runnerLogSignature(log);
     if (signature === lastSignature) {
       const previousLog = deduped[deduped.length - 1];
-      if (previousLog && runnerLogMetadataWeight(log) >= runnerLogMetadataWeight(previousLog)) {
+      if (previousLog && runnerLogReplacementScore(log) >= runnerLogReplacementScore(previousLog)) {
         deduped[deduped.length - 1] = log;
       }
       continue;
@@ -5775,6 +5921,8 @@ export function RunnerChat({
   activeTaskPreviewId = null,
   onTaskPreviewClick,
   onResourcePreviewClick,
+  onAgentTurnClick,
+  onSummaryWorkspacePathClick,
   subagentDetailPortalTarget = null,
   disableSubagentDetailDrawer = false,
   externalRunRequest = null,
@@ -5883,6 +6031,7 @@ export function RunnerChat({
   const [isWorkspaceBrowserLoading, setIsWorkspaceBrowserLoading] = useState(false);
   const [workspaceBrowserError, setWorkspaceBrowserError] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isScreenFileDragActive, setIsScreenFileDragActive] = useState(false);
   const [scheduleType, setScheduleType] = useState<"one-time" | "recurring">("one-time");
   const [scheduledAtValue, setScheduledAtValue] = useState(() => formatDateTimeLocalValue(new Date(Date.now() + 60 * 60 * 1000)));
   const [selectedSchedulePresetId, setSelectedSchedulePresetId] = useState<string>(() => DEFAULT_SCHEDULE_PRESETS[0]?.id || "");
@@ -6003,6 +6152,7 @@ export function RunnerChat({
   const shouldAutoScrollLogsRef = useRef(true);
   const autoScrollAnimationFrameRef = useRef<number | null>(null);
   const previousLogsScrollHeightRef = useRef(0);
+  const screenFileDragActiveRef = useRef(false);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -6186,6 +6336,7 @@ export function RunnerChat({
     [apiKey, requestHeaders]
   );
   const summaryPreviewEnvironmentId = activeThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
+  const canPreviewSummaryWorkspacePaths = Boolean(summaryPreviewEnvironmentId && onSummaryWorkspacePathClick);
   const retainedSummaryPreviewPaths = useMemo(() => collectThreadRetainedSummaryPreviewPaths(turns), [turns]);
   const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
   const availableEnvironments = useMemo(
@@ -8098,6 +8249,28 @@ export function RunnerChat({
   }
 
   useEffect(() => {
+    screenFileDragActiveRef.current = isScreenFileDragActive;
+  }, [isScreenFileDragActive]);
+
+  useEffect(() => {
+    if (!isScreenFileDragActive) {
+      return;
+    }
+    const clearScreenFileDrag = () => {
+      screenFileDragActiveRef.current = false;
+      setIsScreenFileDragActive(false);
+    };
+    window.addEventListener("drop", clearScreenFileDrag);
+    window.addEventListener("dragend", clearScreenFileDrag);
+    window.addEventListener("blur", clearScreenFileDrag);
+    return () => {
+      window.removeEventListener("drop", clearScreenFileDrag);
+      window.removeEventListener("dragend", clearScreenFileDrag);
+      window.removeEventListener("blur", clearScreenFileDrag);
+    };
+  }, [isScreenFileDragActive]);
+
+  useEffect(() => {
     const normalizedRequestThreadId = String(externalRunRequest?.threadId || "").trim();
     const normalizedPrompt = String(externalRunRequest?.prompt || "").trim();
     const requestToken = externalRunRequest?.token;
@@ -9531,6 +9704,16 @@ export function RunnerChat({
     }
   }
 
+  function handleDroppedLocalFiles(files: File[]): boolean {
+    const validFiles = Array.from(files || []).filter((file) => file instanceof File);
+    if (!validFiles.length) {
+      return false;
+    }
+    appendFiles(validFiles);
+    closeAllInputPopups();
+    return true;
+  }
+
   function handleAddFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
@@ -9565,7 +9748,73 @@ export function RunnerChat({
     setActiveInputPopup(null);
     setSelectedWorkspaceFileIds([]);
     setIsDraggingOver(false);
+    setIsScreenFileDragActive(false);
     clearQuotedSelectionPopup();
+  }
+
+  function isExternalFileDrag(event: { dataTransfer?: DataTransfer | null }): boolean {
+    const types = event.dataTransfer?.types;
+    if (!types) {
+      return false;
+    }
+    return Array.from(types).includes("Files");
+  }
+
+  function handleRootFileDragEnter(event: ReactDragEvent<HTMLDivElement>) {
+    if (!isExternalFileDrag(event)) {
+      return;
+    }
+    event.preventDefault();
+    if (!screenFileDragActiveRef.current) {
+      screenFileDragActiveRef.current = true;
+      setIsScreenFileDragActive(true);
+    }
+  }
+
+  function handleRootFileDragOver(event: ReactDragEvent<HTMLDivElement>) {
+    if (!isExternalFileDrag(event)) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "copy";
+    }
+    if (!screenFileDragActiveRef.current) {
+      screenFileDragActiveRef.current = true;
+      setIsScreenFileDragActive(true);
+    }
+  }
+
+  function handleRootFileDragLeave(event: ReactDragEvent<HTMLDivElement>) {
+    if (!isExternalFileDrag(event)) {
+      return;
+    }
+    const rootElement = rootRef.current;
+    if (!rootElement) {
+      screenFileDragActiveRef.current = false;
+      setIsScreenFileDragActive(false);
+      return;
+    }
+    const bounds = rootElement.getBoundingClientRect();
+    const hasLeftRoot =
+      event.clientX < bounds.left
+      || event.clientX > bounds.right
+      || event.clientY < bounds.top
+      || event.clientY > bounds.bottom;
+    if (hasLeftRoot) {
+      screenFileDragActiveRef.current = false;
+      setIsScreenFileDragActive(false);
+    }
+  }
+
+  function handleRootFileDrop(event: ReactDragEvent<HTMLDivElement>) {
+    if (!isExternalFileDrag(event)) {
+      return;
+    }
+    event.preventDefault();
+    screenFileDragActiveRef.current = false;
+    setIsScreenFileDragActive(false);
+    handleDroppedLocalFiles(Array.from(event.dataTransfer.files || []));
   }
 
   async function createWorkspaceAttachment(item: RunnerChatFileNode, sourceEnvironmentId: string): Promise<LocalAttachment> {
@@ -10673,6 +10922,9 @@ export function RunnerChat({
   }
 
   function navigateFileBrowserToFolder(folderId: string | null) {
+    if (fileBrowserSearchQuery.trim()) {
+      setFileBrowserSearchQuery("");
+    }
     const nextEntry = { source: currentFileBrowserSource, folderId };
     setFileBrowserHistory((current) => [...current.slice(0, fileBrowserHistoryIndex + 1), nextEntry]);
     setFileBrowserHistoryIndex((current) => current + 1);
@@ -10702,6 +10954,9 @@ export function RunnerChat({
 
   async function toggleFileBrowserFolderExpansion(folderId: string, event: MouseEvent<HTMLButtonElement>) {
     event.stopPropagation();
+    if (fileBrowserSearchQuery.trim()) {
+      setFileBrowserSearchQuery("");
+    }
     const isExpanded = expandedFileBrowserFolderIds.includes(folderId);
     if (!isExpanded && currentFileBrowserSource === "workspace" && !loadedWorkspaceFolderIds.includes(folderId)) {
       await loadWorkspaceFolder(folderId, { inline: true });
@@ -10718,10 +10973,43 @@ export function RunnerChat({
     setExpandedFileBrowserFolderIds((current) => (current.includes(folderId) ? current.filter((id) => id !== folderId) : [...current, folderId]));
   }
 
+  async function openFileBrowserFolder(item: RunnerChatFileNode) {
+    const normalizedFolderId = String(item.id || "").trim();
+    if (!normalizedFolderId) {
+      return;
+    }
+
+    if (fileBrowserSearchQuery.trim()) {
+      setFileBrowserSearchQuery("");
+    }
+    setFileBrowserPreviewId(null);
+    setExpandedFileBrowserFolderIds([]);
+
+    const nextEntry = { source: currentFileBrowserSource, folderId: normalizedFolderId };
+    setFileBrowserHistory((current) => [...current.slice(0, fileBrowserHistoryIndex + 1), nextEntry]);
+    setFileBrowserHistoryIndex((current) => current + 1);
+
+    if (currentFileBrowserSource === "workspace" && !loadedWorkspaceFolderIds.includes(normalizedFolderId)) {
+      await loadWorkspaceFolder(normalizedFolderId);
+      return;
+    }
+    if (currentFileBrowserSource === "google-drive" && googleDriveConfig?.fetchItems && !loadedGoogleDriveFolderIds.includes(normalizedFolderId)) {
+      await loadGoogleDriveFolder(normalizedFolderId);
+      return;
+    }
+    if (currentFileBrowserSource === "one-drive" && oneDriveConfig?.fetchItems && !loadedOneDriveFolderIds.includes(normalizedFolderId)) {
+      await loadOneDriveFolder(normalizedFolderId);
+      return;
+    }
+    if (currentFileBrowserSource === "github" && githubConfig?.fetchItems && !loadedGithubFolderIds.includes(normalizedFolderId)) {
+      await loadGithubFolder(normalizedFolderId);
+    }
+  }
+
   function handleFileBrowserItemClick(item: RunnerChatFileNode) {
     setFileBrowserPreviewId(item.id);
     if (item.isFolder) {
-      navigateFileBrowserToFolder(item.id);
+      void openFileBrowserFolder(item);
       return;
     }
 
@@ -11421,7 +11709,13 @@ export function RunnerChat({
   }
 
   function isDeepResearchTimelineCommand(log: RunnerLog): boolean {
-    return log.eventType === "command_execution" && isDeepResearchCommand(log.metadata?.command || log.message || "");
+    return (
+      log.eventType === "command_execution" &&
+      (
+        isDeepResearchCommand(log.metadata?.command || log.message || "") ||
+        hasDeepResearchOutput(typeof log.metadata?.output === "string" ? log.metadata.output : "")
+      )
+    );
   }
 
   function collectDeepResearchTimelineLogs(logs: RunnerLog[], subagentGroups: Map<string, RunnerSubagentGroup>): RunnerLog[] {
@@ -11634,20 +11928,7 @@ export function RunnerChat({
     const agentMessage = [...turn.logs]
       .reverse()
       .find((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
-    const normalizedAgentResponseMessage = agentMessage?.message
-      ? stripSystemTags(agentMessage.message).replace(/\s+/g, " ").trim()
-      : "";
-    const timelineLogs = dedupeAdjacentRunnerLogs(
-      turn.logs.filter(
-        (log) =>
-          shouldDisplayTimelineLog(log) &&
-          !(
-            (log.eventType === "reasoning" || log.isReasoning) &&
-            normalizedAgentResponseMessage &&
-            stripSystemTags(log.message || "").replace(/\s+/g, " ").trim() === normalizedAgentResponseMessage
-          )
-      )
-    );
+    const timelineLogs = dedupeAdjacentRunnerLogs(turn.logs.filter((log) => shouldDisplayTimelineLog(log)));
     const displayedTimelineLogs =
       timelineLogs.length === 0 && turn.status === "running"
         ? [
@@ -11896,6 +12177,7 @@ export function RunnerChat({
           runningCommandLog={item.runningCommandLog}
           session={deepResearchSession}
           timeLabel={firstLog ? toDurationLabel(firstLog) : undefined}
+          fallbackTopic={extractDeepResearchTopicFromGroup(item.logs, item.runningCommandLog) || turn.prompt || null}
           isDetailOpen={selectedDeepResearchDetail?.turnId === turn.id}
           onOpenDetails={() => openDeepResearchDetailDrawer(turn.id)}
         />
@@ -11933,6 +12215,7 @@ export function RunnerChat({
         activeTaskPreviewId={activeTaskPreviewId}
         onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
         onTaskPreviewClick={onTaskPreviewClick}
+        onWorkspacePathClick={(path) => handleSummaryWorkspacePathClick(turn, path, "working_log")}
       />
     );
   }
@@ -12131,6 +12414,67 @@ export function RunnerChat({
       ? selectedAgentPhotoUrl
       : "";
   }, [availableAgentPhotoEntries, displayedAgentLabel, selectedAgentPhotoUrl]);
+  const handleTurnAgentClick = useCallback((turn: RunnerTurn, turnAgentLabel: string) => {
+    if (typeof onAgentTurnClick !== "function") {
+      return;
+    }
+    const normalizedAgentName = String(turnAgentLabel || turn.agentName || "").trim();
+    const normalizedSelectedAgentId = String(selectedAgent?.id || effectiveAgentId || agentId || "").trim();
+    const normalizedSelectedAgentName = String(selectedAgent?.name || "").trim().toLowerCase();
+    const resolvedAgentId =
+      normalizedAgentName
+      && normalizedSelectedAgentId
+      && normalizedSelectedAgentName
+      && normalizedAgentName.toLowerCase() === normalizedSelectedAgentName
+        ? normalizedSelectedAgentId
+        : "";
+    onAgentTurnClick({
+      turnId: turn.id,
+      agentId: resolvedAgentId || undefined,
+      agentName: normalizedAgentName || undefined,
+    });
+  }, [agentId, effectiveAgentId, onAgentTurnClick, selectedAgent]);
+  const renderTurnAgentTrigger = useCallback((turn: RunnerTurn, turnAgentLabel: string, turnAgentPhotoUrl: string) => {
+    const content = (
+      <>
+        {renderTurnAgentAvatar(turnAgentLabel, turnAgentPhotoUrl)}
+        <span className="tb-turn-agent-name">{turnAgentLabel}</span>
+      </>
+    );
+    if (typeof onAgentTurnClick !== "function" || !String(turnAgentLabel || "").trim()) {
+      return <div className="tb-turn-agent">{content}</div>;
+    }
+    return (
+      <button
+        type="button"
+        className="tb-turn-agent tb-turn-agent-button"
+        onClick={() => handleTurnAgentClick(turn, turnAgentLabel)}
+        aria-label={`Open agent details for ${turnAgentLabel}`}
+        title={`Open ${turnAgentLabel}`}
+      >
+        {content}
+      </button>
+    );
+  }, [handleTurnAgentClick, onAgentTurnClick]);
+  const handleSummaryWorkspacePathClick = useCallback((turn: RunnerTurn, path: string, sourceType: "run_summary" | "working_log") => {
+    if (typeof onSummaryWorkspacePathClick !== "function") {
+      return;
+    }
+
+    const normalizedPath = String(path || "").trim();
+    if (!normalizedPath) {
+      return;
+    }
+
+    onSummaryWorkspacePathClick({
+      path: normalizedPath,
+      turnId: turn.id,
+      threadId: threadId || null,
+      environmentId: summaryPreviewEnvironmentId,
+      agentName: turn.agentName || null,
+      sourceType,
+    });
+  }, [onSummaryWorkspacePathClick, summaryPreviewEnvironmentId, threadId]);
   const threadHistoryItems = useMemo<RunnerThreadHistoryItem[]>(() => {
     return turns.flatMap((turn, turnIndex) => {
       const items: RunnerThreadHistoryItem[] = [];
@@ -12394,7 +12738,7 @@ export function RunnerChat({
     };
   }, [previewedDocumentAttachment, turns.length]);
 
-  const selectedDeepResearchDetailPresentation = useMemo(() => {
+  const selectedDeepResearchDetailPresentation = useMemo<RunnerSelectedDeepResearchDetailPresentation | null>(() => {
     if (!selectedDeepResearchDetail) {
       return null;
     }
@@ -12408,26 +12752,38 @@ export function RunnerChat({
     const deepResearchGroup = timelineState.displayedTimelineItems.find(
       (item): item is Extract<RunnerTimelineItem, { kind: "deep_research_group" }> => item.kind === "deep_research_group"
     );
-
-    if (!deepResearchGroup) {
-      return null;
-    }
-
-    const firstLog = deepResearchGroup.logs[0] || deepResearchGroup.runningCommandLog;
+    const resolvedLogs = deepResearchGroup?.logs || selectedTurn.logs.filter((log) => log.eventType === "deep_research");
+    const resolvedRunningCommandLog = deepResearchGroup?.runningCommandLog || selectedTurn.logs.find((log) => isDeepResearchTimelineCommand(log));
     const session = resolveDeepResearchSessionForGroup({
-      logs: deepResearchGroup.logs,
-      runningCommandLog: deepResearchGroup.runningCommandLog,
+      logs: resolvedLogs,
+      runningCommandLog: resolvedRunningCommandLog,
       turn: selectedTurn,
       sessions: deepResearchSessions,
     });
+    if (!deepResearchGroup && resolvedLogs.length === 0 && !resolvedRunningCommandLog && !session) {
+      return null;
+    }
+    const firstLog = resolvedLogs[0] || resolvedRunningCommandLog;
     return {
       turn: selectedTurn,
-      logs: deepResearchGroup.logs,
-      runningCommandLog: deepResearchGroup.runningCommandLog,
+      logs: resolvedLogs,
+      runningCommandLog: resolvedRunningCommandLog,
       session,
       timeLabel: firstLog ? toDurationLabel(firstLog) : undefined,
+      fallbackTopic: extractDeepResearchTopicFromGroup(resolvedLogs, resolvedRunningCommandLog) || selectedTurn.prompt || null,
     };
   }, [deepResearchSessions, selectedDeepResearchDetail, turns]);
+  const lastSelectedDeepResearchDetailPresentationRef = useRef<RunnerSelectedDeepResearchDetailPresentation | null>(null);
+  useEffect(() => {
+    if (selectedDeepResearchDetailPresentation) {
+      lastSelectedDeepResearchDetailPresentationRef.current = selectedDeepResearchDetailPresentation;
+    } else if (!selectedDeepResearchDetail) {
+      lastSelectedDeepResearchDetailPresentationRef.current = null;
+    }
+  }, [selectedDeepResearchDetail, selectedDeepResearchDetailPresentation]);
+  const effectiveSelectedDeepResearchDetailPresentation =
+    selectedDeepResearchDetailPresentation
+      || (selectedDeepResearchDetail ? lastSelectedDeepResearchDetailPresentationRef.current : null);
 
   const selectedComputerUseDetailPresentation = useMemo(() => {
     if (!selectedComputerUseDetail) {
@@ -12465,22 +12821,8 @@ export function RunnerChat({
       return null;
     }
 
-    const agentMessage = [...selectedTurn.logs]
-      .reverse()
-      .find((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
-    const normalizedAgentResponseMessage = agentMessage?.message
-      ? stripSystemTags(agentMessage.message).replace(/\s+/g, " ").trim()
-      : "";
     const displayedTimelineLogs = dedupeAdjacentRunnerLogs(
-      selectedTurn.logs.filter(
-        (log) =>
-          shouldDisplayTimelineLog(log) &&
-          !(
-            (log.eventType === "reasoning" || log.isReasoning) &&
-            normalizedAgentResponseMessage &&
-            stripSystemTags(log.message || "").replace(/\s+/g, " ").trim() === normalizedAgentResponseMessage
-          )
-      )
+      selectedTurn.logs.filter((log) => shouldDisplayTimelineLog(log))
     );
     const subagentGroups = buildSubagentTimelineGroups(
       displayedTimelineLogs.length === 0 && selectedTurn.status === "running"
@@ -12686,13 +13028,14 @@ export function RunnerChat({
       showResizeHandle
     />
   ) : null;
-  const deepResearchDetailDrawerContent = selectedDeepResearchDetailPresentation ? (
+  const deepResearchDetailDrawerContent = effectiveSelectedDeepResearchDetailPresentation ? (
     <DeepResearchDetailDrawer
-      log={selectedDeepResearchDetailPresentation.runningCommandLog}
-      logs={selectedDeepResearchDetailPresentation.logs}
-      runningCommandLog={selectedDeepResearchDetailPresentation.runningCommandLog}
-      session={selectedDeepResearchDetailPresentation.session}
-      timeLabel={selectedDeepResearchDetailPresentation.timeLabel}
+      log={effectiveSelectedDeepResearchDetailPresentation.runningCommandLog}
+      logs={effectiveSelectedDeepResearchDetailPresentation.logs}
+      runningCommandLog={effectiveSelectedDeepResearchDetailPresentation.runningCommandLog}
+      session={effectiveSelectedDeepResearchDetailPresentation.session}
+      timeLabel={effectiveSelectedDeepResearchDetailPresentation.timeLabel}
+      fallbackTopic={effectiveSelectedDeepResearchDetailPresentation.fallbackTopic}
       onClose={closeDeepResearchDetailDrawer}
     />
   ) : null;
@@ -12977,12 +13320,6 @@ export function RunnerChat({
   }, [disableSubagentDetailDrawer, selectedComputerUseDetail, selectedDeepResearchDetail, selectedSubagentDetail]);
 
   useEffect(() => {
-    if (selectedDeepResearchDetail && !selectedDeepResearchDetailPresentation) {
-      setSelectedDeepResearchDetail(null);
-    }
-  }, [selectedDeepResearchDetail, selectedDeepResearchDetailPresentation]);
-
-  useEffect(() => {
     onSubagentDetailOpenChange?.(Boolean(selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation));
   }, [onSubagentDetailOpenChange, selectedComputerUseDetailPresentation, selectedSubagentDetailPresentation]);
 
@@ -13003,8 +13340,8 @@ export function RunnerChat({
   }, [onDocumentPreviewOpenChange]);
 
   useEffect(() => {
-    onDeepResearchDetailOpenChange?.(Boolean(selectedDeepResearchDetailPresentation));
-  }, [onDeepResearchDetailOpenChange, selectedDeepResearchDetailPresentation]);
+    onDeepResearchDetailOpenChange?.(Boolean(effectiveSelectedDeepResearchDetailPresentation));
+  }, [effectiveSelectedDeepResearchDetailPresentation, onDeepResearchDetailOpenChange]);
 
   useEffect(() => {
     return () => {
@@ -13803,7 +14140,11 @@ export function RunnerChat({
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${selectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
+      onDragEnterCapture={handleRootFileDragEnter}
+      onDragOverCapture={handleRootFileDragOver}
+      onDragLeaveCapture={handleRootFileDragLeave}
+      onDropCapture={handleRootFileDrop}
       style={
         {
           "--tb-document-preview-width": previewedDocumentAttachment
@@ -13815,6 +14156,26 @@ export function RunnerChat({
       }
     >
       <input ref={fileInputRef} type="file" multiple hidden onChange={handleAddFiles} />
+
+      {isScreenFileDragActive ? (
+        <div className="tb-screen-file-drop-overlay">
+          <div className="tb-screen-file-drop-overlay-panel">
+            <div className="tb-screen-file-drop-overlay-illustration" aria-hidden="true">
+              <div className="tb-screen-file-drop-overlay-icon-card tb-screen-file-drop-overlay-icon-card-back">
+                <LucideCode className="tb-screen-file-drop-overlay-icon" strokeWidth={1.75} />
+              </div>
+              <div className="tb-screen-file-drop-overlay-icon-card tb-screen-file-drop-overlay-icon-card-front">
+                <IconImages className="tb-screen-file-drop-overlay-icon" />
+              </div>
+              <div className="tb-screen-file-drop-overlay-icon-card tb-screen-file-drop-overlay-icon-card-side">
+                <IconFileText className="tb-screen-file-drop-overlay-icon" />
+              </div>
+            </div>
+            <div className="tb-screen-file-drop-overlay-title">Add files</div>
+            <div className="tb-screen-file-drop-overlay-copy">Drop files here to add them to the conversation</div>
+          </div>
+        </div>
+      ) : null}
 
       {quotedSelectionPopup ? (
         <div
@@ -14033,6 +14394,7 @@ export function RunnerChat({
                             content={stripSystemTags(agentMessage.message)}
                             className="tb-message-markdown tb-message-markdown-summary"
                             softBreaks
+                            onWorkspacePathClick={canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
                           />
                         </div>
                       ) : null}
@@ -14056,10 +14418,7 @@ export function RunnerChat({
 
                     {!isQueuedTurn ? (
                       <div className="tb-turn-meta" style={metaHeaderStyle}>
-                        <div className="tb-turn-agent">
-                          {renderTurnAgentAvatar(turnAgentLabel, turnAgentPhotoUrl)}
-                          <span className="tb-turn-agent-name">{turnAgentLabel}</span>
-                        </div>
+                        {renderTurnAgentTrigger(turn, turnAgentLabel, turnAgentPhotoUrl)}
                         <div className="tb-turn-environment-pill">
                           <LucideCloud className="tb-turn-environment-icon" />
                           <span className="tb-turn-environment-label">{turnEnvironmentLabel}</span>
@@ -14132,7 +14491,11 @@ export function RunnerChat({
                           </div>
                         ) : null}
                         <div className="tb-turn-response">
-                          <RunnerMarkdown content={stripSystemTags(agentMessage.message)} className="tb-message-markdown tb-message-markdown-summary" />
+                          <RunnerMarkdown
+                            content={stripSystemTags(agentMessage.message)}
+                            className="tb-message-markdown tb-message-markdown-summary"
+                            onWorkspacePathClick={canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
+                          />
                         </div>
                       </div>
                     ) : null}
@@ -14226,10 +14589,7 @@ export function RunnerChat({
 
                   {!isQueuedTurn ? (
                     <div className="tb-turn-meta" style={metaHeaderStyle}>
-                      <div className="tb-turn-agent">
-                        {renderTurnAgentAvatar(turnAgentLabel, turnAgentPhotoUrl)}
-                        <span className="tb-turn-agent-name">{turnAgentLabel}</span>
-                      </div>
+                      {renderTurnAgentTrigger(turn, turnAgentLabel, turnAgentPhotoUrl)}
                       <div className="tb-turn-environment-pill">
                         <LucideCloud className="tb-turn-environment-icon" />
                         <span className="tb-turn-environment-label">{turnEnvironmentLabel}</span>
@@ -14302,7 +14662,11 @@ export function RunnerChat({
                         </div>
                       ) : null}
                       <div className="tb-turn-response">
-                        <RunnerMarkdown content={stripSystemTags(agentMessage.message)} className="tb-message-markdown tb-message-markdown-summary" />
+                        <RunnerMarkdown
+                          content={stripSystemTags(agentMessage.message)}
+                          className="tb-message-markdown tb-message-markdown-summary"
+                          onWorkspacePathClick={canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
+                        />
                       </div>
                     </div>
                   ) : null}
@@ -14945,11 +15309,7 @@ export function RunnerChat({
                               onDrop={(event) => {
                                 event.preventDefault();
                                 setIsDraggingOver(false);
-                                const droppedFiles = Array.from(event.dataTransfer.files || []);
-                                appendFiles(droppedFiles);
-                                if (droppedFiles.length > 0) {
-                                  closeAllInputPopups();
-                                }
+                                handleDroppedLocalFiles(Array.from(event.dataTransfer.files || []));
                               }}
                             >
                               <LucideUpload className="tb-popup-dropzone-icon" strokeWidth={1.75} />

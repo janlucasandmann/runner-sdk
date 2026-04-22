@@ -61,6 +61,7 @@ const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).t
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
 const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
 const RUNNER_DETAIL_DRAWER_AUTO_SCROLL_THRESHOLD_PX = 24;
+const RUNNER_WORKSPACE_PATH_MATCHER = /\/workspace\/\S+/g;
 
 function isRunnerDetailDrawerPinnedToBottom(element: HTMLDivElement): boolean {
   return element.scrollHeight - element.scrollTop - element.clientHeight <= RUNNER_DETAIL_DRAWER_AUTO_SCROLL_THRESHOLD_PX;
@@ -82,6 +83,80 @@ function truncateSubagentPreviewText(value: string | null | undefined, maxLength
   return `${cleaned.slice(0, maxLength).trimEnd()}...`;
 }
 
+function trimRunnerWorkspacePathMatch(rawValue: string): { path: string; trailing: string } {
+  let boundaryIndex = rawValue.length;
+  while (boundaryIndex > 0 && /[),.;:!?}\]"']/.test(rawValue.charAt(boundaryIndex - 1))) {
+    boundaryIndex -= 1;
+  }
+  return {
+    path: rawValue.slice(0, boundaryIndex),
+    trailing: rawValue.slice(boundaryIndex),
+  };
+}
+
+function renderTextWithWorkspacePathLinks(
+  text: string,
+  {
+    onWorkspacePathClick,
+    keyPrefix,
+    className = "tb-message-markdown-link",
+    style,
+  }: {
+    onWorkspacePathClick?: ((path: string) => void) | null;
+    keyPrefix: string;
+    className?: string;
+    style?: CSSProperties;
+  }
+): ReactNode {
+  if (!text || typeof onWorkspacePathClick !== "function") {
+    return text;
+  }
+
+  const matcher = new RegExp(RUNNER_WORKSPACE_PATH_MATCHER);
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null = null;
+
+  while ((match = matcher.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+
+    const rawValue = String(match[0] || "");
+    const { path, trailing } = trimRunnerWorkspacePathMatch(rawValue);
+    if (path) {
+      nodes.push(
+        <a
+          key={`${keyPrefix}-workspace-path-${match.index}`}
+          href={path}
+          className={className}
+          style={style}
+          onClick={(event) => {
+            event.preventDefault();
+            onWorkspacePathClick(path);
+          }}
+        >
+          {path}
+        </a>
+      );
+    } else {
+      nodes.push(rawValue);
+    }
+
+    if (trailing) {
+      nodes.push(trailing);
+    }
+
+    lastIndex = match.index + rawValue.length;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes.length > 0 ? nodes : text;
+}
+
 interface RunnerWorkLogEntryProps {
   log: RunnerLog;
   timeLabel?: string;
@@ -91,6 +166,7 @@ interface RunnerWorkLogEntryProps {
   renderComputerUseMcpAsGeneric?: boolean;
   activeTaskPreviewId?: string | null;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
+  onWorkspacePathClick?: (path: string) => void;
   onTaskPreviewClick?: (preview: {
     taskId: string;
     projectId: string;
@@ -853,25 +929,31 @@ function parseRunnerAnsiSegments(content: string): RunnerAnsiSegment[] {
 function RunnerAnsiOutput({
   content,
   isError,
+  onWorkspacePathClick,
 }: {
   content: string;
   isError?: boolean;
+  onWorkspacePathClick?: (path: string) => void;
 }) {
   const segments = useMemo(() => parseRunnerAnsiSegments(content), [content]);
 
   return (
     <pre className={`tb-log-terminal-output ${isError ? "is-error" : ""}`}>
-      {segments.map((segment, index) => (
-        <span
-          key={`${index}-${segment.text.length}`}
-          style={{
-            color: segment.color || undefined,
-            fontWeight: segment.bold ? 600 : undefined,
-          }}
-        >
-          {segment.text}
-        </span>
-      ))}
+      {segments.map((segment, index) => {
+        const segmentStyle = {
+          color: segment.color || undefined,
+          fontWeight: segment.bold ? 600 : undefined,
+        } satisfies CSSProperties;
+        return (
+          <span key={`${index}-${segment.text.length}`} style={segmentStyle}>
+            {renderTextWithWorkspacePathLinks(segment.text, {
+              onWorkspacePathClick,
+              keyPrefix: `ansi-${index}`,
+              style: segmentStyle,
+            })}
+          </span>
+        );
+      })}
     </pre>
   );
 }
@@ -881,8 +963,22 @@ function isSkillLaunchNotice(content: string): boolean {
   return /^Launching skill:\s+.+$/i.test(normalized) && !normalized.includes("\n");
 }
 
-function RunnerTerminalStatus({ content }: { content: string }) {
-  return <div className="tb-log-terminal-status">{content.trim()}</div>;
+function RunnerTerminalStatus({
+  content,
+  onWorkspacePathClick,
+}: {
+  content: string;
+  onWorkspacePathClick?: (path: string) => void;
+}) {
+  const normalizedContent = content.trim();
+  return (
+    <div className="tb-log-terminal-status">
+      {renderTextWithWorkspacePathLinks(normalizedContent, {
+        onWorkspacePathClick,
+        keyPrefix: "terminal-status",
+      })}
+    </div>
+  );
 }
 
 type RunnerFileDiffMetadata = {
@@ -2647,7 +2743,13 @@ function TaskManagementReleaseCreateLogBox({
   );
 }
 
-function ReasoningLogBox({ log }: { log: RunnerLog }) {
+function ReasoningLogBox({
+  log,
+  onWorkspacePathClick,
+}: {
+  log: RunnerLog;
+  onWorkspacePathClick?: (path: string) => void;
+}) {
   const content = stripRunnerSystemTags(log.message).replace(/^\*\*[^*]+\*\*\s*/, "").trim();
   if (!content) return null;
   return (
@@ -2655,7 +2757,7 @@ function ReasoningLogBox({ log }: { log: RunnerLog }) {
       <span className="tb-log-reasoning-icon">
         <Lightbulb className="tb-log-card-small-icon" strokeWidth={1.5} />
       </span>
-      <RunnerMarkdown content={content} className="tb-log-reasoning-copy tb-message-markdown" />
+      <RunnerMarkdown content={content} className="tb-log-reasoning-copy tb-message-markdown" onWorkspacePathClick={onWorkspacePathClick} />
     </div>
   );
 }
@@ -2666,12 +2768,14 @@ function GenericTextLogBox({
   label,
   title,
   icon,
+  onWorkspacePathClick,
 }: {
   log: RunnerLog;
   timeLabel?: string;
   label: string;
   title?: string | null;
   icon: ReactNode;
+  onWorkspacePathClick?: (path: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const content = stripRunnerSystemTags(log.message || log.metadata?.output || "");
@@ -2679,7 +2783,7 @@ function GenericTextLogBox({
     <div className="tb-log-card">
       <LogHeader icon={icon} label={label} title={title} timeLabel={timeLabel} collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
       <LogPanel collapsed={collapsed}>
-        {content ? <RunnerMarkdown content={content} className="tb-message-markdown" softBreaks /> : <div className="tb-log-card-empty">No details available.</div>}
+        {content ? <RunnerMarkdown content={content} className="tb-message-markdown" softBreaks onWorkspacePathClick={onWorkspacePathClick} /> : <div className="tb-log-card-empty">No details available.</div>}
       </LogPanel>
     </div>
   );
@@ -3250,6 +3354,55 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
             : {}),
       };
     });
+  }
+
+  const imageGenerationCommand = typeof log.metadata?.command === "string" ? log.metadata.command : undefined;
+  if (
+    (log.eventType === "command_execution" || log.eventType === "mcp_tool_call") &&
+    isLikelyImageGenerationLog(log, imageGenerationCommand)
+  ) {
+    const imagePaths = new Set<string>();
+    const metadataFilePaths = Array.isArray(log.metadata?.filePaths)
+      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      : [];
+    for (const filePath of metadataFilePaths) {
+      if (isRunnerLogImageFilePath(filePath)) {
+        imagePaths.add(filePath);
+      }
+    }
+    if (typeof log.metadata?.savedImagePath === "string" && log.metadata.savedImagePath.trim()) {
+      imagePaths.add(log.metadata.savedImagePath.trim());
+    }
+    const resultImagePath = extractWorkspaceImagePathFromResult(log.metadata?.result);
+    if (resultImagePath) {
+      imagePaths.add(resultImagePath);
+    }
+    const outputImagePath = extractWorkspaceImagePathFromOutput(log.metadata?.output);
+    if (outputImagePath) {
+      imagePaths.add(outputImagePath);
+    }
+    const messageImagePath = extractWorkspaceImagePathFromOutput(log.message);
+    if (messageImagePath) {
+      imagePaths.add(messageImagePath);
+    }
+
+    const resolvedImagePaths = Array.from(imagePaths);
+    if (resolvedImagePaths.length === 0) {
+      return [];
+    }
+
+    const normalizedKind = String(log.metadata?.changeKinds?.[0] || "").trim().toLowerCase();
+    const kind: "created" | "modified" | "deleted" =
+      normalizedKind === "deleted"
+        ? "deleted"
+        : normalizedKind === "modified"
+          ? "modified"
+          : "created";
+
+    return resolvedImagePaths.map((filePath) => ({
+      path: filePath,
+      kind,
+    }));
   }
 
   if (log.eventType !== "command_execution") {
@@ -4952,9 +5105,26 @@ function parseDeepResearchOutput(output?: string) {
     sources: [] as string[],
     elapsedSeconds: 0,
     errorMessage: null as string | null,
+    runtimePath: null as string | null,
   };
   if (!output) return result;
-  for (const line of output.split("\n")) {
+  const segments: string[] = [];
+  const pushSegment = (value: unknown) => {
+    if (typeof value !== "string") return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    segments.push(trimmed);
+  };
+
+  pushSegment(output);
+  try {
+    const parsed = JSON.parse(output) as Record<string, unknown>;
+    pushSegment(parsed?.stdout);
+    pushSegment(parsed?.stderr);
+    pushSegment(parsed?.output);
+  } catch {}
+
+  for (const line of segments.flatMap((segment) => segment.split("\n"))) {
     const trimmed = line.trim();
     if (!trimmed.startsWith("{")) continue;
     try {
@@ -4983,6 +5153,9 @@ function parseDeepResearchOutput(output?: string) {
         result.sources = event.sources.filter((source): source is string => typeof source === "string");
       }
       if (typeof event.elapsed_seconds === "number") result.elapsedSeconds = event.elapsed_seconds;
+      if (event.event === "resolved_runtime" && typeof event.path === "string") {
+        result.runtimePath = event.path;
+      }
       if (event.event === "error" && typeof event.message === "string") {
         result.status = "error";
         result.errorMessage = event.message;
@@ -4990,6 +5163,20 @@ function parseDeepResearchOutput(output?: string) {
     } catch {}
   }
   return result;
+}
+
+export function hasDeepResearchOutput(output?: string): boolean {
+  const parsed = parseDeepResearchOutput(output);
+  return Boolean(
+    parsed.topic ||
+      parsed.interactionId ||
+      parsed.reportFile ||
+      parsed.reportManifestFile ||
+      parsed.runtimePath ||
+      parsed.errorMessage ||
+      parsed.thinkingSummaries.length > 0 ||
+      parsed.sourcesCount > 0
+  );
 }
 
 function buildDeepResearchFromStreamingLogs(logs: RunnerLog[]) {
@@ -5067,6 +5254,11 @@ function buildDeepResearchFromStreamingLogs(logs: RunnerLog[]) {
         result.status = "thinking";
         if (typeof deepResearch.elapsedSeconds === "number" && deepResearch.elapsedSeconds > 0) {
           result.elapsedSeconds = deepResearch.elapsedSeconds;
+        }
+        break;
+      case "resolved_runtime":
+        if (result.status === "starting") {
+          result.status = "starting";
         }
         break;
       case "stream_ended":
@@ -5207,9 +5399,8 @@ export function getDeepResearchLogState({
       streamingLogs.some((entry) => Boolean(entry.metadata?.deepResearch?.reportFile)) ||
       Boolean(parsed.reportFile));
   const isSessionComplete = session?.status === "completed";
-  const isCommandComplete = commandStatus === "completed" && !hasCommandError;
   const isParsedComplete = parsed.status === "complete" || Boolean(parsed.reportFile);
-  const isComplete = !isError && (isStreamingComplete || isSessionComplete || isCommandComplete || isParsedComplete);
+  const isComplete = !isError && (isStreamingComplete || isSessionComplete || isParsedComplete);
   const isCommandRunning = isDeepResearchCommandStatusActive(commandStatus);
   const isSessionRunning = Boolean(
     session &&
@@ -5334,6 +5525,16 @@ function formatDeepResearchDisplayLog(log: RunnerLog, index: number): RunnerDeep
         message: "Resuming the deep research stream.",
         timeLabel,
       };
+    case "resolved_runtime":
+      return {
+        key,
+        label: "Runtime",
+        message:
+          typeof deepResearch.runtimePath === "string" && deepResearch.runtimePath.trim()
+            ? `Using ${deepResearch.runtimePath}`
+            : "Resolved the deep research runtime.",
+        timeLabel,
+      };
     case "stream_ended":
       return {
         key,
@@ -5439,7 +5640,9 @@ export function hasActiveDeepResearchLogGroup(logs: RunnerLog[]): boolean {
   }
   const streamingLogs = logs.filter((entry) => entry.eventType === "deep_research");
   const commandLog = logs.find(
-    (entry) => entry.eventType === "command_execution" && isDeepResearchCommand(entry.metadata?.command || entry.message || "")
+    (entry) =>
+      entry.eventType === "command_execution" &&
+      (isDeepResearchCommand(entry.metadata?.command || entry.message || "") || hasDeepResearchOutput(typeof entry.metadata?.output === "string" ? entry.metadata.output : ""))
   );
   if (!commandLog && streamingLogs.length === 0) {
     return false;
@@ -5562,6 +5765,7 @@ export function DeepResearchLogBox({
   timeLabel,
   onOpenDetails,
   isDetailOpen = false,
+  fallbackTopic,
 }: {
   log?: RunnerLog;
   logs?: RunnerLog[];
@@ -5570,6 +5774,7 @@ export function DeepResearchLogBox({
   timeLabel?: string;
   onOpenDetails?: () => void;
   isDetailOpen?: boolean;
+  fallbackTopic?: string | null;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const {
@@ -5586,7 +5791,8 @@ export function DeepResearchLogBox({
       () => getDeepResearchLogState({ log, logs, runningCommandLog, session }),
     [log, logs, runningCommandLog, session]
   );
-  const taskCopy = truncateSubagentPreviewText(topic || parsed.topic || "Deep research task", 280);
+  const resolvedTopic = topic || parsed.topic || String(fallbackTopic || "").trim() || null;
+  const taskCopy = truncateSubagentPreviewText(resolvedTopic || "Deep research task", 280);
   const previewLogs = useMemo(
     () =>
       buildDeepResearchDisplayLogs({
@@ -5607,7 +5813,7 @@ export function DeepResearchLogBox({
       <LogHeader
         icon={<Telescope className="tb-log-card-small-icon" strokeWidth={1.5} />}
         label="Deep Research"
-        title={topic || undefined}
+        title={resolvedTopic || undefined}
         timeLabel={timeLabel}
         meta={<span className={`tb-log-card-pill ${isError ? "is-error" : ""}`.trim()}>{statusLabel}</span>}
         collapsed={collapsed}
@@ -5667,6 +5873,7 @@ export function DeepResearchDetailDrawer({
   session,
   timeLabel,
   onClose,
+  fallbackTopic,
 }: {
   log?: RunnerLog;
   logs?: RunnerLog[];
@@ -5674,6 +5881,7 @@ export function DeepResearchDetailDrawer({
   session?: RunnerDeepResearchSession | null;
   timeLabel?: string;
   onClose: () => void;
+  fallbackTopic?: string | null;
 }) {
   const {
     streamingLogs,
@@ -5701,7 +5909,7 @@ export function DeepResearchDetailDrawer({
     [isComplete, isError, isLoading, parsed, streamingLogs, topic]
   );
 
-  const taskCopy = String(topic || parsed.topic || "Deep research task").trim();
+  const taskCopy = String(topic || parsed.topic || String(fallbackTopic || "").trim() || "Deep research task").trim();
 
   return (
     <aside className="tb-subagent-detail-drawer tb-deep-research-detail-drawer">
@@ -5936,7 +6144,7 @@ function hasStructuredImagePayload(content: unknown): boolean {
   );
 }
 
-function isLikelyImageGenerationLog(log: RunnerLog, command?: string): boolean {
+export function isLikelyImageGenerationLog(log: RunnerLog, command?: string): boolean {
   return Boolean(
     (command && isImageGenerationCommand(command))
     || log.metadata?.isImageGeneration
@@ -6047,8 +6255,13 @@ function ImageGenerationLogBox({
       if (cancelled) {
         return;
       }
+      const filePathFromMetadata =
+        Array.isArray(log.metadata?.filePaths)
+          ? log.metadata.filePaths.find((value): value is string => typeof value === "string" && isRunnerLogImageFilePath(value))
+          : null;
       const resolvedImagePath =
         log.metadata?.savedImagePath
+        || filePathFromMetadata
         || extractWorkspaceImagePathFromResult(log.metadata?.result)
         || extractWorkspaceImagePathFromOutput(log.metadata?.output)
         || extractWorkspaceImagePathFromOutput(log.message)
@@ -6077,6 +6290,10 @@ function ImageGenerationLogBox({
     };
   }, [backendUrl, environmentId, log]);
 
+  if (!isError && !isLoading && imageResolutionComplete && !resolvedImageSrc) {
+    return null;
+  }
+
   return (
     <ImagePreviewLogCard
       icon={<Images className="tb-log-card-small-icon" strokeWidth={1.5} />}
@@ -6100,9 +6317,7 @@ function ImageGenerationLogBox({
               loadStrategy="visible"
             />
           </div>
-        ) : (
-          <div className="tb-log-card-empty">{isLoading ? "Image generation in progress..." : "No image output available."}</div>
-        )
+        ) : null
       }
     />
   );
@@ -6969,7 +7184,15 @@ function TodoListLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string
   );
 }
 
-function GenericCommandLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function GenericCommandLogBox({
+  log,
+  timeLabel,
+  onWorkspacePathClick,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  onWorkspacePathClick?: (path: string) => void;
+}) {
   const [collapsed, setCollapsed] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -7080,12 +7303,14 @@ function GenericCommandLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: 
                 {command ? <RunnerShellCommandViewer command={commandDisplay} /> : null}
                 {parsedOutput ? (
                   <>
-                    {hasStdout ? <RunnerAnsiOutput content={stdoutDisplay} /> : null}
-                    {hasStderr ? <RunnerAnsiOutput content={stderrDisplay} isError /> : null}
-                    {!hasStdout && !hasStderr && statusNotice ? <RunnerTerminalStatus content={statusNotice} /> : null}
+                    {hasStdout ? <RunnerAnsiOutput content={stdoutDisplay} onWorkspacePathClick={onWorkspacePathClick} /> : null}
+                    {hasStderr ? <RunnerAnsiOutput content={stderrDisplay} isError onWorkspacePathClick={onWorkspacePathClick} /> : null}
+                    {!hasStdout && !hasStderr && statusNotice ? <RunnerTerminalStatus content={statusNotice} onWorkspacePathClick={onWorkspacePathClick} /> : null}
                   </>
                 ) : hasOutput ? (
-                  isSkillLaunchOutput ? <RunnerTerminalStatus content={outputDisplay} /> : <RunnerAnsiOutput content={outputDisplay} isError={isError} />
+                  isSkillLaunchOutput
+                    ? <RunnerTerminalStatus content={outputDisplay} onWorkspacePathClick={onWorkspacePathClick} />
+                    : <RunnerAnsiOutput content={outputDisplay} isError={isError} onWorkspacePathClick={onWorkspacePathClick} />
                 ) : null}
                 {!hasOutput ? <div className="tb-log-card-empty">No command output.</div> : null}
               </div>
@@ -7169,7 +7394,18 @@ export function InlineStatusLogBox({
   );
 }
 
-export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, requestHeaders, renderComputerUseMcpAsGeneric = false, activeTaskPreviewId, onPreviewDocument, onTaskPreviewClick }: RunnerWorkLogEntryProps) {
+export function RunnerWorkLogEntry({
+  log,
+  timeLabel,
+  backendUrl,
+  environmentId,
+  requestHeaders,
+  renderComputerUseMcpAsGeneric = false,
+  activeTaskPreviewId,
+  onPreviewDocument,
+  onWorkspacePathClick,
+  onTaskPreviewClick,
+}: RunnerWorkLogEntryProps) {
   const normalizedMessage = stripRunnerSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
 
   if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") {
@@ -7181,11 +7417,11 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
   }
 
   if (log.eventType === "reasoning" || log.eventType === "planning" || log.isReasoning || log.isPlanning) {
-    return <ReasoningLogBox log={log} />;
+    return <ReasoningLogBox log={log} onWorkspacePathClick={onWorkspacePathClick} />;
   }
 
   if ((log as RunnerLog & { isActionSummary?: boolean }).isActionSummary || log.eventType === "action_summary") {
-    return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Action Summary" icon={<Lightbulb className="tb-log-card-small-icon" strokeWidth={1.5} />} />;
+    return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Action Summary" icon={<Lightbulb className="tb-log-card-small-icon" strokeWidth={1.5} />} onWorkspacePathClick={onWorkspacePathClick} />;
   }
 
   if (log.eventType === "deep_research" && log.metadata?.deepResearch) {
@@ -7234,7 +7470,7 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
       return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     if (isDeepResearchCommand(command)) return <DeepResearchCommandLogBox log={log} timeLabel={timeLabel} />;
-    return <GenericCommandLogBox log={log} timeLabel={timeLabel} />;
+    return <GenericCommandLogBox log={log} timeLabel={timeLabel} onWorkspacePathClick={onWorkspacePathClick} />;
   }
 
   if (log.eventType === "mcp_tool_call") {
@@ -7260,7 +7496,7 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
   }
 
   if (log.eventType === "mcp_log") {
-    return <GenericTextLogBox log={log} timeLabel={timeLabel} label="MCP Log" icon={<Globe className="tb-log-card-small-icon" strokeWidth={1.5} />} />;
+    return <GenericTextLogBox log={log} timeLabel={timeLabel} label="MCP Log" icon={<Globe className="tb-log-card-small-icon" strokeWidth={1.5} />} onWorkspacePathClick={onWorkspacePathClick} />;
   }
 
   if (log.eventType === "file_change") {
@@ -7301,8 +7537,8 @@ export function RunnerWorkLogEntry({ log, timeLabel, backendUrl, environmentId, 
   }
 
   if (log.type === "error") {
-    return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Error" icon={<AlertCircle className="tb-log-card-small-icon" strokeWidth={1.5} />} />;
+    return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Error" icon={<AlertCircle className="tb-log-card-small-icon" strokeWidth={1.5} />} onWorkspacePathClick={onWorkspacePathClick} />;
   }
 
-  return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Log" icon={<FileText className="tb-log-card-small-icon" strokeWidth={1.5} />} />;
+  return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Log" icon={<FileText className="tb-log-card-small-icon" strokeWidth={1.5} />} onWorkspacePathClick={onWorkspacePathClick} />;
 }
