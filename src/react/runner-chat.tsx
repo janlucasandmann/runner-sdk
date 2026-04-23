@@ -202,7 +202,7 @@ function CollapsibleRunnerUserPrompt({
 
 type RunnerTurnStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
 type RunnerFileBrowserSource = "workspace" | "google-drive" | "one-drive" | "github" | "notion";
-type RunnerQuotedSelectionSource = "working_log" | "run_summary";
+type RunnerQuotedSelectionSource = "working_log" | "run_summary" | "deep_research_report";
 type RunnerThinkingStatusPhase = "visible" | "fading" | "hidden";
 
 interface RunnerQuotedSelection {
@@ -246,7 +246,7 @@ export interface RunnerChatSummaryWorkspacePathClickPayload {
   threadId?: string | null;
   environmentId?: string | null;
   agentName?: string | null;
-  sourceType: "run_summary" | "working_log";
+  sourceType: "run_summary" | "working_log" | "deep_research_report";
 }
 
 type RunnerThreadHistoryRole = "user" | "assistant";
@@ -1145,7 +1145,7 @@ interface ParsedThreadContextCommand {
 const DEFAULT_COMPUTER_AGENT_SKILLS: RunnerChatSkill[] = [
   { id: "image_generation", name: "Image Generation", enabled: true },
   { id: "web_search", name: "Web Search", enabled: true },
-  { id: "research", name: "Research", enabled: true },
+  { id: "deep_research", name: "Deep Research", enabled: true },
   { id: "browser", name: "Browser", enabled: true },
   { id: "pdf", name: "PDF Processing", enabled: true },
   { id: "frontend_design", name: "Frontend Design", enabled: true },
@@ -1154,7 +1154,13 @@ const DEFAULT_COMPUTER_AGENT_SKILLS: RunnerChatSkill[] = [
   { id: "task_management", name: "Task Management", enabled: true },
   { id: "computer_agents", name: "Computer Agents", enabled: true },
 ];
-const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "research", "browser", "memory", "task_management", "computer_agents"] as const;
+const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "deep_research", "browser", "memory", "task_management", "computer_agents"] as const;
+const RUNNER_CHAT_SKILL_ID_ALIASES: Record<string, string> = {
+  deepResearch: "deep_research",
+  deep_research: "deep_research",
+  "deep-research": "deep_research",
+  research: "deep_research",
+};
 const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v2";
 
 const DEFAULT_SCHEDULE_PRESETS: RunnerChatSchedulePreset[] = [
@@ -2746,9 +2752,16 @@ function notionDatabasesToFileItems(databases: RunnerChatNotionDatabase[]): Runn
 
 function normalizeComputerAgentSkills(skills: RunnerChatSkill[]): RunnerChatSkill[] {
   const input = skills.length > 0 ? skills : DEFAULT_COMPUTER_AGENT_SKILLS;
-  const byId = new Map(input.map((skill) => [skill.id, skill] as const));
+  const normalizedInput = input
+    .filter((skill): skill is RunnerChatSkill => Boolean(skill?.id))
+    .map((skill) => ({
+      ...skill,
+      id: RUNNER_CHAT_SKILL_ID_ALIASES[String(skill.id || "").trim()] || String(skill.id || "").trim(),
+    }))
+    .filter((skill) => skill.id);
+  const byId = new Map(normalizedInput.map((skill) => [skill.id, skill] as const));
   const core = DEFAULT_COMPUTER_AGENT_SKILLS.map((skill) => ({ ...skill, ...byId.get(skill.id) }));
-  const custom = input.filter((skill) => !DEFAULT_COMPUTER_AGENT_SKILLS.some((entry) => entry.id === skill.id));
+  const custom = normalizedInput.filter((skill) => !DEFAULT_COMPUTER_AGENT_SKILLS.some((entry) => entry.id === skill.id));
   return [...core, ...custom];
 }
 
@@ -2769,7 +2782,9 @@ function loadPersistedEnabledSkillIds(storageKey: string): string[] | null {
     if (!Array.isArray(parsed)) {
       return null;
     }
-    const normalized = parsed.filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+    const normalized = parsed
+      .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      .map((value) => RUNNER_CHAT_SKILL_ID_ALIASES[value.trim()] || value.trim());
     return normalized.length > 0 ? [...new Set(normalized)] : [];
   } catch {
     return null;
@@ -2842,7 +2857,7 @@ function buildEnabledSkillsPayload(enabledSkillIds: string[], displayedSkills: R
   const defaultSkillMap: Record<string, string> = {
     image_generation: "imageGeneration",
     web_search: "webSearch",
-    research: "research",
+    deep_research: "deepResearch",
     browser: "browser",
     pdf: "pdf",
     frontend_design: "frontendDesign",
@@ -6013,6 +6028,7 @@ export function RunnerChat({
   const [isPreparingRun, setIsPreparingRun] = useState(false);
   const [turns, setTurns] = useState<RunnerTurn[]>([]);
   const [deepResearchSessions, setDeepResearchSessions] = useState<RunnerDeepResearchSession[]>([]);
+  const [hydratedThreadStatus, setHydratedThreadStatus] = useState<string | null>(null);
   const [visibleTimelineItemCountsByTurn, setVisibleTimelineItemCountsByTurn] = useState<Record<string, number>>({});
   const [thinkingStatusPhaseByTurn, setThinkingStatusPhaseByTurn] = useState<Record<string, RunnerThinkingStatusPhase>>({});
   const [pendingQueuedMessages, setPendingQueuedMessages] = useState<PendingRunnerMessage[]>([]);
@@ -6246,6 +6262,7 @@ export function RunnerChat({
       (turn) => turn.status === "running" && turn.presentation !== "btw" && turn.presentation !== "context-action-notice"
     ) || null;
   const hasRunningTurn = Boolean(activeRunningTurn);
+  const hydratedThreadIsRunning = isRunningThreadLifecycleStatus(hydratedThreadStatus);
   const activeDeepResearchThreadSession = useMemo(() => {
     const activeSessions = deepResearchSessions.filter((session) => isDeepResearchSessionActive(session));
     if (activeSessions.length === 0) {
@@ -6268,7 +6285,7 @@ export function RunnerChat({
   const showRunPreparationIndicator = isPreparingRun && !hasRunningTurn && !isRunning && !isStoppingRun;
   const showActiveRunStopButton =
     !showRunPreparationIndicator &&
-    (hasRunningTurn || hasActiveDeepResearchSession || isRunning || isStoppingRun);
+    (hasRunningTurn || hydratedThreadIsRunning || hasActiveDeepResearchSession || isRunning || isStoppingRun);
   const trimmedInput = input.trim();
   const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
   const stagedThreadContextCommandLabel = stagedThreadContextCommand ? `/${stagedThreadContextCommand}` : "";
@@ -8719,6 +8736,7 @@ export function RunnerChat({
         if (cancelled) return;
         hydrationApplied = true;
         threadHydrationCacheRef.current = payload;
+        setHydratedThreadStatus(payload.threadStatus ?? null);
         applyHydratedThreadEnvironment(payload);
         return buildHydratedTurnsFromPayload(payload, {
           agentName: displayedAgentLabel,
@@ -8787,6 +8805,7 @@ export function RunnerChat({
     setThreadContextNativeError(null);
     setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
     setDeepResearchSessions([]);
+    setHydratedThreadStatus(null);
     setPendingQueuedMessages([]);
     stopRequestedThreadIdRef.current = null;
     setIsStoppingRun(false);
@@ -12061,7 +12080,7 @@ export function RunnerChat({
     const displayedTimelineItems = buildTimelineItems(displayedTimelineLogs);
     const hasDeepResearchGroup = displayedTimelineItems.some((item) => item.kind === "deep_research_group");
     const fallbackDeepResearchCommandLog = displayedTimelineLogs.find((log) => isDeepResearchTimelineCommand(log));
-    const activeDeepResearchSession = resolveDeepResearchSessionForGroup({
+    const matchedDeepResearchSession = resolveDeepResearchSessionForGroup({
       logs: [],
       runningCommandLog: fallbackDeepResearchCommandLog,
       turn,
@@ -12072,14 +12091,14 @@ export function RunnerChat({
         (candidateTurn) => candidateTurn.presentation !== "btw" && candidateTurn.presentation !== "context-action-notice"
       ) || null;
     const fallbackSessionForLatestTurn =
-      !activeDeepResearchSession &&
+      !matchedDeepResearchSession &&
       latestPrimaryTurn?.id === turn.id
         ? activeDeepResearchThreadSession
         : null;
-    const effectiveDeepResearchSession = activeDeepResearchSession || fallbackSessionForLatestTurn;
+    const effectiveDeepResearchSession = matchedDeepResearchSession || fallbackSessionForLatestTurn;
     const shouldInjectSessionBackedDeepResearchGroup =
       !hasDeepResearchGroup &&
-      isDeepResearchSessionActive(effectiveDeepResearchSession);
+      Boolean(effectiveDeepResearchSession);
 
     return {
       agentMessage,
@@ -12370,7 +12389,7 @@ export function RunnerChat({
     }
     if (skill.id === "image_generation") return <LucideImages className={className} strokeWidth={1.75} />;
     if (skill.id === "web_search") return <LucideGlobe className={className} strokeWidth={1.75} />;
-    if (skill.id === "research") return <LucideTelescope className={className} strokeWidth={1.75} />;
+    if (skill.id === "deep_research" || skill.id === "research") return <LucideTelescope className={className} strokeWidth={1.75} />;
     if (skill.id === "browser") return <LucideMonitor className={className} strokeWidth={1.75} />;
     if (skill.id === "pdf") return <LucideFileText className={className} strokeWidth={1.75} />;
     if (skill.id === "frontend_design") return <LucidePalette className={className} strokeWidth={1.75} />;
@@ -12599,7 +12618,7 @@ export function RunnerChat({
       </button>
     );
   }, [handleTurnAgentClick, onAgentTurnClick]);
-  const handleSummaryWorkspacePathClick = useCallback((turn: RunnerTurn, path: string, sourceType: "run_summary" | "working_log") => {
+  const handleSummaryWorkspacePathClick = useCallback((turn: RunnerTurn, path: string, sourceType: RunnerQuotedSelectionSource) => {
     if (typeof onSummaryWorkspacePathClick !== "function") {
       return;
     }
@@ -13177,8 +13196,12 @@ export function RunnerChat({
       logs={effectiveSelectedDeepResearchDetailPresentation.logs}
       runningCommandLog={effectiveSelectedDeepResearchDetailPresentation.runningCommandLog}
       session={effectiveSelectedDeepResearchDetailPresentation.session}
-      timeLabel={effectiveSelectedDeepResearchDetailPresentation.timeLabel}
       fallbackTopic={effectiveSelectedDeepResearchDetailPresentation.fallbackTopic}
+      onReportFileClick={(path) => handleSummaryWorkspacePathClick(
+        effectiveSelectedDeepResearchDetailPresentation.turn,
+        path,
+        "deep_research_report"
+      )}
       onClose={closeDeepResearchDetailDrawer}
     />
   ) : null;
@@ -13533,6 +13556,7 @@ export function RunnerChat({
         if (cancelled) {
           return;
         }
+        setHydratedThreadStatus(statusSnapshot.status ?? null);
 
         const localHasRunningTurn = turnsRef.current.some((turn) => turn.status === "running");
         const localHasActiveDeepResearch = turnsRef.current.some((turn) => hasActiveDeepResearchLogGroup(turn.logs));
@@ -13578,6 +13602,7 @@ export function RunnerChat({
           }
 
           threadHydrationCacheRef.current = payload;
+          setHydratedThreadStatus(payload.threadStatus ?? statusSnapshot.status ?? null);
           applyHydratedThreadEnvironment(payload);
           const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
             agentName: displayedAgentLabel,
@@ -14422,6 +14447,7 @@ export function RunnerChat({
               const responseStyle = turn.animateOnRender
                 ? getRunnerChatEnterAnimationStyle(baseDelay + 150 + displayedTimelineItems.length * 45)
                 : undefined;
+              const shouldAnimateTimelineRows = turn.animateOnRender || isTurnRunning;
               const turnAgentLabel = turn.agentName || displayedAgentLabel || "Agent";
               const turnAgentPhotoUrl = resolveTurnAgentPhotoUrl(turnAgentLabel);
               const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
@@ -14582,7 +14608,7 @@ export function RunnerChat({
                                   <div
                                     key={timelineItemKey(turn.id, index, item)}
                                     className="agent-step-item"
-                                    style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
+                                    style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
                                   >
                                     <div className="agent-step-content">{renderTimelineItem(turn, item, index)}</div>
                                   </div>
@@ -14591,7 +14617,7 @@ export function RunnerChat({
                               {shouldRenderThinkingStatus ? (
                                 <div
                                   className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
-                                  style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
+                                  style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
                                 >
                                   <div className="agent-step-content">
                                     <InlineStatusLogBox
@@ -14753,7 +14779,7 @@ export function RunnerChat({
                                 <div
                                   key={timelineItemKey(turn.id, index, item)}
                                   className="agent-step-item"
-                                  style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
+                                  style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
                                 >
                                   <div className="agent-step-content">{renderTimelineItem(turn, item, index)}</div>
                                 </div>
@@ -14762,7 +14788,7 @@ export function RunnerChat({
                             {shouldRenderThinkingStatus ? (
                               <div
                                 className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
-                                style={turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
+                                style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
                               >
                                 <div className="agent-step-content">
                                   <InlineStatusLogBox

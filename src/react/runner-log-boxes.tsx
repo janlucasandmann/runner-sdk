@@ -54,6 +54,7 @@ import {
 } from "./runner-document-preview.js";
 import { RunnerFileDiffSurface } from "./runner-file-diff-surface.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
+import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
 import { RunnerMarkdown, stripRunnerSystemTags } from "./runner-markdown.js";
 
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
@@ -5442,6 +5443,119 @@ type RunnerDeepResearchDisplayLog = {
   tone?: "default" | "success" | "error";
 };
 
+type RunnerDeepResearchTransitionPhase = "entering" | "steady" | "exiting";
+
+type RunnerDeepResearchTransitionedDisplayLog = RunnerDeepResearchDisplayLog & {
+  transitionPhase: RunnerDeepResearchTransitionPhase;
+};
+
+function useDeepResearchAnimatedEntryKeys(entries: RunnerDeepResearchDisplayLog[]): Set<string> {
+  const [animatedKeys, setAnimatedKeys] = useState<Set<string>>(new Set());
+  const seenKeysRef = useRef<Set<string>>(new Set());
+  const keySignature = useMemo(() => entries.map((entry) => entry.key).join("|"), [entries]);
+
+  useEffect(() => {
+    const previousKeys = seenKeysRef.current;
+    const currentKeys = entries.map((entry) => entry.key);
+    const addedKeys = currentKeys.filter((key) => !previousKeys.has(key));
+    seenKeysRef.current = new Set(currentKeys);
+
+    if (addedKeys.length === 0) {
+      return;
+    }
+
+    setAnimatedKeys((current) => {
+      const next = new Set(current);
+      addedKeys.forEach((key) => next.add(key));
+      return next;
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      setAnimatedKeys((current) => {
+        const next = new Set(current);
+        addedKeys.forEach((key) => next.delete(key));
+        return next;
+      });
+    }, RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [entries, keySignature]);
+
+  return animatedKeys;
+}
+
+function useDeepResearchPreviewDisplayLogs(
+  entries: RunnerDeepResearchDisplayLog[]
+): RunnerDeepResearchTransitionedDisplayLog[] {
+  const [displayEntries, setDisplayEntries] = useState<RunnerDeepResearchTransitionedDisplayLog[]>(
+    () => entries.map((entry) => ({ ...entry, transitionPhase: "steady" as const }))
+  );
+  const keySignature = useMemo(() => entries.map((entry) => entry.key).join("|"), [entries]);
+
+  useEffect(() => {
+    setDisplayEntries((current) => {
+      const currentMap = new Map(current.map((entry) => [entry.key, entry]));
+      const nextKeys = new Set(entries.map((entry) => entry.key));
+      const exitingEntries = current
+        .filter((entry) => !nextKeys.has(entry.key))
+        .map((entry) => ({ ...entry, transitionPhase: "exiting" as const }));
+      const nextEntries: RunnerDeepResearchTransitionedDisplayLog[] = entries.map((entry) => {
+        const existing = currentMap.get(entry.key);
+        return {
+          ...entry,
+          transitionPhase: existing ? (existing.transitionPhase === "entering" ? "entering" : "steady") : ("entering" as const),
+        };
+      });
+      return [...exitingEntries, ...nextEntries];
+    });
+  }, [entries, keySignature]);
+
+  useEffect(() => {
+    const hasTransientEntries = displayEntries.some(
+      (entry) => entry.transitionPhase === "entering" || entry.transitionPhase === "exiting"
+    );
+    if (!hasTransientEntries) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDisplayEntries((current) =>
+        current
+          .filter((entry) => entry.transitionPhase !== "exiting")
+          .map((entry) =>
+            entry.transitionPhase === "entering"
+              ? { ...entry, transitionPhase: "steady" as const }
+              : entry
+          )
+      );
+    }, RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [displayEntries]);
+
+  return displayEntries;
+}
+
+function isVisibleDeepResearchDisplayEvent(event: string | null | undefined): boolean {
+  const normalized = String(event || "").trim();
+  if (!normalized) {
+    return false;
+  }
+  return ![
+    "status",
+    "research_complete",
+    "complete",
+    "error",
+    "timeout",
+    "connection_timeout",
+    "resume_timeout",
+    "resume_error",
+    "resuming_stream",
+    "stream_ended",
+    "resolved_runtime",
+  ].includes(normalized);
+}
+
 function formatDeepResearchDisplayLog(log: RunnerLog, index: number): RunnerDeepResearchDisplayLog | null {
   const deepResearch = log.metadata?.deepResearch;
   if (!deepResearch) {
@@ -5450,6 +5564,9 @@ function formatDeepResearchDisplayLog(log: RunnerLog, index: number): RunnerDeep
 
   const timeLabel = typeof log.time === "string" && log.time.trim() ? log.time.trim() : undefined;
   const event = String(deepResearch.event || "").trim();
+  if (!isVisibleDeepResearchDisplayEvent(event)) {
+    return null;
+  }
   const eventLabel = event.replace(/_/g, " ").trim();
   const key = `${event || "event"}-${index}-${timeLabel || ""}`;
 
@@ -5580,14 +5697,6 @@ function buildDeepResearchDisplayLogs({
 
   const synthesized: RunnerDeepResearchDisplayLog[] = [];
 
-  if (topic) {
-    synthesized.push({
-      key: "synthetic-task",
-      label: "Started",
-      message: topic,
-    });
-  }
-
   parsed.thinkingSummaries.forEach((summary, index) => {
     synthesized.push({
       key: `synthetic-thinking-${index}`,
@@ -5596,42 +5705,57 @@ function buildDeepResearchDisplayLogs({
     });
   });
 
-  if (isError) {
-    synthesized.push({
-      key: "synthetic-error",
-      label: "Error",
-      message: parsed.errorMessage || "Deep research failed.",
-      tone: "error",
-    });
-  } else if (isComplete) {
-    synthesized.push({
-      key: "synthetic-complete",
-      label: "Complete",
-      message:
-        parsed.reportFile
-          ? `Finished the report in ${parsed.reportFile}${parsed.sourcesCount > 0 ? ` using ${parsed.sourcesCount} sources.` : "."}`
-          : parsed.sourcesCount > 0
-            ? `Finished the research using ${parsed.sourcesCount} sources.`
-            : "Finished the research run.",
-      tone: "success",
-    });
-  } else if (isLoading) {
-    synthesized.push({
-      key: "synthetic-loading",
-      label: "Status",
-      message: "Research started.",
-    });
-  }
-
-  if (synthesized.length === 0) {
-    synthesized.push({
-      key: "synthetic-empty",
-      label: "Status",
-      message: "No research output available.",
-    });
-  }
-
   return synthesized;
+}
+
+function DeepResearchDisplayEventRow({
+  entry,
+  className,
+  style,
+}: {
+  entry: RunnerDeepResearchDisplayLog;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  return (
+    <div
+      className={`tb-deep-research-log-event ${entry.tone === "error" ? "is-error" : entry.tone === "success" ? "is-success" : ""} ${className || ""}`.trim()}
+      style={style}
+    >
+      {entry.label || entry.timeLabel ? (
+        <div className="tb-deep-research-log-event-header">
+          {entry.label ? <span className="tb-deep-research-log-event-label">{entry.label}</span> : <span />}
+          {entry.timeLabel ? <span className="tb-deep-research-log-event-time">{entry.timeLabel}</span> : null}
+        </div>
+      ) : null}
+      <RunnerMarkdown
+        content={entry.message}
+        className="tb-message-markdown tb-message-markdown-summary tb-deep-research-log-event-markdown"
+        softBreaks
+        disallowHeadings
+      />
+    </div>
+  );
+}
+
+function getDeepResearchReportFilename(path: string | null | undefined): string {
+  const normalized = String(path || "").trim().replace(/\\/g, "/");
+  if (!normalized) {
+    return "";
+  }
+  const segments = normalized.split("/").filter(Boolean);
+  return segments[segments.length - 1] || normalized;
+}
+
+function truncateDeepResearchReportFilename(value: string, maxLength = 44): string {
+  const normalized = String(value || "").trim();
+  if (!normalized || normalized.length <= maxLength) {
+    return normalized;
+  }
+  const extensionMatch = normalized.match(/(\.[A-Za-z0-9_-]+)$/);
+  const extension = extensionMatch ? extensionMatch[1] : "";
+  const baseLength = Math.max(12, maxLength - extension.length - 1);
+  return `${normalized.slice(0, baseLength)}…${extension}`;
 }
 
 export function hasActiveDeepResearchLogGroup(logs: RunnerLog[]): boolean {
@@ -5656,6 +5780,9 @@ export function hasActiveDeepResearchLogGroup(logs: RunnerLog[]): boolean {
 function DeepResearchEventLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   const [collapsed, setCollapsed] = useState(false);
   const data = log.metadata?.deepResearch;
+  if (!isVisibleDeepResearchDisplayEvent(data?.event)) {
+    return null;
+  }
   const statusLabel =
     data?.event === "complete" || data?.event === "research_complete"
       ? "complete"
@@ -5807,6 +5934,7 @@ export function DeepResearchLogBox({
         .slice(-2),
     [isComplete, isError, isLoading, parsed, streamingLogs, taskCopy, topic]
   );
+  const transitionedPreviewLogs = useDeepResearchPreviewDisplayLogs(previewLogs);
 
   return (
     <div className={`tb-log-card tb-log-card-deep-research ${isDetailOpen ? "is-detail-open" : ""}`.trim()}>
@@ -5835,22 +5963,18 @@ export function DeepResearchLogBox({
                 <div className="tb-subagent-log-preview-divider" aria-hidden="true" />
               </>
             ) : null}
-            <div className="tb-deep-research-log-events">
-              {previewLogs.map((entry) => (
-                <div key={entry.key} className={`tb-deep-research-log-event ${entry.tone === "error" ? "is-error" : entry.tone === "success" ? "is-success" : ""}`.trim()}>
-                  {entry.label || entry.timeLabel ? (
-                    <div className="tb-deep-research-log-event-header">
-                      {entry.label ? <span className="tb-deep-research-log-event-label">{entry.label}</span> : <span />}
-                      {entry.timeLabel ? <span className="tb-deep-research-log-event-time">{entry.timeLabel}</span> : null}
-                    </div>
-                  ) : null}
-                  <RunnerMarkdown
-                    content={entry.message}
-                    className="tb-message-markdown tb-message-markdown-summary tb-deep-research-log-event-markdown"
-                    softBreaks
-                    disallowHeadings
-                  />
-                </div>
+            <div className="tb-deep-research-log-events tb-deep-research-log-events-preview">
+              {transitionedPreviewLogs.map((entry) => (
+                <DeepResearchDisplayEventRow
+                  key={entry.key}
+                  entry={entry}
+                  className={`tb-deep-research-log-event-preview is-${entry.transitionPhase}`.trim()}
+                  style={
+                    entry.transitionPhase === "entering"
+                      ? getRunnerChatEnterAnimationStyle()
+                      : undefined
+                  }
+                />
               ))}
             </div>
           </div>
@@ -5871,17 +5995,17 @@ export function DeepResearchDetailDrawer({
   logs,
   runningCommandLog,
   session,
-  timeLabel,
   onClose,
   fallbackTopic,
+  onReportFileClick,
 }: {
   log?: RunnerLog;
   logs?: RunnerLog[];
   runningCommandLog?: RunnerLog;
   session?: RunnerDeepResearchSession | null;
-  timeLabel?: string;
   onClose: () => void;
   fallbackTopic?: string | null;
+  onReportFileClick?: (path: string) => void;
 }) {
   const {
     streamingLogs,
@@ -5910,6 +6034,43 @@ export function DeepResearchDetailDrawer({
   );
 
   const taskCopy = String(topic || parsed.topic || String(fallbackTopic || "").trim() || "Deep research task").trim();
+  const reportFilename = getDeepResearchReportFilename(parsed.reportFile);
+  const reportFilenameLabel = truncateDeepResearchReportFilename(reportFilename);
+  const canOpenReportFile = Boolean(parsed.reportFile && typeof onReportFileClick === "function");
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
+  const animatedLogKeys = useDeepResearchAnimatedEntryKeys(displayLogs);
+
+  useEffect(() => {
+    const scrollElement = bodyRef.current;
+    if (!scrollElement) {
+      return;
+    }
+    const resolvedScrollElement = scrollElement;
+
+    function handleScroll() {
+      shouldAutoScrollRef.current = isRunnerDetailDrawerPinnedToBottom(resolvedScrollElement);
+    }
+
+    handleScroll();
+    resolvedScrollElement.addEventListener("scroll", handleScroll, { passive: true });
+    return () => resolvedScrollElement.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useLayoutEffect(() => {
+    const scrollElement = bodyRef.current;
+    if (!scrollElement || !shouldAutoScrollRef.current) {
+      return;
+    }
+    scrollElement.scrollTop = scrollElement.scrollHeight;
+  }, [
+    displayLogs,
+    parsed.reportFile,
+    parsed.sourcesCount,
+    parsed.elapsedSeconds,
+    isError,
+    parsed.errorMessage,
+  ]);
 
   return (
     <aside className="tb-subagent-detail-drawer tb-deep-research-detail-drawer">
@@ -5917,17 +6078,16 @@ export function DeepResearchDetailDrawer({
         <div className="tb-subagent-detail-drawer-header-copy">
           <Telescope className="tb-attachment-preview-drawer-header-icon" strokeWidth={1.6} />
           <div className="tb-subagent-detail-drawer-header-text">
-            <div className="tb-subagent-detail-drawer-title" title={taskCopy || "Deep Research"}>{taskCopy || "Deep Research"}</div>
+            <div className="tb-subagent-detail-drawer-title" title="Deep Research">Deep Research</div>
           </div>
         </div>
         <div className="tb-subagent-detail-drawer-header-actions">
-          {timeLabel ? <span className="tb-subagent-detail-drawer-time">{timeLabel}</span> : null}
           <button type="button" className="tb-attachment-preview-drawer-action" onClick={onClose} aria-label="Close deep research details">
             <X className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.8} />
           </button>
         </div>
       </div>
-      <div className="tb-subagent-detail-drawer-body">
+      <div ref={bodyRef} className="tb-subagent-detail-drawer-body">
         <div className="tb-deep-research-log-shell">
           {taskCopy ? (
             <div className="tb-subagent-log-prompt tb-deep-research-log-task-surface">
@@ -5946,20 +6106,12 @@ export function DeepResearchDetailDrawer({
           <div className="tb-deep-research-log-events tb-deep-research-log-events-drawer">
             {displayLogs.length > 0 ? (
               displayLogs.map((entry) => (
-                <div key={entry.key} className={`tb-deep-research-log-event ${entry.tone === "error" ? "is-error" : entry.tone === "success" ? "is-success" : ""}`.trim()}>
-                  {entry.label || entry.timeLabel ? (
-                    <div className="tb-deep-research-log-event-header">
-                      {entry.label ? <span className="tb-deep-research-log-event-label">{entry.label}</span> : <span />}
-                      {entry.timeLabel ? <span className="tb-deep-research-log-event-time">{entry.timeLabel}</span> : null}
-                    </div>
-                  ) : null}
-                  <RunnerMarkdown
-                    content={entry.message}
-                    className="tb-message-markdown tb-message-markdown-summary tb-deep-research-log-event-markdown"
-                    softBreaks
-                    disallowHeadings
-                  />
-                </div>
+                <DeepResearchDisplayEventRow
+                  key={entry.key}
+                  entry={entry}
+                  className={animatedLogKeys.has(entry.key) ? "is-entering" : undefined}
+                  style={animatedLogKeys.has(entry.key) ? getRunnerChatEnterAnimationStyle() : undefined}
+                />
               ))
             ) : (
               <div className="tb-log-card-empty">No research logs yet.</div>
@@ -5970,7 +6122,20 @@ export function DeepResearchDetailDrawer({
               {parsed.reportFile ? (
                 <div className="tb-log-meta-row">
                   <span className="tb-log-meta-label">Report</span>
-                  <span className="tb-log-meta-value">{parsed.reportFile}</span>
+                  {canOpenReportFile ? (
+                    <button
+                      type="button"
+                      className="tb-deep-research-log-report-link"
+                      onClick={() => onReportFileClick?.(parsed.reportFile || "")}
+                      title={reportFilename || parsed.reportFile || ""}
+                    >
+                      {reportFilenameLabel || parsed.reportFile}
+                    </button>
+                  ) : (
+                    <span className="tb-log-meta-value" title={reportFilename || parsed.reportFile || ""}>
+                      {reportFilenameLabel || parsed.reportFile}
+                    </span>
+                  )}
                 </div>
               ) : null}
               {parsed.sourcesCount > 0 ? (

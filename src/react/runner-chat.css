@@ -1934,6 +1934,10 @@
   gap: 8px;
 }
 
+.tb-runner-chat .tb-deep-research-log-events-preview {
+  overflow: hidden;
+}
+
 .tb-runner-chat .tb-deep-research-log-events-drawer {
   gap: 10px;
 }
@@ -1947,6 +1951,18 @@
   background: transparent;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+  will-change: opacity, transform;
+}
+
+.tb-runner-chat .tb-deep-research-log-event-preview.is-exiting {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
 }
 
 .tb-runner-chat .tb-deep-research-log-event.is-success {
@@ -1973,7 +1989,7 @@
 
 .tb-runner-chat .tb-deep-research-log-event-time {
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.2;
   color: rgba(255, 255, 255, 0.45);
 }
@@ -2190,6 +2206,10 @@
   padding: 16px;
 }
 
+.tb-runner-chat .tb-deep-research-detail-drawer .tb-subagent-detail-drawer-body {
+  padding-bottom: 0;
+}
+
 .tb-runner-chat .tb-subagent-detail-drawer .tb-subagent-log-shell {
   padding: 0;
   border: 0;
@@ -2212,14 +2232,38 @@
   flex-direction: column;
   gap: 10px;
   padding: 14px 16px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  width: calc(100% + 32px);
+  margin: 16px -16px 0;
+  border-radius: 0;
+  background: rgba(15, 15, 18, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
+  position: sticky;
+  bottom: 0;
+  margin-top: 16px;
+  z-index: 2;
 }
 
 .tb-runner-chat .tb-deep-research-log-summary.is-error {
   background: rgba(255, 95, 87, 0.08);
+}
+
+.tb-runner-chat .tb-deep-research-log-report-link {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #60a5fa;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-deep-research-log-report-link:hover {
+  color: #60a5fa;
 }
 
 .tb-runner-chat .tb-browser-carousel-path {
@@ -4046,6 +4090,14 @@
   font-size: 14px;
 }
 
+.tb-runner-chat .tb-deep-research-log-task-markdown.tb-message-markdown-summary,
+.tb-runner-chat .tb-deep-research-log-event-markdown.tb-message-markdown-summary,
+.tb-runner-chat .tb-deep-research-log-events,
+.tb-runner-chat .tb-deep-research-log-summary {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .tb-runner-chat .tb-message-markdown-user {
   color: #fff;
   font-weight: 400;
@@ -4056,10 +4108,25 @@
 .tb-runner-chat .tb-message-markdown-user .tb-message-markdown-list,
 .tb-runner-chat .tb-message-markdown-user .tb-message-markdown-heading,
 .tb-runner-chat .tb-message-markdown-user .tb-message-markdown-table,
+.tb-runner-chat .tb-deep-research-log-task-markdown.tb-message-markdown-summary .tb-message-markdown-paragraph,
+.tb-runner-chat .tb-deep-research-log-task-markdown.tb-message-markdown-summary .tb-message-markdown-list,
+.tb-runner-chat .tb-deep-research-log-task-markdown.tb-message-markdown-summary .tb-message-markdown-heading,
+.tb-runner-chat .tb-deep-research-log-task-markdown.tb-message-markdown-summary .tb-message-markdown-table,
+.tb-runner-chat .tb-deep-research-log-event-markdown.tb-message-markdown-summary .tb-message-markdown-paragraph,
+.tb-runner-chat .tb-deep-research-log-event-markdown.tb-message-markdown-summary .tb-message-markdown-list,
+.tb-runner-chat .tb-deep-research-log-event-markdown.tb-message-markdown-summary .tb-message-markdown-heading,
+.tb-runner-chat .tb-deep-research-log-event-markdown.tb-message-markdown-summary .tb-message-markdown-table,
 .tb-runner-chat .tb-message-markdown-summary .tb-message-markdown-paragraph,
 .tb-runner-chat .tb-message-markdown-summary .tb-message-markdown-list,
 .tb-runner-chat .tb-message-markdown-summary .tb-message-markdown-heading,
 .tb-runner-chat .tb-message-markdown-summary .tb-message-markdown-table {
+  font-size: inherit;
+}
+
+.tb-runner-chat .tb-deep-research-log-task-markdown.tb-message-markdown-summary .tb-message-markdown-list-item,
+.tb-runner-chat .tb-deep-research-log-task-markdown.tb-message-markdown-summary .tb-message-markdown-link,
+.tb-runner-chat .tb-deep-research-log-event-markdown.tb-message-markdown-summary .tb-message-markdown-list-item,
+.tb-runner-chat .tb-deep-research-log-event-markdown.tb-message-markdown-summary .tb-message-markdown-link {
   font-size: inherit;
 }
 
