@@ -439,6 +439,55 @@ export class RunnerEventNormalizer {
       return { logs: [] };
     }
 
+    const metadataToolName = this.asString(metadata?.toolName).trim().toLowerCase();
+    const metadataServerName = this.asString(metadata?.serverName).trim().toLowerCase();
+    const eventToolName = this.asString(event.tool).trim().toLowerCase();
+    const commandCandidate =
+      this.optionalString(input?.command) ||
+      this.optionalString(input?.cmd) ||
+      this.optionalString(input?.script) ||
+      this.optionalString(metadata?.command) ||
+      (resolvedDescription.startsWith("$") ? resolvedDescription.replace(/^\$\s*/, "") : "");
+    const toolArgs = this.asObject(metadata?.args) || this.asObject(input?.arguments) || this.asObject(input?.args) || input || undefined;
+    const promptCandidate =
+      this.optionalString(toolArgs?.prompt) ||
+      this.optionalString(toolArgs?.text) ||
+      this.optionalString(input?.prompt);
+    const isImageGenerationStart = Boolean(
+      metadata?.isImageGeneration ||
+        eventToolName === "image_generation_skill" ||
+        eventToolName === "image_generation" ||
+        eventToolName === "generate_image" ||
+        metadataToolName === "generate_image" ||
+        metadataToolName === "image_generation" ||
+        metadataServerName.includes("image-generation") ||
+        commandCandidate.includes("generate-image.py") ||
+        commandCandidate.includes(".claude/skills/image-generation/") ||
+        /\bimage generation\b|\bgenerate image\b/i.test(rawDescription)
+    );
+    if (isImageGenerationStart) {
+      return {
+        logs: [
+          {
+            time: this.formatElapsed(),
+            message: promptCandidate ? `Generating image: ${promptCandidate}` : this.asString(event.description, "Image generation"),
+            type: "info",
+            eventType: "command_execution",
+            metadata: this.mergeMetadata(metadata, {
+              isImageGeneration: true,
+              isToolStarted: true,
+              serverName: this.optionalString(metadata?.serverName) ?? "image-generation-skill",
+              toolName: this.optionalString(metadata?.toolName) ?? "generate_image",
+              command: commandCandidate,
+              status: "started",
+              args: toolArgs,
+              toolInput: input || undefined,
+            }),
+          },
+        ],
+      };
+    }
+
     if (!metadata) {
       return { logs: [] };
     }

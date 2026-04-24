@@ -6266,6 +6266,13 @@ function extractWorkspaceImagePathFromOutput(output: unknown): string | null {
   return candidates[0] || null;
 }
 
+function hasConfirmedGeneratedImagePathText(output: unknown): boolean {
+  if (typeof output !== "string" || !output.trim()) {
+    return false;
+  }
+  return /(?:generated image|image saved to:|saved image to:|✓\s*image saved to:)/i.test(output);
+}
+
 function hasStructuredImagePayload(content: unknown): boolean {
   if (!content || typeof content !== "object") {
     return false;
@@ -6310,19 +6317,22 @@ function hasStructuredImagePayload(content: unknown): boolean {
 }
 
 export function isLikelyImageGenerationLog(log: RunnerLog, command?: string): boolean {
+  const messageHasConfirmedImagePath =
+    hasConfirmedGeneratedImagePathText(log.message) &&
+    Boolean(extractWorkspaceImagePathFromOutput(log.message));
   return Boolean(
     (command && isImageGenerationCommand(command))
     || log.metadata?.isImageGeneration
     || (typeof log.metadata?.savedImagePath === "string" && log.metadata.savedImagePath.trim())
     || hasStructuredImagePayload(log.metadata?.result)
     || hasStructuredImagePayload(log.metadata?.output)
-    || Boolean(extractWorkspaceImagePathFromOutput(log.message))
+    || messageHasConfirmedImagePath
   );
 }
 
 function ImagePreviewLoadingState() {
   return (
-    <div className="tb-runner-image-preview-surface is-static" aria-hidden="true">
+    <div className="tb-runner-image-preview-surface tb-image-generation-preview tb-image-generation-preview-loading is-static" aria-hidden="true">
       <span className="tb-runner-image-preview-surface-state">
         <LoaderCircle className="tb-runner-image-preview-surface-spinner" strokeWidth={1.75} />
       </span>
@@ -6382,7 +6392,7 @@ function isImageFileChangeLog(log: RunnerLog): boolean {
 function extractImagePrompt(command?: string): string | undefined {
   if (!command) return undefined;
   const quoted = [...command.matchAll(/"([^"]+)"/g), ...command.matchAll(/'([^']+)'/g)]
-    .map((match) => match[1])
+    .map((match) => sanitizeImagePromptCandidate(match[1]))
     .filter(
       (value) =>
         value.length >= 3 &&
@@ -6393,6 +6403,46 @@ function extractImagePrompt(command?: string): string | undefined {
     );
   if (quoted.length === 0) return undefined;
   return quoted.reduce((longest, current) => (current.length > longest.length ? current : longest));
+}
+
+function sanitizeImagePromptCandidate(value: unknown): string {
+  let normalized = String(value || "").trim();
+  if (!normalized) {
+    return "";
+  }
+
+  normalized = normalized.replace(/\\n/g, "\n");
+  const markerMatch = normalized.match(/\r?\n\s*(?:quality|generated with|openai size request|image saved to|size):/i);
+  if (markerMatch) {
+    normalized = normalized.slice(0, markerMatch.index).trim();
+  }
+  normalized = normalized.split(/\r?\n/)[0]?.trim() || "";
+  normalized = normalized.replace(/^["'`]+|["'`,\s]+$/g, "").trim();
+  return normalized;
+}
+
+function extractImagePromptFromLogMetadata(log: RunnerLog): string | undefined {
+  const args = log.metadata?.args && typeof log.metadata.args === "object" && !Array.isArray(log.metadata.args)
+    ? (log.metadata.args as Record<string, unknown>)
+    : null;
+  const toolInput = log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && !Array.isArray(log.metadata.toolInput)
+    ? log.metadata.toolInput
+    : null;
+  const candidates = [
+    args?.prompt,
+    args?.text,
+    toolInput?.prompt,
+    toolInput?.text,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      const sanitized = sanitizeImagePromptCandidate(candidate);
+      if (sanitized) {
+        return sanitized;
+      }
+    }
+  }
+  return undefined;
 }
 
 function ImageGenerationLogBox({
@@ -6408,54 +6458,51 @@ function ImageGenerationLogBox({
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
 }) {
-  const prompt = extractImagePrompt(log.metadata?.command || log.message || "");
+  const prompt = extractImagePrompt(log.metadata?.command || log.message || "") || extractImagePromptFromLogMetadata(log);
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
-  const isError = Boolean(log.metadata?.error) || (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0);
-  const [resolvedImageSrc, setResolvedImageSrc] = useState<string | null>(null);
-  const [imageResolutionComplete, setImageResolutionComplete] = useState(false);
+  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const parsedStdout = parsedOutput?.stdout || "";
+  const parsedStderr = parsedOutput?.stderr || "";
+  const isError = Boolean(log.metadata?.error)
+    || (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0)
+    || parsedOutput?.returnCodeInterpretation === "timeout"
+    || parsedStderr.trim().length > 0;
+  const filePathFromMetadata =
+    Array.isArray(log.metadata?.filePaths)
+      ? log.metadata.filePaths.find((value): value is string => typeof value === "string" && isRunnerLogImageFilePath(value))
+      : null;
+  const outputPathSource = parsedOutput ? parsedStdout : log.metadata?.output;
+  const outputImagePath =
+    !isLoading && !isError && hasConfirmedGeneratedImagePathText(outputPathSource)
+      ? extractWorkspaceImagePathFromOutput(outputPathSource)
+      : null;
+  const messageImagePath =
+    !isLoading && !isError && hasConfirmedGeneratedImagePathText(log.message)
+      ? extractWorkspaceImagePathFromOutput(log.message)
+      : null;
+  const resolvedImagePath =
+    log.metadata?.savedImagePath
+    || filePathFromMetadata
+    || extractWorkspaceImagePathFromResult(log.metadata?.result)
+    || outputImagePath
+    || messageImagePath
+    || null;
+  const resolvedImageSrc =
+    extractBase64Image(log.metadata?.result)
+    || (!isError ? extractBase64Image(log.metadata?.output) : null)
+    || buildRunnerPreviewDownloadUrl(
+      backendUrl,
+      environmentId,
+      resolvedImagePath
+    );
+  const errorMessage =
+    typeof log.metadata?.error === "string" && log.metadata.error.trim()
+      ? log.metadata.error.trim()
+      : parsedOutput?.returnCodeInterpretation === "timeout"
+        ? "Image generation timed out before a new image was saved."
+        : parsedStderr.trim() || String(log.metadata?.output || "Image generation failed.");
 
-  useEffect(() => {
-    let cancelled = false;
-    const timeoutId = globalThis.setTimeout(() => {
-      if (cancelled) {
-        return;
-      }
-      const filePathFromMetadata =
-        Array.isArray(log.metadata?.filePaths)
-          ? log.metadata.filePaths.find((value): value is string => typeof value === "string" && isRunnerLogImageFilePath(value))
-          : null;
-      const resolvedImagePath =
-        log.metadata?.savedImagePath
-        || filePathFromMetadata
-        || extractWorkspaceImagePathFromResult(log.metadata?.result)
-        || extractWorkspaceImagePathFromOutput(log.metadata?.output)
-        || extractWorkspaceImagePathFromOutput(log.message)
-        || null;
-      const imageSrc =
-        extractBase64Image(log.metadata?.result)
-        || extractBase64Image(log.metadata?.output)
-        || buildRunnerPreviewDownloadUrl(
-          backendUrl,
-          environmentId,
-          resolvedImagePath
-        );
-      if (cancelled) {
-        return;
-      }
-      setResolvedImageSrc(imageSrc);
-      setImageResolutionComplete(true);
-    }, 0);
-
-    setResolvedImageSrc(null);
-    setImageResolutionComplete(false);
-
-    return () => {
-      cancelled = true;
-      globalThis.clearTimeout(timeoutId);
-    };
-  }, [backendUrl, environmentId, log]);
-
-  if (!isError && !isLoading && imageResolutionComplete && !resolvedImageSrc) {
+  if (!isError && !isLoading && !resolvedImageSrc) {
     return null;
   }
 
@@ -6468,19 +6515,21 @@ function ImageGenerationLogBox({
       meta={isLoading ? <span className="tb-log-card-status">generating...</span> : null}
       body={
         isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{String(log.metadata?.error || log.metadata?.output || "Image generation failed.")}</div>
-        ) : !imageResolutionComplete ? (
-          <div className="tb-log-image-grid">
-            <ImagePreviewLoadingState />
-          </div>
+          <div className="tb-log-card-state tb-log-card-state-error">{errorMessage}</div>
         ) : resolvedImageSrc ? (
           <div className="tb-log-image-grid">
             <RunnerImagePreviewSurface
+              className="tb-image-generation-preview"
+              imageClassName="tb-image-generation-preview-image"
               src={resolvedImageSrc}
               alt={prompt || "Generated image"}
               fetchHeaders={requestHeaders}
               loadStrategy="visible"
             />
+          </div>
+        ) : isLoading ? (
+          <div className="tb-log-image-grid">
+            <ImagePreviewLoadingState />
           </div>
         ) : null
       }

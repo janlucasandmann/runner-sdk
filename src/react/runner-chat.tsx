@@ -981,6 +981,14 @@ export interface RunnerChatComputerAgentsConfig {
   schedule?: RunnerChatScheduleConfig;
 }
 
+export interface RunnerChatSkillDefaults {
+  imageGeneration?: {
+    model?: string;
+    quality?: string;
+    computeTokensPerImage?: number;
+  };
+}
+
 export interface RunnerChatProps {
   backendUrl: string;
   apiKey: string;
@@ -996,6 +1004,7 @@ export interface RunnerChatProps {
   initialTask?: string;
   hiddenSystemPrompt?: string;
   emptyState?: ReactNode;
+  emptyStateAfterComposer?: ReactNode;
   className?: string;
   disabled?: boolean;
   autoCreateThread?: boolean;
@@ -1005,6 +1014,7 @@ export interface RunnerChatProps {
   agents?: RunnerChatOption[];
   environments?: RunnerChatOption[];
   skills?: RunnerChatSkill[];
+  skillDefaults?: RunnerChatSkillDefaults;
   computerAgents?: RunnerChatComputerAgentsConfig;
   uploadFiles?: (files: File[]) => Promise<RunnerAttachment[]>;
   mapFileToAttachment?: (file: File) => Promise<RunnerAttachment> | RunnerAttachment;
@@ -2852,7 +2862,11 @@ function customSkillIconComponent(icon?: string | null) {
   return iconMap[iconKey as keyof typeof iconMap] || LucideWand2;
 }
 
-function buildEnabledSkillsPayload(enabledSkillIds: string[], displayedSkills: RunnerChatSkill[]) {
+function buildEnabledSkillsPayload(
+  enabledSkillIds: string[],
+  displayedSkills: RunnerChatSkill[],
+  skillDefaults?: RunnerChatSkillDefaults
+) {
   const enabled = new Set(enabledSkillIds);
   const defaultSkillMap: Record<string, string> = {
     image_generation: "imageGeneration",
@@ -2869,6 +2883,30 @@ function buildEnabledSkillsPayload(enabledSkillIds: string[], displayedSkills: R
   const payload: Record<string, unknown> = {};
   for (const [id, key] of Object.entries(defaultSkillMap)) {
     payload[key] = enabled.has(id);
+  }
+
+  if (enabled.has("image_generation") && skillDefaults?.imageGeneration) {
+    const imageGeneration = skillDefaults.imageGeneration;
+    const normalizedModel = typeof imageGeneration.model === "string" ? imageGeneration.model.trim() : "";
+    const normalizedQuality = typeof imageGeneration.quality === "string" ? imageGeneration.quality.trim() : "";
+    const normalizedComputeTokens = Number(imageGeneration.computeTokensPerImage);
+    const imageGenerationConfig: Record<string, unknown> = {};
+    if (normalizedModel) {
+      imageGenerationConfig.model = normalizedModel;
+      payload.imageGenerationModel = normalizedModel;
+    }
+    if (normalizedQuality) {
+      imageGenerationConfig.quality = normalizedQuality;
+      payload.imageGenerationQuality = normalizedQuality;
+    }
+    if (Number.isFinite(normalizedComputeTokens) && normalizedComputeTokens > 0) {
+      const computeTokensPerImage = Math.max(0, Math.round(normalizedComputeTokens));
+      imageGenerationConfig.computeTokensPerImage = computeTokensPerImage;
+      payload.imageGenerationComputeTokensPerImage = computeTokensPerImage;
+    }
+    if (Object.keys(imageGenerationConfig).length > 0) {
+      payload.imageGenerationConfig = imageGenerationConfig;
+    }
   }
 
   if (enabled.has("computer_agents")) {
@@ -4951,6 +4989,10 @@ function turnsLikelyMatch(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): bool
   const hydratedPresentation = turnPresentation(hydratedTurn);
   const localPrompt = normalizeTurnPrompt(localTurn.prompt);
   const hydratedPrompt = normalizeTurnPrompt(hydratedTurn.prompt);
+  const localAssistantText = normalizeTurnPrompt(getTurnAssistantMessageText(localTurn));
+  const hydratedAssistantText = normalizeTurnPrompt(getTurnAssistantMessageText(hydratedTurn));
+  const localTimelineCount = localTurn.logs.filter(shouldDisplayTimelineLog).length;
+  const hydratedTimelineCount = hydratedTurn.logs.filter(shouldDisplayTimelineLog).length;
   const localSourceMessageId =
     typeof localTurn.sourceMessageId === "string" && localTurn.sourceMessageId.trim()
       ? localTurn.sourceMessageId.trim()
@@ -4994,37 +5036,48 @@ function turnsLikelyMatch(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): bool
   }
 
   if (localPrompt && hydratedPrompt && localPrompt === hydratedPrompt) {
-    const localAssistantText = getTurnAssistantMessageText(localTurn);
-    const hydratedAssistantText = getTurnAssistantMessageText(hydratedTurn);
-    if (!localAssistantText || !hydratedAssistantText) {
+    const localRawAssistantText = getTurnAssistantMessageText(localTurn);
+    const hydratedRawAssistantText = getTurnAssistantMessageText(hydratedTurn);
+    if (!localRawAssistantText || !hydratedRawAssistantText) {
       return true;
     }
     return (
-      localAssistantText === hydratedAssistantText ||
-      localAssistantText.startsWith(hydratedAssistantText) ||
-        hydratedAssistantText.startsWith(localAssistantText)
+      localRawAssistantText === hydratedRawAssistantText ||
+      localRawAssistantText.startsWith(hydratedRawAssistantText) ||
+        hydratedRawAssistantText.startsWith(localRawAssistantText)
     );
   }
 
-  const localAssistantText = normalizeTurnPrompt(getTurnAssistantMessageText(localTurn));
-  const hydratedAssistantText = normalizeTurnPrompt(getTurnAssistantMessageText(hydratedTurn));
   const oneSideMissingPrompt = (!localPrompt && hydratedPrompt) || (localPrompt && !hydratedPrompt);
-  if (oneSideMissingPrompt && localAssistantText && hydratedAssistantText) {
-    const assistantResponseMatches =
-      localAssistantText === hydratedAssistantText ||
-      localAssistantText.startsWith(hydratedAssistantText) ||
-      hydratedAssistantText.startsWith(localAssistantText);
-    if (assistantResponseMatches) {
-      const startedAtDeltaMs = Math.abs((localTurn.startedAtMs || 0) - (hydratedTurn.startedAtMs || 0));
-      if (startedAtDeltaMs <= 60_000) {
+  if (oneSideMissingPrompt) {
+    const startedAtDeltaMs = Math.abs((localTurn.startedAtMs || 0) - (hydratedTurn.startedAtMs || 0));
+    if (startedAtDeltaMs <= 60_000) {
+      if (localAssistantText && hydratedAssistantText) {
+        const assistantResponseMatches =
+          localAssistantText === hydratedAssistantText ||
+          localAssistantText.startsWith(hydratedAssistantText) ||
+          hydratedAssistantText.startsWith(localAssistantText);
+        if (assistantResponseMatches) {
+          return true;
+        }
+      }
+
+      const localHasPrompt = localPrompt.length > 0;
+      const hydratedHasPrompt = hydratedPrompt.length > 0;
+      const localHasTimeline = localTimelineCount > 0;
+      const hydratedHasTimeline = hydratedTimelineCount > 0;
+      const promptAndTimelineComplement =
+        (localHasPrompt && !localHasTimeline && hydratedHasTimeline) ||
+        (hydratedHasPrompt && !hydratedHasTimeline && localHasTimeline) ||
+        (localHasPrompt && hydratedHasTimeline) ||
+        (hydratedHasPrompt && localHasTimeline);
+      if (promptAndTimelineComplement) {
         return true;
       }
     }
   }
 
   if (!localPrompt && !hydratedPrompt) {
-    const localTimelineCount = localTurn.logs.filter(shouldDisplayTimelineLog).length;
-    const hydratedTimelineCount = hydratedTurn.logs.filter(shouldDisplayTimelineLog).length;
     const localHasTimeline = localTimelineCount > 0;
     const hydratedHasTimeline = hydratedTimelineCount > 0;
     const localHasResponse = localAssistantText.length > 0;
@@ -5073,11 +5126,33 @@ function getTurnLatestProgressTimestampMs(turn: RunnerTurn): number {
   return latestTimestampMs;
 }
 
+function turnHasVisibleExecutionProgress(turn: RunnerTurn): boolean {
+  if (turn.logs.length > 0) {
+    return true;
+  }
+  return getTurnAssistantMessageText(turn).trim().length > 0;
+}
+
 function shouldPreserveLocalTurnProgress(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): boolean {
   const localIsTerminal = isTerminalTurnStatus(localTurn.status);
   const hydratedIsTerminal = isTerminalTurnStatus(hydratedTurn.status);
   if (localIsTerminal !== hydratedIsTerminal) {
-    return localIsTerminal;
+    if (!localIsTerminal) {
+      return false;
+    }
+
+    const localHasProgress = turnHasVisibleExecutionProgress(localTurn);
+    const hydratedHasProgress = turnHasVisibleExecutionProgress(hydratedTurn);
+
+    if (!localHasProgress) {
+      return false;
+    }
+
+    if (hydratedHasProgress) {
+      return false;
+    }
+
+    return true;
   }
 
   if (localTurn.logs.length !== hydratedTurn.logs.length) {
@@ -5415,18 +5490,91 @@ function isGenericShellRunnerCommand(command: string): boolean {
   return normalized === "bash" || normalized === "sh" || normalized === "zsh" || normalized === "/bin/bash" || normalized === "/bin/sh";
 }
 
+function sanitizeImageGenerationPromptCandidate(value: unknown): string {
+  let normalized = String(value || "").trim();
+  if (!normalized) {
+    return "";
+  }
+
+  normalized = normalized.replace(/\\n/g, "\n");
+  const markerMatch = normalized.match(/\r?\n\s*(?:quality|generated with|openai size request|image saved to|size):/i);
+  if (markerMatch) {
+    normalized = normalized.slice(0, markerMatch.index).trim();
+  }
+  normalized = normalized.split(/\r?\n/)[0]?.trim() || "";
+  normalized = normalized.replace(/^["'`]+|["'`,\s]+$/g, "").trim();
+  return normalized;
+}
+
+function extractImageGenerationPromptFromCommand(command?: string): string {
+  const normalized = String(command || "").trim();
+  if (!normalized) {
+    return "";
+  }
+
+  const directPromptMatch = normalized.match(/generate-image\.py\s+(?:"([^"]+)"|'([^']+)')/);
+  const directPrompt = sanitizeImageGenerationPromptCandidate(directPromptMatch?.[1] || directPromptMatch?.[2] || "");
+  if (directPrompt) {
+    return directPrompt;
+  }
+
+  const quotedValues = [...normalized.matchAll(/"([^"]+)"/g), ...normalized.matchAll(/'([^']+)'/g)]
+    .map((match) => sanitizeImageGenerationPromptCandidate(match[1]))
+    .filter(
+      (value) =>
+        value.length >= 3 &&
+        !value.match(/\.(png|jpg|jpeg|gif|webp|py|sh|txt|md)$/i) &&
+        !value.startsWith("/") &&
+        !value.startsWith(".") &&
+        !value.startsWith("-") &&
+        !value.match(/^\d+:\d+$/) &&
+        !value.match(/^(1K|2K|4K)$/i)
+    );
+  return quotedValues.length > 0
+    ? quotedValues.reduce((longest, current) => (current.length > longest.length ? current : longest))
+    : "";
+}
+
 function extractImageGenerationPromptIdentity(log: RunnerLog): string {
+  const commandPrompt = extractImageGenerationPromptFromCommand(
+    typeof log.metadata?.command === "string" ? log.metadata.command : log.message
+  );
+  if (commandPrompt) {
+    return commandPrompt;
+  }
+
   const metadataPrompt =
     log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).prompt === "string"
-      ? String((log.metadata.args as Record<string, unknown>).prompt).trim()
+      ? sanitizeImageGenerationPromptCandidate((log.metadata.args as Record<string, unknown>).prompt)
       : "";
   if (metadataPrompt) {
     return metadataPrompt;
   }
+  const metadataText =
+    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).text === "string"
+      ? sanitizeImageGenerationPromptCandidate((log.metadata.args as Record<string, unknown>).text)
+      : "";
+  if (metadataText) {
+    return metadataText;
+  }
+  const toolInputPrompt =
+    log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && typeof (log.metadata.toolInput as Record<string, unknown>).prompt === "string"
+      ? sanitizeImageGenerationPromptCandidate((log.metadata.toolInput as Record<string, unknown>).prompt)
+      : "";
+  if (toolInputPrompt) {
+    return toolInputPrompt;
+  }
+  const toolInputText =
+    log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && typeof (log.metadata.toolInput as Record<string, unknown>).text === "string"
+      ? sanitizeImageGenerationPromptCandidate((log.metadata.toolInput as Record<string, unknown>).text)
+      : "";
+  if (toolInputText) {
+    return toolInputText;
+  }
 
   const output = typeof log.metadata?.output === "string" ? log.metadata.output : log.message;
   const promptMatch = String(output || "").match(/(?:Generating|Editing) image with [^:]+:\s*(.+?)(?:\.\.\.)?(?:\r?\n|$)/i);
-  return String(promptMatch?.[1] || "").trim();
+  return sanitizeImageGenerationPromptCandidate(promptMatch?.[1] || "");
 }
 
 function normalizedImageGenerationLogIdentity(log: RunnerLog): string | null {
@@ -5458,7 +5606,7 @@ function normalizedImageGenerationLogIdentity(log: RunnerLog): string | null {
     kind: "image_generation",
     prompt,
     inputPath,
-    command: command || String(log.message || "").trim(),
+    command: prompt || inputPath || savedImagePath || metadataFilePaths.length > 0 ? "" : command || String(log.message || "").trim(),
   });
 }
 
@@ -5954,6 +6102,7 @@ export function RunnerChat({
   initialTask = "",
   hiddenSystemPrompt = "",
   emptyState,
+  emptyStateAfterComposer,
   className,
   disabled = false,
   autoCreateThread = true,
@@ -5963,6 +6112,7 @@ export function RunnerChat({
   agents = [],
   environments = [],
   skills = [],
+  skillDefaults,
   computerAgents,
   uploadFiles,
   mapFileToAttachment,
@@ -6411,8 +6561,8 @@ export function RunnerChat({
     (trimmedInput.length > 0 || canRunStagedThreadContextCommand || canRunStagedMissionControlCommand);
   const useComputerAgentsMode = inputMode === "computer-agents";
   const enabledSkillsPayload = useMemo(
-    () => (useComputerAgentsMode ? buildEnabledSkillsPayload(enabledSkillIds, displayedSkills) : null),
-    [displayedSkills, enabledSkillIds, useComputerAgentsMode]
+    () => (useComputerAgentsMode ? buildEnabledSkillsPayload(enabledSkillIds, displayedSkills, skillDefaults) : null),
+    [displayedSkills, enabledSkillIds, skillDefaults, useComputerAgentsMode]
   );
   const hasApiKey = apiKey.trim().length > 0;
   const authenticatedAttachmentFetchHeaders = useMemo(
@@ -6462,13 +6612,14 @@ export function RunnerChat({
   const isPassiveWarmEnvironmentReady = !useComputerAgentsMode || Boolean(effectiveEnvironmentId);
   const isPassiveWarmAgentReady = !useComputerAgentsMode || Boolean(effectiveAgentId);
   const textareaAllowsPromptAfterStagedCommand = threadContextActionAllowsPrompt(stagedThreadContextCommand);
+  const hasCustomEmptyStateActive = turns.length === 0 && emptyState !== undefined && emptyState !== null;
 
-  function focusComposerSoon() {
+  function focusComposerSoon(options?: { preventScroll?: boolean }) {
     if (typeof window === "undefined") {
       return;
     }
     window.requestAnimationFrame(() => {
-      textareaRef.current?.focus();
+      textareaRef.current?.focus(options?.preventScroll ? { preventScroll: true } : undefined);
     });
   }
 
@@ -9300,16 +9451,21 @@ export function RunnerChat({
 
   useLayoutEffect(() => {
     if (!logsRef.current) return;
+    if (hasCustomEmptyStateActive) {
+      logsRef.current.scrollTop = 0;
+      previousLogsScrollHeightRef.current = logsRef.current.scrollHeight;
+      return;
+    }
     if (!shouldAutoScrollLogsRef.current) return;
     const scrollElement = logsRef.current;
     const nextScrollHeight = scrollElement.scrollHeight;
     previousLogsScrollHeightRef.current = nextScrollHeight;
     scheduleLogsAutoScrollToBottom();
-  }, [logs, scheduleLogsAutoScrollToBottom, turns]);
+  }, [hasCustomEmptyStateActive, logs, scheduleLogsAutoScrollToBottom, turns]);
 
   useLayoutEffect(() => {
     const contentElement = contentWidthRef.current;
-    if (!contentElement || typeof ResizeObserver === "undefined") {
+    if (!contentElement || typeof ResizeObserver === "undefined" || hasCustomEmptyStateActive) {
       return;
     }
     const resolvedContentElement = contentElement;
@@ -9323,7 +9479,7 @@ export function RunnerChat({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [currentThreadId, scheduleLogsAutoScrollToBottom]);
+  }, [currentThreadId, hasCustomEmptyStateActive, scheduleLogsAutoScrollToBottom]);
 
   useEffect(() => {
     return () => {
@@ -9400,8 +9556,8 @@ export function RunnerChat({
     if (!autoFocusComposer) {
       return;
     }
-    focusComposerSoon();
-  }, [autoFocusComposer]);
+    focusComposerSoon({ preventScroll: hasCustomEmptyStateActive });
+  }, [autoFocusComposer, hasCustomEmptyStateActive]);
 
   useEffect(() => {
     if (!enableBacklogSubtaskCommand || !backlogSubtaskCommand?.ticketNumber) {
@@ -14296,6 +14452,8 @@ export function RunnerChat({
   }, [disabled, isPreparingRun, showFileBrowserModal, useComputerAgentsMode]);
 
   const hasCustomEmptyState = turns.length === 0 && emptyState !== undefined && emptyState !== null;
+  const shouldRenderInlineComposerWithEmptyState =
+    hasCustomEmptyState && emptyStateAfterComposer !== undefined && emptyStateAfterComposer !== null;
 
   return (
     <div
@@ -15578,6 +15736,8 @@ export function RunnerChat({
           </div>
         </div>
       </div>
+
+      {shouldRenderInlineComposerWithEmptyState ? emptyStateAfterComposer : null}
 
       {pendingForkConfiguration ? (
         <div
