@@ -168,6 +168,7 @@ interface RunnerWorkLogEntryProps {
   activeTaskPreviewId?: string | null;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
   onWorkspacePathClick?: (path: string) => void;
+  onPermissionDecision?: (log: RunnerLog, decision: "allow" | "deny") => Promise<void> | void;
   onTaskPreviewClick?: (preview: {
     taskId: string;
     projectId: string;
@@ -7608,6 +7609,77 @@ export function InlineStatusLogBox({
   );
 }
 
+function PermissionRequestLogBox({
+  log,
+  timeLabel,
+  onPermissionDecision,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  onPermissionDecision?: (log: RunnerLog, decision: "allow" | "deny") => Promise<void> | void;
+}) {
+  const [isSubmitting, setIsSubmitting] = useState<"allow" | "deny" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const status = String(log.metadata?.status || log.metadata?.decision || "pending").toLowerCase();
+  const isPending = status === "pending";
+  const toolName = String(log.metadata?.toolName || "Tool");
+  const reason = typeof log.metadata?.reason === "string" ? log.metadata.reason.trim() : "";
+  const input = typeof log.metadata?.input === "string" ? log.metadata.input.trim() : "";
+  const resolvedLabel = status === "approved" ? "Approved" : status === "denied" ? "Denied" : "Permission asked";
+
+  const decide = async (decision: "allow" | "deny") => {
+    if (!onPermissionDecision || !isPending || isSubmitting) return;
+    setError(null);
+    setIsSubmitting(decision);
+    try {
+      await onPermissionDecision(log, decision);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : String(nextError));
+      setIsSubmitting(null);
+    }
+  };
+
+  return (
+    <div className={`tb-log-card tb-log-card-permission ${isPending ? "is-pending" : "is-resolved"}`.trim()}>
+      <div className="tb-log-card-header">
+        <div className="tb-log-card-header-copy">
+          <AlertCircle className="tb-log-card-small-icon" strokeWidth={1.5} />
+          <div>
+            <div className="tb-log-card-label">{resolvedLabel}</div>
+            <div className="tb-log-card-title">{toolName}</div>
+          </div>
+        </div>
+        {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
+      </div>
+      <div className="tb-log-card-panel tb-log-permission-panel">
+        {reason ? <div className="tb-log-card-note">{reason}</div> : null}
+        {input ? <pre className="tb-log-static-code tb-log-permission-input">{input}</pre> : null}
+        {error ? <div className="tb-log-card-state tb-log-card-state-error">{error}</div> : null}
+        {isPending ? (
+          <div className="tb-log-permission-actions">
+            <button
+              type="button"
+              className="tb-log-permission-button tb-log-permission-button-secondary"
+              onClick={() => void decide("deny")}
+              disabled={Boolean(isSubmitting)}
+            >
+              {isSubmitting === "deny" ? "Denying..." : "Deny"}
+            </button>
+            <button
+              type="button"
+              className="tb-log-permission-button tb-log-permission-button-primary"
+              onClick={() => void decide("allow")}
+              disabled={Boolean(isSubmitting)}
+            >
+              {isSubmitting === "allow" ? "Approving..." : "Accept"}
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function RunnerWorkLogEntry({
   log,
   timeLabel,
@@ -7618,6 +7690,7 @@ export function RunnerWorkLogEntry({
   activeTaskPreviewId,
   onPreviewDocument,
   onWorkspacePathClick,
+  onPermissionDecision,
   onTaskPreviewClick,
 }: RunnerWorkLogEntryProps) {
   const normalizedMessage = stripRunnerSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
@@ -7636,6 +7709,10 @@ export function RunnerWorkLogEntry({
 
   if ((log as RunnerLog & { isActionSummary?: boolean }).isActionSummary || log.eventType === "action_summary") {
     return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Action Summary" icon={<Lightbulb className="tb-log-card-small-icon" strokeWidth={1.5} />} onWorkspacePathClick={onWorkspacePathClick} />;
+  }
+
+  if (log.eventType === "permission_request") {
+    return <PermissionRequestLogBox log={log} timeLabel={timeLabel} onPermissionDecision={onPermissionDecision} />;
   }
 
   if (log.eventType === "deep_research" && log.metadata?.deepResearch) {

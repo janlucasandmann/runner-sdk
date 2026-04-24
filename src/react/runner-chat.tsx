@@ -200,7 +200,7 @@ function CollapsibleRunnerUserPrompt({
   );
 }
 
-type RunnerTurnStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
+type RunnerTurnStatus = "queued" | "running" | "permission_asked" | "completed" | "failed" | "cancelled";
 type RunnerFileBrowserSource = "workspace" | "google-drive" | "one-drive" | "github" | "notion";
 type RunnerQuotedSelectionSource = "working_log" | "run_summary" | "deep_research_report";
 type RunnerThinkingStatusPhase = "visible" | "fading" | "hidden";
@@ -4474,6 +4474,22 @@ function isRunningThreadLifecycleStatus(status: string | null | undefined): bool
   ].includes(normalizeThreadLifecycleStatus(status));
 }
 
+function isPendingPermissionThreadLifecycleStatus(status: string | null | undefined): boolean {
+  const normalizedStatus = normalizeThreadLifecycleStatus(status);
+  return normalizedStatus === "permission_asked" || normalizedStatus === "permission asked";
+}
+
+function isTerminalThreadLifecycleStatus(status: string | null | undefined): boolean {
+  return ["completed", "failed", "cancelled", "archived", "deleted"].includes(normalizeThreadLifecycleStatus(status));
+}
+
+function terminalTurnStatusFromThreadStatus(status: string | null | undefined): RunnerTurnStatus {
+  const normalizedStatus = normalizeThreadLifecycleStatus(status);
+  if (normalizedStatus === "failed") return "failed";
+  if (normalizedStatus === "cancelled") return "cancelled";
+  return "completed";
+}
+
 function buildHydratedTurnsFromMessages(
   messages: RunnerConversationMessage[],
   meta?: {
@@ -4678,14 +4694,14 @@ function applyHydratedRunningThreadState(
     return turns;
   }
 
-  if (targetTurn.status === "running" && targetTurn.completedAtMs == null) {
+  if (isActiveTurnStatus(targetTurn.status) && targetTurn.completedAtMs == null) {
     return turns;
   }
 
   const nextTurns = turns.slice();
   nextTurns[targetIndex] = {
     ...targetTurn,
-    status: "running",
+    status: isPendingPermissionThreadLifecycleStatus(meta?.threadStatus) ? "permission_asked" : "running",
     completedAtMs: undefined,
   };
   return nextTurns;
@@ -5204,6 +5220,14 @@ function turnsLikelyMatch(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): bool
 
 function isTerminalTurnStatus(status: RunnerTurnStatus): boolean {
   return status === "completed" || status === "failed" || status === "cancelled";
+}
+
+function isRunningTurnStatus(status: RunnerTurnStatus): boolean {
+  return status === "running";
+}
+
+function isActiveTurnStatus(status: RunnerTurnStatus): boolean {
+  return status === "running" || status === "permission_asked";
 }
 
 function getTurnLatestProgressTimestampMs(turn: RunnerTurn): number {
@@ -6107,13 +6131,29 @@ function buildHydratedTurnsFromLogs(
       }
       if (log.type === "error") {
         turn.status = "failed";
-      } else if (turn.status === "running") {
+      } else if (isActiveTurnStatus(turn.status)) {
         turn.status = "completed";
       }
       continue;
     }
 
     turn.logs.push(log);
+
+    if (log.eventType === "permission_request") {
+      const permissionStatus = String(log.metadata?.status || log.metadata?.decision || "").trim().toLowerCase();
+      if (!permissionStatus || permissionStatus === "pending") {
+        turn.status = "permission_asked";
+        turn.completedAtMs = undefined;
+      } else if (turn.status === "permission_asked") {
+        if (isTerminalThreadLifecycleStatus(meta?.threadStatus) || meta?.completedAtMs != null) {
+          turn.status = terminalTurnStatusFromThreadStatus(meta?.threadStatus);
+          turn.completedAtMs = meta?.completedAtMs ?? getSafeTimestamp(log, index);
+        } else {
+          turn.status = "running";
+        }
+      }
+      continue;
+    }
 
     if (log.eventType === "agent_message" || log.eventType === "llm_response") {
       const durationMs =
@@ -6378,10 +6418,6 @@ export function RunnerChat({
     return loadPersistedWorkspaceSelection(buildWorkspaceSelectionStorageKey(appId, backendUrl))?.mode || "computers";
   });
   const [selectedProjectId, setSelectedProjectId] = useState<string>(() => {
-    const configuredProjectId = String(computerAgents?.projects?.selectedProjectId || "").trim();
-    if (configuredProjectId) {
-      return configuredProjectId;
-    }
     const persisted = loadPersistedWorkspaceSelection(buildWorkspaceSelectionStorageKey(appId, backendUrl));
     return persisted?.mode === "projects" ? persisted.projectId : "";
   });
@@ -6532,7 +6568,7 @@ export function RunnerChat({
   const isRunning = status === "running";
   const activeRunningTurn =
     [...turns].reverse().find(
-      (turn) => turn.status === "running" && turn.presentation !== "btw" && turn.presentation !== "context-action-notice"
+      (turn) => isRunningTurnStatus(turn.status) && turn.presentation !== "btw" && turn.presentation !== "context-action-notice"
     ) || null;
   const hasRunningTurn = Boolean(activeRunningTurn);
   const hydratedThreadIsRunning = isRunningThreadLifecycleStatus(hydratedThreadStatus);
@@ -6551,7 +6587,7 @@ export function RunnerChat({
   }, [deepResearchSessions]);
   const hasActiveDeepResearchSession = Boolean(activeDeepResearchThreadSession);
   const hasHydratedReattachActivity = useMemo(
-    () => hasActiveDeepResearchSession || turns.some((turn) => turn.status === "running" || hasActiveDeepResearchLogGroup(turn.logs)),
+    () => hasActiveDeepResearchSession || turns.some((turn) => isActiveTurnStatus(turn.status) || hasActiveDeepResearchLogGroup(turn.logs)),
     [hasActiveDeepResearchSession, turns]
   );
   const hasRunningTurnLogs = Boolean(activeRunningTurn && activeRunningTurn.logs.length > 0);
@@ -6827,7 +6863,7 @@ export function RunnerChat({
     const cancelledAtMs = Date.now();
     setTurns((previousTurns) =>
       previousTurns.map((turn) =>
-        turn.status === "running"
+        isRunningTurnStatus(turn.status)
           ? {
               ...turn,
               status: "cancelled",
@@ -8590,6 +8626,14 @@ export function RunnerChat({
         },
         onLog: (log) => {
           releasePreparationState();
+          if (log.eventType === "permission_request") {
+            const permissionStatus = String(log.metadata?.status || log.metadata?.decision || "").trim().toLowerCase();
+            updateTurn(turnId, (turn) => ({
+              ...turn,
+              status: !permissionStatus || permissionStatus === "pending" ? "permission_asked" : "running",
+              completedAtMs: undefined,
+            }));
+          }
           appendTurnLog(turnId, log);
         },
       });
@@ -9417,6 +9461,17 @@ export function RunnerChat({
       return;
     }
 
+    const persistedWorkspaceSelection = !workspacePreferenceAppliedRef.current
+      ? loadPersistedWorkspaceSelection(workspaceSelectionStorageKey)
+      : null;
+    const hasActiveProjectWorkspaceSelection =
+      (workspaceSelectorMode === "projects" && Boolean(selectedProjectId)) ||
+      (persistedWorkspaceSelection?.mode === "projects" && Boolean(persistedWorkspaceSelection.projectId));
+    if (!hasActiveProjectWorkspaceSelection) {
+      lastAppliedControlledProjectIdRef.current = configuredProjectId;
+      return;
+    }
+
     const configuredProject = availableProjects.find((project) => project.id === configuredProjectId) || null;
     if (!configuredProject) {
       return;
@@ -9437,7 +9492,7 @@ export function RunnerChat({
       projectId: configuredProjectId,
       environmentId: configuredEnvironmentId,
     });
-  }, [availableProjects, projectsConfig?.selectedProjectId, useComputerAgentsMode, workspaceSelectionStorageKey]);
+  }, [availableProjects, projectsConfig?.selectedProjectId, selectedProjectId, useComputerAgentsMode, workspaceSelectionStorageKey, workspaceSelectorMode]);
 
   useEffect(() => {
     if (!useComputerAgentsMode || workspacePreferenceAppliedRef.current) {
@@ -9739,7 +9794,7 @@ export function RunnerChat({
   }, []);
 
   useEffect(() => {
-    const hasRunningTurn = turns.some((turn) => turn.status === "running");
+    const hasRunningTurn = turns.some((turn) => isRunningTurnStatus(turn.status));
     if (!hasRunningTurn) return;
     const timer = window.setInterval(() => {
       setNowMs(Date.now());
@@ -12310,6 +12365,12 @@ export function RunnerChat({
 
   function buildTimelineItems(logs: RunnerLog[], options?: { groupComputerUse?: boolean }): RunnerTimelineItem[] {
     const subagentGroups = buildSubagentTimelineGroups(logs);
+    const latestPermissionLogIndexById = new Map<string, number>();
+    logs.forEach((log, index) => {
+      if (log.eventType !== "permission_request") return;
+      const requestId = String(log.metadata?.permissionRequestId || "").trim();
+      if (requestId) latestPermissionLogIndexById.set(requestId, index);
+    });
     const deepResearchLogs = collectDeepResearchTimelineLogs(logs, subagentGroups);
     const deepResearchCommandLog = logs.find((currentLog) => {
       const invocationId = getSubagentInvocationId(currentLog);
@@ -12339,6 +12400,12 @@ export function RunnerChat({
 
     for (let index = 0; index < logs.length; index += 1) {
       const log = logs[index];
+      if (log.eventType === "permission_request") {
+        const requestId = String(log.metadata?.permissionRequestId || "").trim();
+        if (requestId && latestPermissionLogIndexById.get(requestId) !== index) {
+          continue;
+        }
+      }
       const invocationId = getSubagentInvocationId(log);
       if (invocationId && subagentGroups.has(invocationId)) {
         const group = subagentGroups.get(invocationId)!;
@@ -12429,7 +12496,7 @@ export function RunnerChat({
       displayedAgentLabel ||
       "Subagent";
     const subagentEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
-    const isSubagentRunning = turn.status === "running" && !completionLog;
+    const isSubagentRunning = isRunningTurnStatus(turn.status) && !completionLog;
     const completionOutput = sanitizeSubagentResponseMessage(
       typeof completionLog?.metadata?.output === "string" ? completionLog.metadata.output : ""
     );
@@ -12463,7 +12530,7 @@ export function RunnerChat({
     const computerUseEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
     const interactionCount = item.logs.length;
     const isComputerUseRunning =
-      turn.status === "running" &&
+      isRunningTurnStatus(turn.status) &&
       item.endLog.metadata?.status !== "failed" &&
       item.endLog.metadata?.status !== "completed";
 
@@ -12504,7 +12571,7 @@ export function RunnerChat({
       .find((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
     const timelineLogs = dedupeAdjacentRunnerLogs(turn.logs.filter((log) => shouldDisplayTimelineLog(log)));
     const displayedTimelineLogs =
-      timelineLogs.length === 0 && turn.status === "running"
+      timelineLogs.length === 0 && isRunningTurnStatus(turn.status)
         ? [
             {
               time: "00:00",
@@ -12617,7 +12684,7 @@ export function RunnerChat({
     for (const turn of turns) {
       const { agentMessage, displayedTimelineItems } = getTurnTimelineState(turn);
       const rawItemCount = displayedTimelineItems.length;
-      const canShowThinkingStatus = turn.status === "running" && rawItemCount > 0 && !agentMessage?.message;
+      const canShowThinkingStatus = isRunningTurnStatus(turn.status) && rawItemCount > 0 && !agentMessage?.message;
       const visibleItemCount = visibleTimelineItemCountsRef.current[turn.id];
       const thinkingPhase = thinkingStatusPhaseByTurnRef.current[turn.id] ?? "hidden";
 
@@ -12718,6 +12785,47 @@ export function RunnerChat({
     ));
   }
 
+  async function handlePermissionDecision(log: RunnerLog, decision: "allow" | "deny") {
+    const requestId = String(log.metadata?.permissionRequestId || "").trim();
+    if (!currentThreadId || !requestId || !normalizedBackendUrl || !apiKey.trim()) {
+      return;
+    }
+    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
+    headers.set("Content-Type", "application/json");
+    const response = await fetch(
+      `${normalizedBackendUrl}/threads/${encodeURIComponent(currentThreadId)}/permission-requests/${encodeURIComponent(requestId)}/decision`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ decision }),
+      }
+    );
+    if (!response.ok) {
+      const bodyText = await response.text().catch(() => "");
+      throw new Error(bodyText || `Failed to ${decision === "allow" ? "approve" : "deny"} permission request (${response.status})`);
+    }
+    setTurns((previousTurns) =>
+      previousTurns.map((turn) => ({
+        ...turn,
+        status: turn.status === "permission_asked" ? "running" : turn.status,
+        logs: turn.logs.map((entry) => {
+          if (entry.metadata?.permissionRequestId !== requestId) {
+            return entry;
+          }
+          return {
+            ...entry,
+            type: decision === "allow" ? "success" : "warning",
+            metadata: {
+              ...entry.metadata,
+              status: decision === "allow" ? "approved" : "denied",
+              decision: decision === "allow" ? "approved" : "denied",
+            },
+          };
+        }),
+      }))
+    );
+  }
+
   function renderTimelineItem(turn: RunnerTurn, item: RunnerTimelineItem, index: number, options?: { renderComputerUseMcpAsGeneric?: boolean }) {
     const runnerEnvironmentId = activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
     const runnerHeaders = buildRunnerHeaders(requestHeaders, apiKey.trim());
@@ -12814,6 +12922,7 @@ export function RunnerChat({
         activeTaskPreviewId={activeTaskPreviewId}
         onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
         onTaskPreviewClick={onTaskPreviewClick}
+        onPermissionDecision={handlePermissionDecision}
         onWorkspacePathClick={(path) => handleSummaryWorkspacePathClick(turn, path, "working_log")}
       />
     );
@@ -13429,7 +13538,7 @@ export function RunnerChat({
       selectedTurn.logs.filter((log) => shouldDisplayTimelineLog(log))
     );
     const subagentGroups = buildSubagentTimelineGroups(
-      displayedTimelineLogs.length === 0 && selectedTurn.status === "running"
+      displayedTimelineLogs.length === 0 && isRunningTurnStatus(selectedTurn.status)
         ? [
             {
               time: "00:00",
@@ -14065,14 +14174,18 @@ export function RunnerChat({
         }
         setHydratedThreadStatus(statusSnapshot.status ?? null);
 
-        const localHasRunningTurn = turnsRef.current.some((turn) => turn.status === "running");
+        const localHasRunningTurn = turnsRef.current.some((turn) => isRunningTurnStatus(turn.status));
+        const localHasPendingPermissionTurn = turnsRef.current.some((turn) => turn.status === "permission_asked");
         const localHasActiveDeepResearch = turnsRef.current.some((turn) => hasActiveDeepResearchLogGroup(turn.logs));
         const localHasNoHydratedTurns = turnsRef.current.length === 0;
         const remoteThreadIsRunning = isRunningThreadLifecycleStatus(statusSnapshot.status);
+        const remoteThreadHasPendingPermission = isPendingPermissionThreadLifecycleStatus(statusSnapshot.status);
         const shouldHydrateThread =
           remoteThreadIsRunning
           || localHasRunningTurn
           || localHasActiveDeepResearch
+          || (remoteThreadHasPendingPermission && !localHasPendingPermissionTurn)
+          || (localHasPendingPermissionTurn && !remoteThreadHasPendingPermission)
           || (localHasNoHydratedTurns && initialGracePollsRemaining > 0);
 
         let nextHasRunningTurn = localHasRunningTurn;
@@ -14122,7 +14235,7 @@ export function RunnerChat({
           }
 
           const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
-          nextHasRunningTurn = mergedTurns.some((turn) => turn.status === "running");
+          nextHasRunningTurn = mergedTurns.some((turn) => isRunningTurnStatus(turn.status));
           nextHasActiveDeepResearch = mergedTurns.some((turn) => hasActiveDeepResearchLogGroup(turn.logs));
           setTurns(mergedTurns);
           setExpandedTurns((previousExpandedTurns) =>
@@ -14134,6 +14247,13 @@ export function RunnerChat({
           trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
           initialGracePollsRemaining = REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT;
           scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
+          return;
+        }
+
+        if (remoteThreadHasPendingPermission) {
+          trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
+          initialGracePollsRemaining = REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT;
+          scheduleNextPoll(REATTACH_THREAD_RETRY_DELAY_MS);
           return;
         }
 
@@ -14885,7 +15005,8 @@ export function RunnerChat({
                   : <div className="runner-log-empty">No logs yet. Run a task to start streaming.</div>
               : null}
             {turns.map((turn, turnIndex) => {
-              const isTurnRunning = turn.status === "running";
+              const isTurnRunning = isRunningTurnStatus(turn.status);
+              const isTurnPermissionAsked = turn.status === "permission_asked";
               const isQueuedTurn = turn.status === "queued";
               const turnSeconds = getTurnDurationSeconds(turn);
               const { agentMessage, displayedTimelineItems: rawDisplayedTimelineItems } = getTurnTimelineState(turn);
@@ -14962,10 +15083,12 @@ export function RunnerChat({
               const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
               const workLabel = isWorkLogsLoading
                 ? "Loading Working Logs..."
-                : isTurnRunning
+                : turn.status === "permission_asked"
+                  ? "Permission asked"
+                  : isTurnRunning
                   ? "Working..."
                   : `Worked for ${turnSeconds}s`;
-              const shouldRenderWorkSection = isTurnRunning || displayedTimelineItems.length > 0 || isWorkLogsLoading;
+              const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || displayedTimelineItems.length > 0 || isWorkLogsLoading;
               const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
               const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
 

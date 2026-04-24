@@ -204,6 +204,49 @@ export class RunnerEventNormalizer {
       return this.handleToolStarted(event as ToolStartedEvent);
     }
 
+    if (type === "permission.requested") {
+      const toolName = this.asString(event.toolName, "tool");
+      return {
+        logs: [
+          {
+            time: this.formatElapsed(),
+            message: `Permission requested: ${toolName}`,
+            type: "warning",
+            eventType: "permission_request",
+            metadata: {
+              permissionRequestId: this.asString(event.requestId),
+              toolName,
+              input: this.asString(event.input),
+              currentMode: this.asString(event.currentMode),
+              requiredMode: this.asString(event.requiredMode),
+              reason: this.optionalString(event.reason),
+              status: "pending",
+              decision: "pending",
+            },
+          },
+        ],
+      };
+    }
+
+    if (type === "permission.resolved") {
+      const decision = this.asString(event.decision) === "allow" ? "approved" : "denied";
+      return {
+        logs: [
+          {
+            time: this.formatElapsed(),
+            message: `Permission ${decision}`,
+            type: decision === "approved" ? "success" : "warning",
+            eventType: "permission_request",
+            metadata: {
+              permissionRequestId: this.asString(event.requestId),
+              status: decision,
+              decision,
+            },
+          },
+        ],
+      };
+    }
+
     if (type === "deep_research") {
       const deepResearchEvent = this.asString(event.event, "status");
       const message = this.asString(event.thinkingSummary, `Deep research: ${deepResearchEvent}`);
@@ -907,7 +950,8 @@ export class RunnerEventNormalizer {
       value === "turn_completed" ||
       value === "planning" ||
       value === "llm_response" ||
-      value === "deep_research"
+      value === "deep_research" ||
+      value === "permission_request"
     ) {
       return value;
     }

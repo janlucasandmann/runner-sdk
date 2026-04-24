@@ -16,7 +16,8 @@ export type RunnerEventType =
   | "turn_completed"
   | "planning"
   | "llm_response"
-  | "deep_research";
+  | "deep_research"
+  | "permission_request";
 
 export interface RunnerUsage {
   inputTokens: number;
@@ -84,7 +85,7 @@ export interface RunnerLog {
     subagentInvocation?: RunnerSubagentInvocationMetadata;
     command?: string;
     exitCode?: number;
-    status?: "running" | "completed" | "failed" | "started" | "output";
+    status?: "running" | "completed" | "failed" | "started" | "output" | "pending" | "approved" | "denied";
     output?: string;
     serverName?: string;
     toolName?: string;
@@ -143,6 +144,12 @@ export interface RunnerLog {
       text: string;
       sourceType: "working_log" | "run_summary";
     };
+    permissionRequestId?: string;
+    currentMode?: string;
+    requiredMode?: string;
+    reason?: string;
+    input?: string;
+    decision?: "approved" | "denied" | "pending" | string;
   };
 }
 

@@ -512,7 +512,8 @@ export class RunnerClient {
             log.eventType === "file_change" ||
             log.eventType === "llm_response" ||
             log.eventType === "turn_completed" ||
-            log.eventType === "deep_research"
+            log.eventType === "deep_research" ||
+            log.eventType === "permission_request"
               ? log.eventType
               : "setup",
         };

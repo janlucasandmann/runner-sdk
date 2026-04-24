@@ -1238,10 +1238,11 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 0;
+  padding: 0 0 15px;
   margin-bottom: 8px;
   background: transparent;
   border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   color: white;
   cursor: pointer;
 }
@@ -1902,6 +1903,48 @@
   color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.tb-runner-chat .tb-log-card-permission .tb-log-card-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tb-runner-chat .tb-log-permission-input {
+  max-height: 180px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.tb-runner-chat .tb-log-permission-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-log-permission-button {
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-log-permission-button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.tb-runner-chat .tb-log-permission-button-primary {
+  background: var(--tb-accent, #f5f5f5);
+  color: var(--tb-accent-foreground, #111);
+}
+
+.tb-runner-chat .tb-log-permission-button-secondary {
+  background: var(--tb-control-bg, rgba(255, 255, 255, 0.08));
+  color: var(--tb-primary-text, rgba(255, 255, 255, 0.9));
 }
 
 .tb-runner-chat .tb-browser-carousel {
