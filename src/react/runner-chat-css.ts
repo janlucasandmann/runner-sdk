@@ -6378,6 +6378,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   max-height: 320px;
 }
 
+.tb-runner-chat .tb-popup-menu-inline-workspace {
+  width: 280px;
+  max-height: 320px;
+}
+
 .tb-runner-chat .tb-popup-menu-context {
   bottom: calc(100% + 8px);
   left: -6px;
@@ -6417,6 +6422,15 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-popup-row:hover,
 .tb-runner-chat .tb-popup-row.selected {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.tb-runner-chat .tb-popup-row:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.tb-runner-chat .tb-popup-row:disabled:hover {
+  background: transparent;
 }
 
 .tb-runner-chat .tb-popup-row-select.selected {
@@ -6569,7 +6583,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   line-height: 1.2;
 }
 
-.tb-runner-chat .tb-popup-menu-inline-agent .tb-popup-menu-title {
+.tb-runner-chat .tb-popup-menu-inline-agent .tb-popup-menu-title,
+.tb-runner-chat .tb-popup-menu-inline-workspace .tb-popup-menu-title {
   padding-bottom: 0;
 }
 

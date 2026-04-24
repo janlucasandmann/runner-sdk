@@ -697,10 +697,25 @@ export type RunnerChatInputMode = "minimal" | "computer-agents";
 export interface RunnerChatOption {
   id: string;
   name: string;
+  description?: string;
   isDefault?: boolean;
 }
 
 type RunnerAgentSelectorMode = "agents" | "teams" | "humans";
+type RunnerWorkspaceSelectorMode = "computers" | "projects";
+
+export interface RunnerChatProjectOption extends RunnerChatOption {
+  defaultEnvironmentId?: string | null;
+  environmentId?: string | null;
+  color?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface RunnerChatProjectsConfig {
+  items?: RunnerChatProjectOption[];
+  selectedProjectId?: string | null;
+  onProjectChange?: (projectId: string) => void;
+}
 
 type RunnerAgentOptionRecord = RunnerChatOption & {
   agentType?: string | null;
@@ -736,6 +751,29 @@ function mergeRunnerChatOptions(primary: RunnerChatOption[], additions: Array<Ru
     merged.set(option.id, existing ? { ...option, ...existing, name: existing.name || option.name } : option);
   }
   return Array.from(merged.values());
+}
+
+function getRunnerProjectEnvironmentId(project: RunnerChatProjectOption | null | undefined): string {
+  if (!project) {
+    return "";
+  }
+  const directDefaultEnvironmentId = typeof project.defaultEnvironmentId === "string" ? project.defaultEnvironmentId.trim() : "";
+  if (directDefaultEnvironmentId) {
+    return directDefaultEnvironmentId;
+  }
+  const directEnvironmentId = typeof project.environmentId === "string" ? project.environmentId.trim() : "";
+  if (directEnvironmentId) {
+    return directEnvironmentId;
+  }
+  const metadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+    ? project.metadata
+    : null;
+  const metadataDefaultEnvironmentId =
+    metadata && typeof metadata.defaultEnvironmentId === "string" ? metadata.defaultEnvironmentId.trim() : "";
+  if (metadataDefaultEnvironmentId) {
+    return metadataDefaultEnvironmentId;
+  }
+  return metadata && typeof metadata.environmentId === "string" ? metadata.environmentId.trim() : "";
 }
 
 function isRunnerTeamAgentOption(option: RunnerChatOption | null | undefined): boolean {
@@ -878,6 +916,7 @@ export interface RunnerChatExternalRunRequest {
   } | null;
   enabledSkills?: Record<string, unknown> | null;
   environmentId?: string | null;
+  projectId?: string | null;
   quotedSelection?: RunnerQuotedSelection | null;
 }
 
@@ -979,6 +1018,7 @@ export interface RunnerChatComputerAgentsConfig {
   oneDrive?: RunnerChatDriveConfig;
   workspace?: RunnerChatWorkspaceConfig;
   schedule?: RunnerChatScheduleConfig;
+  projects?: RunnerChatProjectsConfig;
 }
 
 export interface RunnerChatSkillDefaults {
@@ -1085,6 +1125,7 @@ export interface RunnerChatProps {
     prompt: string;
     attachments: RunnerAttachment[];
     environmentId: string | null;
+    projectId?: string | null;
     agentId: string | null;
     githubRepo?: {
       repoFullName: string;
@@ -1172,6 +1213,7 @@ const RUNNER_CHAT_SKILL_ID_ALIASES: Record<string, string> = {
   research: "deep_research",
 };
 const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v2";
+const RUNNER_CHAT_WORKSPACE_SELECTION_STORAGE_KEY_PREFIX = "tb_runner_chat_workspace_selection_v1";
 
 const DEFAULT_SCHEDULE_PRESETS: RunnerChatSchedulePreset[] = [
   { id: "daily", label: "Every day", cron: "0 9 * * *" },
@@ -2779,6 +2821,67 @@ function buildEnabledSkillsStorageKey(appId: string): string {
   return `${RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX}:${appId || "runner-web-sdk"}`;
 }
 
+function buildWorkspaceSelectionStorageKey(appId: string, backendUrl: string): string {
+  return `${RUNNER_CHAT_WORKSPACE_SELECTION_STORAGE_KEY_PREFIX}:${appId || "runner-web-sdk"}:${sanitizeBackendUrl(backendUrl) || "default"}`;
+}
+
+function normalizeWorkspaceSelectorMode(value: unknown): RunnerWorkspaceSelectorMode {
+  return value === "projects" ? "projects" : "computers";
+}
+
+function loadPersistedWorkspaceSelection(storageKey: string): {
+  mode: RunnerWorkspaceSelectorMode;
+  environmentId: string;
+  projectId: string;
+} | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return null;
+    }
+    const record = parsed as Record<string, unknown>;
+    return {
+      mode: normalizeWorkspaceSelectorMode(record.mode),
+      environmentId: typeof record.environmentId === "string" ? record.environmentId.trim() : "",
+      projectId: typeof record.projectId === "string" ? record.projectId.trim() : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function persistWorkspaceSelection(
+  storageKey: string,
+  selection: {
+    mode: RunnerWorkspaceSelectorMode;
+    environmentId?: string | null;
+    projectId?: string | null;
+  }
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        mode: selection.mode,
+        environmentId: String(selection.environmentId || "").trim(),
+        projectId: String(selection.projectId || "").trim(),
+      })
+    );
+  } catch {
+    // Ignore storage failures; the UI still works without persistence.
+  }
+}
+
 function loadPersistedEnabledSkillIds(storageKey: string): string[] | null {
   if (typeof window === "undefined") {
     return null;
@@ -3086,6 +3189,7 @@ async function createThread(params: {
   title?: string;
   appId?: string;
   environmentId?: string;
+  projectId?: string | null;
   agentId?: string;
 }): Promise<{ threadId: string; title: string | null }> {
   const backendUrl = sanitizeBackendUrl(params.backendUrl);
@@ -3100,6 +3204,7 @@ async function createThread(params: {
       title: params.title,
       appId: params.appId,
       environmentId: params.environmentId,
+      projectId: params.projectId || undefined,
       agentId: params.agentId,
     }),
   });
@@ -6269,6 +6374,17 @@ export function RunnerChat({
     if (environmentId) return environmentId;
     return environments.find((environment) => environment.isDefault)?.id || environments[0]?.id || "";
   });
+  const [workspaceSelectorMode, setWorkspaceSelectorMode] = useState<RunnerWorkspaceSelectorMode>(() => {
+    return loadPersistedWorkspaceSelection(buildWorkspaceSelectionStorageKey(appId, backendUrl))?.mode || "computers";
+  });
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(() => {
+    const configuredProjectId = String(computerAgents?.projects?.selectedProjectId || "").trim();
+    if (configuredProjectId) {
+      return configuredProjectId;
+    }
+    const persisted = loadPersistedWorkspaceSelection(buildWorkspaceSelectionStorageKey(appId, backendUrl));
+    return persisted?.mode === "projects" ? persisted.projectId : "";
+  });
   const [initialAgentTopId, setInitialAgentTopId] = useState<string | null>(null);
   const [initialEnvironmentTopId, setInitialEnvironmentTopId] = useState<string | null>(null);
   const [enabledSkillIds, setEnabledSkillIds] = useState<string[]>(() => {
@@ -6353,6 +6469,8 @@ export function RunnerChat({
   const appliedAgentCreationCommandTokenRef = useRef<string | number | null>(null);
   const appliedSkillCreationCommandTokenRef = useRef<string | number | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
+  const workspacePreferenceAppliedRef = useRef(false);
+  const lastAppliedControlledProjectIdRef = useRef<string | null>(null);
   const stopRequestedThreadIdRef = useRef<string | null>(null);
   const visibleTimelineItemCountsRef = useRef<Record<string, number>>({});
   const thinkingStatusPhaseByTurnRef = useRef<Record<string, RunnerThinkingStatusPhase>>({});
@@ -6381,6 +6499,10 @@ export function RunnerChat({
   const normalizedSkills = useMemo(() => normalizeComputerAgentSkills(skills), [skills]);
   const displayedSkills = useMemo(() => [...normalizedSkills, ...customSkills], [customSkills, normalizedSkills]);
   const enabledSkillsStorageKey = useMemo(() => buildEnabledSkillsStorageKey(appId), [appId]);
+  const workspaceSelectionStorageKey = useMemo(
+    () => buildWorkspaceSelectionStorageKey(appId, normalizedBackendUrl),
+    [appId, normalizedBackendUrl]
+  );
   const systemSkills = useMemo(() => displayedSkills.filter((skill) => !skill.isCustom), [displayedSkills]);
   const customSkillItems = useMemo(() => displayedSkills.filter((skill) => skill.isCustom), [displayedSkills]);
   const githubConfig = computerAgents?.github;
@@ -6389,6 +6511,7 @@ export function RunnerChat({
   const oneDriveConfig = computerAgents?.oneDrive;
   const workspaceConfig = computerAgents?.workspace;
   const scheduleConfig = computerAgents?.schedule;
+  const projectsConfig = computerAgents?.projects;
   const schedulePresets = scheduleConfig?.presets?.length ? scheduleConfig.presets : DEFAULT_SCHEDULE_PRESETS;
   const githubRepositories = githubConfig?.repositories || [];
   const githubContexts = githubConfig?.contexts || [];
@@ -6591,6 +6714,32 @@ export function RunnerChat({
       ]),
     [activeThreadEnvironmentId, activeThreadEnvironmentName, environmentId, environments]
   );
+  const availableProjects = useMemo<RunnerChatProjectOption[]>(() => {
+    const merged = new Map<string, RunnerChatProjectOption>();
+    for (const project of projectsConfig?.items || []) {
+      const normalizedProjectId = String(project?.id || "").trim();
+      if (!normalizedProjectId) {
+        continue;
+      }
+      merged.set(normalizedProjectId, {
+        ...project,
+        id: normalizedProjectId,
+        name: String(project.name || "").trim() || "Untitled Project",
+      });
+    }
+    return Array.from(merged.values());
+  }, [projectsConfig?.items]);
+  const selectedProject = useMemo(
+    () => availableProjects.find((project) => project.id === selectedProjectId) || null,
+    [availableProjects, selectedProjectId]
+  );
+  const selectedProjectEnvironmentId = getRunnerProjectEnvironmentId(selectedProject);
+  const effectiveWorkspaceSelectorMode: RunnerWorkspaceSelectorMode =
+    workspaceSelectorMode === "projects" && selectedProject && selectedProjectEnvironmentId
+      ? "projects"
+      : "computers";
+  const effectiveProjectEnvironmentId =
+    effectiveWorkspaceSelectorMode === "projects" ? selectedProjectEnvironmentId : "";
   const targetMainPopup = getMainPopupRenderId(activeInputPopup);
   const targetSidePopup = getSidePopupRenderId(activeInputPopup);
   const supportsSpeechToText = useMemo(() => {
@@ -6608,7 +6757,12 @@ export function RunnerChat({
     );
   }, [hasApiKey, resolvedSpeechToTextUrl]);
   const effectiveAgentId = useComputerAgentsMode ? selectedAgentId || agentId : agentId;
-  const effectiveEnvironmentId = useComputerAgentsMode ? selectedEnvironmentId || environmentId : environmentId;
+  const effectiveProjectId = useComputerAgentsMode && effectiveWorkspaceSelectorMode === "projects" && selectedProject
+    ? selectedProject.id
+    : null;
+  const effectiveEnvironmentId = useComputerAgentsMode
+    ? effectiveProjectEnvironmentId || selectedEnvironmentId || environmentId
+    : environmentId;
   const isPassiveWarmEnvironmentReady = !useComputerAgentsMode || Boolean(effectiveEnvironmentId);
   const isPassiveWarmAgentReady = !useComputerAgentsMode || Boolean(effectiveAgentId);
   const textareaAllowsPromptAfterStagedCommand = threadContextActionAllowsPrompt(stagedThreadContextCommand);
@@ -8284,6 +8438,7 @@ export function RunnerChat({
         githubRepo: githubRepo || null,
         enabledSkills: enabledSkillsPayload || null,
         environmentId: typeof runEnvironmentId === "string" ? runEnvironmentId : "",
+        projectId: effectiveProjectId || null,
         quotedSelection: options?.quotedSelection || null,
       });
       if (didHandleExternalRunRequest !== false) {
@@ -9231,6 +9386,13 @@ export function RunnerChat({
       if (activeThreadEnvironmentId && availableEnvironments.some((environment) => environment.id === activeThreadEnvironmentId)) {
         return activeThreadEnvironmentId;
       }
+      if (
+        effectiveWorkspaceSelectorMode === "projects" &&
+        selectedProjectEnvironmentId &&
+        availableEnvironments.some((environment) => environment.id === selectedProjectEnvironmentId)
+      ) {
+        return selectedProjectEnvironmentId;
+      }
       if (environmentId && availableEnvironments.some((environment) => environment.id === environmentId)) {
         return environmentId;
       }
@@ -9239,7 +9401,94 @@ export function RunnerChat({
       }
       return availableEnvironments.find((environment) => environment.isDefault)?.id || availableEnvironments[0]?.id || "";
     });
-  }, [activeThreadEnvironmentId, availableEnvironments, environmentId]);
+  }, [activeThreadEnvironmentId, availableEnvironments, effectiveWorkspaceSelectorMode, environmentId, selectedProjectEnvironmentId]);
+
+  useEffect(() => {
+    if (!useComputerAgentsMode) {
+      return;
+    }
+
+    const configuredProjectId = String(projectsConfig?.selectedProjectId || "").trim();
+    if (!configuredProjectId) {
+      lastAppliedControlledProjectIdRef.current = configuredProjectId;
+      return;
+    }
+    if (lastAppliedControlledProjectIdRef.current === configuredProjectId) {
+      return;
+    }
+
+    const configuredProject = availableProjects.find((project) => project.id === configuredProjectId) || null;
+    if (!configuredProject) {
+      return;
+    }
+
+    const configuredEnvironmentId = getRunnerProjectEnvironmentId(configuredProject);
+    if (!configuredEnvironmentId) {
+      return;
+    }
+
+    lastAppliedControlledProjectIdRef.current = configuredProjectId;
+    workspacePreferenceAppliedRef.current = true;
+    setWorkspaceSelectorMode("projects");
+    setSelectedProjectId(configuredProjectId);
+    setSelectedEnvironmentId(configuredEnvironmentId);
+    persistWorkspaceSelection(workspaceSelectionStorageKey, {
+      mode: "projects",
+      projectId: configuredProjectId,
+      environmentId: configuredEnvironmentId,
+    });
+  }, [availableProjects, projectsConfig?.selectedProjectId, useComputerAgentsMode, workspaceSelectionStorageKey]);
+
+  useEffect(() => {
+    if (!useComputerAgentsMode || workspacePreferenceAppliedRef.current) {
+      return;
+    }
+
+    const persisted = loadPersistedWorkspaceSelection(workspaceSelectionStorageKey);
+    if (!persisted) {
+      workspacePreferenceAppliedRef.current = true;
+      return;
+    }
+
+    if (persisted.mode === "projects" && persisted.projectId) {
+      if (availableProjects.length === 0) {
+        return;
+      }
+      const persistedProject = availableProjects.find((project) => project.id === persisted.projectId) || null;
+      if (persistedProject) {
+        const persistedEnvironmentId = getRunnerProjectEnvironmentId(persistedProject);
+        if (persistedEnvironmentId) {
+          setWorkspaceSelectorMode("projects");
+          setSelectedProjectId(persisted.projectId);
+          setSelectedEnvironmentId(persistedEnvironmentId);
+        }
+      }
+      workspacePreferenceAppliedRef.current = true;
+      return;
+    }
+
+    if (
+      persisted.mode === "computers" &&
+      persisted.environmentId &&
+      availableEnvironments.some((environment) => environment.id === persisted.environmentId)
+    ) {
+      setWorkspaceSelectorMode("computers");
+      setSelectedProjectId("");
+      setSelectedEnvironmentId(persisted.environmentId);
+    }
+    workspacePreferenceAppliedRef.current = true;
+  }, [availableEnvironments, availableProjects, useComputerAgentsMode, workspaceSelectionStorageKey]);
+
+  useEffect(() => {
+    if (!selectedProjectId || availableProjects.length === 0) {
+      return;
+    }
+    if (availableProjects.some((project) => project.id === selectedProjectId)) {
+      return;
+    }
+    setSelectedProjectId("");
+    setWorkspaceSelectorMode("computers");
+  }, [availableProjects, selectedProjectId]);
 
   useEffect(() => {
     if (!availableEnvironments.length) {
@@ -9719,6 +9968,7 @@ export function RunnerChat({
       requestHeaders,
       appId,
       environmentId: effectiveEnvironmentId,
+      projectId: effectiveProjectId,
       agentId: effectiveAgentId,
       title: title || DEFAULT_NEW_THREAD_TITLE,
     });
@@ -10987,11 +11237,16 @@ export function RunnerChat({
   function selectEnvironment(nextEnvironmentId: string) {
     const previousEnvironmentId = selectedEnvironmentId || sourceThreadEnvironmentId || environmentId || "";
     const threadEnvironmentId = sourceThreadEnvironmentId || environmentId || "";
+    const isWorkspaceModeChange = workspaceSelectorMode !== "computers" || Boolean(selectedProjectId);
 
-    if (nextEnvironmentId === previousEnvironmentId) {
+    if (nextEnvironmentId === previousEnvironmentId && !isWorkspaceModeChange) {
       setActiveInputPopup(null);
       return;
     }
+
+    setWorkspaceSelectorMode("computers");
+    setSelectedProjectId("");
+    projectsConfig?.onProjectChange?.("");
 
     if (
       currentThreadId &&
@@ -11012,6 +11267,31 @@ export function RunnerChat({
 
     setSelectedEnvironmentId(nextEnvironmentId);
     onEnvironmentChange?.(nextEnvironmentId);
+    persistWorkspaceSelection(workspaceSelectionStorageKey, {
+      mode: "computers",
+      environmentId: nextEnvironmentId,
+      projectId: "",
+    });
+    setActiveInputPopup(null);
+  }
+
+  function selectProject(nextProjectId: string) {
+    const project = availableProjects.find((entry) => entry.id === nextProjectId) || null;
+    const nextEnvironmentId = getRunnerProjectEnvironmentId(project);
+    if (!project || !nextEnvironmentId) {
+      return;
+    }
+
+    setWorkspaceSelectorMode("projects");
+    setSelectedProjectId(project.id);
+    setSelectedEnvironmentId(nextEnvironmentId);
+    projectsConfig?.onProjectChange?.(project.id);
+    onEnvironmentChange?.(nextEnvironmentId);
+    persistWorkspaceSelection(workspaceSelectionStorageKey, {
+      mode: "projects",
+      projectId: project.id,
+      environmentId: nextEnvironmentId,
+    });
     setActiveInputPopup(null);
   }
 
@@ -11533,6 +11813,7 @@ export function RunnerChat({
           prompt: taskText,
           attachments: resolvedAttachments || [],
           environmentId: effectiveEnvironmentId ?? null,
+          projectId: effectiveProjectId ?? null,
           agentId: effectiveAgentId ?? null,
           ...(githubRepo
             ? {
@@ -12708,6 +12989,11 @@ export function RunnerChat({
     availableEnvironments[0];
   const displayedAgentLabel = hasApiKey ? selectedAgent?.name || "Agent" : "Default Agent";
   const displayedEnvironmentLabel = hasApiKey ? selectedEnvironment?.name || "Default" : "Default";
+  const displayedWorkspaceLabel = hasApiKey
+    ? effectiveWorkspaceSelectorMode === "projects" && selectedProject
+      ? selectedProject.name || "Project"
+      : displayedEnvironmentLabel
+    : "Default";
   const availableAgentPhotoEntries = useMemo(
     () =>
       agents
@@ -13184,7 +13470,11 @@ export function RunnerChat({
     () => orderOptionsWithPinnedTop(availableEnvironments, initialEnvironmentTopId),
     [availableEnvironments, initialEnvironmentTopId]
   );
-  const activeWorkspaceEnvironmentId = selectedEnvironment?.id || environmentId || "";
+  const orderedProjects = useMemo(
+    () => orderOptionsWithPinnedTop(availableProjects, selectedProjectId || null),
+    [availableProjects, selectedProjectId]
+  );
+  const activeWorkspaceEnvironmentId = effectiveEnvironmentId || selectedEnvironment?.id || environmentId || "";
   useEffect(() => {
     if (availableAgentPopupModes.includes(agentPopupMode)) {
       return;
@@ -13464,6 +13754,10 @@ export function RunnerChat({
       : agentPopupMode === "humans"
         ? "No humans available."
         : "No agents available.";
+  const workspacePopupEmptyLabel =
+    workspaceSelectorMode === "projects"
+      ? "No projects available."
+      : "No computers available.";
   const speechToTextTitle = !hasApiKey
     ? "Enter an API key to enable speech-to-text"
     : supportsSpeechToText
@@ -13563,7 +13857,7 @@ export function RunnerChat({
   }
 
   function renderEnvironmentSelectorControl() {
-    if (availableEnvironments.length === 0) {
+    if (availableEnvironments.length === 0 && availableProjects.length === 0) {
       return null;
     }
 
@@ -13574,34 +13868,91 @@ export function RunnerChat({
           className={`tb-inline-selector ${showEnvironmentPopup ? "active" : ""}`.trim()}
           onClick={() => togglePopup("environment")}
         >
-          <span>{displayedEnvironmentLabel}</span>
+          <span>{displayedWorkspaceLabel}</span>
           <IconChevronDown className="tb-inline-selector-chevron" />
         </button>
 
         {showEnvironmentPopup ? (
-          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-right ${mainPopupAnimationClass}`.trim()}>
+          <div className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-right tb-popup-menu-inline-workspace ${mainPopupAnimationClass}`.trim()}>
             {!hasApiKey ? (
               <div className="tb-popup-note">
                 <div className="tb-popup-note-title">API key required</div>
-                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select an environment.</div>
+                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select a workspace.</div>
               </div>
             ) : (
               <>
-                <div className="tb-popup-menu-title">Environment</div>
-                <div className="tb-popup-menu-inline-body">
-                  {orderedEnvironments.map((environment) => (
+                <div className="tb-popup-menu-title">Workspace</div>
+                <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
+                  <div className="tb-popup-nav">
                     <button
-                      key={environment.id}
                       type="button"
-                      className={`tb-popup-row tb-popup-row-select ${selectedEnvironmentId === environment.id ? "selected" : ""}`}
-                      onClick={() => selectEnvironment(environment.id)}
+                      className={`tb-popup-nav-button ${workspaceSelectorMode === "computers" ? "active" : ""}`}
+                      onClick={() => setWorkspaceSelectorMode("computers")}
                     >
-                      <span className="tb-popup-check-slot">
-                        {selectedEnvironmentId === environment.id ? <IconCheck className="tb-popup-check" /> : null}
-                      </span>
-                      <span className="tb-popup-label">{environment.name}</span>
+                      Computers
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      className={`tb-popup-nav-button ${workspaceSelectorMode === "projects" ? "active" : ""}`}
+                      onClick={() => setWorkspaceSelectorMode("projects")}
+                    >
+                      Projects
+                    </button>
+                  </div>
+                </div>
+                <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent tb-popup-menu-inline-body-workspace">
+                  {workspaceSelectorMode === "projects" ? (
+                    orderedProjects.length > 0 ? (
+                      orderedProjects.map((project) => {
+                        const projectEnvironmentId = getRunnerProjectEnvironmentId(project);
+                        const isSelectedProject =
+                          effectiveWorkspaceSelectorMode === "projects" && selectedProjectId === project.id;
+                        return (
+                          <button
+                            key={project.id}
+                            type="button"
+                            className={`tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-workspace ${isSelectedProject ? "selected" : ""}`}
+                            onClick={() => selectProject(project.id)}
+                            disabled={!projectEnvironmentId}
+                            title={!projectEnvironmentId ? "This project has no linked computer." : project.name}
+                          >
+                            <LucideRocket className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">{project.name}</span>
+                            <span className="tb-popup-check-slot">
+                              {isSelectedProject ? <IconCheck className="tb-popup-check" /> : null}
+                            </span>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="tb-popup-menu-inline-empty">
+                        <div className="tb-popup-empty-state">{workspacePopupEmptyLabel}</div>
+                      </div>
+                    )
+                  ) : orderedEnvironments.length > 0 ? (
+                    orderedEnvironments.map((environment) => {
+                      const isSelectedEnvironment =
+                        effectiveWorkspaceSelectorMode === "computers" && selectedEnvironmentId === environment.id;
+                      return (
+                        <button
+                          key={environment.id}
+                          type="button"
+                          className={`tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-workspace ${isSelectedEnvironment ? "selected" : ""}`}
+                          onClick={() => selectEnvironment(environment.id)}
+                        >
+                          <LucideMonitor className="tb-popup-icon" strokeWidth={1.75} />
+                          <span className="tb-popup-label">{environment.name}</span>
+                          <span className="tb-popup-check-slot">
+                            {isSelectedEnvironment ? <IconCheck className="tb-popup-check" /> : null}
+                          </span>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="tb-popup-menu-inline-empty">
+                      <div className="tb-popup-empty-state">{workspacePopupEmptyLabel}</div>
+                    </div>
+                  )}
                 </div>
               </>
             )}
