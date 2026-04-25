@@ -2576,24 +2576,74 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   gap: 10px;
 }
 
-.tb-runner-chat .tb-log-permission-input {
+.tb-runner-chat .tb-log-permission-summary,
+.tb-runner-chat .tb-log-permission-reason {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.tb-runner-chat .tb-log-permission-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tb-runner-chat .tb-log-permission-detail {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.tb-runner-chat .tb-log-permission-detail-label,
+.tb-runner-chat .tb-log-permission-preview-label {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.tb-runner-chat .tb-log-permission-detail-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-permission-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tb-runner-chat .tb-log-permission-code {
   max-height: 180px;
   overflow: auto;
-  white-space: pre-wrap;
+  padding: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .tb-runner-chat .tb-log-permission-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
 }
 
 .tb-runner-chat .tb-log-permission-button {
   border: 0;
-  border-radius: 6px;
+  border-radius: 999px;
+  margin-bottom: 12px;
   padding: 7px 11px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
 }
 
@@ -2785,6 +2835,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   font-family: inherit;
   cursor: pointer;
   transition: background-color 180ms ease, color 180ms ease;
+}
+
+.tb-runner-chat .tb-log-card.tb-log-card-computer-use .tb-subagent-log-open-button,
+.tb-runner-chat .tb-log-card.tb-log-card-subagent .tb-subagent-log-open-button {
+  margin-bottom: 0;
 }
 
 .tb-runner-chat .tb-subagent-log-open-button:hover {
@@ -4522,6 +4577,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   min-height: 32px;
 }
 
+.tb-runner-chat .tb-log-card-header-static {
+  cursor: default;
+}
+
 .tb-runner-chat .agent-step-content > .tb-step-row .tb-step-row-icon {
   position: absolute;
   left: -24px;
@@ -5091,6 +5150,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   --tb-task-input-outline: rgba(192, 132, 252, 0.46);
   --tb-task-input-border: linear-gradient(-10deg, rgba(192, 132, 252, 0.26), rgba(221, 191, 255, 0.58), rgba(192, 132, 252, 0.28), rgba(168, 85, 247, 0.66));
   --tb-task-input-base-bg: #0f0f0f;
+}
+
+.tb-runner-chat .task-input-box-private {
+  --tb-task-input-overlay: transparent;
+  --tb-task-input-outline: rgba(192, 132, 252, 0.34);
+  --tb-task-input-border: linear-gradient(-10deg, rgba(192, 132, 252, 0.18), rgba(221, 191, 255, 0.48), rgba(192, 132, 252, 0.2), rgba(168, 85, 247, 0.54));
+  --tb-task-input-base-bg: #000000;
 }
 
 .tb-runner-chat .runner-attachments {

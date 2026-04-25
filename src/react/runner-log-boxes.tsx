@@ -6989,7 +6989,7 @@ export function BrowserSkillLogBox({
   }
 
   return (
-    <div className={`tb-log-card tb-log-card-browser ${isDetailOpen ? "is-detail-open" : ""}`.trim()}>
+    <div className={`tb-log-card tb-log-card-browser${variant === "computer-use" ? " tb-log-card-computer-use" : ""}${isDetailOpen ? " is-detail-open" : ""}`}>
       <LogHeader
         icon={
           variant === "computer-use"
@@ -7609,6 +7609,169 @@ export function InlineStatusLogBox({
   );
 }
 
+type PermissionRequestPreview = {
+  summary: string;
+  details: Array<{ label: string; value: string }>;
+  previewLabel?: string;
+  previewContent?: string;
+  previewLanguage?: string;
+  previewFilePath?: string;
+  reason?: string;
+};
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function parsePermissionInput(input: string): unknown {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return null;
+  }
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return trimmed;
+  }
+}
+
+function permissionValueToString(value: unknown): string {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+  if (Array.isArray(value) && value.every((item) => ["string", "number", "boolean"].includes(typeof item))) {
+    return value.map((item) => String(item)).join(" ").trim();
+  }
+  return "";
+}
+
+function getPermissionRecordString(record: Record<string, unknown> | null, keys: string[]): string {
+  if (!record) {
+    return "";
+  }
+  for (const key of keys) {
+    const value = permissionValueToString(record[key]);
+    if (value) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function formatPermissionLanguageLabel(language: string): string {
+  const normalized = language.trim().toLowerCase();
+  if (!normalized) return "code";
+  if (normalized === "js" || normalized === "javascript") return "JavaScript";
+  if (normalized === "ts" || normalized === "typescript") return "TypeScript";
+  if (normalized === "py" || normalized === "python") return "Python";
+  if (normalized === "sh" || normalized === "shell" || normalized === "bash") return "shell";
+  return language.trim();
+}
+
+function normalizePermissionCodeLanguage(language: string): string | undefined {
+  const normalized = language.trim().toLowerCase();
+  if (!normalized) return undefined;
+  if (normalized === "py") return "python";
+  if (normalized === "js") return "javascript";
+  if (normalized === "ts") return "typescript";
+  if (normalized === "sh" || normalized === "bash" || normalized === "shell") return "shell";
+  return normalized;
+}
+
+function getPermissionReasonCopy(reason: string): string {
+  const cleaned = reason.trim();
+  if (!cleaned || /requires approval due to ask rule/i.test(cleaned)) {
+    return "";
+  }
+  return cleaned;
+}
+
+function buildPermissionRequestPreview(toolName: string, input: string, reason: string): PermissionRequestPreview {
+  const parsedInput = parsePermissionInput(input);
+  const inputRecord = isPlainRecord(parsedInput) ? parsedInput : null;
+  const rawTextInput = typeof parsedInput === "string" ? parsedInput.trim() : "";
+  const normalizedToolName = toolName.trim().toLowerCase();
+  const details: Array<{ label: string; value: string }> = [];
+  const addDetail = (label: string, value: string) => {
+    const cleanedValue = value.trim();
+    if (cleanedValue && !details.some((detail) => detail.label === label && detail.value === cleanedValue)) {
+      details.push({ label, value: cleanedValue });
+    }
+  };
+
+  const path = getPermissionRecordString(inputRecord, ["path", "file_path", "filePath", "notebook_path", "notebookPath"]);
+  const language = getPermissionRecordString(inputRecord, ["language", "lang"]);
+  const code = getPermissionRecordString(inputRecord, ["code", "source", "script"]);
+  const command = getPermissionRecordString(inputRecord, ["command", "cmd", "shellCommand", "shell_command"]) || rawTextInput;
+  const diff = getPermissionRecordString(inputRecord, ["diff", "patch", "changes"]);
+  const oldString = getPermissionRecordString(inputRecord, ["old_string", "oldString"]);
+  const newString = getPermissionRecordString(inputRecord, ["new_string", "newString"]);
+  const content = getPermissionRecordString(inputRecord, ["content", "new_content", "newContent", "text"]);
+  const url = getPermissionRecordString(inputRecord, ["url", "uri", "href"]);
+  const query = getPermissionRecordString(inputRecord, ["query", "search", "pattern"]);
+  const reasonCopy = getPermissionReasonCopy(reason);
+
+  if (path) {
+    addDetail("File", path);
+  }
+  if (url) {
+    addDetail("URL", url);
+  }
+  if (query) {
+    addDetail("Query", query);
+  }
+
+  if (normalizedToolName === "bash" || normalizedToolName === "powershell") {
+    return {
+      summary: "Approving lets the agent run this shell command once, then continue.",
+      details,
+      previewLabel: "Command",
+      previewContent: command,
+      previewLanguage: "shell",
+      reason: reasonCopy,
+    };
+  }
+
+  if (normalizedToolName === "repl") {
+    const languageLabel = formatPermissionLanguageLabel(language);
+    const codeLabel = languageLabel === "code" ? "code" : `${languageLabel} code`;
+    return {
+      summary: `Approving lets the agent run this ${codeLabel} once, then continue.`,
+      details,
+      previewContent: code || command,
+      previewLanguage: normalizePermissionCodeLanguage(language),
+      reason: reasonCopy,
+    };
+  }
+
+  if (/^(write_file|edit_file|notebookedit)$/i.test(toolName)) {
+    const isWrite = /^write_file$/i.test(toolName);
+    const previewContent = diff || (oldString || newString ? `Replace:\n${oldString || "(empty)"}\n\nWith:\n${newString || "(empty)"}` : content);
+    return {
+      summary: `Approving lets the agent ${isWrite ? "write" : "edit"} this file once, then continue.`,
+      details,
+      previewLabel: diff ? "Proposed diff" : oldString || newString ? "Proposed change" : content ? "File content" : undefined,
+      previewContent,
+      previewLanguage: diff ? "diff" : undefined,
+      previewFilePath: path || undefined,
+      reason: reasonCopy,
+    };
+  }
+
+  return {
+    summary: `Approving lets the agent use ${toolName} once, then continue.`,
+    details,
+    previewContent: rawTextInput && !inputRecord ? rawTextInput : undefined,
+    reason: reasonCopy,
+  };
+}
+
 function PermissionRequestLogBox({
   log,
   timeLabel,
@@ -7620,12 +7783,14 @@ function PermissionRequestLogBox({
 }) {
   const [isSubmitting, setIsSubmitting] = useState<"allow" | "deny" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const status = String(log.metadata?.status || log.metadata?.decision || "pending").toLowerCase();
+  const status = String(log.metadata?.status || log.metadata?.decision || "pending").trim().toLowerCase();
   const isPending = status === "pending";
-  const toolName = String(log.metadata?.toolName || "Tool");
+  const isApproved = status === "approved" || status === "allowed" || status === "allow" || status === "granted";
+  const toolNameFromMessage = /^permission requested:\s*(.+)$/i.exec(String(log.message || "").trim())?.[1]?.trim();
+  const toolName = String(log.metadata?.toolName || log.metadata?.toolId || toolNameFromMessage || "tool").trim() || "tool";
   const reason = typeof log.metadata?.reason === "string" ? log.metadata.reason.trim() : "";
   const input = typeof log.metadata?.input === "string" ? log.metadata.input.trim() : "";
-  const resolvedLabel = status === "approved" ? "Approved" : status === "denied" ? "Denied" : "Permission asked";
+  const permissionPreview = buildPermissionRequestPreview(toolName, input, reason);
 
   const decide = async (decision: "allow" | "deny") => {
     if (!onPermissionDecision || !isPending || isSubmitting) return;
@@ -7639,21 +7804,61 @@ function PermissionRequestLogBox({
     }
   };
 
-  return (
-    <div className={`tb-log-card tb-log-card-permission ${isPending ? "is-pending" : "is-resolved"}`.trim()}>
-      <div className="tb-log-card-header">
-        <div className="tb-log-card-header-copy">
-          <AlertCircle className="tb-log-card-small-icon" strokeWidth={1.5} />
-          <div>
-            <div className="tb-log-card-label">{resolvedLabel}</div>
-            <div className="tb-log-card-title">{toolName}</div>
+  if (!isPending) {
+    const resolvedTitle = `Permission ${isApproved ? "granted" : "denied"} for ${toolName}`;
+    const ResolvedIcon = isApproved ? Check : X;
+
+    return (
+      <div className="tb-log-card tb-log-card-permission is-resolved">
+        <div className="tb-log-card-header tb-log-card-header-static">
+          <span className="tb-log-card-icon">
+            <ResolvedIcon className="tb-log-card-small-icon" strokeWidth={1.7} />
+          </span>
+          <div className="tb-log-card-header-copy">
+            <div className="tb-log-card-title">{resolvedTitle}</div>
           </div>
+          {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="tb-log-card tb-log-card-permission is-pending">
+      <div className="tb-log-card-header tb-log-card-header-static">
+        <span className="tb-log-card-icon">
+          <AlertCircle className="tb-log-card-small-icon" strokeWidth={1.7} />
+        </span>
+        <div className="tb-log-card-header-copy">
+          <div className="tb-log-card-title">{`Permission asked for ${toolName}`}</div>
         </div>
         {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
       </div>
       <div className="tb-log-card-panel tb-log-permission-panel">
-        {reason ? <div className="tb-log-card-note">{reason}</div> : null}
-        {input ? <pre className="tb-log-static-code tb-log-permission-input">{input}</pre> : null}
+        <div className="tb-log-permission-summary">{permissionPreview.summary}</div>
+        {permissionPreview.details.length > 0 ? (
+          <div className="tb-log-permission-details">
+            {permissionPreview.details.map((detail) => (
+              <div className="tb-log-permission-detail" key={`${detail.label}:${detail.value}`}>
+                <span className="tb-log-permission-detail-label">{detail.label}</span>
+                <span className="tb-log-permission-detail-value">{detail.value}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {permissionPreview.reason ? <div className="tb-log-permission-reason">{permissionPreview.reason}</div> : null}
+        {permissionPreview.previewContent ? (
+          <div className="tb-log-permission-preview">
+            {permissionPreview.previewLabel ? <div className="tb-log-permission-preview-label">{permissionPreview.previewLabel}</div> : null}
+            <RunnerCodeViewer
+              content={permissionPreview.previewContent}
+              filePath={permissionPreview.previewFilePath}
+              language={permissionPreview.previewLanguage}
+              maxHeight={180}
+              className="tb-log-permission-code"
+            />
+          </div>
+        ) : null}
         {error ? <div className="tb-log-card-state tb-log-card-state-error">{error}</div> : null}
         {isPending ? (
           <div className="tb-log-permission-actions">

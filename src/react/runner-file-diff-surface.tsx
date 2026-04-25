@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Component } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { DiffModeEnum, DiffView } from "@git-diff-view/react";
@@ -31,6 +32,8 @@ const RUNNER_DIFF_SURFACE_THEME = "runner-diff-surface";
 const RUNNER_DIFF_LINE_HEIGHT = 20;
 const RUNNER_DIFF_MIN_HEIGHT = 72;
 const RUNNER_DIFF_DEFAULT_COLLAPSED_PREVIEW_LINES = 10;
+
+type RunnerGeneratedDiffFile = ReturnType<typeof generateDiffFile>;
 
 function loadRunnerDiffSurfaceMonacoModule() {
   if (!runnerDiffSurfaceMonacoLoader) {
@@ -608,12 +611,74 @@ function RunnerDiffUnifiedFallbackViewer({
 }
 
 function normalizeRunnerDiffPath(path?: string): string {
-  return String(path || "").replace(/^\.?\//, "").replace(/^\/workspace\//, "");
+  return String(path || "")
+    .replace(/^\/workspace\//, "")
+    .replace(/^\.?\//, "")
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .trim();
 }
 
 function getRunnerDiffDisplayPath(path?: string): string {
   const normalized = normalizeRunnerDiffPath(path);
   return normalized || "file";
+}
+
+function getRunnerDiffPatchFileName(path?: string): string {
+  const displayPath = getRunnerDiffDisplayPath(path);
+  return displayPath.replace(/\s+/g, " ") || "file";
+}
+
+function createRunnerDiffFile(
+  filePath: string,
+  original: string,
+  modified: string,
+  language: string
+): RunnerGeneratedDiffFile | null {
+  try {
+    const file = generateDiffFile(filePath, original, filePath, modified, language, language);
+    file.initTheme("dark");
+    file.initRaw();
+    file.buildSplitDiffLines();
+    file.buildUnifiedDiffLines();
+    return file;
+  } catch {
+    return null;
+  }
+}
+
+function hashRunnerDiffResetValue(values: string[]): string {
+  let hash = 2166136261;
+  for (const value of values) {
+    for (let index = 0; index < value.length; index += 1) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+  }
+  return (hash >>> 0).toString(36);
+}
+
+class RunnerDiffViewBoundary extends Component<
+  { resetKey: string; fallback: ReactNode; children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidUpdate(previousProps: { resetKey: string }) {
+    if (previousProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
 }
 
 function RunnerDiffFallbackViewer({
@@ -683,24 +748,36 @@ export function RunnerFileDiffSurface({
   const previewContentRows = Math.max(1, collapsedPreviewLines);
   const language = inferRunnerDiffLanguage(filePath);
   const displayPath = getRunnerDiffDisplayPath(filePath);
+  const patchFileName = getRunnerDiffPatchFileName(filePath);
   const collapsedBodyMaxHeight = Math.max(
     RUNNER_DIFF_MIN_HEIGHT,
     typeof collapsedMaxHeight === "number" ? collapsedMaxHeight : previewContentRows * 28 + 16
   );
-  const diffFile = useMemo(() => {
-    const file = generateDiffFile(displayPath, models.original, displayPath, models.modified, language, language);
-    file.initTheme("dark");
-    file.initRaw();
-    file.buildSplitDiffLines();
-    file.buildUnifiedDiffLines();
-    return file;
-  }, [displayPath, language, models.modified, models.original]);
+  const diffFile = useMemo(
+    () => createRunnerDiffFile(patchFileName, models.original, models.modified, language),
+    [language, models.modified, models.original, patchFileName]
+  );
+  const diffViewResetKey = useMemo(
+    () => hashRunnerDiffResetValue([patchFileName, language, viewMode, models.original, models.modified, normalizedDiff]),
+    [language, models.modified, models.original, normalizedDiff, patchFileName, viewMode]
+  );
 
   const appliedMaxHeight = typeof maxHeight === "number" ? maxHeight : null;
   const collapsedHeight = appliedMaxHeight !== null ? Math.min(collapsedBodyMaxHeight, appliedMaxHeight) : collapsedBodyMaxHeight;
   const bodyStyle = isExpanded
     ? (appliedMaxHeight !== null ? { maxHeight: `${appliedMaxHeight}px` } : undefined)
     : { maxHeight: `${collapsedHeight}px` };
+  const fallbackViewer = (
+    <RunnerDiffFallbackViewer
+      diffText={normalizedDiff}
+      filePath={displayPath}
+      emptyMessage={emptyMessage}
+      viewMode={viewMode}
+      previewContentRows={previewContentRows}
+      isExpanded={isExpanded}
+      language={language}
+    />
+  );
 
   return (
     <div className={`tb-runner-diff-surface${bleed ? " is-bleed" : ""}${embedded ? " is-embedded" : ""}`.trim()}>
@@ -751,16 +828,20 @@ export function RunnerFileDiffSurface({
       >
         {!normalizedDiff ? (
           <div className="tb-runner-diff-surface-empty">{emptyMessage}</div>
+        ) : !diffFile ? (
+          fallbackViewer
         ) : (
-          <DiffView
-            diffFile={diffFile}
-            diffViewTheme="dark"
-            diffViewHighlight
-            diffViewFontSize={12}
-            diffViewWrap={false}
-            diffViewMode={viewMode === "split" ? DiffModeEnum.SplitGitHub : DiffModeEnum.Unified}
-            className="tb-runner-diff-package-view"
-          />
+          <RunnerDiffViewBoundary resetKey={diffViewResetKey} fallback={fallbackViewer}>
+            <DiffView
+              diffFile={diffFile}
+              diffViewTheme="dark"
+              diffViewHighlight
+              diffViewFontSize={12}
+              diffViewWrap={false}
+              diffViewMode={viewMode === "split" ? DiffModeEnum.SplitGitHub : DiffModeEnum.Unified}
+              className="tb-runner-diff-package-view"
+            />
+          </RunnerDiffViewBoundary>
         )}
       </div>
     </div>

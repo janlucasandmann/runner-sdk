@@ -464,6 +464,146 @@ interface RunnerConversationMessage {
   logMetadata?: Record<string, unknown> | null;
 }
 
+function getRecordString(record: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value;
+    }
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+  }
+  return "";
+}
+
+function normalizeRunnerConversationMessageContent(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (!Array.isArray(value)) {
+    return "";
+  }
+  return value
+    .map((entry) => {
+      if (typeof entry === "string") {
+        return entry;
+      }
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        return "";
+      }
+      const record = entry as Record<string, unknown>;
+      return getRecordString(record, ["text", "content", "message"]);
+    })
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+}
+
+function normalizeRunnerConversationMessage(value: unknown): RunnerConversationMessage | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const role = getRecordString(record, ["role", "authorRole", "author_role"]).trim().toLowerCase();
+  if (!role) {
+    return null;
+  }
+
+  const content = normalizeRunnerConversationMessageContent(record.content ?? record.message ?? record.text);
+  const logMetadataCandidate =
+    record.logMetadata && typeof record.logMetadata === "object" && !Array.isArray(record.logMetadata)
+      ? record.logMetadata
+      : record.log_metadata && typeof record.log_metadata === "object" && !Array.isArray(record.log_metadata)
+        ? record.log_metadata
+        : null;
+  const directAttachments = Array.isArray(record.attachments) ? record.attachments : null;
+  const logMetadata =
+    logMetadataCandidate || directAttachments
+      ? {
+          ...((logMetadataCandidate as Record<string, unknown> | null) || {}),
+          ...(directAttachments ? { attachments: directAttachments } : {}),
+        }
+      : null;
+
+  return {
+    id: getRecordString(record, ["id", "messageId", "message_id"]) || undefined,
+    role,
+    content,
+    createdAt: getRecordString(record, ["createdAt", "created_at", "created", "timestamp"]) || undefined,
+    logMetadata,
+  };
+}
+
+function sortRunnerConversationMessagesChronologically(messages: RunnerConversationMessage[]): RunnerConversationMessage[] {
+  if (messages.length < 2) {
+    return messages;
+  }
+
+  const entries = messages.map((message, index) => ({
+    message,
+    index,
+    timestampMs: parseIsoTimestampMs(message.createdAt),
+  }));
+
+  const canonicalEntries = entries.filter((entry) => entry.message.role === "user" || entry.message.role === "assistant");
+  const canSort =
+    entries.every((entry) => entry.timestampMs !== null) ||
+    (canonicalEntries.length > 0 && canonicalEntries.every((entry) => entry.timestampMs !== null));
+  if (!canSort) {
+    return messages;
+  }
+
+  return [...entries]
+    .sort((left, right) => {
+      if (left.timestampMs === null || right.timestampMs === null) {
+        if (left.timestampMs === null && right.timestampMs === null) {
+          return left.index - right.index;
+        }
+        return left.timestampMs === null ? 1 : -1;
+      }
+      if (left.timestampMs !== right.timestampMs) {
+        return left.timestampMs - right.timestampMs;
+      }
+      return left.index - right.index;
+    })
+    .map((entry) => entry.message);
+}
+
+function getRunnerLogAbsoluteTimestampMs(log: RunnerLog): number | null {
+  const createdAtMs = parseIsoTimestampMs(log.createdAt);
+  if (createdAtMs !== null) {
+    return createdAtMs;
+  }
+  return parseIsoTimestampMs(log.time);
+}
+
+function sortRunnerLogsChronologically(logs: RunnerLog[]): RunnerLog[] {
+  if (logs.length < 2) {
+    return logs;
+  }
+
+  const entries = logs.map((log, index) => ({
+    log,
+    index,
+    timestampMs: getRunnerLogAbsoluteTimestampMs(log),
+  }));
+
+  if (!entries.every((entry) => entry.timestampMs !== null)) {
+    return logs;
+  }
+
+  return [...entries]
+    .sort((left, right) => {
+      if (left.timestampMs !== right.timestampMs) {
+        return (left.timestampMs ?? 0) - (right.timestampMs ?? 0);
+      }
+      return left.index - right.index;
+    })
+    .map((entry) => entry.log);
+}
+
 function isLocalAttachmentRecord(attachment: LocalAttachment | RunnerTurnAttachment): attachment is LocalAttachment {
   return "file" in attachment;
 }
@@ -1041,6 +1181,7 @@ export interface RunnerChatProps {
   threadId?: string;
   title?: string;
   placeholder?: string;
+  privateMode?: boolean;
   initialTask?: string;
   hiddenSystemPrompt?: string;
   emptyState?: ReactNode;
@@ -1060,6 +1201,7 @@ export interface RunnerChatProps {
   mapFileToAttachment?: (file: File) => Promise<RunnerAttachment> | RunnerAttachment;
   onThreadIdChange?: (threadId: string) => void;
   onThreadTitleChange?: (threadId: string, title: string) => void;
+  onThreadStatusChange?: (threadId: string, status: RunnerTurnStatus) => void;
   onRunStart?: (threadId: string) => void;
   onRunFinish?: (result: RunnerExecuteResult, threadId: string) => void;
   onRunCancel?: (threadId: string) => void;
@@ -3191,7 +3333,8 @@ async function createThread(params: {
   environmentId?: string;
   projectId?: string | null;
   agentId?: string;
-}): Promise<{ threadId: string; title: string | null }> {
+  privateMode?: boolean;
+}): Promise<{ threadId: string; title: string | null; environmentId: string | null }> {
   const backendUrl = sanitizeBackendUrl(params.backendUrl);
   const headers = new Headers(params.requestHeaders || {});
   headers.set("Content-Type", "application/json");
@@ -3206,6 +3349,14 @@ async function createThread(params: {
       environmentId: params.environmentId,
       projectId: params.projectId || undefined,
       agentId: params.agentId,
+      metadata: params.privateMode
+        ? {
+            runnerPlayground: {
+              privateMode: true,
+              privateModeCreatedAt: new Date().toISOString(),
+            },
+          }
+        : undefined,
     }),
   });
 
@@ -3229,6 +3380,7 @@ async function createThread(params: {
   return {
     threadId,
     title: typeof parsed?.thread?.title === "string" ? parsed.thread.title : null,
+    environmentId: typeof parsed?.thread?.environmentId === "string" ? parsed.thread.environmentId : null,
   };
 }
 
@@ -3283,6 +3435,8 @@ async function generateThreadTitle(params: {
 const environmentStartPromises = new Map<string, Promise<void>>();
 const environmentWarmCacheUntilMs = new Map<string, number>();
 const ENVIRONMENT_START_CACHE_TTL_MS = 90 * 1000;
+const ENVIRONMENT_START_TIMEOUT_MS = 8 * 1000;
+const ENVIRONMENT_START_TIMEOUT_ERROR_NAME = "EnvironmentStartTimeoutError";
 
 type SharedEnvironmentWarmCacheStore = Record<string, number>;
 
@@ -3325,6 +3479,20 @@ function buildEnvironmentStartRequestKey(params: {
   });
 }
 
+function createEnvironmentStartTimeoutError(timeoutMs: number): Error {
+  const error = new Error(`Environment warm-up timed out after ${Math.round(timeoutMs / 1000)}s.`);
+  error.name = ENVIRONMENT_START_TIMEOUT_ERROR_NAME;
+  return error;
+}
+
+function isEnvironmentStartTimeoutError(error: unknown): error is Error {
+  return error instanceof Error && error.name === ENVIRONMENT_START_TIMEOUT_ERROR_NAME;
+}
+
+function reportRunnerLifecycleCallbackError(callbackName: string, error: unknown): void {
+  console.warn(`[RunnerChat] ${callbackName} callback failed; continuing run execution.`, error);
+}
+
 async function startEnvironment(params: {
   backendUrl: string;
   apiKey: string;
@@ -3355,33 +3523,52 @@ async function startEnvironment(params: {
   }
 
   const startPromise = (async () => {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = new Headers(params.requestHeaders || {});
-  headers.set("Content-Type", "application/json");
-  headers.set("X-API-Key", params.apiKey);
+    const backendUrl = sanitizeBackendUrl(params.backendUrl);
+    const headers = new Headers(params.requestHeaders || {});
+    const controller = new AbortController();
+    let didTimeout = false;
+    const timeoutId = setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+    }, ENVIRONMENT_START_TIMEOUT_MS);
 
-  // Do not short-circuit on `/status === running`.
-  // The backend `/start` route is the idempotent warm-up trigger that restores workspace,
-  // syncs skills, and pre-warms the execution stream. A merely running container is not
-  // equivalent to a warm container.
-  const response = await fetch(`${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/start`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      ...(params.agentId ? { agentId: params.agentId } : {}),
-      ...(params.enabledSkills ? { enabledSkills: params.enabledSkills } : {}),
-    }),
-  });
+    headers.set("Content-Type", "application/json");
+    headers.set("X-API-Key", params.apiKey);
 
-  if (!response.ok) {
-    const bodyText = await response.text().catch(() => "");
-    environmentWarmCacheUntilMs.delete(requestKey);
-    writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
-    throw new Error(bodyText || `Failed to start environment (${response.status})`);
-  }
-  const nextWarmCacheUntilMs = Date.now() + ENVIRONMENT_START_CACHE_TTL_MS;
-  environmentWarmCacheUntilMs.set(requestKey, nextWarmCacheUntilMs);
-  writeSharedEnvironmentWarmCacheUntilMs(requestKey, nextWarmCacheUntilMs);
+    try {
+      // Do not short-circuit on `/status === running`.
+      // The backend `/start` route is the idempotent warm-up trigger that restores workspace,
+      // syncs skills, and pre-warms the execution stream. A merely running container is not
+      // equivalent to a warm container.
+      const response = await fetch(`${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/start`, {
+        method: "POST",
+        headers,
+        signal: controller.signal,
+        body: JSON.stringify({
+          ...(params.agentId ? { agentId: params.agentId } : {}),
+          ...(params.enabledSkills ? { enabledSkills: params.enabledSkills } : {}),
+        }),
+      });
+
+      if (!response.ok) {
+        const bodyText = await response.text().catch(() => "");
+        environmentWarmCacheUntilMs.delete(requestKey);
+        writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
+        throw new Error(bodyText || `Failed to start environment (${response.status})`);
+      }
+      const nextWarmCacheUntilMs = Date.now() + ENVIRONMENT_START_CACHE_TTL_MS;
+      environmentWarmCacheUntilMs.set(requestKey, nextWarmCacheUntilMs);
+      writeSharedEnvironmentWarmCacheUntilMs(requestKey, nextWarmCacheUntilMs);
+    } catch (error) {
+      environmentWarmCacheUntilMs.delete(requestKey);
+      writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
+      if (didTimeout && error instanceof Error && error.name === "AbortError") {
+        throw createEnvironmentStartTimeoutError(ENVIRONMENT_START_TIMEOUT_MS);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   })().finally(() => {
     environmentStartPromises.delete(requestKey);
   });
@@ -3603,7 +3790,7 @@ async function fetchAllThreadMessages(params: {
     );
 
     const body = await response.text();
-    let parsed: { data?: RunnerConversationMessage[]; message?: string; error?: string; has_more?: boolean } = {};
+    let parsed: { data?: unknown[]; message?: string; error?: string; has_more?: boolean } = {};
     try {
       parsed = body ? JSON.parse(body) : {};
     } catch {
@@ -3614,7 +3801,9 @@ async function fetchAllThreadMessages(params: {
       throw new Error(parsed.message || parsed.error || `Failed to load thread messages (${response.status})`);
     }
 
-    const pageItems = Array.isArray(parsed.data) ? parsed.data : [];
+    const pageItems = Array.isArray(parsed.data)
+      ? parsed.data.map(normalizeRunnerConversationMessage).filter((message): message is RunnerConversationMessage => Boolean(message))
+      : [];
     messages.push(...pageItems);
 
     if (!parsed.has_more || pageItems.length === 0) {
@@ -3624,7 +3813,7 @@ async function fetchAllThreadMessages(params: {
     offset += pageItems.length;
   }
 
-  return messages;
+  return sortRunnerConversationMessagesChronologically(messages);
 }
 
 async function forkThreadRequest(params: {
@@ -3891,6 +4080,7 @@ function buildSyntheticFileChangeLog(params: {
         : `Edit: ${normalizedPath}`;
 
   return {
+    ...(params.createdAt ? { createdAt: params.createdAt } : {}),
     time: params.createdAt ? formatHydratedRelativeLogTime(params.createdAt, params.startedAtMs ?? null) : "",
     message,
     type: "info",
@@ -4204,13 +4394,15 @@ async function fetchThreadHydrationPayload(params: {
   const startedAtMs = parseIsoTimestampMs(parsedThread.thread?.startedAt);
   const parsedStepsData = parseThreadSteps(parsedSteps.data);
   let diffEntries = parseThreadDiffEntries(parsedDiffs.diffs);
-  const canonicalConversationMessages = messages.filter(
+  const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
+  const chronologicalLogs = sortRunnerLogsChronologically(Array.isArray(parsedLogs.logs) ? parsedLogs.logs.map(normalizeHydratedLog) : []);
+  const canonicalConversationMessages = chronologicalMessages.filter(
     (message) =>
       (message.role === "user" || message.role === "assistant") &&
       typeof message.content === "string" &&
       message.content.trim().length > 0
   );
-  const hydrationLogs = (Array.isArray(parsedLogs.logs) ? parsedLogs.logs : []).filter((log) => {
+  const hydrationLogs = chronologicalLogs.filter((log) => {
     if (canonicalConversationMessages.length === 0) {
       return true;
     }
@@ -4240,14 +4432,17 @@ async function fetchThreadHydrationPayload(params: {
     startedAtMs
   );
 
+  const completedAtMs = parseIsoTimestampMs(parsedThread.thread?.completedAt);
+  const rawThreadStatus =
+    typeof parsedLogs.status === "string" && parsedLogs.status.trim()
+      ? parsedLogs.status.trim()
+      : typeof parsedThread.thread?.status === "string" && parsedThread.thread.status.trim()
+        ? parsedThread.thread.status.trim()
+        : null;
+
   return {
     threadId: typeof parsedThread.thread?.id === "string" && parsedThread.thread.id.trim() ? parsedThread.thread.id : params.threadId,
-    threadStatus:
-      typeof parsedLogs.status === "string" && parsedLogs.status.trim()
-        ? parsedLogs.status.trim()
-        : typeof parsedThread.thread?.status === "string" && parsedThread.thread.status.trim()
-          ? parsedThread.thread.status.trim()
-          : null,
+    threadStatus: resolveHydratedThreadLifecycleStatus(rawThreadStatus, completedAtMs),
     threadUpdatedAt:
       typeof parsedLogs.updatedAt === "string" && parsedLogs.updatedAt.trim()
         ? parsedLogs.updatedAt
@@ -4260,10 +4455,10 @@ async function fetchThreadHydrationPayload(params: {
       parsedLogs.environmentName ?? parsedThread.thread?.environmentName ?? null,
     initialPrompt: typeof parsedThread.thread?.task === "string" ? parsedThread.thread.task : "",
     logs: mergedLogs,
-    messages,
+    messages: chronologicalMessages,
     durationSeconds: parseDurationSecondsValue(parsedLogs.duration ?? parsedThread.thread?.duration),
     startedAtMs,
-    completedAtMs: parseIsoTimestampMs(parsedThread.thread?.completedAt),
+    completedAtMs,
     agentName: parsedLogs.agentName ?? parsedThread.thread?.agentName ?? null,
     environmentName: parsedLogs.environmentName ?? parsedThread.thread?.environmentName ?? null,
   };
@@ -4357,6 +4552,8 @@ async function fetchThreadStatusSnapshot(params: {
     throw new Error(parsed.message || parsed.error || `Failed to load thread status (${response.status})`);
   }
 
+  const completedAt = typeof parsed.completedAt === "string" && parsed.completedAt.trim() ? parsed.completedAt : null;
+
   return {
     threadId:
       typeof parsed.threadId === "string" && parsed.threadId.trim()
@@ -4364,9 +4561,12 @@ async function fetchThreadStatusSnapshot(params: {
         : typeof parsed.id === "string" && parsed.id.trim()
           ? parsed.id
           : params.threadId,
-    status: typeof parsed.status === "string" && parsed.status.trim() ? parsed.status.trim() : null,
+    status: resolveHydratedThreadLifecycleStatus(
+      typeof parsed.status === "string" && parsed.status.trim() ? parsed.status.trim() : null,
+      parseIsoTimestampMs(completedAt)
+    ),
     updatedAt: typeof parsed.updatedAt === "string" && parsed.updatedAt.trim() ? parsed.updatedAt : null,
-    completedAt: typeof parsed.completedAt === "string" && parsed.completedAt.trim() ? parsed.completedAt : null,
+    completedAt,
   };
 }
 
@@ -4462,6 +4662,17 @@ function normalizeThreadLifecycleStatus(status: string | null | undefined): stri
   return typeof status === "string" ? status.trim().toLowerCase() : "";
 }
 
+function resolveHydratedThreadLifecycleStatus(status: string | null | undefined, completedAtMs?: number | null): string | null {
+  const normalizedStatus = normalizeThreadLifecycleStatus(status);
+  if (isPendingPermissionThreadLifecycleStatus(normalizedStatus)) {
+    return "permission_asked";
+  }
+  if (completedAtMs != null && !isTerminalThreadLifecycleStatus(normalizedStatus)) {
+    return "completed";
+  }
+  return typeof status === "string" && status.trim() ? status.trim() : null;
+}
+
 function isRunningThreadLifecycleStatus(status: string | null | undefined): boolean {
   return [
     "queued",
@@ -4480,14 +4691,62 @@ function isPendingPermissionThreadLifecycleStatus(status: string | null | undefi
 }
 
 function isTerminalThreadLifecycleStatus(status: string | null | undefined): boolean {
-  return ["completed", "failed", "cancelled", "archived", "deleted"].includes(normalizeThreadLifecycleStatus(status));
+  return [
+    "completed",
+    "complete",
+    "done",
+    "succeeded",
+    "success",
+    "finished",
+    "failed",
+    "cancelled",
+    "canceled",
+    "archived",
+    "deleted",
+  ].includes(normalizeThreadLifecycleStatus(status));
 }
 
 function terminalTurnStatusFromThreadStatus(status: string | null | undefined): RunnerTurnStatus {
   const normalizedStatus = normalizeThreadLifecycleStatus(status);
   if (normalizedStatus === "failed") return "failed";
-  if (normalizedStatus === "cancelled") return "cancelled";
+  if (normalizedStatus === "cancelled" || normalizedStatus === "canceled") return "cancelled";
   return "completed";
+}
+
+function threadLifecycleIsTerminal(meta?: {
+  threadStatus?: string | null;
+  completedAtMs?: number | null;
+}): boolean {
+  return isTerminalThreadLifecycleStatus(meta?.threadStatus) || meta?.completedAtMs != null;
+}
+
+function settleHydratedTerminalThreadTurns(
+  turns: RunnerTurn[],
+  meta?: {
+    threadStatus?: string | null;
+    completedAtMs?: number | null;
+  }
+): RunnerTurn[] {
+  if (!threadLifecycleIsTerminal(meta)) {
+    return turns;
+  }
+
+  const terminalStatus = terminalTurnStatusFromThreadStatus(meta?.threadStatus);
+  let changed = false;
+  const nextTurns = turns.map((turn) => {
+    if (turn.status !== "queued" && !isActiveTurnStatus(turn.status)) {
+      return turn;
+    }
+
+    changed = true;
+    return {
+      ...turn,
+      status: terminalStatus,
+      completedAtMs: turn.completedAtMs ?? meta?.completedAtMs ?? getTurnLatestProgressTimestampMs(turn),
+    };
+  });
+
+  return changed ? nextTurns : turns;
 }
 
 function buildHydratedTurnsFromMessages(
@@ -4500,6 +4759,7 @@ function buildHydratedTurnsFromMessages(
     completedAtMs?: number | null;
   }
 ): RunnerTurn[] {
+  const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
   const turns: RunnerTurn[] = [];
   let currentTurn: RunnerTurn | null = null;
   let pendingBtwTurn: RunnerTurn | null = null;
@@ -4524,8 +4784,8 @@ function buildHydratedTurnsFromMessages(
     pendingBtwTurn = null;
   }
 
-  for (let index = 0; index < messages.length; index += 1) {
-    const message = messages[index];
+  for (let index = 0; index < chronologicalMessages.length; index += 1) {
+    const message = chronologicalMessages[index];
     const createdAtMs = message.createdAt ? Date.parse(message.createdAt) : Number.NaN;
     const safeTimestamp = Number.isFinite(createdAtMs) ? createdAtMs : Date.now() + index;
 
@@ -4642,7 +4902,7 @@ function buildHydratedTurnsFromMessages(
     sortedTurns[0].isInitialTurn = true;
   }
   return applyHydratedRunningThreadState(
-    attachHydratedMessageIdsToTurns(sortedTurns, messages, meta?.backendUrl),
+    attachHydratedMessageIdsToTurns(sortedTurns, chronologicalMessages, meta?.backendUrl),
     meta
   );
 }
@@ -4675,6 +4935,11 @@ function applyHydratedRunningThreadState(
     return turns;
   }
 
+  const terminalSettledTurns = settleHydratedTerminalThreadTurns(turns, meta);
+  if (terminalSettledTurns !== turns) {
+    return terminalSettledTurns;
+  }
+
   let activeDeepResearchTurnIndex = -1;
   for (let index = turns.length - 1; index >= 0; index -= 1) {
     if (hasActiveDeepResearchLogGroup(turns[index]!.logs)) {
@@ -4694,7 +4959,11 @@ function applyHydratedRunningThreadState(
     return turns;
   }
 
-  if (isActiveTurnStatus(targetTurn.status) && targetTurn.completedAtMs == null) {
+  const shouldTargetPermissionAsked = isPendingPermissionThreadLifecycleStatus(meta?.threadStatus);
+  if (
+    targetTurn.completedAtMs == null &&
+    (targetTurn.status === "running" || (shouldTargetPermissionAsked && targetTurn.status === "permission_asked"))
+  ) {
     return turns;
   }
 
@@ -4767,7 +5036,34 @@ function buildHydratedTurnsFromPayload(
   payload: RunnerThreadHydrationPayload,
   fallbackMeta?: { agentName?: string | null; environmentName?: string | null; backendUrl?: string }
 ): RunnerTurn[] {
-  const turnsFromLogs = buildHydratedTurnsFromLogs(payload.logs, payload.initialPrompt, payload.messages, {
+  const chronologicalMessages = sortRunnerConversationMessagesChronologically(payload.messages);
+  const chronologicalLogs = sortRunnerLogsChronologically(payload.logs.map(normalizeHydratedLog));
+  const canonicalMessages = chronologicalMessages.filter(
+    (message) =>
+      (message.role === "user" || message.role === "assistant") &&
+      typeof message.content === "string" &&
+      message.content.trim().length > 0
+  );
+  if (canonicalMessages.length > 0) {
+    const messageTurns = buildHydratedTurnsFromMessages(chronologicalMessages, {
+      agentName: payload.agentName ?? fallbackMeta?.agentName ?? null,
+      environmentName: payload.environmentName ?? fallbackMeta?.environmentName ?? null,
+      backendUrl: fallbackMeta?.backendUrl,
+      threadStatus: payload.threadStatus,
+      completedAtMs: payload.completedAtMs,
+    });
+    const messageTurnsWithTimeline = mergeHydratedTimelineLogsIntoMessageTurns(messageTurns, chronologicalLogs, {
+      startedAtMs: payload.startedAtMs,
+    });
+    if (messageTurnsWithTimeline) {
+      return applyHydratedRunningThreadState(messageTurnsWithTimeline, {
+        threadStatus: payload.threadStatus,
+        completedAtMs: payload.completedAtMs,
+      });
+    }
+  }
+
+  const turnsFromLogs = buildHydratedTurnsFromLogs(chronologicalLogs, payload.initialPrompt, chronologicalMessages, {
     durationSeconds: payload.durationSeconds,
     startedAtMs: payload.startedAtMs,
     completedAtMs: payload.completedAtMs,
@@ -4776,14 +5072,14 @@ function buildHydratedTurnsFromPayload(
     environmentName: payload.environmentName,
     backendUrl: fallbackMeta?.backendUrl,
   });
-  const turnsWithCanonicalMessages = mergeHydratedMessageTurnsIntoTurns(turnsFromLogs, payload.messages, {
+  const turnsWithCanonicalMessages = mergeHydratedMessageTurnsIntoTurns(turnsFromLogs, chronologicalMessages, {
     agentName: payload.agentName ?? fallbackMeta?.agentName ?? null,
     environmentName: payload.environmentName ?? fallbackMeta?.environmentName ?? null,
     backendUrl: fallbackMeta?.backendUrl,
     threadStatus: payload.threadStatus,
     completedAtMs: payload.completedAtMs,
   });
-  const hasConversationMessages = payload.messages.some(
+  const hasConversationMessages = chronologicalMessages.some(
     (message) =>
       (message.role === "user" || message.role === "assistant") &&
       typeof message.content === "string" &&
@@ -4797,7 +5093,7 @@ function buildHydratedTurnsFromPayload(
   });
 
   if (hasConversationMessages && !hasHydratedConversationTurns) {
-    return buildHydratedTurnsFromMessages(payload.messages, {
+    return buildHydratedTurnsFromMessages(chronologicalMessages, {
       agentName: payload.agentName ?? fallbackMeta?.agentName ?? null,
       environmentName: payload.environmentName ?? fallbackMeta?.environmentName ?? null,
       backendUrl: fallbackMeta?.backendUrl,
@@ -5263,6 +5559,16 @@ function turnHasVisibleExecutionProgress(turn: RunnerTurn): boolean {
 }
 
 function shouldPreserveLocalTurnProgress(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): boolean {
+  const localAssistantText = getTurnAssistantMessageText(localTurn);
+  const hydratedAssistantText = getTurnAssistantMessageText(hydratedTurn);
+  if (
+    localAssistantText.trim().length > 0 &&
+    !isFallbackAssistantResponseText(localAssistantText) &&
+    isFallbackAssistantResponseText(hydratedAssistantText)
+  ) {
+    return true;
+  }
+
   const localIsTerminal = isTerminalTurnStatus(localTurn.status);
   const hydratedIsTerminal = isTerminalTurnStatus(hydratedTurn.status);
   if (localIsTerminal !== hydratedIsTerminal) {
@@ -5288,8 +5594,8 @@ function shouldPreserveLocalTurnProgress(localTurn: RunnerTurn, hydratedTurn: Ru
     return localTurn.logs.length > hydratedTurn.logs.length;
   }
 
-  const localAssistantTextLength = getTurnAssistantMessageText(localTurn).length;
-  const hydratedAssistantTextLength = getTurnAssistantMessageText(hydratedTurn).length;
+  const localAssistantTextLength = localAssistantText.length;
+  const hydratedAssistantTextLength = hydratedAssistantText.length;
   if (localAssistantTextLength !== hydratedAssistantTextLength) {
     return localAssistantTextLength > hydratedAssistantTextLength;
   }
@@ -5311,6 +5617,11 @@ function shouldPreserveLocalTurnProgress(localTurn: RunnerTurn, hydratedTurn: Ru
 
 function isTurnResponseLog(log: RunnerLog): boolean {
   return log.eventType === "agent_message" || log.eventType === "llm_response";
+}
+
+function isFallbackAssistantResponseText(value: string): boolean {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  return normalized === "[task executed - no detailed response captured]";
 }
 
 function replaceTurnResponseLogs(logs: RunnerLog[], nextResponseLogs: RunnerLog[]): RunnerLog[] {
@@ -5337,6 +5648,142 @@ function replaceTurnResponseLogs(logs: RunnerLog[], nextResponseLogs: RunnerLog[
   }
 
   return nextLogs;
+}
+
+function getHydratedTimelineLogTimestampMs(log: RunnerLog, threadStartedAtMs?: number | null): number | null {
+  const absoluteTimestampMs = getRunnerLogAbsoluteTimestampMs(log);
+  if (absoluteTimestampMs !== null) {
+    return absoluteTimestampMs;
+  }
+  const relativeSeconds = log.time ? parseSecondsFromClock(log.time) : null;
+  if (relativeSeconds !== null && threadStartedAtMs != null) {
+    return threadStartedAtMs + relativeSeconds * 1000;
+  }
+  return null;
+}
+
+function insertHydratedTimelineLogs(turn: RunnerTurn, logs: RunnerLog[]): RunnerTurn {
+  if (logs.length === 0) {
+    return turn;
+  }
+
+  const visibleLogs: RunnerLog[] = [];
+  let status = turn.status;
+  let completedAtMs = turn.completedAtMs;
+  let durationSeconds = turn.durationSeconds ?? null;
+
+  for (const log of logs) {
+    if (log.eventType === "turn_completed") {
+      const durationMs = typeof log.metadata?.durationMs === "number" ? log.metadata.durationMs : null;
+      if (durationMs !== null && durationMs >= 0) {
+        durationSeconds = Math.max(0, Math.round(durationMs / 1000));
+        completedAtMs = turn.startedAtMs + durationMs;
+      }
+      if (log.type === "error") {
+        status = "failed";
+      } else if (isActiveTurnStatus(status)) {
+        status = "completed";
+      }
+      continue;
+    }
+
+    visibleLogs.push(log);
+
+    if (log.eventType === "permission_request") {
+      const permissionStatus = String(log.metadata?.status || log.metadata?.decision || "").trim().toLowerCase();
+      if (!permissionStatus || permissionStatus === "pending") {
+        status = "permission_asked";
+        completedAtMs = undefined;
+      } else if (status === "permission_asked") {
+        status = "running";
+      }
+      continue;
+    }
+
+    if (log.type === "error") {
+      status = "failed";
+    }
+  }
+
+  const responseIndex = turn.logs.findIndex(isTurnResponseLog);
+  const nextLogs =
+    responseIndex === -1
+      ? [...turn.logs, ...visibleLogs]
+      : [
+          ...turn.logs.slice(0, responseIndex),
+          ...visibleLogs,
+          ...turn.logs.slice(responseIndex),
+        ];
+
+  return {
+    ...turn,
+    logs: dedupeAdjacentRunnerLogs(nextLogs),
+    status,
+    completedAtMs,
+    durationSeconds,
+  };
+}
+
+function mergeHydratedTimelineLogsIntoMessageTurns(
+  turns: RunnerTurn[],
+  logs: RunnerLog[],
+  meta?: {
+    startedAtMs?: number | null;
+  }
+): RunnerTurn[] | null {
+  if (turns.length === 0 || logs.length === 0) {
+    return turns;
+  }
+
+  const timelineLogs = dedupeAdjacentRunnerLogs(
+    sortRunnerLogsChronologically(logs.map(normalizeHydratedLog))
+  ).filter((log) => {
+    if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
+      return false;
+    }
+    return !isTurnResponseLog(log);
+  });
+  if (timelineLogs.length === 0) {
+    return turns;
+  }
+
+  const assignableTurns = turns
+    .map((turn, index) => ({ turn, index }))
+    .filter(({ turn }) => turnPresentation(turn) !== "context-action-notice" && turn.prompt.trim().length > 0);
+
+  if (assignableTurns.length === 0) {
+    return null;
+  }
+
+  const logBuckets = new Map<number, RunnerLog[]>();
+  const canAssignByTimestamp =
+    assignableTurns.every(({ turn }) => Number.isFinite(turn.startedAtMs)) &&
+    timelineLogs.every((log) => getHydratedTimelineLogTimestampMs(log, meta?.startedAtMs) !== null);
+
+  if (!canAssignByTimestamp && assignableTurns.length > 1) {
+    return null;
+  }
+
+  for (const log of timelineLogs) {
+    let targetTurnIndex = assignableTurns[0]!.index;
+
+    if (canAssignByTimestamp) {
+      const logTimestampMs = getHydratedTimelineLogTimestampMs(log, meta?.startedAtMs) ?? 0;
+      for (const { turn, index } of assignableTurns) {
+        if (turn.startedAtMs <= logTimestampMs + 1000) {
+          targetTurnIndex = index;
+        } else {
+          break;
+        }
+      }
+    }
+
+    const bucket = logBuckets.get(targetTurnIndex) || [];
+    bucket.push(log);
+    logBuckets.set(targetTurnIndex, bucket);
+  }
+
+  return turns.map((turn, index) => insertHydratedTimelineLogs(turn, logBuckets.get(index) || []));
 }
 
 function mergeHydratedMessageTurnsIntoTurns(
@@ -5374,9 +5821,13 @@ function mergeHydratedMessageTurnsIntoTurns(
     const messageResponseLogs = messageTurn.logs.filter(isTurnResponseLog);
     const turnResponseText = getTurnAssistantMessageText(turn);
     const messageResponseText = getTurnAssistantMessageText(messageTurn);
+    const messageResponseIsFallback = isFallbackAssistantResponseText(messageResponseText);
+    const turnResponseIsFallback = isFallbackAssistantResponseText(turnResponseText);
     const shouldPreferMessageResponse =
       messageResponseLogs.length > 0 &&
+      !messageResponseIsFallback &&
       (!turnResponseText ||
+        turnResponseIsFallback ||
         messageResponseText === turnResponseText ||
         messageResponseText.startsWith(turnResponseText) ||
         messageResponseText.length > turnResponseText.length);
@@ -5561,7 +6012,7 @@ async function fetchThreadLiveRefreshPayload(params: {
   });
 
   const cachedPayload = params.cachedPayload || null;
-  const conversationMessages =
+  const conversationMessages = sortRunnerConversationMessagesChronologically(
     Array.isArray(cachedPayload?.messages) && cachedPayload.messages.length > 0
       ? cachedPayload.messages
       : await fetchAllThreadMessages({
@@ -5569,14 +6020,15 @@ async function fetchThreadLiveRefreshPayload(params: {
           apiKey: params.apiKey,
           threadId: params.threadId,
           requestHeaders: params.requestHeaders,
-        }).catch(() => []);
+        }).catch(() => [])
+  );
   const canonicalConversationMessages = conversationMessages.filter(
     (message) =>
       (message.role === "user" || message.role === "assistant") &&
       typeof message.content === "string" &&
       message.content.trim().length > 0
   );
-  const hydrationLogs = logsSnapshot.logs.filter((log) => {
+  const hydrationLogs = sortRunnerLogsChronologically(logsSnapshot.logs.map(normalizeHydratedLog)).filter((log) => {
     if (canonicalConversationMessages.length === 0) {
       return log.eventType !== "user_message" && log.eventType !== "agent_message" && log.eventType !== "llm_response";
     }
@@ -5589,9 +6041,12 @@ async function fetchThreadLiveRefreshPayload(params: {
     return true;
   });
 
+  const completedAtMs = parseIsoTimestampMs(params.statusSnapshot.completedAt) ?? cachedPayload?.completedAtMs ?? null;
+  const rawThreadStatus = logsSnapshot.status ?? params.statusSnapshot.status ?? cachedPayload?.threadStatus ?? null;
+
   return {
     threadId: params.threadId,
-    threadStatus: logsSnapshot.status ?? params.statusSnapshot.status ?? cachedPayload?.threadStatus ?? null,
+    threadStatus: resolveHydratedThreadLifecycleStatus(rawThreadStatus, completedAtMs),
     threadUpdatedAt: params.statusSnapshot.updatedAt ?? cachedPayload?.threadUpdatedAt ?? null,
     threadEnvironmentId: cachedPayload?.threadEnvironmentId ?? null,
     threadEnvironmentName:
@@ -5604,7 +6059,7 @@ async function fetchThreadLiveRefreshPayload(params: {
     messages: conversationMessages,
     durationSeconds: logsSnapshot.durationSeconds ?? cachedPayload?.durationSeconds ?? null,
     startedAtMs: cachedPayload?.startedAtMs ?? null,
-    completedAtMs: parseIsoTimestampMs(params.statusSnapshot.completedAt) ?? cachedPayload?.completedAtMs ?? null,
+    completedAtMs,
     agentName: logsSnapshot.agentName ?? cachedPayload?.agentName ?? null,
     environmentName:
       logsSnapshot.environmentName
@@ -5740,16 +6195,48 @@ function normalizedImageGenerationLogIdentity(log: RunnerLog): string | null {
 }
 
 function normalizeHydratedLog(log: RunnerLog): RunnerLog {
-  if (typeof (log.metadata as { duration_ms?: unknown } | undefined)?.duration_ms === "number" && typeof log.metadata?.durationMs !== "number") {
-    return {
-      ...log,
-      metadata: {
-        ...log.metadata,
-        durationMs: (log.metadata as { duration_ms: number }).duration_ms,
-      },
-    };
+  const rawLog = log as RunnerLog & Record<string, unknown>;
+  const rawMetadata =
+    log.metadata && typeof log.metadata === "object" && !Array.isArray(log.metadata)
+      ? log.metadata
+      : rawLog.metadata && typeof rawLog.metadata === "object" && !Array.isArray(rawLog.metadata)
+        ? rawLog.metadata as RunnerLog["metadata"]
+        : undefined;
+  const metadata =
+    rawMetadata && typeof (rawMetadata as { duration_ms?: unknown }).duration_ms === "number" && typeof rawMetadata.durationMs !== "number"
+      ? {
+          ...rawMetadata,
+          durationMs: (rawMetadata as { duration_ms: number }).duration_ms,
+        }
+      : rawMetadata;
+  const eventType = typeof log.eventType === "string"
+    ? log.eventType
+    : typeof rawLog.event_type === "string"
+      ? rawLog.event_type as RunnerLog["eventType"]
+      : undefined;
+  const createdAt = typeof log.createdAt === "string" && log.createdAt.trim()
+    ? log.createdAt
+    : typeof rawLog.created_at === "string" && rawLog.created_at.trim()
+      ? rawLog.created_at
+      : typeof rawLog.timestamp === "string" && rawLog.timestamp.trim()
+        ? rawLog.timestamp
+        : undefined;
+  const normalizedLog: RunnerLog = {
+    ...log,
+    ...(createdAt ? { createdAt } : {}),
+    ...(eventType ? { eventType } : {}),
+    ...(metadata ? { metadata } : {}),
+  };
+  if (typeof rawLog.is_reasoning === "boolean" && typeof normalizedLog.isReasoning !== "boolean") {
+    normalizedLog.isReasoning = rawLog.is_reasoning;
   }
-  return log;
+  if (typeof rawLog.is_planning === "boolean" && typeof normalizedLog.isPlanning !== "boolean") {
+    normalizedLog.isPlanning = rawLog.is_planning;
+  }
+  if (typeof rawLog.is_llm_response === "boolean" && typeof normalizedLog.isLLMResponse !== "boolean") {
+    normalizedLog.isLLMResponse = rawLog.is_llm_response;
+  }
+  return normalizedLog;
 }
 
 function stableRunnerLogValue(value: unknown): string {
@@ -5951,6 +6438,28 @@ function shouldDisplayTimelineLog(log: RunnerLog): boolean {
   return true;
 }
 
+function isReasoningLikeTimelineLog(log: RunnerLog): boolean {
+  return log.eventType === "reasoning" || log.eventType === "planning" || Boolean(log.isReasoning || log.isPlanning);
+}
+
+function normalizeDuplicateSummaryText(value: string): string {
+  return stripSystemTags(value || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function isDuplicateAssistantSummaryTimelineLog(log: RunnerLog, agentMessage?: RunnerLog): boolean {
+  if (!agentMessage?.message || !isReasoningLikeTimelineLog(log)) {
+    return false;
+  }
+
+  const logText = normalizeDuplicateSummaryText(log.message || "").replace(/^run summary:?\s*/i, "").trim();
+  const assistantText = normalizeDuplicateSummaryText(agentMessage.message || "");
+  return Boolean(logText && assistantText && logText === assistantText);
+}
+
 function buildHydratedTurnsFromLogs(
   logs: RunnerLog[],
   initialPrompt: string,
@@ -5966,7 +6475,8 @@ function buildHydratedTurnsFromLogs(
   }
 ): RunnerTurn[] {
   const turns: RunnerTurn[] = [];
-  const dedupedLogs = dedupeAdjacentRunnerLogs(logs.map(normalizeHydratedLog));
+  const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
+  const dedupedLogs = dedupeAdjacentRunnerLogs(sortRunnerLogsChronologically(logs.map(normalizeHydratedLog)));
   let pendingBtwTurn: RunnerTurn | null = null;
   let currentTurn: RunnerTurn | null = initialPrompt.trim()
     ? {
@@ -6205,7 +6715,7 @@ function buildHydratedTurnsFromLogs(
     }
   }
   return applyHydratedRunningThreadState(
-    attachHydratedMessageIdsToTurns(sortedTurns, messages, meta?.backendUrl),
+    attachHydratedMessageIdsToTurns(sortedTurns, chronologicalMessages, meta?.backendUrl),
     meta
   );
 }
@@ -6244,6 +6754,7 @@ export function RunnerChat({
   threadId,
   title,
   placeholder = "What would you like me to do?",
+  privateMode = false,
   initialTask = "",
   hiddenSystemPrompt = "",
   emptyState,
@@ -6263,6 +6774,7 @@ export function RunnerChat({
   mapFileToAttachment,
   onThreadIdChange,
   onThreadTitleChange,
+  onThreadStatusChange,
   onRunStart,
   onRunFinish,
   onRunCancel,
@@ -6408,7 +6920,7 @@ export function RunnerChat({
   const [agentPopupMode, setAgentPopupMode] = useState<RunnerAgentSelectorMode>(() =>
     getRunnerAgentSelectorMode(agents.find((agent) => agent.id === agentId) || agents[0] || null)
   );
-  const [activeThreadEnvironmentId, setActiveThreadEnvironmentId] = useState<string | null>(environmentId ?? null);
+  const [activeThreadEnvironmentId, setActiveThreadEnvironmentId] = useState<string | null>(null);
   const [activeThreadEnvironmentName, setActiveThreadEnvironmentName] = useState<string | null>(null);
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(() => {
     if (environmentId) return environmentId;
@@ -6557,6 +7069,9 @@ export function RunnerChat({
   const githubItems = githubConfig?.fetchItems ? remoteGithubItems : [];
   const notionItems = notionDatabasesToFileItems(notionDatabases);
   const currentThreadId = threadId ?? localThreadId;
+  const hasCurrentThread = Boolean(currentThreadId);
+  const scopedActiveThreadEnvironmentId = hasCurrentThread ? activeThreadEnvironmentId : null;
+  const scopedActiveThreadEnvironmentName = hasCurrentThread ? activeThreadEnvironmentName : null;
   const currentThreadHasMessages = useMemo(
     () => turns.some((turn) => turn.presentation !== "context-action-notice" && turn.prompt.trim().length > 0),
     [turns]
@@ -6728,27 +7243,27 @@ export function RunnerChat({
     () => buildRunnerHeaders(requestHeaders, apiKey.trim()),
     [apiKey, requestHeaders]
   );
-  const summaryPreviewEnvironmentId = activeThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
+  const summaryPreviewEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
   const canPreviewSummaryWorkspacePaths = Boolean(summaryPreviewEnvironmentId && onSummaryWorkspacePathClick);
   const retainedSummaryPreviewPaths = useMemo(() => collectThreadRetainedSummaryPreviewPaths(turns), [turns]);
   const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
   const availableEnvironments = useMemo(
     () =>
       mergeRunnerChatOptions(environments, [
-        activeThreadEnvironmentId && activeThreadEnvironmentName
+        scopedActiveThreadEnvironmentId && scopedActiveThreadEnvironmentName
           ? {
-              id: activeThreadEnvironmentId,
-              name: activeThreadEnvironmentName,
+              id: scopedActiveThreadEnvironmentId,
+              name: scopedActiveThreadEnvironmentName,
             }
           : null,
         environmentId && !environments.some((environment) => environment.id === environmentId)
           ? {
               id: environmentId,
-              name: activeThreadEnvironmentName || "Current Environment",
+              name: scopedActiveThreadEnvironmentName || "Current Environment",
             }
           : null,
       ]),
-    [activeThreadEnvironmentId, activeThreadEnvironmentName, environmentId, environments]
+    [environmentId, environments, scopedActiveThreadEnvironmentId, scopedActiveThreadEnvironmentName]
   );
   const availableProjects = useMemo<RunnerChatProjectOption[]>(() => {
     const merged = new Map<string, RunnerChatProjectOption>();
@@ -6812,6 +7327,16 @@ export function RunnerChat({
       textareaRef.current?.focus(options?.preventScroll ? { preventScroll: true } : undefined);
     });
   }
+
+  useEffect(() => {
+    if (!privateMode || disabled || typeof window === "undefined") {
+      return;
+    }
+    const focusFrame = window.requestAnimationFrame(() => {
+      textareaRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(focusFrame);
+  }, [disabled, privateMode]);
 
   function isStopRequestedThread(threadIdToMatch?: string | null): boolean {
     const requestedThreadId = String(stopRequestedThreadIdRef.current || "").trim();
@@ -6918,13 +7443,21 @@ export function RunnerChat({
 
       if (threadIdToCancel) {
         refreshThreadContextDetailsInBackground(threadIdToCancel);
-        onRunCancel?.(threadIdToCancel);
+        try {
+          onRunCancel?.(threadIdToCancel);
+        } catch (callbackError) {
+          reportRunnerLifecycleCallbackError("onRunCancel", callbackError);
+        }
       }
     } catch (error) {
       stopRequestedThreadIdRef.current = null;
       const normalizedError = error instanceof Error ? error : new Error(String(error));
       setInlineError(normalizedError.message || "Failed to stop agent.");
-      onRunError?.(normalizedError, threadIdToCancel || undefined);
+      try {
+        onRunError?.(normalizedError, threadIdToCancel || undefined);
+      } catch (callbackError) {
+        reportRunnerLifecycleCallbackError("onRunError", callbackError);
+      }
     } finally {
       setIsStoppingRun(false);
     }
@@ -7303,14 +7836,14 @@ export function RunnerChat({
     }
 
     const normalizedEnvironmentId = String(
-      targetEnvironmentId || activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || ""
+      targetEnvironmentId || scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || ""
     ).trim();
     if (!normalizedEnvironmentId) {
       return;
     }
 
     const normalizedEnvironmentName = String(
-      targetEnvironmentName || activeThreadEnvironmentName || selectedEnvironment?.name || displayedEnvironmentLabel || "Environment"
+      targetEnvironmentName || scopedActiveThreadEnvironmentName || selectedEnvironment?.name || displayedEnvironmentLabel || "Environment"
     ).trim() || "Environment";
     const desktopWindow = window.open("about:blank", "_blank");
 
@@ -8033,7 +8566,11 @@ export function RunnerChat({
       onEnvironmentChange?.(params.nextEnvironmentId);
     }
     setLocalThreadId(params.nextThreadId);
-    onThreadIdChange?.(params.nextThreadId);
+    try {
+      onThreadIdChange?.(params.nextThreadId);
+    } catch (error) {
+      reportRunnerLifecycleCallbackError("onThreadIdChange", error);
+    }
 
     if (typeof params.composerDraft === "string") {
       setComposerDraft(params.composerDraft);
@@ -8434,21 +8971,25 @@ export function RunnerChat({
         .filter((part) => typeof part === "string" && part.trim().length > 0)
         .join("\n\n");
     const hasResolvedThread = Boolean(options?.threadIdOverride || currentThreadId);
-    const runEnvironmentId =
+    let runEnvironmentId =
       options?.environmentIdOverride !== undefined
         ? options.environmentIdOverride
         : hasResolvedThread
           ? activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
           : effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
-    const ensuredThread =
-      options?.threadIdOverride
-        ? {
-            threadId: options.threadIdOverride,
-            didCreateThread: false,
-            initialTitle: null,
-          }
-        : await ensureThread(taskText);
+	    const ensuredThread =
+	      options?.threadIdOverride
+	        ? {
+	            threadId: options.threadIdOverride,
+	            didCreateThread: false,
+	            initialTitle: null,
+	            environmentId: runEnvironmentId,
+	          }
+	        : await ensureThread(taskText, { reserveLocalExecution: true });
     const threadId = ensuredThread.threadId;
+    if (!runEnvironmentId && ensuredThread.environmentId) {
+      runEnvironmentId = ensuredThread.environmentId;
+    }
     initializedThreadHistoryIdRef.current = threadId;
     const githubRepo =
       options?.githubRepoOverride !== undefined
@@ -8478,6 +9019,9 @@ export function RunnerChat({
         quotedSelection: options?.quotedSelection || null,
       });
       if (didHandleExternalRunRequest !== false) {
+        if (locallyOwnedExecutionThreadIdRef.current === threadId) {
+          locallyOwnedExecutionThreadIdRef.current = null;
+        }
         return {
           threadId,
           executionResult: null,
@@ -8531,22 +9075,35 @@ export function RunnerChat({
       setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
     }
 
-    onRunStart?.(threadId);
+    try {
+      onRunStart?.(threadId);
+    } catch (error) {
+      reportRunnerLifecycleCallbackError("onRunStart", error);
+    }
     try {
       if (runEnvironmentId && normalizedBackendUrl && apiKey.trim()) {
-        await startEnvironment({
-          backendUrl: normalizedBackendUrl,
-          apiKey: apiKey.trim(),
-          requestHeaders,
-          environmentId: runEnvironmentId,
-          ...(effectiveAgentId ? { agentId: effectiveAgentId } : {}),
-          ...(options?.enabledSkillsOverride !== undefined
-            ? { enabledSkills: options.enabledSkillsOverride }
-            : enabledSkillsPayload
-              ? { enabledSkills: enabledSkillsPayload }
-              : {}),
-        });
-        if (githubRepo?.repoFullName && githubRepo?.branch) {
+        let didEnvironmentWarmupTimeout = false;
+        try {
+          await startEnvironment({
+            backendUrl: normalizedBackendUrl,
+            apiKey: apiKey.trim(),
+            requestHeaders,
+            environmentId: runEnvironmentId,
+            ...(effectiveAgentId ? { agentId: effectiveAgentId } : {}),
+            ...(options?.enabledSkillsOverride !== undefined
+              ? { enabledSkills: options.enabledSkillsOverride }
+              : enabledSkillsPayload
+                ? { enabledSkills: enabledSkillsPayload }
+                : {}),
+          });
+        } catch (error) {
+          if (!isEnvironmentStartTimeoutError(error)) {
+            throw error;
+          }
+          didEnvironmentWarmupTimeout = true;
+          console.warn("[RunnerChat] Environment warm-up timed out; continuing with thread execution.", error);
+        }
+        if (githubRepo?.repoFullName && githubRepo?.branch && !didEnvironmentWarmupTimeout) {
           await prepareGithubRepoForThreadRun(
             {
               repoFullName: githubRepo.repoFullName,
@@ -8554,6 +9111,8 @@ export function RunnerChat({
             },
             runEnvironmentId
           );
+        } else if (githubRepo?.repoFullName && githubRepo?.branch && didEnvironmentWarmupTimeout) {
+          console.warn("[RunnerChat] Skipping GitHub preflight because environment warm-up timed out.");
         }
       }
 
@@ -8628,11 +9187,17 @@ export function RunnerChat({
           releasePreparationState();
           if (log.eventType === "permission_request") {
             const permissionStatus = String(log.metadata?.status || log.metadata?.decision || "").trim().toLowerCase();
+            const nextTurnStatus: RunnerTurnStatus = !permissionStatus || permissionStatus === "pending" ? "permission_asked" : "running";
             updateTurn(turnId, (turn) => ({
               ...turn,
-              status: !permissionStatus || permissionStatus === "pending" ? "permission_asked" : "running",
+              status: nextTurnStatus,
               completedAtMs: undefined,
             }));
+            try {
+              onThreadStatusChange?.(threadId, nextTurnStatus);
+            } catch (error) {
+              reportRunnerLifecycleCallbackError("onThreadStatusChange", error);
+            }
           }
           appendTurnLog(turnId, log);
         },
@@ -8659,7 +9224,11 @@ export function RunnerChat({
             setCustomSkillsLoaded(false);
           });
       }
-      onRunFinish?.(executionResult, threadId);
+      try {
+        onRunFinish?.(executionResult, threadId);
+      } catch (error) {
+        reportRunnerLifecycleCallbackError("onRunFinish", error);
+      }
       return { threadId, executionResult, turnId };
     } catch (error) {
       releasePreparationState();
@@ -8725,7 +9294,11 @@ export function RunnerChat({
     }
 
     handledExternalRunRequestTokenRef.current = requestToken;
-    onExternalRunRequestHandled?.(requestToken);
+    try {
+      onExternalRunRequestHandled?.(requestToken);
+    } catch (error) {
+      reportRunnerLifecycleCallbackError("onExternalRunRequestHandled", error);
+    }
 
     void (async () => {
       try {
@@ -8747,7 +9320,11 @@ export function RunnerChat({
           return;
         }
         setInlineError(normalizedError.message);
-        onRunError?.(normalizedError, normalizedRequestThreadId);
+        try {
+          onRunError?.(normalizedError, normalizedRequestThreadId);
+        } catch (callbackError) {
+          reportRunnerLifecycleCallbackError("onRunError", callbackError);
+        }
       } finally {
         setIsPreparingRun(false);
       }
@@ -8831,7 +9408,11 @@ export function RunnerChat({
           throw new Error("Fork completed without returning a new thread.");
         }
         setLocalThreadId(nextThreadId);
-        onThreadIdChange?.(nextThreadId);
+        try {
+          onThreadIdChange?.(nextThreadId);
+        } catch (error) {
+          reportRunnerLifecycleCallbackError("onThreadIdChange", error);
+        }
         appendThreadContextActionNotice("fork", "Forked into a new conversation");
         refreshThreadContextDetailsInBackground(nextThreadId);
         return;
@@ -8971,6 +9552,8 @@ export function RunnerChat({
     if (threadId) {
       if (threadId !== localThreadId) {
         initializedThreadHistoryIdRef.current = null;
+        setActiveThreadEnvironmentId(null);
+        setActiveThreadEnvironmentName(null);
       }
       setLocalThreadId(threadId);
       setEditingTurnId(null);
@@ -8981,6 +9564,14 @@ export function RunnerChat({
       resetForkConfiguration();
     }
   }, [localThreadId, threadId]);
+
+  useEffect(() => {
+    if (currentThreadId) {
+      return;
+    }
+    setActiveThreadEnvironmentId(null);
+    setActiveThreadEnvironmentName(null);
+  }, [currentThreadId]);
 
   useEffect(() => {
     if (!quotedSelectionPopup) {
@@ -9024,8 +9615,7 @@ export function RunnerChat({
       && String(externalRunRequest?.prompt || "").trim().length > 0;
     const isLocallyOwnedExecutionForRequestedThread =
       Boolean(threadId) &&
-      locallyOwnedExecutionThreadIdRef.current === threadId &&
-      (isPreparingRun || isRunning || pendingQueuedMessages.length > 0);
+      locallyOwnedExecutionThreadIdRef.current === threadId;
 
     if (!threadId || !hasApiKey || hasPendingExternalRunForThread || isLocallyOwnedExecutionForRequestedThread) {
       setIsThreadHistoryLoading(false);
@@ -9427,8 +10017,11 @@ export function RunnerChat({
   useEffect(() => {
     if (!availableEnvironments.length) return;
     setSelectedEnvironmentId((current) => {
-      if (activeThreadEnvironmentId && availableEnvironments.some((environment) => environment.id === activeThreadEnvironmentId)) {
-        return activeThreadEnvironmentId;
+      if (
+        scopedActiveThreadEnvironmentId &&
+        availableEnvironments.some((environment) => environment.id === scopedActiveThreadEnvironmentId)
+      ) {
+        return scopedActiveThreadEnvironmentId;
       }
       if (
         effectiveWorkspaceSelectorMode === "projects" &&
@@ -9437,15 +10030,15 @@ export function RunnerChat({
       ) {
         return selectedProjectEnvironmentId;
       }
-      if (environmentId && availableEnvironments.some((environment) => environment.id === environmentId)) {
-        return environmentId;
-      }
       if (current && availableEnvironments.some((environment) => environment.id === current)) {
         return current;
       }
+      if (environmentId && availableEnvironments.some((environment) => environment.id === environmentId)) {
+        return environmentId;
+      }
       return availableEnvironments.find((environment) => environment.isDefault)?.id || availableEnvironments[0]?.id || "";
     });
-  }, [activeThreadEnvironmentId, availableEnvironments, effectiveWorkspaceSelectorMode, environmentId, selectedProjectEnvironmentId]);
+  }, [availableEnvironments, effectiveWorkspaceSelectorMode, environmentId, scopedActiveThreadEnvironmentId, selectedProjectEnvironmentId]);
 
   useEffect(() => {
     if (!useComputerAgentsMode) {
@@ -9522,14 +10115,15 @@ export function RunnerChat({
       return;
     }
 
-    if (
-      persisted.mode === "computers" &&
-      persisted.environmentId &&
-      availableEnvironments.some((environment) => environment.id === persisted.environmentId)
-    ) {
-      setWorkspaceSelectorMode("computers");
-      setSelectedProjectId("");
-      setSelectedEnvironmentId(persisted.environmentId);
+    if (persisted.mode === "computers" && persisted.environmentId) {
+      if (availableEnvironments.length === 0) {
+        return;
+      }
+      if (availableEnvironments.some((environment) => environment.id === persisted.environmentId)) {
+        setWorkspaceSelectorMode("computers");
+        setSelectedProjectId("");
+        setSelectedEnvironmentId(persisted.environmentId);
+      }
     }
     workspacePreferenceAppliedRef.current = true;
   }, [availableEnvironments, availableProjects, useComputerAgentsMode, workspaceSelectionStorageKey]);
@@ -9553,8 +10147,11 @@ export function RunnerChat({
     if (initialEnvironmentTopId && availableEnvironments.some((environment) => environment.id === initialEnvironmentTopId)) {
       return;
     }
-    if (activeThreadEnvironmentId && availableEnvironments.some((environment) => environment.id === activeThreadEnvironmentId)) {
-      setInitialEnvironmentTopId(activeThreadEnvironmentId);
+    if (
+      scopedActiveThreadEnvironmentId &&
+      availableEnvironments.some((environment) => environment.id === scopedActiveThreadEnvironmentId)
+    ) {
+      setInitialEnvironmentTopId(scopedActiveThreadEnvironmentId);
       return;
     }
     if (environmentId && availableEnvironments.some((environment) => environment.id === environmentId)) {
@@ -9566,7 +10163,7 @@ export function RunnerChat({
       return;
     }
     setInitialEnvironmentTopId(availableEnvironments.find((environment) => environment.isDefault)?.id || availableEnvironments[0]?.id || null);
-  }, [activeThreadEnvironmentId, availableEnvironments, environmentId, initialEnvironmentTopId, selectedEnvironmentId]);
+  }, [availableEnvironments, environmentId, initialEnvironmentTopId, scopedActiveThreadEnvironmentId, selectedEnvironmentId]);
 
   useEffect(() => {
     const persisted = loadPersistedEnabledSkillIds(enabledSkillsStorageKey);
@@ -10000,16 +10597,18 @@ export function RunnerChat({
     void stopSpeechToText();
   }, [isRunning]);
 
-  async function ensureThread(taskText: string): Promise<{
+  async function ensureThread(taskText: string, options?: { reserveLocalExecution?: boolean }): Promise<{
     threadId: string;
     didCreateThread: boolean;
     initialTitle: string | null;
+    environmentId: string | null;
   }> {
     if (currentThreadId) {
       return {
         threadId: currentThreadId,
         didCreateThread: false,
         initialTitle: null,
+        environmentId: activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null,
       };
     }
 
@@ -10026,20 +10625,33 @@ export function RunnerChat({
       projectId: effectiveProjectId,
       agentId: effectiveAgentId,
       title: title || DEFAULT_NEW_THREAD_TITLE,
+      privateMode,
     });
 
     initializedThreadHistoryIdRef.current = createdThread.threadId;
+    if (options?.reserveLocalExecution) {
+      locallyOwnedExecutionThreadIdRef.current = createdThread.threadId;
+    }
     setLocalThreadId(createdThread.threadId);
-    setActiveThreadEnvironmentId(effectiveEnvironmentId || null);
+    setActiveThreadEnvironmentId(createdThread.environmentId || effectiveEnvironmentId || null);
     setActiveThreadEnvironmentName(selectedEnvironment?.name || null);
-    onThreadIdChange?.(createdThread.threadId);
+    try {
+      onThreadIdChange?.(createdThread.threadId);
+    } catch (error) {
+      reportRunnerLifecycleCallbackError("onThreadIdChange", error);
+    }
     if (createdThread.title) {
-      onThreadTitleChange?.(createdThread.threadId, createdThread.title);
+      try {
+        onThreadTitleChange?.(createdThread.threadId, createdThread.title);
+      } catch (error) {
+        reportRunnerLifecycleCallbackError("onThreadTitleChange", error);
+      }
     }
     return {
       threadId: createdThread.threadId,
       didCreateThread: true,
       initialTitle: createdThread.title,
+      environmentId: createdThread.environmentId || effectiveEnvironmentId || null,
     };
   }
 
@@ -11942,7 +12554,11 @@ export function RunnerChat({
         return;
       }
       setInlineError(normalizedError.message);
-      onRunError?.(normalizedError, ensuredThreadId ?? currentThreadId ?? undefined);
+      try {
+        onRunError?.(normalizedError, ensuredThreadId ?? currentThreadId ?? undefined);
+      } catch (callbackError) {
+        reportRunnerLifecycleCallbackError("onRunError", callbackError);
+      }
     } finally {
       setIsPreparingRun(false);
     }
@@ -11977,7 +12593,11 @@ export function RunnerChat({
           return;
         }
         setInlineError(normalizedError.message);
-        onRunError?.(normalizedError, currentThreadId ?? undefined);
+        try {
+          onRunError?.(normalizedError, currentThreadId ?? undefined);
+        } catch (callbackError) {
+          reportRunnerLifecycleCallbackError("onRunError", callbackError);
+        }
       } finally {
         isDrainingQueuedRunsRef.current = false;
       }
@@ -12366,10 +12986,25 @@ export function RunnerChat({
   function buildTimelineItems(logs: RunnerLog[], options?: { groupComputerUse?: boolean }): RunnerTimelineItem[] {
     const subagentGroups = buildSubagentTimelineGroups(logs);
     const latestPermissionLogIndexById = new Map<string, number>();
+    const latestPermissionLogById = new Map<string, RunnerLog>();
     logs.forEach((log, index) => {
       if (log.eventType !== "permission_request") return;
       const requestId = String(log.metadata?.permissionRequestId || "").trim();
-      if (requestId) latestPermissionLogIndexById.set(requestId, index);
+      if (!requestId) return;
+      latestPermissionLogIndexById.set(requestId, index);
+      const previousLog = latestPermissionLogById.get(requestId);
+      latestPermissionLogById.set(
+        requestId,
+        previousLog
+          ? {
+              ...log,
+              metadata: {
+                ...(previousLog.metadata || {}),
+                ...(log.metadata || {}),
+              },
+            }
+          : log
+      );
     });
     const deepResearchLogs = collectDeepResearchTimelineLogs(logs, subagentGroups);
     const deepResearchCommandLog = logs.find((currentLog) => {
@@ -12405,6 +13040,8 @@ export function RunnerChat({
         if (requestId && latestPermissionLogIndexById.get(requestId) !== index) {
           continue;
         }
+        items.push({ kind: "log", log: requestId ? latestPermissionLogById.get(requestId) || log : log });
+        continue;
       }
       const invocationId = getSubagentInvocationId(log);
       if (invocationId && subagentGroups.has(invocationId)) {
@@ -12569,7 +13206,9 @@ export function RunnerChat({
     const agentMessage = [...turn.logs]
       .reverse()
       .find((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
-    const timelineLogs = dedupeAdjacentRunnerLogs(turn.logs.filter((log) => shouldDisplayTimelineLog(log)));
+    const timelineLogs = dedupeAdjacentRunnerLogs(
+      turn.logs.filter((log) => shouldDisplayTimelineLog(log) && !isDuplicateAssistantSummaryTimelineLog(log, agentMessage))
+    );
     const displayedTimelineLogs =
       timelineLogs.length === 0 && isRunningTurnStatus(turn.status)
         ? [
@@ -12804,10 +13443,16 @@ export function RunnerChat({
       const bodyText = await response.text().catch(() => "");
       throw new Error(bodyText || `Failed to ${decision === "allow" ? "approve" : "deny"} permission request (${response.status})`);
     }
+    const decisionResult = await response.json().catch(() => null) as { active?: boolean } | null;
+    const nextTurnStatus: RunnerTurnStatus = decisionResult?.active === false
+      ? (decision === "allow" ? "completed" : "cancelled")
+      : "running";
+    const completedAtMs = decisionResult?.active === false ? Date.now() : undefined;
     setTurns((previousTurns) =>
       previousTurns.map((turn) => ({
         ...turn,
-        status: turn.status === "permission_asked" ? "running" : turn.status,
+        status: turn.status === "permission_asked" ? nextTurnStatus : turn.status,
+        completedAtMs: turn.status === "permission_asked" && completedAtMs ? completedAtMs : turn.completedAtMs,
         logs: turn.logs.map((entry) => {
           if (entry.metadata?.permissionRequestId !== requestId) {
             return entry;
@@ -12824,10 +13469,15 @@ export function RunnerChat({
         }),
       }))
     );
+    try {
+      onThreadStatusChange?.(currentThreadId, nextTurnStatus);
+    } catch (error) {
+      reportRunnerLifecycleCallbackError("onThreadStatusChange", error);
+    }
   }
 
   function renderTimelineItem(turn: RunnerTurn, item: RunnerTimelineItem, index: number, options?: { renderComputerUseMcpAsGeneric?: boolean }) {
-    const runnerEnvironmentId = activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
+    const runnerEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
     const runnerHeaders = buildRunnerHeaders(requestHeaders, apiKey.trim());
 
     if (item.kind === "browser_group") {
@@ -12847,7 +13497,7 @@ export function RunnerChat({
     if (item.kind === "computer_use_group") {
       const latestLog = item.group.logs[item.group.logs.length - 1] || item.group.endLog;
       const computerUseEnvironmentName =
-        turn.environmentName || activeThreadEnvironmentName || selectedEnvironment?.name || displayedEnvironmentLabel || "Environment";
+        turn.environmentName || scopedActiveThreadEnvironmentName || selectedEnvironment?.name || displayedEnvironmentLabel || "Environment";
       return (
         <BrowserSkillLogBox
           log={latestLog}
@@ -13597,8 +14247,12 @@ export function RunnerChat({
       : fallbackMode;
     setAgentPopupMode(resolvedMode);
   }, [agentPopupMode, availableAgentPopupModes, orderedAgents, selectedAgentId]);
-  const sourceThreadEnvironmentId = activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
-  const sourceThreadEnvironmentName = activeThreadEnvironmentName || selectedEnvironment?.name || null;
+  const sourceThreadEnvironmentId = hasCurrentThread
+    ? scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
+    : null;
+  const sourceThreadEnvironmentName = hasCurrentThread
+    ? scopedActiveThreadEnvironmentName || selectedEnvironment?.name || null
+    : null;
   const selectedForkExistingEnvironment =
     availableEnvironments.find((environment) => environment.id === forkTargetEnvironmentId) ||
     (sourceThreadEnvironmentId && sourceThreadEnvironmentId === forkTargetEnvironmentId
@@ -14162,6 +14816,11 @@ export function RunnerChat({
       pollInFlight = true;
 
       try {
+        if (locallyOwnedExecutionThreadIdRef.current === currentThreadId) {
+          scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
+          return;
+        }
+
         const statusSnapshot = await fetchThreadStatusSnapshot({
           backendUrl: normalizedBackendUrl,
           apiKey: apiKey.trim(),
@@ -15539,7 +16198,7 @@ export function RunnerChat({
         <div className="tb-input-width">
           <div className="embedded-runner-input">
             <div
-              className={`task-input-box ${stagedComposerToneValue ? `task-input-box-thread-context task-input-box-thread-context-${stagedComposerToneValue}` : ""}`.trim()}
+              className={`task-input-box ${privateMode ? "task-input-box-private" : ""} ${stagedComposerToneValue ? `task-input-box-thread-context task-input-box-thread-context-${stagedComposerToneValue}` : ""}`.trim()}
             >
               {attachments.length > 0 ? (
                 <div className="runner-attachments">
@@ -15622,7 +16281,7 @@ export function RunnerChat({
                   className={`sidebar-textarea ${hasStagedComposerCommand ? "sidebar-textarea-staged" : ""}`.trim()}
                   value={input}
                   onChange={handleInputChange}
-                  placeholder={hasStagedComposerCommand ? "" : placeholder}
+                  placeholder={hasStagedComposerCommand ? "" : privateMode ? "Ask anything (Private Mode activated)" : placeholder}
                   onKeyDown={handleKeyDown}
                   readOnly={Boolean(stagedThreadContextCommand && !textareaAllowsPromptAfterStagedCommand)}
                 />
