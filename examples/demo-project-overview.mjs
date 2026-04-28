@@ -213,6 +213,31 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         margin-left: auto;
       }
 
+      .playground-project-overview-summary-title-actions {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .playground-project-overview-summary-title-actions .playground-project-overview-summary-mission-button {
+        margin-left: 0;
+      }
+
+      .playground-project-overview-summary-strategy-button {
+        background: #fff;
+        border-color: #fff;
+        color: #000;
+      }
+
+      .playground-project-overview-summary-strategy-button:hover {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(255, 255, 255, 0.92);
+        color: #000;
+      }
+
       .playground-project-overview-summary-mission-label {
         display: inline-flex;
         align-items: center;
@@ -2675,13 +2700,23 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   React.createElement("div", { className: "playground-project-overview-summary-copy" },
                     React.createElement("div", { className: "playground-project-overview-summary-title-row" },
                       React.createElement("h1", { className: "playground-project-overview-summary-title" }, selectedProject.name || "Untitled Project"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button playground-project-overview-summary-mission-button",
-                        onClick: openMissionControlStrategySidebar,
-                      },
-                        React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
+                      React.createElement("div", { className: "playground-project-overview-summary-title-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-control-button playground-project-overview-summary-mission-button",
+                          onClick: openMissionControlComposer,
+                        },
+                          React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button",
+                          onClick: openMissionControlStrategySidebar,
+                        },
+                          React.createElement(FileText, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Strategy")
+                        )
                       )
                     ),
                     React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-project-overview-summary-description-section" },

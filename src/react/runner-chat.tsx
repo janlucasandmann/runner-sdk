@@ -1049,6 +1049,7 @@ export interface RunnerChatExternalRunRequest {
   threadId: string;
   prompt: string;
   displayPrompt?: string | null;
+  agentId?: string | null;
   attachments?: RunnerAttachment[] | null;
   githubRepo?: {
     repoFullName: string;
@@ -1177,10 +1178,12 @@ export interface RunnerChatProps {
   fetchCustomSkills?: () => Promise<RunnerChatSkill[]>;
   requestHeaders?: HeadersInit;
   environmentId?: string;
+  projectId?: string | null;
   agentId?: string;
   appId?: string;
   threadId?: string;
   title?: string;
+  threadMetadata?: Record<string, unknown> | null;
   placeholder?: string;
   privateMode?: boolean;
   initialTask?: string;
@@ -1196,6 +1199,7 @@ export interface RunnerChatProps {
   agents?: RunnerChatOption[];
   hideAgentSelector?: boolean;
   environments?: RunnerChatOption[];
+  hideEnvironmentSelector?: boolean;
   skills?: RunnerChatSkill[];
   skillDefaults?: RunnerChatSkillDefaults;
   computerAgents?: RunnerChatComputerAgentsConfig;
@@ -3336,12 +3340,36 @@ async function createThread(params: {
   environmentId?: string;
   projectId?: string | null;
   agentId?: string;
+  metadata?: Record<string, unknown> | null;
   privateMode?: boolean;
 }): Promise<{ threadId: string; title: string | null; environmentId: string | null }> {
   const backendUrl = sanitizeBackendUrl(params.backendUrl);
   const headers = new Headers(params.requestHeaders || {});
   headers.set("Content-Type", "application/json");
   headers.set("X-API-Key", params.apiKey);
+  const baseMetadata =
+    params.metadata && typeof params.metadata === "object" && !Array.isArray(params.metadata)
+      ? params.metadata
+      : undefined;
+  const runnerPlaygroundMetadata =
+    baseMetadata?.runnerPlayground && typeof baseMetadata.runnerPlayground === "object" && !Array.isArray(baseMetadata.runnerPlayground)
+      ? baseMetadata.runnerPlayground
+      : {};
+  const metadata =
+    baseMetadata || params.privateMode
+      ? {
+          ...(baseMetadata || {}),
+          runnerPlayground: {
+            ...runnerPlaygroundMetadata,
+            ...(params.privateMode
+              ? {
+                  privateMode: true,
+                  privateModeCreatedAt: new Date().toISOString(),
+                }
+              : {}),
+          },
+        }
+      : undefined;
 
   const response = await fetch(`${backendUrl}/threads`, {
     method: "POST",
@@ -3352,14 +3380,7 @@ async function createThread(params: {
       environmentId: params.environmentId,
       projectId: params.projectId || undefined,
       agentId: params.agentId,
-      metadata: params.privateMode
-        ? {
-            runnerPlayground: {
-              privateMode: true,
-              privateModeCreatedAt: new Date().toISOString(),
-            },
-          }
-        : undefined,
+      metadata,
     }),
   });
 
@@ -6821,10 +6842,12 @@ export function RunnerChat({
   fetchCustomSkills,
   requestHeaders,
   environmentId,
+  projectId,
   agentId,
   appId = "runner-web-sdk",
   threadId,
   title,
+  threadMetadata = null,
   placeholder = "What would you like me to do?",
   privateMode = false,
   initialTask = "",
@@ -6840,6 +6863,7 @@ export function RunnerChat({
   agents = [],
   hideAgentSelector = false,
   environments = [],
+  hideEnvironmentSelector = false,
   skills = [],
   skillDefaults,
   computerAgents,
@@ -7382,9 +7406,12 @@ export function RunnerChat({
     );
   }, [hasApiKey, resolvedSpeechToTextUrl]);
   const effectiveAgentId = useComputerAgentsMode ? selectedAgentId || agentId : agentId;
-  const effectiveProjectId = useComputerAgentsMode && effectiveWorkspaceSelectorMode === "projects" && selectedProject
-    ? selectedProject.id
-    : null;
+  const explicitProjectId = typeof projectId === "string" && projectId.trim() ? projectId.trim() : null;
+  const effectiveProjectId = explicitProjectId || (
+    useComputerAgentsMode && effectiveWorkspaceSelectorMode === "projects" && selectedProject
+      ? selectedProject.id
+      : null
+  );
   const effectiveEnvironmentId = useComputerAgentsMode
     ? effectiveProjectEnvironmentId || selectedEnvironmentId || environmentId
     : environmentId;
@@ -9017,6 +9044,7 @@ export function RunnerChat({
       persistFileChanges?: boolean;
       quotedSelection?: RunnerQuotedSelection | null;
       environmentIdOverride?: string | null;
+      agentIdOverride?: string | null;
       backlogCommand?: StagedBacklogCommand | null;
       resourceCreationCommand?: StagedResourceCreationCommand | null;
       agentCreationCommand?: StagedAgentCreationCommand | null;
@@ -9069,6 +9097,10 @@ export function RunnerChat({
     if (!runEnvironmentId && ensuredThread.environmentId) {
       runEnvironmentId = ensuredThread.environmentId;
     }
+    const runAgentId =
+      options?.agentIdOverride !== undefined
+        ? String(options.agentIdOverride || "").trim()
+        : String(effectiveAgentId || "").trim();
     initializedThreadHistoryIdRef.current = threadId;
     const githubRepo =
       options?.githubRepoOverride !== undefined
@@ -9091,6 +9123,7 @@ export function RunnerChat({
         threadId,
         prompt: executionTaskText,
         displayPrompt: visibleTaskText || taskText,
+        agentId: effectiveAgentId || null,
         attachments: resolvedAttachments || [],
         githubRepo: githubRepo || null,
         enabledSkills: enabledSkillsPayload || null,
@@ -9169,7 +9202,7 @@ export function RunnerChat({
             apiKey: apiKey.trim(),
             requestHeaders,
             environmentId: runEnvironmentId,
-            ...(effectiveAgentId ? { agentId: effectiveAgentId } : {}),
+            ...(runAgentId ? { agentId: runAgentId } : {}),
             ...(options?.enabledSkillsOverride !== undefined
               ? { enabledSkills: options.enabledSkillsOverride }
               : enabledSkillsPayload
@@ -9394,6 +9427,7 @@ export function RunnerChat({
         await executeThreadRun(normalizedPrompt, [], {
           threadIdOverride: normalizedRequestThreadId,
           environmentIdOverride: externalRunRequest.environmentId ?? undefined,
+          agentIdOverride: externalRunRequest.agentId ?? undefined,
           quotedSelection: externalRunRequest.quotedSelection || null,
           resolvedAttachmentsOverride: Array.isArray(externalRunRequest.attachments) ? externalRunRequest.attachments : undefined,
           githubRepoOverride: externalRunRequest.githubRepo ?? undefined,
@@ -10711,6 +10745,7 @@ export function RunnerChat({
       projectId: effectiveProjectId,
       agentId: effectiveAgentId,
       title: title || DEFAULT_NEW_THREAD_TITLE,
+      metadata: threadMetadata,
       privateMode,
     });
 
@@ -14706,6 +14741,10 @@ export function RunnerChat({
   }
 
   function renderEnvironmentSelectorControl() {
+    if (hideEnvironmentSelector) {
+      return null;
+    }
+
     if (availableEnvironments.length === 0 && availableProjects.length === 0) {
       return null;
     }
