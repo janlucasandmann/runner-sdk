@@ -22,9 +22,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-summary-header {
         display: flex;
-        align-items: center;
-        gap: 18px;
-        padding-top: 20px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        padding-top: 0;
       }
 
       .playground-project-overview-summary-icon {
@@ -70,15 +71,17 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0;
       }
 
-      .playground-project-overview-summary-description-row {
+      .playground-project-overview-summary-title-row {
         width: 100%;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+        margin-top: 12px;
+        min-height: 40px;
       }
 
       .playground-project-overview-summary-title {
@@ -112,6 +115,28 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.88);
       }
 
+      .playground-project-overview-summary-description-section.playground-tasks-detail-description {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-project-overview-summary-description-section.playground-tasks-detail-description::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-project-overview-summary-description-section .playground-tasks-detail-section-header {
+        padding: 0 0 12px;
+        margin-top: 12px;
+        margin-bottom: 12px;
+        border-bottom: 0;
+      }
+
       .playground-project-overview-summary-divider {
         width: 100%;
         height: 1px;
@@ -137,12 +162,12 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
-        padding: 12px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        background: rgba(255, 255, 255, 0.03);
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
         text-align: left;
       }
 
@@ -257,7 +282,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       @media (max-width: 1080px) {
-        .playground-project-overview-summary-description-row {
+        .playground-project-overview-summary-title-row {
           flex-direction: column;
           align-items: flex-start;
         }
@@ -379,14 +404,63 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-chart-card {
+        box-sizing: border-box;
         min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 12px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
       }
 
       .playground-project-overview-chart-card.is-donut {
         min-height: 0;
+      }
+
+      .playground-project-overview-integration-facts {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-integration-row {
+        grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-integration-icon {
+        width: 12px;
+        height: 12px;
+      }
+
+      .playground-project-overview-integration-value-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .playground-project-overview-integration-value-button .playground-tasks-detail-select-trigger-label {
+        max-width: min(260px, 42vw);
+      }
+
+      .playground-project-overview-integration-chevron {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
       }
 
       .playground-project-overview-chart-empty {
@@ -494,17 +568,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-activity-map-cell.level-4 {
         background: rgba(77, 163, 255, 0.82);
-      }
-
-      .playground-project-overview-activity-map-backdrop {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        background: rgba(255, 255, 255, 0.02);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
       }
 
       .playground-project-overview-chart-footer {
@@ -808,12 +871,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         padding: 0;
       }
 
-      .playground-project-overview-plugins-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
       .playground-project-overview-thread-list {
         display: flex;
         flex-direction: column;
@@ -910,20 +967,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         margin-bottom: 32px;
       }
 
-      .playground-project-overview-files-subsection {
-        margin-top: 32px;
-      }
-
-      .playground-project-overview-files-subsection > .playground-plugins-section-header {
-        margin-top: 0;
-        padding-bottom: 0 !important;
-        border-bottom: 0 !important;
-      }
-
-      .playground-project-overview-files-subsection-empty {
-        margin-top: 12px;
-      }
-
       .playground-project-overview-resources-table {
         display: flex;
         flex-direction: column;
@@ -982,62 +1025,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-resource-status {
         text-transform: capitalize;
-      }
-
-      .playground-project-overview-plugins-table {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-      }
-
-      .playground-project-overview-plugins-table-header,
-      .playground-project-overview-plugins-table-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1.8fr) minmax(120px, 1fr) minmax(84px, 0.7fr) minmax(112px, 0.8fr);
-        align-items: center;
-        gap: 16px;
-      }
-
-      .playground-project-overview-plugins-table-header {
-        min-height: 34px;
-        padding: 0 0 8px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        font-size: 11px;
-        line-height: 1.4;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.45);
-        letter-spacing: 0.02em;
-      }
-
-      .playground-project-overview-plugins-table-row {
-        min-height: 50px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      }
-
-      .playground-project-overview-plugin-table-cell {
-        min-width: 0;
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
-      .playground-project-overview-plugin-table-cell.is-usage,
-      .playground-project-overview-plugin-table-cell.is-task,
-      .playground-project-overview-plugin-table-cell.is-date {
-        color: rgba(255, 255, 255, 0.56);
-        white-space: nowrap;
-      }
-
-      .playground-project-overview-plugin-table-main {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-      }
-
-      .playground-project-overview-plugins-table .playground-plugin-row-title {
-        font-size: 12px;
-        line-height: 1.45;
       }
 
       .playground-project-overview-threads-section > .playground-plugins-section-header {
@@ -1594,38 +1581,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               svgHeight: frameHeight,
               fallbackWidth: 1200,
               ariaLabel: config?.ariaLabel || "Project activity map",
-              renderOverlay: ({ svgWidth, svgHeight }) => {
-                const { columnCount, cellRadius, stepX, gridOffsetY } = computeActivityMapLayout(svgWidth, svgHeight);
-                const radialStops = [];
-                columns.forEach((column, columnIndex) => {
-                  const cellCenterX = columnCount > 1
-                    ? outerPaddingX + cellRadius + (stepX * columnIndex)
-                    : outerPaddingX + ((Math.max(1, svgWidth - (outerPaddingX * 2))) / 2);
-                  column.forEach((cell, rowIndex) => {
-                    const count = Math.max(0, Number(cell?.count || 0));
-                    if (count > 0) {
-                      return;
-                    }
-                    const centerY = gridOffsetY + cellRadius + (rowIndex * ((cellRadius * 2) + gridGapY));
-                    radialStops.push(
-                      "radial-gradient(circle " + cellRadius + "px at " + cellCenterX + "px " + centerY + "px, rgba(0, 0, 0, 1) 98%, rgba(0, 0, 0, 0) 100%)"
-                    );
-                  });
-                });
-                if (radialStops.length === 0) {
-                  return null;
-                }
-                const maskImage = radialStops.join(", ");
-                return React.createElement("div", {
-                  className: "playground-project-overview-activity-map-backdrop",
-                  style: {
-                    maskImage,
-                    WebkitMaskImage: maskImage,
-                    maskRepeat: "no-repeat",
-                    WebkitMaskRepeat: "no-repeat",
-                  },
-                });
-              },
             }, ({ svgWidth, svgHeight }) => {
               const {
                 availableWidth,
@@ -1802,8 +1757,10 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           }
 
           const normalizedSelectedProjectId = String(selectedProjectId || selectedProject.id || "").trim();
-          const projectOverviewDescription = String(selectedProject.description || "").trim()
-            || "Track backlog execution, active resources, recent threads, and the current mission strategy in one project workspace.";
+          const projectOverviewDraft = projectDraft?.id === normalizedSelectedProjectId
+            ? projectDraft
+            : selectedProject;
+          const projectOverviewDescription = String(projectOverviewDraft?.description || "");
           const projectThreads = Array.isArray(projectOverviewThreads) ? projectOverviewThreads : [];
           const normalizedOverviewTasks = Array.isArray(tasks)
             ? tasks.map((task) => normalizePlaygroundTaskRecord(task))
@@ -1947,96 +1904,32 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             : [];
           const overviewResourceItems = allOverviewResourceItems
             .filter((item) => !normalizedSearchQuery || String(item?.searchText || "").includes(normalizedSearchQuery));
-          const allOverviewPluginItems = (() => {
-            const next = new Map();
-
-            function upsertPluginUsage(source, usageLabel, taskRecord) {
-              const option = typeof getPlaygroundTaskConnectorOption === "function"
-                ? getPlaygroundTaskConnectorOption(source)
-                : null;
-              if (!option?.key) {
-                return;
-              }
-              const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
-              const taskId = String(normalizedTask?.id || "").trim();
-              const ticketNumber = taskId
-                ? (taskTicketNumbersById[taskId] || normalizedTask?.ticketNumber || "")
-                : (normalizedTask?.ticketNumber || "");
-              const updatedAt = String(normalizedTask?.updatedAt || normalizedTask?.createdAt || "").trim();
-              const existing = next.get(option.key) || {
-                id: option.key,
-                label: option.label,
-                logoUrl: option.logoUrl,
-                usageLabels: new Set(),
-                taskIds: new Set(),
-                latestTaskTicketNumber: "",
-                latestUsedAt: "",
-              };
-              existing.usageLabels.add(String(usageLabel || "").trim() || "Task usage");
-              if (taskId) {
-                existing.taskIds.add(taskId);
-              }
-              if (!existing.latestUsedAt || String(updatedAt || "").localeCompare(existing.latestUsedAt) >= 0) {
-                existing.latestUsedAt = updatedAt;
-                existing.latestTaskTicketNumber = String(ticketNumber || "").trim();
-              }
-              next.set(option.key, existing);
-            }
-
-            normalizedOverviewTasks.forEach((taskRecord) => {
-              const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
-              normalizePlaygroundTaskAttachmentList(normalizedTask.attachments).forEach((attachment) => {
-                const source = getPlaygroundTaskAttachmentConnectorSource(attachment);
-                if (source) {
-                  upsertPluginUsage(source, "Task attachment", normalizedTask);
-                }
-              });
-
-              const taskConnectors = normalizePlaygroundTaskConnectorSelections(normalizedTask.connectors);
-              (Array.isArray(PLAYGROUND_TASK_CONNECTOR_OPTIONS) ? PLAYGROUND_TASK_CONNECTOR_OPTIONS : []).forEach((option) => {
-                const selection = taskConnectors?.[option.key];
-                const hasSelection = Boolean(
-                  (Array.isArray(selection?.items) && selection.items.length > 0)
-                  || (Array.isArray(selection?.selectedIds) && selection.selectedIds.length > 0)
-                );
-                if (hasSelection) {
-                  upsertPluginUsage(option.source, "Task connector", normalizedTask);
-                }
-              });
-
-              const githubRepo = typeof buildPlaygroundTaskGithubRepoReference === "function"
-                ? buildPlaygroundTaskGithubRepoReference(normalizedTask)
-                : null;
-              if (githubRepo?.repoFullName) {
-                upsertPluginUsage("github", "Repo context", normalizedTask);
-              }
-            });
-
-            return Array.from(next.values())
-              .map((item) => {
-                const usage = Array.from(item.usageLabels).filter(Boolean).join(" · ");
-                const taskCount = item.taskIds.size;
-                const taskLabel = item.latestTaskTicketNumber || (taskCount > 1 ? String(taskCount) + " tasks" : "—");
-                const searchText = [
-                  item.label,
-                  usage,
-                  taskLabel,
-                  item.latestUsedAt,
-                ].join(" ").toLowerCase();
-                return {
-                  id: item.id,
-                  label: item.label,
-                  logoUrl: item.logoUrl,
-                  usage,
-                  taskLabel,
-                  latestUsedAt: item.latestUsedAt,
-                  searchText,
-                };
+          const projectOverviewIntegrationRows = (() => {
+            const integrationOrder = new Map([
+              ["github", 0],
+              ["notion", 1],
+              ["googleDrive", 2],
+              ["oneDrive", 3],
+            ]);
+            return (Array.isArray(PLAYGROUND_TASK_CONNECTOR_OPTIONS) ? PLAYGROUND_TASK_CONNECTOR_OPTIONS : [])
+              .slice()
+              .sort((left, right) => {
+                const leftOrder = integrationOrder.has(left?.key) ? integrationOrder.get(left.key) : 99;
+                const rightOrder = integrationOrder.has(right?.key) ? integrationOrder.get(right.key) : 99;
+                return leftOrder - rightOrder;
               })
-              .sort((left, right) => String(right.latestUsedAt || "").localeCompare(String(left.latestUsedAt || "")));
+              .map((option) => {
+                const selection = getDraftTaskConnectorSelection(option.source, selectedProject);
+                return {
+                  id: String(option?.key || option?.source || option?.label || ""),
+                  source: option?.source || "",
+                  label: option?.label || "Integration",
+                  selection,
+                  value: selection?.valueLabel || "Connect",
+                  isEmpty: !selection,
+                };
+              });
           })();
-          const overviewPluginItems = allOverviewPluginItems
-            .filter((item) => !normalizedSearchQuery || String(item?.searchText || "").includes(normalizedSearchQuery));
           const overviewProjectAttachments = Array.isArray(selectedProjectAttachments) ? selectedProjectAttachments : [];
           const hasOverviewProjectAttachments = overviewProjectAttachments.length > 0;
           function openOverviewAttachmentInFiles(attachment) {
@@ -2249,18 +2142,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             },
           ];
 
-          function renderOverviewPluginLogo(plugin) {
-            return React.createElement("div", { className: "playground-plugin-row-logo-shell playground-project-overview-plugin-logo-shell" },
-              React.createElement("img", {
-                src: plugin.logoUrl,
-                alt: "",
-                "aria-hidden": "true",
-                draggable: false,
-                className: "playground-plugin-row-logo" + (plugin.id === "github" ? " is-github" : ""),
-              })
-            );
-          }
-
           function renderOverviewSectionHeader(title, description, action) {
             return React.createElement("div", { className: "playground-plugins-section-header" },
               React.createElement("div", { className: "playground-plugins-section-copy" },
@@ -2270,6 +2151,84 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   : null
               ),
               action || null
+            );
+          }
+
+          function renderProjectOverviewIntegrationRow(row) {
+            const rowProjectId = normalizedSelectedProjectId;
+            const openProjectConnectorBrowser = (reason, event) => {
+              console.info("[connector-debug] project overview integration row open requested", {
+                reason,
+                source: row.source,
+                rowProjectId,
+                selectedProjectId: normalizedSelectedProjectId,
+                hasRequestHandler: typeof requestProjectConnectorBrowserOpen === "function",
+                eventButton: event?.button ?? null,
+                eventDetail: event?.detail ?? null,
+                eventType: event?.type || "",
+                isTrusted: event?.isTrusted ?? null,
+              });
+              requestProjectConnectorBrowserOpen(row.source, {
+                projectId: rowProjectId,
+              });
+            };
+            return React.createElement("button", {
+                key: row.id || row.label,
+                type: "button",
+                className: "playground-tasks-connector-row playground-project-overview-integration-row",
+                "data-project-overview-connector-source": row.source,
+                "data-project-overview-project-id": rowProjectId,
+                onPointerDown: (event) => {
+                  console.info("[connector-debug] project overview integration row pointerdown", {
+                    source: row.source,
+                    rowProjectId,
+                    button: event.button,
+                    detail: event.detail,
+                    isTrusted: event.isTrusted,
+                  });
+                  if (event.button && event.button !== 0) {
+                    console.info("[connector-debug] project overview integration row pointerdown ignored", {
+                      source: row.source,
+                      rowProjectId,
+                      button: event.button,
+                    });
+                    return;
+                  }
+                  event.preventDefault();
+                  openProjectConnectorBrowser("pointerdown", event);
+                },
+                onClick: (event) => {
+                  console.info("[connector-debug] project overview integration row click", {
+                    source: row.source,
+                    rowProjectId,
+                    detail: event.detail,
+                    isTrusted: event.isTrusted,
+                  });
+                  if (event.detail !== 0) {
+                    console.info("[connector-debug] project overview integration row click ignored because pointerdown handled it", {
+                      source: row.source,
+                      rowProjectId,
+                      detail: event.detail,
+                    });
+                    return;
+                  }
+                  event.preventDefault();
+                  openProjectConnectorBrowser("programmatic-click", event);
+                },
+              },
+              React.createElement("div", { className: "playground-tasks-connector-service" },
+                renderTaskConnectorServiceIcon(row.source, "playground-tasks-connector-service-icon playground-project-overview-integration-icon"),
+                React.createElement("span", { className: "playground-tasks-connector-service-label" }, row.label)
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                React.createElement("span", {
+                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-project-overview-integration-value-button" + (row.isEmpty ? " is-empty" : ""),
+                  title: row.value,
+                },
+                  React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, row.value),
+                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron playground-project-overview-integration-chevron", strokeWidth: 1.8 })
+                )
+              )
             );
           }
 
@@ -2547,29 +2506,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
-          function renderOverviewPluginRow(plugin) {
-            return React.createElement("div", {
-                key: plugin.id,
-                className: "playground-project-overview-plugins-table-row",
-              },
-              React.createElement("div", { className: "playground-project-overview-plugin-table-cell" },
-                React.createElement("div", { className: "playground-project-overview-plugin-table-main" },
-                  renderOverviewPluginLogo(plugin),
-                  React.createElement("div", { className: "playground-plugin-row-title" }, plugin.label)
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-plugin-table-cell is-usage" }, plugin.usage || "Project usage"),
-              React.createElement("div", { className: "playground-project-overview-plugin-table-cell is-task" }, plugin.taskLabel || "—"),
-              React.createElement("div", { className: "playground-project-overview-plugin-table-cell is-date" },
-                (typeof formatThreadSearchTimestamp === "function"
-                  ? formatThreadSearchTimestamp(plugin?.latestUsedAt || "")
-                  : null)
-                || formatRelativeThreadTime(plugin?.latestUsedAt || "")
-                || "—"
-              )
-            );
-          }
-
           function renderOverviewResourceRow(resource) {
             return React.createElement("div", {
                 key: resource.id || resource.title,
@@ -2737,12 +2673,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               React.createElement("section", { className: "playground-project-overview-summary-surface" },
                 React.createElement("div", { className: "playground-project-overview-summary-header" },
                   React.createElement("div", { className: "playground-project-overview-summary-copy" },
-                    React.createElement("h1", { className: "playground-project-overview-summary-title" }, selectedProject.name || "Untitled Project"),
-                    React.createElement("div", { className: "playground-project-overview-summary-description-row" },
-                      React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                        content: projectOverviewDescription,
-                        className: "playground-project-overview-summary-description tb-message-markdown",
-                      }),
+                    React.createElement("div", { className: "playground-project-overview-summary-title-row" },
+                      React.createElement("h1", { className: "playground-project-overview-summary-title" }, selectedProject.name || "Untitled Project"),
                       React.createElement("button", {
                         type: "button",
                         className: "playground-files-control-button playground-project-overview-summary-mission-button",
@@ -2751,6 +2683,80 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
                         React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
                       )
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-project-overview-summary-description-section" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                          [
+                            { id: "bold", label: "Bold", icon: Bold },
+                            { id: "italic", label: "Italic", icon: Italic },
+                            { id: "underline", label: "Underline", icon: Underline },
+                            { id: "list", label: "List", icon: List },
+                          ].map((action) =>
+                            React.createElement("button", {
+                              key: action.id,
+                              type: "button",
+                              className: "playground-tasks-detail-format-button",
+                              title: action.label,
+                              "aria-label": action.label,
+                              disabled: projectSaveState.isSaving,
+                              onMouseDown: (event) => event.preventDefault(),
+                              onClick: () => handleProjectDescriptionFormat(action.id),
+                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isProjectDescriptionEditing ? " is-editing" : " is-preview") },
+                        !isProjectDescriptionEditing
+                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                              String(projectOverviewDescription || "").trim()
+                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                    content: projectOverviewDescription,
+                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                  })
+                                : React.createElement("div", {
+                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                  }, "Add Description here")
+                            )
+                          : null,
+                        React.createElement("textarea", {
+                          ref: projectDescriptionTextareaRef,
+                          className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
+                          rows: 1,
+                          placeholder: isProjectDescriptionEditing ? "Add Description here" : "",
+                          value: projectOverviewDescription,
+                          onFocus: () => {
+                            setProjectDraft((current) => current?.id === normalizedSelectedProjectId
+                              ? current
+                              : normalizePlaygroundProjectRecord(selectedProject)
+                            );
+                            setIsProjectDescriptionEditing(true);
+                          },
+                          onChange: (event) => {
+                            const nextDescription = event.target.value;
+                            setProjectDraft((current) => {
+                              const baseProject = current?.id === normalizedSelectedProjectId
+                                ? current
+                                : normalizePlaygroundProjectRecord(selectedProject);
+                              return {
+                                ...baseProject,
+                                description: nextDescription,
+                              };
+                            });
+                            resizeTaskDescriptionTextarea(event.currentTarget);
+                          },
+                          onBlur: () => {
+                            setIsProjectDescriptionEditing(false);
+                            if (typeof saveProjectOverviewDescription === "function") {
+                              void saveProjectOverviewDescription();
+                            }
+                          },
+                        })
+                      ),
+                      projectSaveState.error
+                        ? React.createElement("div", { className: "playground-environments-error" }, projectSaveState.error)
+                        : null
                     )
                   )
                 ),
@@ -2857,7 +2863,10 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                               )
                             )
                           )
-                        )
+                        ),
+                    React.createElement("div", { className: "playground-project-overview-integration-facts" },
+                      projectOverviewIntegrationRows.map((row) => renderProjectOverviewIntegrationRow(row))
+                    )
                   )
                 )
               )
@@ -3099,25 +3108,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 projectAttachmentTransferState.error
                   ? React.createElement("div", { className: "playground-environments-error" }, projectAttachmentTransferState.error)
                   : null
-                ),
-                React.createElement("div", { className: "playground-project-overview-files-subsection" },
-                  renderOverviewSectionHeader(
-                    "Plugins",
-                    null
-                  ),
-                  overviewPluginItems.length > 0
-                    ? React.createElement("div", { className: "playground-project-overview-plugins-table" },
-                        React.createElement("div", { className: "playground-project-overview-plugins-table-header" },
-                          React.createElement("div", null, "Title"),
-                          React.createElement("div", null, "Used In"),
-                          React.createElement("div", null, "Task"),
-                          React.createElement("div", null, "Date")
-                        ),
-                        overviewPluginItems.map((plugin) => renderOverviewPluginRow(plugin))
-                      )
-                    : React.createElement("div", { className: "playground-tasks-secondary-copy playground-project-overview-files-subsection-empty" },
-                        normalizedSearchQuery ? "No matching project plugins." : "No plugins have been used in this project yet."
-                      )
                 ),
                 renderProjectOverviewFileMenu()
               ),

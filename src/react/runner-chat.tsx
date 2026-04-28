@@ -1048,6 +1048,7 @@ export interface RunnerChatExternalRunRequest {
   token: string | number;
   threadId: string;
   prompt: string;
+  displayPrompt?: string | null;
   attachments?: RunnerAttachment[] | null;
   githubRepo?: {
     repoFullName: string;
@@ -1193,6 +1194,7 @@ export interface RunnerChatProps {
   showUsageInStatus?: boolean;
   inputMode?: RunnerChatInputMode;
   agents?: RunnerChatOption[];
+  hideAgentSelector?: boolean;
   environments?: RunnerChatOption[];
   skills?: RunnerChatSkill[];
   skillDefaults?: RunnerChatSkillDefaults;
@@ -1229,6 +1231,7 @@ export interface RunnerChatProps {
   autoFocusComposer?: boolean;
   keepFocusOnSubmit?: boolean;
   enableBacklogSubtaskCommand?: boolean;
+  backlogTaskConnectors?: Record<string, unknown> | null;
   backlogSubtaskCommand?: {
     ticketNumber: string;
     token: string | number;
@@ -4322,12 +4325,16 @@ async function fetchThreadHydrationPayload(params: {
   let parsedThread: {
     thread?: {
       id?: string | null;
+      title?: string | null;
       status?: string | null;
       task?: string | null;
       environmentId?: string | null;
       duration?: string | number | null;
       startedAt?: string | null;
       completedAt?: string | null;
+      updatedAt?: string | null;
+      lastMessagePreview?: string | null;
+      metadata?: Record<string, unknown> | null;
       agentName?: string | null;
       environmentName?: string | null;
     };
@@ -4394,8 +4401,25 @@ async function fetchThreadHydrationPayload(params: {
   const startedAtMs = parseIsoTimestampMs(parsedThread.thread?.startedAt);
   const parsedStepsData = parseThreadSteps(parsedSteps.data);
   let diffEntries = parseThreadDiffEntries(parsedDiffs.diffs);
+  const completedAtMs = parseIsoTimestampMs(parsedThread.thread?.completedAt);
+  const rawThreadStatus =
+    typeof parsedLogs.status === "string" && parsedLogs.status.trim()
+      ? parsedLogs.status.trim()
+      : typeof parsedThread.thread?.status === "string" && parsedThread.thread.status.trim()
+        ? parsedThread.thread.status.trim()
+        : null;
   const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
-  const chronologicalLogs = sortRunnerLogsChronologically(Array.isArray(parsedLogs.logs) ? parsedLogs.logs.map(normalizeHydratedLog) : []);
+  const parsedRunnerLogs = Array.isArray(parsedLogs.logs) ? parsedLogs.logs.map(normalizeHydratedLog) : [];
+  const chronologicalLogs = sortRunnerLogsChronologically(buildFailedThreadFallbackLogs({
+    logs: parsedRunnerLogs,
+    threadStatus: rawThreadStatus,
+    title: parsedThread.thread?.title,
+    task: parsedThread.thread?.task,
+    lastMessagePreview: parsedThread.thread?.lastMessagePreview,
+    updatedAt: parsedThread.thread?.updatedAt ?? parsedLogs.updatedAt,
+    completedAt: parsedThread.thread?.completedAt,
+    metadata: parsedThread.thread?.metadata ?? null,
+  }).map(normalizeHydratedLog));
   const canonicalConversationMessages = chronologicalMessages.filter(
     (message) =>
       (message.role === "user" || message.role === "assistant") &&
@@ -4431,14 +4455,6 @@ async function fetchThreadHydrationPayload(params: {
     diffEntries,
     startedAtMs
   );
-
-  const completedAtMs = parseIsoTimestampMs(parsedThread.thread?.completedAt);
-  const rawThreadStatus =
-    typeof parsedLogs.status === "string" && parsedLogs.status.trim()
-      ? parsedLogs.status.trim()
-      : typeof parsedThread.thread?.status === "string" && parsedThread.thread.status.trim()
-        ? parsedThread.thread.status.trim()
-        : null;
 
   return {
     threadId: typeof parsedThread.thread?.id === "string" && parsedThread.thread.id.trim() ? parsedThread.thread.id : params.threadId,
@@ -4504,9 +4520,15 @@ async function fetchThreadLogsSnapshot(params: {
     throw new Error(parsed.message || parsed.error || `Failed to load thread logs (${response.status})`);
   }
 
+  const status = typeof parsed.status === "string" && parsed.status.trim() ? parsed.status.trim() : null;
+  const parsedRunnerLogs = Array.isArray(parsed.logs) ? parsed.logs.map(normalizeHydratedLog) : [];
+
   return {
-    logs: Array.isArray(parsed.logs) ? parsed.logs : [],
-    status: typeof parsed.status === "string" && parsed.status.trim() ? parsed.status.trim() : null,
+    logs: buildFailedThreadFallbackLogs({
+      logs: parsedRunnerLogs,
+      threadStatus: status,
+    }),
+    status,
     durationSeconds: parseDurationSecondsValue(parsed.duration),
     agentName: parsed.agentName ?? null,
     environmentName: parsed.environmentName ?? null,
@@ -4671,6 +4693,56 @@ function resolveHydratedThreadLifecycleStatus(status: string | null | undefined,
     return "completed";
   }
   return typeof status === "string" && status.trim() ? status.trim() : null;
+}
+
+function buildFailedThreadFallbackLogs(params: {
+  logs: RunnerLog[];
+  threadStatus: string | null | undefined;
+  title?: string | null;
+  task?: string | null;
+  lastMessagePreview?: string | null;
+  updatedAt?: string | null;
+  completedAt?: string | null;
+  metadata?: Record<string, unknown> | null;
+}): RunnerLog[] {
+  if (params.logs.length > 0 || normalizeThreadLifecycleStatus(params.threadStatus) !== "failed") {
+    return params.logs;
+  }
+
+  const task = typeof params.task === "string" ? params.task.trim() : "";
+  const preview = typeof params.lastMessagePreview === "string" ? params.lastMessagePreview.trim() : "";
+  const scheduleId =
+    params.metadata &&
+    typeof params.metadata === "object" &&
+    !Array.isArray(params.metadata) &&
+    typeof params.metadata.scheduleId === "string"
+      ? params.metadata.scheduleId.trim()
+      : "";
+  const title = typeof params.title === "string" ? params.title.trim() : "";
+  const isScheduledThread = Boolean(scheduleId || /^scheduled:/i.test(title));
+  const fallbackTime =
+    (typeof params.completedAt === "string" && params.completedAt.trim()) ||
+    (typeof params.updatedAt === "string" && params.updatedAt.trim()) ||
+    new Date().toISOString();
+
+  return [{
+    createdAt: fallbackTime,
+    time: fallbackTime,
+    message: preview && preview !== task
+      ? preview
+      : isScheduledThread
+        ? "Scheduled task failed before working logs were recorded."
+        : "Thread failed before working logs were recorded.",
+    type: "error",
+    metadata: {
+      status: "failed",
+      error: {
+        source: isScheduledThread ? "scheduled_task" : "thread",
+        synthetic: true,
+        ...(scheduleId ? { scheduleId } : {}),
+      },
+    },
+  }];
 }
 
 function isRunningThreadLifecycleStatus(status: string | null | undefined): boolean {
@@ -6766,6 +6838,7 @@ export function RunnerChat({
   showUsageInStatus = true,
   inputMode = "minimal",
   agents = [],
+  hideAgentSelector = false,
   environments = [],
   skills = [],
   skillDefaults,
@@ -6802,6 +6875,7 @@ export function RunnerChat({
   autoFocusComposer = false,
   keepFocusOnSubmit = false,
   enableBacklogSubtaskCommand = false,
+  backlogTaskConnectors = null,
   backlogSubtaskCommand = null,
   enableBacklogMissionControlCommand = false,
   backlogMissionControlCommand = null,
@@ -8954,6 +9028,7 @@ export function RunnerChat({
         branch: string;
       } | null;
       enabledSkillsOverride?: Record<string, unknown> | null;
+      displayPromptOverride?: string | null;
     }
   ) {
     const hiddenSystemPromptText = hiddenSystemPrompt.trim();
@@ -8970,6 +9045,10 @@ export function RunnerChat({
       [hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, taskText]
         .filter((part) => typeof part === "string" && part.trim().length > 0)
         .join("\n\n");
+    const visibleTaskText =
+      options?.displayPromptOverride !== undefined
+        ? String(options.displayPromptOverride || "")
+        : taskText;
     const hasResolvedThread = Boolean(options?.threadIdOverride || currentThreadId);
     let runEnvironmentId =
       options?.environmentIdOverride !== undefined
@@ -9011,6 +9090,7 @@ export function RunnerChat({
         token: generateId("runreq"),
         threadId,
         prompt: executionTaskText,
+        displayPrompt: visibleTaskText || taskText,
         attachments: resolvedAttachments || [],
         githubRepo: githubRepo || null,
         enabledSkills: enabledSkillsPayload || null,
@@ -9060,7 +9140,7 @@ export function RunnerChat({
         ...prev,
         {
           id: turnId,
-          prompt: taskText,
+          prompt: visibleTaskText,
           logs: [],
           startedAtMs,
           status: "running",
@@ -9139,7 +9219,7 @@ export function RunnerChat({
           apiKey,
           requestHeaders,
           threadId,
-          message: taskText,
+          message: visibleTaskText || taskText,
         })
           .then((nextTitle) => {
             onThreadTitleChange?.(threadId, nextTitle);
@@ -9164,7 +9244,8 @@ export function RunnerChat({
             return headers;
           })(),
           body: {
-            content: executionTaskText,
+            content: visibleTaskText || taskText,
+            ...(executionTaskText !== (visibleTaskText || taskText) ? { executionContent: executionTaskText } : {}),
             ...(resolvedAttachments ? { attachments: resolvedAttachments } : {}),
             ...(githubRepo ? { githubRepo } : {}),
             ...(typeof options?.truncateAtMessageIndex === "number" ? { truncateAtMessageIndex: options.truncateAtMessageIndex } : {}),
@@ -9173,6 +9254,7 @@ export function RunnerChat({
             ...(options?.enabledSkillsOverride !== undefined
               ? (options.enabledSkillsOverride ? { enabledSkills: options.enabledSkillsOverride } : {})
               : (enabledSkillsPayload ? { enabledSkills: enabledSkillsPayload } : {})),
+            ...(backlogTaskConnectors ? { connectors: backlogTaskConnectors } : {}),
             ...(subtaskBacklogCommand
               ? {
                   backlogTaskCommand: {
@@ -9276,6 +9358,9 @@ export function RunnerChat({
   useEffect(() => {
     const normalizedRequestThreadId = String(externalRunRequest?.threadId || "").trim();
     const normalizedPrompt = String(externalRunRequest?.prompt || "").trim();
+    const normalizedDisplayPrompt = typeof externalRunRequest?.displayPrompt === "string"
+      ? externalRunRequest.displayPrompt
+      : undefined;
     const requestToken = externalRunRequest?.token;
 
     if (
@@ -9313,6 +9398,7 @@ export function RunnerChat({
           resolvedAttachmentsOverride: Array.isArray(externalRunRequest.attachments) ? externalRunRequest.attachments : undefined,
           githubRepoOverride: externalRunRequest.githubRepo ?? undefined,
           enabledSkillsOverride: externalRunRequest.enabledSkills ?? undefined,
+          displayPromptOverride: normalizedDisplayPrompt,
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -14530,7 +14616,7 @@ export function RunnerChat({
       : "Speech-to-text is not supported in this browser";
 
   function renderAgentSelectorControl() {
-    if (agents.length === 0) {
+    if (hideAgentSelector || agents.length === 0) {
       return null;
     }
 
@@ -15747,6 +15833,7 @@ export function RunnerChat({
                   : isTurnRunning
                   ? "Working..."
                   : `Worked for ${turnSeconds}s`;
+              const workToggleLabel = isExpanded ? "Collapse" : "Expand";
               const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || displayedTimelineItems.length > 0 || isWorkLogsLoading;
               const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
               const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
@@ -15884,10 +15971,14 @@ export function RunnerChat({
                           type="button"
                           className="tb-work-header"
                           style={workHeaderStyle}
+                          aria-expanded={isExpanded}
                           onClick={() => setExpandedTurns((prev) => ({ ...prev, [turn.id]: !isExpanded }))}
                         >
                           <span className="tb-work-label">{workLabel}</span>
-                          {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
+                          <span className="tb-work-toggle">
+                            <span className="tb-work-toggle-label">{workToggleLabel}</span>
+                            {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
+                          </span>
                         </button>
 
                         <div className={`tb-work-collapse ${isExpanded ? "" : "collapsed"}`}>
@@ -16055,10 +16146,14 @@ export function RunnerChat({
                           type="button"
                           className="tb-work-header"
                           style={workHeaderStyle}
+                          aria-expanded={isExpanded}
                           onClick={() => setExpandedTurns((prev) => ({ ...prev, [turn.id]: !isExpanded }))}
                         >
                           <span className="tb-work-label">{workLabel}</span>
-                          {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
+                          <span className="tb-work-toggle">
+                            <span className="tb-work-toggle-label">{workToggleLabel}</span>
+                            {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
+                          </span>
                         </button>
 
                       <div className={`tb-work-collapse ${isExpanded ? "" : "collapsed"}`}>
@@ -16281,7 +16376,7 @@ export function RunnerChat({
                   className={`sidebar-textarea ${hasStagedComposerCommand ? "sidebar-textarea-staged" : ""}`.trim()}
                   value={input}
                   onChange={handleInputChange}
-                  placeholder={hasStagedComposerCommand ? "" : privateMode ? "Ask anything (Private Mode activated)" : placeholder}
+                  placeholder={hasStagedComposerCommand ? "" : placeholder}
                   onKeyDown={handleKeyDown}
                   readOnly={Boolean(stagedThreadContextCommand && !textareaAllowsPromptAfterStagedCommand)}
                 />

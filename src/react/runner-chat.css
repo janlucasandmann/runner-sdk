@@ -1238,6 +1238,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  text-align: left;
   padding: 0 0 15px;
   margin-bottom: 8px;
   background: transparent;
@@ -1248,14 +1249,31 @@
 }
 
 .tb-runner-chat .tb-work-label {
+  min-width: 0;
   font-size: 14px;
   line-height: 1.15;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.95);
 }
 
+.tb-runner-chat .tb-work-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tb-runner-chat .tb-work-toggle-label {
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .tb-runner-chat .tb-work-header .tb-chevron {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .tb-runner-chat .tb-chevron,
@@ -3805,7 +3823,7 @@
 }
 
 .tb-runner-chat .tb-log-terminal-status {
-  margin: 0;
+  margin: 0 0 12px;
   color: var(--tb-working-log-text);
   font-size: 12px;
   line-height: 1.5;
@@ -4489,8 +4507,8 @@
 
 .tb-runner-chat .task-input-box-private {
   --tb-task-input-overlay: transparent;
-  --tb-task-input-outline: rgba(192, 132, 252, 0.34);
-  --tb-task-input-border: linear-gradient(-10deg, rgba(192, 132, 252, 0.18), rgba(221, 191, 255, 0.48), rgba(192, 132, 252, 0.2), rgba(168, 85, 247, 0.54));
+  --tb-task-input-outline: rgba(96, 165, 250, 0.34);
+  --tb-task-input-border: linear-gradient(-10deg, rgba(96, 165, 250, 0.18), rgba(147, 197, 253, 0.48), rgba(96, 165, 250, 0.2), rgba(59, 130, 246, 0.54));
   --tb-task-input-base-bg: #000000;
 }
 

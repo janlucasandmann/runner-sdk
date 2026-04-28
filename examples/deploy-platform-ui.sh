@@ -6,11 +6,11 @@ PROJECT_ID="${PROJECT_ID:-firechatbot-a9654}"
 REGION="${REGION:-europe-west1}"
 SERVICE_NAME="${SERVICE_NAME:-computer-agents-platform}"
 IMAGE_URI="${IMAGE_URI:-gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest}"
+CLOUDBUILD_SUBMIT_VIA_VM="${CLOUDBUILD_SUBMIT_VIA_VM:-0}"
 TMP_BUILD_DIR="$(mktemp -d)"
 TMP_ENV_FILE="$(mktemp)"
 TMP_SOURCE_ARCHIVE="$(mktemp -t platform-source.XXXXXX).tar.gz"
 SOURCE_ARCHIVE_NAME="${SERVICE_NAME}-$(date +%Y%m%d%H%M%S).tar.gz"
-SOURCE_OBJECT="gs://${PROJECT_ID}_cloudbuild/source/${SOURCE_ARCHIVE_NAME}"
 
 cleanup() {
   rm -rf "${TMP_BUILD_DIR}"
@@ -20,6 +20,7 @@ cleanup() {
 trap cleanup EXIT
 
 cd "${ROOT_DIR}"
+source "${ROOT_DIR}/web/deploy-helpers.sh"
 
 mkdir -p "${TMP_BUILD_DIR}/repos" "${TMP_BUILD_DIR}/web/hosting"
 rsync -a --exclude ".git" --exclude "node_modules" --exclude "dist" --exclude "img" "repos/runner-web-sdk/" "${TMP_BUILD_DIR}/repos/runner-web-sdk/"
@@ -137,67 +138,33 @@ with output_path.open("w") as f:
 PY
 
 echo "Building platform image: ${IMAGE_URI}"
-tar -czf "${TMP_SOURCE_ARCHIVE}" -C "${TMP_BUILD_DIR}" .
-ACCESS_TOKEN="$(gcloud auth print-access-token --project "${PROJECT_ID}")"
+COPYFILE_DISABLE=1 tar -czf "${TMP_SOURCE_ARCHIVE}" -C "${TMP_BUILD_DIR}" .
 SOURCE_SIZE="$(wc -c < "${TMP_SOURCE_ARCHIVE}" | tr -d '[:space:]')"
-UPLOAD_HEADERS="$(mktemp)"
-UPLOAD_RESPONSE="$(mktemp)"
-CHUNK_FILE="$(mktemp -t platform-source-chunk.XXXXXX)"
-trap 'rm -rf "${TMP_BUILD_DIR}"; rm -f "${TMP_ENV_FILE}" "${TMP_SOURCE_ARCHIVE}" "${UPLOAD_HEADERS:-}" "${UPLOAD_RESPONSE:-}" "${CHUNK_FILE:-}"' EXIT
-curl --fail --show-error --silent --ipv4 \
-  --request POST \
-  --dump-header "${UPLOAD_HEADERS}" \
-  --output "${UPLOAD_RESPONSE}" \
-  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-  --header "Content-Type: application/json; charset=UTF-8" \
-  --header "X-Upload-Content-Type: application/gzip" \
-  --header "X-Upload-Content-Length: ${SOURCE_SIZE}" \
-  --data "{\"name\":\"source/${SOURCE_ARCHIVE_NAME}\"}" \
-  "https://storage.googleapis.com/upload/storage/v1/b/${PROJECT_ID}_cloudbuild/o?uploadType=resumable"
-UPLOAD_URL="$(awk '{key=tolower($1); if (key == "location:") {gsub(/\r/, ""); print $2}}' "${UPLOAD_HEADERS}" | tail -n 1)"
-if [[ -z "${UPLOAD_URL}" ]]; then
-  echo "Failed to start Cloud Storage resumable upload." >&2
-  cat "${UPLOAD_RESPONSE}" >&2
-  exit 1
-fi
+if [[ "${CLOUDBUILD_SUBMIT_VIA_VM:-0}" == "1" ]]; then
+  BUILD_SUBMIT_VM_NAME="${BUILD_SUBMIT_VM_NAME:-testbase-mig-d25h}"
+  BUILD_SUBMIT_VM_ZONE="${BUILD_SUBMIT_VM_ZONE:-us-central1-a}"
+  REMOTE_ARCHIVE="/tmp/${SOURCE_ARCHIVE_NAME}"
+  REMOTE_SOURCE_DIR="/tmp/${SERVICE_NAME}-source-${SOURCE_ARCHIVE_NAME%.tar.gz}"
 
-CHUNK_SIZE=$((256 * 1024))
-OFFSET=0
-CHUNK_INDEX=0
-echo "Uploading platform source archive in 256 KiB chunks (${SOURCE_SIZE} bytes)..."
-while [[ "${OFFSET}" -lt "${SOURCE_SIZE}" ]]; do
-  REMAINING=$((SOURCE_SIZE - OFFSET))
-  CURRENT_CHUNK_SIZE="${CHUNK_SIZE}"
-  if [[ "${REMAINING}" -lt "${CURRENT_CHUNK_SIZE}" ]]; then
-    CURRENT_CHUNK_SIZE="${REMAINING}"
-  fi
-  END=$((OFFSET + CURRENT_CHUNK_SIZE - 1))
-  dd if="${TMP_SOURCE_ARCHIVE}" of="${CHUNK_FILE}" bs="${CHUNK_SIZE}" skip="${CHUNK_INDEX}" count=1 status=none
-  HTTP_CODE="$(curl --show-error --silent --ipv4 \
-    --retry 10 --retry-delay 1 --retry-all-errors \
-    --speed-limit 512 --speed-time 20 \
-    --request PUT \
-    --output "${UPLOAD_RESPONSE}" \
-    --write-out "%{http_code}" \
-    --header "Content-Length: ${CURRENT_CHUNK_SIZE}" \
-    --header "Content-Range: bytes ${OFFSET}-${END}/${SOURCE_SIZE}" \
-    --upload-file "${CHUNK_FILE}" \
-    "${UPLOAD_URL}")"
-  if [[ "${HTTP_CODE}" != "308" && "${HTTP_CODE}" != "200" && "${HTTP_CODE}" != "201" ]]; then
-    echo "Cloud Storage chunk upload failed with HTTP ${HTTP_CODE}." >&2
-    cat "${UPLOAD_RESPONSE}" >&2
-    exit 1
-  fi
-  OFFSET=$((OFFSET + CURRENT_CHUNK_SIZE))
-  CHUNK_INDEX=$((CHUNK_INDEX + 1))
-  printf "."
-done
-echo
-gcloud builds submit \
-  --project "${PROJECT_ID}" \
-  --config "repos/runner-web-sdk/examples/cloudbuild.platform.yaml" \
-  --substitutions "_IMAGE_URI=${IMAGE_URI}" \
-  "${SOURCE_OBJECT}"
+  echo "Submitting platform build from ${BUILD_SUBMIT_VM_NAME} (${SOURCE_SIZE} bytes)..."
+  deploy_stream_file_to_vm "${PROJECT_ID}" "${BUILD_SUBMIT_VM_ZONE}" "${BUILD_SUBMIT_VM_NAME}" "${TMP_SOURCE_ARCHIVE}" "${REMOTE_ARCHIVE}" "platform source archive"
+  gcloud compute ssh "${BUILD_SUBMIT_VM_NAME}" \
+    --project "${PROJECT_ID}" \
+    --zone "${BUILD_SUBMIT_VM_ZONE}" \
+    --quiet \
+    --command="
+      set -e
+      trap 'rm -rf \"${REMOTE_SOURCE_DIR}\" \"${REMOTE_ARCHIVE}\"' EXIT
+      rm -rf '${REMOTE_SOURCE_DIR}'
+      mkdir -p '${REMOTE_SOURCE_DIR}'
+      tar -xzf '${REMOTE_ARCHIVE}' -C '${REMOTE_SOURCE_DIR}'
+      cd '${REMOTE_SOURCE_DIR}'
+      gcloud builds submit --project '${PROJECT_ID}' --config 'repos/runner-web-sdk/examples/cloudbuild.platform.yaml' --substitutions '_IMAGE_URI=${IMAGE_URI}' .
+    "
+else
+  echo "Submitting platform build locally (${SOURCE_SIZE} bytes)..."
+  deploy_gcloud_build_submit "${PROJECT_ID}" "${TMP_BUILD_DIR}" "repos/runner-web-sdk/examples/cloudbuild.platform.yaml" "_IMAGE_URI=${IMAGE_URI}" "platform"
+fi
 
 echo "Deploying Cloud Run service: ${SERVICE_NAME}"
 gcloud run deploy "${SERVICE_NAME}" \
