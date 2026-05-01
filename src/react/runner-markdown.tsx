@@ -20,6 +20,7 @@ export function stripRunnerSystemTags(text: string): string {
   return text
     .replace(/<system>[\s\S]*?<\/system>/g, "")
     .replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, "")
+    .replace(/<\/?(?:system|system-reminder)>/g, "")
     .replace(/<tool_use_error>([\s\S]*?)<\/tool_use_error>/g, "$1")
     .trim();
 }

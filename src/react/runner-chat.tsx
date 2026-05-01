@@ -82,6 +82,7 @@ const RUNNER_THREAD_HISTORY_PREVIEW_LENGTH = 50;
 const RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH = 15;
 const RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH = 10;
 const RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH = 5;
+const RUNNER_WORK_LOG_PAGE_SIZE = 10;
 
 export interface RunnerAttachment {
   id: string;
@@ -318,6 +319,10 @@ interface RunnerTaskPreview {
   assigneePhotoUrl?: string;
   environmentId?: string;
   environmentName?: string;
+  runKind?: string;
+  reviewRequest?: boolean;
+  showPromptPreview?: boolean;
+  reviewCommentId?: string;
   isDeleted?: boolean;
 }
 
@@ -325,6 +330,8 @@ interface RunnerMissionControlPreview {
   prompt?: string;
   projectName?: string;
   projectIcon?: ReactNode;
+  agentName?: string;
+  agentPhotoUrl?: string;
 }
 
 type RunnerTurnSummaryPreviewItem =
@@ -477,14 +484,26 @@ function getRecordString(record: Record<string, unknown>, keys: string[]): strin
   return "";
 }
 
+function sanitizeRunnerBudgetMessage(value: string): string {
+  return String(value || "")
+    .replace(
+      /Insufficient budget:\s*Insufficient balance:\s*\$-?\d+(?:\.\d+)?\.?\s*Please add funds\.?/gi,
+      "Insufficient budget: Insufficient balance. Please add Compute Tokens or upgrade your plan to continue."
+    )
+    .replace(
+      /Insufficient balance:\s*\$-?\d+(?:\.\d+)?\.?\s*Please add funds\.?/gi,
+      "Insufficient balance. Please add Compute Tokens or upgrade your plan to continue."
+    );
+}
+
 function normalizeRunnerConversationMessageContent(value: unknown): string {
   if (typeof value === "string") {
-    return value;
+    return sanitizeRunnerBudgetMessage(value);
   }
   if (!Array.isArray(value)) {
     return "";
   }
-  return value
+  const normalized = value
     .map((entry) => {
       if (typeof entry === "string") {
         return entry;
@@ -498,6 +517,7 @@ function normalizeRunnerConversationMessageContent(value: unknown): string {
     .filter(Boolean)
     .join("\n")
     .trim();
+  return sanitizeRunnerBudgetMessage(normalized);
 }
 
 function normalizeRunnerConversationMessage(value: unknown): RunnerConversationMessage | null {
@@ -1050,6 +1070,7 @@ export interface RunnerChatExternalRunRequest {
   prompt: string;
   displayPrompt?: string | null;
   agentId?: string | null;
+  agentName?: string | null;
   attachments?: RunnerAttachment[] | null;
   githubRepo?: {
     repoFullName: string;
@@ -1059,6 +1080,23 @@ export interface RunnerChatExternalRunRequest {
   enabledSkills?: Record<string, unknown> | null;
   environmentId?: string | null;
   projectId?: string | null;
+  quotedSelection?: RunnerQuotedSelection | null;
+}
+
+export interface RunnerChatProjectTaskSubmitPayload {
+  prompt: string;
+  taskPreview: RunnerTaskPreview;
+  attachments: RunnerAttachment[];
+  environmentId: string | null;
+  projectId?: string | null;
+  agentId: string | null;
+  agentName?: string | null;
+  githubRepo?: {
+    repoFullName: string;
+    repoName: string;
+    branch: string;
+  } | null;
+  enabledSkills?: Record<string, unknown> | null;
   quotedSelection?: RunnerQuotedSelection | null;
 }
 
@@ -1222,6 +1260,10 @@ export interface RunnerChatProps {
   onDeepResearchDetailOpenChange?: (isOpen: boolean) => void;
   threadTaskPreview?: RunnerTaskPreview | null;
   threadMissionControlPreview?: RunnerMissionControlPreview | null;
+  composerProjectTasks?: RunnerTaskPreview[];
+  selectedComposerProjectTask?: RunnerTaskPreview | null;
+  onComposerProjectTaskChange?: (preview: RunnerTaskPreview | null) => void;
+  onComposerProjectTaskSubmit?: (payload: RunnerChatProjectTaskSubmitPayload) => Promise<boolean | void> | boolean | void;
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
   onResourcePreviewClick?: (resource: RunnerCreatedResourcePreview) => void;
@@ -1270,6 +1312,7 @@ export interface RunnerChatProps {
   } | null;
   skillCreationCommandHiddenPrompt?: (commandType: RunnerSkillCreationCommandType) => string;
   onSkillCreationCommandChange?: (commandType: RunnerSkillCreationCommandType | null) => void;
+  onOpenPluginsOverview?: () => void;
   onBacklogMissionControlSubmit?: (payload: {
     prompt: string;
     attachments: RunnerAttachment[];
@@ -1934,6 +1977,14 @@ function renderRunnerMissionControlPreviewCard(preview: RunnerMissionControlPrev
   );
 }
 
+function getRunnerMissionControlAgentName(preview: RunnerMissionControlPreview | null | undefined) {
+  return String(preview?.agentName || "").trim() || "Mission Control";
+}
+
+function getRunnerMissionControlAgentPhotoUrl(preview: RunnerMissionControlPreview | null | undefined) {
+  return String(preview?.agentPhotoUrl || "").trim();
+}
+
 function getRunnerSummaryResourceSubtitle(resource: RunnerCreatedResourcePreview): string {
   if (resource.resourceType === "agent") {
     return [resource.model, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
@@ -1943,6 +1994,9 @@ function getRunnerSummaryResourceSubtitle(resource: RunnerCreatedResourcePreview
   }
   if (resource.resourceType === "environment") {
     return [resource.projectName, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
+  }
+  if (resource.resourceType === "project") {
+    return [resource.status, resource.projectName].filter(Boolean).join(" · ");
   }
   return [resource.status, resource.projectName].filter(Boolean).join(" · ");
 }
@@ -1956,6 +2010,9 @@ function renderRunnerSummaryResourceIcon(resource: RunnerCreatedResourcePreview)
   }
   if (resource.resourceType === "environment") {
     return <LucideCloud className="runner-summary-resource-icon" strokeWidth={1.8} />;
+  }
+  if (resource.resourceType === "project") {
+    return <LucideRocket className="runner-summary-resource-icon" strokeWidth={1.8} />;
   }
   return <LucideCalendar className="runner-summary-resource-icon" strokeWidth={1.8} />;
 }
@@ -1975,6 +2032,8 @@ function renderRunnerSummaryResourceChip(
         ? "Skill"
         : resource.resourceType === "environment"
           ? "Environment"
+          : resource.resourceType === "project"
+            ? "Project"
           : "Release";
   const subtitle = getRunnerSummaryResourceSubtitle(resource);
   const isAgent = resource.resourceType === "agent";
@@ -2185,7 +2244,9 @@ function isInternalTurnPreviewPath(filePath: string): boolean {
 function isInternalFileChangeLog(log: RunnerLog): boolean {
   if (log.eventType !== "file_change") return false;
   const filePaths = Array.isArray(log.metadata?.filePaths)
-    ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    ? log.metadata.filePaths.filter((value): value is string =>
+      typeof value === "string" && value.trim().length > 0 && !isRunnerHydratedNullDevicePath(value)
+    )
     : [];
   return filePaths.length > 0 && filePaths.every((filePath) => {
     const normalizedPath = normalizeRunnerPreviewPath(filePath);
@@ -2743,6 +2804,14 @@ function IconChevronDown({ className }: { className?: string }) {
   );
 }
 
+function IconChevronUp({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="m6 15 6-6 6 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function IconChevronRight({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -3228,7 +3297,63 @@ function parseSecondsFromClock(time: string): number | null {
   return null;
 }
 
-function toDurationLabel(log: RunnerLog): string | undefined {
+function formatElapsedDurationLabel(secondsValue: number): string {
+  const totalSeconds = Math.max(0, Math.round(secondsValue));
+  if (totalSeconds < 120) {
+    return `${totalSeconds}s`;
+  }
+
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes < 60) {
+    return seconds > 0 ? `${minutes} min ${seconds}s` : `${minutes} min`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes} min` : `${hours}h`;
+}
+
+function getRunnerLogTimestampMs(log: RunnerLog, relativeBaseMs?: number | null): number | null {
+  const absoluteTimestampMs = getRunnerLogAbsoluteTimestampMs(log);
+  if (absoluteTimestampMs !== null) {
+    return absoluteTimestampMs;
+  }
+
+  const relativeSeconds = log.time ? parseSecondsFromClock(log.time) : null;
+  if (relativeSeconds !== null && relativeBaseMs != null && Number.isFinite(relativeBaseMs)) {
+    return relativeBaseMs + relativeSeconds * 1000;
+  }
+
+  return null;
+}
+
+function getRunnerLogRelativeSeconds(log: RunnerLog, startedAtMs?: number | null): number | null {
+  const absoluteTimestampMs = getRunnerLogAbsoluteTimestampMs(log);
+  if (absoluteTimestampMs !== null && startedAtMs != null && Number.isFinite(startedAtMs)) {
+    return Math.max(0, Math.round((absoluteTimestampMs - startedAtMs) / 1000));
+  }
+
+  const clockSeconds = log.time ? parseSecondsFromClock(log.time) : null;
+  return clockSeconds !== null ? Math.max(0, clockSeconds) : null;
+}
+
+function getRunnerLogRangeDurationLabel(startLog: RunnerLog, endLog: RunnerLog, relativeBaseMs?: number | null): string | undefined {
+  const startMs = getRunnerLogTimestampMs(startLog, relativeBaseMs);
+  const endMs = getRunnerLogTimestampMs(endLog, relativeBaseMs);
+  if (startMs === null || endMs === null) {
+    return undefined;
+  }
+
+  return formatElapsedDurationLabel(Math.max(0, (endMs - startMs) / 1000));
+}
+
+function toDurationLabel(log: RunnerLog, startedAtMs?: number | null): string | undefined {
+  const relativeSeconds = getRunnerLogRelativeSeconds(log, startedAtMs);
+  if (relativeSeconds !== null) {
+    return formatElapsedDurationLabel(relativeSeconds);
+  }
+
   const durationMs =
     typeof log.metadata?.durationMs === "number"
       ? log.metadata.durationMs
@@ -3236,13 +3361,9 @@ function toDurationLabel(log: RunnerLog): string | undefined {
         ? ((log.metadata as { duration_ms: number }).duration_ms)
         : undefined;
   if (typeof durationMs === "number" && durationMs >= 0) {
-    return `${Math.max(1, Math.round(durationMs / 1000))}s`;
+    return formatElapsedDurationLabel(Math.max(1, Math.round(durationMs / 1000)));
   }
-  if (log.time) {
-    const seconds = parseSecondsFromClock(log.time);
-    if (seconds !== null) return `${seconds}s`;
-    return log.time;
-  }
+  if (log.time) return log.time;
   return undefined;
 }
 
@@ -3301,21 +3422,33 @@ function summarizeCommandRow(log: RunnerLog): CommandRowSummary {
     return { label: `Using ${skill} Skill`, icon: "terminal" };
   }
 
+  const listPath =
+    command.match(/\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?["']([^"']+)["']/)?.[1] ||
+    command.match(/\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?([^\s|&;>"']+)/)?.[1] ||
+    command.match(/\bfind\s+["']([^"']+)["']/)?.[1] ||
+    command.match(/\bfind\s+([^\s|&;>"']+)/)?.[1] ||
+    command.match(/\brg\s+--files\s+["']([^"']+)["']/)?.[1] ||
+    command.match(/\brg\s+--files\s+([^\s|&;>"']+)/)?.[1];
+  if (listPath) {
+    return { label: "List Files", detail: listPath, icon: "list" };
+  }
+
+  const headTailReadPath =
+    command.match(/\b(?:head|tail)\s+-n\s+\d+\s+["']([^"']+)["']/)?.[1] ||
+    command.match(/\b(?:head|tail)\s+-n\s+\d+\s+([^\s|&;>"']+)/)?.[1] ||
+    command.match(/\b(?:head|tail)\s+-\d+\s+["']([^"']+)["']/)?.[1] ||
+    command.match(/\b(?:head|tail)\s+-\d+\s+([^\s|&;>"']+)/)?.[1] ||
+    command.match(/\b(?:head|tail)\s+["']([^"']+)["']/)?.[1] ||
+    command.match(/\b(?:head|tail)\s+([^\s|&;>"']+)/)?.[1];
   const readPath =
     command.match(/sed\s+-n\s+['"][^'"]*['"]\s+["']([^"']+)["']/)?.[1] ||
-    command.match(/\b(?:cat|head|tail|less)\s+(?:-n\s+\d+\s+)?["']([^"']+)["']/)?.[1] ||
-    command.match(/\b(?:cat|head|tail|less)\s+(?:-n\s+\d+\s+)?([^\s|&;>"']+)/)?.[1];
+    command.match(/\b(?:cat|less)\s+["']([^"']+)["']/)?.[1] ||
+    command.match(/\b(?:cat|less)\s+([^\s|&;>"']+)/)?.[1] ||
+    (headTailReadPath && !headTailReadPath.startsWith("-") ? headTailReadPath : undefined);
   if (readPath) {
     const lines = command.match(/sed\s+-n\s+['"](\d+),(\d+)p['"]/);
     const detail = lines ? `${readPath}  ·  ${lines[1]}-${lines[2]}` : readPath;
     return { label: "Read File", detail, icon: "read" };
-  }
-
-  const listPath =
-    command.match(/\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?["']([^"']+)["']/)?.[1] ||
-    command.match(/\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?([^\s|&;>"']+)/)?.[1];
-  if (listPath) {
-    return { label: "List Files", detail: listPath, icon: "list" };
   }
 
   const writePath =
@@ -3900,6 +4033,11 @@ function normalizeRunnerHydratedFilePath(value: string): string {
   return value.trim().replace(/^\.?\//, "").replace(/^\/workspace\//, "");
 }
 
+function isRunnerHydratedNullDevicePath(value?: string | null): boolean {
+  const normalized = String(value || "").trim().replace(/^['"`]+|['"`]+$/g, "");
+  return normalized === "/dev/null" || normalized === "dev/null";
+}
+
 function parseThreadDiffEntries(value: unknown): RunnerThreadDiffEntry[] {
   if (!Array.isArray(value)) {
     return [];
@@ -3944,17 +4082,7 @@ function formatHydratedRelativeLogTime(createdAt: string, startedAtMs: number | 
   }
 
   const elapsedSeconds = Math.max(0, Math.round((createdAtMs - startedAtMs) / 1000));
-  if (elapsedSeconds < 60) {
-    return `${elapsedSeconds}s`;
-  }
-  if (elapsedSeconds < 3600) {
-    const minutes = Math.floor(elapsedSeconds / 60);
-    const seconds = elapsedSeconds % 60;
-    return `${minutes}m ${seconds}s`;
-  }
-  const hours = Math.floor(elapsedSeconds / 3600);
-  const minutes = Math.floor((elapsedSeconds % 3600) / 60);
-  return `${hours}h ${minutes}m`;
+  return formatElapsedDurationLabel(elapsedSeconds);
 }
 
 function inferHydratedChangeKindFromDiff(entry: RunnerThreadDiffEntry): "created" | "modified" | "deleted" {
@@ -4004,6 +4132,9 @@ function parseHydratedStepDiffEntries(diffText: string, createdAt?: string): Run
       const plusPath = plusPlusPlusMatch?.[1]?.trim() || "";
       const minusPath = minusMinusMinusMatch?.[1]?.trim() || "";
       const selectedPath = plusPath !== "/dev/null" ? plusPath : minusPath;
+      if (isRunnerHydratedNullDevicePath(selectedPath)) {
+        continue;
+      }
       const normalizedPath = selectedPath.replace(/^[ab]\//, "").trim();
       if (!normalizedPath) {
         continue;
@@ -4140,7 +4271,9 @@ function mergeThreadStepsIntoLogs(
     .flatMap((step) => {
       const metadata = step.metadata || {};
       const filePaths = Array.isArray(metadata.filePaths)
-        ? metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+        ? metadata.filePaths.filter((value): value is string =>
+          typeof value === "string" && value.trim().length > 0 && !isRunnerHydratedNullDevicePath(value)
+        )
         : [];
       const changeKinds = Array.isArray(metadata.changeKinds)
         ? metadata.changeKinds.filter(
@@ -4154,6 +4287,9 @@ function mergeThreadStepsIntoLogs(
           : {};
 
       return filePaths.map((filePath, index) => {
+        if (isRunnerHydratedNullDevicePath(filePath)) {
+          return null;
+        }
         const normalizedPreviewPath = normalizeRunnerPreviewPath(filePath);
         if (normalizedPreviewPath && isInternalTurnPreviewPath(normalizedPreviewPath)) {
           return null;
@@ -4177,7 +4313,7 @@ function mergeThreadStepsIntoLogs(
     syntheticLogsFromSteps.length > 0
       ? syntheticLogsFromSteps
         : diffEntries.map((entry) =>
-          entry.path && !isInternalTurnPreviewPath(normalizeRunnerHydratedFilePath(entry.path))
+          entry.path && !isRunnerHydratedNullDevicePath(entry.path) && !isInternalTurnPreviewPath(normalizeRunnerHydratedFilePath(entry.path))
             ? buildSyntheticFileChangeLog({
                 path: entry.path || "",
                 changeKind: inferHydratedChangeKindFromDiff(entry),
@@ -4217,6 +4353,7 @@ function mergeThreadDiffsIntoLogs(logs: RunnerLog[], diffEntries: RunnerThreadDi
     if (log.eventType !== "file_change") continue;
     const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [];
     if (filePaths.length !== 1 || typeof filePaths[0] !== "string") continue;
+    if (isRunnerHydratedNullDevicePath(filePaths[0])) continue;
     const normalizedPath = normalizeRunnerHydratedFilePath(filePaths[0]);
     if (isInternalTurnPreviewPath(normalizedPath)) continue;
     if (!normalizedPath) continue;
@@ -4235,6 +4372,7 @@ function mergeThreadDiffsIntoLogs(logs: RunnerLog[], diffEntries: RunnerThreadDi
 
   for (const entry of diffEntries) {
     if (!entry.path) continue;
+    if (isRunnerHydratedNullDevicePath(entry.path)) continue;
     const normalizedPath = normalizeRunnerHydratedFilePath(entry.path);
     if (isInternalTurnPreviewPath(normalizedPath)) continue;
     if (!normalizedPath) continue;
@@ -4253,6 +4391,9 @@ function mergeThreadDiffsIntoLogs(logs: RunnerLog[], diffEntries: RunnerThreadDi
 
     const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [];
     if (filePaths.length !== 1 || typeof filePaths[0] !== "string") {
+      return log;
+    }
+    if (isRunnerHydratedNullDevicePath(filePaths[0])) {
       return log;
     }
 
@@ -4710,6 +4851,9 @@ function resolveHydratedThreadLifecycleStatus(status: string | null | undefined,
   if (isPendingPermissionThreadLifecycleStatus(normalizedStatus)) {
     return "permission_asked";
   }
+  if (isRunningThreadLifecycleStatus(normalizedStatus) && (normalizedStatus !== "active" || completedAtMs == null)) {
+    return normalizedStatus;
+  }
   if (completedAtMs != null && !isTerminalThreadLifecycleStatus(normalizedStatus)) {
     return "completed";
   }
@@ -4810,6 +4954,13 @@ function threadLifecycleIsTerminal(meta?: {
   threadStatus?: string | null;
   completedAtMs?: number | null;
 }): boolean {
+  const normalizedStatus = normalizeThreadLifecycleStatus(meta?.threadStatus);
+  if (isPendingPermissionThreadLifecycleStatus(normalizedStatus)) {
+    return false;
+  }
+  if (isRunningThreadLifecycleStatus(normalizedStatus) && (normalizedStatus !== "active" || meta?.completedAtMs == null)) {
+    return false;
+  }
   return isTerminalThreadLifecycleStatus(meta?.threadStatus) || meta?.completedAtMs != null;
 }
 
@@ -5004,10 +5155,10 @@ function hydratedThreadStatusIsRunning(meta?: {
   threadStatus?: string | null;
   completedAtMs?: number | null;
 }): boolean {
-  if (isRunningThreadLifecycleStatus(meta?.threadStatus)) {
-    return true;
-  }
   const normalizedStatus = typeof meta?.threadStatus === "string" ? meta.threadStatus.trim().toLowerCase() : "";
+  if (isRunningThreadLifecycleStatus(normalizedStatus)) {
+    return normalizedStatus !== "active" || meta?.completedAtMs == null;
+  }
   if (normalizedStatus) {
     return false;
   }
@@ -5015,6 +5166,53 @@ function hydratedThreadStatusIsRunning(meta?: {
     return false;
   }
   return meta.completedAtMs == null;
+}
+
+function turnHasResponse(turn: RunnerTurn): boolean {
+  return turn.logs.some(isTurnResponseLog);
+}
+
+function findLatestUnansweredUserTurnIndex(turns: RunnerTurn[]): number {
+  for (let index = turns.length - 1; index >= 0; index -= 1) {
+    const turn = turns[index];
+    if (!turn || turnPresentation(turn) === "context-action-notice" || !turn.prompt.trim()) {
+      continue;
+    }
+    return turnHasResponse(turn) ? -1 : index;
+  }
+  return -1;
+}
+
+function findStaleCompletedAtRunningTurnIndex(
+  turns: RunnerTurn[],
+  meta?: {
+    threadStatus?: string | null;
+    completedAtMs?: number | null;
+  }
+): number {
+  const completedAtMs = meta?.completedAtMs;
+  const normalizedStatus = normalizeThreadLifecycleStatus(meta?.threadStatus);
+  if (
+    completedAtMs == null ||
+    (isRunningThreadLifecycleStatus(normalizedStatus) && normalizedStatus !== "active") ||
+    isPendingPermissionThreadLifecycleStatus(normalizedStatus)
+  ) {
+    return -1;
+  }
+
+  const latestUnansweredTurnIndex = findLatestUnansweredUserTurnIndex(turns);
+  if (latestUnansweredTurnIndex === -1) {
+    return -1;
+  }
+
+  const latestUnansweredTurn = turns[latestUnansweredTurnIndex];
+  if (!latestUnansweredTurn) {
+    return -1;
+  }
+
+  return latestUnansweredTurn.startedAtMs > completedAtMs + 1000
+    ? latestUnansweredTurnIndex
+    : -1;
 }
 
 function applyHydratedRunningThreadState(
@@ -5028,7 +5226,10 @@ function applyHydratedRunningThreadState(
     return turns;
   }
 
-  const terminalSettledTurns = settleHydratedTerminalThreadTurns(turns, meta);
+  const staleCompletedAtRunningTurnIndex = findStaleCompletedAtRunningTurnIndex(turns, meta);
+  const terminalSettledTurns = staleCompletedAtRunningTurnIndex === -1
+    ? settleHydratedTerminalThreadTurns(turns, meta)
+    : turns;
   if (terminalSettledTurns !== turns) {
     return terminalSettledTurns;
   }
@@ -5040,13 +5241,20 @@ function applyHydratedRunningThreadState(
       break;
     }
   }
-  const shouldForceRunningState = hydratedThreadStatusIsRunning(meta) || activeDeepResearchTurnIndex !== -1;
+  const shouldForceRunningState =
+    hydratedThreadStatusIsRunning(meta) ||
+    activeDeepResearchTurnIndex !== -1 ||
+    staleCompletedAtRunningTurnIndex !== -1;
 
   if (!shouldForceRunningState) {
     return turns;
   }
 
-  const targetIndex = activeDeepResearchTurnIndex !== -1 ? activeDeepResearchTurnIndex : turns.length - 1;
+  const targetIndex = activeDeepResearchTurnIndex !== -1
+    ? activeDeepResearchTurnIndex
+    : staleCompletedAtRunningTurnIndex !== -1
+      ? staleCompletedAtRunningTurnIndex
+      : turns.length - 1;
   const targetTurn = turns[targetIndex];
   if (!targetTurn || targetTurn.status === "failed" || targetTurn.status === "cancelled") {
     return turns;
@@ -5755,7 +5963,11 @@ function getHydratedTimelineLogTimestampMs(log: RunnerLog, threadStartedAtMs?: n
   return null;
 }
 
-function insertHydratedTimelineLogs(turn: RunnerTurn, logs: RunnerLog[]): RunnerTurn {
+function insertHydratedTimelineLogs(
+  turn: RunnerTurn,
+  logs: RunnerLog[],
+  meta?: { threadStartedAtMs?: number | null }
+): RunnerTurn {
   if (logs.length === 0) {
     return turn;
   }
@@ -5796,6 +6008,31 @@ function insertHydratedTimelineLogs(turn: RunnerTurn, logs: RunnerLog[]): Runner
     if (log.type === "error") {
       status = "failed";
     }
+  }
+
+  const latestVisibleLogTimestampMs = visibleLogs.reduce<number | null>((latestTimestampMs, log) => {
+    const timestampMs = getRunnerLogTimestampMs(log, meta?.threadStartedAtMs ?? turn.startedAtMs);
+    if (timestampMs === null) {
+      return latestTimestampMs;
+    }
+    return latestTimestampMs === null ? timestampMs : Math.max(latestTimestampMs, timestampMs);
+  }, null);
+
+  if (
+    !isActiveTurnStatus(status) &&
+    latestVisibleLogTimestampMs !== null &&
+    (completedAtMs == null || completedAtMs <= turn.startedAtMs || latestVisibleLogTimestampMs > completedAtMs)
+  ) {
+    completedAtMs = latestVisibleLogTimestampMs;
+  }
+
+  if (
+    (durationSeconds == null || durationSeconds <= 0) &&
+    completedAtMs != null &&
+    Number.isFinite(turn.startedAtMs) &&
+    completedAtMs >= turn.startedAtMs
+  ) {
+    durationSeconds = Math.max(0, Math.round((completedAtMs - turn.startedAtMs) / 1000));
   }
 
   const responseIndex = turn.logs.findIndex(isTurnResponseLog);
@@ -5876,7 +6113,9 @@ function mergeHydratedTimelineLogsIntoMessageTurns(
     logBuckets.set(targetTurnIndex, bucket);
   }
 
-  return turns.map((turn, index) => insertHydratedTimelineLogs(turn, logBuckets.get(index) || []));
+  return turns.map((turn, index) => insertHydratedTimelineLogs(turn, logBuckets.get(index) || [], {
+    threadStartedAtMs: meta?.startedAtMs ?? null,
+  }));
 }
 
 function mergeHydratedMessageTurnsIntoTurns(
@@ -6022,8 +6261,15 @@ function mapExpandedTurns(
   previousExpandedTurns: Record<string, boolean>,
   previousTurns: RunnerTurn[],
   nextTurns: RunnerTurn[],
-  options?: { defaultLatestExpanded?: boolean }
+  options?: { defaultLatestExpanded?: boolean; collapseOnNewRunSummary?: boolean }
 ): Record<string, boolean> {
+  if (options?.collapseOnNewRunSummary && hasNewTurnRunSummary(previousTurns, nextTurns)) {
+    return nextTurns.reduce<Record<string, boolean>>((accumulator, turn) => {
+      accumulator[turn.id] = false;
+      return accumulator;
+    }, {});
+  }
+
   const latestTurnId = nextTurns.length > 0 ? nextTurns[nextTurns.length - 1]!.id : null;
   return nextTurns.reduce<Record<string, boolean>>((accumulator, turn) => {
     const directExpanded = previousExpandedTurns[turn.id];
@@ -6038,9 +6284,44 @@ function mapExpandedTurns(
       return accumulator;
     }
 
-    accumulator[turn.id] = Boolean(options?.defaultLatestExpanded && latestTurnId === turn.id);
+    if (options?.defaultLatestExpanded && latestTurnId === turn.id) {
+      accumulator[turn.id] = true;
+    }
     return accumulator;
   }, {});
+}
+
+function getTurnRunSummarySignature(turn: RunnerTurn | null | undefined): string {
+  const responseLog = turn?.logs
+    ? [...turn.logs].reverse().find(isTurnResponseLog)
+    : null;
+  const normalizedMessage = normalizeDuplicateSummaryText(responseLog?.message || "");
+  if (!normalizedMessage) {
+    return "";
+  }
+  return [
+    responseLog?.eventType || "",
+    responseLog?.time || "",
+    normalizedMessage.length,
+    normalizedMessage.slice(0, 160),
+  ].join(":");
+}
+
+function findMatchingPreviousTurn(previousTurns: RunnerTurn[], nextTurn: RunnerTurn): RunnerTurn | null {
+  return previousTurns.find((previousTurn) => previousTurn.id === nextTurn.id)
+    || previousTurns.find((previousTurn) => turnsLikelyMatch(previousTurn, nextTurn))
+    || null;
+}
+
+function hasNewTurnRunSummary(previousTurns: RunnerTurn[], nextTurns: RunnerTurn[]): boolean {
+  return nextTurns.some((nextTurn) => {
+    const nextSignature = getTurnRunSummarySignature(nextTurn);
+    if (!nextSignature) {
+      return false;
+    }
+    const previousTurn = findMatchingPreviousTurn(previousTurns, nextTurn);
+    return getTurnRunSummarySignature(previousTurn) !== nextSignature;
+  });
 }
 
 function parseDurationSecondsValue(value: unknown): number | null {
@@ -6491,22 +6772,6 @@ function dedupeAdjacentRunnerLogs(logs: RunnerLog[]): RunnerLog[] {
   return deduped;
 }
 
-function isRedundantToolStartReasoningLog(log: RunnerLog): boolean {
-  if (log.eventType !== "reasoning" && log.eventType !== "planning" && !log.isReasoning && !log.isPlanning) {
-    return false;
-  }
-
-  const metadata = log.metadata as Record<string, unknown> | null | undefined;
-  const source = typeof metadata?.source === "string" ? metadata.source.trim().toLowerCase() : "";
-  const synthetic = metadata?.synthetic === true || source === "synthetic_progress";
-  if (!synthetic) {
-    return false;
-  }
-
-  const normalizedMessage = stripSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
-  return /^running\s+[a-z0-9_-]+(?:\s|:|$)/.test(normalizedMessage);
-}
-
 function isSyntheticProgressReasoningLog(log: RunnerLog): boolean {
   if (log.eventType !== "reasoning" && log.eventType !== "planning" && !log.isReasoning && !log.isPlanning) {
     return false;
@@ -6514,7 +6779,51 @@ function isSyntheticProgressReasoningLog(log: RunnerLog): boolean {
 
   const metadata = log.metadata as Record<string, unknown> | null | undefined;
   const source = typeof metadata?.source === "string" ? metadata.source.trim().toLowerCase() : "";
-  return metadata?.synthetic === true || source === "synthetic_progress";
+  return metadata?.synthetic === true
+    || (typeof metadata?.synthetic === "string" && metadata.synthetic.trim().toLowerCase() === "true")
+    || source === "synthetic_progress";
+}
+
+function isInternalUserMessageToolLog(log: RunnerLog): boolean {
+  if (log.eventType !== "command_execution") {
+    return false;
+  }
+
+  const metadata = log.metadata as Record<string, unknown> | null | undefined;
+  const candidates = [
+    metadata?.command,
+    metadata?.toolName,
+    metadata?.tool_name,
+    metadata?.name,
+    log.message,
+  ];
+
+  return candidates.some((candidate) => {
+    if (typeof candidate !== "string") {
+      return false;
+    }
+    const normalized = stripSystemTags(candidate)
+      .replace(/^\$\s*/, "")
+      .trim()
+      .toLowerCase();
+    return normalized === "sendusermessage" || normalized === "send_user_message" || normalized === "send-user-message";
+  });
+}
+
+function isTrivialSkillLaunchLog(log: RunnerLog): boolean {
+  if (log.eventType !== "command_execution") {
+    return false;
+  }
+
+  const command = stripSystemTags(String(log.metadata?.command || log.message || ""))
+    .replace(/^Executed:\s*/i, "")
+    .replace(/^\$\s*/, "")
+    .trim();
+  const output = stripSystemTags(String(log.metadata?.output || ""))
+    .replace(/\r\n/g, "\n")
+    .trim();
+
+  return /^Using Skill$/i.test(command) && /^Launching skill:\s*[\w.-]+$/i.test(output);
 }
 
 function shouldDisplayTimelineLog(log: RunnerLog): boolean {
@@ -6525,7 +6834,8 @@ function shouldDisplayTimelineLog(log: RunnerLog): boolean {
   if (log.eventType === "setup" || log.eventType === "startup") return false;
   if (isInternalFileChangeLog(log)) return false;
   if (isSyntheticProgressReasoningLog(log)) return false;
-  if (isRedundantToolStartReasoningLog(log)) return false;
+  if (isInternalUserMessageToolLog(log)) return false;
+  if (isTrivialSkillLaunchLog(log)) return false;
   if (log.eventType === "command_execution" && isBrowserSkillLaunchCommand(log.metadata?.command || log.message || "")) return false;
   if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") return false;
   return true;
@@ -6886,6 +7196,10 @@ export function RunnerChat({
   onDeepResearchDetailOpenChange,
   threadTaskPreview = null,
   threadMissionControlPreview = null,
+  composerProjectTasks = [],
+  selectedComposerProjectTask = null,
+  onComposerProjectTaskChange,
+  onComposerProjectTaskSubmit,
   activeTaskPreviewId = null,
   onTaskPreviewClick,
   onResourcePreviewClick,
@@ -6915,12 +7229,14 @@ export function RunnerChat({
   skillCreationCommand = null,
   skillCreationCommandHiddenPrompt,
   onSkillCreationCommandChange,
+  onOpenPluginsOverview,
   onBacklogMissionControlSubmit,
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
   const [composerQuotedSelection, setComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
   const [renderedComposerQuotedSelection, setRenderedComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
   const [isComposerQuotedSelectionVisible, setIsComposerQuotedSelectionVisible] = useState(false);
+  const [projectTasksPopupOpen, setProjectTasksPopupOpen] = useState(false);
   const [localThreadId, setLocalThreadId] = useState<string | null>(threadId ?? null);
   const [attachments, setAttachments] = useState<LocalAttachment[]>([]);
   const [previewedDocumentAttachment, setPreviewedDocumentAttachment] = useState<RunnerTurnAttachment | null>(null);
@@ -6935,6 +7251,7 @@ export function RunnerChat({
   const [deepResearchSessions, setDeepResearchSessions] = useState<RunnerDeepResearchSession[]>([]);
   const [hydratedThreadStatus, setHydratedThreadStatus] = useState<string | null>(null);
   const [visibleTimelineItemCountsByTurn, setVisibleTimelineItemCountsByTurn] = useState<Record<string, number>>({});
+  const [visibleWorkLogItemCountsByTurn, setVisibleWorkLogItemCountsByTurn] = useState<Record<string, number>>({});
   const [thinkingStatusPhaseByTurn, setThinkingStatusPhaseByTurn] = useState<Record<string, RunnerThinkingStatusPhase>>({});
   const [pendingQueuedMessages, setPendingQueuedMessages] = useState<PendingRunnerMessage[]>([]);
   const [editingTurnId, setEditingTurnId] = useState<string | null>(null);
@@ -7080,6 +7397,7 @@ export function RunnerChat({
   const editingTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const popupAreaRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const projectTasksPopupRef = useRef<HTMLDivElement | null>(null);
   const forkEnvironmentPopupRef = useRef<HTMLDivElement | null>(null);
   const currentInputRef = useRef(initialTask);
   const speechSocketRef = useRef<WebSocket | null>(null);
@@ -7208,6 +7526,18 @@ export function RunnerChat({
   const showActiveRunStopButton =
     !showRunPreparationIndicator &&
     (hasRunningTurn || hydratedThreadIsRunning || hasActiveDeepResearchSession || isRunning || isStoppingRun);
+  useEffect(() => {
+    if (!currentThreadId || !hasRunningTurn || hydratedThreadIsRunning) {
+      return;
+    }
+
+    setHydratedThreadStatus("running");
+    try {
+      onThreadStatusChange?.(currentThreadId, "running");
+    } catch (error) {
+      reportRunnerLifecycleCallbackError("onThreadStatusChange", error);
+    }
+  }, [currentThreadId, hasRunningTurn, hydratedThreadIsRunning, onThreadStatusChange]);
   const trimmedInput = input.trim();
   const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
   const stagedThreadContextCommandLabel = stagedThreadContextCommand ? `/${stagedThreadContextCommand}` : "";
@@ -8258,11 +8588,79 @@ export function RunnerChat({
     setTurns((prev) => prev.map((turn) => (turn.id === turnId ? updater(turn) : turn)));
   }
 
+  function collapseAllWorkingLogs(extraTurnId?: string) {
+    const turnIds = Array.from(new Set([
+      ...turnsRef.current.map((turn) => turn.id).filter(Boolean),
+      ...(extraTurnId ? [extraTurnId] : []),
+    ]));
+    if (turnIds.length === 0) {
+      return;
+    }
+    setExpandedTurns((previousExpandedTurns) => {
+      let didChange = false;
+      const nextExpandedTurns = { ...previousExpandedTurns };
+      turnIds.forEach((turnId) => {
+        if (nextExpandedTurns[turnId] !== false) {
+          nextExpandedTurns[turnId] = false;
+          didChange = true;
+        }
+      });
+      return didChange ? nextExpandedTurns : previousExpandedTurns;
+    });
+    setVisibleWorkLogItemCountsByTurn((previousCounts) => {
+      let didChange = false;
+      const nextCounts = { ...previousCounts };
+      turnIds.forEach((turnId) => {
+        if (turnId in nextCounts) {
+          delete nextCounts[turnId];
+          didChange = true;
+        }
+      });
+      return didChange ? nextCounts : previousCounts;
+    });
+  }
+
+  function toggleWorkingLogs(turnId: string, isExpanded: boolean) {
+    setExpandedTurns((prev) => ({ ...prev, [turnId]: !isExpanded }));
+    setVisibleWorkLogItemCountsByTurn((previousCounts) => {
+      if (!(turnId in previousCounts)) {
+        return previousCounts;
+      }
+      const nextCounts = { ...previousCounts };
+      delete nextCounts[turnId];
+      return nextCounts;
+    });
+  }
+
+  function loadMoreWorkingLogs(turnId: string, totalItemCount: number) {
+    setVisibleWorkLogItemCountsByTurn((previousCounts) => {
+      const currentCount = previousCounts[turnId] ?? RUNNER_WORK_LOG_PAGE_SIZE;
+      const nextCount = Math.min(totalItemCount, currentCount + RUNNER_WORK_LOG_PAGE_SIZE);
+      if (nextCount <= currentCount) {
+        return previousCounts;
+      }
+      return { ...previousCounts, [turnId]: nextCount };
+    });
+  }
+
   function appendTurnLog(turnId: string, log: RunnerLog) {
+    const normalizedLog = normalizeHydratedLog(log);
+    const hasAbsoluteTimestamp = getRunnerLogAbsoluteTimestampMs(normalizedLog) !== null;
+    const relativeSeconds = normalizedLog.time ? parseSecondsFromClock(normalizedLog.time) : null;
+    const timestampedLog =
+      hasAbsoluteTimestamp || (relativeSeconds !== null && relativeSeconds > 0)
+        ? normalizedLog
+        : {
+            ...normalizedLog,
+            createdAt: new Date().toISOString(),
+          };
     updateTurn(turnId, (turn) => ({
       ...turn,
-      logs: [...turn.logs, log],
+      logs: [...turn.logs, timestampedLog],
     }));
+    if (isTurnResponseLog(timestampedLog)) {
+      collapseAllWorkingLogs(turnId);
+    }
   }
 
   function upsertTurnAgentMessage(turnId: string, message: string) {
@@ -8285,6 +8683,9 @@ export function RunnerChat({
         logs: nextLogs,
       };
     });
+    if (message.trim()) {
+      collapseAllWorkingLogs(turnId);
+    }
   }
 
   function isEditableUserTurn(turn: RunnerTurn) {
@@ -8497,7 +8898,10 @@ export function RunnerChat({
         });
         setTurns(hydratedTurns);
         setExpandedTurns((previousExpandedTurns) =>
-          mapExpandedTurns(previousExpandedTurns, nextTurns, hydratedTurns, { defaultLatestExpanded: true })
+          mapExpandedTurns(previousExpandedTurns, nextTurns, hydratedTurns, {
+            defaultLatestExpanded: true,
+            collapseOnNewRunSummary: true,
+          })
         );
       }
     } catch (error) {
@@ -8522,7 +8926,10 @@ export function RunnerChat({
           .then((hydratedTurns) => {
             setTurns(hydratedTurns);
             setExpandedTurns((previousExpandedTurns) =>
-              mapExpandedTurns(previousExpandedTurns, turnsRef.current, hydratedTurns, { defaultLatestExpanded: true })
+              mapExpandedTurns(previousExpandedTurns, turnsRef.current, hydratedTurns, {
+                defaultLatestExpanded: true,
+                collapseOnNewRunSummary: true,
+              })
             );
           })
           .catch(() => {
@@ -8696,7 +9103,7 @@ export function RunnerChat({
           backendUrl: normalizedBackendUrl,
         });
         setTurns(hydratedTurns);
-        setExpandedTurns(mapExpandedTurns({}, [], hydratedTurns));
+        setExpandedTurns(mapExpandedTurns({}, [], hydratedTurns, { collapseOnNewRunSummary: true }));
       } catch {
         setActiveThreadEnvironmentName(params.nextEnvironmentName || null);
         const hydratedTurns = await fetchAllThreadMessages({
@@ -8712,7 +9119,7 @@ export function RunnerChat({
           })
         );
         setTurns(hydratedTurns);
-        setExpandedTurns(mapExpandedTurns({}, [], hydratedTurns));
+        setExpandedTurns(mapExpandedTurns({}, [], hydratedTurns, { collapseOnNewRunSummary: true }));
       }
 
       if (params.autoRunPrompt?.trim()) {
@@ -9045,6 +9452,7 @@ export function RunnerChat({
       quotedSelection?: RunnerQuotedSelection | null;
       environmentIdOverride?: string | null;
       agentIdOverride?: string | null;
+      agentNameOverride?: string | null;
       backlogCommand?: StagedBacklogCommand | null;
       resourceCreationCommand?: StagedResourceCreationCommand | null;
       agentCreationCommand?: StagedAgentCreationCommand | null;
@@ -9101,6 +9509,7 @@ export function RunnerChat({
       options?.agentIdOverride !== undefined
         ? String(options.agentIdOverride || "").trim()
         : String(effectiveAgentId || "").trim();
+    const runAgentName = String(options?.agentNameOverride || "").trim() || selectedAgent?.name || displayedAgentLabel;
     initializedThreadHistoryIdRef.current = threadId;
     const githubRepo =
       options?.githubRepoOverride !== undefined
@@ -9124,6 +9533,7 @@ export function RunnerChat({
         prompt: executionTaskText,
         displayPrompt: visibleTaskText || taskText,
         agentId: effectiveAgentId || null,
+        agentName: selectedAgent?.name || displayedAgentLabel,
         attachments: resolvedAttachments || [],
         githubRepo: githubRepo || null,
         enabledSkills: enabledSkillsPayload || null,
@@ -9167,6 +9577,7 @@ export function RunnerChat({
         status: "running",
         quotedSelection: options?.quotedSelection === undefined ? turn.quotedSelection : options.quotedSelection,
         attachments: pickTurnAttachments(initialTurnAttachments, turn.attachments),
+        agentName: runAgentName || turn.agentName || null,
       }));
     } else {
       setTurns((prev) => [
@@ -9179,7 +9590,7 @@ export function RunnerChat({
           status: "running",
           animateOnRender: true,
           isInitialTurn: prev.length === 0,
-          agentName: selectedAgent?.name || displayedAgentLabel,
+          agentName: runAgentName,
           environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
           quotedSelection: options?.quotedSelection || null,
           attachments: initialTurnAttachments,
@@ -9316,18 +9727,17 @@ export function RunnerChat({
           }
           appendTurnLog(turnId, log);
         },
-      });
+	      });
 
-      releasePreparationState();
-      updateTurn(turnId, (turn) => ({
-        ...turn,
-        status: executionResult.cancelled ? "cancelled" : "completed",
-        completedAtMs: Date.now(),
-        durationSeconds: executionResult.durationSeconds,
-      }));
-      setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
+	      releasePreparationState();
+	      updateTurn(turnId, (turn) => ({
+	        ...turn,
+	        status: executionResult.cancelled ? "cancelled" : "completed",
+	        completedAtMs: Date.now(),
+	        durationSeconds: executionResult.durationSeconds,
+	      }));
 
-      refreshThreadContextDetailsInBackground(threadId);
+	      refreshThreadContextDetailsInBackground(threadId);
       if (options?.skillCreationCommand && fetchCustomSkills) {
         void fetchCustomSkills()
           .then((loadedSkills) => {
@@ -9428,6 +9838,7 @@ export function RunnerChat({
           threadIdOverride: normalizedRequestThreadId,
           environmentIdOverride: externalRunRequest.environmentId ?? undefined,
           agentIdOverride: externalRunRequest.agentId ?? undefined,
+          agentNameOverride: externalRunRequest.agentName ?? undefined,
           quotedSelection: externalRunRequest.quotedSelection || null,
           resolvedAttachmentsOverride: Array.isArray(externalRunRequest.attachments) ? externalRunRequest.attachments : undefined,
           githubRepoOverride: externalRunRequest.githubRepo ?? undefined,
@@ -9780,7 +10191,7 @@ export function RunnerChat({
         initializedThreadHistoryIdRef.current = threadId;
         setTurns(previewTurns);
         setExpandedTurns((previousExpandedTurns) =>
-          mapExpandedTurns(previousExpandedTurns, turnsRef.current, previewTurns)
+          mapExpandedTurns(previousExpandedTurns, turnsRef.current, previewTurns, { collapseOnNewRunSummary: true })
         );
       })
       .catch(() => undefined);
@@ -9824,7 +10235,10 @@ export function RunnerChat({
         const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
         setTurns(mergedTurns);
         setExpandedTurns((previousExpandedTurns) =>
-          mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, { defaultLatestExpanded: true })
+          mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, {
+            defaultLatestExpanded: true,
+            collapseOnNewRunSummary: true,
+          })
         );
       })
       .catch((error) => {
@@ -11083,6 +11497,7 @@ export function RunnerChat({
     setSelectedWorkspaceFileIds([]);
     setIsDraggingOver(false);
     setIsScreenFileDragActive(false);
+    setProjectTasksPopupOpen(false);
     clearQuotedSelectionPopup();
   }
 
@@ -12586,6 +13001,35 @@ export function RunnerChat({
         await handleThreadContextCommand(threadContextCommand);
         return;
       }
+      if (selectedComposerProjectTask && onComposerProjectTaskSubmit && taskText) {
+        setIsPreparingRun(true);
+        const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
+        const githubRepo = buildSelectedGithubRepoReference(attachmentEntries);
+        const didHandleProjectTask = await onComposerProjectTaskSubmit({
+          prompt: taskText,
+          taskPreview: selectedComposerProjectTask,
+          attachments: resolvedAttachments || [],
+          environmentId: effectiveEnvironmentId ?? null,
+          projectId: effectiveProjectId ?? null,
+          agentId: effectiveAgentId ?? null,
+          agentName: selectedAgent?.name || displayedAgentLabel || null,
+          githubRepo: githubRepo || null,
+          enabledSkills: enabledSkillsPayload || null,
+          quotedSelection,
+        });
+        if (didHandleProjectTask !== false) {
+          clearComposerDraft();
+          clearComposerAttachments(attachmentEntries, {
+            revokePreviews: false,
+          });
+          if (keepFocusOnSubmit) {
+            focusComposerSoon();
+          }
+          await stopSpeechToText();
+          return;
+        }
+        setIsPreparingRun(false);
+      }
       if (stagedBacklogMissionControlCommand && onBacklogMissionControlSubmit) {
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
         const githubRepo = buildSelectedGithubRepoReference(attachmentEntries);
@@ -12830,11 +13274,22 @@ export function RunnerChat({
   }
 
   function getTurnDurationSeconds(turn: RunnerTurn): number {
-    if (typeof turn.durationSeconds === "number" && Number.isFinite(turn.durationSeconds)) {
-      return Math.max(0, Math.round(turn.durationSeconds));
+    const explicitDurationSeconds =
+      typeof turn.durationSeconds === "number" && Number.isFinite(turn.durationSeconds)
+        ? Math.max(0, Math.round(turn.durationSeconds))
+        : null;
+    if (explicitDurationSeconds !== null && explicitDurationSeconds > 0) {
+      return explicitDurationSeconds;
     }
-    const end = turn.completedAtMs ?? nowMs;
-    return Math.max(0, Math.floor((end - turn.startedAtMs) / 1000));
+
+    const derivedEndMs = isRunningTurnStatus(turn.status)
+      ? nowMs
+      : Math.max(
+          turn.completedAtMs ?? turn.startedAtMs,
+          getTurnLatestProgressTimestampMs(turn)
+        );
+    const derivedDurationSeconds = Math.max(0, Math.round((derivedEndMs - turn.startedAtMs) / 1000));
+    return derivedDurationSeconds > 0 ? derivedDurationSeconds : explicitDurationSeconds ?? derivedDurationSeconds;
   }
 
   function stepRowKey(turnId: string, index: number, log: RunnerLog): string {
@@ -13264,9 +13719,13 @@ export function RunnerChat({
       completionLog?.metadata?.exitCode === 1;
     const previewMessage = completionOutput.trim()
       || (isSubagentRunning ? `${subagentTitle} is working` : completionFailed ? `${subagentTitle} failed` : `${subagentTitle} finished`);
+    const nestedDurationLabel =
+      completionLog && completionLog !== item.invocationLog
+        ? getRunnerLogRangeDurationLabel(item.invocationLog, completionLog, turn.startedAtMs)
+        : undefined;
     const nestedWorkLabel = isSubagentRunning
       ? "Working..."
-      : `Worked for ${toDurationLabel(completionLog || latestNestedLog) || "0s"}`;
+      : `Worked for ${nestedDurationLabel || toDurationLabel(completionLog || latestNestedLog, turn.startedAtMs) || "0s"}`;
 
     return {
       invocationId,
@@ -13274,7 +13733,7 @@ export function RunnerChat({
       prompt: invocation?.message || invocation?.description,
       environmentName: subagentEnvironmentLabel,
       running: isSubagentRunning,
-      timeLabel: toDurationLabel(completionLog || latestNestedLog),
+      timeLabel: toDurationLabel(completionLog || latestNestedLog, turn.startedAtMs),
       responseMessage: completionOutput,
       responseFailed: completionFailed,
       previewMessage,
@@ -13297,7 +13756,7 @@ export function RunnerChat({
       title: computerUseTitle,
       environmentName: computerUseEnvironmentLabel,
       running: isComputerUseRunning,
-      timeLabel: toDurationLabel(item.endLog || item.startLog),
+      timeLabel: toDurationLabel(item.endLog || item.startLog, turn.startedAtMs),
       workLabel: `${interactionCount} ${interactionCount === 1 ? "interaction" : "interactions"}`,
       nestedItems: buildTimelineItems(item.sessionLogs, { groupComputerUse: false }),
     };
@@ -13433,6 +13892,21 @@ export function RunnerChat({
   useEffect(() => {
     visibleTimelineItemCountsRef.current = visibleTimelineItemCountsByTurn;
   }, [visibleTimelineItemCountsByTurn]);
+
+  useEffect(() => {
+    const activeTurnIds = new Set(turns.map((turn) => turn.id));
+    setVisibleWorkLogItemCountsByTurn((previousCounts) => {
+      let didChange = false;
+      const nextCounts = { ...previousCounts };
+      for (const turnId of Object.keys(nextCounts)) {
+        if (!activeTurnIds.has(turnId)) {
+          delete nextCounts[turnId];
+          didChange = true;
+        }
+      }
+      return didChange ? nextCounts : previousCounts;
+    });
+  }, [turns]);
 
   useEffect(() => {
     thinkingStatusPhaseByTurnRef.current = thinkingStatusPhaseByTurn;
@@ -13607,7 +14081,7 @@ export function RunnerChat({
         <BrowserSkillLogBox
           log={latestLog}
           logs={item.logs}
-          timeLabel={latestLog ? toDurationLabel(latestLog) : undefined}
+          timeLabel={latestLog ? toDurationLabel(latestLog, turn.startedAtMs) : undefined}
           backendUrl={normalizedBackendUrl}
           environmentId={runnerEnvironmentId}
           requestHeaders={runnerHeaders}
@@ -13623,7 +14097,7 @@ export function RunnerChat({
         <BrowserSkillLogBox
           log={latestLog}
           logs={item.group.logs}
-          timeLabel={latestLog ? toDurationLabel(latestLog) : undefined}
+          timeLabel={latestLog ? toDurationLabel(latestLog, turn.startedAtMs) : undefined}
           backendUrl={normalizedBackendUrl}
           environmentId={runnerEnvironmentId}
           requestHeaders={runnerHeaders}
@@ -13654,7 +14128,7 @@ export function RunnerChat({
           logs={item.logs}
           runningCommandLog={item.runningCommandLog}
           session={deepResearchSession}
-          timeLabel={firstLog ? toDurationLabel(firstLog) : undefined}
+          timeLabel={firstLog ? toDurationLabel(firstLog, turn.startedAtMs) : undefined}
           fallbackTopic={extractDeepResearchTopicFromGroup(item.logs, item.runningCommandLog) || turn.prompt || null}
           isDetailOpen={selectedDeepResearchDetail?.turnId === turn.id}
           onOpenDetails={() => openDeepResearchDetailDrawer(turn.id)}
@@ -13685,14 +14159,57 @@ export function RunnerChat({
     return (
       <RunnerWorkLogEntry
         log={item.log}
-        timeLabel={toDurationLabel(item.log)}
+        timeLabel={toDurationLabel(item.log, turn.startedAtMs)}
         backendUrl={normalizedBackendUrl}
         environmentId={runnerEnvironmentId}
         requestHeaders={runnerHeaders}
         renderComputerUseMcpAsGeneric={options?.renderComputerUseMcpAsGeneric}
         activeTaskPreviewId={activeTaskPreviewId}
+        availableAgents={agents}
+        availableEnvironments={availableEnvironments}
+        availableProjects={availableProjects}
         onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
         onTaskPreviewClick={onTaskPreviewClick}
+        onAgentPreviewClick={(agent) => {
+          if (typeof onAgentTurnClick !== "function") return;
+          onAgentTurnClick({
+            turnId: turn.id,
+            agentId: agent.agentId || undefined,
+            agentName: agent.agentName || undefined,
+          });
+        }}
+        onEnvironmentPreviewClick={(environment) => {
+          const normalizedEnvironmentId = String(environment.environmentId || "").trim();
+          if (!normalizedEnvironmentId) return;
+          onResourcePreviewClick?.({
+            id: normalizedEnvironmentId,
+            name: String(environment.environmentName || "Environment").trim() || "Environment",
+            resourceType: "environment",
+            description: null,
+            model: null,
+            category: null,
+            projectId: null,
+            projectName: null,
+            isDefault: false,
+            status: null,
+          });
+        }}
+        onProjectPreviewClick={(project) => {
+          const normalizedProjectId = String(project.projectId || "").trim();
+          if (!normalizedProjectId) return;
+          onResourcePreviewClick?.({
+            id: normalizedProjectId,
+            name: String(project.projectName || "Project").trim() || "Project",
+            resourceType: "project",
+            description: null,
+            model: null,
+            category: null,
+            projectId: normalizedProjectId,
+            projectName: String(project.projectName || "").trim() || null,
+            isDefault: false,
+            status: null,
+          });
+        }}
         onPermissionDecision={handlePermissionDecision}
         onWorkspacePathClick={(path) => handleSummaryWorkspacePathClick(turn, path, "working_log")}
       />
@@ -13890,6 +14407,11 @@ export function RunnerChat({
     if (!normalizedLabel) {
       return "";
     }
+    const missionControlAgentLabel = getRunnerMissionControlAgentName(threadMissionControlPreview).toLowerCase();
+    const missionControlAgentPhotoUrl = getRunnerMissionControlAgentPhotoUrl(threadMissionControlPreview);
+    if (normalizedLabel === missionControlAgentLabel && missionControlAgentPhotoUrl) {
+      return missionControlAgentPhotoUrl;
+    }
     const exactMatch = availableAgentPhotoEntries.find((entry) => entry.label.trim().toLowerCase() === normalizedLabel);
     if (exactMatch?.photoUrl) {
       return exactMatch.photoUrl;
@@ -13897,7 +14419,7 @@ export function RunnerChat({
     return String(displayedAgentLabel || "").trim().toLowerCase() === normalizedLabel
       ? selectedAgentPhotoUrl
       : "";
-  }, [availableAgentPhotoEntries, displayedAgentLabel, selectedAgentPhotoUrl]);
+  }, [availableAgentPhotoEntries, displayedAgentLabel, selectedAgentPhotoUrl, threadMissionControlPreview]);
   const handleTurnAgentClick = useCallback((turn: RunnerTurn, turnAgentLabel: string) => {
     if (typeof onAgentTurnClick !== "function") {
       return;
@@ -13979,14 +14501,20 @@ export function RunnerChat({
         (turn.isInitialTurn || turnIndex === 0)
           ? threadMissionControlPreview
           : null;
+      const isMissionControlThreadTurn = Boolean(threadMissionControlPreview) && !isBtwTurn && turn.presentation !== "context-action-notice";
       const hasSpecialPromptPreview = Boolean(taskPreviewForTurn || missionControlPreviewForTurn);
+      const shouldUseTaskPromptPreview = Boolean(
+        (taskPreviewForTurn?.reviewRequest === true || taskPreviewForTurn?.showPromptPreview === true) && normalizedPrompt
+      );
       const specialPromptPreviewText = taskPreviewForTurn
         ? `${taskPreviewForTurn.ticketNumber} ${taskPreviewForTurn.title}`
         : (missionControlPreviewForTurn?.prompt || "Run mission control.");
       const promptPreview = buildRunnerThreadHistoryPreviewText(
-        hasSpecialPromptPreview ? specialPromptPreviewText : normalizedPrompt
+        shouldUseTaskPromptPreview ? normalizedPrompt : (hasSpecialPromptPreview ? specialPromptPreviewText : normalizedPrompt)
       );
-      const turnAgentLabel = turn.agentName || displayedAgentLabel || "Agent";
+      const turnAgentLabel = isMissionControlThreadTurn
+        ? getRunnerMissionControlAgentName(threadMissionControlPreview)
+        : turn.agentName || displayedAgentLabel || "Agent";
 
       if (promptPreview) {
         items.push({
@@ -14253,7 +14781,7 @@ export function RunnerChat({
       logs: resolvedLogs,
       runningCommandLog: resolvedRunningCommandLog,
       session,
-      timeLabel: firstLog ? toDurationLabel(firstLog) : undefined,
+      timeLabel: firstLog ? toDurationLabel(firstLog, selectedTurn.startedAtMs) : undefined,
       fallbackTopic: extractDeepResearchTopicFromGroup(resolvedLogs, resolvedRunningCommandLog) || selectedTurn.prompt || null,
     };
   }, [deepResearchSessions, selectedDeepResearchDetail, turns]);
@@ -14395,6 +14923,44 @@ export function RunnerChat({
   const notionConnected = notionConfig?.connected ?? false;
   const googleDriveConnected = googleDriveConfig?.connected ?? false;
   const oneDriveConnected = oneDriveConfig?.connected ?? false;
+  const connectedComposerConnectors = [
+    { id: "github", label: "GitHub", source: "github" as const, connected: githubConnected, Icon: IconGithub },
+    { id: "notion", label: "Notion", source: "notion" as const, connected: notionConnected, Icon: IconNotion },
+    { id: "one-drive", label: "OneDrive", source: "one-drive" as const, connected: oneDriveConnected, Icon: IconOneDrive },
+    { id: "google-drive", label: "Google Drive", source: "google-drive" as const, connected: googleDriveConnected, Icon: IconGoogleDrive },
+  ].filter((connector) => connector.connected);
+  const composerProjectTaskItems = useMemo(
+    () => (Array.isArray(composerProjectTasks) ? composerProjectTasks : [])
+      .filter((task): task is RunnerTaskPreview => Boolean(task?.taskId && task.title)),
+    [composerProjectTasks]
+  );
+  const selectedComposerProjectTaskId = String(selectedComposerProjectTask?.taskId || "").trim();
+  const selectedComposerProjectTaskLabel = String(selectedComposerProjectTask?.title || "").trim();
+  useEffect(() => {
+    if (!projectTasksPopupOpen) {
+      return undefined;
+    }
+
+    const handleDocumentPointerDown = (event: Event) => {
+      const target = event.target instanceof Node ? event.target : null;
+      if (target && projectTasksPopupRef.current?.contains(target)) {
+        return;
+      }
+      setProjectTasksPopupOpen(false);
+    };
+    const handleDocumentKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setProjectTasksPopupOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handleDocumentPointerDown, true);
+    document.addEventListener("keydown", handleDocumentKeyDown, true);
+    return () => {
+      document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
+      document.removeEventListener("keydown", handleDocumentKeyDown, true);
+    };
+  }, [projectTasksPopupOpen]);
   const scheduleEnabled = (scheduleConfig?.enabled ?? false) || scheduledTask !== null;
   const githubContextLabel = githubConfig?.contextLabel || "Branch";
   const defaultGithubBranchFromContext = useMemo(() => {
@@ -15023,7 +15589,10 @@ export function RunnerChat({
           nextHasActiveDeepResearch = mergedTurns.some((turn) => hasActiveDeepResearchLogGroup(turn.logs));
           setTurns(mergedTurns);
           setExpandedTurns((previousExpandedTurns) =>
-            mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, { defaultLatestExpanded: true })
+            mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, {
+              defaultLatestExpanded: true,
+              collapseOnNewRunSummary: true,
+            })
           );
         }
 
@@ -15794,7 +16363,8 @@ export function RunnerChat({
               const isQueuedTurn = turn.status === "queued";
               const turnSeconds = getTurnDurationSeconds(turn);
               const { agentMessage, displayedTimelineItems: rawDisplayedTimelineItems } = getTurnTimelineState(turn);
-              const isBtwTurn = turn.presentation === "btw" || turn.prompt.trim().toLowerCase().startsWith("/btw");
+              const normalizedPrompt = turn.prompt.trim();
+              const isBtwTurn = turn.presentation === "btw" || normalizedPrompt.toLowerCase().startsWith("/btw");
               const isEditingTurn = editingTurnId === turn.id;
               const canEditTurn = isEditableUserTurn(turn);
               const taskPreviewForTurn =
@@ -15812,12 +16382,16 @@ export function RunnerChat({
                 (turn.isInitialTurn || turnIndex === 0)
                   ? threadMissionControlPreview
                   : null;
+              const isMissionControlThreadTurn = Boolean(threadMissionControlPreview) && !isBtwTurn && turn.presentation !== "context-action-notice";
               const hasSpecialPromptPreview = Boolean(taskPreviewForTurn || missionControlPreviewForTurn);
               const isActionableTurn = isActionableUserTurn(turn);
               const isForkingTurn = forkingTurnId === turn.id;
               const isEditablePromptTurn = canEditTurn && !hasSpecialPromptPreview;
               const showTurnActions = isActionableTurn && !isEditingTurn && !hasSpecialPromptPreview;
               const areTurnActionsDisabled = !canEditTurn || isForkingTurn || hasSpecialPromptPreview;
+              const shouldRenderSpecialPreviewPrompt = Boolean(
+                (taskPreviewForTurn?.reviewRequest === true || taskPreviewForTurn?.showPromptPreview === true) && normalizedPrompt
+              );
               const actionSummaryLog =
                 turn.presentation === "context-action-notice"
                   ? turn.logs.find((log) => log.eventType === "action_summary") || null
@@ -15836,10 +16410,14 @@ export function RunnerChat({
                 return !normalizedPath || retainedSummaryPreviewPaths.has(normalizedPath) || changedFilePathsForTurn.has(normalizedPath);
               });
               const visibleTimelineItemCount = visibleTimelineItemCountsByTurn[turn.id];
-              const displayedTimelineItems =
+              const revealedTimelineItems =
                 visibleTimelineItemCount === undefined
                   ? rawDisplayedTimelineItems
                   : rawDisplayedTimelineItems.slice(0, visibleTimelineItemCount);
+              const visibleWorkLogItemCount = visibleWorkLogItemCountsByTurn[turn.id] ?? RUNNER_WORK_LOG_PAGE_SIZE;
+              const firstDisplayedTimelineItemIndex = Math.max(0, revealedTimelineItems.length - visibleWorkLogItemCount);
+              const displayedTimelineItems = revealedTimelineItems.slice(firstDisplayedTimelineItemIndex);
+              const hasMoreWorkingLogs = firstDisplayedTimelineItemIndex > 0;
               const thinkingStatusPhase =
                 thinkingStatusPhaseByTurn[turn.id] ??
                 (isTurnRunning && rawDisplayedTimelineItems.length > 0 && !agentMessage?.message ? "visible" : "hidden");
@@ -15852,7 +16430,7 @@ export function RunnerChat({
                 isThreadHistoryLoading &&
                 !isTurnRunning &&
                 Boolean(agentMessage?.message) &&
-                displayedTimelineItems.length === 0;
+                revealedTimelineItems.length === 0;
               const isExpanded = expandedTurns[turn.id] ?? !isThreadHistoryLoading;
               const baseDelay = turnIndex * 140;
               const promptStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay) : undefined;
@@ -15862,7 +16440,9 @@ export function RunnerChat({
                 ? getRunnerChatEnterAnimationStyle(baseDelay + 150 + displayedTimelineItems.length * 45)
                 : undefined;
               const shouldAnimateTimelineRows = turn.animateOnRender || isTurnRunning;
-              const turnAgentLabel = turn.agentName || displayedAgentLabel || "Agent";
+              const turnAgentLabel = isMissionControlThreadTurn
+                ? getRunnerMissionControlAgentName(threadMissionControlPreview)
+                : turn.agentName || displayedAgentLabel || "Agent";
               const turnAgentPhotoUrl = resolveTurnAgentPhotoUrl(turnAgentLabel);
               const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
               const workLabel = isWorkLogsLoading
@@ -15871,9 +16451,9 @@ export function RunnerChat({
                   ? "Permission asked"
                   : isTurnRunning
                   ? "Working..."
-                  : `Worked for ${turnSeconds}s`;
+                  : `Worked for ${formatElapsedDurationLabel(turnSeconds)}`;
               const workToggleLabel = isExpanded ? "Collapse" : "Expand";
-              const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || displayedTimelineItems.length > 0 || isWorkLogsLoading;
+              const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || revealedTimelineItems.length > 0 || isWorkLogsLoading;
               const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
               const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
 
@@ -15985,7 +16565,11 @@ export function RunnerChat({
                 return (
                   <div key={turn.id} className="tb-turn tb-turn-user tb-turn-user-task-preview">
                     <div
-                      ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
+                      ref={(node) => {
+                        if (!shouldRenderSpecialPreviewPrompt) {
+                          setThreadHistoryAnchorElement(userThreadHistoryItemId, node);
+                        }
+                      }}
                       className="tb-task-preview-turn-shell tb-thread-history-anchor"
                       style={promptStyle}
                     >
@@ -15993,6 +16577,21 @@ export function RunnerChat({
                         ? renderRunnerTaskPreviewCard(taskPreviewForTurn, { onClick: onTaskPreviewClick })
                         : renderRunnerMissionControlPreviewCard(missionControlPreviewForTurn)}
                     </div>
+
+                    {shouldRenderSpecialPreviewPrompt ? (
+                      <div
+                        ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
+                        className="tb-user-turn-shell tb-thread-history-anchor"
+                        style={promptStyle}
+                      >
+                        <div className="task-prompt-in-session-context">
+                          <CollapsibleRunnerUserPrompt
+                            content={stripSystemTags(turn.prompt)}
+                            className="tb-message-markdown tb-message-markdown-user"
+                          />
+                        </div>
+                      </div>
+                    ) : null}
 
                     {!isQueuedTurn ? (
                       <div className="tb-turn-meta" style={metaHeaderStyle}>
@@ -16011,12 +16610,12 @@ export function RunnerChat({
                           className="tb-work-header"
                           style={workHeaderStyle}
                           aria-expanded={isExpanded}
-                          onClick={() => setExpandedTurns((prev) => ({ ...prev, [turn.id]: !isExpanded }))}
+                          onClick={() => toggleWorkingLogs(turn.id, isExpanded)}
                         >
                           <span className="tb-work-label">{workLabel}</span>
                           <span className="tb-work-toggle">
                             <span className="tb-work-toggle-label">{workToggleLabel}</span>
-                            {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
+                            {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
                           </span>
                         </button>
 
@@ -16025,13 +16624,27 @@ export function RunnerChat({
                             <div className="tb-work-collapse-inner">
                               <div className="agent-steps-container">
                                 <div className="agent-steps-line" />
+                                {hasMoreWorkingLogs ? (
+                                  <div className="agent-step-item tb-work-load-more-item">
+                                    <div className="agent-step-content">
+                                      <button
+                                        type="button"
+                                        className="tb-work-load-more-button"
+                                        onClick={() => loadMoreWorkingLogs(turn.id, revealedTimelineItems.length)}
+                                      >
+                                        <LucidePlus className="tb-work-load-more-icon" strokeWidth={1.8} />
+                                        Load more...
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : null}
                                 {displayedTimelineItems.map((item, index) => (
                                   <div
-                                    key={timelineItemKey(turn.id, index, item)}
+                                    key={timelineItemKey(turn.id, firstDisplayedTimelineItemIndex + index, item)}
                                     className="agent-step-item"
                                     style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
                                   >
-                                    <div className="agent-step-content">{renderTimelineItem(turn, item, index)}</div>
+                                    <div className="agent-step-content">{renderTimelineItem(turn, item, firstDisplayedTimelineItemIndex + index)}</div>
                                   </div>
                                 ))}
                               </div>
@@ -16186,12 +16799,12 @@ export function RunnerChat({
                           className="tb-work-header"
                           style={workHeaderStyle}
                           aria-expanded={isExpanded}
-                          onClick={() => setExpandedTurns((prev) => ({ ...prev, [turn.id]: !isExpanded }))}
+                          onClick={() => toggleWorkingLogs(turn.id, isExpanded)}
                         >
                           <span className="tb-work-label">{workLabel}</span>
                           <span className="tb-work-toggle">
                             <span className="tb-work-toggle-label">{workToggleLabel}</span>
-                            {isExpanded ? <IconChevronDown className="tb-chevron" /> : <IconChevronRight className="tb-chevron" />}
+                            {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
                           </span>
                         </button>
 
@@ -16200,13 +16813,27 @@ export function RunnerChat({
                           <div className="tb-work-collapse-inner">
                             <div className="agent-steps-container">
                               <div className="agent-steps-line" />
+                              {hasMoreWorkingLogs ? (
+                                <div className="agent-step-item tb-work-load-more-item">
+                                  <div className="agent-step-content">
+                                    <button
+                                      type="button"
+                                      className="tb-work-load-more-button"
+                                      onClick={() => loadMoreWorkingLogs(turn.id, revealedTimelineItems.length)}
+                                    >
+                                      <LucidePlus className="tb-work-load-more-icon" strokeWidth={1.8} />
+                                      Load more...
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : null}
                               {displayedTimelineItems.map((item, index) => (
                                 <div
-                                  key={timelineItemKey(turn.id, index, item)}
+                                  key={timelineItemKey(turn.id, firstDisplayedTimelineItemIndex + index, item)}
                                   className="agent-step-item"
                                   style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
                                 >
-                                  <div className="agent-step-content">{renderTimelineItem(turn, item, index)}</div>
+                                  <div className="agent-step-content">{renderTimelineItem(turn, item, firstDisplayedTimelineItemIndex + index)}</div>
                                 </div>
                               ))}
                             </div>
@@ -17000,6 +17627,99 @@ export function RunnerChat({
                   </div>
                 )}
               </div>
+              {useComputerAgentsMode && shouldRenderInlineComposerWithEmptyState ? (
+                <div className="tb-composer-connectors-row" aria-label="Project tasks and plugins">
+                  <div className="tb-composer-project-task-area" ref={projectTasksPopupRef}>
+                    <button
+                      type="button"
+                      className={`tb-composer-project-task-button ${projectTasksPopupOpen ? "is-open" : ""}`.trim()}
+                      onClick={() => setProjectTasksPopupOpen((current) => !current)}
+                      aria-haspopup="dialog"
+                      aria-expanded={projectTasksPopupOpen}
+                    >
+                      <LucideListTodo className="tb-composer-project-task-icon" strokeWidth={1.75} />
+                      <span>Project Tasks</span>
+                    </button>
+                    {selectedComposerProjectTask ? (
+                      <span className="tb-composer-project-task-chip">
+                        <span className="tb-composer-project-task-chip-label">{selectedComposerProjectTaskLabel || "Selected task"}</span>
+                        <button
+                          type="button"
+                          className="tb-composer-project-task-chip-clear"
+                          onClick={() => onComposerProjectTaskChange?.(null)}
+                          aria-label="Clear selected project task"
+                        >
+                          <LucideX className="tb-composer-project-task-chip-clear-icon" strokeWidth={1.8} />
+                        </button>
+                      </span>
+                    ) : null}
+                    {projectTasksPopupOpen ? (
+                      <div className="tb-composer-project-task-menu" role="dialog" aria-label="Choose project task">
+                        <div className="tb-composer-project-task-menu-title">Open Tickets</div>
+                        <div className="tb-composer-project-task-list">
+                          {composerProjectTaskItems.length > 0 ? (
+                            composerProjectTaskItems.map((task) => {
+                              const isSelectedTask = String(task.taskId || "").trim() === selectedComposerProjectTaskId;
+                              const ticketLabel = String(task.ticketNumber || "").trim();
+                              return (
+                                <button
+                                  key={task.taskId}
+                                  type="button"
+                                  className={`tb-composer-project-task-row ${isSelectedTask ? "is-selected" : ""}`.trim()}
+                                  onClick={() => {
+                                    onComposerProjectTaskChange?.(task);
+                                    setProjectTasksPopupOpen(false);
+                                  }}
+                                >
+                                  <LucideBookmark className="tb-composer-project-task-row-icon" strokeWidth={1.8} />
+                                  <span className="tb-composer-project-task-row-main">
+                                    <span className="tb-composer-project-task-row-title">{task.title || "Untitled task"}</span>
+                                    <span className="tb-composer-project-task-row-meta">
+                                      {ticketLabel || "Ticket"}
+                                    </span>
+                                  </span>
+                                  {isSelectedTask ? <LucideCheck className="tb-composer-project-task-row-check" strokeWidth={1.8} /> : null}
+                                </button>
+                              );
+                            })
+                          ) : (
+                            <div className="tb-composer-project-task-empty">No open project tickets.</div>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="tb-composer-connectors-right">
+                    {connectedComposerConnectors.length > 0 ? (
+                      <div className="tb-composer-connectors-actions">
+                        {connectedComposerConnectors.map((connector) => {
+                          const ConnectorIcon = connector.Icon;
+                          return (
+                            <button
+                              key={connector.id}
+                              type="button"
+                              className="tb-composer-connector-button"
+                              onClick={() => openFileBrowserModal(connector.source)}
+                            >
+                              <ConnectorIcon className="tb-composer-connector-brand-icon" />
+                              <span>{connector.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="tb-composer-connectors-link"
+                      onClick={onOpenPluginsOverview}
+                      disabled={!onOpenPluginsOverview}
+                    >
+                      <span>Show Plugins</span>
+                      <IconChevronRight className="tb-composer-connectors-link-icon" />
+                    </button>
+                  </div>
+                </div>
+              ) : null}
           </div>
         </div>
       </div>

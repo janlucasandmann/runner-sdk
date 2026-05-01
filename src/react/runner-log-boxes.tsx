@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   AlertCircle,
+  ArrowUpDown,
   Bookmark,
   Bot,
   Brain,
@@ -39,6 +40,7 @@ import {
   Paperclip,
   ScanText,
   Search,
+  SlidersHorizontal,
   Telescope,
   Terminal,
   Video,
@@ -55,6 +57,13 @@ import {
 import { RunnerFileDiffSurface } from "./runner-file-diff-surface.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
 import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
+import { ComputerAgentsListLogBox, parseComputerAgentsListLogDetails, type ComputerAgentsListAvailableAgent } from "./runner-agents-list-log-box.js";
+import { ComputerAgentsEnvironmentsListLogBox, parseComputerAgentsEnvironmentsListLogDetails, type ComputerAgentsListAvailableEnvironment } from "./runner-environments-list-log-box.js";
+import { TaskManagementProjectsListLogBox, parseTaskManagementProjectsListLogDetails, type TaskManagementListAvailableEnvironment, type TaskManagementListAvailableProject } from "./runner-projects-list-log-box.js";
+import { GitCommitLogBox, parseGitCommitLogDetails } from "./runner-git-commit-log-box.js";
+import { GitDiffLogBox, parseGitDiffLogDetails } from "./runner-git-diff-log-box.js";
+import { GitStatusLogBox, parseGitStatusLogDetails } from "./runner-git-status-log-box.js";
+import { LogHeader, LogPanel } from "./runner-log-card.js";
 import { RunnerMarkdown, stripRunnerSystemTags } from "./runner-markdown.js";
 
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
@@ -166,6 +175,9 @@ interface RunnerWorkLogEntryProps {
   requestHeaders?: HeadersInit;
   renderComputerUseMcpAsGeneric?: boolean;
   activeTaskPreviewId?: string | null;
+  availableAgents?: ComputerAgentsListAvailableAgent[];
+  availableEnvironments?: ComputerAgentsListAvailableEnvironment[];
+  availableProjects?: TaskManagementListAvailableProject[];
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
   onWorkspacePathClick?: (path: string) => void;
   onPermissionDecision?: (log: RunnerLog, decision: "allow" | "deny") => Promise<void> | void;
@@ -187,6 +199,9 @@ interface RunnerWorkLogEntryProps {
     environmentName?: string;
     isDeleted?: boolean;
   }) => void;
+  onAgentPreviewClick?: (agent: { agentId: string; agentName?: string }) => void;
+  onEnvironmentPreviewClick?: (environment: { environmentId: string; environmentName?: string }) => void;
+  onProjectPreviewClick?: (project: { projectId: string; projectName?: string }) => void;
 }
 
 function isRunnerLogImageFilePath(filePath?: string | null): boolean {
@@ -298,13 +313,19 @@ function normalizeRunnerFilePath(filePath?: string | null): string | undefined {
   return trimmed;
 }
 
+function isRunnerNullDevicePath(filePath?: string | null): boolean {
+  const normalized = normalizeRunnerFilePath(filePath);
+  return normalized === "/dev/null" || normalized === "dev/null";
+}
+
 function getFileName(filePath: string): string {
   const parts = filePath.split("/");
   return parts[parts.length - 1] || filePath;
 }
 
 function formatBytes(bytes?: number): string {
-  if (!bytes || bytes < 1) return "";
+  if (typeof bytes !== "number" || !Number.isFinite(bytes) || bytes < 0) return "";
+  if (bytes < 1) return "0 B";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -465,52 +486,6 @@ function extractQuotedArgument(command: string, flagPattern: string): string | n
   }
   const unquoted = rest.match(/^(\S+)/);
   return unquoted ? unquoted[1].trim() : null;
-}
-
-function LogHeader({
-  icon,
-  label,
-  title,
-  timeLabel,
-  meta,
-  collapsed,
-  onToggle,
-  className,
-}: {
-  icon: ReactNode;
-  label: string;
-  title?: string | null;
-  timeLabel?: string;
-  meta?: ReactNode;
-  collapsed: boolean;
-  onToggle: () => void;
-  className?: string;
-}) {
-  return (
-    <button type="button" className={`tb-log-card-header ${className || ""}`.trim()} onClick={onToggle}>
-      <span className="tb-log-card-icon">{icon}</span>
-      <div className="tb-log-card-header-copy">
-        <span className="tb-log-card-label">{label}</span>
-        {title ? <span className="tb-log-card-title">{title}</span> : null}
-      </div>
-      <div className="tb-log-card-header-right">
-        {meta}
-        {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
-        {collapsed ? <ChevronRight className="tb-log-card-chevron" strokeWidth={1.5} /> : <ChevronDown className="tb-log-card-chevron" strokeWidth={1.5} />}
-      </div>
-    </button>
-  );
-}
-
-function LogPanel({
-  children,
-  collapsed,
-}: {
-  children: ReactNode;
-  collapsed: boolean;
-}) {
-  if (collapsed) return null;
-  return <div className="tb-log-card-panel">{children}</div>;
 }
 
 function detectCodeLanguage(content: string, filePath?: string): string {
@@ -1108,7 +1083,7 @@ type RunnerTaskManagementCreatedTaskPreview = {
   taskColor?: string | null;
 };
 
-export type RunnerCreatedResourceType = "agent" | "skill" | "environment" | "release";
+export type RunnerCreatedResourceType = "agent" | "skill" | "environment" | "project" | "release";
 
 export type RunnerCreatedResourcePreview = {
   id: string;
@@ -2795,15 +2770,36 @@ function stripLineNumbers(text: string): string {
   return text.replace(/^\s*\d+→/gm, "");
 }
 
+function extractHeadTailReadPath(command?: string): string | null {
+  if (!command) return null;
+  const patterns = [
+    /\b(?:head|tail)\s+-n\s+\d+\s+["']([^"']+)["']/,
+    /\b(?:head|tail)\s+-n\s+\d+\s+([^\s|&;>"']+)\s*(?:[|&;>]|$)/,
+    /\b(?:head|tail)\s+-\d+\s+["']([^"']+)["']/,
+    /\b(?:head|tail)\s+-\d+\s+([^\s|&;>"']+)\s*(?:[|&;>]|$)/,
+    /\b(?:head|tail)\s+["']([^"']+)["']/,
+    /\b(?:head|tail)\s+([^\s|&;>"']+)\s*(?:[|&;>]|$)/,
+  ];
+  for (const pattern of patterns) {
+    const match = command.match(pattern);
+    const candidate = match?.[1]?.trim();
+    if (candidate && !candidate.startsWith("-")) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
 function isReadFileCommand(command?: string): boolean {
   if (!command) return false;
+  if (extractHeadTailReadPath(command)) {
+    return true;
+  }
   return [
     /^\$?\s*read_file\b/i,
     /^reading:\s+/i,
     /sed\s+-n\s+['"][^'"]*['"]\s+/,
     /\bcat\s+["']?[^|&;]+/,
-    /\bhead\s+(?:-n\s+\d+\s+)?["']?[^|&;]+/,
-    /\btail\s+(?:-n\s+\d+\s+)?["']?[^|&;]+/,
     /\bless\s+["']?[^|&;]+/,
   ].some((pattern) => pattern.test(command));
 }
@@ -2825,11 +2821,15 @@ export function isReadFileLog(log?: RunnerLog): boolean {
 
 function extractReadFilePath(command?: string): string | null {
   if (!command) return null;
+  const headTailPath = extractHeadTailReadPath(command);
+  if (headTailPath) {
+    return headTailPath;
+  }
   const patterns = [
     /sed\s+-n\s+['"][^'"]*['"]\s+["']([^"']+)["']/,
     /sed\s+-n\s+['"][^'"]*['"]\s+(\S+)/,
-    /\b(?:cat|head|tail|less)\s+(?:-n\s+\d+\s+)?["']([^"']+)["']/,
-    /\b(?:cat|head|tail|less)\s+(?:-n\s+\d+\s+)?([^\s|&;>"']+)\s*(?:[|&;>]|$)/,
+    /\b(?:cat|less)\s+["']([^"']+)["']/,
+    /\b(?:cat|less)\s+([^\s|&;>"']+)\s*(?:[|&;>]|$)/,
     /["']?(\/workspace\/[^"'\s|&;>]+)["']?/,
   ];
   for (const pattern of patterns) {
@@ -2845,8 +2845,12 @@ function extractReadLineRange(command?: string): string | null {
   if (sedRange) return `lines ${sedRange[1]}-${sedRange[2]}`;
   const head = command.match(/head\s+-n\s+(\d+)/);
   if (head) return `first ${head[1]} lines`;
+  const compactHead = command.match(/head\s+-(\d+)(?:\s|$)/);
+  if (compactHead) return `first ${compactHead[1]} lines`;
   const tail = command.match(/tail\s+-n\s+(\d+)/);
   if (tail) return `last ${tail[1]} lines`;
+  const compactTail = command.match(/tail\s+-(\d+)(?:\s|$)/);
+  if (compactTail) return `last ${compactTail[1]} lines`;
   return null;
 }
 
@@ -3047,6 +3051,19 @@ function parseStructuredCommandExecutionOutput(output: unknown): StructuredComma
     interrupted: extractJsonBooleanFieldValue(trimmed, ["interrupted"]),
     noOutputExpected: extractJsonBooleanFieldValue(trimmed, ["noOutputExpected"]),
   };
+}
+
+function resolveCommandOutputText(output: unknown, preferred: "stdout" | "combined" = "combined"): string {
+  const structured = parseStructuredCommandExecutionOutput(output);
+  if (!structured) {
+    return stripRunnerSystemTags(String(output || ""));
+  }
+
+  if (preferred === "stdout") {
+    return stripRunnerSystemTags(structured.stdout || structured.stderr || "");
+  }
+
+  return stripRunnerSystemTags([structured.stdout, structured.stderr].filter(Boolean).join("\n"));
 }
 
 function extractStructuredReadFilePayload(output: string): { filePath?: string; content?: string } | null {
@@ -3286,6 +3303,19 @@ export function isWriteFileLog(log?: RunnerLog): boolean {
   const command = String(log.metadata?.command || "");
   const message = String(log.message || "");
   const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const structuredWrite = extractStructuredWriteFilePayload(output);
+  const candidatePaths = [
+    ...(Array.isArray(log.metadata?.filePaths)
+      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      : []),
+    structuredWrite?.filePath,
+    extractWriteFilePath(command),
+    extractWorkspacePathFromText(message),
+    extractWriteMessagePath(message),
+  ].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+  if (candidatePaths.length > 0 && candidatePaths.every((filePath) => isRunnerNullDevicePath(filePath))) {
+    return false;
+  }
 
   return (
     isWriteFileCommand(command) ||
@@ -3304,7 +3334,9 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
 
   if (log.eventType === "file_change") {
     const filePaths = Array.isArray(log.metadata?.filePaths)
-      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      ? log.metadata.filePaths.filter((value): value is string =>
+        typeof value === "string" && value.trim().length > 0 && !isRunnerNullDevicePath(value)
+      )
       : [];
     if (filePaths.length === 0) {
       return [];
@@ -3365,7 +3397,9 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
   ) {
     const imagePaths = new Set<string>();
     const metadataFilePaths = Array.isArray(log.metadata?.filePaths)
-      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      ? log.metadata.filePaths.filter((value): value is string =>
+        typeof value === "string" && value.trim().length > 0 && !isRunnerNullDevicePath(value)
+      )
       : [];
     for (const filePath of metadataFilePaths) {
       if (isRunnerLogImageFilePath(filePath)) {
@@ -3430,8 +3464,9 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
     structuredWrite?.filePath ||
     extractWriteFilePath(command) ||
     extractWorkspacePathFromText(log.message) ||
+    extractWriteMessagePath(log.message) ||
     undefined;
-  if (!filePath) {
+  if (!filePath || isRunnerNullDevicePath(filePath)) {
     return [];
   }
 
@@ -3482,7 +3517,7 @@ function extractDeletedFilePathFromCommandOutput(log: RunnerLog): string | null 
     /cannot remove ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(outputText) ||
     /no such file or directory[^\n]*['"`]([^'"`\n]+)['"`]/i.exec(outputText);
   const resolvedPath = normalizeRunnerFilePath(pathMatch?.[1] || "");
-  if (!resolvedPath) {
+  if (!resolvedPath || isRunnerNullDevicePath(resolvedPath)) {
     return null;
   }
   return resolvedPath;
@@ -3532,6 +3567,8 @@ function resolveReadCodePreviewAttachment(
   }
   const normalizedPath = normalizeRunnerFilePath(filePath) || "/workspace/preview.txt";
   const filename = getFileName(normalizedPath);
+  const isMarkdown = looksLikeMarkdown(normalizedContent, normalizedPath);
+  const mimeType = isMarkdown ? "text/markdown" : "text/plain";
   return {
     ...buildRunnerPreviewAttachmentFromPath(normalizedPath, {
       backendUrl,
@@ -3539,11 +3576,11 @@ function resolveReadCodePreviewAttachment(
       idPrefix: "log-preview-code",
     }),
     filename,
-    mimeType: "text/plain",
+    mimeType,
     type: "document",
-    previewKindOverride: "text",
-    url: `data:text/plain;charset=utf-8,${encodeURIComponent(normalizedContent)}`,
-    previewUrl: `data:text/plain;charset=utf-8,${encodeURIComponent(normalizedContent)}`,
+    previewKindOverride: isMarkdown ? "markdown" : "text",
+    url: `data:${mimeType};charset=utf-8,${encodeURIComponent(normalizedContent)}`,
+    previewUrl: `data:${mimeType};charset=utf-8,${encodeURIComponent(normalizedContent)}`,
   };
 }
 
@@ -3554,6 +3591,7 @@ function ReadFileLogBox({
   environmentId,
   requestHeaders,
   onPreviewDocument,
+  onWorkspacePathClick,
 }: {
   log: RunnerLog;
   timeLabel?: string;
@@ -3561,6 +3599,7 @@ function ReadFileLogBox({
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
+  onWorkspacePathClick?: (path: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -3574,10 +3613,11 @@ function ReadFileLogBox({
     normalizeRunnerFilePath(extractWorkspacePathFromText(log.message)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(command));
   const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
+  const commandOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
   const structuredReadPayload = extractStructuredReadFilePayload(output);
   const lineRange = extractReadLineRange(command);
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
-  const content = stripLineNumbers(structuredReadPayload?.content ?? output);
+  const content = stripLineNumbers(structuredReadPayload?.content ?? commandOutput?.stdout ?? output);
   const normalizedContent = content.trim().toLowerCase();
   const isImageFile = Boolean(filePath && isRunnerLogImageFilePath(filePath));
   const imagePreviewUrl = isImageFile ? buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath) : null;
@@ -3591,6 +3631,13 @@ function ReadFileLogBox({
     );
   const detectedLanguage = detectCodeLanguage(content, filePath || undefined);
   const languageLabel = formatCodeLanguageLabel(detectedLanguage);
+  const shouldRenderMarkdownPreview = detectedLanguage === "markdown";
+  const openCodePreviewLabel =
+    shouldRenderMarkdownPreview && codePreviewAttachment
+      ? `Open Markdown preview for ${codePreviewAttachment.filename}`
+      : codePreviewAttachment
+        ? `Open code preview for ${codePreviewAttachment.filename}`
+        : "";
 
   useEffect(() => {
     if (!copied) return;
@@ -3658,8 +3705,8 @@ function ReadFileLogBox({
                       type="button"
                       className="tb-log-file-preview-icon-button"
                       onClick={() => onPreviewDocument?.(codePreviewAttachment)}
-                      aria-label={`Open code preview for ${codePreviewAttachment.filename}`}
-                      title={`Open code preview for ${codePreviewAttachment.filename}`}
+                      aria-label={openCodePreviewLabel}
+                      title={openCodePreviewLabel}
                     >
                       <ListChevronsUpDown className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
                     </button>
@@ -3682,15 +3729,23 @@ function ReadFileLogBox({
                 </div>
               </div>
               <div className="tb-log-file-preview-body">
-                <RunnerCodeViewer
-                  key={`${filePath || "inline"}:${detectedLanguage}:file-preview`}
-                  content={content}
-                  filePath={filePath}
-                  language={detectedLanguage}
-                  maxHeight={500}
-                  showLineNumbers
-                  className="tb-log-card-code-hide-scrollbars"
-                />
+                {shouldRenderMarkdownPreview ? (
+                  <RunnerMarkdown
+                    content={content}
+                    className="tb-log-file-markdown-preview tb-message-markdown"
+                    onWorkspacePathClick={onWorkspacePathClick}
+                  />
+                ) : (
+                  <RunnerCodeViewer
+                    key={`${filePath || "inline"}:${detectedLanguage}:file-preview`}
+                    content={content}
+                    filePath={filePath}
+                    language={detectedLanguage}
+                    maxHeight={500}
+                    showLineNumbers
+                    className="tb-log-card-code-hide-scrollbars"
+                  />
+                )}
               </div>
             </div>
           </>
@@ -3704,7 +3759,7 @@ function ReadFileLogBox({
 
 function isWriteFileCommand(command?: string): boolean {
   if (!command) return false;
-  return [
+  const isWriteLike = [
     /^\$?\s*write_file\b/i,
     /^\$?\s*edit_file\b/i,
     /\bcat\s+>+\s*/,
@@ -3716,6 +3771,9 @@ function isWriteFileCommand(command?: string): boolean {
     /\bcp\s+.*["']?\/workspace\//,
     /\bmv\s+.*["']?\/workspace\//,
   ].some((pattern) => pattern.test(command));
+  if (!isWriteLike) return false;
+  const writeTarget = extractWriteFilePath(command);
+  return !isRunnerNullDevicePath(writeTarget);
 }
 
 function extractWriteFilePath(command?: string): string | null {
@@ -3735,6 +3793,11 @@ function extractWriteFilePath(command?: string): string | null {
     if (match?.[1]) return match[1];
   }
   return null;
+}
+
+function extractWriteMessagePath(message?: string | null): string | null {
+  const match = String(message || "").match(/^\s*(?:Write|Edit|Delete):\s+(.+?)\s*$/i);
+  return normalizeRunnerFilePath(match?.[1] || "") || null;
 }
 
 function deriveWriteOperation(command?: string, changeKind?: string): "created" | "modified" {
@@ -3799,7 +3862,11 @@ function WriteFileSingleLogBox({
     || structuredWrite?.filePath
     || extractWriteFilePath(command)
     || extractWorkspacePathFromText(log.message)
+    || extractWriteMessagePath(log.message)
     || undefined;
+  if (isRunnerNullDevicePath(filePath)) {
+    return null;
+  }
   const fileContents = log.metadata?.fileContents as Record<string, string> | undefined;
   const fileContent = resolveFileMapValue(fileContents, filePath) ?? structuredWrite?.content;
   const output = stripRunnerSystemTags(String(fileContent || log.metadata?.output || ""));
@@ -3951,7 +4018,10 @@ function WriteFileLogGroup({
   requestHeaders?: HeadersInit;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
-  const filePaths = log.metadata?.filePaths || [];
+  const filePaths = (log.metadata?.filePaths || []).filter((filePath) => !isRunnerNullDevicePath(filePath));
+  if (filePaths.length === 0 && Array.isArray(log.metadata?.filePaths) && log.metadata.filePaths.length > 0) {
+    return null;
+  }
   if (filePaths.length <= 1) {
     return (
       <WriteFileSingleLogBox
@@ -4004,27 +4074,310 @@ function WriteFileLogGroup({
 type ListFileItem = {
   name: string;
   type: "file" | "folder";
+  path?: string;
   size?: string;
+  sizeBytes?: number | null;
   isHidden: boolean;
 };
 
+type ListFileSort = "name" | "type" | "size";
+type ListFileFilter = "visible" | "files" | "folders" | "hidden";
+type ListFilePopover = "sort" | "filter" | null;
+type ListFileMetadata = {
+  sizeBytes?: number;
+  type?: "file" | "directory" | "folder";
+};
+
+const LIST_FILES_PAGE_SIZE = 5;
+const DEFAULT_LIST_FILES_DIRECTORY = "/workspace";
+
+function stripListFileAnsiSequences(value: string): string {
+  return value.replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "");
+}
+
+function stripShellInlineComments(command?: string): string {
+  if (!command) return "";
+  let quote: "'" | "\"" | null = null;
+  let escaped = false;
+  let result = "";
+  for (let index = 0; index < command.length; index += 1) {
+    const character = command[index];
+    if (escaped) {
+      result += character;
+      escaped = false;
+      continue;
+    }
+    if (character === "\\" && quote !== "'") {
+      result += character;
+      escaped = true;
+      continue;
+    }
+    if (quote) {
+      result += character;
+      if (character === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (character === "'" || character === "\"") {
+      quote = character;
+      result += character;
+      continue;
+    }
+    if (character === "#" && (index === 0 || /\s/.test(command[index - 1] || ""))) {
+      break;
+    }
+    result += character;
+  }
+  return result.trim();
+}
+
+function isUsableListDirectoryCandidate(value?: string | null): value is string {
+  const trimmed = String(value || "").trim();
+  return Boolean(trimmed && !trimmed.startsWith("-") && !/^#+$/.test(trimmed) && !trimmed.includes("#"));
+}
+
 function isListFilesCommand(command?: string): boolean {
   if (!command) return false;
-  return [/\bls\s+(?:-[a-zA-Z]+\s+)?["']?[^|&;]+/, /\bll\s+["']?[^|&;]+/].some((pattern) => pattern.test(command));
+  return [
+    /(?:^|[;&|]\s*)\$?\s*(?:ls|ll)\b(?:\s|$)/i,
+    /\bfind\s+(?!.*\s-exec\s)/i,
+    /\brg\s+--files\b/i,
+    /\bgit\s+ls-files\b/i,
+  ].some((pattern) => pattern.test(command));
+}
+
+function extractShellCdPath(command?: string): string | null {
+  if (!command) return null;
+  const normalizedCommand = stripShellInlineComments(command);
+  const patterns = [
+    /(?:^|[;&|]\s*)cd\s+["']([^"']+)["']/,
+    /(?:^|[;&|]\s*)cd\s+([^\s|&;>"']+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = normalizedCommand.match(pattern);
+    const candidate = match?.[1]?.trim();
+    if (isUsableListDirectoryCandidate(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function resolveListedDirectoryPath(command: string | undefined, listedPath: string): string {
+  const normalizedListedPath = listedPath.trim();
+  if (!normalizedListedPath || normalizedListedPath.startsWith("/") || normalizedListedPath.startsWith("~")) {
+    return normalizedListedPath;
+  }
+
+  const cdPath = extractShellCdPath(command);
+  if (!cdPath || !cdPath.startsWith("/")) {
+    return normalizedListedPath;
+  }
+
+  if (normalizedListedPath === ".") {
+    return cdPath;
+  }
+
+  return `${cdPath.replace(/\/+$/, "")}/${normalizedListedPath.replace(/^\.\//, "")}`;
 }
 
 function extractDirectoryPath(command?: string): string | null {
   if (!command) return null;
+  const normalizedCommand = stripShellInlineComments(command);
+  const cdPath = extractShellCdPath(normalizedCommand);
+  const defaultDirectory = cdPath && cdPath.startsWith("/") ? cdPath : DEFAULT_LIST_FILES_DIRECTORY;
   const patterns = [
     /\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?["']([^"']+)["']/,
     /\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?([^\s|&;>"']+)\s*(?:[|&;>]|$)/,
-    /["']?(\/workspace\/[^"'\s|&;>]*)["']?/,
+    /\bfind\s+["']([^"']+)["']/,
+    /\bfind\s+([^\s|&;>"']+)\s*(?:[|&;>]|$)/,
+    /\brg\s+--files\s+["']([^"']+)["']/,
+    /\brg\s+--files\s+([^\s|&;>"']+)\s*(?:[|&;>]|$)/,
   ];
   for (const pattern of patterns) {
-    const match = command.match(pattern);
-    if (match?.[1] && !match[1].startsWith("-")) return match[1];
+    const match = normalizedCommand.match(pattern);
+    const candidate = match?.[1]?.trim();
+    if (isUsableListDirectoryCandidate(candidate)) return resolveListedDirectoryPath(normalizedCommand, candidate);
   }
-  return null;
+  const workspacePath = normalizedCommand.match(/(?:^|\s)(\/workspace(?:\/[^"'\s|&;>#]+)*)/);
+  if (isUsableListDirectoryCandidate(workspacePath?.[1])) {
+    return workspacePath[1];
+  }
+  return isListFilesCommand(normalizedCommand) ? defaultDirectory : null;
+}
+
+function isLikelyFileListLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith("total ")) {
+    return false;
+  }
+  if (/^[dl-][rwx-]{9}\s+/.test(trimmed)) {
+    return true;
+  }
+  if (/^(?:\.{1,2}\/|\/workspace\/|~\/)[^\s]+$/.test(trimmed)) {
+    return true;
+  }
+  if (/^[^\s]+\.[A-Za-z0-9]{1,12}$/.test(trimmed)) {
+    return true;
+  }
+  return /^[A-Za-z0-9._@+-]+\/$/.test(trimmed);
+}
+
+function isLikelyFileListOutput(output: string): boolean {
+  const lines = output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !line.startsWith("total "));
+  if (lines.length < 2) {
+    return false;
+  }
+
+  const fileLikeCount = lines.filter(isLikelyFileListLine).length;
+  return fileLikeCount >= Math.min(3, lines.length) && fileLikeCount / lines.length >= 0.7;
+}
+
+function isListFilesLog(log?: RunnerLog): boolean {
+  if (!log || log.eventType !== "command_execution") {
+    return false;
+  }
+  const command = String(log.metadata?.command || "");
+  if (isListFilesCommand(command)) {
+    return true;
+  }
+
+  const output = resolveCommandOutputText(log.metadata?.output, "stdout");
+  return !extractReadFilePath(command) && isLikelyFileListOutput(output);
+}
+
+function normalizeListFileName(name: string): string {
+  return stripListFileAnsiSequences(name).trim().replace(/^\.\//, "");
+}
+
+function parseListFileSizeBytes(value: string): number | null {
+  const normalized = value.trim();
+  if (!normalized || normalized === "-") return null;
+  const numericBytes = Number(normalized);
+  if (Number.isFinite(numericBytes)) return numericBytes;
+  const match = normalized.match(/^(\d+(?:\.\d+)?)([KMGTPE])B?$/i);
+  if (!match) return null;
+  const amount = Number(match[1]);
+  const unit = match[2].toUpperCase();
+  const multipliers: Record<string, number> = {
+    K: 1024,
+    M: 1024 ** 2,
+    G: 1024 ** 3,
+    T: 1024 ** 4,
+    P: 1024 ** 5,
+    E: 1024 ** 6,
+  };
+  const multiplier = multipliers[unit];
+  return Number.isFinite(amount) && multiplier ? Math.round(amount * multiplier) : null;
+}
+
+function getListFileDisplayName(pathOrName: string): string {
+  const normalized = normalizeListFileName(pathOrName).replace(/\/+$/, "");
+  const parts = normalized.split("/").filter(Boolean);
+  return parts[parts.length - 1] || normalized;
+}
+
+function normalizeListFileWorkspaceRelativePath(pathOrName: string): string {
+  let normalized = String(pathOrName || "").trim().replace(/\\/g, "/");
+  if (!normalized) return "";
+  normalized = normalized.replace(/^\/workspace\/?/, "");
+  normalized = normalized.replace(/^workspace\/?/, "");
+  normalized = normalized.replace(/^\.\//, "");
+  return normalized.replace(/^\/+|\/+$/g, "");
+}
+
+function getListFileMetadataLookupKey(pathOrName: string): string {
+  const relativePath = normalizeListFileWorkspaceRelativePath(pathOrName);
+  return relativePath ? `${DEFAULT_LIST_FILES_DIRECTORY}/${relativePath}` : DEFAULT_LIST_FILES_DIRECTORY;
+}
+
+function getListFileParentDirectory(pathOrName: string): string {
+  const relativePath = normalizeListFileWorkspaceRelativePath(pathOrName);
+  if (!relativePath || !relativePath.includes("/")) return "";
+  return relativePath.split("/").slice(0, -1).join("/");
+}
+
+function buildListFileMetadataUrl(backendUrl: string | undefined, environmentId: string | null | undefined, folderPath: string): string {
+  const normalizedBackendUrl = String(backendUrl || "").trim().replace(/\/+$/, "");
+  const normalizedEnvironmentId = String(environmentId || "").trim();
+  if (!normalizedBackendUrl || !normalizedEnvironmentId) return "";
+  const params = new URLSearchParams();
+  params.set("depth", "1");
+  if (folderPath) {
+    params.set("path", folderPath);
+  }
+  return `${normalizedBackendUrl}/environments/${encodeURIComponent(normalizedEnvironmentId)}/files?${params.toString()}`;
+}
+
+function isHiddenListFileName(name: string): boolean {
+  const normalized = normalizeListFileName(name);
+  const firstSegment = normalized.split("/").find(Boolean) || normalized;
+  return firstSegment.startsWith(".") && firstSegment !== "." && firstSegment !== "..";
+}
+
+function isListLongFormatPermissions(value?: string): boolean {
+  return /^[bcdlps-][rwxstST-]{9}[+@.]?$/.test(String(value || ""));
+}
+
+function isLikelyLongListMetadataLine(line: string): boolean {
+  return line.split(/\s+/).some(isListLongFormatPermissions);
+}
+
+function parseLongListOutputLine(line: string): ListFileItem | null {
+  const tokens = line.split(/\s+/).filter(Boolean);
+  const permissionsIndex = tokens.findIndex(isListLongFormatPermissions);
+  if (permissionsIndex < 0) return null;
+
+  const permissions = tokens[permissionsIndex];
+  const fields = tokens.slice(permissionsIndex + 1);
+  if (fields.length < 7) return null;
+
+  let sizeToken = fields[3];
+  let nameStartIndex = /^\d{4}-\d{2}-\d{2}$/.test(fields[4] || "") ? 6 : 7;
+  if (/^[\d.]+,$/.test(sizeToken) && fields.length >= 8) {
+    sizeToken = "";
+    nameStartIndex += 1;
+  }
+
+  const rawName = fields.slice(nameStartIndex).join(" ").replace(/\s+->\s+.+$/, "");
+  const normalizedPath = normalizeListFileName(rawName);
+  const displayName = getListFileDisplayName(normalizedPath);
+  if (!displayName || displayName === "." || displayName === "..") {
+    return null;
+  }
+
+  const sizeBytes = sizeToken ? parseListFileSizeBytes(sizeToken) : null;
+  return {
+    name: displayName,
+    path: normalizedPath,
+    type: permissions.startsWith("d") ? "folder" : "file",
+    size: sizeBytes == null ? "" : formatBytes(sizeBytes),
+    sizeBytes,
+    isHidden: isHiddenListFileName(normalizedPath),
+  };
+}
+
+function dedupeListFileItems(items: ListFileItem[]): ListFileItem[] {
+  const byPath = new Map<string, ListFileItem>();
+  for (const item of items) {
+    const key = normalizeListFileWorkspaceRelativePath(item.path || item.name).toLowerCase() || item.name.toLowerCase();
+    const existing = byPath.get(key);
+    if (!existing) {
+      byPath.set(key, item);
+      continue;
+    }
+    const existingHasSize = existing.sizeBytes != null || Boolean(existing.size);
+    const nextHasSize = item.sizeBytes != null || Boolean(item.size);
+    if (!existingHasSize && nextHasSize) {
+      byPath.set(key, item);
+    }
+  }
+  return Array.from(byPath.values());
 }
 
 function parseListOutput(output: string): ListFileItem[] {
@@ -4032,27 +4385,27 @@ function parseListOutput(output: string): ListFileItem[] {
   const lines = output.trim().split("\n");
   const items: ListFileItem[] = [];
   for (const line of lines) {
-    const trimmed = line.trim();
+    const trimmed = stripListFileAnsiSequences(line).trim();
     if (!trimmed || trimmed.startsWith("total ")) continue;
-    const detailed = trimmed.match(/^([d-][rwx-]{9})\s+\d+\s+\S+\s+\S+\s+(\d+)\s+\S+\s+\d+\s+[\d:]+\s+(.+)$/);
+    const detailed = parseLongListOutputLine(trimmed);
     if (detailed) {
-      const [, permissions, size, name] = detailed;
-      items.push({
-        name,
-        type: permissions.startsWith("d") ? "folder" : "file",
-        size: formatBytes(Number(size)),
-        isHidden: name.startsWith("."),
-      });
+      items.push(detailed);
+      continue;
+    }
+    if (isLikelyLongListMetadataLine(trimmed)) {
       continue;
     }
     const names = trimmed.split(/\s+/);
-    for (const name of names) {
+    for (const rawName of names) {
+      const path = normalizeListFileName(rawName);
+      const name = getListFileDisplayName(path);
       if (!name) continue;
+      if (name === "." || name === "..") continue;
       const isLikelyFolder = !name.includes(".") || ["node_modules", "src", "dist", "build", "public", "assets", "components", "lib", "utils"].includes(name);
-      items.push({ name, type: isLikelyFolder ? "folder" : "file", isHidden: name.startsWith(".") });
+      items.push({ name, path, type: isLikelyFolder ? "folder" : "file", isHidden: isHiddenListFileName(path) });
     }
   }
-  return items.sort((left, right) => {
+  return dedupeListFileItems(items).sort((left, right) => {
     if (left.type !== right.type) return left.type === "folder" ? -1 : 1;
     return left.name.localeCompare(right.name);
   });
@@ -4078,61 +4431,570 @@ function FileKindIcon({ item }: { item: ListFileItem }) {
   return <img src={RUNNER_TEXT_FILE_ICON_URL} alt="" className="tb-log-file-icon-asset" />;
 }
 
-function ListFilesLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function getListFileCountLabel(count: number): string {
+  return `${count.toLocaleString()} ${count === 1 ? "Item" : "Items"}`;
+}
+
+function getListFileTypeLabel(item: ListFileItem): string {
+  return item.type === "folder" ? "Folder" : "File";
+}
+
+function getResolvedListFileTypeLabel(item: ListFileItem, metadata?: ListFileMetadata): string {
+  if (metadata?.type === "directory" || metadata?.type === "folder") return "Folder";
+  if (metadata?.type === "file") return "File";
+  return getListFileTypeLabel(item);
+}
+
+function getListFileLocationLabel(directoryPath: string | null, item: ListFileItem): string {
+  const itemPath = item.path || item.name;
+  if (itemPath.startsWith("/")) return itemPath;
+  const baseDirectory = directoryPath && directoryPath !== "." ? directoryPath : DEFAULT_LIST_FILES_DIRECTORY;
+  if (baseDirectory.startsWith("/") || baseDirectory.startsWith("~")) {
+    return `${baseDirectory.replace(/\/+$/, "")}/${itemPath.replace(/^\/+/, "")}`;
+  }
+  return `${DEFAULT_LIST_FILES_DIRECTORY}/${itemPath.replace(/^\/+/, "")}`;
+}
+
+function normalizeListFileSearchText(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function sortListFiles(items: ListFileItem[], sortMode: ListFileSort): ListFileItem[] {
+  const sorted = items.slice();
+  sorted.sort((left, right) => {
+    if (sortMode === "type") {
+      if (left.type !== right.type) return left.type === "folder" ? -1 : 1;
+      return left.name.localeCompare(right.name);
+    }
+    if (sortMode === "size") {
+      const leftSize = left.sizeBytes ?? Number.MAX_SAFE_INTEGER;
+      const rightSize = right.sizeBytes ?? Number.MAX_SAFE_INTEGER;
+      return leftSize - rightSize || left.name.localeCompare(right.name);
+    }
+    return left.name.localeCompare(right.name);
+  });
+  return sorted;
+}
+
+function filterListFiles(items: ListFileItem[], filterMode: ListFileFilter): ListFileItem[] {
+  if (filterMode === "files") return items.filter((item) => item.type === "file" && !item.isHidden);
+  if (filterMode === "folders") return items.filter((item) => item.type === "folder" && !item.isHidden);
+  if (filterMode === "hidden") return items.filter((item) => item.isHidden);
+  return items.filter((item) => !item.isHidden);
+}
+
+function ListFilesLogBox({
+  log,
+  timeLabel,
+  backendUrl,
+  environmentId,
+  requestHeaders,
+  onWorkspacePathClick,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  backendUrl?: string;
+  environmentId?: string | null;
+  requestHeaders?: HeadersInit;
+  onWorkspacePathClick?: (path: string) => void;
+}) {
   const [collapsed, setCollapsed] = useState(false);
-  const [showAll, setShowAll] = useState(false);
-  const [showHidden, setShowHidden] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterMode, setFilterMode] = useState<ListFileFilter>("visible");
+  const [sortMode, setSortMode] = useState<ListFileSort>("name");
+  const [openPopover, setOpenPopover] = useState<ListFilePopover>(null);
+  const [visibleCount, setVisibleCount] = useState(LIST_FILES_PAGE_SIZE);
+  const [fileMetadataByPath, setFileMetadataByPath] = useState<Record<string, ListFileMetadata>>({});
+  const requestedMetadataFoldersRef = useRef<Set<string>>(new Set());
   const command = log.metadata?.command || "";
-  const output = String(log.metadata?.output || "");
+  const output = resolveCommandOutputText(log.metadata?.output, "stdout");
   const directoryPath = extractDirectoryPath(command);
   const allItems = useMemo(() => parseListOutput(output), [output]);
-  const visibleItems = showHidden ? allItems : allItems.filter((item) => !item.isHidden);
-  const displayItems = showAll ? visibleItems : visibleItems.slice(0, 12);
-  const hasHidden = allItems.some((item) => item.isHidden);
+  const normalizedSearchQuery = normalizeListFileSearchText(searchQuery);
+  const filteredItems = useMemo(() => {
+    const matchingFilter = filterListFiles(allItems, filterMode);
+    const matchingSearch = normalizedSearchQuery
+      ? matchingFilter.filter((item) => {
+          const location = getListFileLocationLabel(directoryPath, item);
+          const haystack = [
+            item.name,
+            location,
+            getListFileTypeLabel(item),
+            item.size || "",
+            item.isHidden ? "hidden" : "",
+          ].join(" ").toLowerCase();
+          return haystack.includes(normalizedSearchQuery);
+        })
+      : matchingFilter;
+    return sortListFiles(matchingSearch, sortMode);
+  }, [allItems, directoryPath, filterMode, normalizedSearchQuery, sortMode]);
+  const displayItems = filteredItems.slice(0, visibleCount);
+  const hasMoreItems = filteredItems.length > displayItems.length;
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
 
+  useEffect(() => {
+    setVisibleCount(LIST_FILES_PAGE_SIZE);
+  }, [filterMode, normalizedSearchQuery, sortMode]);
+
+  useEffect(() => {
+    const normalizedEnvironmentId = String(environmentId || "").trim();
+    if (!backendUrl || !normalizedEnvironmentId || displayItems.length === 0) {
+      return;
+    }
+    const folderPaths = new Set<string>();
+    for (const item of displayItems) {
+      if (item.sizeBytes != null || item.size) continue;
+      const location = getListFileLocationLabel(directoryPath, item);
+      const relativePath = normalizeListFileWorkspaceRelativePath(location);
+      if (!relativePath || item.type === "folder") continue;
+      folderPaths.add(getListFileParentDirectory(relativePath));
+    }
+    const pendingFolders = Array.from(folderPaths).filter((folderPath) => {
+      const requestKey = `${normalizedEnvironmentId}:${folderPath}`;
+      if (requestedMetadataFoldersRef.current.has(requestKey)) return false;
+      requestedMetadataFoldersRef.current.add(requestKey);
+      return true;
+    });
+    if (pendingFolders.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+    void Promise.all(pendingFolders.map(async (folderPath) => {
+      const url = buildListFileMetadataUrl(backendUrl, normalizedEnvironmentId, folderPath);
+      if (!url) return [];
+      try {
+        const response = await fetch(url, { headers: requestHeaders });
+        if (!response.ok) return [];
+        const payload = await response.json();
+        return Array.isArray(payload?.files) ? payload.files : [];
+      } catch {
+        return [];
+      }
+    })).then((results) => {
+      if (cancelled) return;
+      const nextMetadata: Record<string, ListFileMetadata> = {};
+      for (const files of results) {
+        for (const file of files) {
+          const rawPath = String(file?.path || "").trim();
+          if (!rawPath) continue;
+          const size = Number(file?.size);
+          nextMetadata[getListFileMetadataLookupKey(rawPath)] = {
+            sizeBytes: Number.isFinite(size) ? size : undefined,
+            type: file?.type === "directory" || file?.type === "folder" ? "directory" : "file",
+          };
+        }
+      }
+      if (Object.keys(nextMetadata).length > 0) {
+        setFileMetadataByPath((current) => ({ ...current, ...nextMetadata }));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [backendUrl, directoryPath, displayItems, environmentId, requestHeaders]);
+
+  const sortOptions: Array<{ id: ListFileSort; label: string }> = [
+    { id: "name", label: "Name" },
+    { id: "type", label: "Type" },
+    { id: "size", label: "Size" },
+  ];
+  const filterOptions: Array<{ id: ListFileFilter; label: string }> = [
+    { id: "visible", label: "Visible items" },
+    { id: "files", label: "Files" },
+    { id: "folders", label: "Folders" },
+    { id: "hidden", label: "Hidden items" },
+  ];
+  const selectedSortLabel = sortOptions.find((option) => option.id === sortMode)?.label || "Name";
+  const selectedFilterLabel = filterOptions.find((option) => option.id === filterMode)?.label || "Visible items";
+
+  function handleListFileOpen(item: ListFileItem) {
+    if (typeof onWorkspacePathClick !== "function") return;
+    const location = getListFileLocationLabel(directoryPath, item);
+    if (!location) return;
+    onWorkspacePathClick(location);
+  }
+
   return (
-    <div className="tb-log-card">
+    <div className="tb-log-card tb-log-card-agent-list tb-log-card-file-list">
       <LogHeader
         icon={<FolderOpen className="tb-log-card-small-icon" strokeWidth={1.5} />}
         label="List Files"
         title={directoryPath}
         timeLabel={timeLabel}
-        meta={visibleItems.length > 0 ? <span className="tb-log-card-pill">{visibleItems.length} items</span> : null}
         collapsed={collapsed}
         onToggle={() => setCollapsed((value) => !value)}
       />
       <LogPanel collapsed={collapsed}>
         {isError ? (
           <div className="tb-log-card-state tb-log-card-state-error">{output || "Failed to list files."}</div>
-        ) : visibleItems.length > 0 ? (
+        ) : allItems.length > 0 ? (
           <>
-            <div className="tb-log-file-list">
-              {displayItems.map((item) => (
-                <div key={`${item.type}-${item.name}`} className="tb-log-file-row">
-                  <span className="tb-log-file-icon">
-                    <FileKindIcon item={item} />
-                  </span>
-                  <span className="tb-log-file-name">{item.name}</span>
-                  {item.size ? <span className="tb-log-file-size">{item.size}</span> : null}
+            <div className="tb-log-agent-list-toolbar">
+              <div className="tb-log-agent-list-summary">{getListFileCountLabel(filteredItems.length)}</div>
+              <div className="tb-log-agent-list-controls">
+                <div className="tb-log-agent-list-search-shell">
+                  <Search className="tb-log-agent-list-search-icon" strokeWidth={1.8} />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    className="tb-log-agent-list-search"
+                    placeholder="Search files"
+                  />
                 </div>
-              ))}
+                <div className="tb-log-agent-list-toolbar-controls">
+                  <div className="tb-log-agent-list-popup-shell">
+                    <button
+                      type="button"
+                      className={`tb-log-agent-list-control-button ${openPopover === "sort" || sortMode !== "name" ? "is-active" : ""}`.trim()}
+                      onClick={() => setOpenPopover((current) => current === "sort" ? null : "sort")}
+                    >
+                      <ArrowUpDown className="tb-log-agent-list-control-icon" strokeWidth={1.8} />
+                      <span>Sort</span>
+                    </button>
+                    {openPopover === "sort" ? (
+                      <div className="tb-log-agent-list-popup-menu">
+                        <div className="tb-log-agent-list-popup-title">Sort by</div>
+                        {sortOptions.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={`tb-log-agent-list-popup-row ${sortMode === option.id ? "selected" : ""}`.trim()}
+                            onClick={() => {
+                              setSortMode(option.id);
+                              setOpenPopover(null);
+                            }}
+                          >
+                            <span className="tb-log-agent-list-popup-check-slot">
+                              {sortMode === option.id ? <Check className="tb-log-agent-list-popup-check" strokeWidth={1.8} /> : null}
+                            </span>
+                            <span>{option.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="tb-log-agent-list-popup-shell">
+                    <button
+                      type="button"
+                      className={`tb-log-agent-list-control-button ${openPopover === "filter" || filterMode !== "visible" ? "is-active" : ""}`.trim()}
+                      onClick={() => setOpenPopover((current) => current === "filter" ? null : "filter")}
+                    >
+                      <SlidersHorizontal className="tb-log-agent-list-control-icon" strokeWidth={1.8} />
+                      <span>Filter</span>
+                    </button>
+                    {openPopover === "filter" ? (
+                      <div className="tb-log-agent-list-popup-menu">
+                        <div className="tb-log-agent-list-popup-title">Type</div>
+                        {filterOptions.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={`tb-log-agent-list-popup-row ${filterMode === option.id ? "selected" : ""}`.trim()}
+                            onClick={() => {
+                              setFilterMode(option.id);
+                              setOpenPopover(null);
+                            }}
+                          >
+                            <span className="tb-log-agent-list-popup-check-slot">
+                              {filterMode === option.id ? <Check className="tb-log-agent-list-popup-check" strokeWidth={1.8} /> : null}
+                            </span>
+                            <span>{option.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+              <div className="tb-log-agent-list-active-filters" aria-live="polite">
+                {sortMode !== "name" ? <span>{`Sorted by ${selectedSortLabel}`}</span> : null}
+                {filterMode !== "visible" ? <span>{selectedFilterLabel}</span> : null}
+              </div>
             </div>
-            <div className="tb-log-card-actions">
-              {hasHidden ? (
-                <button type="button" className="tb-log-card-link-button" onClick={() => setShowHidden((value) => !value)}>
-                  {showHidden ? "Hide hidden files" : `Show hidden files (${allItems.filter((item) => item.isHidden).length})`}
-                </button>
-              ) : null}
-              {visibleItems.length > 12 ? (
-                <button type="button" className="tb-log-card-link-button" onClick={() => setShowAll((value) => !value)}>
-                  {showAll ? "Show fewer" : `Show ${visibleItems.length - 12} more`}
-                </button>
-              ) : null}
+            <div className="tb-log-agent-list-table-shell">
+              {displayItems.length > 0 ? (
+                <table className="tb-log-agent-list-table">
+                  <colgroup>
+                    <col className="tb-log-agent-list-col-name" />
+                    <col className="tb-log-agent-list-col-model" />
+                    <col className="tb-log-agent-list-col-context" />
+                    <col className="tb-log-agent-list-col-cost" />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Location</th>
+                      <th>Type</th>
+                      <th className="is-right">Size</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayItems.map((item) => {
+                      const location = getListFileLocationLabel(directoryPath, item);
+                      const fileMetadata = fileMetadataByPath[getListFileMetadataLookupKey(location)];
+                      const sizeLabel = item.size || (fileMetadata?.sizeBytes != null && fileMetadata.type !== "directory"
+                        ? formatBytes(fileMetadata.sizeBytes)
+                        : "-");
+                      return (
+                        <tr
+                          key={`${item.type}-${item.path || item.name}`}
+                          role={onWorkspacePathClick ? "button" : undefined}
+                          tabIndex={onWorkspacePathClick ? 0 : undefined}
+                          onClick={() => handleListFileOpen(item)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              handleListFileOpen(item);
+                            }
+                          }}
+                        >
+                          <td>
+                            <div className="tb-log-agent-list-name-cell">
+                              <span className="tb-log-agent-list-avatar" aria-hidden="true">
+                                <FileKindIcon item={item} />
+                              </span>
+                              <div className="tb-log-agent-list-name-copy">
+                                <div className="tb-log-agent-list-name-title" title={item.name}>{item.name}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="tb-log-agent-list-model-cell">
+                              <div className="tb-log-agent-list-model-copy">
+                                <div className="tb-log-agent-list-model-provider" title="Path">Path</div>
+                                <div className="tb-log-agent-list-model-name" title={location}>{location}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="tb-log-agent-list-context">{getResolvedListFileTypeLabel(item, fileMetadata)}</div>
+                          </td>
+                          <td>
+                            <div className="tb-log-agent-list-cost">{sizeLabel}</div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="tb-log-agent-list-empty">
+                  {normalizedSearchQuery || filterMode !== "visible" ? "No matching files found." : "No visible files available."}
+                </div>
+              )}
             </div>
+            {hasMoreItems || visibleCount > LIST_FILES_PAGE_SIZE ? (
+              <div className="tb-log-agent-list-more-row tb-log-file-list-more-row">
+                <div className="tb-log-file-list-more-summary">
+                  {`Showing ${displayItems.length.toLocaleString()} of ${filteredItems.length.toLocaleString()} ${filteredItems.length === 1 ? "Item" : "Items"}`}
+                </div>
+                <div className="tb-log-file-list-more-actions">
+                  {visibleCount > LIST_FILES_PAGE_SIZE ? (
+                    <button
+                      type="button"
+                      className="tb-log-agent-list-load-more"
+                      onClick={() => setVisibleCount(LIST_FILES_PAGE_SIZE)}
+                    >
+                      Collapse
+                    </button>
+                  ) : null}
+                  {hasMoreItems ? (
+                    <button
+                      type="button"
+                      className="tb-log-agent-list-load-more"
+                      onClick={() => setVisibleCount((current) => current + LIST_FILES_PAGE_SIZE)}
+                    >
+                      Load more
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="tb-log-card-empty">Folder is empty.</div>
+        )}
+      </LogPanel>
+    </div>
+  );
+}
+
+type GrepSearchMatch = {
+  title: string;
+  subtitle?: string;
+  source?: string;
+  lineNumber?: string;
+};
+
+function isGrepSearchCommand(command?: string): boolean {
+  if (!command) return false;
+  if (/\brg\s+--files\b/i.test(command)) {
+    return false;
+  }
+  return /\b(?:grep|rg|ag|git\s+grep)\b/i.test(command);
+}
+
+function isGrepSearchLog(log?: RunnerLog): boolean {
+  return Boolean(log && log.eventType === "command_execution" && isGrepSearchCommand(String(log.metadata?.command || "")));
+}
+
+function extractFirstQuotedShellValue(value: string): string | null {
+  for (let index = 0; index < value.length; index += 1) {
+    const quote = value[index];
+    if (quote !== `"` && quote !== `'`) {
+      continue;
+    }
+
+    let result = "";
+    for (let nextIndex = index + 1; nextIndex < value.length; nextIndex += 1) {
+      const current = value[nextIndex];
+      if (current === "\\" && nextIndex + 1 < value.length) {
+        result += value[nextIndex + 1];
+        nextIndex += 1;
+        continue;
+      }
+      if (current === quote) {
+        return result.trim();
+      }
+      result += current;
+    }
+  }
+  return null;
+}
+
+function extractGrepSearchPattern(command?: string): string | null {
+  if (!command) return null;
+  const segmentMatch = /\b(?:grep|rg|ag|git\s+grep)\b([\s\S]*)/i.exec(command);
+  const segment = segmentMatch?.[1] || command;
+  const quoted = extractFirstQuotedShellValue(segment);
+  if (quoted) {
+    return quoted;
+  }
+
+  const tokens = segment.trim().split(/\s+/);
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (!token) continue;
+    if (token === "-e" || token === "--regexp") {
+      return tokens[index + 1]?.trim() || null;
+    }
+    if (token.startsWith("-")) {
+      continue;
+    }
+    return token.replace(/[|&;]+$/, "").trim() || null;
+  }
+  return null;
+}
+
+function formatGrepSearchPattern(pattern?: string | null): string {
+  const normalized = String(pattern || "")
+    .replace(/\\\\/g, "\\")
+    .replace(/\\\./g, ".")
+    .replace(/\\-/g, "-")
+    .replace(/\\_/g, "_")
+    .trim();
+  return normalized || "matches";
+}
+
+function parseGrepSearchMatches(output: string): GrepSearchMatch[] {
+  const lines = output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const matches: GrepSearchMatch[] = [];
+
+  for (const line of lines) {
+    const directoryEntry = line.match(/^[d-][rwx-]{9}\s+\d+\s+\S+\s+\S+\s+(\d+)\s+([A-Za-z]{3}\s+\d+\s+[\d:]+)\s+(.+)$/);
+    if (directoryEntry) {
+      const [, size, modifiedAt, name] = directoryEntry;
+      matches.push({
+        title: normalizeListFileName(name),
+        subtitle: [formatBytes(Number(size)), modifiedAt].filter(Boolean).join(" · "),
+      });
+      continue;
+    }
+
+    const lineMatch = line.match(/^(.+?):(\d+)(?::\d+)?:\s*(.*)$/);
+    if (lineMatch) {
+      const [, source, lineNumber, content] = lineMatch;
+      matches.push({
+        title: content || source,
+        subtitle: `${source} · line ${lineNumber}`,
+        source,
+        lineNumber,
+      });
+      continue;
+    }
+
+    const sourceMatch = line.match(/^(.+?):\s*(.+)$/);
+    if (sourceMatch && (sourceMatch[1].includes("/") || /\.[A-Za-z0-9]{1,12}$/.test(sourceMatch[1]))) {
+      const [, source, content] = sourceMatch;
+      matches.push({
+        title: content,
+        subtitle: source,
+        source,
+      });
+      continue;
+    }
+
+    matches.push({ title: normalizeListFileName(line) });
+  }
+
+  return matches;
+}
+
+function GrepSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const command = String(log.metadata?.command || "");
+  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const stdout = resolveCommandOutputText(log.metadata?.output, "stdout");
+  const stderr = stripRunnerSystemTags(parsedOutput?.stderr || "");
+  const pattern = formatGrepSearchPattern(extractGrepSearchPattern(command));
+  const matches = useMemo(() => parseGrepSearchMatches(stdout), [stdout]);
+  const visibleMatches = showAll ? matches : matches.slice(0, 12);
+  const exitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
+  const hasError = Boolean(stderr.trim()) && exitCode !== 1;
+
+  return (
+    <div className="tb-log-card tb-log-card-grep-search">
+      <LogHeader
+        icon={<Search className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Search Files"
+        title={pattern}
+        timeLabel={timeLabel}
+        meta={matches.length > 0 ? <span className="tb-log-card-pill">{matches.length} {matches.length === 1 ? "match" : "matches"}</span> : null}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        {hasError ? (
+          <div className="tb-log-card-state tb-log-card-state-error">{stderr || "Search failed."}</div>
+        ) : matches.length > 0 ? (
+          <>
+            <div className="tb-log-list tb-log-search-match-list">
+              {visibleMatches.map((match, index) => (
+                <div key={`${match.source || match.title}-${match.lineNumber || index}`} className="tb-log-list-item tb-log-list-item-column tb-log-search-match">
+                  <div className="tb-log-list-copy">
+                    <div className="tb-log-list-title">{match.title}</div>
+                    {match.subtitle ? <div className="tb-log-list-subtitle">{match.subtitle}</div> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {matches.length > 12 ? (
+              <div className="tb-log-card-actions">
+                <button type="button" className="tb-log-card-link-button" onClick={() => setShowAll((value) => !value)}>
+                  {showAll ? "Show fewer" : `Show ${matches.length - 12} more`}
+                </button>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <div className="tb-log-card-empty">No matches found.</div>
         )}
       </LogPanel>
     </div>
@@ -7240,7 +8102,7 @@ export function ComputerUseDetailDrawer({
           >
             <Route className="tb-step-row-icon" strokeWidth={1.5} />
             <span className="tb-work-label">{running ? "Computer use is running" : workLabel}</span>
-            {expanded ? <ChevronDown className="tb-chevron" strokeWidth={1.5} /> : <ChevronRight className="tb-chevron" strokeWidth={1.5} />}
+            {expanded ? <ChevronUp className="tb-chevron" strokeWidth={1.5} /> : <ChevronDown className="tb-chevron" strokeWidth={1.5} />}
           </button>
           <div className={`tb-work-collapse ${expanded ? "" : "collapsed"}`}>
             {expanded ? (
@@ -7334,7 +8196,7 @@ export function SubagentDetailDrawer({
           >
             <Route className="tb-step-row-icon" strokeWidth={1.5} />
             <span className="tb-work-label">{running ? `${title} is working` : workLabel}</span>
-            {expanded ? <ChevronDown className="tb-chevron" strokeWidth={1.5} /> : <ChevronRight className="tb-chevron" strokeWidth={1.5} />}
+            {expanded ? <ChevronUp className="tb-chevron" strokeWidth={1.5} /> : <ChevronDown className="tb-chevron" strokeWidth={1.5} />}
           </button>
           <div className={`tb-work-collapse ${expanded ? "" : "collapsed"}`}>
             {expanded ? (
@@ -7893,10 +8755,16 @@ export function RunnerWorkLogEntry({
   requestHeaders,
   renderComputerUseMcpAsGeneric = false,
   activeTaskPreviewId,
+  availableAgents,
+  availableEnvironments,
+  availableProjects,
   onPreviewDocument,
   onWorkspacePathClick,
   onPermissionDecision,
   onTaskPreviewClick,
+  onAgentPreviewClick,
+  onEnvironmentPreviewClick,
+  onProjectPreviewClick,
 }: RunnerWorkLogEntryProps) {
   const normalizedMessage = stripRunnerSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
 
@@ -7934,8 +8802,61 @@ export function RunnerWorkLogEntry({
     }
     if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderComputerAgentsCreateLog(log)) return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
+    const taskManagementProjectsListDetails = parseTaskManagementProjectsListLogDetails(log);
+    if (taskManagementProjectsListDetails) {
+      return (
+        <TaskManagementProjectsListLogBox
+          details={taskManagementProjectsListDetails}
+          timeLabel={timeLabel}
+          availableProjects={availableProjects}
+          availableEnvironments={availableEnvironments as TaskManagementListAvailableEnvironment[] | undefined}
+          onProjectClick={(project) => onProjectPreviewClick?.({
+            projectId: project.id,
+            projectName: project.name,
+          })}
+        />
+      );
+    }
+    const computerAgentsEnvironmentsListDetails = parseComputerAgentsEnvironmentsListLogDetails(log);
+    if (computerAgentsEnvironmentsListDetails) {
+      return (
+        <ComputerAgentsEnvironmentsListLogBox
+          details={computerAgentsEnvironmentsListDetails}
+          timeLabel={timeLabel}
+          availableEnvironments={availableEnvironments}
+          onEnvironmentClick={(environment) => onEnvironmentPreviewClick?.({
+            environmentId: environment.id,
+            environmentName: environment.name,
+          })}
+        />
+      );
+    }
+    const computerAgentsListDetails = parseComputerAgentsListLogDetails(log);
+    if (computerAgentsListDetails) {
+      return (
+        <ComputerAgentsListLogBox
+          details={computerAgentsListDetails}
+          timeLabel={timeLabel}
+          availableAgents={availableAgents}
+          onAgentClick={(agent) => onAgentPreviewClick?.({ agentId: agent.id, agentName: agent.name })}
+        />
+      );
+    }
     if (shouldRenderTaskManagementReleaseCreateLog(log)) return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementCreateLog(log)) return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
+    if (isGrepSearchLog(log)) return <GrepSearchLogBox log={log} timeLabel={timeLabel} />;
+    if (isListFilesLog(log)) {
+      return (
+        <ListFilesLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+          onWorkspacePathClick={onWorkspacePathClick}
+        />
+      );
+    }
     if (isReadFileLog(log)) {
       return (
         <ReadFileLogBox
@@ -7945,10 +8866,10 @@ export function RunnerWorkLogEntry({
           environmentId={environmentId}
           requestHeaders={requestHeaders}
           onPreviewDocument={onPreviewDocument}
+          onWorkspacePathClick={onWorkspacePathClick}
         />
       );
     }
-    if (isListFilesCommand(command)) return <ListFilesLogBox log={log} timeLabel={timeLabel} />;
     if (isWriteFileLog(log)) {
       return (
         <WriteFileLogGroup
@@ -7966,6 +8887,12 @@ export function RunnerWorkLogEntry({
       return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     if (isDeepResearchCommand(command)) return <DeepResearchCommandLogBox log={log} timeLabel={timeLabel} />;
+    const gitDiffDetails = parseGitDiffLogDetails(log);
+    if (gitDiffDetails) return <GitDiffLogBox details={gitDiffDetails} timeLabel={timeLabel} />;
+    const gitCommitDetails = parseGitCommitLogDetails(log);
+    if (gitCommitDetails) return <GitCommitLogBox details={gitCommitDetails} timeLabel={timeLabel} />;
+    const gitStatusDetails = parseGitStatusLogDetails(log);
+    if (gitStatusDetails) return <GitStatusLogBox details={gitStatusDetails} timeLabel={timeLabel} />;
     return <GenericCommandLogBox log={log} timeLabel={timeLabel} onWorkspacePathClick={onWorkspacePathClick} />;
   }
 

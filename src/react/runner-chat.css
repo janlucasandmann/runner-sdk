@@ -33,7 +33,7 @@
   min-height: 0;
   height: 100%;
   color: white;
-  background: transparent;
+  background: #000;
   position: relative;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
@@ -197,7 +197,6 @@
 .tb-runner-chat .tb-log-scroll .tb-runner-diff-surface,
 .tb-runner-chat .tb-log-scroll .tb-runner-diff-surface-body {
   backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
 .tb-runner-chat .tb-log-scroll.is-custom-empty-state {
@@ -226,7 +225,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 7px;
+  gap: 5px;
 }
 
 .tb-runner-chat .tb-thread-history-line-button {
@@ -565,7 +564,7 @@
   flex-direction: column;
   gap: 0;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: 15px;
   border: 0;
   background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
   -webkit-backdrop-filter: blur(20px);
@@ -1371,6 +1370,45 @@
   min-width: 0;
 }
 
+.tb-runner-chat .tb-work-load-more-item {
+  --tb-log-rail-center-y: 8px;
+  --tb-log-rail-gap-half: 9px;
+  margin-bottom: 10px;
+}
+
+.tb-runner-chat .tb-work-load-more-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-work-load-more-icon {
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  z-index: 1;
+}
+
+.tb-runner-chat .tb-work-load-more-button:hover,
+.tb-runner-chat .tb-work-load-more-button:focus-visible {
+  color: #fff;
+}
+
+.tb-runner-chat .tb-work-load-more-button:focus-visible {
+  outline: none;
+}
+
 .tb-runner-chat .agent-step-item:not(:first-child)::before,
 .tb-runner-chat .agent-step-item:not(:last-child)::after {
   content: "";
@@ -1791,6 +1829,11 @@
   color: #ff8d87;
 }
 
+.tb-runner-chat .tb-log-card-pill.is-dirty {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+}
+
 .tb-runner-chat .tb-log-pill-link {
   border: 0;
   text-decoration: none;
@@ -1921,6 +1964,731 @@
   color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.tb-runner-chat .tb-log-card.tb-log-card-git-commit .tb-log-card-panel,
+.tb-runner-chat .tb-log-card.tb-log-card-git-diff .tb-log-card-panel,
+.tb-runner-chat .tb-log-card.tb-log-card-git-status .tb-log-card-panel {
+  padding: 14px 16px;
+}
+
+.tb-runner-chat .tb-log-git-summary {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tb-runner-chat .tb-log-git-overview {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tb-runner-chat .tb-log-git-main {
+  min-width: 0;
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tb-runner-chat .tb-log-git-title {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-runner-chat .tb-log-git-meta {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-runner-chat .tb-log-git-stats {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.tb-runner-chat .tb-log-git-stat {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-git-stat.is-total {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.tb-runner-chat .tb-log-git-stat.is-added,
+.tb-runner-chat .tb-log-git-stat.is-clean {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+}
+
+.tb-runner-chat .tb-log-git-stat.is-removed {
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+}
+
+.tb-runner-chat .tb-log-git-stat.is-untracked {
+  background: rgba(125, 211, 252, 0.12);
+  color: #7dd3fc;
+}
+
+.tb-runner-chat .tb-log-git-status-files {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.tb-runner-chat .tb-log-git-status-file {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-git-status-file-state {
+  flex-shrink: 0;
+  min-width: 72px;
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.tb-runner-chat .tb-log-git-status-file-state.is-staged {
+  color: #4ade80;
+}
+
+.tb-runner-chat .tb-log-git-status-file-state.is-unstaged {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.tb-runner-chat .tb-log-git-status-file-state.is-untracked {
+  color: #7dd3fc;
+}
+
+.tb-runner-chat .tb-log-git-status-file-state.is-conflict {
+  color: #f87171;
+}
+
+.tb-runner-chat .tb-log-git-status-file-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-git-status-file-more {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-git-diff-files {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 2px;
+}
+
+.tb-runner-chat .tb-log-git-diff-file {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.tb-runner-chat .tb-log-git-diff-file:last-child {
+  margin-bottom: 0;
+}
+
+.tb-runner-chat .tb-log-git-diff-file-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tb-runner-chat .tb-log-card-git-diff .tb-log-git-title,
+.tb-runner-chat .tb-log-card-git-diff .tb-log-git-meta,
+.tb-runner-chat .tb-log-card-git-diff .tb-log-git-status-file-path,
+.tb-runner-chat .tb-log-git-diff-file-count {
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-card-git-diff .tb-log-git-status-file-path {
+  flex: 1 1 auto;
+}
+
+.tb-runner-chat .tb-log-git-diff-file-count {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.tb-runner-chat .tb-log-git-diff-file-bar {
+  display: flex;
+  width: 100%;
+  height: 1px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tb-runner-chat .tb-log-git-diff-file-bar-added {
+  display: block;
+  min-width: 2px;
+  background: rgba(74, 222, 128, 0.82);
+}
+
+.tb-runner-chat .tb-log-git-diff-file-bar-removed {
+  display: block;
+  min-width: 2px;
+  background: rgba(248, 113, 113, 0.82);
+}
+
+.tb-runner-chat .tb-log-card.tb-log-card-agent-list .tb-log-card-panel {
+  padding: 0;
+  overflow: visible;
+}
+
+.tb-runner-chat .tb-log-agent-list-toolbar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tb-runner-chat .tb-log-agent-list-summary {
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-agent-list-controls {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tb-runner-chat .tb-log-agent-list-search-shell {
+  position: relative;
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.tb-runner-chat .tb-log-agent-list-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 14px;
+  height: 14px;
+  color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.tb-runner-chat .tb-log-agent-list-search {
+  width: 100%;
+  min-height: 34px;
+  box-sizing: border-box;
+  padding: 0 12px 0 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 400;
+  outline: none;
+}
+
+.tb-runner-chat .tb-log-agent-list-search::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.tb-runner-chat .tb-log-agent-list-search:focus {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tb-runner-chat .tb-log-agent-list-toolbar-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-log-agent-list-popup-shell {
+  position: relative;
+  display: inline-flex;
+}
+
+.tb-runner-chat .tb-log-agent-list-control-button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 0 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-log-agent-list-control-button:hover,
+.tb-runner-chat .tb-log-agent-list-control-button.is-active {
+  color: white;
+}
+
+.tb-runner-chat .tb-log-agent-list-control-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.tb-runner-chat .tb-log-agent-list-popup-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: 220px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(22, 22, 22, 0.98);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.tb-runner-chat .tb-log-agent-list-popup-title {
+  padding: 4px 8px 8px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-agent-list-popup-row {
+  width: 100%;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-log-agent-list-popup-row:hover,
+.tb-runner-chat .tb-log-agent-list-popup-row.selected {
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+}
+
+.tb-runner-chat .tb-log-agent-list-popup-check-slot {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-log-agent-list-popup-check {
+  width: 14px;
+  height: 14px;
+}
+
+.tb-runner-chat .tb-log-agent-list-mode-switch {
+  display: inline-flex;
+  gap: 8px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  line-height: 1rem;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-log-agent-list-mode-button {
+  min-width: 84px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-log-agent-list-mode-button.is-active {
+  background: rgba(255, 255, 255, 0.35);
+  color: white;
+}
+
+.tb-runner-chat .tb-log-agent-list-mode-button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.tb-runner-chat .tb-log-agent-list-active-filters {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tb-runner-chat .tb-log-agent-list-active-filters:empty {
+  display: none;
+}
+
+.tb-runner-chat .tb-log-agent-list-active-filters span {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-agent-list-table-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.tb-runner-chat .tb-log-agent-list-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.tb-runner-chat .tb-log-agent-list-col-name {
+  width: 38%;
+}
+
+.tb-runner-chat .tb-log-agent-list-col-model {
+  width: 28%;
+}
+
+.tb-runner-chat .tb-log-agent-list-col-context {
+  width: 14%;
+}
+
+.tb-runner-chat .tb-log-agent-list-col-cost {
+  width: 20%;
+}
+
+.tb-runner-chat .tb-log-card-file-list .tb-log-agent-list-col-name {
+  width: 34%;
+}
+
+.tb-runner-chat .tb-log-card-file-list .tb-log-agent-list-col-model {
+  width: 44%;
+}
+
+.tb-runner-chat .tb-log-card-file-list .tb-log-agent-list-col-context {
+  width: 10%;
+}
+
+.tb-runner-chat .tb-log-card-file-list .tb-log-agent-list-col-cost {
+  width: 12%;
+}
+
+.tb-runner-chat .tb-log-agent-list-table th,
+.tb-runner-chat .tb-log-agent-list-table td {
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tb-runner-chat .tb-log-agent-list-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.tb-runner-chat .tb-log-agent-list-table tbody tr[role="button"] {
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.tb-runner-chat .tb-log-agent-list-table tbody tr[role="button"]:hover,
+.tb-runner-chat .tb-log-agent-list-table tbody tr[role="button"]:focus-visible {
+  background: rgba(255, 255, 255, 0.03);
+  outline: none;
+}
+
+.tb-runner-chat .tb-log-agent-list-table th {
+  padding: 12px 0;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-agent-list-table td {
+  padding: 13px 0;
+}
+
+.tb-runner-chat .tb-log-agent-list-table th:first-child,
+.tb-runner-chat .tb-log-agent-list-table td:first-child {
+  padding-left: 16px;
+}
+
+.tb-runner-chat .tb-log-agent-list-table th:last-child,
+.tb-runner-chat .tb-log-agent-list-table td:last-child {
+  padding-right: 16px;
+}
+
+.tb-runner-chat .tb-log-agent-list-table th.is-right {
+  text-align: right;
+}
+
+.tb-runner-chat .tb-log-agent-list-name-cell,
+.tb-runner-chat .tb-log-agent-list-model-cell {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.tb-runner-chat .tb-log-agent-list-name-cell {
+  gap: 12px;
+  padding-right: 20px;
+}
+
+.tb-runner-chat .tb-log-agent-list-model-cell {
+  gap: 10px;
+  padding-right: 18px;
+}
+
+.tb-runner-chat .tb-log-agent-list-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.76);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-log-agent-list-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tb-runner-chat .tb-log-agent-list-avatar-fallback {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-log-agent-list-name-copy,
+.tb-runner-chat .tb-log-agent-list-model-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tb-runner-chat .tb-log-agent-list-name-copy {
+  gap: 0;
+}
+
+.tb-runner-chat .tb-log-agent-list-name-title,
+.tb-runner-chat .tb-log-agent-list-model-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-agent-list-name-title {
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-log-agent-list-provider-icon-shell {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  color: rgba(255, 255, 255, 0.8);
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-log-agent-list-provider-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+.tb-runner-chat .tb-log-agent-list-provider-icon.is-openai {
+  filter: brightness(0) invert(1);
+}
+
+.tb-runner-chat .tb-log-agent-list-provider-fallback-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.tb-runner-chat .tb-log-agent-list-model-provider {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-agent-list-model-name {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-agent-list-context,
+.tb-runner-chat .tb-log-agent-list-cost {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-agent-list-cost {
+  text-align: right;
+}
+
+.tb-runner-chat .tb-log-agent-list-empty {
+  padding: 22px 16px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 400;
+  text-align: center;
+}
+
+.tb-runner-chat .tb-log-agent-list-more-row {
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tb-runner-chat .tb-log-file-list-more-row {
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tb-runner-chat .tb-log-file-list-more-summary {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-file-list-more-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-log-agent-list-load-more {
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-log-agent-list-load-more:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
 }
 
 .tb-runner-chat .tb-log-card-permission .tb-log-card-panel {
@@ -2215,8 +2983,8 @@
   width: fit-content;
   max-width: 85%;
   margin: 0 0 20px auto;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .tb-runner-chat .tb-subagent-log-prompt-markdown {
@@ -2248,8 +3016,8 @@
   padding: 14px 16px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .tb-runner-chat .tb-subagent-log-summary.is-error {
@@ -2373,8 +3141,8 @@
   border-radius: 0;
   background: rgba(15, 15, 18, 0.98);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   position: sticky;
   bottom: 0;
   margin-top: 16px;
@@ -2731,8 +3499,8 @@
   border: 1px solid var(--tb-log-task-preview-border, rgba(255, 255, 255, 0.08));
   border-radius: 10px;
   background: var(--tb-log-task-preview-surface, rgba(255, 255, 255, 0.05));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   color: rgba(255, 255, 255, 0.72);
 }
 
@@ -2930,8 +3698,8 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   color: rgba(255, 255, 255, 0.74);
 }
 
@@ -3115,6 +3883,35 @@
   padding: 0 12px 12px;
 }
 
+.tb-runner-chat .tb-log-file-markdown-preview.tb-message-markdown {
+  max-height: 500px;
+  margin: 0;
+  overflow: auto;
+  padding: 0 8px 2px;
+  color: rgba(255, 255, 255, 0.72);
+  scrollbar-width: none;
+}
+
+.tb-runner-chat .tb-log-file-markdown-preview.tb-message-markdown::-webkit-scrollbar {
+  display: none;
+}
+
+.tb-runner-chat .tb-log-file-markdown-preview .tb-message-markdown-paragraph,
+.tb-runner-chat .tb-log-file-markdown-preview .tb-message-markdown-list,
+.tb-runner-chat .tb-log-file-markdown-preview .tb-message-markdown-table {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.tb-runner-chat .tb-log-file-markdown-preview .tb-message-markdown-heading {
+  color: white;
+  font-weight: 600;
+}
+
+.tb-runner-chat .tb-log-file-markdown-preview .tb-message-markdown-pre {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: none;
+}
+
 .tb-runner-diff-surface {
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -3122,8 +3919,8 @@
   overflow: hidden;
   background: rgba(255, 255, 255, 0.04);
   isolation: isolate;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   scrollbar-width: none;
 }
 
@@ -3157,8 +3954,8 @@
   padding: 6px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .tb-runner-diff-surface-meta {
@@ -3525,8 +4322,8 @@
 .tb-runner-diff-surface-fallback {
   overflow: hidden;
   background: rgba(15, 17, 21, 0.38);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .tb-runner-diff-surface-fallback-hunk,
@@ -3869,6 +4666,7 @@
 
 .tb-runner-chat .tb-log-card-link-button {
   margin-top: 8px;
+  margin-bottom: 12px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -3887,6 +4685,7 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 8px;
+  margin-bottom: 12px;
 }
 
 .tb-runner-chat .tb-log-reasoning {
@@ -3984,6 +4783,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-bottom: 12px;
 }
 
 .tb-runner-chat .tb-log-file-row,
@@ -4054,6 +4854,16 @@
 
 .tb-runner-chat .tb-log-list-subtitle {
   margin-top: 2px;
+}
+
+.tb-runner-chat .tb-log-search-match {
+  align-items: flex-start;
+}
+
+.tb-runner-chat .tb-log-search-match .tb-log-list-title {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
 }
 
 .tb-runner-chat .tb-log-meta-grid {
@@ -4443,6 +5253,333 @@
   margin: 0;
   background: transparent;
   flex-shrink: 0;
+}
+
+.tb-runner-chat .tb-composer-connectors-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 52px;
+  margin-top: -16px;
+  margin-bottom: 12px;
+  padding: 25px 16px 11px;
+  border-radius: 0 0 var(--tb-runner-radius-xl) var(--tb-runner-radius-xl);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.2);
+}
+
+.tb-runner-chat .tb-composer-project-task-area {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-composer-project-task-button,
+.tb-runner-chat .tb-composer-project-task-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.tb-runner-chat .tb-composer-project-task-button {
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.tb-runner-chat .tb-composer-project-task-button:hover,
+.tb-runner-chat .tb-composer-project-task-button.is-open {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.tb-runner-chat .tb-composer-project-task-button:focus-visible,
+.tb-runner-chat .tb-composer-project-task-chip-clear:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.22);
+  outline-offset: 2px;
+}
+
+.tb-runner-chat .tb-composer-project-task-icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-composer-project-task-chip {
+  max-width: min(260px, 42vw);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.tb-runner-chat .tb-composer-project-task-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-composer-project-task-chip-clear {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-composer-project-task-chip-clear:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.tb-runner-chat .tb-composer-project-task-chip-clear-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.tb-runner-chat .tb-composer-project-task-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 60;
+  width: min(420px, calc(100vw - 40px));
+  max-height: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(16, 16, 18, 0.98);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
+.tb-runner-chat .tb-composer-project-task-menu-title {
+  padding: 0 2px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.tb-runner-chat .tb-composer-project-task-list {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: auto;
+}
+
+.tb-runner-chat .tb-composer-project-task-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.tb-runner-chat .tb-composer-project-task-row:hover,
+.tb-runner-chat .tb-composer-project-task-row.is-selected {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.tb-runner-chat .tb-composer-project-task-row:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.22);
+  outline-offset: 2px;
+}
+
+.tb-runner-chat .tb-composer-project-task-row-icon,
+.tb-runner-chat .tb-composer-project-task-row-check {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-composer-project-task-row-icon {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.tb-runner-chat .tb-composer-project-task-row-check {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.tb-runner-chat .tb-composer-project-task-row-main {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tb-runner-chat .tb-composer-project-task-row-title,
+.tb-runner-chat .tb-composer-project-task-row-meta,
+.tb-runner-chat .tb-composer-project-task-empty {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.tb-runner-chat .tb-composer-project-task-row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-composer-project-task-row-meta,
+.tb-runner-chat .tb-composer-project-task-empty {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.tb-runner-chat .tb-composer-project-task-empty {
+  padding: 18px 8px;
+}
+
+.tb-runner-chat .tb-composer-connectors-label {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-composer-connectors-label-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.tb-runner-chat .tb-composer-connectors-actions {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tb-runner-chat .tb-composer-connectors-right {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tb-runner-chat .tb-composer-connectors-actions::-webkit-scrollbar {
+  display: none;
+}
+
+.tb-runner-chat .tb-composer-connector-button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.tb-runner-chat .tb-composer-connector-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tb-runner-chat .tb-composer-connector-button:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.22);
+  outline-offset: 2px;
+}
+
+.tb-runner-chat .tb-composer-connector-brand-icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.tb-runner-chat .tb-composer-connectors-link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+  transition: color 160ms ease;
+}
+
+.tb-runner-chat .tb-composer-connectors-link:hover {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.tb-runner-chat .tb-composer-connectors-link:disabled {
+  color: rgba(255, 255, 255, 0.36);
+  cursor: default;
+}
+
+.tb-runner-chat .tb-composer-connectors-link:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.22);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.tb-runner-chat .tb-composer-connectors-link-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
 }
 
 .tb-runner-chat .tb-input-width {

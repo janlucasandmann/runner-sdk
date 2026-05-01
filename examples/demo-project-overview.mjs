@@ -137,6 +137,29 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         border-bottom: 0;
       }
 
+      .playground-project-overview-summary-description-section .playground-tasks-detail-description-editor.is-preview {
+        min-height: 0;
+      }
+
+      .playground-project-overview-summary-description-section .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-preview-scope.tb-runner-chat {
+        position: relative;
+        inset: auto;
+        height: auto;
+        min-height: 36px;
+      }
+
+      .playground-project-overview-summary-description-section .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-input.is-preview {
+        position: absolute;
+        inset: 0;
+        height: 100% !important;
+        min-height: 100%;
+        padding-bottom: 0;
+      }
+
+      .playground-project-overview-summary-description-section .playground-tasks-detail-description-preview.tb-message-markdown {
+        margin-bottom: 0;
+      }
+
       .playground-project-overview-summary-divider {
         width: 100%;
         height: 1px;
@@ -562,6 +585,18 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.82);
       }
 
+      .playground-project-overview-list-tabs-header {
+        justify-content: flex-start;
+      }
+
+      .playground-project-overview-list-tabs {
+        gap: 20px;
+      }
+
+      .playground-project-overview-list-tab {
+        font-size: 14px;
+      }
+
       .playground-project-overview-chart-copy {
         font-size: 12px;
         line-height: 1.5;
@@ -648,10 +683,57 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-current-tasks-section > .playground-plugins-section-header {
         margin-top: 0;
+        padding-bottom: 0;
+        border-bottom: 0;
       }
 
       .playground-project-overview-current-tasks-section > .playground-tasks-secondary-copy {
         margin-bottom: 32px;
+      }
+
+      .playground-project-overview-current-tasks-section .playground-plugins-search-row,
+      .playground-project-overview-threads-section .playground-plugins-search-row,
+      .playground-project-overview-files-section .playground-plugins-search-row {
+        align-items: stretch;
+        gap: 8px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-current-tasks-section .playground-plugins-search-shell,
+      .playground-project-overview-threads-section .playground-plugins-search-shell,
+      .playground-project-overview-files-section .playground-plugins-search-shell {
+        flex: 0 1 360px;
+        width: min(360px, 100%);
+        min-width: 0;
+        max-width: 360px;
+      }
+
+      .playground-project-overview-current-tasks-section .playground-plugins-search,
+      .playground-project-overview-threads-section .playground-plugins-search,
+      .playground-project-overview-files-section .playground-plugins-search {
+        position: relative;
+        min-height: 32px;
+        font-size: 12px;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-project-overview-current-tasks-section .playground-plugins-search-icon,
+      .playground-project-overview-threads-section .playground-plugins-search-icon,
+      .playground-project-overview-files-section .playground-plugins-search-icon {
+        z-index: 1;
+      }
+
+      .playground-project-overview-current-tasks-section .playground-files-control-button,
+      .playground-project-overview-threads-section .playground-files-control-button,
+      .playground-project-overview-files-section .playground-files-control-button {
+        min-height: 32px;
+      }
+
+      .playground-project-overview-toolbar-action,
+      .playground-project-overview-current-tasks-see-all {
+        margin-left: auto;
       }
 
       .playground-project-overview-empty-card {
@@ -699,7 +781,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-panel-plain .playground-plugins-section-title {
-        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
         font-weight: 400;
       }
 
@@ -730,6 +815,14 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-files-section .playground-tasks-attachments {
         gap: 14px;
+      }
+
+      .playground-project-overview-resources-block {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-project-overview-files-section .playground-tasks-attachments-toolbar {
@@ -851,6 +944,14 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         flex-direction: column;
         gap: 10px;
         margin-bottom: 32px;
+      }
+
+      .playground-project-overview-current-release-list {
+        gap: 14px;
+      }
+
+      .playground-project-overview-current-release-section .playground-tasks-backlog-item {
+        width: 100%;
       }
 
       .playground-project-overview-release-list {
@@ -980,16 +1081,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-      }
-
-      .playground-project-overview-resources-section > .playground-plugins-section-header {
-        margin-top: 32px;
-        padding-bottom: 0 !important;
-        border-bottom: 0 !important;
-      }
-
-      .playground-project-overview-resources-section {
-        margin-bottom: 32px;
       }
 
       .playground-project-overview-resources-table {
@@ -1404,7 +1495,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const marginTop = 12;
           const marginRight = 14;
           const marginBottom = 38;
-          const marginLeft = 40;
+          const marginLeft = 58;
           const totals = labels.map((_, index) =>
             series.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
           );
@@ -1457,9 +1548,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     strokeWidth: "1",
                   }),
                   React.createElement("text", {
-                    x: marginLeft - 8,
+                    x: 0,
                     y,
-                    textAnchor: "end",
+                    textAnchor: "start",
                     dominantBaseline: "middle",
                     fill: "rgba(255,255,255,0.4)",
                     fontSize: "10",
@@ -2112,11 +2203,136 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             };
           })();
           const visibleOverviewTasks = overviewVisibleTasks.slice(0, 5);
-          const overviewVisibleReleases = Array.isArray(filteredReleases)
-            ? filteredReleases.slice(0, 5)
-            : [];
-          const visibleProjectThreads = filteredProjectThreads.slice(0, Math.max(5, Number(projectOverviewVisibleThreadCount) || 5));
-          const hasMoreProjectThreads = filteredProjectThreads.length > visibleProjectThreads.length;
+          const normalizedProjectOverviewTaskSearch = String(projectOverviewTaskSearchQuery || "").trim();
+          const hasProjectOverviewTaskListFilters = Boolean(
+            normalizedSearchQuery
+            || normalizedProjectOverviewTaskSearch
+            || projectOverviewTaskFilterMode !== "open"
+          );
+          const overviewCurrentTaskReleaseSections = (() => {
+            const sections = [];
+            const sectionIndexByKey = new Map();
+            visibleOverviewTasks.forEach((task) => {
+              const normalizedReleaseId = typeof task?.releaseId === "string" && task.releaseId.trim()
+                ? task.releaseId.trim()
+                : "";
+              const sectionKey = normalizedReleaseId || "__no_release__";
+              const releaseRecord = normalizedReleaseId ? (releasesById[normalizedReleaseId] || null) : null;
+              let sectionIndex = sectionIndexByKey.get(sectionKey);
+              if (sectionIndex === undefined) {
+                sectionIndex = sections.length;
+                sectionIndexByKey.set(sectionKey, sectionIndex);
+                sections.push({
+                  key: sectionKey,
+                  releaseId: normalizedReleaseId,
+                  title: normalizedReleaseId ? (releaseRecord?.name || "Release unavailable") : "All other",
+                  tasks: [],
+                });
+              }
+              sections[sectionIndex].tasks.push(task);
+            });
+            return sections
+              .slice()
+              .sort((left, right) => {
+                const leftIsAllOther = left.key === "__no_release__";
+                const rightIsAllOther = right.key === "__no_release__";
+                if (leftIsAllOther !== rightIsAllOther) {
+                  return leftIsAllOther ? 1 : -1;
+                }
+                if (leftIsAllOther && rightIsAllOther) {
+                  return 0;
+                }
+                const leftRelease = releasesById[left.releaseId] || { id: left.releaseId, name: left.title };
+                const rightRelease = releasesById[right.releaseId] || { id: right.releaseId, name: right.title };
+                return typeof compareTaskReleaseOrder === "function"
+                  ? compareTaskReleaseOrder(leftRelease, rightRelease)
+                  : String(left.title || "").localeCompare(String(right.title || ""));
+              });
+          })();
+          const normalizedProjectOverviewThreadSearch = String(projectOverviewThreadSearchQuery || "").trim().toLowerCase();
+          const projectOverviewFilteredThreads = filteredProjectThreads
+            .filter((thread) => {
+              const status = typeof resolveThreadDisplayStatus === "function"
+                ? resolveThreadDisplayStatus(thread?.status, thread?.completedAt || thread?.finishedAt || thread?.endedAt)
+                : (thread?.status || "");
+              const normalizedStatus = String(status || "").trim().toLowerCase();
+              if (projectOverviewThreadFilterMode === "running" && !(typeof isRunningThreadDisplayStatus === "function" ? isRunningThreadDisplayStatus(normalizedStatus) : ["running", "queued", "pending", "scheduled", "starting", "created", "ready"].includes(normalizedStatus))) {
+                return false;
+              }
+              if (projectOverviewThreadFilterMode === "permission" && !(typeof isPendingPermissionThreadDisplayStatus === "function" ? isPendingPermissionThreadDisplayStatus(normalizedStatus) : normalizedStatus === "permission_asked")) {
+                return false;
+              }
+              if (projectOverviewThreadFilterMode === "completed" && !(typeof isCompletedThreadStatus === "function" ? isCompletedThreadStatus(normalizedStatus) : ["completed", "complete", "done", "succeeded", "success", "finished"].includes(normalizedStatus))) {
+                return false;
+              }
+              if (projectOverviewThreadFilterMode === "failed" && !["failed", "cancelled", "canceled"].includes(normalizedStatus)) {
+                return false;
+              }
+              if (!normalizedProjectOverviewThreadSearch) {
+                return true;
+              }
+              const threadParts = typeof getSidebarThreadTitleParts === "function"
+                ? getSidebarThreadTitleParts(thread)
+                : {
+                    safeThread: thread,
+                    taskTicketNumber: "",
+                    displayThreadTitle: thread?.title || "Untitled thread",
+                  };
+              const safeThread = threadParts.safeThread || thread;
+              const threadActor = typeof getPlaygroundThreadActorInfo === "function"
+                ? getPlaygroundThreadActorInfo(safeThread, agentsById, "No agent")
+                : { name: safeThread?.agentId || "" };
+              const taskPreview = typeof getThreadTaskPreview === "function" ? getThreadTaskPreview(safeThread) : null;
+              const haystack = [
+                threadParts.displayThreadTitle || safeThread?.title || "",
+                safeThread?.id || "",
+                threadParts.taskTicketNumber || "",
+                threadActor?.name || "",
+                status || "",
+                taskPreview?.runKind || "",
+                typeof formatRelativeThreadTime === "function" ? (formatRelativeThreadTime(safeThread?.updatedAt || safeThread?.createdAt) || "") : "",
+              ].join(" ").toLowerCase();
+              return haystack.includes(normalizedProjectOverviewThreadSearch);
+            })
+            .sort((left, right) => {
+              if (projectOverviewThreadSortMode === "title-asc") {
+                const leftTitle = typeof getSidebarThreadTitleParts === "function"
+                  ? getSidebarThreadTitleParts(left).displayThreadTitle
+                  : left?.title;
+                const rightTitle = typeof getSidebarThreadTitleParts === "function"
+                  ? getSidebarThreadTitleParts(right).displayThreadTitle
+                  : right?.title;
+                return String(leftTitle || "").localeCompare(String(rightTitle || ""));
+              }
+              if (projectOverviewThreadSortMode === "created-desc") {
+                const leftCreatedAt = Date.parse(String(left?.createdAt || ""));
+                const rightCreatedAt = Date.parse(String(right?.createdAt || ""));
+                const leftValue = Number.isFinite(leftCreatedAt) ? leftCreatedAt : 0;
+                const rightValue = Number.isFinite(rightCreatedAt) ? rightCreatedAt : 0;
+                return rightValue - leftValue;
+              }
+              return typeof compareThreadsByRecent === "function"
+                ? compareThreadsByRecent(left, right)
+                : String(right?.updatedAt || right?.createdAt || "").localeCompare(String(left?.updatedAt || left?.createdAt || ""));
+            });
+          const visibleProjectThreads = projectOverviewFilteredThreads.slice(0, Math.max(5, Number(projectOverviewVisibleThreadCount) || 5));
+          const hasMoreProjectThreads = projectOverviewFilteredThreads.length > visibleProjectThreads.length;
+          const hasProjectOverviewThreadListFilters = Boolean(
+            normalizedSearchQuery
+            || normalizedProjectOverviewThreadSearch
+            || projectOverviewThreadFilterMode !== "all"
+          );
+          const normalizedProjectOverviewFileSearch = String(projectOverviewFileSearchQuery || "").trim().toLowerCase();
+          const getProjectOverviewFileOperationKind = (item) => {
+            const normalizedKind = String(item?.operationKind || item?.operation || "").trim().toLowerCase();
+            if (normalizedKind.includes("creat") || normalizedKind === "added" || normalizedKind === "add") {
+              return "created";
+            }
+            if (normalizedKind.includes("delet") || normalizedKind === "removed" || normalizedKind === "remove") {
+              return "deleted";
+            }
+            return "modified";
+          };
           const filteredProjectFileActivityItems = (projectOverviewFileActivityState?.items || [])
             .filter((item) => {
               if (!normalizedSearchQuery) {
@@ -2133,7 +2349,46 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 .toLowerCase();
               return haystack.includes(normalizedSearchQuery);
             })
+            .filter((item) => {
+              if (projectOverviewFileFilterMode !== "all" && getProjectOverviewFileOperationKind(item) !== projectOverviewFileFilterMode) {
+                return false;
+              }
+              if (!normalizedProjectOverviewFileSearch) {
+                return true;
+              }
+              const haystack = [
+                item?.title || "",
+                item?.path || "",
+                item?.operation || "",
+                item?.assignee || "",
+                item?.taskTicketNumber || "",
+                item?.dateLabel || "",
+              ].join(" ").toLowerCase();
+              return haystack.includes(normalizedProjectOverviewFileSearch);
+            })
+            .sort((left, right) => {
+              if (projectOverviewFileSortMode === "title-asc") {
+                return String(left?.title || left?.path || "").localeCompare(String(right?.title || right?.path || ""));
+              }
+              if (projectOverviewFileSortMode === "operation-asc") {
+                const operationOrder = getProjectOverviewFileOperationKind(left).localeCompare(getProjectOverviewFileOperationKind(right));
+                if (operationOrder !== 0) {
+                  return operationOrder;
+                }
+                return String(left?.title || left?.path || "").localeCompare(String(right?.title || right?.path || ""));
+              }
+              const leftTimestamp = Number(left?.timestamp || 0);
+              const rightTimestamp = Number(right?.timestamp || 0);
+              const leftValue = Number.isFinite(leftTimestamp) ? leftTimestamp : 0;
+              const rightValue = Number.isFinite(rightTimestamp) ? rightTimestamp : 0;
+              return rightValue - leftValue;
+            })
             .slice(0, 12);
+          const hasProjectOverviewFileListFilters = Boolean(
+            normalizedSearchQuery
+            || normalizedProjectOverviewFileSearch
+            || projectOverviewFileFilterMode !== "all"
+          );
           const projectOverviewKpis = [
             {
               id: "tasks",
@@ -2257,6 +2512,27 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
+          function renderProjectOverviewTaskToolbarOption({ option, active, onClick }) {
+            return React.createElement("button", {
+                key: option.id,
+                type: "button",
+                className: "tb-popup-row tb-popup-row-select" + (active ? " selected" : ""),
+                onClick,
+              },
+              React.createElement("span", { className: "tb-popup-check-slot" },
+                active
+                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, option.label),
+                option.description
+                  ? React.createElement("span", null, option.description)
+                  : null
+              )
+            );
+          }
+
           function renderProjectOverviewHeaderResource(resource) {
             return React.createElement("div", {
                 key: "resource:" + resource.id,
@@ -2293,6 +2569,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               : "Unassigned";
             const isSubtask = typeof isPlaygroundSubtaskRecord === "function" ? isPlaygroundSubtaskRecord(task) : false;
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
+            const isLaunchLocked = typeof isTaskThreadLaunchLocked === "function" ? isTaskThreadLaunchLocked(task) : false;
+            const isRunDisabled = Boolean(saveState?.isSaving) || isLaunchLocked;
 
             return React.createElement("div", {
                 key: taskId || ticketNumber,
@@ -2337,11 +2615,16 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                 React.createElement("button", {
                   type: "button",
                   className: "playground-tasks-backlog-run-button",
-                  "aria-label": "Open task",
-                  title: "Open task",
+                  "aria-label": "Run task thread",
+                  title: "Run thread",
+                  disabled: isRunDisabled,
                   onClick: (event) => {
                     event.stopPropagation();
-                    taskId && typeof handleSelectTask === "function" && handleSelectTask(taskId);
+                    if (taskId && typeof handleStartTaskThread === "function") {
+                      void handleStartTaskThread(task);
+                    } else if (taskId && typeof handleSelectTask === "function") {
+                      handleSelectTask(taskId);
+                    }
                   },
                 },
                   React.createElement(Play, {
@@ -2351,74 +2634,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     fill: "currentColor",
                     "aria-hidden": "true",
                   })
-                )
-              )
-            );
-          }
-
-          function renderOverviewReleaseRow(release) {
-            const releaseId = String(release?.id || "").trim();
-            const deadlineLabel = typeof formatPlaygroundTaskReleaseDateRange === "function"
-              ? formatPlaygroundTaskReleaseDateRange(release)
-              : "";
-            const dateLabel = deadlineLabel && deadlineLabel !== "No dates" ? deadlineLabel : "No deadlines";
-            const openReleaseBacklog = () => {
-              if (typeof handleSelectRelease === "function") {
-                handleSelectRelease(releaseId);
-              } else if (typeof setSelectedReleaseId === "function") {
-                setSelectedReleaseId(releaseId);
-              }
-              if (typeof setTaskView === "function") {
-                setTaskView("backlog");
-              }
-            };
-
-            return React.createElement("div", {
-                key: releaseId || String(release?.name || "release"),
-                className: "playground-tasks-backlog-item playground-project-overview-release-card",
-                role: "button",
-                tabIndex: 0,
-                onClick: openReleaseBacklog,
-                onKeyDown: (event) => {
-                  if ((event.key === "Enter" || event.key === " ") && releaseId) {
-                    event.preventDefault();
-                    openReleaseBacklog();
-                  }
-                },
-              },
-              React.createElement("div", { className: "playground-tasks-backlog-item-content" },
-                React.createElement("div", { className: "playground-tasks-backlog-leading" },
-                  React.createElement("div", {
-                    className: "playground-tasks-backlog-project-icon playground-project-overview-release-icon",
-                    "aria-hidden": "true",
-                  },
-                    React.createElement(History, { width: 14, height: 14, strokeWidth: 1.9 })
-                  ),
-                  React.createElement("div", { className: "playground-tasks-backlog-main" },
-                    React.createElement("span", { className: "playground-tasks-backlog-title" }, release?.name || "Untitled Release")
-                  )
-                ),
-                React.createElement("div", { className: "playground-project-overview-release-meta" },
-                  React.createElement("span", { className: "playground-project-overview-release-dates" }, dateLabel),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-tasks-backlog-run-button playground-project-overview-release-settings-button",
-                    onClick: (event) => {
-                      event.stopPropagation();
-                      if (typeof openReleaseComposerForEdit === "function") {
-                        openReleaseComposerForEdit(release);
-                      }
-                    },
-                    "aria-label": "Edit release",
-                    title: "Edit release",
-                  },
-                    React.createElement(Settings2, {
-                      width: 13,
-                      height: 13,
-                      strokeWidth: 1.9,
-                      "aria-hidden": "true",
-                    })
-                  )
                 )
               )
             );
@@ -2437,13 +2652,17 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ? getThreadTaskPreview(safeThread)
               : null;
             const threadTaskId = String(threadTaskPreview?.taskId || safeThread?.taskId || "").trim();
-            const threadAgentId = String(safeThread?.agentId || "").trim();
+            const threadActor = typeof getPlaygroundThreadActorInfo === "function"
+              ? getPlaygroundThreadActorInfo(safeThread, agentsById, "No agent")
+              : {
+                  id: String(safeThread?.agentId || "").trim(),
+                  name: String(safeThread?.agentId || "").trim() || "No agent",
+                };
+            const threadAgentId = String(threadActor?.id || "").trim();
             const threadAgent = threadAgentId && agentsById && agentsById[threadAgentId]
               ? agentsById[threadAgentId]
               : null;
-            const threadAgentName = threadAgentId && agentsById && agentsById[threadAgentId]
-              ? (agentsById[threadAgentId]?.name || threadAgentId)
-              : "No agent";
+            const threadAgentName = String(threadActor?.name || "").trim() || "No agent";
             const threadAgentPhotoUrl = threadAgent
               ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(threadAgent))
               : "";
@@ -2571,6 +2790,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             const isRowMutating = projectOverviewFileMutationState?.rowId === rowId;
             const isRenaming = isRowMutating && projectOverviewFileMutationState?.action === "rename";
             const isReverting = isRowMutating && projectOverviewFileMutationState?.action === "revert";
+            const isDeleting = isRowMutating && projectOverviewFileMutationState?.action === "delete";
 
             return React.createElement("div", {
                 key: rowId || [row?.threadId, row?.stepId, row?.path].filter(Boolean).join(":"),
@@ -2610,9 +2830,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   className: "playground-project-overview-thread-menu-button",
                   "aria-label": "File actions",
                   onClick: (event) => typeof openProjectOverviewFileMenu === "function" && openProjectOverviewFileMenu(event, row),
-                  disabled: isRenaming || isReverting,
+                  disabled: isRenaming || isReverting || isDeleting,
                 },
-                  isRenaming || isReverting
+                  isRenaming || isReverting || isDeleting
                     ? React.createElement(Loader2, { width: 15, height: 15, strokeWidth: 1.8, className: "sidebar-thread-menu-icon is-spinning" })
                     : React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 })
                 )
@@ -2629,6 +2849,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             const isRowMutating = projectOverviewFileMutationState?.rowId === targetRowId;
             const isRenaming = isRowMutating && projectOverviewFileMutationState?.action === "rename";
             const isReverting = isRowMutating && projectOverviewFileMutationState?.action === "revert";
+            const isDeleting = isRowMutating && projectOverviewFileMutationState?.action === "delete";
             const canRevert = Boolean(String(targetRow?.revertTargetStepId || "").trim());
 
             const content = React.createElement("div", {
@@ -2648,7 +2869,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   type: "button",
                   className: "sidebar-thread-popup-row",
                   onClick: () => typeof handleProjectOverviewFileRename === "function" && handleProjectOverviewFileRename(targetRow),
-                  disabled: isRenaming || isReverting,
+                  disabled: isRenaming || isReverting || isDeleting,
                 },
                   React.createElement(SquarePen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
                   React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isRenaming ? "Renaming..." : "Rename file")
@@ -2657,7 +2878,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   type: "button",
                   className: "sidebar-thread-popup-row",
                   onClick: () => typeof handleProjectOverviewFileRevert === "function" && handleProjectOverviewFileRevert(targetRow),
-                  disabled: !canRevert || isRenaming || isReverting,
+                  disabled: !canRevert || isRenaming || isReverting || isDeleting,
                 },
                   React.createElement(History, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
                   React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isReverting ? "Reverting..." : "Revert changes")
@@ -2666,7 +2887,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   type: "button",
                   className: "sidebar-thread-popup-row",
                   onClick: () => typeof navigateProjectOverviewFileToFiles === "function" && navigateProjectOverviewFileToFiles(targetRow),
-                  disabled: isRenaming || isReverting,
+                  disabled: isRenaming || isReverting || isDeleting,
                 },
                   React.createElement(FolderOpen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
                   React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Show in Files")
@@ -2680,10 +2901,19 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     }
                     typeof closeProjectOverviewFileMenu === "function" && closeProjectOverviewFileMenu();
                   },
-                  disabled: !String(targetRow?.taskId || "").trim() || isRenaming || isReverting,
+                  disabled: !String(targetRow?.taskId || "").trim() || isRenaming || isReverting || isDeleting,
                 },
                   React.createElement(ListTodo, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
                   React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Show Task")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-thread-popup-row is-danger",
+                  onClick: () => typeof handleProjectOverviewFileDelete === "function" && handleProjectOverviewFileDelete(targetRow),
+                  disabled: isRenaming || isReverting || isDeleting,
+                },
+                  React.createElement(Trash2, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isDeleting ? "Deleting..." : "Delete")
                 )
               )
             );
@@ -2701,15 +2931,28 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     React.createElement("div", { className: "playground-project-overview-summary-title-row" },
                       React.createElement("h1", { className: "playground-project-overview-summary-title" }, selectedProject.name || "Untitled Project"),
                       React.createElement("div", { className: "playground-project-overview-summary-title-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button playground-project-overview-summary-mission-button",
-                          onClick: openMissionControlComposer,
-                        },
-                          React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
-                        ),
-                        React.createElement("button", {
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "playground-files-control-button playground-project-overview-summary-mission-button",
+	                          onClick: openMissionControlComposer,
+	                        },
+	                          React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                          React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
+	                        ),
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "playground-files-control-button playground-project-overview-summary-mission-button" + (projectFullAutoState?.enabled && projectFullAutoState.projectId === selectedProjectId ? " is-active" : ""),
+	                          onClick: projectFullAutoState?.enabled && projectFullAutoState.projectId === selectedProjectId
+	                            ? stopProjectFullAutoMode
+	                            : startProjectFullAutoMode,
+	                          title: projectFullAutoState?.enabled && projectFullAutoState.projectId === selectedProjectId ? "Stop Full Auto" : "Start Full Auto",
+	                        },
+	                          React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8, fill: "currentColor" }),
+	                          React.createElement("span", { className: "playground-project-overview-summary-mission-label" },
+	                            projectFullAutoState?.enabled && projectFullAutoState.projectId === selectedProjectId ? "Stop Auto" : "Full Auto"
+	                          )
+	                        ),
+	                        React.createElement("button", {
                           type: "button",
                           className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button",
                           onClick: openMissionControlStrategySidebar,
@@ -2761,12 +3004,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                           rows: 1,
                           placeholder: isProjectDescriptionEditing ? "Add Description here" : "",
                           value: projectOverviewDescription,
-                          onFocus: () => {
+                          onFocus: (event) => {
+                            const textarea = event.currentTarget;
                             setProjectDraft((current) => current?.id === normalizedSelectedProjectId
                               ? current
                               : normalizePlaygroundProjectRecord(selectedProject)
                             );
                             setIsProjectDescriptionEditing(true);
+                            window.requestAnimationFrame(() => resizeTaskDescriptionTextarea(textarea));
                           },
                           onChange: (event) => {
                             const nextDescription = event.target.value;
@@ -2820,14 +3065,14 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         React.createElement("div", { className: "playground-project-overview-chart-tabs" },
                           React.createElement("button", {
                             type: "button",
-                            className: "playground-project-overview-chart-tab" + (projectOverviewChartMode === "activity" ? " is-active" : ""),
-                            onClick: () => typeof setProjectOverviewChartMode === "function" && setProjectOverviewChartMode("activity"),
-                          }, "Activity"),
-                          React.createElement("button", {
-                            type: "button",
                             className: "playground-project-overview-chart-tab" + (projectOverviewChartMode === "cost" ? " is-active" : ""),
                             onClick: () => typeof setProjectOverviewChartMode === "function" && setProjectOverviewChartMode("cost"),
-                          }, "Cost by Resource")
+                          }, "Cost by Resource"),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-project-overview-chart-tab" + (projectOverviewChartMode === "activity" ? " is-active" : ""),
+                            onClick: () => typeof setProjectOverviewChartMode === "function" && setProjectOverviewChartMode("activity"),
+                          }, "Activity")
                         ),
                         React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
                           React.createElement("select", {
@@ -2907,122 +3152,304 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               )
             ),
             React.createElement("div", { className: "playground-tasks-project-panel-grid" },
-              React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-releases-section" },
-                renderOverviewSectionHeader(
-                  "Releases",
-                  null,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button",
-                    onClick: () => {
-                      if (typeof handleSelectRelease === "function") {
-                        handleSelectRelease("");
-                      } else if (typeof setSelectedReleaseId === "function") {
-                        setSelectedReleaseId("");
-                      }
-                      if (typeof setTaskView === "function") {
-                        setTaskView("backlog");
-                      }
-                    },
-                  },
-                    React.createElement(ListTodo, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "See all")
+              React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section" },
+                React.createElement("div", { className: "playground-plugins-section-header playground-project-overview-list-tabs-header" },
+                  React.createElement("div", { className: "playground-project-overview-chart-tabs playground-project-overview-list-tabs" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-project-overview-chart-tab playground-project-overview-list-tab" + (projectOverviewListMode !== "threads" ? " is-active" : ""),
+                      onClick: () => {
+                        setProjectOverviewListMode("tasks");
+                        setProjectOverviewThreadToolbarPopover("");
+                      },
+                    }, "Current Tasks"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-project-overview-chart-tab playground-project-overview-list-tab" + (projectOverviewListMode === "threads" ? " is-active" : ""),
+                      onClick: () => {
+                        setProjectOverviewListMode("threads");
+                        setProjectOverviewTaskToolbarPopover("");
+                      },
+                    }, "Threads")
                   )
                 ),
-                overviewVisibleReleases.length > 0
-                  ? React.createElement("div", { className: "playground-project-overview-release-list" },
-                      overviewVisibleReleases.map((release) => renderOverviewReleaseRow(release))
-                    )
-                  : normalizedSearchQuery
-                    ? React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                        "No matching releases."
-                      )
-                    : React.createElement("div", { className: "playground-project-overview-empty-card is-compact" },
-                        React.createElement("div", { className: "playground-project-overview-empty-title" }, "Create your first release"),
-                        React.createElement("div", { className: "playground-project-overview-empty-copy" }, "Group tickets into milestones and plan work by release."),
+                projectOverviewListMode === "threads"
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewThreadsToolbarRef },
+                        React.createElement("div", { className: "playground-plugins-search-shell" },
+                          React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("input", {
+                            type: "search",
+                            value: projectOverviewThreadSearchQuery,
+                            onChange: (event) => setProjectOverviewThreadSearchQuery(event.target.value),
+                            className: "playground-plugins-search",
+                            placeholder: "Search threads",
+                            "aria-label": "Search project threads",
+                          })
+                        ),
+                        React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                          React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-files-control-button is-bare is-backlog-sort" + (projectOverviewThreadToolbarPopover === "sort" || projectOverviewThreadSortMode !== "recent-desc" ? " is-active" : ""),
+                              onClick: () => setProjectOverviewThreadToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                              title: activeProjectOverviewThreadSortOption.label,
+                            },
+                              React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "Sort")
+                            ),
+                            projectOverviewThreadToolbarPopover === "sort"
+                              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                  projectOverviewThreadSortOptions.map((option) =>
+                                    renderProjectOverviewTaskToolbarOption({
+                                      option,
+                                      active: projectOverviewThreadSortMode === option.id,
+                                      onClick: () => {
+                                        setProjectOverviewThreadSortMode(option.id);
+                                        setProjectOverviewThreadToolbarPopover("");
+                                      },
+                                    })
+                                  )
+                                )
+                              : null
+                          ),
+                          React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-files-control-button is-bare is-backlog-filter" + (projectOverviewThreadToolbarPopover === "filter" || projectOverviewThreadFilterMode !== "all" ? " is-active" : ""),
+                              onClick: () => setProjectOverviewThreadToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                              title: activeProjectOverviewThreadFilterOption.label,
+                            },
+                              React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "Filter")
+                            ),
+                            projectOverviewThreadToolbarPopover === "filter"
+                              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                  projectOverviewThreadFilterOptions.map((option) =>
+                                    renderProjectOverviewTaskToolbarOption({
+                                      option,
+                                      active: projectOverviewThreadFilterMode === option.id,
+                                      onClick: () => {
+                                        setProjectOverviewThreadFilterMode(option.id);
+                                        setProjectOverviewThreadToolbarPopover("");
+                                      },
+                                    })
+                                  )
+                                )
+                            : null
+                          )
+                        ),
                         React.createElement("button", {
                           type: "button",
-                          className: "playground-tasks-empty-primary-button playground-project-overview-empty-action",
-                          onClick: () => typeof openReleaseComposer === "function" && openReleaseComposer(),
+                          className: "playground-files-control-button playground-project-overview-toolbar-action",
+                          onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
+                          disabled: !hasMoreProjectThreads,
+                          style: !hasMoreProjectThreads ? { opacity: 0.5 } : undefined,
                         },
-                          React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
-                          React.createElement("span", null, "New Release")
+                          React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, "Show more")
                         )
-                      )
-              ),
-              React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section" },
-                renderOverviewSectionHeader(
-                  "Current Tasks",
-                  null,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button",
-                    onClick: () => typeof setTaskView === "function" && setTaskView("backlog"),
-                  },
-                    React.createElement(ListTodo, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "See all")
-                  )
-                ),
-                overviewVisibleTasks.length > 0
-                  ? React.createElement("div", { className: "playground-project-overview-backlog-list" },
-                      visibleOverviewTasks.map((task) => renderOverviewTaskRow(task))
+                      ),
+                      projectOverviewFilteredThreads.length > 0
+                        ? React.createElement("div", { className: "playground-project-overview-threads-table" },
+                            React.createElement("div", { className: "playground-project-overview-threads-table-header" },
+                              React.createElement("div", null, "Title"),
+                              React.createElement("div", null, "Assignee"),
+                              React.createElement("div", null, "Task"),
+                              React.createElement("div", null, "Date"),
+                              React.createElement("div", null)
+                            ),
+                            React.createElement("div", { className: "playground-project-overview-thread-list" },
+                              visibleProjectThreads.map((thread) => renderOverviewThreadRow(thread))
+                            )
+                          )
+                        : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                            hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet."
+                          )
                     )
-                  : normalizedSearchQuery
-                    ? React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                        "No matching active tasks."
-                      )
-                    : React.createElement("div", { className: "playground-project-overview-empty-card is-compact" },
-                        React.createElement("div", { className: "playground-project-overview-empty-title" }, "Create your first task"),
-                        React.createElement("div", { className: "playground-project-overview-empty-copy" }, "Start the backlog and define the first ticket for this project."),
+                  : React.createElement(React.Fragment, null,
+                      React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewTasksToolbarRef },
+                        React.createElement("div", { className: "playground-plugins-search-shell" },
+                          React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("input", {
+                            type: "search",
+                            value: projectOverviewTaskSearchQuery,
+                            onChange: (event) => setProjectOverviewTaskSearchQuery(event.target.value),
+                            className: "playground-plugins-search",
+                            placeholder: "Search tasks",
+                            "aria-label": "Search current tasks",
+                          })
+                        ),
+                        React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                          React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-files-control-button is-bare is-backlog-sort" + (projectOverviewTaskToolbarPopover === "sort" || projectOverviewTaskSortMode !== "default" ? " is-active" : ""),
+                              onClick: () => setProjectOverviewTaskToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                              title: activeProjectOverviewTaskSortOption.label,
+                            },
+                              React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "Sort")
+                            ),
+                            projectOverviewTaskToolbarPopover === "sort"
+                              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                  projectOverviewTaskSortOptions.map((option) =>
+                                    renderProjectOverviewTaskToolbarOption({
+                                      option,
+                                      active: projectOverviewTaskSortMode === option.id,
+                                      onClick: () => {
+                                        setProjectOverviewTaskSortMode(option.id);
+                                        setProjectOverviewTaskToolbarPopover("");
+                                      },
+                                    })
+                                  )
+                                )
+                              : null
+                          ),
+                          React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-files-control-button is-bare is-backlog-filter" + (projectOverviewTaskToolbarPopover === "filter" || projectOverviewTaskFilterMode !== "open" ? " is-active" : ""),
+                              onClick: () => setProjectOverviewTaskToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                              title: activeProjectOverviewTaskFilterOption.label,
+                            },
+                              React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "Filter")
+                            ),
+                            projectOverviewTaskToolbarPopover === "filter"
+                              ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                                  projectOverviewTaskFilterOptions.map((option) =>
+                                    renderProjectOverviewTaskToolbarOption({
+                                      option,
+                                      active: projectOverviewTaskFilterMode === option.id,
+                                      onClick: () => {
+                                        setProjectOverviewTaskFilterMode(option.id);
+                                        setProjectOverviewTaskToolbarPopover("");
+                                      },
+                                    })
+                                  )
+                                )
+                            : null
+                          )
+                        ),
                         React.createElement("button", {
                           type: "button",
-                          className: "playground-tasks-empty-primary-button playground-project-overview-empty-action",
+                          className: "playground-files-control-button playground-project-overview-current-tasks-see-all",
                           onClick: () => typeof setTaskView === "function" && setTaskView("backlog"),
                         },
-                          React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
-                          React.createElement("span", null, "New Task")
+                          React.createElement(ListTodo, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, "See all")
                         )
-                      )
-              ),
-              React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section" },
-                renderOverviewSectionHeader(
-                  "Threads",
-                  null,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button",
-                    onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
-                    disabled: !hasMoreProjectThreads,
-                    style: !hasMoreProjectThreads ? { opacity: 0.5 } : undefined,
-                  },
-                    React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Show more")
-                  )
-                ),
-                filteredProjectThreads.length > 0
-                  ? React.createElement("div", { className: "playground-project-overview-threads-table" },
-                      React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-                        React.createElement("div", null, "Title"),
-                        React.createElement("div", null, "Assignee"),
-                        React.createElement("div", null, "Task"),
-                        React.createElement("div", null, "Date"),
-                        React.createElement("div", null)
                       ),
-                      React.createElement("div", { className: "playground-project-overview-thread-list" },
-                      visibleProjectThreads.map((thread) => renderOverviewThreadRow(thread))
-                      )
-                    )
-                  : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                      normalizedSearchQuery ? "No matching project threads." : "No project threads yet."
+                      overviewVisibleTasks.length > 0
+                        ? React.createElement("div", { className: "playground-project-overview-backlog-list playground-project-overview-current-release-list" },
+                            overviewCurrentTaskReleaseSections.map((section) =>
+                              React.createElement("div", {
+                                  key: section.key,
+                                  className: "playground-tasks-backlog-section playground-project-overview-current-release-section",
+                                },
+                                React.createElement("div", { className: "playground-tasks-backlog-section-header" },
+                                  React.createElement("div", { className: "playground-tasks-backlog-section-copy-group" },
+                                    React.createElement("div", { className: "playground-tasks-backlog-section-title" }, section.title)
+                                  ),
+                                  typeof renderReleaseHeaderMeta === "function"
+                                    ? renderReleaseHeaderMeta(section.releaseId ? (releasesById[section.releaseId] || null) : null)
+                                    : null
+                                ),
+                                section.tasks.map((task) => renderOverviewTaskRow(task))
+                              )
+                            )
+                          )
+                        : hasProjectOverviewTaskListFilters
+                          ? React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                              "No matching active tasks."
+                            )
+                          : React.createElement("div", { className: "playground-project-overview-empty-card is-compact" },
+                              React.createElement("div", { className: "playground-project-overview-empty-title" }, "Create your first task"),
+                              React.createElement("div", { className: "playground-project-overview-empty-copy" }, "Start the backlog and define the first ticket for this project."),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-tasks-empty-primary-button playground-project-overview-empty-action",
+                                onClick: () => typeof setTaskView === "function" && setTaskView("backlog"),
+                              },
+                                React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
+                                React.createElement("span", null, "New Task")
+                              )
+                            )
                     )
               ),
               React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
                 renderOverviewSectionHeader(
                   "Files",
-                  null,
+                  null
+                ),
+                React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewFilesToolbarRef },
+                  React.createElement("div", { className: "playground-plugins-search-shell" },
+                    React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("input", {
+                      type: "search",
+                      value: projectOverviewFileSearchQuery,
+                      onChange: (event) => setProjectOverviewFileSearchQuery(event.target.value),
+                      className: "playground-plugins-search",
+                      placeholder: "Search files",
+                      "aria-label": "Search project files",
+                    })
+                  ),
+                  React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button is-bare is-backlog-sort" + (projectOverviewFileToolbarPopover === "sort" || projectOverviewFileSortMode !== "recent-desc" ? " is-active" : ""),
+                        onClick: () => setProjectOverviewFileToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                        title: activeProjectOverviewFileSortOption.label,
+                      },
+                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Sort")
+                      ),
+                      projectOverviewFileToolbarPopover === "sort"
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            projectOverviewFileSortOptions.map((option) =>
+                              renderProjectOverviewTaskToolbarOption({
+                                option,
+                                active: projectOverviewFileSortMode === option.id,
+                                onClick: () => {
+                                  setProjectOverviewFileSortMode(option.id);
+                                  setProjectOverviewFileToolbarPopover("");
+                                },
+                              })
+                            )
+                          )
+                        : null
+                    ),
+                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button is-bare is-backlog-filter" + (projectOverviewFileToolbarPopover === "filter" || projectOverviewFileFilterMode !== "all" ? " is-active" : ""),
+                        onClick: () => setProjectOverviewFileToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                        title: activeProjectOverviewFileFilterOption.label,
+                      },
+                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Filter")
+                      ),
+                      projectOverviewFileToolbarPopover === "filter"
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            projectOverviewFileFilterOptions.map((option) =>
+                              renderProjectOverviewTaskToolbarOption({
+                                option,
+                                active: projectOverviewFileFilterMode === option.id,
+                                onClick: () => {
+                                  setProjectOverviewFileFilterMode(option.id);
+                                  setProjectOverviewFileToolbarPopover("");
+                                },
+                              })
+                            )
+                          )
+                      : null
+                    )
+                  ),
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                    className: "playground-files-control-button playground-project-overview-toolbar-action",
                     onClick: () => {
                       const normalizedProjectId = String(selectedProjectId || "").trim();
                       const normalizedEnvironmentId = String(
@@ -3038,7 +3465,10 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         });
                       }
                     },
-                  }, "Show all on Files")
+                  },
+                    React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Show all on Files")
+                  )
                 ),
                 React.createElement("div", { className: "playground-project-overview-files-activity" },
                   filteredProjectFileActivityItems.length > 0
@@ -3046,19 +3476,17 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         React.createElement("div", { className: "playground-project-overview-files-table-header" },
                           React.createElement("div", null, "File Title"),
                           React.createElement("div", null, "Operation"),
-                          React.createElement("div", null, "Assignee"),
+                          React.createElement("div", null, "Modified by"),
                           React.createElement("div", null, "Task"),
                           React.createElement("div", null, "Date"),
                           React.createElement("div", null)
                         ),
                         filteredProjectFileActivityItems.map((row) => renderOverviewFileActivityRow(row))
                       )
-                    : projectOverviewFileActivityState?.status === "loading"
-                      ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading file activity…")
-                      : projectOverviewFileActivityState?.status === "error"
+                    : projectOverviewFileActivityState?.status === "error"
                         ? React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileActivityState.error || "Failed to load project file activity.")
                         : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                            normalizedSearchQuery ? "No matching project file activity." : "No project file activity yet."
+                            hasProjectOverviewFileListFilters ? "No matching project file activity." : "No project file activity yet."
                           )
                 ),
                 projectOverviewFileMutationState?.error
@@ -3140,35 +3568,34 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   projectAttachmentTransferState.isProcessing
                     ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
                     : null,
-                projectAttachmentTransferState.error
+                  projectAttachmentTransferState.error
                   ? React.createElement("div", { className: "playground-environments-error" }, projectAttachmentTransferState.error)
                   : null
                 ),
-                renderProjectOverviewFileMenu()
-              ),
-              React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-resources-section" },
-                renderOverviewSectionHeader(
-                  "Resources",
-                  null
+                React.createElement("div", { className: "playground-project-overview-resources-block" },
+                  React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Resources")
+                  ),
+                  projectOverviewServerResourcesState?.status === "loading"
+                    ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading project resources...")
+                    : projectOverviewServerResourcesState?.status === "error"
+                      ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, projectOverviewServerResourcesState.error || "Failed to load project resources.")
+                      : overviewResourceItems.length > 0
+                        ? React.createElement("div", { className: "playground-project-overview-resources-table" },
+                            React.createElement("div", { className: "playground-project-overview-resources-table-header" },
+                              React.createElement("div", null, "Title"),
+                              React.createElement("div", null, "Type"),
+                              React.createElement("div", null, "Endpoint"),
+                              React.createElement("div", null, "Status"),
+                              React.createElement("div", null, "Date")
+                            ),
+                            overviewResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
+                          )
+                        : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                            normalizedSearchQuery ? "No matching resources." : "No project resources have been created yet."
+                          )
                 ),
-                projectOverviewServerResourcesState?.status === "loading"
-                  ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading project resources...")
-                  : projectOverviewServerResourcesState?.status === "error"
-                    ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, projectOverviewServerResourcesState.error || "Failed to load project resources.")
-                    : overviewResourceItems.length > 0
-                      ? React.createElement("div", { className: "playground-project-overview-resources-table" },
-                          React.createElement("div", { className: "playground-project-overview-resources-table-header" },
-                            React.createElement("div", null, "Title"),
-                            React.createElement("div", null, "Type"),
-                            React.createElement("div", null, "Endpoint"),
-                            React.createElement("div", null, "Status"),
-                            React.createElement("div", null, "Date")
-                          ),
-                          overviewResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
-                        )
-                      : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                          normalizedSearchQuery ? "No matching resources." : "No project resources have been created yet."
-                        )
+                renderProjectOverviewFileMenu()
               )
             )
           );

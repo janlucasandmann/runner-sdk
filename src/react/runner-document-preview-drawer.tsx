@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointer
 import {
   ChevronLeft as LucideChevronLeft,
   ChevronRight as LucideChevronRight,
+  Code2 as LucideCode2,
   FileText as LucideFileText,
   LoaderCircle as LucideLoaderCircle,
   Minus as LucideMinus,
@@ -80,8 +81,13 @@ export function RunnerDocumentPreviewDrawer({
   const [pdfPreviewViewportSize, setPdfPreviewViewportSize] = useState({ width: 0, height: 0 });
   const [isPdfPreviewRendering, setIsPdfPreviewRendering] = useState(false);
   const [pdfPreviewError, setPdfPreviewError] = useState<string | null>(null);
+  const [markdownPreviewMode, setMarkdownPreviewMode] = useState<"rendered" | "code">("rendered");
 
   const isImageAttachment = isRunnerPreviewImageAttachment(attachment);
+  const attachmentPreviewKind = !isImageAttachment
+    ? attachment.previewKindOverride ?? getRunnerDocumentPreviewKind(attachment)
+    : null;
+  const canToggleMarkdownPreview = attachmentPreviewKind === "markdown";
   const requestHeadersWithApiKey = useMemo(
     () => buildRunnerPreviewHeaders(requestHeaders, apiKey),
     [apiKey, requestHeaders]
@@ -132,6 +138,7 @@ export function RunnerDocumentPreviewDrawer({
     setPdfPreviewZoom(1);
     setPdfPreviewError(null);
     setIsPdfPreviewRendering(false);
+    setMarkdownPreviewMode("rendered");
     documentPreviewPdfCanvasRefs.current = {};
     documentPreviewPdfPageRefs.current = {};
   }, [attachment.id]);
@@ -616,9 +623,25 @@ export function RunnerDocumentPreviewDrawer({
               </div>
             </div>
           </div>
-          {headerActions || (showCloseButton && onClose) ? (
+          {headerActions || canToggleMarkdownPreview || (showCloseButton && onClose) ? (
             <div className="tb-attachment-preview-drawer-header-actions">
               {headerActions}
+              {canToggleMarkdownPreview ? (
+                <button
+                  type="button"
+                  className={`tb-attachment-preview-drawer-action${markdownPreviewMode === "code" ? " is-active" : ""}`}
+                  onClick={() => setMarkdownPreviewMode((current) => current === "code" ? "rendered" : "code")}
+                  aria-label={markdownPreviewMode === "code" ? "Show rendered Markdown" : "Show code"}
+                  aria-pressed={markdownPreviewMode === "code"}
+                  title={markdownPreviewMode === "code" ? "Show rendered Markdown" : "Show code"}
+                >
+                  {markdownPreviewMode === "code" ? (
+                    <LucideFileText className="tb-attachment-preview-drawer-action-icon" strokeWidth={2} />
+                  ) : (
+                    <LucideCode2 className="tb-attachment-preview-drawer-action-icon" strokeWidth={2} />
+                  )}
+                </button>
+              ) : null}
               {showCloseButton && onClose ? (
                 <button
                   type="button"
@@ -750,13 +773,26 @@ export function RunnerDocumentPreviewDrawer({
               className="tb-attachment-preview-frame"
             />
           ) : documentPreviewState.kind === "markdown" && typeof documentPreviewState.text === "string" ? (
-            <div className="tb-attachment-preview-markdown-shell">
-              <RunnerMarkdown
-                content={documentPreviewState.text}
-                className="tb-attachment-preview-markdown tb-message-markdown"
-                softBreaks
-              />
-            </div>
+            markdownPreviewMode === "code" ? (
+              <div className="tb-attachment-preview-code-shell">
+                <RunnerCodeViewer
+                  content={documentPreviewState.text}
+                  filePath={attachment.filename}
+                  language="markdown"
+                  maxHeight={inline ? 520 : 980}
+                  showLineNumbers
+                  className="tb-log-card-code-hide-scrollbars"
+                />
+              </div>
+            ) : (
+              <div className="tb-attachment-preview-markdown-shell">
+                <RunnerMarkdown
+                  content={documentPreviewState.text}
+                  className="tb-attachment-preview-markdown tb-message-markdown"
+                  softBreaks
+                />
+              </div>
+            )
           ) : documentPreviewState.kind === "text" && typeof documentPreviewState.text === "string" ? (
             <div className="tb-attachment-preview-code-shell">
               <RunnerCodeViewer
