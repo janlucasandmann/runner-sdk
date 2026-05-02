@@ -1,6 +1,7 @@
 import { CSSProperties, ChangeEvent, DragEvent as ReactDragEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  ArrowUp as LucideArrowUp,
   Bookmark as LucideBookmark,
   Bot as LucideBot,
   Brain as LucideBrain,
@@ -1262,6 +1263,8 @@ export interface RunnerChatProps {
   threadMissionControlPreview?: RunnerMissionControlPreview | null;
   composerProjectTasks?: RunnerTaskPreview[];
   selectedComposerProjectTask?: RunnerTaskPreview | null;
+  showComposerCreateAgentAction?: boolean;
+  onComposerCreateAgentClick?: () => void;
   onComposerProjectTaskChange?: (preview: RunnerTaskPreview | null) => void;
   onComposerProjectTaskSubmit?: (payload: RunnerChatProjectTaskSubmitPayload) => Promise<boolean | void> | boolean | void;
   activeTaskPreviewId?: string | null;
@@ -7198,6 +7201,8 @@ export function RunnerChat({
   threadMissionControlPreview = null,
   composerProjectTasks = [],
   selectedComposerProjectTask = null,
+  showComposerCreateAgentAction = false,
+  onComposerCreateAgentClick,
   onComposerProjectTaskChange,
   onComposerProjectTaskSubmit,
   activeTaskPreviewId = null,
@@ -7539,6 +7544,7 @@ export function RunnerChat({
     }
   }, [currentThreadId, hasRunningTurn, hydratedThreadIsRunning, onThreadStatusChange]);
   const trimmedInput = input.trim();
+  const hasComposerText = input.length > 0;
   const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
   const stagedThreadContextCommandLabel = stagedThreadContextCommand ? `/${stagedThreadContextCommand}` : "";
   const stagedResourceCreationCommandLabel = stagedResourceCreationCommand?.label || "";
@@ -17566,6 +17572,17 @@ export function RunnerChat({
                       >
                         <span className="task-stop-icon" />
                       </button>
+                    ) : hasComposerText ? (
+                      <button
+                        type="button"
+                        className="task-run-button task-run-button-full"
+                        onClick={() => void runTask()}
+                        disabled={!canRun}
+                        aria-label="Send message"
+                        title="Send message"
+                      >
+                        <LucideArrowUp className="task-send-icon" strokeWidth={2.1} />
+                      </button>
                     ) : (
                       <>
                         {isListening ? <span className="task-recording-duration">{recordingElapsedSeconds}s</span> : null}
@@ -17609,6 +17626,17 @@ export function RunnerChat({
                       >
                         <span className="task-stop-icon" />
                       </button>
+                    ) : hasComposerText ? (
+                      <button
+                        type="button"
+                        className="task-run-button"
+                        onClick={() => void runTask()}
+                        disabled={!canRun}
+                        aria-label="Send message"
+                        title="Send message"
+                      >
+                        <LucideArrowUp className="task-send-icon" strokeWidth={2.1} />
+                      </button>
                     ) : (
                       <>
                         {isListening ? <span className="task-recording-duration">{recordingElapsedSeconds}s</span> : null}
@@ -17630,64 +17658,81 @@ export function RunnerChat({
               {useComputerAgentsMode && shouldRenderInlineComposerWithEmptyState ? (
                 <div className="tb-composer-connectors-row" aria-label="Project tasks and plugins">
                   <div className="tb-composer-project-task-area" ref={projectTasksPopupRef}>
-                    <button
-                      type="button"
-                      className={`tb-composer-project-task-button ${projectTasksPopupOpen ? "is-open" : ""}`.trim()}
-                      onClick={() => setProjectTasksPopupOpen((current) => !current)}
-                      aria-haspopup="dialog"
-                      aria-expanded={projectTasksPopupOpen}
-                    >
-                      <LucideListTodo className="tb-composer-project-task-icon" strokeWidth={1.75} />
-                      <span>Project Tasks</span>
-                    </button>
-                    {selectedComposerProjectTask ? (
-                      <span className="tb-composer-project-task-chip">
-                        <span className="tb-composer-project-task-chip-label">{selectedComposerProjectTaskLabel || "Selected task"}</span>
+                    {showComposerCreateAgentAction ? (
+                      <button
+                        type="button"
+                        className="tb-composer-project-task-button"
+                        onClick={() => {
+                          setProjectTasksPopupOpen(false);
+                          onComposerCreateAgentClick?.();
+                        }}
+                        disabled={!onComposerCreateAgentClick}
+                      >
+                        <LucideBot className="tb-composer-project-task-icon" strokeWidth={1.75} />
+                        <span>Create an Agent</span>
+                      </button>
+                    ) : (
+                      <>
                         <button
                           type="button"
-                          className="tb-composer-project-task-chip-clear"
-                          onClick={() => onComposerProjectTaskChange?.(null)}
-                          aria-label="Clear selected project task"
+                          className={`tb-composer-project-task-button ${projectTasksPopupOpen ? "is-open" : ""}`.trim()}
+                          onClick={() => setProjectTasksPopupOpen((current) => !current)}
+                          aria-haspopup="dialog"
+                          aria-expanded={projectTasksPopupOpen}
                         >
-                          <LucideX className="tb-composer-project-task-chip-clear-icon" strokeWidth={1.8} />
+                          <LucideListTodo className="tb-composer-project-task-icon" strokeWidth={1.75} />
+                          <span>Project Tasks</span>
                         </button>
-                      </span>
-                    ) : null}
-                    {projectTasksPopupOpen ? (
-                      <div className="tb-composer-project-task-menu" role="dialog" aria-label="Choose project task">
-                        <div className="tb-composer-project-task-menu-title">Open Tickets</div>
-                        <div className="tb-composer-project-task-list">
-                          {composerProjectTaskItems.length > 0 ? (
-                            composerProjectTaskItems.map((task) => {
-                              const isSelectedTask = String(task.taskId || "").trim() === selectedComposerProjectTaskId;
-                              const ticketLabel = String(task.ticketNumber || "").trim();
-                              return (
-                                <button
-                                  key={task.taskId}
-                                  type="button"
-                                  className={`tb-composer-project-task-row ${isSelectedTask ? "is-selected" : ""}`.trim()}
-                                  onClick={() => {
-                                    onComposerProjectTaskChange?.(task);
-                                    setProjectTasksPopupOpen(false);
-                                  }}
-                                >
-                                  <LucideBookmark className="tb-composer-project-task-row-icon" strokeWidth={1.8} />
-                                  <span className="tb-composer-project-task-row-main">
-                                    <span className="tb-composer-project-task-row-title">{task.title || "Untitled task"}</span>
-                                    <span className="tb-composer-project-task-row-meta">
-                                      {ticketLabel || "Ticket"}
-                                    </span>
-                                  </span>
-                                  {isSelectedTask ? <LucideCheck className="tb-composer-project-task-row-check" strokeWidth={1.8} /> : null}
-                                </button>
-                              );
-                            })
-                          ) : (
-                            <div className="tb-composer-project-task-empty">No open project tickets.</div>
-                          )}
-                        </div>
-                      </div>
-                    ) : null}
+                        {selectedComposerProjectTask ? (
+                          <span className="tb-composer-project-task-chip">
+                            <span className="tb-composer-project-task-chip-label">{selectedComposerProjectTaskLabel || "Selected task"}</span>
+                            <button
+                              type="button"
+                              className="tb-composer-project-task-chip-clear"
+                              onClick={() => onComposerProjectTaskChange?.(null)}
+                              aria-label="Clear selected project task"
+                            >
+                              <LucideX className="tb-composer-project-task-chip-clear-icon" strokeWidth={1.8} />
+                            </button>
+                          </span>
+                        ) : null}
+                        {projectTasksPopupOpen ? (
+                          <div className="tb-composer-project-task-menu" role="dialog" aria-label="Choose project task">
+                            <div className="tb-composer-project-task-menu-title">Open Tickets</div>
+                            <div className="tb-composer-project-task-list">
+                              {composerProjectTaskItems.length > 0 ? (
+                                composerProjectTaskItems.map((task) => {
+                                  const isSelectedTask = String(task.taskId || "").trim() === selectedComposerProjectTaskId;
+                                  const ticketLabel = String(task.ticketNumber || "").trim();
+                                  return (
+                                    <button
+                                      key={task.taskId}
+                                      type="button"
+                                      className={`tb-composer-project-task-row ${isSelectedTask ? "is-selected" : ""}`.trim()}
+                                      onClick={() => {
+                                        onComposerProjectTaskChange?.(task);
+                                        setProjectTasksPopupOpen(false);
+                                      }}
+                                    >
+                                      <LucideBookmark className="tb-composer-project-task-row-icon" strokeWidth={1.8} />
+                                      <span className="tb-composer-project-task-row-main">
+                                        <span className="tb-composer-project-task-row-title">{task.title || "Untitled task"}</span>
+                                        <span className="tb-composer-project-task-row-meta">
+                                          {ticketLabel || "Ticket"}
+                                        </span>
+                                      </span>
+                                      {isSelectedTask ? <LucideCheck className="tb-composer-project-task-row-check" strokeWidth={1.8} /> : null}
+                                    </button>
+                                  );
+                                })
+                              ) : (
+                                <div className="tb-composer-project-task-empty">No open project tickets.</div>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+                      </>
+                    )}
                   </div>
                   <div className="tb-composer-connectors-right">
                     {connectedComposerConnectors.length > 0 ? (

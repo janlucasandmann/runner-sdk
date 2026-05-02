@@ -7407,6 +7407,12 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   height: 20px;
 }
 
+.tb-runner-chat .task-send-icon {
+  width: 16px;
+  height: 16px;
+  color: white;
+}
+
 .tb-runner-chat .task-recording-duration {
   flex-shrink: 0;
   min-width: 2.4ch;

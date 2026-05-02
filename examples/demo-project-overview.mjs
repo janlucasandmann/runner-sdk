@@ -789,7 +789,8 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-files-section {
-        margin-top: 32px;
+        margin-top: 12px;
+        margin-bottom: 32px;
         padding: 20px 20px 22px;
         border-radius: 15px;
         background: rgba(255, 255, 255, 0.035);
@@ -3026,10 +3027,20 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                             });
                             resizeTaskDescriptionTextarea(event.currentTarget);
                           },
-                          onBlur: () => {
+                          onBlur: (event) => {
+                            const nextDescription = String(event.currentTarget.value || "");
+                            setProjectDraft((current) => {
+                              const baseProject = current?.id === normalizedSelectedProjectId
+                                ? current
+                                : normalizePlaygroundProjectRecord(selectedProject);
+                              return {
+                                ...baseProject,
+                                description: nextDescription,
+                              };
+                            });
                             setIsProjectDescriptionEditing(false);
                             if (typeof saveProjectOverviewDescription === "function") {
-                              void saveProjectOverviewDescription();
+                              void saveProjectOverviewDescription(nextDescription);
                             }
                           },
                         })
