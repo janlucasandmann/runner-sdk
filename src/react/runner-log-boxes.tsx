@@ -33,6 +33,7 @@ import {
   ListChevronsUpDown,
   ListTodo,
   Mail,
+  MessageSquare,
   Monitor,
   MousePointerClick,
   Route,
@@ -43,6 +44,7 @@ import {
   SlidersHorizontal,
   Telescope,
   Terminal,
+  User,
   Video,
   X,
 } from "lucide-react";
@@ -1083,6 +1085,40 @@ type RunnerTaskManagementCreatedTaskPreview = {
   taskColor?: string | null;
 };
 
+type RunnerTaskManagementCommentPreview = {
+  id: string;
+  body: string;
+  authorName?: string | null;
+  createdAt?: string | null;
+  taskId?: string | null;
+  taskTitle?: string | null;
+  projectId?: string | null;
+  projectName?: string | null;
+  ticketNumber?: string | null;
+  status?: string | null;
+  priority?: string | null;
+  taskType?: string | null;
+};
+
+type RunnerComputerAgentsThreadSnapshotKind = "messages" | "logs";
+
+type RunnerComputerAgentsThreadSnapshotItem = {
+  id: string;
+  role?: string | null;
+  label: string;
+  content: string;
+  createdAt?: string | null;
+  eventType?: string | null;
+  tone?: "user" | "assistant" | "reasoning" | "command" | "error" | "log";
+};
+
+type RunnerComputerAgentsThreadSnapshotDetails = {
+  kind: RunnerComputerAgentsThreadSnapshotKind;
+  threadId: string;
+  entries: RunnerComputerAgentsThreadSnapshotItem[];
+  hasMore?: boolean | null;
+};
+
 export type RunnerCreatedResourceType = "agent" | "skill" | "environment" | "project" | "release";
 
 export type RunnerCreatedResourcePreview = {
@@ -1658,6 +1694,769 @@ function collectTaskManagementCreatedTasks(log: RunnerLog): RunnerTaskManagement
   }
 
   return [];
+}
+
+function isTaskManagementCommentCommand(command?: string): boolean {
+  if (!command) return false;
+  return /manage-tasks\.py[\s\S]*\btasks\s+comment\b/i.test(command);
+}
+
+function isTaskManagementCommentToolInvocation(log: RunnerLog): boolean {
+  const serverName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const toolName = String(log.metadata?.toolName || "").trim().toLowerCase();
+  return (
+    /task/.test(serverName || toolName)
+    && (
+      /(?:^|[._/-])comment(?:[._/-])?tasks?(?:$|[._/-])/.test(toolName)
+      || /(?:^|[._/-])tasks?(?:[._/-])comment(?:$|[._/-])/.test(toolName)
+      || /(?:^|[._/-])add(?:[._/-])?task(?:[._/-])?comment(?:$|[._/-])/.test(toolName)
+    )
+  );
+}
+
+function extractTaskManagementCommentTaskIdFromCommand(command?: string): string | null {
+  if (!command) return null;
+  const match = /manage-tasks\.py[\s\S]*?\btasks\s+comment\s+("[^"]+"|'[^']+'|[^\s|&;]+)/i.exec(command);
+  const value = match?.[1] || "";
+  return asOptionalTrimmedString(value.replace(/^["']|["']$/g, "")) || null;
+}
+
+function extractTaskManagementCommandFlagValue(command: string, flagName: string): string | null {
+  const quoted = extractQuotedArgument(command, flagName);
+  if (quoted) {
+    return quoted;
+  }
+
+  const equalsPattern = new RegExp(`${flagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=(?:"((?:\\\\.|[^"])*)"|'((?:\\\\.|[^'])*)'|([^\\s|&;]+))`, "i");
+  const match = command.match(equalsPattern);
+  const value = match?.[1] || match?.[2] || match?.[3] || "";
+  return asOptionalTrimmedString(value.replace(/\\"/g, `"`).replace(/\\'/g, `'`).replace(/\\\\/g, `\\`)) || null;
+}
+
+function isTaskManagementUpdateCommand(command?: string): boolean {
+  if (!command) return false;
+  return /manage-tasks\.py[\s\S]*\btasks\s+update\b/i.test(command);
+}
+
+function isTaskManagementUpdateToolInvocation(log: RunnerLog): boolean {
+  const serverName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const toolName = String(log.metadata?.toolName || "").trim().toLowerCase();
+  return (
+    /task/.test(serverName || toolName)
+    && (
+      /(?:^|[._/-])update(?:[._/-])?tasks?(?:$|[._/-])/.test(toolName)
+      || /(?:^|[._/-])tasks?(?:[._/-])update(?:$|[._/-])/.test(toolName)
+    )
+  );
+}
+
+function extractTaskManagementUpdateTaskIdFromCommand(command?: string): string | null {
+  if (!command) return null;
+  const match = /manage-tasks\.py[\s\S]*?\btasks\s+update\s+("[^"]+"|'[^']+'|[^\s|&;]+)/i.exec(command);
+  const value = match?.[1] || "";
+  return asOptionalTrimmedString(value.replace(/^["']|["']$/g, "")) || null;
+}
+
+function extractTaskManagementUpdatePreviewsFromValue(value: unknown): RunnerTaskManagementCreatedTaskPreview[] {
+  const previews: RunnerTaskManagementCreatedTaskPreview[] = [];
+  const visited = new WeakSet<object>();
+
+  function visit(current: unknown, depth: number) {
+    if (!current || depth > 6) return;
+    if (typeof current === "string") {
+      const trimmed = current.trim();
+      if ((trimmed.startsWith("{") || trimmed.startsWith("[")) && trimmed.length > 1) {
+        try {
+          visit(JSON.parse(trimmed), depth + 1);
+        } catch {}
+      }
+      return;
+    }
+    if (Array.isArray(current)) {
+      current.forEach((entry) => visit(entry, depth + 1));
+      return;
+    }
+    const record = asObjectRecord(current);
+    if (!record || visited.has(record)) return;
+    visited.add(record);
+
+    const payloadPreview = buildTaskManagementCreatePreviewFromTaskPayload(record);
+    if (payloadPreview) {
+      previews.push(payloadPreview);
+    }
+
+    const directPreview = normalizeTaskManagementCreatePreview(record);
+    if (directPreview) {
+      previews.push(directPreview);
+    }
+
+    for (const nestedValue of Object.values(record)) {
+      if (nestedValue && typeof nestedValue === "object") {
+        visit(nestedValue, depth + 1);
+      } else if (typeof nestedValue === "string") {
+        visit(nestedValue, depth + 1);
+      }
+    }
+  }
+
+  visit(value, 0);
+  return dedupeTaskManagementCreatePreviews(previews);
+}
+
+function extractTaskManagementUpdatePreviewsFromText(text: string): RunnerTaskManagementCreatedTaskPreview[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  return extractTaskManagementUpdatePreviewsFromValue(trimmed);
+}
+
+function collectTaskManagementUpdatedTasks(log: RunnerLog): RunnerTaskManagementCreatedTaskPreview[] {
+  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const previews = [
+    ...extractTaskManagementUpdatePreviewsFromValue(log.metadata?.result),
+    ...extractTaskManagementUpdatePreviewsFromValue(log.metadata?.args),
+    ...Object.values((log.metadata?.fileContents as Record<string, string> | undefined) || {}).flatMap((value) =>
+      extractTaskManagementUpdatePreviewsFromText(String(value || ""))
+    ),
+    ...(typeof log.metadata?.result === "string" ? extractTaskManagementUpdatePreviewsFromText(log.metadata.result) : []),
+    ...(typeof log.metadata?.output === "string" ? extractTaskManagementUpdatePreviewsFromText(log.metadata.output) : []),
+    ...(parsedOutput?.stdout ? extractTaskManagementUpdatePreviewsFromText(parsedOutput.stdout) : []),
+    ...(parsedOutput?.stderr ? extractTaskManagementUpdatePreviewsFromText(parsedOutput.stderr) : []),
+    ...extractTaskManagementUpdatePreviewsFromText(log.message || ""),
+  ];
+
+  const command = String(log.metadata?.command || "");
+  const commandTaskId = extractTaskManagementUpdateTaskIdFromCommand(command);
+  if (previews.length > 0) {
+    return dedupeTaskManagementCreatePreviews(previews).map((preview) => ({
+      ...preview,
+      id: preview.id || commandTaskId || `task:${preview.title}`,
+    }));
+  }
+
+  if (!isTaskManagementUpdateCommand(command) || !commandTaskId) {
+    return [];
+  }
+
+  return [{
+    id: commandTaskId,
+    title: extractTaskManagementCommandFlagValue(command, "--title") || commandTaskId,
+    projectId: extractTaskManagementCommandFlagValue(command, "--project-id"),
+    projectName: null,
+    ticketNumber: null,
+    status: extractTaskManagementCommandFlagValue(command, "--status") || null,
+    priority: extractTaskManagementCommandFlagValue(command, "--priority") || null,
+    taskType: extractTaskManagementCommandFlagValue(command, "--task-type") || "task",
+    assigneeAgentId:
+      extractTaskManagementCommandFlagValue(command, "--assignee-agent-id")
+      || extractTaskManagementCommandFlagValue(command, "--assignee-id")
+      || null,
+    assigneeName: null,
+    taskColor: null,
+  }];
+}
+
+function shouldRenderTaskManagementUpdateLog(log: RunnerLog): boolean {
+  return (
+    isTaskManagementUpdateCommand(log.metadata?.command || "")
+    || isTaskManagementUpdateToolInvocation(log)
+  );
+}
+
+function formatTaskManagementPriorityLabel(value: string | null | undefined): string {
+  const normalized = normalizeTaskManagementPreviewPriority(value);
+  if (normalized === "critical") return "Critical";
+  if (normalized === "high") return "High";
+  if (normalized === "low") return "Low";
+  return "Medium";
+}
+
+function formatTaskManagementUpdateSummary(log: RunnerLog, tasks: RunnerTaskManagementCreatedTaskPreview[]): string {
+  const command = String(log.metadata?.command || "");
+  const task = tasks[0];
+  const changes: string[] = [];
+  const statusFlag = extractTaskManagementCommandFlagValue(command, "--status");
+  const priorityFlag = extractTaskManagementCommandFlagValue(command, "--priority");
+  const titleFlag = extractTaskManagementCommandFlagValue(command, "--title");
+  const assigneeFlag =
+    extractTaskManagementCommandFlagValue(command, "--assignee-agent-id")
+    || extractTaskManagementCommandFlagValue(command, "--assignee-id");
+  const dueAtFlag = extractTaskManagementCommandFlagValue(command, "--due-at");
+  const releaseFlag = extractTaskManagementCommandFlagValue(command, "--release-id");
+  const sprintFlag = extractTaskManagementCommandFlagValue(command, "--sprint-id");
+
+  if (statusFlag || (task?.status && /\s--status(?:=|\s)/i.test(command))) {
+    changes.push(`Status changed to ${getTaskManagementPreviewStatusLabel(statusFlag || task?.status)}.`);
+  }
+  if (priorityFlag || (task?.priority && /\s--priority(?:=|\s)/i.test(command))) {
+    changes.push(`Priority changed to ${formatTaskManagementPriorityLabel(priorityFlag || task?.priority)}.`);
+  }
+  if (titleFlag) {
+    changes.push(`Title changed to "${titleFlag}".`);
+  }
+  if (assigneeFlag) {
+    changes.push("Assignee updated.");
+  }
+  if (dueAtFlag) {
+    changes.push("Due date updated.");
+  }
+  if (releaseFlag) {
+    changes.push("Release assignment updated.");
+  }
+  if (sprintFlag) {
+    changes.push("Sprint assignment updated.");
+  }
+
+  if (changes.length > 0) {
+    return changes.join(" ");
+  }
+  return tasks.length > 1 ? `${tasks.length} tickets updated.` : "Ticket updated.";
+}
+
+function normalizeTaskManagementCommentPreview(value: unknown): RunnerTaskManagementCommentPreview | null {
+  const record = asObjectRecord(value);
+  if (!record) return null;
+
+  const taskRecord = asObjectRecord(record.task);
+  const taskMetadata = asObjectRecord(taskRecord?.metadata);
+  const runnerPlayground = asObjectRecord(taskMetadata?.runnerPlayground);
+  const objectType =
+    asOptionalTrimmedString(record.object)
+    || asOptionalTrimmedString(record.type)
+    || "";
+  const id =
+    asOptionalTrimmedString(record.id)
+    || asOptionalTrimmedString(record.commentId)
+    || asOptionalTrimmedString(record.comment_id)
+    || "";
+  const body =
+    asOptionalTrimmedString(record.body)
+    || asOptionalTrimmedString(record.text)
+    || asOptionalTrimmedString(record.comment)
+    || asOptionalTrimmedString(record.message)
+    || "";
+  const taskId =
+    asOptionalTrimmedString(record.taskId)
+    || asOptionalTrimmedString(record.task_id)
+    || asOptionalTrimmedString(taskRecord?.id)
+    || null;
+  const taskTitle =
+    asOptionalTrimmedString(taskRecord?.title)
+    || asOptionalTrimmedString(taskRecord?.name)
+    || asOptionalTrimmedString(record.taskTitle)
+    || asOptionalTrimmedString(record.task_title)
+    || null;
+  const titleParts = taskTitle ? splitTaskManagementTitleAndTicket(taskTitle) : { title: taskTitle || "" };
+  const ticketNumber = normalizeTaskManagementPreviewTicketNumber(
+    asOptionalTrimmedString(record.ticketNumber)
+    || asOptionalTrimmedString(record.ticket_number)
+    || asOptionalTrimmedString(taskRecord?.ticketNumber)
+    || asOptionalTrimmedString(taskRecord?.ticket_number)
+    || asOptionalTrimmedString(runnerPlayground?.ticketNumber)
+    || titleParts.ticketNumber
+    || null
+  );
+  const looksLikeTaskComment =
+    objectType === "task_comment"
+    || id.startsWith("tcomment_")
+    || (Boolean(body) && (Boolean(taskId) || Boolean(taskRecord)));
+
+  if (!body || !looksLikeTaskComment) {
+    return null;
+  }
+
+  return {
+    id: id || `task-comment:${taskId || "task"}:${body}`,
+    body,
+    authorName:
+      asOptionalTrimmedString(record.authorName)
+      || asOptionalTrimmedString(record.author_name)
+      || asOptionalTrimmedString(record.userName)
+      || asOptionalTrimmedString(record.user_name)
+      || asOptionalTrimmedString(record.displayName)
+      || asOptionalTrimmedString(record.display_name)
+      || null,
+    createdAt:
+      asOptionalTrimmedString(record.createdAt)
+      || asOptionalTrimmedString(record.created_at)
+      || null,
+    taskId,
+    taskTitle: titleParts.title || taskTitle,
+    projectId:
+      asOptionalTrimmedString(record.projectId)
+      || asOptionalTrimmedString(record.project_id)
+      || asOptionalTrimmedString(taskRecord?.projectId)
+      || asOptionalTrimmedString(taskRecord?.project_id)
+      || null,
+    projectName:
+      asOptionalTrimmedString(record.projectName)
+      || asOptionalTrimmedString(record.project_name)
+      || asOptionalTrimmedString(taskRecord?.projectName)
+      || asOptionalTrimmedString(taskRecord?.project_name)
+      || null,
+    ticketNumber,
+    status:
+      asOptionalTrimmedString(taskRecord?.status)
+      || asOptionalTrimmedString(record.status)
+      || null,
+    priority:
+      asOptionalTrimmedString(taskRecord?.priority)
+      || asOptionalTrimmedString(record.priority)
+      || null,
+    taskType:
+      asOptionalTrimmedString(taskRecord?.taskType)
+      || asOptionalTrimmedString(taskRecord?.task_type)
+      || asOptionalTrimmedString(runnerPlayground?.taskType)
+      || null,
+  };
+}
+
+function dedupeTaskManagementCommentPreviews(previews: RunnerTaskManagementCommentPreview[]): RunnerTaskManagementCommentPreview[] {
+  const next = new Map<string, RunnerTaskManagementCommentPreview>();
+  for (const preview of previews) {
+    const normalizedId = String(preview.id || "").trim();
+    const fallbackKey = `${String(preview.taskId || "").trim()}:${preview.body.trim()}`;
+    const key = normalizedId || fallbackKey;
+    if (!key.trim()) {
+      continue;
+    }
+    const existing = next.get(key);
+    next.set(key, existing ? {
+      ...existing,
+      ...preview,
+      id: preview.id || existing.id,
+      body: preview.body || existing.body,
+      authorName: preview.authorName || existing.authorName || null,
+      createdAt: preview.createdAt || existing.createdAt || null,
+      taskId: preview.taskId || existing.taskId || null,
+      taskTitle: preview.taskTitle || existing.taskTitle || null,
+      projectId: preview.projectId || existing.projectId || null,
+      projectName: preview.projectName || existing.projectName || null,
+      ticketNumber: preview.ticketNumber || existing.ticketNumber || null,
+      status: preview.status || existing.status || null,
+      priority: preview.priority || existing.priority || null,
+      taskType: preview.taskType || existing.taskType || null,
+    } : preview);
+  }
+  return Array.from(next.values());
+}
+
+function extractTaskManagementCommentPreviewsFromValue(value: unknown): RunnerTaskManagementCommentPreview[] {
+  const previews: RunnerTaskManagementCommentPreview[] = [];
+  const visited = new WeakSet<object>();
+
+  function visit(current: unknown, depth: number) {
+    if (!current || depth > 6) return;
+    if (Array.isArray(current)) {
+      current.forEach((entry) => visit(entry, depth + 1));
+      return;
+    }
+    if (typeof current === "string") {
+      const trimmed = current.trim();
+      if ((trimmed.startsWith("{") || trimmed.startsWith("[")) && trimmed.length > 1) {
+        try {
+          visit(JSON.parse(trimmed), depth + 1);
+        } catch {}
+      }
+      return;
+    }
+    const record = asObjectRecord(current);
+    if (!record || visited.has(record)) return;
+    visited.add(record);
+
+    if (record.comment && typeof record.comment === "object") {
+      visit(record.comment, depth + 1);
+    }
+    if (Array.isArray(record.comments)) {
+      visit(record.comments, depth + 1);
+    }
+
+    const directPreview = normalizeTaskManagementCommentPreview(record);
+    if (directPreview) {
+      previews.push(directPreview);
+    }
+
+    for (const nestedValue of Object.values(record)) {
+      if (nestedValue && typeof nestedValue === "object") {
+        visit(nestedValue, depth + 1);
+      } else if (typeof nestedValue === "string") {
+        visit(nestedValue, depth + 1);
+      }
+    }
+  }
+
+  visit(value, 0);
+  return dedupeTaskManagementCommentPreviews(previews);
+}
+
+function extractTaskManagementCommentPreviewsFromText(text: string): RunnerTaskManagementCommentPreview[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    return extractTaskManagementCommentPreviewsFromValue(parsed);
+  } catch {
+    return [];
+  }
+}
+
+function collectTaskManagementComments(log: RunnerLog): RunnerTaskManagementCommentPreview[] {
+  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const previews = [
+    ...extractTaskManagementCommentPreviewsFromValue(log.metadata?.result),
+    ...extractTaskManagementCommentPreviewsFromValue(log.metadata?.args),
+    ...Object.values((log.metadata?.fileContents as Record<string, string> | undefined) || {}).flatMap((value) =>
+      extractTaskManagementCommentPreviewsFromText(String(value || ""))
+    ),
+    ...(typeof log.metadata?.result === "string" ? extractTaskManagementCommentPreviewsFromText(log.metadata.result) : []),
+    ...(typeof log.metadata?.output === "string" ? extractTaskManagementCommentPreviewsFromText(log.metadata.output) : []),
+    ...(parsedOutput?.stdout ? extractTaskManagementCommentPreviewsFromText(parsedOutput.stdout) : []),
+    ...(parsedOutput?.stderr ? extractTaskManagementCommentPreviewsFromText(parsedOutput.stderr) : []),
+    ...extractTaskManagementCommentPreviewsFromText(log.message || ""),
+  ];
+
+  const command = String(log.metadata?.command || "");
+  const commandTaskId = extractTaskManagementCommentTaskIdFromCommand(command);
+  const commandBody = extractTaskManagementCommandFlagValue(command, "--body");
+  if (previews.length > 0) {
+    return dedupeTaskManagementCommentPreviews(previews).map((preview) => ({
+      ...preview,
+      taskId: preview.taskId || commandTaskId || null,
+      body: preview.body || commandBody || "",
+    })).filter((preview) => preview.body.trim().length > 0);
+  }
+
+  if (!isTaskManagementCommentCommand(command) || !commandBody) {
+    return [];
+  }
+
+  return [{
+    id: `task-comment:${commandTaskId || "task"}:${commandBody}`,
+    body: commandBody,
+    authorName: null,
+    createdAt: null,
+    taskId: commandTaskId,
+    taskTitle: null,
+    projectId: null,
+    projectName: null,
+    ticketNumber: null,
+    status: null,
+    priority: null,
+    taskType: null,
+  }];
+}
+
+function shouldRenderTaskManagementCommentLog(log: RunnerLog): boolean {
+  return (
+    isTaskManagementCommentCommand(log.metadata?.command || "")
+    || isTaskManagementCommentToolInvocation(log)
+    || collectTaskManagementComments(log).length > 0
+  );
+}
+
+function formatTaskManagementCommentTimestamp(value: string | null | undefined): string {
+  const timestamp = Date.parse(String(value || ""));
+  if (!Number.isFinite(timestamp)) {
+    return "Just now";
+  }
+
+  const diffMs = Math.max(0, Date.now() - timestamp);
+  const minuteMs = 60 * 1000;
+  const hourMs = 60 * minuteMs;
+  const dayMs = 24 * hourMs;
+  if (diffMs < minuteMs) {
+    return "Just now";
+  }
+  if (diffMs < hourMs) {
+    const minutes = Math.max(1, Math.round(diffMs / minuteMs));
+    return `${minutes}m ago`;
+  }
+  if (diffMs < dayMs) {
+    const hours = Math.max(1, Math.round(diffMs / hourMs));
+    return `${hours}h ago`;
+  }
+  const days = Math.max(1, Math.round(diffMs / dayMs));
+  return `${days}d ago`;
+}
+
+function getComputerAgentsThreadSnapshotCommandMatch(command?: string): RegExpMatchArray | null {
+  if (!command) return null;
+  return String(command).match(/computer-agents\.py[\s\S]*?\bthreads\s+(messages|logs)\s+("[^"]+"|'[^']+'|[^\s|&;]+)/i);
+}
+
+function isComputerAgentsThreadSnapshotCommand(command?: string): boolean {
+  return Boolean(getComputerAgentsThreadSnapshotCommandMatch(command));
+}
+
+function isComputerAgentsThreadSnapshotToolInvocation(log: RunnerLog): boolean {
+  const serverName = String(log.metadata?.serverName || "").trim().toLowerCase();
+  const toolName = String(log.metadata?.toolName || "").trim().toLowerCase();
+  return (
+    /(computer[_ -]?agents?|threads?)/.test(`${serverName} ${toolName}`)
+    && (
+      /(?:^|[._/-])threads?(?:[._/-])messages?(?:$|[._/-])/.test(toolName)
+      || /(?:^|[._/-])messages?(?:[._/-])threads?(?:$|[._/-])/.test(toolName)
+      || /(?:^|[._/-])threads?(?:[._/-])logs?(?:$|[._/-])/.test(toolName)
+      || /(?:^|[._/-])logs?(?:[._/-])threads?(?:$|[._/-])/.test(toolName)
+    )
+  );
+}
+
+function extractComputerAgentsThreadSnapshotCommandDetails(command?: string): {
+  kind: RunnerComputerAgentsThreadSnapshotKind;
+  threadId: string;
+} | null {
+  const match = getComputerAgentsThreadSnapshotCommandMatch(command);
+  if (!match?.[1]) return null;
+  const kind = match[1].toLowerCase() === "logs" ? "logs" : "messages";
+  const threadId = String(match[2] || "").replace(/^["']|["']$/g, "").trim();
+  return {
+    kind,
+    threadId,
+  };
+}
+
+function stringifyComputerAgentsThreadSnapshotContent(value: unknown): string {
+  if (typeof value === "string") {
+    return stripRunnerSystemTags(value).trim();
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => stringifyComputerAgentsThreadSnapshotContent(entry))
+      .filter(Boolean)
+      .join("\n\n")
+      .trim();
+  }
+  const record = asObjectRecord(value);
+  if (!record) {
+    return "";
+  }
+
+  const directText =
+    asOptionalTrimmedString(record.text)
+    || asOptionalTrimmedString(record.content)
+    || asOptionalTrimmedString(record.message)
+    || asOptionalTrimmedString(record.output_text)
+    || asOptionalTrimmedString(record.input_text)
+    || asOptionalTrimmedString(record.summary)
+    || "";
+  if (directText) {
+    return stripRunnerSystemTags(directText).trim();
+  }
+
+  return "";
+}
+
+function normalizeComputerAgentsThreadMessageSnapshotItem(value: unknown, index: number): RunnerComputerAgentsThreadSnapshotItem | null {
+  const record = asObjectRecord(value);
+  if (!record) return null;
+  const role = String(
+    asOptionalTrimmedString(record.role)
+    || asOptionalTrimmedString(record.authorRole)
+    || asOptionalTrimmedString(record.author_role)
+    || "assistant"
+  ).trim().toLowerCase();
+  const content = stringifyComputerAgentsThreadSnapshotContent(record.content ?? record.message ?? record.text);
+  if (!content) {
+    return null;
+  }
+  const normalizedRole = role === "user" ? "user" : role === "system" ? "system" : "assistant";
+  return {
+    id: asOptionalTrimmedString(record.id) || `message:${index}`,
+    role: normalizedRole,
+    label: normalizedRole === "user" ? "You" : normalizedRole === "system" ? "System" : "Agent",
+    content,
+    createdAt:
+      asOptionalTrimmedString(record.createdAt)
+      || asOptionalTrimmedString(record.created_at)
+      || asOptionalTrimmedString(record.time)
+      || null,
+    tone: normalizedRole === "user" ? "user" : "assistant",
+  };
+}
+
+function formatComputerAgentsThreadLogLabel(eventType: string, type: string): string {
+  const normalizedEventType = eventType.trim().toLowerCase();
+  const normalizedType = type.trim().toLowerCase();
+  if (normalizedEventType === "reasoning" || normalizedEventType === "planning") return "Reasoning";
+  if (normalizedEventType === "command_execution") return "Tool Call";
+  if (normalizedEventType === "mcp_tool_call") return "Tool Call";
+  if (normalizedEventType === "action_summary") return "Run Summary";
+  if (normalizedEventType === "permission_request") return "Permission";
+  if (normalizedEventType === "file_change") return "File Change";
+  if (normalizedEventType === "todo_list") return "Task List";
+  if (normalizedType === "error") return "Error";
+  return "Run Summary";
+}
+
+function normalizeComputerAgentsThreadLogSnapshotItem(value: unknown, index: number): RunnerComputerAgentsThreadSnapshotItem | null {
+  const record = asObjectRecord(value);
+  if (!record) return null;
+  const metadata = asObjectRecord(record.metadata) || asObjectRecord(record.logMetadata) || asObjectRecord(record.log_metadata);
+  const eventType = String(
+    asOptionalTrimmedString(record.eventType)
+    || asOptionalTrimmedString(record.event_type)
+    || asOptionalTrimmedString(record.kind)
+    || ""
+  ).trim();
+  const type = String(asOptionalTrimmedString(record.type) || asOptionalTrimmedString(record.level) || "").trim();
+  const command = asOptionalTrimmedString(metadata?.command);
+  const messageContent =
+    asOptionalTrimmedString(record.message)
+    || asOptionalTrimmedString(record.content)
+    || asOptionalTrimmedString(record.text)
+    || "";
+  const content = stripRunnerSystemTags(command ? formatShellCommandForDisplay(command) : messageContent).trim();
+  if (!content) {
+    return null;
+  }
+  const normalizedEventType = eventType.toLowerCase();
+  const normalizedType = type.toLowerCase();
+  const tone: RunnerComputerAgentsThreadSnapshotItem["tone"] =
+    normalizedType === "error"
+      ? "error"
+      : normalizedEventType === "reasoning" || normalizedEventType === "planning"
+        ? "reasoning"
+        : normalizedEventType === "command_execution" || normalizedEventType === "mcp_tool_call"
+          ? "command"
+          : "log";
+  return {
+    id: asOptionalTrimmedString(record.id) || `log:${index}`,
+    label: formatComputerAgentsThreadLogLabel(eventType, type),
+    content,
+    createdAt:
+      asOptionalTrimmedString(record.createdAt)
+      || asOptionalTrimmedString(record.created_at)
+      || asOptionalTrimmedString(record.time)
+      || null,
+    eventType: eventType || null,
+    tone,
+  };
+}
+
+function extractComputerAgentsThreadSnapshotPayloadItems(value: unknown): unknown[] {
+  if (value == null) {
+    return [];
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) {
+      return [];
+    }
+    try {
+      return extractComputerAgentsThreadSnapshotPayloadItems(JSON.parse(trimmed));
+    } catch {
+      return [];
+    }
+  }
+  if (Array.isArray(value)) {
+    return value;
+  }
+  const record = asObjectRecord(value);
+  if (!record) {
+    return [];
+  }
+
+  const directItems =
+    Array.isArray(record.data) ? record.data
+      : Array.isArray(record.items) ? record.items
+        : Array.isArray(record.messages) ? record.messages
+          : Array.isArray(record.logs) ? record.logs
+            : null;
+  if (directItems) {
+    return directItems;
+  }
+
+  const nestedCandidates = [
+    record.result,
+    record.payload,
+    record.structuredContent,
+    record.structured_content,
+    record.stdout,
+  ];
+  for (const candidate of nestedCandidates) {
+    const nestedItems = extractComputerAgentsThreadSnapshotPayloadItems(candidate);
+    if (nestedItems.length > 0) {
+      return nestedItems;
+    }
+  }
+
+  return [];
+}
+
+function parseComputerAgentsThreadSnapshotDetails(log: RunnerLog): RunnerComputerAgentsThreadSnapshotDetails | null {
+  const command = String(log.metadata?.command || "");
+  const commandDetails = extractComputerAgentsThreadSnapshotCommandDetails(command);
+  if (!commandDetails && !isComputerAgentsThreadSnapshotToolInvocation(log)) {
+    return null;
+  }
+
+  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const kind =
+    commandDetails?.kind
+    || (String(log.metadata?.toolName || "").toLowerCase().includes("logs") ? "logs" : "messages");
+  const threadId =
+    commandDetails?.threadId
+    || asOptionalTrimmedString((asObjectRecord(log.metadata?.args)?.threadId))
+    || asOptionalTrimmedString((asObjectRecord(log.metadata?.args)?.thread_id))
+    || "";
+  const candidateValues = [
+    log.metadata?.result,
+    parsedOutput?.stdout,
+    log.metadata?.output,
+    log.message,
+  ];
+
+  for (const candidate of candidateValues) {
+    const payloadItems = extractComputerAgentsThreadSnapshotPayloadItems(candidate);
+    if (payloadItems.length === 0) {
+      continue;
+    }
+    const entries = payloadItems
+      .map((item, index) =>
+        kind === "logs"
+          ? normalizeComputerAgentsThreadLogSnapshotItem(item, index)
+          : normalizeComputerAgentsThreadMessageSnapshotItem(item, index)
+      )
+      .filter((item): item is RunnerComputerAgentsThreadSnapshotItem => Boolean(item));
+    if (entries.length > 0) {
+      return {
+        kind,
+        threadId,
+        entries,
+      };
+    }
+  }
+
+  if (!commandDetails && !isComputerAgentsThreadSnapshotToolInvocation(log)) {
+    return null;
+  }
+
+  return {
+    kind,
+    threadId,
+    entries: [],
+  };
+}
+
+function isComputerAgentsThreadSnapshotLog(log: RunnerLog): boolean {
+  return (
+    isComputerAgentsThreadSnapshotCommand(log.metadata?.command || "")
+    || isComputerAgentsThreadSnapshotToolInvocation(log)
+  );
+}
+
+function formatComputerAgentsThreadSnapshotTimestamp(value: string | null | undefined): string {
+  const timestamp = Date.parse(String(value || ""));
+  if (!Number.isFinite(timestamp)) {
+    return "";
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(timestamp));
 }
 
 function normalizeCreatedResourceType(value: unknown): RunnerCreatedResourceType | null {
@@ -2240,6 +3039,147 @@ function shouldRenderTaskManagementCreateLog(log: RunnerLog): boolean {
   );
 }
 
+function TaskManagementCommentLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const comments = useMemo(() => collectTaskManagementComments(log), [log]);
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
+  const title =
+    comments.length === 1
+      ? comments[0]?.taskTitle || "Comment added"
+      : comments.length > 1
+        ? `${comments.length} comments added`
+        : "Add ticket comment";
+
+  return (
+    <div className="tb-log-card tb-log-card-task-comment">
+      <LogHeader
+        icon={<MessageSquare className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Ticket Comment"
+        title={title}
+        timeLabel={timeLabel}
+        meta={isLoading ? <span className="tb-log-card-status">commenting...</span> : null}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        {comments.length > 0 ? (
+          <div className="tb-log-task-comment-list">
+            {comments.map((comment, index) => {
+              const authorName = comment.authorName || "Agent";
+              const authorInitial = (authorName.trim().charAt(0) || "A").toUpperCase();
+              return (
+                <div key={comment.id || `${comment.taskId || "task"}:${index}`} className="tb-log-task-comment-item">
+                  <div className="tb-log-task-comment-avatar" aria-hidden="true">
+                    <span className="tb-log-task-comment-avatar-fallback">{authorInitial}</span>
+                  </div>
+                  <div className="tb-log-task-comment-body">
+                    <div className="tb-log-task-comment-meta">
+                      <span className="tb-log-task-comment-author">{authorName}</span>
+                      <span className="tb-log-task-comment-time">{formatTaskManagementCommentTimestamp(comment.createdAt)}</span>
+                    </div>
+                    <div className="tb-log-task-comment-text">{comment.body}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="tb-log-card-empty">
+            {isLoading ? "Adding ticket comment..." : "No ticket comment was parsed."}
+          </div>
+        )}
+      </LogPanel>
+    </div>
+  );
+}
+
+function TaskManagementPreviewCard({
+  task,
+  activeTaskPreviewId,
+  onTaskPreviewClick,
+  fallbackTicketLabel = "TASK",
+}: {
+  task: RunnerTaskManagementCreatedTaskPreview;
+  activeTaskPreviewId?: string | null;
+  onTaskPreviewClick?: RunnerWorkLogEntryProps["onTaskPreviewClick"];
+  fallbackTicketLabel?: string;
+}) {
+  const normalizedStatus = normalizeTaskManagementPreviewStatus(task.status);
+  const normalizedTaskType = normalizeTaskManagementPreviewType(task.taskType);
+  const isClickable = Boolean(onTaskPreviewClick && task.id);
+  const isActive = String(activeTaskPreviewId || "").trim() !== "" && String(task.id || "").trim() === String(activeTaskPreviewId || "").trim();
+  const content = (
+    <>
+      <div className="tb-log-task-create-item-content">
+        <div className="tb-log-task-create-leading">
+          <div className={`tb-log-task-create-type ${normalizedTaskType === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
+            {normalizedTaskType === "subtask"
+              ? <Check className="tb-log-task-create-type-icon" strokeWidth={1.9} />
+              : <Bookmark className="tb-log-task-create-type-icon" strokeWidth={1.9} />}
+          </div>
+          <div className="tb-log-task-create-main">
+            {renderTaskManagementPreviewPriorityIcon(task.priority, "tb-log-task-create-priority")}
+            <span className={`tb-log-task-create-ticket ${task.ticketNumber ? "" : "is-placeholder"}`.trim()}>
+              {task.ticketNumber || fallbackTicketLabel}
+            </span>
+            <span className="tb-log-task-create-title" title={task.title}>
+              {task.title}
+            </span>
+          </div>
+        </div>
+        <div className="tb-log-task-create-meta">
+          <span className={`tb-log-task-create-assignee ${task.assigneeName ? "" : "is-unassigned"}`.trim()} title={task.assigneeName || "Unassigned"}>
+            {task.assigneeName || "Unassigned"}
+          </span>
+          <span className={`tb-log-task-create-status is-${normalizedStatus.replace(/_/g, "-")}`.trim()}>
+            {getTaskManagementPreviewStatusLabel(task.status)}
+          </span>
+        </div>
+      </div>
+    </>
+  );
+
+  return isClickable ? (
+    <button
+      key={task.id}
+      type="button"
+      className={`tb-log-task-create-item tb-log-task-create-item-button ${isActive ? "is-active" : ""}`.trim()}
+      style={getTaskManagementPreviewColorStyle(task.taskColor)}
+      onClick={() =>
+        onTaskPreviewClick?.({
+          taskId: task.id,
+          projectId: task.projectId || "",
+          ...(task.projectName ? { projectName: task.projectName } : {}),
+          ticketNumber: task.ticketNumber || fallbackTicketLabel,
+          title: task.title,
+          ...(task.taskColor ? { taskColor: task.taskColor } : {}),
+          ...(task.status ? { status: task.status } : {}),
+          ...(task.priority ? { priority: task.priority } : {}),
+          ...(task.taskType ? { taskType: task.taskType } : {}),
+          ...(task.assigneeAgentId ? { assigneeAgentId: task.assigneeAgentId } : {}),
+          ...(task.assigneeName ? { assigneeName: task.assigneeName } : {}),
+        })
+      }
+    >
+      {content}
+    </button>
+  ) : (
+    <div
+      key={task.id}
+      className={`tb-log-task-create-item ${isActive ? "is-active" : ""}`.trim()}
+      style={getTaskManagementPreviewColorStyle(task.taskColor)}
+    >
+      {content}
+    </div>
+  );
+}
+
 function TaskManagementCreateLogBox({
   log,
   timeLabel,
@@ -2464,79 +3404,172 @@ function TaskManagementCreateLogBox({
       <LogPanel collapsed={collapsed}>
         {createdCount > 0 ? (
           <div className="tb-log-task-create-list">
-            {displayTasks.map((task) => {
-              const normalizedStatus = normalizeTaskManagementPreviewStatus(task.status);
-              const normalizedTaskType = normalizeTaskManagementPreviewType(task.taskType);
-              const isClickable = Boolean(onTaskPreviewClick && task.id);
-              const isActive = String(activeTaskPreviewId || "").trim() !== "" && String(task.id || "").trim() === String(activeTaskPreviewId || "").trim();
-              const content = (
-                <>
-                  <div className="tb-log-task-create-item-content">
-                    <div className="tb-log-task-create-leading">
-                      <div className={`tb-log-task-create-type ${normalizedTaskType === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
-                        {normalizedTaskType === "subtask"
-                          ? <Check className="tb-log-task-create-type-icon" strokeWidth={1.9} />
-                          : <Bookmark className="tb-log-task-create-type-icon" strokeWidth={1.9} />}
-                      </div>
-                      <div className="tb-log-task-create-main">
-                        {renderTaskManagementPreviewPriorityIcon(task.priority, "tb-log-task-create-priority")}
-                        <span className={`tb-log-task-create-ticket ${task.ticketNumber ? "" : "is-placeholder"}`.trim()}>
-                          {task.ticketNumber || "NEW"}
-                        </span>
-                        <span className="tb-log-task-create-title" title={task.title}>
-                          {task.title}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="tb-log-task-create-meta">
-                      <span className={`tb-log-task-create-assignee ${task.assigneeName ? "" : "is-unassigned"}`.trim()} title={task.assigneeName || "Unassigned"}>
-                        {task.assigneeName || "Unassigned"}
-                      </span>
-                      <span className={`tb-log-task-create-status is-${normalizedStatus.replace(/_/g, "-")}`.trim()}>
-                        {getTaskManagementPreviewStatusLabel(task.status)}
-                      </span>
-                    </div>
-                  </div>
-                </>
-              );
-              return isClickable ? (
-                <button
-                  key={task.id}
-                  type="button"
-                  className={`tb-log-task-create-item tb-log-task-create-item-button ${isActive ? "is-active" : ""}`.trim()}
-                  style={getTaskManagementPreviewColorStyle(task.taskColor)}
-                  onClick={() =>
-                    onTaskPreviewClick?.({
-                      taskId: task.id,
-                      projectId: task.projectId || "",
-                      ...(task.projectName ? { projectName: task.projectName } : {}),
-                      ticketNumber: task.ticketNumber || "NEW",
-                      title: task.title,
-                      ...(task.taskColor ? { taskColor: task.taskColor } : {}),
-                      ...(task.status ? { status: task.status } : {}),
-                      ...(task.priority ? { priority: task.priority } : {}),
-                      ...(task.taskType ? { taskType: task.taskType } : {}),
-                      ...(task.assigneeAgentId ? { assigneeAgentId: task.assigneeAgentId } : {}),
-                      ...(task.assigneeName ? { assigneeName: task.assigneeName } : {}),
-                    })
-                  }
-                >
-                  {content}
-                </button>
-              ) : (
-                <div
-                  key={task.id}
-                  className={`tb-log-task-create-item ${isActive ? "is-active" : ""}`.trim()}
-                  style={getTaskManagementPreviewColorStyle(task.taskColor)}
-                >
-                  {content}
-                </div>
-              );
-            })}
+            {displayTasks.map((task) => (
+              <TaskManagementPreviewCard
+                key={task.id}
+                task={task}
+                activeTaskPreviewId={activeTaskPreviewId}
+                onTaskPreviewClick={onTaskPreviewClick}
+                fallbackTicketLabel="NEW"
+              />
+            ))}
           </div>
         ) : (
           <div className="tb-log-card-empty">
             {isLoading ? "Creating tasks..." : "No created tasks were parsed."}
+          </div>
+        )}
+      </LogPanel>
+    </div>
+  );
+}
+
+function TaskManagementUpdateLogBox({
+  log,
+  timeLabel,
+  backendUrl,
+  requestHeaders,
+  activeTaskPreviewId,
+  onTaskPreviewClick,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  backendUrl?: string;
+  requestHeaders?: HeadersInit;
+  activeTaskPreviewId?: string | null;
+  onTaskPreviewClick?: RunnerWorkLogEntryProps["onTaskPreviewClick"];
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [enrichedTasksById, setEnrichedTasksById] = useState<Record<string, RunnerTaskManagementCreatedTaskPreview>>({});
+  const updatedTasks = useMemo(() => collectTaskManagementUpdatedTasks(log), [log]);
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
+
+  useEffect(() => {
+    const nextEnrichedTasksById: Record<string, RunnerTaskManagementCreatedTaskPreview> = {};
+    updatedTasks.forEach((task) => {
+      const normalizedTaskId = String(task.id || "").trim();
+      if (normalizedTaskId && runnerTaskManagementPreviewCache.has(normalizedTaskId)) {
+        nextEnrichedTasksById[normalizedTaskId] = runnerTaskManagementPreviewCache.get(normalizedTaskId)!;
+      }
+    });
+    setEnrichedTasksById(nextEnrichedTasksById);
+  }, [updatedTasks]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const normalizedBackendUrl = String(backendUrl || "").trim().replace(/\/$/, "");
+    const taskIds = Array.from(
+      new Set(
+        updatedTasks
+          .map((task) => String(task.id || "").trim())
+          .filter((taskId) => taskId.startsWith("task_"))
+      )
+    );
+
+    if (!normalizedBackendUrl || taskIds.length === 0) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void Promise.allSettled(
+      taskIds.map(async (taskId) => {
+        const response = await fetch(`${normalizedBackendUrl}/tasks/${encodeURIComponent(taskId)}`, {
+          method: "GET",
+          headers: requestHeaders,
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to load task ${taskId}`);
+        }
+        const body = await response.json();
+        return {
+          taskId,
+          preview: buildTaskManagementCreatePreviewFromTaskPayload(body),
+        };
+      })
+    ).then((results) => {
+      if (cancelled) return;
+      const nextEnrichedTasksById: Record<string, RunnerTaskManagementCreatedTaskPreview> = {};
+      for (const result of results) {
+        if (result.status !== "fulfilled" || !result.value.preview) {
+          continue;
+        }
+        nextEnrichedTasksById[result.value.taskId] = result.value.preview;
+        runnerTaskManagementPreviewCache.set(result.value.taskId, result.value.preview);
+      }
+      setEnrichedTasksById(nextEnrichedTasksById);
+    }).catch(() => {
+      if (!cancelled) {
+        setEnrichedTasksById({});
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [backendUrl, requestHeaders, updatedTasks]);
+
+  const displayTasks = useMemo(
+    () =>
+      updatedTasks.map((task) => {
+        const enriched = task.id ? enrichedTasksById[task.id] : undefined;
+        if (!enriched) return task;
+        return {
+          ...task,
+          ...enriched,
+          status: task.status || enriched.status || null,
+          priority: task.priority || enriched.priority || null,
+          projectId: enriched.projectId || task.projectId || null,
+          projectName: enriched.projectName || task.projectName || null,
+        };
+      }),
+    [enrichedTasksById, updatedTasks]
+  );
+  const updatedCount = displayTasks.length;
+  const summary = formatTaskManagementUpdateSummary(log, displayTasks);
+  const title =
+    updatedCount === 1
+      ? "1 ticket updated"
+      : updatedCount > 1
+        ? `${updatedCount} tickets updated`
+        : "Update ticket";
+
+  return (
+    <div className="tb-log-card tb-log-card-task-update">
+      <LogHeader
+        icon={<CheckCircle2 className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Ticket Update"
+        title={title}
+        timeLabel={timeLabel}
+        meta={
+          updatedCount > 0
+            ? <span className="tb-log-card-pill">{updatedCount} updated</span>
+            : isLoading
+              ? <span className="tb-log-card-status">updating...</span>
+              : null
+        }
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        {updatedCount > 0 ? (
+          <>
+            <div className="tb-log-task-update-summary">{summary}</div>
+            <div className="tb-log-task-create-list">
+              {displayTasks.map((task) => (
+                <TaskManagementPreviewCard
+                  key={task.id}
+                  task={task}
+                  activeTaskPreviewId={activeTaskPreviewId}
+                  onTaskPreviewClick={onTaskPreviewClick}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="tb-log-card-empty">
+            {isLoading ? "Updating ticket..." : "No updated ticket was parsed."}
           </div>
         )}
       </LogPanel>
@@ -2715,6 +3748,118 @@ function TaskManagementReleaseCreateLogBox({
           resources={releases}
           emptyLabel={isLoading ? "Creating releases..." : "No created releases were parsed."}
         />
+      </LogPanel>
+    </div>
+  );
+}
+
+function renderComputerAgentsThreadSnapshotLogIcon(tone: RunnerComputerAgentsThreadSnapshotItem["tone"]) {
+  if (tone === "reasoning") return <Lightbulb className="tb-log-thread-snapshot-log-icon-svg" strokeWidth={1.5} />;
+  if (tone === "command") return <Terminal className="tb-log-thread-snapshot-log-icon-svg" strokeWidth={1.5} />;
+  if (tone === "error") return <AlertCircle className="tb-log-thread-snapshot-log-icon-svg" strokeWidth={1.5} />;
+  return <MessageSquare className="tb-log-thread-snapshot-log-icon-svg" strokeWidth={1.5} />;
+}
+
+function ComputerAgentsThreadSnapshotLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const details = useMemo(() => parseComputerAgentsThreadSnapshotDetails(log), [log]);
+  const entries = details?.entries || [];
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
+  const kind = details?.kind || "messages";
+  const label = kind === "logs" ? "Thread Logs" : "Thread Messages";
+  const snapshotTitle = details?.threadId || (kind === "logs" ? "Thread activity" : "Thread transcript");
+
+  return (
+    <div className="tb-log-card tb-log-card-thread-snapshot">
+      <LogHeader
+        icon={kind === "logs"
+          ? <Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />
+          : <MessageSquare className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label={label}
+        title={snapshotTitle}
+        timeLabel={timeLabel}
+        meta={
+          entries.length > 0
+            ? <span className="tb-log-card-pill">{entries.length} {kind === "logs" ? "logs" : "messages"}</span>
+            : isLoading
+              ? <span className="tb-log-card-status">loading...</span>
+              : null
+        }
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        {entries.length > 0 ? (
+          <div className={`tb-log-thread-snapshot-body is-${kind}`.trim()}>
+            {kind === "messages" ? (
+              entries.map((entry) => {
+                const role = entry.role === "user" ? "user" : entry.role === "system" ? "system" : "assistant";
+                const timestamp = formatComputerAgentsThreadSnapshotTimestamp(entry.createdAt);
+                return (
+                  <div key={entry.id} className={`tb-log-thread-snapshot-message is-${role}`.trim()}>
+                    <div className="tb-log-thread-snapshot-message-avatar" aria-hidden="true">
+                      {role === "user"
+                        ? <User className="tb-log-thread-snapshot-message-avatar-icon" strokeWidth={1.5} />
+                        : <Bot className="tb-log-thread-snapshot-message-avatar-icon" strokeWidth={1.5} />}
+                    </div>
+                    <div className="tb-log-thread-snapshot-message-stack">
+                      <div className="tb-log-thread-snapshot-message-meta">
+                        <span>{entry.label}</span>
+                        {timestamp ? <span>{timestamp}</span> : null}
+                      </div>
+                      <div className="tb-log-thread-snapshot-message-bubble">
+                        <RunnerMarkdown
+                          content={entry.content}
+                          className="tb-message-markdown tb-message-markdown-summary tb-log-thread-snapshot-markdown"
+                          softBreaks
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              entries.map((entry) => {
+                const timestamp = formatComputerAgentsThreadSnapshotTimestamp(entry.createdAt);
+                return (
+                  <div key={entry.id} className={`tb-log-thread-snapshot-log-row is-${entry.tone || "log"}`.trim()}>
+                    <span className="tb-log-thread-snapshot-log-icon" aria-hidden="true">
+                      {renderComputerAgentsThreadSnapshotLogIcon(entry.tone)}
+                    </span>
+                    <div className="tb-log-thread-snapshot-log-main">
+                      <div className="tb-log-thread-snapshot-log-meta">
+                        <span>{entry.label}</span>
+                        {timestamp ? <span>{timestamp}</span> : null}
+                      </div>
+                      <div className="tb-log-thread-snapshot-log-content">
+                        {entry.tone === "command" ? (
+                          <RunnerShellCommandViewer command={entry.content} />
+                        ) : (
+                          <RunnerMarkdown
+                            content={entry.content}
+                            className="tb-message-markdown tb-message-markdown-summary tb-log-thread-snapshot-markdown"
+                            softBreaks
+                            disallowHeadings
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        ) : (
+          <div className="tb-log-card-empty">
+            {isLoading ? `Loading ${kind === "logs" ? "thread logs" : "thread messages"}...` : `No ${kind === "logs" ? "thread logs" : "thread messages"} were parsed.`}
+          </div>
+        )}
       </LogPanel>
     </div>
   );
@@ -8842,7 +9987,10 @@ export function RunnerWorkLogEntry({
         />
       );
     }
+    if (isComputerAgentsThreadSnapshotLog(log)) return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementReleaseCreateLog(log)) return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
+    if (shouldRenderTaskManagementCommentLog(log)) return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
+    if (shouldRenderTaskManagementUpdateLog(log)) return <TaskManagementUpdateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     if (shouldRenderTaskManagementCreateLog(log)) return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     if (isGrepSearchLog(log)) return <GrepSearchLogBox log={log} timeLabel={timeLabel} />;
     if (isListFilesLog(log)) {
@@ -8900,8 +10048,17 @@ export function RunnerWorkLogEntry({
     if (shouldRenderComputerAgentsCreateLog(log)) {
       return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
     }
+    if (isComputerAgentsThreadSnapshotLog(log)) {
+      return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
+    }
     if (shouldRenderTaskManagementReleaseCreateLog(log)) {
       return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
+    }
+    if (shouldRenderTaskManagementCommentLog(log)) {
+      return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
+    }
+    if (shouldRenderTaskManagementUpdateLog(log)) {
+      return <TaskManagementUpdateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     }
     if (shouldRenderTaskManagementCreateLog(log)) {
       return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
@@ -8928,6 +10085,12 @@ export function RunnerWorkLogEntry({
     }
     if (shouldRenderTaskManagementReleaseCreateLog(log)) {
       return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
+    }
+    if (shouldRenderTaskManagementCommentLog(log)) {
+      return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
+    }
+    if (shouldRenderTaskManagementUpdateLog(log)) {
+      return <TaskManagementUpdateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
     }
     if (shouldRenderTaskManagementCreateLog(log)) {
       return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;

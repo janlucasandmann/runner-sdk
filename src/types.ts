@@ -25,6 +25,7 @@ export interface RunnerUsage {
   cachedInputTokens: number;
   totalTokens: number;
   costUsd?: number;
+  costCt?: number;
 }
 
 export interface RunnerTeamExecutionMember {
@@ -83,6 +84,8 @@ export interface RunnerLog {
     delegatedTo?: RunnerLogActorMetadata;
     teamExecution?: RunnerTeamExecutionMetadata;
     subagentInvocation?: RunnerSubagentInvocationMetadata;
+    parentToolUseId?: string;
+    source?: string;
     command?: string;
     exitCode?: number;
     status?: "running" | "completed" | "failed" | "started" | "output" | "pending" | "approved" | "denied";
@@ -116,6 +119,15 @@ export interface RunnerLog {
     cachedInputTokens?: number;
     totalTokens?: number;
     costUsd?: number;
+    costCt?: number;
+    costCT?: number;
+    computeTokens?: number;
+    model?: string;
+    modelName?: string;
+    provider?: string;
+    providerName?: string;
+    runId?: string;
+    actionsCount?: number;
     deepResearch?: {
       sessionId?: string;
       event: string;

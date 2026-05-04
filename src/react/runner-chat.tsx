@@ -9,16 +9,19 @@ import {
   Check as LucideCheck,
   ChevronDown as LucideChevronDown,
   ChevronLeft as LucideChevronLeft,
+  CornerDownRight as LucideCornerDownRight,
   Route as LucideRoute,
   Rocket as LucideRocket,
   Cloud as LucideCloud,
   Code as LucideCode,
+  Copy as LucideCopy,
   Cpu as LucideCpu,
   Database as LucideDatabase,
   ChevronsUp as LucideChevronsUp,
   ChevronRight as LucideChevronRight,
   ChevronUp as LucideChevronUp,
   Clock3 as LucideClock3,
+  Ellipsis as LucideEllipsis,
   Calculator as LucideCalculator,
   Equal as LucideEqual,
   FileText as LucideFileText,
@@ -40,13 +43,17 @@ import {
   PenTool as LucidePenTool,
   Minus as LucideMinus,
   Plus as LucidePlus,
+  RefreshCw as LucideRefreshCw,
   Eraser as LucideEraser,
   Server as LucideServer,
   Shield as LucideShield,
+  Split as LucideSplit,
   Sparkles as LucideSparkles,
   Telescope as LucideTelescope,
   Terminal as LucideTerminal,
   TextQuote as LucideTextQuote,
+  ThumbsDown as LucideThumbsDown,
+  ThumbsUp as LucideThumbsUp,
   Upload as LucideUpload,
   Wand2 as LucideWand2,
   X as LucideX,
@@ -321,10 +328,22 @@ interface RunnerTaskPreview {
   environmentId?: string;
   environmentName?: string;
   runKind?: string;
+  reviewRequired?: boolean;
+  reviewerAgentId?: string;
+  sourceThreadId?: string;
   reviewRequest?: boolean;
   showPromptPreview?: boolean;
   reviewCommentId?: string;
   isDeleted?: boolean;
+}
+
+export interface RunnerChatFollowUpAction {
+  id: string;
+  label: string;
+  disabled?: boolean;
+  pending?: boolean;
+  focusComposer?: boolean;
+  onClick?: () => Promise<void> | void;
 }
 
 interface RunnerMissionControlPreview {
@@ -469,8 +488,30 @@ interface RunnerConversationMessage {
   role: string;
   content: string;
   createdAt?: string;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  durationMs?: number | null;
+  actionsCount?: number | null;
   logMetadata?: Record<string, unknown> | null;
 }
+
+type RunnerThreadFeedbackRating = "up" | "down";
+type RunnerThreadFeedbackReportType = "general" | "bug" | "child_safety" | "response";
+
+interface RunnerThreadFeedbackState {
+  userRating: RunnerThreadFeedbackRating | null;
+  upCount: number;
+  downCount: number;
+  reportCount: number;
+  isSubmitting: boolean;
+}
+
+const RUNNER_THREAD_FEEDBACK_REPORT_OPTIONS: Array<{ value: RunnerThreadFeedbackReportType; label: string }> = [
+  { value: "general", label: "General feedback" },
+  { value: "bug", label: "Report issue / bug" },
+  { value: "child_safety", label: "Child safety concern" },
+  { value: "response", label: "Response feedback" },
+];
 
 function getRecordString(record: Record<string, unknown>, keys: string[]): string {
   for (const key of keys) {
@@ -483,6 +524,76 @@ function getRecordString(record: Record<string, unknown>, keys: string[]): strin
     }
   }
   return "";
+}
+
+function getRecordNumber(record: Record<string, unknown> | null | undefined, keys: string[]): number | null {
+  if (!record) {
+    return null;
+  }
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === "string" && value.trim()) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
+function normalizeRecordObject(value: unknown): Record<string, unknown> | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function getRecordObject(record: Record<string, unknown> | null | undefined, keys: string[]): Record<string, unknown> | null {
+  if (!record) {
+    return null;
+  }
+  for (const key of keys) {
+    const value = normalizeRecordObject(record[key]);
+    if (value) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function buildAssistantMessageRunMetadata(message: RunnerConversationMessage): RunnerLog["metadata"] | undefined {
+  const baseMetadata =
+    message.logMetadata && typeof message.logMetadata === "object" && !Array.isArray(message.logMetadata)
+      ? message.logMetadata
+      : {};
+  const metadata: Record<string, unknown> = { ...baseMetadata };
+  if (typeof message.durationMs === "number" && Number.isFinite(message.durationMs)) {
+    metadata.durationMs = message.durationMs;
+  }
+  if (typeof message.inputTokens === "number" && Number.isFinite(message.inputTokens)) {
+    metadata.inputTokens = message.inputTokens;
+  }
+  if (typeof message.outputTokens === "number" && Number.isFinite(message.outputTokens)) {
+    metadata.outputTokens = message.outputTokens;
+  }
+  if (typeof message.actionsCount === "number" && Number.isFinite(message.actionsCount)) {
+    metadata.actionsCount = message.actionsCount;
+  }
+  return Object.keys(metadata).length > 0 ? (metadata as RunnerLog["metadata"]) : undefined;
 }
 
 function sanitizeRunnerBudgetMessage(value: string): string {
@@ -534,16 +645,39 @@ function normalizeRunnerConversationMessage(value: unknown): RunnerConversationM
 
   const content = normalizeRunnerConversationMessageContent(record.content ?? record.message ?? record.text);
   const logMetadataCandidate =
-    record.logMetadata && typeof record.logMetadata === "object" && !Array.isArray(record.logMetadata)
-      ? record.logMetadata
-      : record.log_metadata && typeof record.log_metadata === "object" && !Array.isArray(record.log_metadata)
-        ? record.log_metadata
-        : null;
+    getRecordObject(record, ["logMetadata", "log_metadata", "metadata"]);
+  const usageRecord = getRecordObject(record, ["usage", "tokenUsage", "token_usage"]);
   const directAttachments = Array.isArray(record.attachments) ? record.attachments : null;
+  const directModel = getRecordString(record, ["model", "modelName", "model_name", "modelId", "model_id", "runModel"]);
+  const directProvider = getRecordString(record, ["provider", "providerName", "provider_name", "modelProvider", "model_provider"]);
+  const directComputeTokens =
+    getRecordNumber(record, ["computeTokens", "compute_tokens", "costCT", "costCt", "cost_ct", "ct", "totalComputeTokens", "total_compute_tokens"]) ??
+    getRecordNumber(usageRecord, ["computeTokens", "compute_tokens", "costCT", "costCt", "cost_ct", "ct", "totalComputeTokens", "total_compute_tokens"]);
+  const inputTokens =
+    getRecordNumber(record, ["inputTokens", "input_tokens"]) ??
+    getRecordNumber(usageRecord, ["inputTokens", "input_tokens"]);
+  const outputTokens =
+    getRecordNumber(record, ["outputTokens", "output_tokens"]) ??
+    getRecordNumber(usageRecord, ["outputTokens", "output_tokens"]);
+  const durationMs = getRecordNumber(record, ["durationMs", "duration_ms"]);
+  const actionsCount = getRecordNumber(record, ["actionsCount", "actions_count"]);
+  const directRunMetadata: Record<string, unknown> = {};
+  if (directModel) {
+    directRunMetadata.model = directModel;
+  }
+  if (directProvider) {
+    directRunMetadata.provider = directProvider;
+  }
+  if (directComputeTokens !== null) {
+    directRunMetadata.computeTokens = directComputeTokens;
+    directRunMetadata.costCT = directComputeTokens;
+    directRunMetadata.costCt = directComputeTokens;
+  }
   const logMetadata =
-    logMetadataCandidate || directAttachments
+    logMetadataCandidate || directAttachments || Object.keys(directRunMetadata).length > 0
       ? {
           ...((logMetadataCandidate as Record<string, unknown> | null) || {}),
+          ...directRunMetadata,
           ...(directAttachments ? { attachments: directAttachments } : {}),
         }
       : null;
@@ -553,6 +687,10 @@ function normalizeRunnerConversationMessage(value: unknown): RunnerConversationM
     role,
     content,
     createdAt: getRecordString(record, ["createdAt", "created_at", "created", "timestamp"]) || undefined,
+    inputTokens,
+    outputTokens,
+    durationMs,
+    actionsCount,
     logMetadata,
   };
 }
@@ -623,6 +761,83 @@ function sortRunnerLogsChronologically(logs: RunnerLog[]): RunnerLog[] {
       return left.index - right.index;
     })
     .map((entry) => entry.log);
+}
+
+function getRunnerLogMetadataRecord(log: RunnerLog | null | undefined): Record<string, unknown> | null {
+  const metadata = log?.metadata;
+  return metadata && typeof metadata === "object" && !Array.isArray(metadata)
+    ? (metadata as Record<string, unknown>)
+    : null;
+}
+
+function getRunnerLogNumber(log: RunnerLog | null | undefined, keys: string[]): number | null {
+  return getRecordNumber(getRunnerLogMetadataRecord(log), keys) ?? getRecordNumber(log as Record<string, unknown> | null | undefined, keys);
+}
+
+function mergeConversationMessageRunMetadataFromLogs(
+  messages: RunnerConversationMessage[],
+  logs: RunnerLog[]
+): RunnerConversationMessage[] {
+  if (messages.length === 0 || logs.length === 0) {
+    return messages;
+  }
+
+  const assistantResponseLogs = logs.filter((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
+  const completionLogs = logs.filter((log) => log.eventType === "turn_completed");
+  if (assistantResponseLogs.length === 0 && completionLogs.length === 0) {
+    return messages;
+  }
+
+  let changed = false;
+  let assistantLogIndex = 0;
+  let completionLogIndex = 0;
+
+  const nextMessages = messages.map((message) => {
+    if (message.role !== "assistant") {
+      return message;
+    }
+
+    const responseLog = assistantResponseLogs[assistantLogIndex++] || null;
+    const completionLog = completionLogs[completionLogIndex++] || null;
+    const responseMetadata = getRunnerLogMetadataRecord(responseLog);
+    const completionMetadata = getRunnerLogMetadataRecord(completionLog);
+    const messageMetadata =
+      message.logMetadata && typeof message.logMetadata === "object" && !Array.isArray(message.logMetadata)
+        ? message.logMetadata
+        : null;
+    const mergedMetadata = {
+      ...(responseMetadata || {}),
+      ...(completionMetadata || {}),
+      ...(messageMetadata || {}),
+    };
+    const hasMergedMetadata = Object.keys(mergedMetadata).length > 0;
+    const inputTokens = message.inputTokens ?? getRunnerLogNumber(responseLog, ["inputTokens", "input_tokens"]) ?? getRunnerLogNumber(completionLog, ["inputTokens", "input_tokens"]);
+    const outputTokens = message.outputTokens ?? getRunnerLogNumber(responseLog, ["outputTokens", "output_tokens"]) ?? getRunnerLogNumber(completionLog, ["outputTokens", "output_tokens"]);
+    const durationMs = message.durationMs ?? getRunnerLogNumber(responseLog, ["durationMs", "duration_ms"]) ?? getRunnerLogNumber(completionLog, ["durationMs", "duration_ms"]);
+    const actionsCount = message.actionsCount ?? getRunnerLogNumber(responseLog, ["actionsCount", "actions_count"]) ?? getRunnerLogNumber(completionLog, ["actionsCount", "actions_count"]);
+
+    if (
+      !hasMergedMetadata &&
+      inputTokens === message.inputTokens &&
+      outputTokens === message.outputTokens &&
+      durationMs === message.durationMs &&
+      actionsCount === message.actionsCount
+    ) {
+      return message;
+    }
+
+    changed = true;
+    return {
+      ...message,
+      inputTokens,
+      outputTokens,
+      durationMs,
+      actionsCount,
+      logMetadata: hasMergedMetadata ? mergedMetadata : message.logMetadata,
+    };
+  });
+
+  return changed ? nextMessages : messages;
 }
 
 function isLocalAttachmentRecord(attachment: LocalAttachment | RunnerTurnAttachment): attachment is LocalAttachment {
@@ -1329,6 +1544,8 @@ export interface RunnerChatProps {
     } | null;
     enabledSkills?: Record<string, unknown> | null;
   }) => Promise<void> | void;
+  followUpActions?: RunnerChatFollowUpAction[];
+  followUpError?: string;
 }
 
 export interface RunnerChatActionSummaryClickPayload {
@@ -1766,14 +1983,6 @@ function parseAutoStageSkillCreationCommand(input: string): { action: RunnerSkil
   };
 }
 
-function normalizeRunnerTaskPreviewStatus(value: string | null | undefined): "todo" | "in_progress" | "blocked" | "done" {
-  const normalized = String(value || "").trim().toLowerCase();
-  if (normalized === "in_progress" || normalized === "blocked" || normalized === "done") {
-    return normalized;
-  }
-  return "todo";
-}
-
 function normalizeRunnerTaskPreviewPriority(value: string | null | undefined): "low" | "medium" | "high" | "critical" {
   const normalized = String(value || "").trim().toLowerCase();
   if (normalized === "low" || normalized === "medium" || normalized === "high" || normalized === "critical") {
@@ -1838,12 +2047,8 @@ function getRunnerTaskPreviewColorStyle(value: string | null | undefined): CSSPr
   } as CSSProperties;
 }
 
-function getRunnerTaskPreviewStatusLabel(value: string | null | undefined): string {
-  const normalized = normalizeRunnerTaskPreviewStatus(value);
-  if (normalized === "in_progress") return "In doing";
-  if (normalized === "blocked") return "Blocked";
-  if (normalized === "done") return "Done";
-  return "To do";
+function isRunnerTaskReviewPreview(taskPreview: RunnerTaskPreview): boolean {
+  return String(taskPreview?.runKind || "").trim().toLowerCase() === "review";
 }
 
 function renderRunnerTaskPreviewPriorityIcon(priority: string | null | undefined, className: string) {
@@ -1910,11 +2115,12 @@ function renderRunnerTaskPreviewCard(
   } = {}
 ) {
   const isTaskPreviewDeleted = Boolean(taskPreview?.isDeleted);
+  const isReviewPreview = isRunnerTaskReviewPreview(taskPreview);
 
   return (
     <button
       type="button"
-      className="tb-task-preview-card"
+      className={`tb-task-preview-card${isReviewPreview ? " is-review" : ""}`.trim()}
       style={getRunnerTaskPreviewColorStyle(taskPreview.taskColor)}
       disabled={isTaskPreviewDeleted}
       onClick={() => {
@@ -1923,6 +2129,7 @@ function renderRunnerTaskPreviewCard(
         }
       }}
     >
+      {isReviewPreview ? <div className="tb-task-preview-review-label">Review</div> : null}
       <div className="tb-task-preview-card-header">
         <div className="tb-task-preview-title">{taskPreview.title || "Untitled Task"}</div>
         {renderRunnerTaskPreviewAssigneeAvatar(taskPreview)}
@@ -1941,9 +2148,6 @@ function renderRunnerTaskPreviewCard(
               : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
           </div>
           {renderRunnerTaskPreviewPriorityIcon(taskPreview.priority, "tb-task-preview-priority-icon")}
-          <span className={`tb-task-preview-status tb-task-preview-status-${normalizeRunnerTaskPreviewStatus(taskPreview.status)}`.trim()}>
-            {getRunnerTaskPreviewStatusLabel(taskPreview.status)}
-          </span>
         </div>
         <span className="tb-task-preview-ticket">{taskPreview.ticketNumber}</span>
       </div>
@@ -3976,6 +4180,108 @@ async function fetchAllThreadMessages(params: {
   return sortRunnerConversationMessagesChronologically(messages);
 }
 
+function normalizeRunnerThreadFeedback(value: unknown): Omit<RunnerThreadFeedbackState, "isSubmitting"> {
+  const record = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+  const rawUserRating = getRecordString(record, ["userRating", "user_rating", "rating"]).trim().toLowerCase();
+  return {
+    userRating: rawUserRating === "up" || rawUserRating === "down" ? rawUserRating : null,
+    upCount: Math.max(0, Math.round(getRecordNumber(record, ["upCount", "up_count", "upvotes", "thumbsUp"]) ?? 0)),
+    downCount: Math.max(0, Math.round(getRecordNumber(record, ["downCount", "down_count", "downvotes", "thumbsDown"]) ?? 0)),
+    reportCount: Math.max(0, Math.round(getRecordNumber(record, ["reportCount", "report_count", "reports"]) ?? 0)),
+  };
+}
+
+async function fetchThreadFeedback(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  requestHeaders?: HeadersInit;
+}): Promise<Omit<RunnerThreadFeedbackState, "isSubmitting">> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/feedback`, {
+    method: "GET",
+    headers: buildRunnerHeaders(params.requestHeaders, params.apiKey),
+    cache: "no-store",
+  });
+  const body = await response.text();
+  let parsed: unknown = {};
+  try {
+    parsed = body ? JSON.parse(body) : {};
+  } catch {
+    parsed = {};
+  }
+  if (!response.ok) {
+    const record = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
+    throw new Error(getRecordString(record, ["message", "error"]) || `Failed to load thread feedback (${response.status})`);
+  }
+  return normalizeRunnerThreadFeedback(parsed);
+}
+
+async function setThreadFeedback(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  rating: RunnerThreadFeedbackRating;
+  requestHeaders?: HeadersInit;
+}): Promise<Omit<RunnerThreadFeedbackState, "isSubmitting">> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
+  headers.set("Content-Type", "application/json");
+  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/feedback`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ rating: params.rating }),
+  });
+  const body = await response.text();
+  let parsed: unknown = {};
+  try {
+    parsed = body ? JSON.parse(body) : {};
+  } catch {
+    parsed = {};
+  }
+  if (!response.ok) {
+    const record = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
+    throw new Error(getRecordString(record, ["message", "error"]) || `Failed to save thread feedback (${response.status})`);
+  }
+  return normalizeRunnerThreadFeedback(parsed);
+}
+
+async function reportThreadFeedbackIssue(params: {
+  backendUrl: string;
+  apiKey: string;
+  threadId: string;
+  reportType: RunnerThreadFeedbackReportType;
+  message: string;
+  metadata?: Record<string, unknown> | null;
+  requestHeaders?: HeadersInit;
+}): Promise<void> {
+  const backendUrl = sanitizeBackendUrl(params.backendUrl);
+  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
+  headers.set("Content-Type", "application/json");
+  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/feedback/report`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      reportType: params.reportType,
+      message: params.message,
+      metadata: params.metadata ?? null,
+    }),
+  });
+  const body = await response.text();
+  let parsed: unknown = {};
+  try {
+    parsed = body ? JSON.parse(body) : {};
+  } catch {
+    parsed = {};
+  }
+  if (!response.ok) {
+    const record = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
+    throw new Error(getRecordString(record, ["message", "error"]) || `Failed to report issue (${response.status})`);
+  }
+}
+
 async function forkThreadRequest(params: {
   backendUrl: string;
   apiKey: string;
@@ -4573,7 +4879,6 @@ async function fetchThreadHydrationPayload(params: {
       : typeof parsedThread.thread?.status === "string" && parsedThread.thread.status.trim()
         ? parsedThread.thread.status.trim()
         : null;
-  const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
   const parsedRunnerLogs = Array.isArray(parsedLogs.logs) ? parsedLogs.logs.map(normalizeHydratedLog) : [];
   const chronologicalLogs = sortRunnerLogsChronologically(buildFailedThreadFallbackLogs({
     logs: parsedRunnerLogs,
@@ -4585,6 +4890,10 @@ async function fetchThreadHydrationPayload(params: {
     completedAt: parsedThread.thread?.completedAt,
     metadata: parsedThread.thread?.metadata ?? null,
   }).map(normalizeHydratedLog));
+  const chronologicalMessages = mergeConversationMessageRunMetadataFromLogs(
+    sortRunnerConversationMessagesChronologically(messages),
+    chronologicalLogs
+  );
   const canonicalConversationMessages = chronologicalMessages.filter(
     (message) =>
       (message.role === "user" || message.role === "assistant") &&
@@ -5095,12 +5404,18 @@ function buildHydratedTurnsFromMessages(
           message: message.content || "",
           type: "info",
           eventType: "agent_message",
+          metadata: buildAssistantMessageRunMetadata(message),
         });
       } else {
         const existing = pendingBtwTurn.logs[existingResponseIndex];
+        const messageMetadata = buildAssistantMessageRunMetadata(message);
         pendingBtwTurn.logs[existingResponseIndex] = {
           ...existing,
           message: `${existing.message}\n\n${message.content || ""}`.trim(),
+          metadata: {
+            ...(existing.metadata || {}),
+            ...(messageMetadata || {}),
+          },
         };
       }
 
@@ -5124,12 +5439,18 @@ function buildHydratedTurnsFromMessages(
         message: message.content || "",
         type: "info",
         eventType: "agent_message",
+        metadata: buildAssistantMessageRunMetadata(message),
       });
     } else {
       const existing = currentTurn.logs[existingResponseIndex];
+      const messageMetadata = buildAssistantMessageRunMetadata(message);
       currentTurn.logs[existingResponseIndex] = {
         ...existing,
         message: `${existing.message}\n\n${message.content || ""}`.trim(),
+        metadata: {
+          ...(existing.metadata || {}),
+          ...(messageMetadata || {}),
+        },
       };
     }
 
@@ -5982,6 +6303,7 @@ function insertHydratedTimelineLogs(
 
   for (const log of logs) {
     if (log.eventType === "turn_completed") {
+      visibleLogs.push(log);
       const durationMs = typeof log.metadata?.durationMs === "number" ? log.metadata.durationMs : null;
       if (durationMs !== null && durationMs >= 0) {
         durationSeconds = Math.max(0, Math.round(durationMs / 1000));
@@ -6389,7 +6711,7 @@ async function fetchThreadLiveRefreshPayload(params: {
   });
 
   const cachedPayload = params.cachedPayload || null;
-  const conversationMessages = sortRunnerConversationMessagesChronologically(
+  const rawConversationMessages = sortRunnerConversationMessagesChronologically(
     Array.isArray(cachedPayload?.messages) && cachedPayload.messages.length > 0
       ? cachedPayload.messages
       : await fetchAllThreadMessages({
@@ -6399,13 +6721,18 @@ async function fetchThreadLiveRefreshPayload(params: {
           requestHeaders: params.requestHeaders,
         }).catch(() => [])
   );
+  const chronologicalSnapshotLogs = sortRunnerLogsChronologically(logsSnapshot.logs.map(normalizeHydratedLog));
+  const conversationMessages = mergeConversationMessageRunMetadataFromLogs(
+    rawConversationMessages,
+    chronologicalSnapshotLogs
+  );
   const canonicalConversationMessages = conversationMessages.filter(
     (message) =>
       (message.role === "user" || message.role === "assistant") &&
       typeof message.content === "string" &&
       message.content.trim().length > 0
   );
-  const hydrationLogs = sortRunnerLogsChronologically(logsSnapshot.logs.map(normalizeHydratedLog)).filter((log) => {
+  const hydrationLogs = chronologicalSnapshotLogs.filter((log) => {
     if (canonicalConversationMessages.length === 0) {
       return log.eventType !== "user_message" && log.eventType !== "agent_message" && log.eventType !== "llm_response";
     }
@@ -6672,6 +6999,59 @@ function normalizedToolLogIdentity(log: RunnerLog): string | null {
   return null;
 }
 
+function normalizeRunnerLogIdentityPart(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getRunnerLogSubagentInvocationIdentity(log: RunnerLog): string {
+  const metadata = log.metadata;
+  const invocation = metadata?.subagentInvocation;
+  const invocationId =
+    normalizeRunnerLogIdentityPart(invocation?.invocationId) ||
+    normalizeRunnerLogIdentityPart(invocation?.parentToolUseId);
+  if (invocationId) {
+    return invocationId;
+  }
+
+  const source = normalizeRunnerLogIdentityPart(metadata?.source).toLowerCase();
+  const parentToolUseId = normalizeRunnerLogIdentityPart(metadata?.parentToolUseId);
+  if (parentToolUseId && (source === "claw_subagent_artifact" || source === "subagent_run_summary")) {
+    return parentToolUseId;
+  }
+
+  const actor = metadata?.actor;
+  if (actor?.kind === "subagent") {
+    const actorInvocationId =
+      normalizeRunnerLogIdentityPart(actor.invocationId) ||
+      normalizeRunnerLogIdentityPart(actor.parentToolUseId);
+    if (actorInvocationId) {
+      return actorInvocationId;
+    }
+
+    const actorIdentity = [
+      normalizeRunnerLogIdentityPart(actor.teamAgentId),
+      normalizeRunnerLogIdentityPart(actor.agentId),
+      normalizeRunnerLogIdentityPart(actor.subagentType),
+      normalizeRunnerLogIdentityPart(actor.agentName),
+    ].filter(Boolean).join(":");
+    if (actorIdentity) {
+      return `subagent:${actorIdentity}`;
+    }
+  }
+
+  const delegatedTo = metadata?.delegatedTo;
+  if (delegatedTo?.kind === "subagent") {
+    const delegatedInvocationId =
+      normalizeRunnerLogIdentityPart(delegatedTo.invocationId) ||
+      normalizeRunnerLogIdentityPart(delegatedTo.parentToolUseId);
+    if (delegatedInvocationId) {
+      return delegatedInvocationId;
+    }
+  }
+
+  return "";
+}
+
 function runnerLogSignature(log: RunnerLog): string {
   const normalizedEventType =
     log.eventType === "setup" || log.eventType === "startup"
@@ -6681,8 +7061,12 @@ function runnerLogSignature(log: RunnerLog): string {
         : log.eventType || "";
   const normalizedMessage = normalizedEventType === "session_start" ? "Starting session" : log.message || "";
   const normalizedToolIdentity = normalizedToolLogIdentity(log);
+  const normalizedThinkingActorIdentity =
+    normalizedEventType === "thinking" ? getRunnerLogSubagentInvocationIdentity(log) : "";
   const normalizedMetadata =
-    normalizedEventType === "thinking" || normalizedEventType === "session_start" || normalizedToolIdentity
+    normalizedEventType === "thinking"
+      ? (normalizedThinkingActorIdentity ? { subagentInvocationId: normalizedThinkingActorIdentity } : {})
+      : normalizedEventType === "session_start" || normalizedToolIdentity
       ? {}
       : log.metadata || {};
   return [
@@ -7040,6 +7424,7 @@ function buildHydratedTurnsFromLogs(
     const turn = ensureCurrentTurn(index);
 
     if (log.eventType === "turn_completed") {
+      turn.logs.push(log);
       const durationMs = typeof log.metadata?.durationMs === "number" ? log.metadata.durationMs : null;
       if (durationMs && durationMs >= 0) {
         turn.durationSeconds = Math.max(0, Math.round(durationMs / 1000));
@@ -7236,6 +7621,8 @@ export function RunnerChat({
   onSkillCreationCommandChange,
   onOpenPluginsOverview,
   onBacklogMissionControlSubmit,
+  followUpActions = [],
+  followUpError = "",
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
   const [composerQuotedSelection, setComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
@@ -7262,6 +7649,19 @@ export function RunnerChat({
   const [editingTurnId, setEditingTurnId] = useState<string | null>(null);
   const [editingTurnDraft, setEditingTurnDraft] = useState("");
   const [forkingTurnId, setForkingTurnId] = useState<string | null>(null);
+  const [threadFeedback, setThreadFeedbackState] = useState<RunnerThreadFeedbackState>({
+    userRating: null,
+    upCount: 0,
+    downCount: 0,
+    reportCount: 0,
+    isSubmitting: false,
+  });
+  const [runSummaryMoreTurnId, setRunSummaryMoreTurnId] = useState<string | null>(null);
+  const [reportIssueTurn, setReportIssueTurn] = useState<{ turnId: string; summaryText: string } | null>(null);
+  const [reportIssueType, setReportIssueType] = useState<RunnerThreadFeedbackReportType>("bug");
+  const [reportIssueMessage, setReportIssueMessage] = useState("");
+  const [reportIssueError, setReportIssueError] = useState("");
+  const [isReportIssueSubmitting, setIsReportIssueSubmitting] = useState(false);
   const [pendingForkConfiguration, setPendingForkConfiguration] = useState<PendingForkConfiguration | null>(null);
   const [forkTarget, setForkTarget] = useState<RunnerForkTarget>("existing_environment");
   const [forkTargetEnvironmentId, setForkTargetEnvironmentId] = useState<string>(environmentId ?? "");
@@ -7340,6 +7740,7 @@ export function RunnerChat({
   const [agentPopupMode, setAgentPopupMode] = useState<RunnerAgentSelectorMode>(() =>
     getRunnerAgentSelectorMode(agents.find((agent) => agent.id === agentId) || agents[0] || null)
   );
+  const hasInitializedOpenAgentPopupModeRef = useRef(false);
   const [activeThreadEnvironmentId, setActiveThreadEnvironmentId] = useState<string | null>(null);
   const [activeThreadEnvironmentName, setActiveThreadEnvironmentName] = useState<string | null>(null);
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(() => {
@@ -7404,6 +7805,7 @@ export function RunnerChat({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const projectTasksPopupRef = useRef<HTMLDivElement | null>(null);
   const forkEnvironmentPopupRef = useRef<HTMLDivElement | null>(null);
+  const runSummaryMoreMenuRef = useRef<HTMLSpanElement | null>(null);
   const currentInputRef = useRef(initialTask);
   const speechSocketRef = useRef<WebSocket | null>(null);
   const speechSocketReadyRef = useRef(false);
@@ -7501,6 +7903,27 @@ export function RunnerChat({
     () => turns.some((turn) => collectTurnChangedFiles(turn.logs).length > 0),
     [turns]
   );
+  const currentThreadHasDeepResearchActivity = useMemo(
+    () =>
+      turns.some((turn) =>
+        turn.logs.some((log) => {
+          if (log.eventType === "deep_research" || log.metadata?.deepResearch) {
+            return true;
+          }
+          const command = typeof log.metadata?.command === "string"
+            ? log.metadata.command
+            : typeof log.message === "string"
+              ? log.message
+              : "";
+          return log.eventType === "command_execution" && isDeepResearchCommand(command);
+        })
+      ),
+    [turns]
+  );
+  const currentThreadHasActiveDeepResearchLogs = useMemo(
+    () => turns.some((turn) => hasActiveDeepResearchLogGroup(turn.logs)),
+    [turns]
+  );
   const isRunning = status === "running";
   const activeRunningTurn =
     [...turns].reverse().find(
@@ -7522,6 +7945,8 @@ export function RunnerChat({
       })[0] || null;
   }, [deepResearchSessions]);
   const hasActiveDeepResearchSession = Boolean(activeDeepResearchThreadSession);
+  const shouldRefreshDeepResearchSessions = currentThreadHasDeepResearchActivity || Boolean(selectedDeepResearchDetail);
+  const shouldPollDeepResearchSessions = currentThreadHasActiveDeepResearchLogs || hasActiveDeepResearchSession;
   const hasHydratedReattachActivity = useMemo(
     () => hasActiveDeepResearchSession || turns.some((turn) => isActiveTurnStatus(turn.status) || hasActiveDeepResearchLogGroup(turn.logs)),
     [hasActiveDeepResearchSession, turns]
@@ -7677,6 +8102,43 @@ export function RunnerChat({
     () => buildRunnerHeaders(requestHeaders, apiKey.trim()),
     [apiKey, requestHeaders]
   );
+  useEffect(() => {
+    let cancelled = false;
+    const normalizedThreadId = String(currentThreadId || "").trim();
+    if (!normalizedThreadId || !normalizedBackendUrl || !hasApiKey) {
+      setThreadFeedbackState({
+        userRating: null,
+        upCount: 0,
+        downCount: 0,
+        reportCount: 0,
+        isSubmitting: false,
+      });
+      return;
+    }
+
+    void fetchThreadFeedback({
+      backendUrl: normalizedBackendUrl,
+      apiKey: apiKey.trim(),
+      threadId: normalizedThreadId,
+      requestHeaders,
+    })
+      .then((feedback) => {
+        if (cancelled) {
+          return;
+        }
+        setThreadFeedbackState({ ...feedback, isSubmitting: false });
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+        setThreadFeedbackState((previous) => ({ ...previous, isSubmitting: false }));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiKey, currentThreadId, hasApiKey, normalizedBackendUrl, requestHeaders]);
   const summaryPreviewEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
   const canPreviewSummaryWorkspacePaths = Boolean(summaryPreviewEnvironmentId && onSummaryWorkspacePathClick);
   const retainedSummaryPreviewPaths = useMemo(() => collectThreadRetainedSummaryPreviewPaths(turns), [turns]);
@@ -7762,6 +8224,26 @@ export function RunnerChat({
     }
     window.requestAnimationFrame(() => {
       textareaRef.current?.focus(options?.preventScroll ? { preventScroll: true } : undefined);
+    });
+  }
+
+  function handleFollowUpActionClick(action: RunnerChatFollowUpAction) {
+    if (!action || action.disabled || action.pending) {
+      return;
+    }
+    if (action.focusComposer) {
+      focusComposerSoon({ preventScroll: true });
+    }
+    if (typeof action.onClick !== "function") {
+      return;
+    }
+    void Promise.resolve(action.onClick()).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error || "Follow-up action failed.");
+      setInlineError(message || "Follow-up action failed.");
+    }).finally(() => {
+      if (action.focusComposer) {
+        focusComposerSoon({ preventScroll: true });
+      }
     });
   }
 
@@ -8993,6 +9475,240 @@ export function RunnerChat({
     setForkExistingEnvironmentFileCopyMode("none");
     setShowForkEnvironmentPopup(false);
     setForkDialogError(null);
+  }
+
+  async function copyRunSummaryText(summaryText: string) {
+    const normalizedSummary = stripSystemTags(summaryText).trim();
+    if (!normalizedSummary) {
+      return;
+    }
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(normalizedSummary);
+        return;
+      }
+    } catch {}
+
+    const textarea = document.createElement("textarea");
+    textarea.value = normalizedSummary;
+    textarea.setAttribute("readonly", "true");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand("copy");
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  }
+
+  function rerunTurnFromSummary(turn: RunnerTurn) {
+    const normalizedPrompt = stripSystemTags(turn.prompt).trim();
+    if (!normalizedPrompt) {
+      setInlineError("Message is empty.");
+      return;
+    }
+    void submitEditedTurn(turn.id, normalizedPrompt);
+  }
+
+  function submitThreadFeedback(rating: RunnerThreadFeedbackRating) {
+    const normalizedThreadId = String(currentThreadId || "").trim();
+    if (!normalizedThreadId || !normalizedBackendUrl || !hasApiKey) {
+      return;
+    }
+    setThreadFeedbackState((previous) => ({
+      ...previous,
+      userRating: rating,
+      upCount:
+        previous.userRating === rating
+          ? previous.upCount
+          : rating === "up"
+            ? previous.upCount + 1
+            : Math.max(0, previous.upCount - (previous.userRating === "up" ? 1 : 0)),
+      downCount:
+        previous.userRating === rating
+          ? previous.downCount
+          : rating === "down"
+            ? previous.downCount + 1
+            : Math.max(0, previous.downCount - (previous.userRating === "down" ? 1 : 0)),
+      isSubmitting: true,
+    }));
+    void setThreadFeedback({
+      backendUrl: normalizedBackendUrl,
+      apiKey: apiKey.trim(),
+      threadId: normalizedThreadId,
+      rating,
+      requestHeaders,
+    })
+      .then((feedback) => {
+        setThreadFeedbackState({ ...feedback, isSubmitting: false });
+      })
+      .catch(() => {
+        setThreadFeedbackState((previous) => ({ ...previous, isSubmitting: false }));
+      });
+  }
+
+  function openReportIssueModal(turn: RunnerTurn, summaryText: string) {
+    if (!currentThreadId || !normalizedBackendUrl || !hasApiKey) {
+      setInlineError("Reporting an issue requires a saved thread.");
+      return;
+    }
+    setRunSummaryMoreTurnId(null);
+    setReportIssueTurn({ turnId: turn.id, summaryText });
+    setReportIssueType("bug");
+    setReportIssueMessage("");
+    setReportIssueError("");
+    setIsReportIssueSubmitting(false);
+  }
+
+  function closeReportIssueModal() {
+    if (isReportIssueSubmitting) {
+      return;
+    }
+    setReportIssueTurn(null);
+    setReportIssueMessage("");
+    setReportIssueError("");
+  }
+
+  async function submitReportIssue() {
+    const normalizedThreadId = String(currentThreadId || "").trim();
+    const message = reportIssueMessage.trim();
+    if (!reportIssueTurn || !normalizedThreadId || !normalizedBackendUrl || !hasApiKey) {
+      setReportIssueError("Reporting an issue requires a saved thread.");
+      return;
+    }
+    if (!message) {
+      setReportIssueError("Describe the issue before sending.");
+      return;
+    }
+
+    setIsReportIssueSubmitting(true);
+    setReportIssueError("");
+    try {
+      await reportThreadFeedbackIssue({
+        backendUrl: normalizedBackendUrl,
+        apiKey: apiKey.trim(),
+        threadId: normalizedThreadId,
+        reportType: reportIssueType,
+        message,
+        requestHeaders,
+        metadata: {
+          turnId: reportIssueTurn.turnId,
+          summary: stripSystemTags(reportIssueTurn.summaryText).trim().slice(0, 4000),
+          url: typeof window !== "undefined" ? window.location.href : "",
+          userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+        },
+      });
+      setThreadFeedbackState((previous) => ({
+        ...previous,
+        reportCount: previous.reportCount + 1,
+      }));
+      setReportIssueTurn(null);
+      setReportIssueMessage("");
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      setReportIssueError(normalizedError.message || "Failed to report issue.");
+    } finally {
+      setIsReportIssueSubmitting(false);
+    }
+  }
+
+  function renderRunSummaryActionLine(turn: RunnerTurn, summaryText: string, options?: { isLatest?: boolean; canEditTurn?: boolean }) {
+    const isForkingThisTurn = forkingTurnId === turn.id;
+    const isMoreMenuOpen = runSummaryMoreTurnId === turn.id;
+    return (
+      <div className={`tb-run-summary-action-line ${options?.isLatest ? "is-latest" : ""}`.trim()} aria-label="Run summary actions">
+        <button
+          type="button"
+          className="tb-run-summary-action-button"
+          data-label="Copy"
+          title="Copy run summary"
+          aria-label="Copy run summary"
+          onClick={() => {
+            void copyRunSummaryText(summaryText);
+          }}
+        >
+          <LucideCopy className="tb-run-summary-action-icon" strokeWidth={2} />
+        </button>
+        <button
+          type="button"
+          className="tb-run-summary-action-button"
+          data-label="Fork"
+          title="Fork from message"
+          aria-label="Fork from message"
+          onClick={() => openForkDialogForTurn(turn)}
+        >
+          {isForkingThisTurn ? (
+            <LucideLoaderCircle className="tb-run-summary-action-icon tb-context-action-notice-icon-spinner" strokeWidth={2} />
+          ) : (
+            <LucideSplit className="tb-run-summary-action-icon" strokeWidth={2} />
+          )}
+        </button>
+        <button
+          type="button"
+          className={`tb-run-summary-action-button ${threadFeedback.userRating === "up" ? "is-active" : ""}`.trim()}
+          data-label="Good"
+          title="Mark as helpful"
+          aria-label="Mark as helpful"
+          aria-pressed={threadFeedback.userRating === "up"}
+          onClick={() => submitThreadFeedback("up")}
+        >
+          <LucideThumbsUp className="tb-run-summary-action-icon" strokeWidth={2} />
+        </button>
+        <button
+          type="button"
+          className={`tb-run-summary-action-button ${threadFeedback.userRating === "down" ? "is-active" : ""}`.trim()}
+          data-label="Bad"
+          title="Mark as not helpful"
+          aria-label="Mark as not helpful"
+          aria-pressed={threadFeedback.userRating === "down"}
+          onClick={() => submitThreadFeedback("down")}
+        >
+          <LucideThumbsDown className="tb-run-summary-action-icon" strokeWidth={2} />
+        </button>
+        <button
+          type="button"
+          className="tb-run-summary-action-button"
+          data-label="Rerun"
+          title="Rerun from message"
+          aria-label="Rerun from message"
+          onClick={() => rerunTurnFromSummary(turn)}
+        >
+          <LucideRefreshCw className="tb-run-summary-action-icon" strokeWidth={2} />
+        </button>
+        <span className="tb-run-summary-more-anchor" ref={isMoreMenuOpen ? runSummaryMoreMenuRef : undefined}>
+          <button
+            type="button"
+            className={`tb-run-summary-action-button ${isMoreMenuOpen ? "is-open" : ""}`.trim()}
+            data-label="More"
+            title="More"
+            aria-label="More"
+            aria-haspopup="menu"
+            aria-expanded={isMoreMenuOpen}
+            onClick={(event) => {
+              event.stopPropagation();
+              setRunSummaryMoreTurnId((current) => current === turn.id ? null : turn.id);
+            }}
+          >
+            <LucideEllipsis className="tb-run-summary-action-icon" strokeWidth={2} />
+          </button>
+          {isMoreMenuOpen ? (
+            <div className="tb-run-summary-more-menu" role="menu" onClick={(event) => event.stopPropagation()}>
+              <button
+                type="button"
+                className="tb-run-summary-more-menu-item"
+                role="menuitem"
+                onClick={() => openReportIssueModal(turn, summaryText)}
+              >
+                Report issue
+              </button>
+            </div>
+          ) : null}
+        </span>
+      </div>
+    );
   }
 
   function openForkDialogForCurrentThread(
@@ -10304,8 +11020,8 @@ export function RunnerChat({
     let pollTimer: number | null = null;
     const resolvedThreadId = String(currentThreadId || "").trim();
 
-    if (!resolvedThreadId || !hasApiKey || !normalizedBackendUrl) {
-      setDeepResearchSessions([]);
+    if (!resolvedThreadId || !hasApiKey || !normalizedBackendUrl || !shouldRefreshDeepResearchSessions) {
+      setDeepResearchSessions((currentSessions) => (currentSessions.length > 0 ? [] : currentSessions));
       return () => {
         cancelled = true;
       };
@@ -10317,7 +11033,7 @@ export function RunnerChat({
       } catch {
         // Keep existing session state on transient fetch failures.
       } finally {
-        if (!cancelled) {
+        if (!cancelled && shouldPollDeepResearchSessions) {
           pollTimer = window.setTimeout(poll, 3000);
         }
       }
@@ -10331,7 +11047,15 @@ export function RunnerChat({
         window.clearTimeout(pollTimer);
       }
     };
-  }, [apiKey, currentThreadId, hasApiKey, normalizedBackendUrl, requestHeaders]);
+  }, [
+    apiKey,
+    currentThreadId,
+    hasApiKey,
+    normalizedBackendUrl,
+    requestHeaders,
+    shouldPollDeepResearchSessions,
+    shouldRefreshDeepResearchSessions,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -10511,6 +11235,22 @@ export function RunnerChat({
   }, [showForkEnvironmentPopup]);
 
   useEffect(() => {
+    if (!runSummaryMoreTurnId) {
+      return;
+    }
+
+    const handlePointerDown = (event: Event) => {
+      const target = event.target as Node | null;
+      if (runSummaryMoreMenuRef.current && target && !runSummaryMoreMenuRef.current.contains(target)) {
+        setRunSummaryMoreTurnId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [runSummaryMoreTurnId]);
+
+  useEffect(() => {
     if (!agents.length) return;
     setSelectedAgentId((current) => {
       if (agentId && agents.some((agent) => agent.id === agentId)) {
@@ -10544,8 +11284,13 @@ export function RunnerChat({
 
   useEffect(() => {
     if (activeInputPopup !== "agent") {
+      hasInitializedOpenAgentPopupModeRef.current = false;
       return;
     }
+    if (hasInitializedOpenAgentPopupModeRef.current) {
+      return;
+    }
+    hasInitializedOpenAgentPopupModeRef.current = true;
     const nextSelectedAgent =
       agents.find((agent) => agent.id === selectedAgentId) ||
       (agentId ? agents.find((agent) => agent.id === agentId) : null) ||
@@ -13370,15 +14115,7 @@ export function RunnerChat({
   }
 
   function getSubagentInvocationId(log: RunnerLog): string | null {
-    const invocationId = getSubagentInvocationMetadata(log)?.invocationId;
-    if (invocationId) {
-      return invocationId;
-    }
-    const actor = log.metadata?.actor;
-    if (actor?.kind === "subagent" && typeof actor.invocationId === "string" && actor.invocationId.trim()) {
-      return actor.invocationId.trim();
-    }
-    return null;
+    return getRunnerLogSubagentInvocationIdentity(log) || null;
   }
 
   function isSubagentInvocationLog(log: RunnerLog): boolean {
@@ -13396,6 +14133,14 @@ export function RunnerChat({
       .replace(/\n{3,}/g, "\n\n")
       .trim();
     return cleaned;
+  }
+
+  function normalizeSubagentSummaryText(message: string | null | undefined): string {
+    return stripSystemTags(String(message || ""))
+      .normalize("NFKC")
+      .replace(/[’‘]/g, "'")
+      .replace(/[*_`#>\-\s]+/g, "")
+      .toLowerCase();
   }
 
   function buildSubagentTimelineGroups(logs: RunnerLog[]) {
@@ -13723,6 +14468,32 @@ export function RunnerChat({
       completionLog?.metadata?.status === "failed" ||
       completionLog?.type === "error" ||
       completionLog?.metadata?.exitCode === 1;
+    const completionOutputFingerprint = normalizeSubagentSummaryText(completionOutput);
+    const hasCompletionOutputLog = Boolean(
+      completionOutputFingerprint &&
+      item.logs.some((log) => normalizeSubagentSummaryText(log.message) === completionOutputFingerprint)
+    );
+    const nestedLogs =
+      completionOutput.trim() && !hasCompletionOutputLog
+        ? [
+            ...item.logs,
+            {
+              createdAt: completionLog?.createdAt || item.invocationLog.createdAt,
+              time: completionLog?.time || latestNestedLog.time || item.invocationLog.time,
+              message: completionOutput,
+              type: completionFailed ? "error" : "success",
+              eventType: "reasoning",
+              isReasoning: true,
+              metadata: {
+                ...(completionLog?.metadata || {}),
+                actor: completionLog?.metadata?.delegatedTo || completionLog?.metadata?.actor,
+                parentToolUseId: invocationId,
+                source: "subagent_run_summary",
+                isReasoning: true,
+              },
+            } as RunnerLog,
+          ]
+        : item.logs;
     const previewMessage = completionOutput.trim()
       || (isSubagentRunning ? `${subagentTitle} is working` : completionFailed ? `${subagentTitle} failed` : `${subagentTitle} finished`);
     const nestedDurationLabel =
@@ -13744,7 +14515,7 @@ export function RunnerChat({
       responseFailed: completionFailed,
       previewMessage,
       workLabel: nestedWorkLabel,
-      nestedItems: buildTimelineItems(item.logs),
+      nestedItems: buildTimelineItems(nestedLogs),
     };
   }
 
@@ -14893,6 +15664,9 @@ export function RunnerChat({
     if (availableAgentPopupModes.includes(agentPopupMode)) {
       return;
     }
+    if (activeInputPopup === "agent") {
+      return;
+    }
     const nextMode = getRunnerAgentSelectorMode(
       orderedAgents.find((agent) => agent.id === selectedAgentId) || orderedAgents[0] || null
     );
@@ -14901,7 +15675,7 @@ export function RunnerChat({
       ? nextMode
       : fallbackMode;
     setAgentPopupMode(resolvedMode);
-  }, [agentPopupMode, availableAgentPopupModes, orderedAgents, selectedAgentId]);
+  }, [activeInputPopup, agentPopupMode, availableAgentPopupModes, orderedAgents, selectedAgentId]);
   const sourceThreadEnvironmentId = hasCurrentThread
     ? scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
     : null;
@@ -16367,6 +17141,7 @@ export function RunnerChat({
               const isTurnRunning = isRunningTurnStatus(turn.status);
               const isTurnPermissionAsked = turn.status === "permission_asked";
               const isQueuedTurn = turn.status === "queued";
+              const isLatestTurn = turnIndex === turns.length - 1;
               const turnSeconds = getTurnDurationSeconds(turn);
               const { agentMessage, displayedTimelineItems: rawDisplayedTimelineItems } = getTurnTimelineState(turn);
               const normalizedPrompt = turn.prompt.trim();
@@ -16462,6 +17237,17 @@ export function RunnerChat({
               const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || revealedTimelineItems.length > 0 || isWorkLogsLoading;
               const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
               const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
+              const visibleFollowUpActions = Array.isArray(followUpActions)
+                ? followUpActions.filter((action) => action && action.id && action.label)
+                : [];
+              const shouldRenderFollowUpEngine = Boolean(
+                agentMessage?.message &&
+                visibleFollowUpActions.length > 0 &&
+                isLatestTurn &&
+                !isTurnRunning &&
+                !isTurnPermissionAsked &&
+                !isQueuedTurn
+              );
 
               if (actionSummaryLog) {
                 const actionType = actionSummaryLog.metadata?.actionType;
@@ -16677,7 +17463,7 @@ export function RunnerChat({
                     {agentMessage?.message ? (
                       <div
                         ref={(node) => setThreadHistoryAnchorElement(assistantThreadHistoryItemId, node)}
-                        className="tb-turn-summary tb-thread-history-anchor"
+                        className={`tb-turn-summary tb-thread-history-anchor ${isLatestTurn ? "is-latest-summary" : ""}`.trim()}
                         style={responseStyle}
                       >
                         {summaryPreviewItems.length > 0 ? (
@@ -16698,6 +17484,31 @@ export function RunnerChat({
                             onWorkspacePathClick={canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
                           />
                         </div>
+                        {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn })}
+                        {shouldRenderFollowUpEngine ? (
+                          <div className="tb-follow-up-engine" role="group" aria-label="Follow-up actions">
+                            <div className="tb-follow-up-engine-stack">
+                              <div className="tb-follow-up-engine-actions">
+                                {visibleFollowUpActions.map((action) => (
+                                  <button
+                                    key={action.id}
+                                    type="button"
+                                    className="tb-follow-up-engine-action"
+                                    onClick={() => handleFollowUpActionClick(action)}
+                                    disabled={Boolean(action.disabled || action.pending)}
+                                  >
+                                    <LucideCornerDownRight className="tb-follow-up-engine-action-icon" strokeWidth={1.75} />
+                                    {action.pending ? (
+                                      <LucideLoaderCircle className="tb-follow-up-engine-action-spinner tb-context-action-notice-icon-spinner" strokeWidth={1.6} />
+                                    ) : null}
+                                    <span>{action.label}</span>
+                                  </button>
+                                ))}
+                              </div>
+                              {followUpError ? <div className="tb-follow-up-engine-error">{followUpError}</div> : null}
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>
@@ -16866,7 +17677,7 @@ export function RunnerChat({
                   {agentMessage?.message ? (
                     <div
                       ref={(node) => setThreadHistoryAnchorElement(assistantThreadHistoryItemId, node)}
-                      className="tb-turn-summary tb-thread-history-anchor"
+                      className={`tb-turn-summary tb-thread-history-anchor ${isLatestTurn ? "is-latest-summary" : ""}`.trim()}
                       style={responseStyle}
                     >
                       {summaryPreviewItems.length > 0 ? (
@@ -16887,6 +17698,31 @@ export function RunnerChat({
                           onWorkspacePathClick={canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
                         />
                       </div>
+                      {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn })}
+                      {shouldRenderFollowUpEngine ? (
+                        <div className="tb-follow-up-engine" role="group" aria-label="Follow-up actions">
+                          <div className="tb-follow-up-engine-stack">
+                            <div className="tb-follow-up-engine-actions">
+                              {visibleFollowUpActions.map((action) => (
+                                <button
+                                  key={action.id}
+                                  type="button"
+                                  className="tb-follow-up-engine-action"
+                                  onClick={() => handleFollowUpActionClick(action)}
+                                  disabled={Boolean(action.disabled || action.pending)}
+                                >
+                                  <LucideCornerDownRight className="tb-follow-up-engine-action-icon" strokeWidth={1.75} />
+                                  {action.pending ? (
+                                    <LucideLoaderCircle className="tb-follow-up-engine-action-spinner tb-context-action-notice-icon-spinner" strokeWidth={1.6} />
+                                  ) : null}
+                                  <span>{action.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                            {followUpError ? <div className="tb-follow-up-engine-error">{followUpError}</div> : null}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -17770,6 +18606,79 @@ export function RunnerChat({
       </div>
 
       {shouldRenderInlineComposerWithEmptyState ? emptyStateAfterComposer : null}
+
+      {reportIssueTurn ? (
+        <div className="tb-popup-modal-scrim" onClick={closeReportIssueModal}>
+          <div className="tb-popup-modal tb-report-issue-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="tb-popup-modal-header tb-report-issue-modal-header">
+              <div className="tb-popup-note-title">Report an issue</div>
+              <button
+                type="button"
+                className="tb-report-issue-close-button"
+                aria-label="Close report issue dialog"
+                onClick={closeReportIssueModal}
+                disabled={isReportIssueSubmitting}
+              >
+                <LucideX className="tb-report-issue-close-icon" strokeWidth={2} />
+              </button>
+            </div>
+            <div className="tb-report-issue-modal-body">
+              <label className="tb-report-issue-field">
+                <span className="tb-report-issue-label">Feedback type</span>
+                <select
+                  className="tb-report-issue-select"
+                  value={reportIssueType}
+                  onChange={(event) => {
+                    setReportIssueType(event.target.value as RunnerThreadFeedbackReportType);
+                    setReportIssueError("");
+                  }}
+                  disabled={isReportIssueSubmitting}
+                >
+                  {RUNNER_THREAD_FEEDBACK_REPORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="tb-report-issue-field">
+                <span className="tb-report-issue-label">Your feedback</span>
+                <textarea
+                  className="tb-report-issue-textarea"
+                  value={reportIssueMessage}
+                  placeholder="Please describe the issue or feedback."
+                  maxLength={5000}
+                  onChange={(event) => {
+                    setReportIssueMessage(event.target.value);
+                    setReportIssueError("");
+                  }}
+                  disabled={isReportIssueSubmitting}
+                />
+              </label>
+
+              {reportIssueError ? <div className="runner-inline-error tb-report-issue-error">{reportIssueError}</div> : null}
+
+              <div className="tb-edit-confirmation-actions tb-report-issue-actions">
+                <button
+                  type="button"
+                  className="tb-popup-action tb-popup-action-secondary"
+                  onClick={closeReportIssueModal}
+                  disabled={isReportIssueSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={`tb-popup-action tb-popup-action-primary ${isReportIssueSubmitting ? "loading" : ""}`.trim()}
+                  onClick={() => void submitReportIssue()}
+                  disabled={isReportIssueSubmitting || !reportIssueMessage.trim()}
+                >
+                  {isReportIssueSubmitting ? "Sending..." : "Send"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {pendingForkConfiguration ? (
         <div

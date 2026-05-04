@@ -80,7 +80,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-top: 12px;
+        margin-top: 36px;
         min-height: 40px;
       }
 
@@ -97,10 +97,21 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         min-width: 0;
         flex: 1 1 auto;
         max-width: 860px;
+        margin-top: 10px;
         font-size: 12px;
         line-height: 1.7;
         font-weight: 400;
         color: rgba(255, 255, 255, 0.68);
+        background: transparent;
+      }
+
+      .playground-project-overview-summary-description .tb-message-markdown {
+        margin: 0;
+        color: inherit;
+        font-size: inherit;
+        line-height: inherit;
+        font-weight: inherit;
+        background: transparent;
       }
 
       .playground-project-overview-summary-description p {
@@ -115,68 +126,20 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.88);
       }
 
-      .playground-project-overview-summary-description-section.playground-tasks-detail-description {
-        padding: 0;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-      }
-
-      .playground-project-overview-summary-description-section.playground-tasks-detail-description::before {
-        content: none;
-        display: none;
-      }
-
-      .playground-project-overview-summary-description-section .playground-tasks-detail-section-header {
-        padding: 0 0 12px;
-        margin-top: 12px;
-        margin-bottom: 12px;
-        border-bottom: 0;
-      }
-
-      .playground-project-overview-summary-description-section .playground-tasks-detail-description-editor.is-preview {
-        min-height: 0;
-      }
-
-      .playground-project-overview-summary-description-section .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-preview-scope.tb-runner-chat {
-        position: relative;
-        inset: auto;
-        height: auto;
-        min-height: 36px;
-      }
-
-      .playground-project-overview-summary-description-section .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-input.is-preview {
-        position: absolute;
-        inset: 0;
-        height: 100% !important;
-        min-height: 100%;
-        padding-bottom: 0;
-      }
-
-      .playground-project-overview-summary-description-section .playground-tasks-detail-description-preview.tb-message-markdown {
-        margin-bottom: 0;
-      }
-
-      .playground-project-overview-summary-divider {
-        width: 100%;
-        height: 1px;
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-project-overview-summary-body {
-        width: 100%;
-        display: block;
-        align-items: start;
-      }
-
       .playground-project-overview-summary-kpis {
-        width: 100%;
+        width: calc(100% + 40px);
+        margin-left: -20px;
+        padding: 20px;
+        margin-top: -20px;
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 12px;
+      }
+
+      .playground-project-overview-chart-kpis {
+        margin-bottom: 12px;
       }
 
       .playground-project-overview-summary-kpi {
@@ -250,15 +213,15 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-summary-strategy-button {
-        background: #fff;
-        border-color: #fff;
-        color: #000;
+        background: transparent;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
       }
 
       .playground-project-overview-summary-strategy-button:hover {
-        background: rgba(255, 255, 255, 0.92);
-        border-color: rgba(255, 255, 255, 0.92);
-        color: #000;
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.16);
+        color: rgba(255, 255, 255, 0.9);
       }
 
       .playground-project-overview-summary-mission-label {
@@ -443,7 +406,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-chart-surface {
         width: 100%;
-        margin: 24px 0;
+        margin: 0 0 24px;
         padding: 0;
         border-radius: 0;
         background: transparent;
@@ -454,11 +417,12 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-chart-card {
         box-sizing: border-box;
         min-width: 0;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
         gap: 12px;
         padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 15px;
         background: rgba(255, 255, 255, 0.05);
         -webkit-backdrop-filter: blur(50px);
@@ -470,16 +434,18 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-integration-facts {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 24px;
+        margin-top: 12px;
+        padding: 12px 0 0;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-project-overview-integration-row {
         grid-template-columns: minmax(0, 1fr) minmax(0, auto);
         width: 100%;
+        min-width: 0;
         padding: 0;
         border: 0;
         background: transparent;
@@ -487,6 +453,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         font: inherit;
         text-align: left;
         cursor: pointer;
+      }
+
+      .playground-project-overview-integration-row .playground-tasks-connector-service-label {
+        color: #ffffff;
       }
 
       .playground-project-overview-integration-icon {
@@ -1356,10 +1326,6 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       @media (max-width: 1100px) {
-        .playground-project-overview-summary-body {
-          grid-template-columns: minmax(0, 1fr);
-        }
-
         .playground-project-overview-summary-kpis {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -2394,32 +2360,27 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             {
               id: "tasks",
               value: String(Number(selectedProjectSummary.tasksCount) || Number(selectedProjectTaskStatusOverview.total) || 0),
-              label: "Tasks",
-              Icon: ListTodo,
+              label: "All Tasks",
             },
             {
               id: "open",
               value: String(Number(selectedProjectSummary.openTasksCount) || 0),
               label: "Open Tasks",
-              Icon: Clock,
             },
             {
               id: "ct",
               value: formatProjectOverviewCt(projectTotalCt) + " CT",
               label: "Spent on Project",
-              Icon: Coins,
             },
             {
               id: "resources",
               value: String(allOverviewResourceItems.length),
-              label: "Resources",
-              Icon: Server,
+              label: "Project Resources",
             },
             {
               id: "files",
               value: String(allOverviewProjectFileCount),
-              label: "Files",
-              Icon: File,
+              label: "Project Files",
             },
           ];
 
@@ -2575,7 +2536,8 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
             return React.createElement("div", {
                 key: taskId || ticketNumber,
-                className: "playground-tasks-backlog-item",
+                className: "playground-tasks-backlog-item"
+                  + (typeof isTaskPreviewStatusMenuOpen === "function" && isTaskPreviewStatusMenuOpen(taskId) ? " is-status-menu-open" : ""),
                 role: "button",
                 tabIndex: 0,
                 style: typeof getPlaygroundTaskColorStyle === "function" ? getPlaygroundTaskColorStyle(task?.taskColor) : undefined,
@@ -2606,6 +2568,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-backlog-meta" },
+                  typeof renderTaskPreviewStatusControl === "function"
+                    ? renderTaskPreviewStatusControl(task)
+                    : null,
                   React.createElement("div", { className: "playground-tasks-backlog-assignee-shell" },
                     typeof renderTaskAssigneeAvatar === "function"
                       ? renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar")
@@ -2963,114 +2928,30 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                         )
                       )
                     ),
-                    React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-project-overview-summary-description-section" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                          [
-                            { id: "bold", label: "Bold", icon: Bold },
-                            { id: "italic", label: "Italic", icon: Italic },
-                            { id: "underline", label: "Underline", icon: Underline },
-                            { id: "list", label: "List", icon: List },
-                          ].map((action) =>
-                            React.createElement("button", {
-                              key: action.id,
-                              type: "button",
-                              className: "playground-tasks-detail-format-button",
-                              title: action.label,
-                              "aria-label": action.label,
-                              disabled: projectSaveState.isSaving,
-                              onMouseDown: (event) => event.preventDefault(),
-                              onClick: () => handleProjectDescriptionFormat(action.id),
-                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                          )
+                    String(projectOverviewDescription || "").trim()
+                      ? React.createElement("div", { className: "playground-project-overview-summary-description" },
+                          React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: projectOverviewDescription,
+                            className: "playground-project-overview-summary-description-markdown tb-message-markdown",
+                          })
                         )
-                      ),
-                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isProjectDescriptionEditing ? " is-editing" : " is-preview") },
-                        !isProjectDescriptionEditing
-                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                              String(projectOverviewDescription || "").trim()
-                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                    content: projectOverviewDescription,
-                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                  })
-                                : React.createElement("div", {
-                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                  }, "Add Description here")
-                            )
-                          : null,
-                        React.createElement("textarea", {
-                          ref: projectDescriptionTextareaRef,
-                          className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
-                          rows: 1,
-                          placeholder: isProjectDescriptionEditing ? "Add Description here" : "",
-                          value: projectOverviewDescription,
-                          onFocus: (event) => {
-                            const textarea = event.currentTarget;
-                            setProjectDraft((current) => current?.id === normalizedSelectedProjectId
-                              ? current
-                              : normalizePlaygroundProjectRecord(selectedProject)
-                            );
-                            setIsProjectDescriptionEditing(true);
-                            window.requestAnimationFrame(() => resizeTaskDescriptionTextarea(textarea));
-                          },
-                          onChange: (event) => {
-                            const nextDescription = event.target.value;
-                            setProjectDraft((current) => {
-                              const baseProject = current?.id === normalizedSelectedProjectId
-                                ? current
-                                : normalizePlaygroundProjectRecord(selectedProject);
-                              return {
-                                ...baseProject,
-                                description: nextDescription,
-                              };
-                            });
-                            resizeTaskDescriptionTextarea(event.currentTarget);
-                          },
-                          onBlur: (event) => {
-                            const nextDescription = String(event.currentTarget.value || "");
-                            setProjectDraft((current) => {
-                              const baseProject = current?.id === normalizedSelectedProjectId
-                                ? current
-                                : normalizePlaygroundProjectRecord(selectedProject);
-                              return {
-                                ...baseProject,
-                                description: nextDescription,
-                              };
-                            });
-                            setIsProjectDescriptionEditing(false);
-                            if (typeof saveProjectOverviewDescription === "function") {
-                              void saveProjectOverviewDescription(nextDescription);
-                            }
-                          },
-                        })
-                      ),
-                      projectSaveState.error
-                        ? React.createElement("div", { className: "playground-environments-error" }, projectSaveState.error)
-                        : null
-                    )
+                      : null
                   )
-                ),
-                React.createElement("div", { className: "playground-project-overview-summary-divider" }),
-                React.createElement("div", { className: "playground-project-overview-summary-body" },
-                  React.createElement("div", { className: "playground-project-overview-summary-kpis" },
-                    projectOverviewKpis.map((item) =>
-                      React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                        React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                          item.Icon
-                            ? React.createElement(item.Icon, { className: "playground-project-overview-summary-kpi-icon", strokeWidth: 1.85 })
-                            : null,
-                          React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                        ),
-                        React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                      )
-                    )
-                  )
-                ),
+                )
               ),
               React.createElement("div", { className: "playground-project-overview-chart-surface" },
                 React.createElement("div", { className: "playground-project-overview-chart-grid" },
                   React.createElement("section", { className: "playground-settings-usage-chart-card playground-project-overview-chart-card" },
+                    React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
+                      projectOverviewKpis.map((item) =>
+                        React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                          React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                            React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                        )
+                      )
+                    ),
                     React.createElement("div", { className: "playground-project-overview-chart-header" },
                       React.createElement("div", { className: "playground-project-overview-chart-header-main" },
                         React.createElement("div", { className: "playground-project-overview-chart-tabs" },

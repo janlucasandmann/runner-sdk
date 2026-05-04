@@ -5,12 +5,17 @@ type TimeProvider = () => number;
 type CompletedEvent = {
   type: "response.completed";
   response?: {
+    id?: string;
+    model?: string;
+    provider?: string;
     usage?: {
       input_tokens?: number;
       output_tokens?: number;
       cached_tokens?: number;
+      total_tokens?: number;
     };
     cost_usd?: number;
+    cost_ct?: number;
   };
 };
 
@@ -150,6 +155,11 @@ export class RunnerEventNormalizer {
   private readonly startTimeMs: number;
   private readonly now: TimeProvider;
   private isContainerExecution = false;
+  private responseRunMetadata: {
+    runId?: string;
+    model?: string;
+    provider?: string;
+  } = {};
 
   constructor(now: TimeProvider = () => Date.now()) {
     this.now = now;
@@ -184,6 +194,12 @@ export class RunnerEventNormalizer {
     }
 
     if (type === "response.started") {
+      const response = this.asObject(event.response);
+      this.responseRunMetadata = {
+        runId: this.optionalString(response?.id),
+        model: this.optionalString(response?.model),
+        provider: this.optionalString(response?.provider),
+      };
       const logs: RunnerLog[] = [];
       if (this.isContainerExecution) {
         logs.push({
@@ -191,6 +207,7 @@ export class RunnerEventNormalizer {
           message: "Starting agent on computer",
           type: "info",
           eventType: "startup",
+          metadata: this.mergeMetadata(null, this.responseRunMetadata),
         });
       }
       return { logs, setupComplete: true };
@@ -768,13 +785,21 @@ export class RunnerEventNormalizer {
   private handleResponseCompleted(event: CompletedEvent): RunnerEventHandleResult {
     const usage = event.response?.usage;
     if (!usage) return { logs: [] };
+    const costCt = this.optionalNumber(event.response?.cost_ct);
+    const runMetadata = {
+      ...this.responseRunMetadata,
+      runId: this.optionalString(event.response?.id) || this.responseRunMetadata.runId,
+      model: this.optionalString(event.response?.model) || this.responseRunMetadata.model,
+      provider: this.optionalString(event.response?.provider) || this.responseRunMetadata.provider,
+    };
 
     const normalizedUsage: RunnerUsage = {
       inputTokens: usage.input_tokens ?? 0,
       outputTokens: usage.output_tokens ?? 0,
       cachedInputTokens: usage.cached_tokens ?? 0,
-      totalTokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+      totalTokens: usage.total_tokens ?? ((usage.input_tokens ?? 0) + (usage.output_tokens ?? 0)),
       costUsd: event.response?.cost_usd,
+      costCt,
     };
 
     return {
@@ -791,6 +816,10 @@ export class RunnerEventNormalizer {
             cachedInputTokens: normalizedUsage.cachedInputTokens,
             totalTokens: normalizedUsage.totalTokens,
             costUsd: normalizedUsage.costUsd,
+            costCt,
+            costCT: costCt,
+            computeTokens: costCt,
+            ...runMetadata,
           },
         },
       ],

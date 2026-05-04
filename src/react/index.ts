@@ -18,6 +18,7 @@ export type {
   RunnerChatComputerAgentsConfig,
   RunnerChatDriveConfig,
   RunnerChatFileNode,
+  RunnerChatFollowUpAction,
   RunnerChatGithubConfig,
   RunnerChatInputMode,
   RunnerChatNotionConfig,
