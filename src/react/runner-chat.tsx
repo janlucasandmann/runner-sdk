@@ -386,9 +386,12 @@ interface RunnerSelectedDeepResearchDetail {
   turnId: string;
 }
 
+type RunnerVisualDetailKind = "browser" | "computer_use";
+
 interface RunnerSelectedComputerUseDetail {
   turnId: string;
   groupId: string;
+  kind?: RunnerVisualDetailKind;
 }
 
 interface RunnerSelectedDeepResearchDetailPresentation {
@@ -606,6 +609,47 @@ function sanitizeRunnerBudgetMessage(value: string): string {
       /Insufficient balance:\s*\$-?\d+(?:\.\d+)?\.?\s*Please add funds\.?/gi,
       "Insufficient balance. Please add Compute Tokens or upgrade your plan to continue."
     );
+}
+
+function isComputeTokenBudgetErrorMessage(value: unknown): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+  const normalized = sanitizeRunnerBudgetMessage(value).replace(/\s+/g, " ").trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  return (
+    normalized.includes("compute tokens") && (
+      normalized.includes("insufficient") ||
+      normalized.includes("balance") ||
+      normalized.includes("upgrade") ||
+      normalized.includes("quota")
+    )
+  ) || (
+    normalized.includes("insufficient") && (
+      normalized.includes("budget") ||
+      normalized.includes("balance")
+    )
+  );
+}
+
+function isComputeTokenBudgetErrorLog(log: RunnerLog | null | undefined): boolean {
+  if (!log) {
+    return false;
+  }
+  const errorRecord = normalizeRecordObject(log.metadata?.error);
+  const errorCode = typeof errorRecord?.code === "string" ? errorRecord.code.trim().toLowerCase() : "";
+  if (errorCode === "compute_tokens_exhausted" || errorCode === "insufficient_compute_tokens") {
+    return true;
+  }
+  const metadataRecord = normalizeRecordObject(log.metadata);
+  const candidates = [
+    log.message,
+    typeof errorRecord?.message === "string" ? errorRecord.message : "",
+    typeof metadataRecord?.message === "string" ? metadataRecord.message : "",
+  ];
+  return candidates.some((candidate) => isComputeTokenBudgetErrorMessage(candidate));
 }
 
 function normalizeRunnerConversationMessageContent(value: unknown): string {
@@ -1531,6 +1575,7 @@ export interface RunnerChatProps {
   skillCreationCommandHiddenPrompt?: (commandType: RunnerSkillCreationCommandType) => string;
   onSkillCreationCommandChange?: (commandType: RunnerSkillCreationCommandType | null) => void;
   onOpenPluginsOverview?: () => void;
+  onOpenPlansBudget?: () => void;
   onBacklogMissionControlSubmit?: (payload: {
     prompt: string;
     attachments: RunnerAttachment[];
@@ -6183,6 +6228,42 @@ function turnHasVisibleExecutionProgress(turn: RunnerTurn): boolean {
   return getTurnAssistantMessageText(turn).trim().length > 0;
 }
 
+function stringifyRunnerLogField(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (value == null) {
+    return "";
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return "";
+  }
+}
+
+function runnerLogHasVisualBrowserScreenshot(log: RunnerLog): boolean {
+  if (log.eventType === "command_execution") {
+    const command = String(log.metadata?.command || log.message || "");
+    if (!isBrowserSkillCommand(command)) {
+      return false;
+    }
+    const output = `${String(log.metadata?.output || "")}\n${String(log.message || "")}`;
+    return /BROWSER_SKILL_RESULT::/.test(output) && /screenshotPaths?|browser-skill\/[^\s"'<>]+\.(?:png|jpe?g|webp)/i.test(output);
+  }
+
+  if (isComputerUseMcpLog(log)) {
+    const resultText = stringifyRunnerLogField(log.metadata?.result || log.message);
+    return /COMPUTER_USE_RESULT::/.test(resultText) && /screenshotPaths?|tmp\/computer-use\/[^\s"'<>]+\.(?:png|jpe?g|webp)/i.test(resultText);
+  }
+
+  return false;
+}
+
+function countTurnVisualBrowserScreenshotLogs(turn: RunnerTurn): number {
+  return turn.logs.reduce((count, log) => count + (runnerLogHasVisualBrowserScreenshot(log) ? 1 : 0), 0);
+}
+
 function shouldPreserveLocalTurnProgress(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): boolean {
   const localAssistantText = getTurnAssistantMessageText(localTurn);
   const hydratedAssistantText = getTurnAssistantMessageText(hydratedTurn);
@@ -6191,6 +6272,10 @@ function shouldPreserveLocalTurnProgress(localTurn: RunnerTurn, hydratedTurn: Ru
     !isFallbackAssistantResponseText(localAssistantText) &&
     isFallbackAssistantResponseText(hydratedAssistantText)
   ) {
+    return true;
+  }
+
+  if (countTurnVisualBrowserScreenshotLogs(localTurn) > countTurnVisualBrowserScreenshotLogs(hydratedTurn)) {
     return true;
   }
 
@@ -7620,6 +7705,7 @@ export function RunnerChat({
   skillCreationCommandHiddenPrompt,
   onSkillCreationCommandChange,
   onOpenPluginsOverview,
+  onOpenPlansBudget,
   onBacklogMissionControlSubmit,
   followUpActions = [],
   followUpError = "",
@@ -8746,7 +8832,17 @@ export function RunnerChat({
     closeSubagentDetailDrawer();
     closeDeepResearchDetailDrawer();
     closeDocumentAttachmentPreview();
-    setSelectedComputerUseDetail({ turnId, groupId });
+    setSelectedComputerUseDetail({ turnId, groupId, kind: "computer_use" });
+  }
+
+  function openBrowserDetailDrawer(turnId: string, groupId: string) {
+    if (!turnId || !groupId) {
+      return;
+    }
+    closeSubagentDetailDrawer();
+    closeDeepResearchDetailDrawer();
+    closeDocumentAttachmentPreview();
+    setSelectedComputerUseDetail({ turnId, groupId, kind: "browser" });
   }
 
   async function openEnvironmentDesktopWindow(targetEnvironmentId?: string | null, targetEnvironmentName?: string | null) {
@@ -9613,6 +9709,67 @@ export function RunnerChat({
     } finally {
       setIsReportIssueSubmitting(false);
     }
+  }
+
+  function openPlansBudgetFromComputeTokenLog() {
+    if (typeof onOpenPlansBudget === "function") {
+      try {
+        onOpenPlansBudget();
+      } catch (error) {
+        reportRunnerLifecycleCallbackError("onOpenPlansBudget", error);
+      }
+      return;
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("runner:open-plans-budget", {
+        detail: { section: "costs-plans" },
+      }));
+    }
+  }
+
+  function renderComputeTokenUpgradeLogBox(message: string) {
+    const normalizedMessage = sanitizeRunnerBudgetMessage(stripSystemTags(message)).trim()
+      || "Add Compute Tokens or upgrade your plan to continue.";
+    return (
+      <div className="tb-compute-token-log-box" role="status">
+        <div className="tb-compute-token-log-copy">
+          <div className="tb-compute-token-log-heading">
+            <LucideZap className="tb-compute-token-log-icon" strokeWidth={1.8} />
+            <span>No Compute Tokens left</span>
+          </div>
+          <div className="tb-compute-token-log-message">{normalizedMessage}</div>
+        </div>
+        <button
+          type="button"
+          className="tb-compute-token-log-button"
+          onClick={openPlansBudgetFromComputeTokenLog}
+        >
+          Open Plans &amp; Budget
+        </button>
+      </div>
+    );
+  }
+
+  function renderAgentSummaryContent(
+    turn: RunnerTurn,
+    agentMessage: RunnerLog,
+    options: {
+      className: string;
+      softBreaks?: boolean;
+      canPreviewSummaryWorkspacePaths?: boolean;
+    }
+  ) {
+    if (isComputeTokenBudgetErrorLog(agentMessage)) {
+      return renderComputeTokenUpgradeLogBox(agentMessage.message);
+    }
+    return (
+      <RunnerMarkdown
+        content={stripSystemTags(agentMessage.message)}
+        className={options.className}
+        softBreaks={options.softBreaks}
+        onWorkspacePathClick={options.canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
+      />
+    );
   }
 
   function renderRunSummaryActionLine(turn: RunnerTurn, summaryText: string, options?: { isLatest?: boolean; canEditTurn?: boolean }) {
@@ -10483,11 +10640,37 @@ export function RunnerChat({
         error instanceof Error ? error : new Error(String(error)),
         threadId
       );
+      const isAbort = normalizedError.name === "AbortError";
+      const errorMessage = sanitizeRunnerBudgetMessage(normalizedError.message || "Execution failed.");
+      const isComputeTokenError = isComputeTokenBudgetErrorMessage(errorMessage);
       updateTurn(turnId, (turn) => ({
         ...turn,
-        status: normalizedError.name === "AbortError" ? "cancelled" : "failed",
+        status: isAbort ? "cancelled" : "failed",
         completedAtMs: Date.now(),
         durationSeconds: getTurnDurationSeconds(turn),
+        logs: isAbort
+          ? turn.logs
+          : [
+              ...turn.logs,
+              {
+                time: new Date().toISOString(),
+                message: errorMessage,
+                type: "error",
+                eventType: "agent_message",
+                metadata: {
+                  status: "failed",
+                  error: {
+                    source: "runner_stream",
+                    ...(isComputeTokenError
+                      ? {
+                          code: "compute_tokens_exhausted",
+                          action: "open_plans_budget",
+                        }
+                      : {}),
+                  },
+                },
+              },
+            ],
       }));
       throw normalizedError;
     } finally {
@@ -14073,6 +14256,7 @@ export function RunnerChat({
     nestedItems: RunnerTimelineItem[];
   };
   type RunnerComputerUsePresentation = {
+    kind: RunnerVisualDetailKind;
     groupId: string;
     title: string;
     environmentName: string;
@@ -14529,6 +14713,7 @@ export function RunnerChat({
       item.endLog.metadata?.status !== "completed";
 
     return {
+      kind: "computer_use",
       groupId: item.id,
       title: computerUseTitle,
       environmentName: computerUseEnvironmentLabel,
@@ -14536,6 +14721,31 @@ export function RunnerChat({
       timeLabel: toDurationLabel(item.endLog || item.startLog, turn.startedAtMs),
       workLabel: `${interactionCount} ${interactionCount === 1 ? "interaction" : "interactions"}`,
       nestedItems: buildTimelineItems(item.sessionLogs, { groupComputerUse: false }),
+    };
+  }
+
+  function getBrowserTimelineGroupId(logs: RunnerLog[]): string {
+    return logs.length > 0 ? "browser" : "browser-empty";
+  }
+
+  function buildBrowserGroupPresentation(turn: RunnerTurn, logs: RunnerLog[]): RunnerComputerUsePresentation {
+    const browserEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
+    const latestLog = logs[logs.length - 1] || null;
+    const interactionCount = logs.length;
+    const isBrowserRunning =
+      isRunningTurnStatus(turn.status) &&
+      latestLog?.metadata?.status !== "failed" &&
+      latestLog?.metadata?.status !== "completed";
+
+    return {
+      kind: "browser",
+      groupId: getBrowserTimelineGroupId(logs),
+      title: "Browser",
+      environmentName: browserEnvironmentLabel,
+      running: isBrowserRunning,
+      timeLabel: latestLog ? toDurationLabel(latestLog, turn.startedAtMs) : undefined,
+      workLabel: `${interactionCount} ${interactionCount === 1 ? "interaction" : "interactions"}`,
+      nestedItems: logs.map((log) => ({ kind: "log" as const, log })),
     };
   }
 
@@ -14788,10 +14998,10 @@ export function RunnerChat({
     return <IconTerminal className="tb-step-row-icon" />;
   }
 
-  function renderNestedTimelineItems(turn: RunnerTurn, items: RunnerTimelineItem[]) {
+  function renderNestedTimelineItems(turn: RunnerTurn, items: RunnerTimelineItem[], options?: { renderBrowserSkillAsGeneric?: boolean }) {
     return items.map((nestedItem, nestedIndex) => (
       <div key={timelineItemKey(turn.id, nestedIndex, nestedItem)} className="agent-step-item">
-        <div className="agent-step-content">{renderTimelineItem(turn, nestedItem, nestedIndex, { renderComputerUseMcpAsGeneric: true })}</div>
+        <div className="agent-step-content">{renderTimelineItem(turn, nestedItem, nestedIndex, { renderComputerUseMcpAsGeneric: true, renderBrowserSkillAsGeneric: options?.renderBrowserSkillAsGeneric })}</div>
       </div>
     ));
   }
@@ -14848,12 +15058,13 @@ export function RunnerChat({
     }
   }
 
-  function renderTimelineItem(turn: RunnerTurn, item: RunnerTimelineItem, index: number, options?: { renderComputerUseMcpAsGeneric?: boolean }) {
+  function renderTimelineItem(turn: RunnerTurn, item: RunnerTimelineItem, index: number, options?: { renderComputerUseMcpAsGeneric?: boolean; renderBrowserSkillAsGeneric?: boolean }) {
     const runnerEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
     const runnerHeaders = buildRunnerHeaders(requestHeaders, apiKey.trim());
 
     if (item.kind === "browser_group") {
       const latestLog = item.logs[item.logs.length - 1];
+      const browserGroupId = getBrowserTimelineGroupId(item.logs);
       return (
         <BrowserSkillLogBox
           log={latestLog}
@@ -14862,6 +15073,12 @@ export function RunnerChat({
           backendUrl={normalizedBackendUrl}
           environmentId={runnerEnvironmentId}
           requestHeaders={runnerHeaders}
+          isDetailOpen={
+            selectedComputerUseDetail?.turnId === turn.id &&
+            selectedComputerUseDetail?.kind === "browser" &&
+            selectedComputerUseDetail?.groupId === browserGroupId
+          }
+          onOpenDetails={() => openBrowserDetailDrawer(turn.id, browserGroupId)}
         />
       );
     }
@@ -14941,6 +15158,7 @@ export function RunnerChat({
         environmentId={runnerEnvironmentId}
         requestHeaders={runnerHeaders}
         renderComputerUseMcpAsGeneric={options?.renderComputerUseMcpAsGeneric}
+        renderBrowserSkillAsGeneric={options?.renderBrowserSkillAsGeneric}
         activeTaskPreviewId={activeTaskPreviewId}
         availableAgents={agents}
         availableEnvironments={availableEnvironments}
@@ -15585,6 +15803,23 @@ export function RunnerChat({
     }
 
     const timelineState = getTurnTimelineState(selectedTurn);
+    const selectedDetailKind = selectedComputerUseDetail.kind || "computer_use";
+    if (selectedDetailKind === "browser") {
+      const browserGroup = timelineState.displayedTimelineItems.find(
+        (item): item is Extract<RunnerTimelineItem, { kind: "browser_group" }> =>
+          item.kind === "browser_group" && getBrowserTimelineGroupId(item.logs) === selectedComputerUseDetail.groupId
+      );
+
+      if (!browserGroup) {
+        return null;
+      }
+
+      return {
+        turn: selectedTurn,
+        ...buildBrowserGroupPresentation(selectedTurn, browserGroup.logs),
+      };
+    }
+
     const computerUseGroup = timelineState.displayedTimelineItems.find(
       (item): item is Extract<RunnerTimelineItem, { kind: "computer_use_group" }> =>
         item.kind === "computer_use_group" && item.group.id === selectedComputerUseDetail.groupId
@@ -15888,13 +16123,18 @@ export function RunnerChat({
   const computerUseDetailDrawerContent = selectedComputerUseDetailPresentation ? (
     <ComputerUseDetailDrawer
       title={selectedComputerUseDetailPresentation.title}
+      variant={selectedComputerUseDetailPresentation.kind === "browser" ? "browser" : "computer-use"}
       environmentName={selectedComputerUseDetailPresentation.environmentName}
       workLabel={selectedComputerUseDetailPresentation.workLabel}
       timeLabel={selectedComputerUseDetailPresentation.timeLabel}
       running={selectedComputerUseDetailPresentation.running}
       onClose={closeComputerUseDetailDrawer}
     >
-      {renderNestedTimelineItems(selectedComputerUseDetailPresentation.turn, selectedComputerUseDetailPresentation.nestedItems)}
+      {renderNestedTimelineItems(
+        selectedComputerUseDetailPresentation.turn,
+        selectedComputerUseDetailPresentation.nestedItems,
+        { renderBrowserSkillAsGeneric: selectedComputerUseDetailPresentation.kind === "browser" }
+      )}
     </ComputerUseDetailDrawer>
   ) : null;
   const computerUseDetailDrawer =
@@ -17340,12 +17580,11 @@ export function RunnerChat({
                           className="tb-btw-turn-response tb-thread-history-anchor"
                           style={responseStyle}
                         >
-                          <RunnerMarkdown
-                            content={stripSystemTags(agentMessage.message)}
-                            className="tb-message-markdown tb-message-markdown-summary"
-                            softBreaks
-                            onWorkspacePathClick={canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
-                          />
+                          {renderAgentSummaryContent(turn, agentMessage, {
+                            className: "tb-message-markdown tb-message-markdown-summary",
+                            softBreaks: true,
+                            canPreviewSummaryWorkspacePaths,
+                          })}
                         </div>
                       ) : null}
                     </div>
@@ -17478,11 +17717,10 @@ export function RunnerChat({
                           </div>
                         ) : null}
                         <div className="tb-turn-response">
-                          <RunnerMarkdown
-                            content={stripSystemTags(agentMessage.message)}
-                            className="tb-message-markdown tb-message-markdown-summary"
-                            onWorkspacePathClick={canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
-                          />
+                          {renderAgentSummaryContent(turn, agentMessage, {
+                            className: "tb-message-markdown tb-message-markdown-summary",
+                            canPreviewSummaryWorkspacePaths,
+                          })}
                         </div>
                         {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn })}
                         {shouldRenderFollowUpEngine ? (
@@ -17692,11 +17930,10 @@ export function RunnerChat({
                         </div>
                       ) : null}
                       <div className="tb-turn-response">
-                        <RunnerMarkdown
-                          content={stripSystemTags(agentMessage.message)}
-                          className="tb-message-markdown tb-message-markdown-summary"
-                          onWorkspacePathClick={canPreviewSummaryWorkspacePaths ? (path) => handleSummaryWorkspacePathClick(turn, path, "run_summary") : undefined}
-                        />
+                        {renderAgentSummaryContent(turn, agentMessage, {
+                          className: "tb-message-markdown tb-message-markdown-summary",
+                          canPreviewSummaryWorkspacePaths,
+                        })}
                       </div>
                       {renderRunSummaryActionLine(turn, agentMessage.message, { isLatest: isLatestTurn, canEditTurn })}
                       {shouldRenderFollowUpEngine ? (

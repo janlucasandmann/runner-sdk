@@ -2222,6 +2222,68 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   white-space: normal;
 }
 
+.tb-runner-chat .tb-compute-token-log-box {
+  width: min(100%, 560px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.tb-runner-chat .tb-compute-token-log-copy {
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-compute-token-log-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-compute-token-log-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tb-runner-chat .tb-compute-token-log-message {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-compute-token-log-button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0 12px;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 400;
+  cursor: pointer;
+  transition: opacity 140ms ease;
+}
+
+.tb-runner-chat .tb-compute-token-log-button:hover {
+  opacity: 0.7;
+}
+
 .tb-runner-chat .tb-turn-summary {
   margin-top: 8px;
   margin-bottom: 8px;
@@ -3858,9 +3920,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   transition: background-color 180ms ease, color 180ms ease;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-computer-use .tb-subagent-log-open-button,
 .tb-runner-chat .tb-log-card.tb-log-card-subagent .tb-subagent-log-open-button {
   margin-bottom: 12px;
+}
+
+.tb-runner-chat .tb-log-card.tb-log-card-browser .tb-subagent-log-open-button,
+.tb-runner-chat .tb-log-card.tb-log-card-computer-use .tb-subagent-log-open-button {
+  margin-bottom: 0;
 }
 
 .tb-runner-chat .tb-subagent-log-open-button:hover {

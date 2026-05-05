@@ -176,6 +176,7 @@ interface RunnerWorkLogEntryProps {
   environmentId?: string | null;
   requestHeaders?: HeadersInit;
   renderComputerUseMcpAsGeneric?: boolean;
+  renderBrowserSkillAsGeneric?: boolean;
   activeTaskPreviewId?: string | null;
   availableAgents?: ComputerAgentsListAvailableAgent[];
   availableEnvironments?: ComputerAgentsListAvailableEnvironment[];
@@ -9082,9 +9083,9 @@ export function BrowserSkillLogBox({
                     <ChevronRight className="tb-browser-carousel-control-icon" strokeWidth={1.5} />
                   </button>
                 </div>
-                {variant === "computer-use" && onOpenDetails ? (
+                {onOpenDetails ? (
                   <button type="button" className="tb-subagent-log-open-button" onClick={onOpenDetails}>
-                    <span>View all logs</span>
+                    <span>View logs</span>
                     <ChevronRight className="tb-subagent-log-open-button-icon" strokeWidth={1.6} />
                   </button>
                 ) : null}
@@ -9169,6 +9170,7 @@ export function SubagentLogBox({
 
 export function ComputerUseDetailDrawer({
   title = "Computer Use",
+  variant = "computer-use",
   environmentName,
   workLabel,
   timeLabel,
@@ -9177,6 +9179,7 @@ export function ComputerUseDetailDrawer({
   children,
 }: {
   title?: string;
+  variant?: VisualInteractionVariant;
   environmentName?: string | null;
   workLabel: string;
   timeLabel?: string;
@@ -9213,17 +9216,21 @@ export function ComputerUseDetailDrawer({
   }, [children, expanded]);
 
   return (
-    <aside className="tb-subagent-detail-drawer tb-computer-use-detail-drawer">
+    <aside className={`tb-subagent-detail-drawer tb-computer-use-detail-drawer${variant === "browser" ? " tb-browser-detail-drawer" : ""}`}>
       <div className="tb-subagent-detail-drawer-header">
         <div className="tb-subagent-detail-drawer-header-copy">
-          <Monitor className="tb-attachment-preview-drawer-header-icon" strokeWidth={1.6} />
+          {variant === "browser" ? (
+            <Globe className="tb-attachment-preview-drawer-header-icon" strokeWidth={1.6} />
+          ) : (
+            <Monitor className="tb-attachment-preview-drawer-header-icon" strokeWidth={1.6} />
+          )}
           <div className="tb-subagent-detail-drawer-header-text">
             <div className="tb-subagent-detail-drawer-title" title={title}>{title}</div>
           </div>
         </div>
         <div className="tb-subagent-detail-drawer-header-actions">
           {timeLabel ? <span className="tb-subagent-detail-drawer-time">{timeLabel}</span> : null}
-          <button type="button" className="tb-attachment-preview-drawer-action" onClick={onClose} aria-label="Close computer use details">
+          <button type="button" className="tb-attachment-preview-drawer-action" onClick={onClose} aria-label={`Close ${variant === "browser" ? "browser" : "computer use"} details`}>
             <X className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.8} />
           </button>
         </div>
@@ -9899,6 +9906,7 @@ export function RunnerWorkLogEntry({
   environmentId,
   requestHeaders,
   renderComputerUseMcpAsGeneric = false,
+  renderBrowserSkillAsGeneric = false,
   activeTaskPreviewId,
   availableAgents,
   availableEnvironments,
@@ -9942,7 +9950,7 @@ export function RunnerWorkLogEntry({
     const output = String(log.metadata?.output || "");
     if (isWebSearchCommand(command) || isWebSearchOutput(output)) return <WebSearchLogBox log={log} timeLabel={timeLabel} />;
     if (isMemoryCommand(command)) return <MemoryLogBox log={log} timeLabel={timeLabel} />;
-    if (isBrowserSkillCommand(command)) {
+    if (isBrowserSkillCommand(command) && !renderBrowserSkillAsGeneric) {
       return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
     if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;

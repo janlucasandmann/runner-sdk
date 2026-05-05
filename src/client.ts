@@ -47,8 +47,7 @@ export class RunnerClient {
     });
 
     if (!response.ok) {
-      const bodyText = await response.text().catch(() => "");
-      throw new Error(`Runner stream failed (${response.status}): ${bodyText || response.statusText}`);
+      throw new Error(await this.readResponseErrorMessage(response, "Runner stream failed"));
     }
 
     if (!response.body) {
@@ -553,11 +552,37 @@ export class RunnerClient {
     return normalized;
   }
 
+  private async readResponseErrorMessage(response: Response, fallback: string): Promise<string> {
+    const bodyText = await response.text().catch(() => "");
+    let parsed: unknown = null;
+    try {
+      parsed = bodyText ? JSON.parse(bodyText) : null;
+    } catch {
+      parsed = null;
+    }
+
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const payload = parsed as Record<string, unknown>;
+      if (typeof payload.message === "string" && payload.message.trim()) {
+        return payload.message.trim();
+      }
+      if (typeof payload.error === "string" && payload.error.trim()) {
+        return payload.error.trim();
+      }
+    }
+
+    const trimmedBody = bodyText.trim();
+    if (trimmedBody) {
+      return trimmedBody;
+    }
+
+    return `${fallback} (${response.status || "unknown"}${response.statusText ? ` ${response.statusText}` : ""})`;
+  }
+
   private async requestJson<T>(url: string, init: RequestInit): Promise<T> {
     const response = await this.fetchImpl(url, init);
     if (!response.ok) {
-      const bodyText = await response.text().catch(() => "");
-      throw new Error(`Runner API request failed (${response.status}): ${bodyText || response.statusText}`);
+      throw new Error(await this.readResponseErrorMessage(response, "Runner API request failed"));
     }
     return response.json() as Promise<T>;
   }
