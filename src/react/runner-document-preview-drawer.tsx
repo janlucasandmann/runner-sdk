@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
+  ChevronDown as LucideChevronDown,
   ChevronLeft as LucideChevronLeft,
   ChevronRight as LucideChevronRight,
   Code2 as LucideCode2,
@@ -12,16 +13,22 @@ import {
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 import {
   buildRunnerPreviewHeaders,
+  buildRunnerPreviewDirectoryListUrl,
   buildRunnerPreviewHtmlDocument,
   getRunnerDocumentPreviewKind,
+  normalizeRunnerPreviewDirectoryEntries,
+  normalizeRunnerPreviewWorkspacePath,
   resolveRunnerPreviewAssetUrl,
   type RunnerDocumentPreviewKind,
+  type RunnerPreviewDirectoryEntry,
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
 import { RunnerCodeViewer } from "./runner-log-boxes.js";
 import { RunnerMarkdown } from "./runner-markdown.js";
 
+const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
+const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
 
 interface AttachmentDocumentPreviewState {
@@ -32,9 +39,17 @@ interface AttachmentDocumentPreviewState {
   error?: string | null;
 }
 
+interface AttachmentDirectoryPreviewState {
+  status: "idle" | "loading" | "ready" | "error" | "not-directory";
+  folderPath: string;
+  entries: RunnerPreviewDirectoryEntry[];
+  error?: string | null;
+}
+
 export interface RunnerDocumentPreviewDrawerProps {
   attachment: RunnerPreviewAttachment;
   backendUrl?: string;
+  environmentId?: string;
   requestHeaders?: HeadersInit;
   apiKey?: string;
   className?: string;
@@ -44,15 +59,59 @@ export interface RunnerDocumentPreviewDrawerProps {
   headerActions?: ReactNode;
   showCloseButton?: boolean;
   showResizeHandle?: boolean;
+  onWorkspacePathOpen?: (path: string, options?: { isFolder?: boolean }) => void;
 }
 
 function isRunnerPreviewImageAttachment(attachment: RunnerPreviewAttachment): boolean {
   return attachment.type === "image" || String(attachment.mimeType || "").toLowerCase().startsWith("image/");
 }
 
+function getRunnerPreviewAttachmentEnvironmentId(attachment: RunnerPreviewAttachment, explicitEnvironmentId?: string | null): string {
+  const directEnvironmentId = String(explicitEnvironmentId || attachment.environmentId || "").trim();
+  if (directEnvironmentId) {
+    return directEnvironmentId;
+  }
+  const idMatch = String(attachment.id || "").match(/^[^:]+:([^:]+):(?:\/workspace\/|workspace\/|.+)/);
+  return String(idMatch?.[1] || "").trim();
+}
+
+function toAbsoluteRunnerWorkspacePath(path: string): string {
+  const normalizedPath = normalizeRunnerPreviewWorkspacePath(path);
+  return normalizedPath ? `/workspace/${normalizedPath}` : "/workspace";
+}
+
+function formatRunnerPreviewFileSize(value?: number): string {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    return "";
+  }
+  if (value < 1024) return `${value} B`;
+  const units = ["KB", "MB", "GB", "TB"];
+  let nextValue = value / 1024;
+  let unitIndex = 0;
+  while (nextValue >= 1024 && unitIndex < units.length - 1) {
+    nextValue /= 1024;
+    unitIndex += 1;
+  }
+  return `${nextValue.toFixed(nextValue >= 10 ? 0 : 1).replace(/\.0$/, "")} ${units[unitIndex]}`;
+}
+
+function formatRunnerPreviewFileDate(value?: string): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function isRunnerPreviewImageEntry(entry: RunnerPreviewDirectoryEntry): boolean {
+  const mimeType = String(entry.mimeType || "").toLowerCase();
+  const name = String(entry.name || "").toLowerCase();
+  return mimeType.startsWith("image/") || /\.(?:png|jpe?g|gif|webp|svg|avif|bmp)$/.test(name);
+}
+
 export function RunnerDocumentPreviewDrawer({
   attachment,
   backendUrl,
+  environmentId,
   requestHeaders,
   apiKey,
   className,
@@ -62,6 +121,7 @@ export function RunnerDocumentPreviewDrawer({
   headerActions,
   showCloseButton = true,
   showResizeHandle = false,
+  onWorkspacePathOpen,
 }: RunnerDocumentPreviewDrawerProps) {
   const documentPreviewDocxRef = useRef<HTMLDivElement | null>(null);
   const documentPreviewPdfViewportRef = useRef<HTMLDivElement | null>(null);
@@ -82,11 +142,37 @@ export function RunnerDocumentPreviewDrawer({
   const [isPdfPreviewRendering, setIsPdfPreviewRendering] = useState(false);
   const [pdfPreviewError, setPdfPreviewError] = useState<string | null>(null);
   const [markdownPreviewMode, setMarkdownPreviewMode] = useState<"rendered" | "code">("rendered");
+  const initialDirectoryPath = normalizeRunnerPreviewWorkspacePath(attachment.workspacePath || attachment.id);
+  const [directoryPreviewPath, setDirectoryPreviewPath] = useState(initialDirectoryPath);
+  const [directoryPreviewState, setDirectoryPreviewState] = useState<AttachmentDirectoryPreviewState>({
+    status: "idle",
+    folderPath: initialDirectoryPath,
+    entries: [],
+  });
+  const [directoryEntriesByPath, setDirectoryEntriesByPath] = useState<Record<string, RunnerPreviewDirectoryEntry[]>>({});
+  const [directoryLoadingPaths, setDirectoryLoadingPaths] = useState<string[]>([]);
+  const [directoryErrorByPath, setDirectoryErrorByPath] = useState<Record<string, string>>({});
+  const [expandedDirectoryPaths, setExpandedDirectoryPaths] = useState<string[]>([]);
 
   const isImageAttachment = isRunnerPreviewImageAttachment(attachment);
   const attachmentPreviewKind = !isImageAttachment
     ? attachment.previewKindOverride ?? getRunnerDocumentPreviewKind(attachment)
     : null;
+  const resolvedEnvironmentId = getRunnerPreviewAttachmentEnvironmentId(attachment, environmentId);
+  const isExplicitDirectoryAttachment = Boolean(attachment.isFolder || attachmentPreviewKind === "directory");
+  const canAttemptDirectoryPreview = Boolean(
+    !isImageAttachment &&
+    backendUrl &&
+    resolvedEnvironmentId &&
+    initialDirectoryPath &&
+    (isExplicitDirectoryAttachment || attachmentPreviewKind === "unsupported")
+  );
+  const shouldRenderDirectoryPreview =
+    canAttemptDirectoryPreview &&
+    directoryPreviewState.status !== "idle" &&
+    (directoryPreviewState.status !== "not-directory" || isExplicitDirectoryAttachment);
+  const isDirectoryLikePreview = shouldRenderDirectoryPreview || isExplicitDirectoryAttachment;
+  const activeDirectoryAbsolutePath = toAbsoluteRunnerWorkspacePath(directoryPreviewPath);
   const canToggleMarkdownPreview = attachmentPreviewKind === "markdown";
   const requestHeadersWithApiKey = useMemo(
     () => buildRunnerPreviewHeaders(requestHeaders, apiKey),
@@ -139,9 +225,20 @@ export function RunnerDocumentPreviewDrawer({
     setPdfPreviewError(null);
     setIsPdfPreviewRendering(false);
     setMarkdownPreviewMode("rendered");
+    setDirectoryPreviewPath(initialDirectoryPath);
+    setDirectoryPreviewState({
+      status: "idle",
+      folderPath: initialDirectoryPath,
+      entries: [],
+      error: null,
+    });
+    setDirectoryEntriesByPath({});
+    setDirectoryLoadingPaths([]);
+    setDirectoryErrorByPath({});
+    setExpandedDirectoryPaths([]);
     documentPreviewPdfCanvasRefs.current = {};
     documentPreviewPdfPageRefs.current = {};
-  }, [attachment.id]);
+  }, [attachment.id, initialDirectoryPath]);
 
   useEffect(() => {
     const viewport = documentPreviewPdfViewportRef.current;
@@ -186,6 +283,29 @@ export function RunnerDocumentPreviewDrawer({
   }, [documentPreviewState]);
 
   useEffect(() => {
+    if (!canAttemptDirectoryPreview) {
+      setDirectoryPreviewState({
+        status: "idle",
+        folderPath: directoryPreviewPath,
+        entries: [],
+        error: null,
+      });
+      return;
+    }
+
+    const controller = new AbortController();
+    void loadDirectoryFolder(directoryPreviewPath, { root: true, signal: controller.signal });
+    return () => controller.abort();
+  }, [
+    backendUrl,
+    canAttemptDirectoryPreview,
+    directoryPreviewPath,
+    isExplicitDirectoryAttachment,
+    requestHeadersWithApiKey,
+    resolvedEnvironmentId,
+  ]);
+
+  useEffect(() => {
     if (documentPreviewDocxRef.current) {
       documentPreviewDocxRef.current.innerHTML = "";
     }
@@ -199,6 +319,13 @@ export function RunnerDocumentPreviewDrawer({
     }
 
     const previewKind = attachment.previewKindOverride ?? getRunnerDocumentPreviewKind(attachment);
+    if (previewKind === "directory" || (previewKind === "unsupported" && canAttemptDirectoryPreview)) {
+      setDocumentPreviewState({
+        status: "idle",
+        kind: previewKind,
+      });
+      return;
+    }
     if (previewKind === "unsupported") {
       setDocumentPreviewState({
         status: "ready",
@@ -283,7 +410,7 @@ export function RunnerDocumentPreviewDrawer({
       });
 
     return () => controller.abort();
-  }, [attachment, backendUrl, isImageAttachment, requestHeadersWithApiKey, resolvedDirectHtmlPreviewUrl]);
+  }, [attachment, backendUrl, canAttemptDirectoryPreview, isImageAttachment, requestHeadersWithApiKey, resolvedDirectHtmlPreviewUrl]);
 
   useEffect(() => {
     if (
@@ -593,6 +720,264 @@ export function RunnerDocumentPreviewDrawer({
     setPdfPreviewPage(pageNumber);
   }
 
+  function openDirectoryEntryInFiles(entry: RunnerPreviewDirectoryEntry) {
+    if (typeof onWorkspacePathOpen !== "function") {
+      return;
+    }
+    onWorkspacePathOpen(toAbsoluteRunnerWorkspacePath(entry.path), { isFolder: entry.isFolder });
+  }
+
+  async function loadDirectoryFolder(
+    folderPath: string,
+    options?: { root?: boolean; signal?: AbortSignal }
+  ) {
+    const normalizedFolderPath = normalizeRunnerPreviewWorkspacePath(folderPath);
+    const isRootRequest = Boolean(options?.root);
+    const requestUrl = buildRunnerPreviewDirectoryListUrl(backendUrl, resolvedEnvironmentId, normalizedFolderPath, 1);
+    if (!requestUrl) {
+      const errorMessage = "Folder preview is unavailable for this environment.";
+      if (isRootRequest) {
+        setDirectoryPreviewState({
+          status: isExplicitDirectoryAttachment ? "error" : "not-directory",
+          folderPath: normalizedFolderPath,
+          entries: [],
+          error: errorMessage,
+        });
+      }
+      setDirectoryErrorByPath((current) => ({ ...current, [normalizedFolderPath]: errorMessage }));
+      return;
+    }
+
+    if (directoryLoadingPaths.includes(normalizedFolderPath)) {
+      return;
+    }
+
+    setDirectoryLoadingPaths((current) => (
+      current.includes(normalizedFolderPath) ? current : [...current, normalizedFolderPath]
+    ));
+    setDirectoryErrorByPath((current) => ({ ...current, [normalizedFolderPath]: "" }));
+    if (isRootRequest) {
+      setDirectoryPreviewState({
+        status: "loading",
+        folderPath: normalizedFolderPath,
+        entries: directoryEntriesByPath[normalizedFolderPath] || [],
+        error: null,
+      });
+    }
+
+    try {
+      const response = await fetch(requestUrl, {
+        method: "GET",
+        headers: requestHeadersWithApiKey,
+        signal: options?.signal,
+      });
+      const text = await response.text();
+      let parsed: unknown = {};
+      try {
+        parsed = text ? JSON.parse(text) : {};
+      } catch {
+        parsed = { message: text };
+      }
+      if (!response.ok) {
+        const record = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
+        const message = typeof record.message === "string"
+          ? record.message
+          : typeof record.error === "string"
+            ? record.error
+            : `Failed to load folder (${response.status})`;
+        const error = new Error(message);
+        (error as Error & { status?: number }).status = response.status;
+        throw error;
+      }
+
+      const entries = normalizeRunnerPreviewDirectoryEntries(parsed, normalizedFolderPath);
+      setDirectoryEntriesByPath((current) => ({
+        ...current,
+        [normalizedFolderPath]: entries,
+      }));
+      setDirectoryErrorByPath((current) => ({ ...current, [normalizedFolderPath]: "" }));
+      if (isRootRequest) {
+        setDirectoryPreviewState({
+          status: "ready",
+          folderPath: normalizedFolderPath,
+          entries,
+          error: null,
+        });
+      }
+    } catch (error) {
+      if (options?.signal?.aborted) {
+        return;
+      }
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      const status = typeof (normalizedError as Error & { status?: unknown }).status === "number"
+        ? (normalizedError as Error & { status: number }).status
+        : 0;
+      const shouldTreatAsNotDirectory = !isExplicitDirectoryAttachment && (status === 400 || status === 404);
+      const errorMessage = normalizedError.message || "Failed to load folder.";
+      setDirectoryErrorByPath((current) => ({ ...current, [normalizedFolderPath]: errorMessage }));
+      if (isRootRequest) {
+        setDirectoryPreviewState({
+          status: shouldTreatAsNotDirectory ? "not-directory" : "error",
+          folderPath: normalizedFolderPath,
+          entries: [],
+          error: errorMessage,
+        });
+      }
+    } finally {
+      setDirectoryLoadingPaths((current) => current.filter((path) => path !== normalizedFolderPath));
+    }
+  }
+
+  function toggleDirectoryFolder(entry: RunnerPreviewDirectoryEntry) {
+    if (!entry.isFolder) {
+      return;
+    }
+    const normalizedPath = normalizeRunnerPreviewWorkspacePath(entry.path);
+    if (!normalizedPath) {
+      return;
+    }
+    const isExpanded = expandedDirectoryPaths.includes(normalizedPath);
+    setExpandedDirectoryPaths((current) => (
+      current.includes(normalizedPath)
+        ? current.filter((path) => path !== normalizedPath)
+        : [...current, normalizedPath]
+    ));
+    if (!isExpanded && !directoryEntriesByPath[normalizedPath]) {
+      void loadDirectoryFolder(normalizedPath);
+    }
+  }
+
+  function renderDirectoryEntryIcon(entry: RunnerPreviewDirectoryEntry) {
+    const iconUrl = entry.isFolder
+      ? RUNNER_FOLDER_ICON_URL
+      : isRunnerPreviewImageEntry(entry)
+        ? RUNNER_IMAGE_FILE_ICON_URL
+        : RUNNER_TEXT_FILE_ICON_URL;
+    return (
+      <img
+        src={iconUrl}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className={`tb-attachment-preview-directory-icon-asset ${entry.isFolder ? "is-folder" : "is-file"}`.trim()}
+      />
+    );
+  }
+
+  function renderDirectoryEntry(entry: RunnerPreviewDirectoryEntry, depth = 0): ReactNode {
+    const normalizedPath = normalizeRunnerPreviewWorkspacePath(entry.path);
+    const isExpanded = entry.isFolder && expandedDirectoryPaths.includes(normalizedPath);
+    const isLoading = entry.isFolder && directoryLoadingPaths.includes(normalizedPath);
+    const error = entry.isFolder ? directoryErrorByPath[normalizedPath] || "" : "";
+    const childEntries = entry.isFolder ? directoryEntriesByPath[normalizedPath] || [] : [];
+
+    return (
+      <div key={entry.id} className="tb-attachment-preview-directory-node" role="listitem">
+        <button
+          type="button"
+          className={`tb-attachment-preview-directory-row ${entry.isFolder ? "is-folder" : "is-file"}`.trim()}
+          title={toAbsoluteRunnerWorkspacePath(entry.path)}
+          style={{ paddingLeft: `${9 + depth * 18}px` }}
+          onClick={() => {
+            if (entry.isFolder) {
+              toggleDirectoryFolder(entry);
+              return;
+            }
+            openDirectoryEntryInFiles(entry);
+          }}
+          onDoubleClick={() => {
+            if (entry.isFolder) {
+              openDirectoryEntryInFiles(entry);
+            }
+          }}
+        >
+          <span className="tb-attachment-preview-directory-chevron-slot" aria-hidden="true">
+            {entry.isFolder ? (
+              isLoading ? (
+                <LucideLoaderCircle className="tb-attachment-preview-directory-chevron tb-context-action-notice-icon-spinner" strokeWidth={1.8} />
+              ) : isExpanded ? (
+                <LucideChevronDown className="tb-attachment-preview-directory-chevron is-expanded" strokeWidth={1.8} />
+              ) : (
+                <LucideChevronRight className="tb-attachment-preview-directory-chevron" strokeWidth={1.8} />
+              )
+            ) : null}
+          </span>
+          <span className="tb-attachment-preview-directory-icon-slot" aria-hidden="true">
+            {renderDirectoryEntryIcon(entry)}
+          </span>
+          <span className="tb-attachment-preview-directory-copy">
+            <span className="tb-attachment-preview-directory-name">{entry.name}</span>
+            <span className="tb-attachment-preview-directory-meta">
+              {entry.isFolder
+                ? "Folder"
+                : formatRunnerPreviewFileSize(entry.size) || entry.mimeType || "File"}
+              {formatRunnerPreviewFileDate(entry.modifiedTime)
+                ? ` • ${formatRunnerPreviewFileDate(entry.modifiedTime)}`
+                : ""}
+            </span>
+          </span>
+        </button>
+        {isExpanded ? (
+          <div className="tb-attachment-preview-directory-children" role="list">
+            {childEntries.length > 0
+              ? childEntries.map((childEntry) => renderDirectoryEntry(childEntry, depth + 1))
+              : !isLoading && !error
+                ? <div className="tb-attachment-preview-directory-empty-row" style={{ paddingLeft: `${47 + (depth + 1) * 18}px` }}>Empty folder</div>
+                : null}
+            {error && childEntries.length === 0 ? (
+              <div className="tb-attachment-preview-directory-empty-row is-error" style={{ paddingLeft: `${47 + (depth + 1) * 18}px` }}>
+                {error}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderDirectoryPreview() {
+    const entries = directoryEntriesByPath[directoryPreviewPath] || directoryPreviewState.entries;
+    return (
+      <div className="tb-attachment-preview-directory">
+        <div className="tb-attachment-preview-directory-path" title={activeDirectoryAbsolutePath}>
+          {activeDirectoryAbsolutePath}
+        </div>
+        {directoryPreviewState.status === "loading" ? (
+          <div className="tb-attachment-preview-state">
+            <LucideLoaderCircle className="tb-attachment-preview-state-icon tb-context-action-notice-icon-spinner" strokeWidth={1.8} />
+            <span>Loading folder…</span>
+          </div>
+        ) : directoryPreviewState.status === "error" ? (
+          <div className="tb-attachment-preview-state tb-attachment-preview-state-error">
+            <img
+              src={RUNNER_FOLDER_ICON_URL}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className="tb-attachment-preview-state-icon-asset"
+            />
+            <span>{directoryPreviewState.error || "Failed to load folder."}</span>
+          </div>
+        ) : entries.length === 0 ? (
+          <div className="tb-attachment-preview-directory-empty">
+            <img
+              src={RUNNER_FOLDER_ICON_URL}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className="tb-attachment-preview-directory-empty-icon"
+            />
+            <span>This folder is empty.</span>
+          </div>
+        ) : (
+          <div className="tb-attachment-preview-directory-list" role="list">
+            {entries.map((entry) => renderDirectoryEntry(entry, 0))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`tb-runner-document-preview-host${inline ? " tb-runner-document-preview-host-inline" : ""}`}>
       <aside
@@ -610,13 +995,23 @@ export function RunnerDocumentPreviewDrawer({
         ) : null}
         <div className="tb-attachment-preview-drawer-header">
           <div className="tb-attachment-preview-drawer-header-copy">
-            <img
-              src={RUNNER_TEXT_FILE_ICON_URL}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              className="tb-attachment-preview-drawer-header-icon-asset"
-            />
+            {isDirectoryLikePreview ? (
+              <img
+                src={RUNNER_FOLDER_ICON_URL}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                className="tb-attachment-preview-drawer-header-icon-asset"
+              />
+            ) : (
+              <img
+                src={RUNNER_TEXT_FILE_ICON_URL}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                className="tb-attachment-preview-drawer-header-icon-asset"
+              />
+            )}
             <div className="tb-attachment-preview-drawer-header-text">
               <div className="tb-attachment-preview-drawer-name" title={attachment.filename}>
                 {attachment.filename}
@@ -656,7 +1051,9 @@ export function RunnerDocumentPreviewDrawer({
           ) : null}
         </div>
         <div className="tb-attachment-preview-drawer-body">
-          {isImageAttachment && resolvedImagePreviewUrl ? (
+          {shouldRenderDirectoryPreview ? (
+            renderDirectoryPreview()
+          ) : isImageAttachment && resolvedImagePreviewUrl ? (
             <RunnerImagePreviewSurface
               src={resolvedImagePreviewUrl}
               alt={attachment.filename}

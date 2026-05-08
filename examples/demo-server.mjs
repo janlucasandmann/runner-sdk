@@ -1720,7 +1720,8 @@ const html = `<!doctype html>
       }
 
       .playground-content-shell.is-thread-task-detail-open > .playground-content-nav,
-      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav {
+      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav,
+      .playground-content-shell.is-resources-side-detail-open > .playground-content-nav {
         padding-right: calc(12px + var(--playground-thread-task-detail-width));
       }
 
@@ -1753,7 +1754,9 @@ const html = `<!doctype html>
       .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-center,
       .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-right,
       .playground-content-shell.is-thread-side-detail-open > .playground-content-nav > .playground-content-nav-center,
-      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav > .playground-content-nav-right {
+      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav > .playground-content-nav-right,
+      .playground-content-shell.is-resources-side-detail-open > .playground-content-nav > .playground-content-nav-center,
+      .playground-content-shell.is-resources-side-detail-open > .playground-content-nav > .playground-content-nav-right {
         opacity: 0;
         pointer-events: none;
       }
@@ -1803,6 +1806,10 @@ const html = `<!doctype html>
         justify-content: center;
         padding: 24px;
         background: rgba(0, 0, 0, 0.6);
+      }
+
+      .playground-project-environment-file-picker-portal.tb-runner-chat .tb-file-browser-scrim {
+        z-index: 2147483001;
       }
 
       .playground-tasks-connector-browser-portal.tb-runner-chat .tb-file-browser-modal {
@@ -14236,6 +14243,16 @@ const html = `<!doctype html>
 
       .playground-servers-editor-layout.has-preview {
         grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+        padding-bottom: 0;
+      }
+
+      .playground-servers-editor-main-column {
+        min-width: 0;
+        min-height: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
 
       .playground-servers-editor-topbar {
@@ -14264,9 +14281,28 @@ const html = `<!doctype html>
         overflow: hidden;
       }
 
+      .playground-servers-editor-layout.has-preview .playground-servers-editor-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 40;
+        width: min(420px, 60vw);
+        height: auto;
+        padding: 0;
+        background: rgba(0, 0, 0, 0.5);
+      }
+
       .playground-servers-editor-sidebar-topnav {
         border-left: 1px solid rgba(255, 255, 255, 0.08);
         padding-left: 22px;
+      }
+
+      .playground-servers-editor-sidebar > .playground-servers-editor-sidebar-topnav {
+        flex: 0 0 auto;
+        border-left: 0;
+        padding-left: 18px;
+        padding-right: 18px;
       }
 
       .playground-environments-editor-navbar {
@@ -16714,6 +16750,39 @@ const html = `<!doctype html>
         min-height: 0;
       }
 
+      .playground-computer-detail-chart-kpis.playground-project-overview-summary-kpis,
+      .playground-server-detail-chart-kpis.playground-project-overview-summary-kpis {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .playground-server-detail-content .playground-environments-section.is-database-browser {
+        padding-top: 0;
+      }
+
+      .playground-server-detail-content .playground-environments-section.is-database-browser .playground-environments-section-header.is-static {
+        border-bottom: 0;
+      }
+
+      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card {
+        padding: 0 20px 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-server-detail-content .playground-auth-users-section-header {
+        border-bottom: 0;
+      }
+
+      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card {
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
       .playground-computer-detail-fact-rows {
         display: flex;
         flex-direction: column;
@@ -16728,6 +16797,374 @@ const html = `<!doctype html>
         gap: 4px;
         padding-top: 0;
         border-top: 0;
+      }
+
+      .playground-server-custom-domain-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-server-custom-domain-add-button {
+        border-radius: 999px;
+      }
+
+      .playground-server-custom-domain-header,
+      .playground-server-custom-domain-card,
+      .playground-server-custom-domain-main,
+      .playground-server-custom-domain-actions,
+      .playground-server-custom-domain-modal-summary-row,
+      .playground-server-custom-domain-record {
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-server-custom-domain-header,
+      .playground-server-custom-domain-card,
+      .playground-server-custom-domain-modal-summary-row {
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-server-custom-domain-subtitle,
+      .playground-server-custom-domain-meta,
+      .playground-server-custom-domain-empty-copy,
+      .playground-server-custom-domain-records-empty {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-server-custom-domain-subtitle {
+        margin-top: 4px;
+      }
+
+      .playground-server-custom-domain-card,
+      .playground-server-custom-domain-empty,
+      .playground-server-custom-domain-modal-summary,
+      .playground-server-custom-domain-records {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.22);
+      }
+
+      .playground-server-custom-domain-card {
+        position: relative;
+        padding: 12px;
+        cursor: pointer;
+      }
+
+      .playground-server-custom-domain-main {
+        min-width: 0;
+        gap: 10px;
+      }
+
+      .playground-server-custom-domain-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.9);
+        flex: 0 0 auto;
+      }
+
+      .playground-server-custom-domain-copy {
+        min-width: 0;
+      }
+
+      .playground-server-custom-domain-name {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 500;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-server-custom-domain-actions {
+        flex: 0 0 auto;
+        gap: 8px;
+      }
+
+      .playground-server-custom-domain-row-menu-button {
+        width: auto;
+        min-width: 0;
+        height: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
+      }
+
+      .playground-server-custom-domain-row-menu-button:hover {
+        background: transparent;
+      }
+
+      .playground-server-custom-domain-open-button {
+        width: auto;
+        min-width: 0;
+        height: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
+      }
+
+      .playground-server-custom-domain-open-button:hover {
+        background: transparent;
+      }
+
+      .playground-server-custom-domain-menu {
+        position: absolute;
+        top: calc(100% - 6px);
+        right: 12px;
+        z-index: 12;
+        min-width: 132px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: #242424;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
+      }
+
+      .playground-server-custom-domain-menu-row {
+        width: 100%;
+        min-height: 30px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 12px;
+        font-weight: 400;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-server-custom-domain-menu-row:hover:enabled {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-server-custom-domain-menu-row:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+
+      .playground-server-custom-domain-menu-row.is-danger {
+        color: rgb(255, 146, 146);
+      }
+
+      .playground-server-custom-domain-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+
+      .playground-server-custom-domain-status.is-connected {
+        background: rgba(94, 213, 143, 0.16);
+        color: rgb(127, 238, 168);
+      }
+
+      .playground-server-custom-domain-status.is-error {
+        background: rgba(255, 105, 105, 0.16);
+        color: rgb(255, 146, 146);
+      }
+
+      .playground-server-custom-domain-empty {
+        padding: 16px;
+      }
+
+      .playground-server-custom-domain-empty-title {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-server-custom-domain-empty-copy {
+        margin-top: 4px;
+      }
+
+      .playground-server-custom-domain-modal {
+        max-width: min(680px, calc(100vw - 32px));
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+      }
+
+      .playground-server-custom-domain-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 2px 0 0;
+      }
+
+      .playground-server-custom-domain-field {
+        padding-top: 0;
+      }
+
+      .playground-server-custom-domain-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-server-custom-domain-label-row .playground-environments-field-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-server-custom-domain-notice {
+        background: rgba(102, 166, 255, 0.08);
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .playground-server-custom-domain-modal-summary,
+      .playground-server-custom-domain-records {
+        padding: 12px;
+      }
+
+      .playground-server-custom-domain-modal-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-server-custom-domain-modal-summary-row > span:first-child {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+      }
+
+      .playground-server-custom-domain-records {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-server-custom-domain-records-title {
+        margin-top: 12px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-server-custom-domain-records-copy {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-server-custom-domain-record-group-title {
+        padding-top: 6px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-server-custom-domain-record {
+        min-height: 38px;
+        gap: 10px;
+        padding: 9px 0 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-server-custom-domain-record-action {
+        width: 58px;
+        flex: 0 0 58px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-server-custom-domain-record-action.is-remove {
+        color: rgb(255, 146, 146);
+      }
+
+      .playground-server-custom-domain-record-action.is-add {
+        color: rgb(127, 238, 168);
+      }
+
+      .playground-server-custom-domain-record-type {
+        width: 56px;
+        flex: 0 0 56px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-server-custom-domain-record-name,
+      .playground-server-custom-domain-record-value {
+        min-width: 0;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.66);
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-server-custom-domain-record-name {
+        flex: 0.85 1 0;
+      }
+
+      .playground-server-custom-domain-record-value {
+        display: flex;
+        flex: 1.15 1 0;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-server-custom-domain-record-value span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-server-custom-domain-record-copy-button {
+        width: auto;
+        min-width: 0;
+        height: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
+      }
+
+      .playground-server-custom-domain-record-copy-button:hover {
+        background: transparent;
       }
 
       .playground-computer-detail-content .playground-environment-profile-section {
@@ -16859,20 +17296,76 @@ const html = `<!doctype html>
       }
 
       .playground-servers-source-files-list {
+        width: 100%;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 4px;
+        margin-top: 12px;
+      }
+
+      .playground-servers-source-files-toolbar {
+        width: 100%;
+      }
+
+      .playground-servers-source-files-toolbar .playground-tasks-attachments-actions {
+        flex: 1 1 auto;
+        justify-content: flex-end;
+      }
+
+      .playground-servers-source-deploy-button.playground-environments-action-button {
+        min-height: 30px;
+        margin-left: 12px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-servers-source-deploy-button.playground-environments-action-button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.92);
+        color: #000;
+      }
+
+      .playground-servers-source-new-file-button.playground-environments-action-button {
+        margin-left: 8px;
+      }
+
+      .playground-server-description-section.is-titleless .playground-tasks-detail-section-header {
+        justify-content: flex-end;
+      }
+
+      .playground-server-description-inline-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .playground-server-description-inline-row .playground-tasks-detail-description-editor {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .playground-server-description-inline-row .playground-tasks-detail-format-actions {
+        flex: 0 0 auto;
+        justify-content: flex-end;
       }
 
       .playground-servers-source-file-row {
+        position: relative;
+        width: 100%;
+        min-height: 74px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-servers-source-file-row.is-active {
@@ -16903,11 +17396,31 @@ const html = `<!doctype html>
         opacity: 0.72;
       }
 
+      .playground-servers-source-file-icon-shell {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-servers-source-file-icon-shell img,
+      .playground-servers-source-file-icon-shell svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        object-fit: contain;
+      }
+
       .playground-servers-source-file-copy {
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 4px;
       }
 
       .playground-servers-source-file-name {
@@ -16920,11 +17433,63 @@ const html = `<!doctype html>
       }
 
       .playground-servers-source-file-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         font-size: 11px;
         color: rgba(255, 255, 255, 0.5);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .playground-servers-source-file-meta-dot {
+        width: 3px;
+        height: 3px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-servers-source-file-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: rgb(127, 238, 168);
+      }
+
+      .playground-servers-source-file-actions-menu-shell {
+        position: relative;
+        flex: 0 0 auto;
+      }
+
+      .playground-servers-source-file-menu-button {
+        width: 28px;
+        height: 28px;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        box-shadow: none;
+        backdrop-filter: none;
+        cursor: pointer;
+      }
+
+      .playground-servers-source-file-menu-button:hover {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .playground-servers-source-file-menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        z-index: 20;
       }
 
       .playground-servers-function-snippet,
@@ -16980,6 +17545,7 @@ const html = `<!doctype html>
       .playground-servers-source-preview-sidebar {
         min-width: 0;
         min-height: 0;
+        height: 100%;
         flex: 1;
         display: flex;
         flex-direction: column;
@@ -17036,7 +17602,8 @@ const html = `<!doctype html>
       }
 
       .playground-servers-source-preview-status {
-        padding: 10px 0 0;
+        flex: 0 0 auto;
+        padding: 10px 18px 12px;
         color: rgba(255, 255, 255, 0.52);
         font-size: 11px;
         line-height: 1.4;
@@ -17059,12 +17626,13 @@ const html = `<!doctype html>
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding-top: 14px;
+        padding: 0;
       }
 
       .playground-servers-source-preview-editor-shell {
-        min-height: 420px;
-        height: 420px;
+        min-height: 0;
+        height: 100%;
+        flex: 1;
         background: transparent;
         border-radius: 0;
         overflow: hidden;
@@ -18083,6 +18651,40 @@ const html = `<!doctype html>
         gap: 14px;
       }
 
+      .playground-servers-logs-section-header.playground-plugins-section-header {
+        margin-top: 0;
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .playground-servers-logs-section-header .playground-plugins-section-title {
+        margin-top: 0;
+      }
+
+      .playground-server-detail-tabs.playground-agents-overview-tabs {
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-server-detail-tab-actions {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-server-detail-docs-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .playground-server-detail-docs-tab-icon {
+        width: 11px;
+        height: 11px;
+        flex: 0 0 auto;
+      }
+
       .playground-servers-analytics-log-tabs {
         display: inline-flex;
         align-items: center;
@@ -18127,6 +18729,105 @@ const html = `<!doctype html>
         line-height: 1;
         text-transform: uppercase;
         letter-spacing: 0.04em;
+      }
+
+      .playground-servers-analytics-log-pill.is-success {
+        background: rgba(94, 213, 143, 0.16);
+        color: rgb(127, 238, 168);
+      }
+
+      .playground-servers-analytics-log-pill.is-info {
+        background: rgba(102, 166, 255, 0.16);
+        color: rgb(143, 196, 255);
+      }
+
+      .playground-servers-analytics-log-pill.is-warning {
+        background: rgba(255, 191, 102, 0.16);
+        color: rgb(255, 209, 129);
+      }
+
+      .playground-servers-analytics-log-pill.is-error {
+        background: rgba(255, 105, 105, 0.16);
+        color: rgb(255, 146, 146);
+      }
+
+      .playground-servers-logs-table.playground-agents-overview-table {
+        min-width: 820px;
+      }
+
+      .playground-servers-logs-table .playground-agents-overview-table-value {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-servers-logs-loading-state.playground-files-state {
+        min-height: 96px;
+        padding: 34px 24px;
+        overflow: visible;
+      }
+
+      .playground-servers-logs-table-shell {
+        overflow-y: visible;
+      }
+
+      .playground-servers-logs-table-row {
+        cursor: pointer;
+      }
+
+      .playground-servers-logs-table-row.is-expanded {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .playground-servers-logs-table-detail-row td {
+        padding-top: 0;
+      }
+
+      .playground-servers-logs-expanded-detail {
+        margin: 0 0 4px;
+        padding: 0 0 14px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: rgba(255, 255, 255, 0.74);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.55;
+      }
+
+      .playground-servers-logs-expanded-editor-shell {
+        min-height: 140px;
+        margin: 0 0 8px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .playground-servers-logs-expanded-editor-shell.playground-code-preview-editor-shell,
+      .playground-servers-logs-expanded-editor-shell.playground-code-preview-editor-shell .monaco-editor,
+      .playground-servers-logs-expanded-editor-shell.playground-code-preview-editor-shell .monaco-editor-background,
+      .playground-servers-logs-expanded-editor-shell.playground-code-preview-editor-shell .monaco-scrollable-element,
+      .playground-servers-logs-expanded-editor-shell.playground-code-preview-editor-shell .margin,
+      .playground-servers-logs-expanded-editor-shell.playground-code-preview-editor-shell .overflow-guard {
+        background: transparent !important;
+      }
+
+      .playground-servers-logs-load-more-row {
+        padding: 14px 20px 16px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .playground-servers-logs-load-more-row .playground-environments-action-button {
+        border-radius: 999px;
+      }
+
+      .playground-servers-logs-table-message {
+        display: -webkit-box;
+        overflow: hidden;
+        white-space: normal;
+        word-break: break-word;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
       }
 
       .playground-servers-analytics-log-method,
@@ -23465,21 +24166,72 @@ const html = `<!doctype html>
         margin-top: 18px;
       }
 
+      .playground-mission-control-setup-form .playground-tasks-project-modal-description {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 12px;
+      }
+
       .playground-tasks-project-wallpaper-field {
         margin-top: 16px;
       }
 
       .playground-tasks-project-wallpaper-picker {
-        width: min(820px, 100%);
-        margin: 12px auto 0;
+        width: 100%;
+        margin: 0 0 14px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 12px;
+        gap: 8px;
         color: #ffffff;
         font-size: 12px;
         line-height: 1;
         font-weight: 400;
+      }
+
+      .playground-tasks-project-wallpaper-picker-preview {
+        position: relative;
+        width: 100%;
+        height: 188px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+
+      .playground-tasks-project-wallpaper-picker-preview-image {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        will-change: transform;
+      }
+
+      .playground-tasks-project-wallpaper-picker-preview.is-next .playground-tasks-project-wallpaper-picker-preview-image.is-outgoing {
+        animation: playgroundProjectWallpaperSlideOutLeft 360ms ease both;
+      }
+
+      .playground-tasks-project-wallpaper-picker-preview.is-next .playground-tasks-project-wallpaper-picker-preview-image.is-incoming {
+        animation: playgroundProjectWallpaperSlideInRight 360ms ease both;
+      }
+
+      .playground-tasks-project-wallpaper-picker-preview.is-prev .playground-tasks-project-wallpaper-picker-preview-image.is-outgoing {
+        animation: playgroundProjectWallpaperSlideOutRight 360ms ease both;
+      }
+
+      .playground-tasks-project-wallpaper-picker-preview.is-prev .playground-tasks-project-wallpaper-picker-preview-image.is-incoming {
+        animation: playgroundProjectWallpaperSlideInLeft 360ms ease both;
+      }
+
+      .playground-tasks-project-wallpaper-picker-controls {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
       }
 
       .playground-tasks-project-wallpaper-picker-button {
@@ -23506,6 +24258,8 @@ const html = `<!doctype html>
         font-size: 12px;
         line-height: 1;
         font-weight: 400;
+        min-width: 110px;
+        text-align: center;
       }
 
       .playground-project-wallpaper-transition-layer {
@@ -24458,12 +25212,759 @@ ${ENVIRONMENT_CHANGES_CSS}
         border-bottom: 0;
       }
 
+      .playground-agents-overview-tabs {
+        margin: 16px 0 18px;
+        padding-bottom: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .playground-resources-overview-section > .playground-plugins-section-header {
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .playground-agents-observability-section {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-agents-observability-section > .playground-plugins-section-header {
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .playground-agents-observability-section .playground-plugins-toolbar-controls {
+        flex: 1 1 0;
+      }
+
+      .playground-agents-observability-refresh-button {
+        margin-left: auto;
+      }
+
+      .playground-agents-observability-table-shell {
+        width: 100%;
+      }
+
+      .playground-agents-overview-table-shell.is-static .playground-agents-overview-table tbody tr {
+        cursor: default;
+      }
+
+      .playground-agents-overview-table-shell.is-static .playground-agents-overview-table tbody tr:hover,
+      .playground-agents-overview-table-shell.is-static .playground-agents-overview-table tbody tr:focus-visible {
+        background: transparent;
+      }
+
+      .playground-agents-observability-load-more-row {
+        display: flex;
+        justify-content: center;
+        padding-top: 2px;
+      }
+
+      .playground-agents-observability-load-more-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.82);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-agents-observability-load-more-button:hover,
+      .playground-agents-observability-load-more-button:focus-visible {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        outline: none;
+      }
+
+      .playground-agents-observability-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        text-transform: capitalize;
+      }
+
+      .playground-agents-observability-status.is-completed {
+        background: rgba(53, 232, 187, 0.12);
+        color: rgba(160, 255, 229, 0.92);
+      }
+
+      .playground-agents-observability-status.is-running,
+      .playground-agents-observability-status.is-permission_asked {
+        background: rgba(102, 166, 255, 0.14);
+        color: rgba(190, 218, 255, 0.94);
+      }
+
+      .playground-agents-observability-status.is-failed,
+      .playground-agents-observability-status.is-cancelled {
+        background: rgba(255, 100, 125, 0.13);
+        color: rgba(255, 185, 197, 0.95);
+      }
+
+      .playground-agents-model-access {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-agents-model-access.is-available {
+        background: rgba(102, 166, 255, 0.14);
+        color: rgba(190, 218, 255, 0.94);
+      }
+
+      .playground-agents-model-access.is-locked {
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-agents-model-brains {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .playground-agents-model-brain {
+        width: 12px;
+        height: 12px;
+        color: rgba(255, 255, 255, 0.28);
+      }
+
+      .playground-agents-model-brain.is-active {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-agents-observability-detail-row td {
+        padding: 0 20px 20px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-agents-observability-detail {
+        display: grid;
+        grid-template-columns: minmax(420px, 1.08fr) minmax(320px, 0.92fr);
+        gap: 0;
+        margin-top: 2px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        overflow: hidden;
+      }
+
+      .playground-agents-observability-detail.is-loading,
+      .playground-agents-observability-detail.is-error {
+        display: block;
+        padding: 14px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .playground-agents-observability-tree,
+      .playground-agents-observability-panel {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-agents-observability-tree {
+        max-height: 640px;
+        overflow: auto;
+        background: rgba(0, 0, 0, 0.18);
+      }
+
+      .playground-agents-observability-panel {
+        max-height: 640px;
+        overflow: auto;
+        padding: 0;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.12);
+      }
+
+      .playground-agents-observability-node {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr) 76px 220px;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 14px;
+        border: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 160ms ease;
+      }
+
+      .playground-agents-observability-node:hover,
+      .playground-agents-observability-node:focus-visible,
+      .playground-agents-observability-node.is-selected {
+        background: rgba(255, 255, 255, 0.06);
+        outline: none;
+      }
+
+      .playground-agents-observability-node-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-agents-observability-node.is-thread .playground-agents-observability-node-icon {
+        background: rgba(102, 166, 255, 0.20);
+      }
+
+      .playground-agents-observability-node.is-tool .playground-agents-observability-node-icon {
+        background: rgba(53, 232, 187, 0.15);
+      }
+
+      .playground-agents-observability-node.is-permission .playground-agents-observability-node-icon {
+        background: rgba(255, 231, 23, 0.16);
+      }
+
+      .playground-agents-observability-node-icon svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      .playground-agents-observability-node-copy {
+        min-width: 0;
+      }
+
+      .playground-agents-observability-node-title {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-agents-observability-node-duration {
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .playground-agents-observability-node-bar {
+        position: relative;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.58);
+        overflow: hidden;
+      }
+
+      .playground-agents-observability-node-bar-fill {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        min-width: 2px;
+        border-radius: inherit;
+        background: #66a6ff;
+      }
+
+      .playground-agents-observability-panel-header,
+      .playground-agents-observability-panel-section {
+        padding: 18px 18px 0;
+      }
+
+      .playground-agents-observability-panel-section {
+        padding-bottom: 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-agents-observability-panel-header {
+        padding-bottom: 18px;
+      }
+
+      .playground-agents-observability-panel-kicker {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .playground-agents-observability-panel-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 24px;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-agents-observability-property-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-agents-observability-property-row {
+        display: grid;
+        grid-template-columns: minmax(90px, 0.45fr) minmax(0, 1fr);
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .playground-agents-observability-property-label {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+      }
+
+      .playground-agents-observability-property-value {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+
+      .playground-agents-observability-raw {
+        max-height: 220px;
+        overflow: auto;
+        margin: 0;
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.24);
+        color: rgba(255, 255, 255, 0.68);
+        font: 400 12px/1.5 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        white-space: pre-wrap;
+      }
+
+      .playground-agents-observability-node-meta,
+      .playground-agents-observability-panel-copy,
+      .playground-agents-observability-empty {
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-agents-observability-panel-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
+      .playground-agents-observability-facts {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .playground-agents-observability-fact {
+        min-width: 0;
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.22);
+      }
+
+      .playground-agents-observability-fact-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .playground-agents-observability-fact-value {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-agents-observability-message {
+        max-height: 140px;
+        overflow: auto;
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.22);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .playground-agents-observability-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 0 18px 18px;
+      }
+
+      .playground-thread-observability-view {
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        scrollbar-width: none;
+      }
+
+      .playground-thread-observability-view::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-thread-observability-card {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        height: 100%;
+        min-height: 0;
+        margin: 0 auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-thread-observability-card > .playground-plugins-section-header {
+        flex: 0 0 auto;
+        padding-bottom: 10px;
+        border-bottom: 0;
+      }
+
+      .playground-thread-observability-toolbar {
+        flex: 0 0 auto;
+        margin-bottom: 10px;
+        border-bottom: 0;
+      }
+
+      .playground-thread-observability-card > .playground-agents-observability-detail {
+        display: block;
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        overflow: visible;
+      }
+
+      .playground-thread-observability-card .playground-agents-observability-tree {
+        max-height: none;
+        height: auto;
+        overflow: visible;
+        background: transparent;
+      }
+
+      .playground-thread-observability-card .playground-agents-observability-node {
+        grid-template-columns: 24px minmax(0, 1fr) 94px minmax(160px, 240px);
+        padding: 10px 12px;
+        border-bottom-color: rgba(255, 255, 255, 0.11);
+      }
+
+      .playground-thread-observability-card .playground-agents-observability-node.is-selected {
+        background: rgba(255, 255, 255, 0.10);
+      }
+
+      .playground-thread-observability-card .playground-agents-observability-node-meta {
+        display: none;
+      }
+
+      .playground-thread-observability-card .playground-agents-observability-node-duration {
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      .playground-thread-observability-card .playground-agents-observability-node-bar {
+        background: rgba(255, 255, 255, 0.10);
+      }
+
+      .playground-thread-observability-expanded {
+        padding: 16px 18px 22px 52px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.11);
+        background: rgba(255, 255, 255, 0.10);
+      }
+
+      .playground-thread-observability-expanded-header {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .playground-thread-observability-expanded-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .playground-thread-observability-expanded-chips {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-thread-observability-expanded-chip {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.66);
+        font-size: 12px;
+        line-height: 1.2;
+      }
+
+      .playground-thread-observability-expanded-chip.is-kind {
+        min-height: 24px;
+        padding: 0 10px;
+        border-radius: 7px;
+        background: rgba(77, 163, 255, 0.88);
+        color: #fff;
+      }
+
+      .playground-thread-observability-expanded-chip svg {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 auto;
+      }
+
+      .playground-thread-observability-expanded-section {
+        padding-top: 16px;
+      }
+
+      .playground-thread-observability-expanded-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .playground-thread-observability-expanded-properties {
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+      }
+
+      .playground-thread-observability-expanded-property {
+        display: grid;
+        grid-template-columns: minmax(120px, 0.42fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .playground-thread-observability-expanded-property-label {
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-thread-observability-expanded-property-value {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+        line-height: 1.45;
+        text-align: right;
+        overflow-wrap: anywhere;
+      }
+
+      .playground-thread-observability-expanded-message,
+      .playground-thread-observability-expanded-raw {
+        max-height: 260px;
+        overflow: auto;
+        color: rgba(255, 255, 255, 0.74);
+        font-size: 12px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+      }
+
+      .playground-thread-observability-expanded-raw {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.58);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      .playground-thread-observability-expanded-raw-editor {
+        min-height: 160px;
+        max-height: 420px;
+        border: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: transparent;
+        scrollbar-width: none;
+      }
+
+      .playground-thread-observability-expanded-raw-editor::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-thread-observability-expanded-raw-editor .monaco-editor,
+      .playground-thread-observability-expanded-raw-editor .monaco-editor-background,
+      .playground-thread-observability-expanded-raw-editor .monaco-scrollable-element,
+      .playground-thread-observability-expanded-raw-editor .margin,
+      .playground-thread-observability-expanded-raw-editor .overflow-guard {
+        background: transparent !important;
+      }
+
+      .playground-thread-observability-expanded-section.is-raw-event {
+        margin-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.10);
+      }
+
+      @media (max-width: 980px) {
+        .playground-agents-observability-detail {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-agents-observability-panel {
+          padding-left: 0;
+          border-left: 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          padding-top: 0;
+        }
+
+        .playground-agents-observability-node {
+          grid-template-columns: 24px minmax(0, 1fr) 68px;
+        }
+
+        .playground-agents-observability-node-bar {
+          display: none;
+        }
+
+        .playground-agents-observability-facts {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
       .playground-resources-page .playground-resources-overview-search-row {
         border-bottom: 0;
       }
 
       .playground-resources-overview-create-button {
         margin-left: auto;
+      }
+
+      .playground-resources-overview-settings-stack {
+        width: 100%;
+      }
+
+      .playground-resources-overview-settings-card {
+        width: 100%;
+      }
+
+      .playground-resources-overview-estimate-card {
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 18px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .playground-resources-overview-estimate-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .playground-resources-overview-estimate-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-resources-overview-estimate-value {
+        color: #fff;
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .playground-resources-overview-estimate-note {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
+      .playground-resources-overview-estimate-breakdown {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+        max-width: 52%;
+      }
+
+      .playground-resources-overview-estimate-chip {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        padding: 7px 9px;
+        white-space: nowrap;
       }
 
       .playground-agents-overview-page .playground-environments-home-scroll,
@@ -24758,6 +26259,18 @@ ${ENVIRONMENT_CHANGES_CSS}
         background: linear-gradient(to top, rgba(5, 24, 58, 0.5), rgba(5, 24, 58, 0.9));
       }
 
+      .playground-agents-page .playground-environments-home-metrics .playground-database-overview-chart-block,
+      .playground-agents-overview-page .playground-environments-home-metrics .playground-database-overview-chart-block,
+      .playground-resources-page .playground-environments-home-metrics .playground-database-overview-chart-block {
+        overflow: hidden;
+      }
+
+      .playground-agents-page .playground-environments-home-metrics .playground-project-overview-chart-kpis,
+      .playground-agents-overview-page .playground-environments-home-metrics .playground-project-overview-chart-kpis,
+      .playground-resources-page .playground-environments-home-metrics .playground-project-overview-chart-kpis {
+        background: rgba(0, 0, 0, 0.35);
+      }
+
       .playground-agents-page .playground-environments-home-metrics .playground-settings-usage-chart-card,
       .playground-agents-overview-page .playground-environments-home-metrics .playground-settings-usage-chart-card,
       .playground-resources-page .playground-environments-home-metrics .playground-settings-usage-chart-card {
@@ -24787,8 +26300,13 @@ ${ENVIRONMENT_CHANGES_CSS}
         border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      .playground-agents-detail-summary .playground-environments-home-summary-kpis {
+      .playground-agents-detail-summary .playground-environments-home-summary-kpis,
+      .playground-agents-detail-chart-kpis.playground-project-overview-summary-kpis {
         grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .playground-agents-detail-tabs.playground-agents-overview-tabs {
+        margin: -4px 0 0;
       }
 
       .playground-agents-detail-metrics.playground-environments-home-metrics {
@@ -24817,7 +26335,8 @@ ${ENVIRONMENT_CHANGES_CSS}
       }
 
       @media (max-width: 980px) {
-        .playground-agents-detail-summary .playground-environments-home-summary-kpis {
+        .playground-agents-detail-summary .playground-environments-home-summary-kpis,
+        .playground-agents-detail-chart-kpis.playground-project-overview-summary-kpis {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
@@ -24994,6 +26513,233 @@ ${ENVIRONMENT_CHANGES_CSS}
         overflow: hidden;
       }
 
+      .playground-mission-control-studio-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        background: rgba(6, 6, 10, 0.96);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+      }
+
+      .playground-mission-control-studio {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .playground-mission-control-studio-header {
+        min-height: 58px;
+        padding: 0 22px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .playground-mission-control-studio-title-row {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-mission-control-studio-title-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .playground-mission-control-studio-title {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.98);
+        font-size: 15px;
+        line-height: 1.25;
+        font-weight: 500;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-mission-control-studio-subtitle {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 12px;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-mission-control-studio-back {
+        flex: 0 0 auto;
+      }
+
+      .playground-mission-control-studio-header-actions {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .playground-mission-control-studio-body {
+        min-width: 0;
+        min-height: 0;
+        flex: 1 1 auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .playground-mission-control-studio-settings,
+      .playground-mission-control-studio-chat {
+        min-width: 0;
+        min-height: 0;
+        background: rgba(6, 6, 10, 0.96);
+        overflow: hidden;
+      }
+
+      .playground-mission-control-studio-settings {
+        display: flex;
+        flex-direction: column;
+        background: transparent;
+      }
+
+      .playground-mission-control-studio-section-header {
+        flex: 0 0 auto;
+        padding: 20px 22px 12px;
+      }
+
+      .playground-mission-control-studio-section-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 10px;
+      }
+
+      .playground-mission-control-studio-back-link {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.68);
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 400;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: color 160ms ease;
+      }
+
+      .playground-mission-control-studio-back-link:hover {
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-mission-control-studio-save-button {
+        min-height: 28px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #000000;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.2;
+        font-weight: 400;
+        cursor: pointer;
+        transition: color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-mission-control-studio-save-button:hover:not(:disabled) {
+        color: #000000;
+        opacity: 0.72;
+      }
+
+      .playground-mission-control-studio-save-button:disabled {
+        cursor: default;
+        opacity: 0.38;
+      }
+
+      .playground-mission-control-studio-section-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 500;
+      }
+
+      .playground-mission-control-studio-section-copy {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-mission-control-studio-settings-scroll {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow: auto;
+        padding: 0 22px 22px;
+        scrollbar-width: none;
+      }
+
+      .playground-mission-control-studio-settings-scroll::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-mission-control-studio-settings-footer {
+        flex: 0 0 auto;
+        padding: 12px 22px 20px;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .playground-mission-control-studio-chat {
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid rgba(255, 255, 255, 0.15);
+      }
+
+      .playground-mission-control-studio-chat-header {
+        flex: 0 0 auto;
+        min-height: 64px;
+        padding: 16px 22px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .playground-mission-control-studio-chat-copy {
+        min-width: 0;
+      }
+
+      .playground-mission-control-studio-chat-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 500;
+      }
+
+      .playground-mission-control-studio-chat-subtitle {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
       .playground-mission-control-setup-pane {
         width: 100%;
         height: 100%;
@@ -25027,8 +26773,8 @@ ${ENVIRONMENT_CHANGES_CSS}
       }
 
       .tb-runner-chat.playground-mission-control-setup-runner .tb-content-width.is-custom-empty-state {
-        width: min(100%, 820px);
-        max-width: 820px;
+        width: min(100%, 620px);
+        max-width: 620px;
       }
 
       .tb-runner-chat.playground-mission-control-setup-runner .task-input-box {
@@ -25046,10 +26792,102 @@ ${ENVIRONMENT_CHANGES_CSS}
 
       .playground-mission-control-setup-form {
         width: 100%;
-        margin: -55px auto 0;
+        margin: 0 auto;
         display: flex;
         flex-direction: column;
         gap: 0;
+      }
+
+      .playground-mission-control-setup-form .playground-tasks-project-composer-modal {
+        width: 100%;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .playground-mission-control-setup-form .playground-tasks-project-modal-top {
+        margin-bottom: 12px;
+      }
+
+      .playground-mission-control-setup-form .playground-tasks-project-modal-actions {
+        position: sticky;
+        bottom: 0;
+        padding-top: 16px;
+        padding-bottom: 2px;
+        background: linear-gradient(180deg, rgba(6, 6, 10, 0), rgba(6, 6, 10, 0.96) 28%);
+      }
+
+      .playground-mission-control-setup-empty-card {
+        width: min(100%, 560px);
+        margin: 0 auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        text-align: left;
+      }
+
+      .playground-mission-control-setup-empty-kicker {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 11px;
+        line-height: 1.2;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .playground-mission-control-setup-empty-title {
+        margin-top: 10px;
+        color: rgba(255, 255, 255, 0.98);
+        font-size: 24px;
+        line-height: 1.1;
+        font-weight: 500;
+      }
+
+      .playground-mission-control-setup-empty-copy {
+        margin-top: 12px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .playground-mission-control-capability-list {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-mission-control-capability-item {
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+
+      .playground-mission-control-capability-icon {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-mission-control-capability-title {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 14px;
+        line-height: 1.35;
+        font-weight: 500;
+      }
+
+      .playground-mission-control-capability-copy {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        line-height: 1.45;
       }
 
       .playground-mission-control-project-modal {
@@ -25233,6 +27071,49 @@ ${ENVIRONMENT_CHANGES_CSS}
       .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar {
         padding: 0;
         gap: 0;
+      }
+
+      @media (max-width: 980px) {
+        .playground-mission-control-studio-header {
+          padding: 0 14px;
+        }
+
+        .playground-mission-control-studio-body {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-rows: minmax(320px, 45vh) minmax(0, 1fr);
+        }
+
+        .playground-mission-control-studio-settings {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .playground-mission-control-studio-section-header,
+        .playground-mission-control-studio-chat-header {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+
+        .playground-mission-control-studio-settings-scroll {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+
+        .playground-mission-control-studio-settings-footer {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .playground-mission-control-studio-body {
+          grid-template-rows: minmax(300px, 42vh) minmax(0, 1fr);
+        }
+
+        .playground-mission-control-studio-subtitle,
+        .playground-mission-control-studio-chat-subtitle,
+        .playground-mission-control-studio-section-copy {
+          display: none;
+        }
       }
 
       .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-calendar {
@@ -26571,8 +28452,24 @@ ${ENVIRONMENT_CHANGES_CSS}
         margin-top: 14px;
       }
 
-      .playground-tasks-backlog-composer-shell.is-project-wallpaper-active .tb-runner-chat.playground-tasks-backlog-runner .task-input-box {
+      .playground-tasks-backlog-composer-shell,
+      .playground-tasks-backlog-composer-shell .tb-runner-chat.playground-tasks-backlog-runner,
+      .playground-tasks-backlog-composer-shell .tb-runner-chat.playground-tasks-backlog-runner .tb-input-shell,
+      .playground-tasks-backlog-composer-shell .tb-runner-chat.playground-tasks-backlog-runner .tb-input-width,
+      .playground-tasks-backlog-composer-shell .tb-runner-chat.playground-tasks-backlog-runner .embedded-runner-input,
+      .playground-tasks-backlog-composer-shell .tb-runner-chat.playground-tasks-backlog-runner .tb-composer-textarea-shell,
+      .playground-tasks-backlog-composer-shell .tb-runner-chat.playground-tasks-backlog-runner .task-input-controls {
+        background: transparent !important;
+      }
+
+      .playground-tasks-backlog-composer-shell .tb-runner-chat.playground-tasks-backlog-runner .task-input-box {
+        --tb-runner-input-bg: transparent;
+        --tb-task-input-overlay: transparent;
         --tb-task-input-base-bg: transparent;
+        background: transparent !important;
+        box-shadow: none;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
       }
 
       .playground-environments-home-composer-shell .tb-runner-chat.playground-environments-home-runner .task-input-box {
@@ -28908,7 +30805,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -29111,6 +31008,14 @@ ${ENVIRONMENT_CHANGES_CSS}
       const FIREBASE_APP_ID = ${JSON.stringify(process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:65067873832:web:15722955fece43cdf9671d")};
       const SEARCH_THREAD_FETCH_LIMIT = 200;
       const SETTINGS_CT_PER_DOLLAR = 100;
+      const PLAYGROUND_SERVER_IDLE_RATE_PER_MINUTE = {
+        website: 0.000005,
+        web_app: 0.000008333333,
+        api: 0.000006944444,
+        function: 0,
+        auth: 0.000004166667,
+        agent_runtime: 0.0000125,
+      };
       const SETTINGS_SOURCE_CHANNELS = {
         ios: "native",
         macos: "native",
@@ -30462,15 +32367,19 @@ ${ENVIRONMENT_CHANGES_CSS}
         const normalizedUsageBillingEnabled = Boolean(source.usageBillingEnabled);
         const normalizedSpendLimit = normalizeSettingsSpendLimit(source.monthlyResourceSpendLimit);
         const legacyImplicitDefault = !normalizedUsageBillingEnabled && normalizedSpendLimit === 200;
+        const hasEmailAlerts = Object.prototype.hasOwnProperty.call(source, "emailAlerts");
+        const hasResourceEmailAlerts = Object.prototype.hasOwnProperty.call(source, "resourceEmailAlerts");
         return {
           usageBillingEnabled: normalizedUsageBillingEnabled,
           monthlyResourceSpendLimit: legacyImplicitDefault ? 0 : normalizedSpendLimit,
           pauseOnLimit: Object.prototype.hasOwnProperty.call(source, "pauseOnLimit")
             ? Boolean(source.pauseOnLimit)
             : SETTINGS_DEFAULT_BILLING_PREFERENCES.pauseOnLimit,
-          emailAlerts: Object.prototype.hasOwnProperty.call(source, "emailAlerts")
+          emailAlerts: hasEmailAlerts
             ? Boolean(source.emailAlerts)
-            : SETTINGS_DEFAULT_BILLING_PREFERENCES.emailAlerts,
+            : hasResourceEmailAlerts
+              ? Boolean(source.resourceEmailAlerts)
+              : SETTINGS_DEFAULT_BILLING_PREFERENCES.emailAlerts,
         };
       }
 
@@ -33169,16 +35078,19 @@ ${ENVIRONMENT_CHANGES_CSS}
           "Your job is to run project strategy and backlog planning for the exact project supplied in the user prompt. You do not ask what Mission Control means.",
           "",
           "Workflow:",
-          "1. Read the provided project description, connectors, attachments, releases, tasks, agents, environments, and operator directive.",
+          "1. Read the provided project goal, existing structured strategy, outcomes, rules, connectors, attachments, releases, tasks, agents, environments, and operator directive.",
           "2. Use the Task Management skill for release, task, subtask, blocker, dependency, connector, comment, and assignment mutations whenever the project structure needs to change.",
           "3. Use the Computer Agents skill to inspect live agents, environments, skills, and thread context before assigning work or assuming IDs.",
           "4. Keep the project's selected default environment as the execution environment unless the prompt or available context proves another environment is better.",
-          "5. Produce a concise project strategy document and the required mission_control_json block. Do not add conversational prefaces or outros.",
+          "5. Update the compact strategy, outcomes, and project rules only when the new project context justifies it. Preserve existing outcome IDs and rule meaning whenever possible.",
+          "6. Produce a concise project strategy document and the required mission_control_json block. Do not add conversational prefaces or outros.",
           "",
           "Planning standards:",
           "- Prefer release-level structure before creating loose tasks.",
           "- Create execution-ready tasks with assignee, environment, skills, dependencies, connector context, and acceptance criteria when the context supports it.",
           "- Keep tickets specific, short, and actionable.",
+          "- Keep outcomes user/business-facing and map them to taskIds or releaseId when work clearly contributes to them.",
+          "- Keep project rules concrete, operational, and phrased as instructions agents can follow while executing tickets.",
           "- Use comments to preserve important rationale, sequencing, and handoff context.",
           "- If the project is underspecified, still create a useful strategy from the available context and state the most important assumptions in the strategy document.",
         ].join("\\n");
@@ -33615,6 +35527,75 @@ ${ENVIRONMENT_CHANGES_CSS}
           skillsMode: skillPolicy?.mode === "override" ? "override" : "inherit",
           enabledSkills: normalizePlaygroundEnabledSkillIds(skillPolicy?.enabledSkills),
         };
+      }
+
+      function normalizePlaygroundServerCustomDomainState(domainState, fallbackDomain) {
+        const primary = domainState && typeof domainState === "object" && !Array.isArray(domainState)
+          ? domainState
+          : null;
+        const domain = String(primary?.domain || fallbackDomain || "").trim();
+        if (!domain) {
+          return null;
+        }
+        return {
+          domain,
+          provider: String(primary?.provider || "firebase_hosting"),
+          status: String(primary?.status || "pending"),
+          url: typeof primary?.url === "string" ? primary.url : "",
+          records: Array.isArray(primary?.records) ? primary.records : [],
+          conditions: Array.isArray(primary?.conditions) ? primary.conditions : [],
+          verification: primary?.verification && typeof primary.verification === "object" && !Array.isArray(primary.verification) ? primary.verification : null,
+          siteId: typeof primary?.siteId === "string"
+            ? primary.siteId
+            : typeof primary?.hosting?.siteId === "string"
+              ? primary.hosting.siteId
+              : "",
+          hostState: typeof primary?.hostState === "string" ? primary.hostState : "",
+          ownershipState: typeof primary?.ownershipState === "string" ? primary.ownershipState : "",
+          certState: typeof primary?.certState === "string" ? primary.certState : "",
+          lastCheckedAt: typeof primary?.lastCheckedAt === "string" ? primary.lastCheckedAt : "",
+        };
+      }
+
+      function getPlaygroundServerCustomDomainStates(server) {
+        const normalized = normalizePlaygroundServerRecord(server);
+        const metadata = normalized?.metadata && typeof normalized.metadata === "object" && !Array.isArray(normalized.metadata)
+          ? normalized.metadata
+          : null;
+        const domains = metadata?.customDomains && typeof metadata.customDomains === "object" && !Array.isArray(metadata.customDomains)
+          ? Object.values(metadata.customDomains)
+          : [];
+        const primary = metadata?.customDomain && typeof metadata.customDomain === "object" && !Array.isArray(metadata.customDomain)
+          ? metadata.customDomain
+          : null;
+        const states = [];
+        const seen = new Set();
+        [primary, ...domains].forEach((item) => {
+          const normalizedState = normalizePlaygroundServerCustomDomainState(item, normalized.customDomain);
+          if (!normalizedState || seen.has(normalizedState.domain)) {
+            return;
+          }
+          seen.add(normalizedState.domain);
+          states.push(normalizedState);
+        });
+        return states.sort((left, right) => {
+          const leftTime = Date.parse(left.lastCheckedAt || "") || 0;
+          const rightTime = Date.parse(right.lastCheckedAt || "") || 0;
+          return rightTime - leftTime;
+        });
+      }
+
+      function getPlaygroundServerCustomDomainState(server) {
+        return getPlaygroundServerCustomDomainStates(server)[0] || null;
+      }
+
+      function formatPlaygroundCustomDomainStatus(value) {
+        const status = String(value || "").trim();
+        if (status === "connected") return "Connected";
+        if (status === "verification_required") return "Verify domain";
+        if (status === "needs_setup") return "Needs setup";
+        if (status === "pending_dns") return "Pending DNS";
+        return "Pending";
       }
 
       function buildPlaygroundServerMetadata(server) {
@@ -34570,12 +36551,13 @@ ${ENVIRONMENT_CHANGES_CSS}
           wallpaperId: PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id,
           useCardBackgroundAsWallpaper: true,
           color: null,
-          defaultEnvironmentId: null,
-          attachments: [],
-          connectors: buildPlaygroundDefaultTaskConnectors(),
-          missionControl: buildEmptyPlaygroundProjectMissionControl(),
-          metadata: null,
-          summary: buildEmptyPlaygroundProjectSummary(),
+	          defaultEnvironmentId: null,
+	          attachments: [],
+	          connectors: buildPlaygroundDefaultTaskConnectors(),
+	          projectRules: "",
+	          missionControl: buildEmptyPlaygroundProjectMissionControl(),
+	          metadata: null,
+	          summary: buildEmptyPlaygroundProjectSummary(),
           createdAt: now,
           updatedAt: now,
         };
@@ -34586,21 +36568,107 @@ ${ENVIRONMENT_CHANGES_CSS}
           summary: "",
           document: "",
           instructions: "",
+          strategyBrief: buildEmptyPlaygroundProjectStrategyBrief(),
           comments: [],
           lastThreadId: "",
           updatedAt: "",
         };
       }
 
+      function buildEmptyPlaygroundProjectStrategyBrief() {
+        return {
+          mission: "",
+          outcomes: [],
+          inScope: [],
+          outOfScope: [],
+          successCriteria: [],
+          risks: [],
+          decisions: [],
+        };
+      }
+
+      function normalizePlaygroundStrategyText(value) {
+        return String(value || "").replaceAll(String.fromCharCode(13), "").trim();
+      }
+
+      function normalizePlaygroundStrategyTextList(value) {
+        const values = Array.isArray(value)
+          ? value
+          : String(value || "").replaceAll(String.fromCharCode(13), "").split(String.fromCharCode(10));
+        return values
+          .map((item) => normalizePlaygroundStrategyText(item))
+          .filter(Boolean);
+      }
+
+      function normalizePlaygroundStrategyOutcomeRecord(value, index = 0) {
+        const isOutcomeRecord = value && typeof value === "object" && !Array.isArray(value);
+        const outcome = isOutcomeRecord
+          ? value
+          : {};
+        const title = normalizePlaygroundStrategyText(outcome.title || outcome.name || (isOutcomeRecord ? "" : value));
+        const fallbackId = title
+          ? "outcome-" + slugifyPlaygroundAgentEmailLocalPart(title).slice(0, 40)
+          : "outcome-" + String(index + 1).padStart(2, "0");
+        return {
+          id: normalizePlaygroundStrategyText(outcome.id || outcome.outcomeId) || fallbackId,
+          title,
+          description: normalizePlaygroundStrategyText(outcome.description || outcome.summary),
+          releaseId: normalizePlaygroundStrategyText(outcome.releaseId || outcome.release_id),
+          taskIds: normalizePlaygroundIdList(outcome.taskIds || outcome.task_ids),
+          successCriteria: normalizePlaygroundStrategyTextList(outcome.successCriteria || outcome.success_criteria || outcome.criteria),
+        };
+      }
+
+      function normalizePlaygroundProjectStrategyBrief(value) {
+        const strategy = value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+        const scope = strategy.scope && typeof strategy.scope === "object" && !Array.isArray(strategy.scope)
+          ? strategy.scope
+          : {};
+        const outcomes = Array.isArray(strategy.outcomes)
+          ? strategy.outcomes
+          : Array.isArray(strategy.primaryOutcomes)
+            ? strategy.primaryOutcomes
+            : [];
+        return {
+          ...buildEmptyPlaygroundProjectStrategyBrief(),
+          mission: normalizePlaygroundStrategyText(strategy.goal || strategy.mission || strategy.summary),
+          outcomes: outcomes
+            .map((outcome, index) => normalizePlaygroundStrategyOutcomeRecord(outcome, index))
+            .filter((outcome) => outcome.title || outcome.description),
+          inScope: normalizePlaygroundStrategyTextList(strategy.inScope || strategy.in_scope || scope.in || scope.inScope),
+          outOfScope: normalizePlaygroundStrategyTextList(strategy.outOfScope || strategy.out_of_scope || scope.out || scope.outOfScope),
+          successCriteria: normalizePlaygroundStrategyTextList(strategy.successCriteria || strategy.success_criteria),
+          risks: normalizePlaygroundStrategyTextList(strategy.risks || strategy.assumptions || strategy.risksAndAssumptions),
+          decisions: normalizePlaygroundStrategyTextList(strategy.decisions || strategy.keyDecisions),
+        };
+      }
+
+      function hasMeaningfulPlaygroundProjectStrategyBrief(value) {
+        const strategy = normalizePlaygroundProjectStrategyBrief(value);
+        return Boolean(
+          String(strategy.mission || "").trim()
+          || strategy.outcomes.length > 0
+          || strategy.inScope.length > 0
+          || strategy.outOfScope.length > 0
+          || strategy.successCriteria.length > 0
+          || strategy.risks.length > 0
+          || strategy.decisions.length > 0
+        );
+      }
+
       function normalizePlaygroundProjectMissionControlRecord(value) {
         const missionControl = value && typeof value === "object" && !Array.isArray(value)
           ? value
           : {};
+        const rawStrategyBrief = missionControl.strategyBrief || missionControl.structuredStrategy || missionControl.strategy;
         return {
           ...buildEmptyPlaygroundProjectMissionControl(),
           summary: typeof missionControl.summary === "string" ? missionControl.summary : "",
           document: typeof missionControl.document === "string" ? missionControl.document : "",
           instructions: typeof missionControl.instructions === "string" ? missionControl.instructions : "",
+          strategyBrief: normalizePlaygroundProjectStrategyBrief(rawStrategyBrief),
           comments: normalizePlaygroundTaskCommentList(missionControl.comments),
           lastThreadId: typeof missionControl.lastThreadId === "string" ? missionControl.lastThreadId : "",
           updatedAt: typeof missionControl.updatedAt === "string" ? missionControl.updatedAt : "",
@@ -34608,15 +36676,254 @@ ${ENVIRONMENT_CHANGES_CSS}
       }
 
       function getPlaygroundProjectMissionControlRecord(project) {
-        const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
-          ? project.metadata
-          : null;
-        return normalizePlaygroundProjectMissionControlRecord(project?.missionControl || metadata?.missionControl);
+        return selectPlaygroundProjectMissionControlRecord(project);
       }
 
-      function getPlaygroundProjectMissionInstructions(project) {
-        return String(project?.description || "").trim();
+      function selectPlaygroundProjectMissionControlRecord(...sources) {
+        const knownRecords = [];
+        for (const source of sources) {
+          if (!source || typeof source !== "object" || Array.isArray(source)) {
+            continue;
+          }
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+            ? source.metadata
+            : {};
+          const candidates = [];
+          if (Object.prototype.hasOwnProperty.call(source, "missionControl")) {
+            candidates.push(source.missionControl);
+          }
+          if (Object.prototype.hasOwnProperty.call(metadata, "missionControl")) {
+            candidates.push(metadata.missionControl);
+          }
+          for (const candidate of candidates) {
+            const normalized = normalizePlaygroundProjectMissionControlRecord(candidate);
+            knownRecords.push(normalized);
+            if (hasMeaningfulPlaygroundProjectMissionControlRecord(normalized)) {
+              return normalized;
+            }
+          }
+        }
+        return knownRecords.length > 0
+          ? knownRecords[0]
+          : buildEmptyPlaygroundProjectMissionControl();
       }
+
+      function hasMeaningfulPlaygroundProjectMissionControlRecord(value) {
+        const missionControl = normalizePlaygroundProjectMissionControlRecord(value);
+        const strategyBrief = normalizePlaygroundProjectStrategyBrief(missionControl.strategyBrief);
+        return Boolean(
+          String(missionControl.summary || "").trim()
+          || String(missionControl.document || "").trim()
+          || String(missionControl.instructions || "").trim()
+          || String(missionControl.lastThreadId || "").trim()
+          || String(missionControl.updatedAt || "").trim()
+          || normalizePlaygroundTaskCommentList(missionControl.comments).length > 0
+          || hasMeaningfulPlaygroundProjectStrategyBrief(strategyBrief)
+        );
+      }
+
+      function buildPlaygroundProjectMissionControlMetadataFragment(project, fallbackProject = null) {
+        const projectMetadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+          ? project.metadata
+          : {};
+        const fallbackMetadata = fallbackProject?.metadata && typeof fallbackProject.metadata === "object" && !Array.isArray(fallbackProject.metadata)
+          ? fallbackProject.metadata
+          : {};
+        const hasKnownMissionControl = Object.prototype.hasOwnProperty.call(project || {}, "missionControl")
+          || Object.prototype.hasOwnProperty.call(projectMetadata, "missionControl")
+          || Object.prototype.hasOwnProperty.call(fallbackProject || {}, "missionControl")
+          || Object.prototype.hasOwnProperty.call(fallbackMetadata, "missionControl");
+        const missionControl = selectPlaygroundProjectMissionControlRecord(project, fallbackProject);
+        return hasKnownMissionControl || hasMeaningfulPlaygroundProjectMissionControlRecord(missionControl)
+          ? { missionControl }
+          : {};
+      }
+
+	      function getPlaygroundProjectMissionInstructions(project) {
+	        return String(project?.description || "").trim();
+	      }
+
+	      function getPlaygroundProjectRules(project) {
+	        const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	          ? project.metadata
+	          : null;
+	        if (typeof project?.projectRules === "string") {
+	          return project.projectRules;
+	        }
+	        if (typeof metadata?.projectRules === "string") {
+	          return metadata.projectRules;
+	        }
+	        return "";
+	      }
+
+	      function normalizePlaygroundProjectRuleEntry(value) {
+	        return String(value || "").replace(/\\r\\n/g, "\\n").trim();
+	      }
+
+	      function splitPlaygroundProjectRuleEntries(value) {
+	        const normalized = normalizePlaygroundProjectRuleEntry(value);
+	        if (!normalized) {
+	          return [];
+	        }
+	        return normalized
+	          .split(/\\n{2,}/)
+	          .map((entry) => normalizePlaygroundProjectRuleEntry(entry))
+	          .filter(Boolean);
+	      }
+
+	      function serializePlaygroundProjectRuleEntries(entries) {
+	        return (Array.isArray(entries) ? entries : [])
+	          .map((entry) => normalizePlaygroundProjectRuleEntry(entry))
+	          .filter(Boolean)
+	          .join("\\n\\n");
+	      }
+
+	      function buildPlaygroundProjectRulesPromptSection(project) {
+	        const rules = serializePlaygroundProjectRuleEntries(splitPlaygroundProjectRuleEntries(getPlaygroundProjectRules(project)));
+	        if (!rules) {
+	          return "";
+	        }
+	        return "Project rules agents must follow:" + String.fromCharCode(10) + rules;
+	      }
+
+	      function extractPlaygroundMissionControlSummary(document) {
+	        const plainText = String(document || "")
+	          .replace(/\\x60\\x60\\x60[\\s\\S]*?\\x60\\x60\\x60/g, " ")
+	          .replace(/[\\x60*_>#-]/g, " ")
+	          .replace(/\\[(.*?)\\]\\((.*?)\\)/g, "$1")
+	          .replace(/\\s+/g, " ")
+	          .trim();
+	        if (!plainText) {
+	          return "";
+	        }
+	        const sentenceMatches = plainText.match(/[^.!?]+[.!?]+/g) || [plainText];
+	        const summary = sentenceMatches.slice(0, 2).join(" ").trim() || plainText;
+	        return summary.length > 260 ? summary.slice(0, 257).trimEnd() + "…" : summary;
+	      }
+
+	      function getPlaygroundProjectStrategyBriefRecord(project) {
+	        const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	          ? project.metadata
+	          : null;
+	        const missionControl = getPlaygroundProjectMissionControlRecord(project);
+	        const strategyBrief = normalizePlaygroundProjectStrategyBrief(missionControl.strategyBrief);
+	        const projectGoal = normalizePlaygroundStrategyText(project?.description || metadata?.description);
+	        if (projectGoal) {
+	          strategyBrief.mission = projectGoal;
+	        } else if (!strategyBrief.mission && missionControl.summary) {
+	          strategyBrief.mission = normalizePlaygroundStrategyText(missionControl.summary);
+	        }
+	        if (!strategyBrief.mission && missionControl.document) {
+	          strategyBrief.mission = extractPlaygroundMissionControlSummary(missionControl.document);
+	        }
+	        return strategyBrief;
+	      }
+
+	      function getPlaygroundTaskStrategyOutcomeId(taskRecord) {
+	        const metadata = taskRecord?.metadata && typeof taskRecord.metadata === "object" && !Array.isArray(taskRecord.metadata)
+	          ? taskRecord.metadata
+	          : null;
+	        const runnerPlayground = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+	          ? metadata.runnerPlayground
+	          : null;
+	        return normalizePlaygroundStrategyText(
+	          taskRecord?.strategyOutcomeId
+	          || metadata?.strategyOutcomeId
+	          || runnerPlayground?.strategyOutcomeId
+	        );
+	      }
+
+	      function findPlaygroundStrategyOutcomeForTask(strategyBrief, taskRecord) {
+	        const normalizedStrategy = normalizePlaygroundProjectStrategyBrief(strategyBrief);
+	        const outcomes = normalizedStrategy.outcomes;
+	        if (!outcomes.length || !taskRecord) {
+	          return null;
+	        }
+	        const taskId = normalizePlaygroundStrategyText(taskRecord.id);
+	        const taskOutcomeId = getPlaygroundTaskStrategyOutcomeId(taskRecord);
+	        const releaseId = normalizePlaygroundStrategyText(taskRecord.releaseId);
+	        if (taskOutcomeId) {
+	          const matchedOutcome = outcomes.find((outcome) => outcome.id === taskOutcomeId);
+	          if (matchedOutcome) {
+	            return matchedOutcome;
+	          }
+	        }
+	        if (taskId) {
+	          const matchedOutcome = outcomes.find((outcome) => outcome.taskIds.includes(taskId));
+	          if (matchedOutcome) {
+	            return matchedOutcome;
+	          }
+	        }
+	        if (releaseId) {
+	          const matchedOutcome = outcomes.find((outcome) => outcome.releaseId && outcome.releaseId === releaseId);
+	          if (matchedOutcome) {
+	            return matchedOutcome;
+	          }
+	        }
+	        const taskText = normalizePlaygroundStrategyText([taskRecord.title, taskRecord.description].filter(Boolean).join(" ")).toLowerCase();
+	        if (taskText) {
+	          return outcomes.find((outcome) => {
+	            const title = normalizePlaygroundStrategyText(outcome.title).toLowerCase();
+	            return title.length >= 8 && taskText.includes(title);
+	          }) || null;
+	        }
+	        return null;
+	      }
+
+	      function formatPlaygroundStrategyPromptList(label, values) {
+	        const items = normalizePlaygroundStrategyTextList(values);
+	        if (!items.length) {
+	          return "";
+	        }
+	        const newline = String.fromCharCode(10);
+	        return label + ":" + newline + items.map((item) => "- " + item).join(newline);
+	      }
+
+	        function buildPlaygroundProjectStrategyBriefPromptSection(project, options = {}) {
+	        const strategyBrief = getPlaygroundProjectStrategyBriefRecord(project);
+	        const newline = String.fromCharCode(10);
+	        const sections = [];
+	        if (strategyBrief.mission) {
+	          sections.push("Goal: " + strategyBrief.mission);
+	        }
+	        if (strategyBrief.outcomes.length > 0) {
+	          sections.push([
+	            "Primary outcomes:",
+	            ...strategyBrief.outcomes.map((outcome, index) => {
+	              const prefix = String(index + 1) + ". " + (outcome.title || "Outcome");
+	              const details = [
+	                outcome.description,
+	                outcome.successCriteria.length > 0 ? "Success: " + outcome.successCriteria.join("; ") : "",
+	              ].filter(Boolean).join(" ");
+	              return "- " + prefix + (details ? " — " + details : "");
+	            }),
+	          ].join(newline));
+	        }
+	        const taskOutcome = findPlaygroundStrategyOutcomeForTask(strategyBrief, options?.taskRecord);
+	        if (taskOutcome) {
+	          sections.push([
+	            "This task supports outcome: " + (taskOutcome.title || taskOutcome.id),
+	            taskOutcome.description ? "Outcome context: " + taskOutcome.description : "",
+	            taskOutcome.successCriteria.length > 0 ? "Outcome success criteria:" + newline + taskOutcome.successCriteria.map((item) => "- " + item).join(newline) : "",
+	          ].filter(Boolean).join(newline));
+	        }
+	        const scopeLines = [
+	          formatPlaygroundStrategyPromptList("In scope", strategyBrief.inScope),
+	          formatPlaygroundStrategyPromptList("Out of scope", strategyBrief.outOfScope),
+	        ].filter(Boolean).join(newline);
+	        if (scopeLines) {
+	          sections.push("Scope boundaries:" + newline + scopeLines);
+	        }
+	        [
+	          formatPlaygroundStrategyPromptList("Project success criteria", strategyBrief.successCriteria),
+	          formatPlaygroundStrategyPromptList("Risks and assumptions", strategyBrief.risks),
+	          formatPlaygroundStrategyPromptList("Key decisions", strategyBrief.decisions),
+	        ].filter(Boolean).forEach((section) => sections.push(section));
+	        if (!sections.length) {
+	          return "";
+	        }
+	        return "Project goal and strategy:" + newline + sections.join(newline + newline);
+	      }
 
       function buildPlaygroundDefaultScheduleDraft() {
         const now = new Date().toISOString();
@@ -35016,9 +37323,19 @@ ${ENVIRONMENT_CHANGES_CSS}
           return null;
         }
 
-        const mimeType = typeof attachment.mimeType === "string" && attachment.mimeType.trim()
+        const rawMimeType = typeof attachment.mimeType === "string" && attachment.mimeType.trim()
           ? attachment.mimeType.trim()
-          : "application/octet-stream";
+          : "";
+        const isFolder = Boolean(
+          attachment.isFolder
+          || attachment.type === "directory"
+          || String(attachment.previewKindOverride || "").toLowerCase() === "directory"
+          || rawMimeType.toLowerCase() === "inode/directory"
+        );
+        const mimeType = rawMimeType || (isFolder ? "inode/directory" : "application/octet-stream");
+        const previewKindOverride = typeof attachment.previewKindOverride === "string" && attachment.previewKindOverride.trim()
+          ? attachment.previewKindOverride.trim()
+          : undefined;
         const type = attachment.type === "image" || String(mimeType).toLowerCase().startsWith("image/")
           ? "image"
           : "document";
@@ -35047,6 +37364,8 @@ ${ENVIRONMENT_CHANGES_CSS}
           filename,
           mimeType,
           type,
+          isFolder: isFolder || undefined,
+          previewKindOverride: isFolder ? "directory" : previewKindOverride,
           size: Number.isFinite(attachment.size) ? Number(attachment.size) : 0,
           uploadedAt: typeof attachment.uploadedAt === "string" && attachment.uploadedAt ? attachment.uploadedAt : "",
           url: typeof attachment.url === "string" && attachment.url.trim() ? attachment.url.trim() : undefined,
@@ -36050,13 +38369,14 @@ ${ENVIRONMENT_CHANGES_CSS}
           ? project.name
           : (metadataProjectName || (typeof project.name === "string" ? project.name : draft.name));
         const metadataDescription = typeof metadata?.description === "string" ? metadata.description : "";
-        const resolvedProjectDescription = typeof project.description === "string" && (project.description.trim() || !metadataDescription)
-          ? project.description
-          : (metadataDescription || (typeof project.description === "string" ? project.description : draft.description));
+	        const resolvedProjectDescription = typeof project.description === "string" && (project.description.trim() || !metadataDescription)
+	          ? project.description
+	          : (metadataDescription || (typeof project.description === "string" ? project.description : draft.description));
+	        const projectRules = getPlaygroundProjectRules(project);
 
-        return {
-          ...draft,
-          ...project,
+	        return {
+	          ...draft,
+	          ...project,
           id: typeof project.id === "string" ? project.id : draft.id,
           name: resolvedProjectName,
           description: resolvedProjectDescription,
@@ -36069,10 +38389,11 @@ ${ENVIRONMENT_CHANGES_CSS}
             : typeof metadata?.defaultEnvironmentId === "string" && metadata.defaultEnvironmentId.trim()
               ? metadata.defaultEnvironmentId.trim()
             : null,
-          attachments,
-          connectors,
-          missionControl,
-          metadata,
+	          attachments,
+	          connectors,
+	          projectRules,
+	          missionControl,
+	          metadata,
           summary: {
             ...buildEmptyPlaygroundProjectSummary(),
             environmentsCount: Number(summary.environmentsCount) || 0,
@@ -36400,10 +38721,12 @@ ${ENVIRONMENT_CHANGES_CSS}
           || hasOwnProjectField(rawPrimaryMetadata, "defaultEnvironmentId");
         const primaryHasAttachments = hasOwnProjectField(primaryProject, "attachments")
           || hasOwnProjectField(rawPrimaryMetadata, "attachments");
-        const primaryHasConnectors = hasOwnProjectField(primaryProject, "connectors")
-          || hasOwnProjectField(rawPrimaryMetadata, "connectors");
-        const primaryHasMissionControl = hasOwnProjectField(primaryProject, "missionControl")
-          || hasOwnProjectField(rawPrimaryMetadata, "missionControl");
+	        const primaryHasConnectors = hasOwnProjectField(primaryProject, "connectors")
+	          || hasOwnProjectField(rawPrimaryMetadata, "connectors");
+	        const primaryHasProjectRules = hasOwnProjectField(primaryProject, "projectRules")
+	          || hasOwnProjectField(rawPrimaryMetadata, "projectRules");
+	        const primaryHasMissionControl = hasOwnProjectField(primaryProject, "missionControl")
+	          || hasOwnProjectField(rawPrimaryMetadata, "missionControl");
         const primaryHasWallpaper = hasOwnProjectField(primaryProject, "wallpaperId")
           || hasOwnProjectField(rawPrimaryMetadata, "wallpaperId");
         const primaryHasIcon = hasOwnProjectField(primaryProject, "icon")
@@ -36422,9 +38745,16 @@ ${ENVIRONMENT_CHANGES_CSS}
         const mergedDefaultEnvironmentId = primaryHasDefaultEnvironment
           ? normalizedPrimary.defaultEnvironmentId
           : normalizedFallback.defaultEnvironmentId;
-        const mergedAttachments = primaryHasAttachments ? normalizedPrimary.attachments : normalizedFallback.attachments;
-        const mergedConnectors = primaryHasConnectors ? normalizedPrimary.connectors : normalizedFallback.connectors;
-        const mergedMissionControl = primaryHasMissionControl ? normalizedPrimary.missionControl : normalizedFallback.missionControl;
+	        const mergedAttachments = primaryHasAttachments ? normalizedPrimary.attachments : normalizedFallback.attachments;
+	        const mergedConnectors = primaryHasConnectors ? normalizedPrimary.connectors : normalizedFallback.connectors;
+	        const mergedProjectRules = primaryHasProjectRules ? normalizedPrimary.projectRules : normalizedFallback.projectRules;
+	        const primaryMissionControlIsMeaningful = hasMeaningfulPlaygroundProjectMissionControlRecord(normalizedPrimary.missionControl);
+	        const fallbackMissionControlIsMeaningful = hasMeaningfulPlaygroundProjectMissionControlRecord(normalizedFallback.missionControl);
+	        const mergedMissionControl = primaryHasMissionControl
+	          ? (primaryMissionControlIsMeaningful || !fallbackMissionControlIsMeaningful
+	              ? normalizedPrimary.missionControl
+	              : normalizedFallback.missionControl)
+	          : normalizedFallback.missionControl;
         const fallbackMetadata = normalizedFallback.metadata && typeof normalizedFallback.metadata === "object" && !Array.isArray(normalizedFallback.metadata)
           ? normalizedFallback.metadata
           : {};
@@ -36468,10 +38798,11 @@ ${ENVIRONMENT_CHANGES_CSS}
           useCardBackgroundAsWallpaper: mergedUseCardBackgroundAsWallpaper,
           color: mergedColor,
           defaultEnvironmentId: mergedDefaultEnvironmentId,
-          attachments: mergedAttachments,
-          connectors: mergedConnectors,
-          missionControl: mergedMissionControl,
-          metadata: {
+	          attachments: mergedAttachments,
+	          connectors: mergedConnectors,
+	          projectRules: mergedProjectRules,
+	          missionControl: mergedMissionControl,
+	          metadata: {
             ...mergedMetadata,
             name: mergedName,
             description: mergedDescription,
@@ -36479,10 +38810,11 @@ ${ENVIRONMENT_CHANGES_CSS}
             wallpaperId: mergedWallpaperId,
             useCardBackgroundAsWallpaper: mergedUseCardBackgroundAsWallpaper,
             defaultEnvironmentId: mergedDefaultEnvironmentId,
-            attachments: mergedAttachments,
-            connectors: hasPlaygroundTaskConnectorSelections(mergedConnectors) ? mergedConnectors : null,
-            missionControl: mergedMissionControl,
-          },
+	            attachments: mergedAttachments,
+	            connectors: hasPlaygroundTaskConnectorSelections(mergedConnectors) ? mergedConnectors : null,
+	            projectRules: mergedProjectRules,
+	            missionControl: mergedMissionControl,
+	          },
           summary: {
             ...buildEmptyPlaygroundProjectSummary(),
             ...(normalizedFallback.summary && typeof normalizedFallback.summary === "object" ? normalizedFallback.summary : {}),
@@ -39061,6 +41393,7 @@ ${ENVIRONMENT_CHANGES_CSS}
           filename,
           mimeType,
           type: mimeType.startsWith("image/") ? "image" : "document",
+          environmentId: normalizedEnvironmentId,
           url: downloadUrl,
           previewUrl: downloadUrl,
           htmlPreviewUrl: mimeType === "text/html"
@@ -41981,6 +44314,1171 @@ ${ENVIRONMENT_CHANGES_CSS}
           threadId,
           headers,
         });
+      }
+
+      function normalizeTraceItems(data, primaryKey, fallbackKey) {
+        if (Array.isArray(data)) {
+          return data;
+        }
+        if (Array.isArray(data?.[primaryKey])) {
+          return data[primaryKey];
+        }
+        if (fallbackKey && Array.isArray(data?.[fallbackKey])) {
+          return data[fallbackKey];
+        }
+        if (Array.isArray(data?.data)) {
+          return data.data;
+        }
+        return [];
+      }
+
+      async function fetchThreadTraceDetails({ backendUrl, threadId, headers, messageLimit = 160, stepLimit = 160 }) {
+        const normalizedThreadId = String(threadId || "").trim();
+        if (!normalizedThreadId) {
+          throw new Error("Thread id is required.");
+        }
+
+        const fetchJson = async (path) => {
+          const response = await fetch(backendUrl + path, {
+            method: "GET",
+            headers,
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to load trace data.");
+          }
+          return data;
+        };
+
+        const encodedThreadId = encodeURIComponent(normalizedThreadId);
+        const [threadResult, logsResult, messagesResult, stepsResult] = await Promise.allSettled([
+          fetchJson("/threads/" + encodedThreadId),
+          fetchJson("/threads/" + encodedThreadId + "/logs"),
+          fetchJson("/threads/" + encodedThreadId + "/messages?limit=" + encodeURIComponent(String(messageLimit))),
+          fetchJson("/threads/" + encodedThreadId + "/steps?limit=" + encodeURIComponent(String(stepLimit))),
+        ]);
+
+        const firstRejected = [threadResult, logsResult, messagesResult, stepsResult].find((result) => result.status === "rejected");
+        const threadData = threadResult.status === "fulfilled" ? threadResult.value : {};
+        const logsData = logsResult.status === "fulfilled" ? logsResult.value : {};
+        const messagesData = messagesResult.status === "fulfilled" ? messagesResult.value : {};
+        const stepsData = stepsResult.status === "fulfilled" ? stepsResult.value : {};
+        const nextDetails = {
+          status: "loaded",
+          error: firstRejected?.reason instanceof Error ? firstRejected.reason.message : "",
+          thread: threadData?.thread || threadData?.data || null,
+          logs: normalizeTraceItems(logsData, "logs"),
+          messages: normalizeTraceItems(messagesData, "messages"),
+          steps: normalizeTraceItems(stepsData, "steps"),
+          loadedAt: new Date().toISOString(),
+        };
+
+        if (firstRejected && !nextDetails.thread && nextDetails.logs.length === 0 && nextDetails.messages.length === 0 && nextDetails.steps.length === 0) {
+          throw firstRejected.reason instanceof Error ? firstRejected.reason : new Error("Failed to load trace data.");
+        }
+
+        return nextDetails;
+      }
+
+      function parseTraceTimestampValue(value) {
+        if (value == null || value === "") {
+          return 0;
+        }
+        if (typeof value === "number") {
+          if (!Number.isFinite(value) || value <= 0) {
+            return 0;
+          }
+          return value > 1000000000000 ? value : value > 1000000000 ? value * 1000 : 0;
+        }
+        if (value instanceof Date) {
+          const timestamp = value.getTime();
+          return Number.isFinite(timestamp) ? timestamp : 0;
+        }
+        if (value && typeof value === "object") {
+          const seconds = Number(value.seconds ?? value._seconds ?? value.secs ?? value._secs);
+          if (Number.isFinite(seconds) && seconds > 0) {
+            const nanos = Number(value.nanoseconds ?? value._nanoseconds ?? value.nanos ?? value._nanos ?? 0);
+            return Math.round((seconds * 1000) + (Number.isFinite(nanos) ? nanos / 1000000 : 0));
+          }
+          if (typeof value.toDate === "function") {
+            try {
+              const timestamp = value.toDate().getTime();
+              return Number.isFinite(timestamp) ? timestamp : 0;
+            } catch {}
+          }
+        }
+        const timestamp = Date.parse(String(value || ""));
+        return Number.isFinite(timestamp) ? timestamp : 0;
+      }
+
+      function readTraceTimestamp(record) {
+        const metadata = record?.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+        const candidates = [
+          record?.timestamp,
+          record?.created_at,
+          record?.createdAt,
+          record?.updated_at,
+          record?.updatedAt,
+          record?.started_at,
+          record?.startedAt,
+          record?.completed_at,
+          record?.completedAt,
+          record?.finished_at,
+          record?.finishedAt,
+          record?.ended_at,
+          record?.endedAt,
+          metadata?.timestamp,
+          metadata?.created_at,
+          metadata?.createdAt,
+          metadata?.updated_at,
+          metadata?.updatedAt,
+          metadata?.started_at,
+          metadata?.startedAt,
+          metadata?.completed_at,
+          metadata?.completedAt,
+          metadata?.finished_at,
+          metadata?.finishedAt,
+          metadata?.ended_at,
+          metadata?.endedAt,
+        ];
+        for (const value of candidates) {
+          const timestamp = parseTraceTimestampValue(value);
+          if (timestamp > 0) {
+            return timestamp;
+          }
+        }
+        return 0;
+      }
+
+      function getTraceEventCreatedAt(record) {
+        const metadata = record?.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+        const candidates = [
+          record?.createdAt,
+          record?.created_at,
+          record?.timestamp,
+          record?.startedAt,
+          record?.started_at,
+          metadata?.createdAt,
+          metadata?.created_at,
+          metadata?.timestamp,
+          metadata?.startedAt,
+          metadata?.started_at,
+        ];
+        for (const value of candidates) {
+          if (value == null || value === "") {
+            continue;
+          }
+          const timestamp = parseTraceTimestampValue(value);
+          if (timestamp > 0) {
+            return new Date(timestamp).toISOString();
+          }
+        }
+        return "";
+      }
+
+      function formatTraceTimestampLabel(value) {
+        const timestamp = Number(value);
+        if (!Number.isFinite(timestamp) || timestamp <= 0) {
+          return "—";
+        }
+        return new Intl.DateTimeFormat("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }).format(new Date(timestamp));
+      }
+
+      function formatTraceRowTimeLabel(entry) {
+        if (entry?.durationMs != null) {
+          return formatTraceDurationMs(entry.durationMs);
+        }
+        return formatTraceTimestampLabel(entry?.timestamp);
+      }
+
+      function readTraceText(value, maxLength = 260) {
+        const normalize = (text) => String(text || "").replace(/\s+/g, " ").trim();
+        let text = "";
+
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          text = String(value);
+        } else if (Array.isArray(value)) {
+          text = value
+            .map((entry) => readTraceText(entry, maxLength))
+            .filter(Boolean)
+            .join(" ");
+        } else if (value && typeof value === "object") {
+          if (typeof value.content === "string") {
+            text = value.content;
+          } else if (typeof value.text === "string") {
+            text = value.text;
+          } else if (value.text && typeof value.text === "object" && typeof value.text.value === "string") {
+            text = value.text.value;
+          } else if (typeof value.message === "string") {
+            text = value.message;
+          } else if (typeof value.summary === "string") {
+            text = value.summary;
+          } else if (typeof value.body === "string") {
+            text = value.body;
+          } else if (typeof value.name === "string") {
+            text = value.name;
+          } else if (Array.isArray(value.content)) {
+            text = value.content.map((entry) => readTraceText(entry, maxLength)).filter(Boolean).join(" ");
+          } else {
+            try {
+              text = JSON.stringify(value);
+            } catch {
+              text = "";
+            }
+          }
+        }
+
+        const normalized = normalize(text);
+        if (!maxLength || normalized.length <= maxLength) {
+          return normalized;
+        }
+        return normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd() + "...";
+      }
+
+      function getTraceThreadTitle(thread, fallbackTitle = "") {
+        const normalizedThread = thread ? normalizeThreadItem(thread) : null;
+        const titleParts = normalizedThread ? getSidebarThreadTitleParts(normalizedThread) : null;
+        return titleParts?.displayThreadTitle || String(fallbackTitle || "").trim() || normalizedThread?.title || "Untitled thread";
+      }
+
+      function getTraceStatusLabel(value) {
+        const normalized = String(value || "").trim().replace(/_/g, " ");
+        return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "Unknown";
+      }
+
+      function getTraceEventType(log) {
+        return String(log?.eventType || log?.type || log?.logType || log?.kind || "").trim().toLowerCase();
+      }
+
+      function getTraceEventTitle(log) {
+        const eventType = getTraceEventType(log);
+        const metadata = log?.metadata && typeof log.metadata === "object" && !Array.isArray(log.metadata) ? log.metadata : {};
+        const action = String(log?.action || metadata?.action || metadata?.toolName || metadata?.command || "").trim();
+        if (action) {
+          return action.length > 80 ? action.slice(0, 79).trimEnd() + "..." : action;
+        }
+        if (eventType === "agent_message" || eventType === "assistant_message") return "Assistant message";
+        if (eventType === "user_message") return "User message";
+        if (eventType === "reasoning") return "Reasoning";
+        if (eventType === "command_execution") return "Command execution";
+        if (eventType === "mcp_tool_call") return "Tool call";
+        if (eventType === "subagent_invocation") return "Subagent";
+        if (eventType === "permission_request") return "Permission request";
+        if (eventType === "turn_completed") return "Run summary";
+        if (eventType === "file_change") return "File change";
+        return eventType ? getTraceStatusLabel(eventType) : "Log event";
+      }
+
+      function getTraceEventCopy(log) {
+        const metadata = log?.metadata && typeof log.metadata === "object" && !Array.isArray(log.metadata) ? log.metadata : {};
+        return readTraceText(
+          log?.message
+          || log?.content
+          || log?.summary
+          || metadata?.summary
+          || metadata?.message
+          || metadata?.stdout
+          || metadata?.stderr
+          || metadata?.result
+          || "",
+          180
+        );
+      }
+
+      function getTraceEventIcon(eventType) {
+        const type = String(eventType || "").toLowerCase();
+        if (type.includes("message")) return MessageSquare;
+        if (type.includes("command") || type.includes("tool")) return Terminal;
+        if (type.includes("subagent")) return Bot;
+        if (type.includes("permission")) return Shield;
+        if (type.includes("file")) return FileText;
+        if (type.includes("reasoning") || type.includes("summary")) return Lightbulb;
+        return Clock;
+      }
+
+      function getTraceEventKindClass(eventType) {
+        const type = String(eventType || "").toLowerCase();
+        if (type.includes("command") || type.includes("tool")) return "tool";
+        if (type.includes("permission")) return "permission";
+        if (type.includes("subagent")) return "subagent";
+        if (type.includes("message")) return "message";
+        return "log";
+      }
+
+      function getTraceEventDurationMs(record) {
+        const metadata = record?.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+        const candidates = [
+          record?.durationMs,
+          record?.duration_ms,
+          record?.duration,
+          record?.elapsedMs,
+          record?.elapsed_ms,
+          metadata?.durationMs,
+          metadata?.duration_ms,
+          metadata?.duration,
+          metadata?.elapsedMs,
+          metadata?.elapsed_ms,
+        ];
+        for (const value of candidates) {
+          const numeric = Number(value);
+          if (Number.isFinite(numeric) && numeric >= 0) {
+            return numeric;
+          }
+        }
+        const startedAt = Date.parse(String(record?.startedAt || record?.createdAt || metadata?.startedAt || ""));
+        const endedAt = Date.parse(String(record?.completedAt || record?.finishedAt || record?.endedAt || metadata?.completedAt || ""));
+        if (Number.isFinite(startedAt) && Number.isFinite(endedAt) && endedAt >= startedAt) {
+          return endedAt - startedAt;
+        }
+        return null;
+      }
+
+      function readTraceTokenNumber(value) {
+        const numeric = Number(value);
+        return Number.isFinite(numeric) && numeric > 0 ? numeric : 0;
+      }
+
+      function readTraceTokensFromObject(value) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          return 0;
+        }
+
+        const totalCandidates = [
+          value.totalTokens,
+          value.total_tokens,
+          value.tokenCount,
+          value.token_count,
+          value.tokens,
+          value.total,
+          value.completionTokensTotal,
+          value.completion_tokens_total,
+          value.llmTokens,
+          value.llm_tokens,
+          value["usage.total_tokens"],
+          value["gen_ai.usage.total_tokens"],
+          value["llm.token_count.total"],
+        ];
+        for (const candidate of totalCandidates) {
+          const numeric = readTraceTokenNumber(candidate);
+          if (numeric) {
+            return Math.round(numeric);
+          }
+        }
+
+        const inputCandidates = [
+          value.inputTokens,
+          value.input_tokens,
+          value.promptTokens,
+          value.prompt_tokens,
+          value.cachedInputTokens,
+          value.cached_input_tokens,
+          value["usage.input_tokens"],
+          value["usage.prompt_tokens"],
+          value["gen_ai.usage.input_tokens"],
+          value["llm.token_count.prompt"],
+        ];
+        const outputCandidates = [
+          value.outputTokens,
+          value.output_tokens,
+          value.completionTokens,
+          value.completion_tokens,
+          value.reasoningTokens,
+          value.reasoning_tokens,
+          value["usage.output_tokens"],
+          value["usage.completion_tokens"],
+          value["gen_ai.usage.output_tokens"],
+          value["llm.token_count.completion"],
+        ];
+        const inputTotal = inputCandidates.reduce((total, candidate) => total + readTraceTokenNumber(candidate), 0);
+        const outputTotal = outputCandidates.reduce((total, candidate) => total + readTraceTokenNumber(candidate), 0);
+        return inputTotal + outputTotal > 0 ? Math.round(inputTotal + outputTotal) : 0;
+      }
+
+      function getTraceEventTokens(record) {
+        const metadata = record?.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+        const directCandidates = [
+          record,
+          metadata,
+          record?.usage,
+          metadata?.usage,
+          record?.response?.usage,
+          metadata?.response?.usage,
+          record?.result?.usage,
+          metadata?.result?.usage,
+          record?.data?.usage,
+          metadata?.data?.usage,
+          record?.spanData,
+          record?.span_data,
+          metadata?.spanData,
+          metadata?.span_data,
+          record?.attributes,
+          metadata?.attributes,
+        ];
+        for (const candidate of directCandidates) {
+          const total = readTraceTokensFromObject(candidate);
+          if (total) {
+            return total;
+          }
+        }
+
+        const visited = new WeakSet();
+        const searchNested = (value, depth = 0) => {
+          if (!value || typeof value !== "object" || depth > 4) {
+            return 0;
+          }
+          if (visited.has(value)) {
+            return 0;
+          }
+          visited.add(value);
+
+          const localTotal = readTraceTokensFromObject(value);
+          if (localTotal) {
+            return localTotal;
+          }
+
+          if (Array.isArray(value)) {
+            for (const entry of value) {
+              const nestedTotal = searchNested(entry, depth + 1);
+              if (nestedTotal) {
+                return nestedTotal;
+              }
+            }
+            return 0;
+          }
+
+          for (const entry of Object.values(value)) {
+            const nestedTotal = searchNested(entry, depth + 1);
+            if (nestedTotal) {
+              return nestedTotal;
+            }
+          }
+          return 0;
+        };
+
+        return searchNested(record);
+      }
+
+      function formatTraceTokenLabel(value, suffix = " total") {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric) || numeric <= 0) {
+          return "-";
+        }
+        return Math.round(numeric).toLocaleString("en-US") + suffix;
+      }
+
+      function formatTraceDateTime(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "-";
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(date);
+      }
+
+      function formatTraceDurationMs(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue) || numericValue < 0) {
+          return "—";
+        }
+        return Math.round(numericValue).toLocaleString("en-US") + " ms";
+      }
+
+      function formatTraceRawJson(value) {
+        try {
+          return JSON.stringify(value || {}, null, 2);
+        } catch {
+          return "{}";
+        }
+      }
+
+      function ThreadTraceRawEventEditor({ eventId, value }) {
+        const [editorModule, setEditorModule] = useState(null);
+        const [editorModuleError, setEditorModuleError] = useState("");
+        const rawText = useMemo(() => formatTraceRawJson(value), [value]);
+        const editorHeight = useMemo(() => {
+          const lineCount = String(rawText || "").split(/\\n/).length;
+          return Math.min(420, Math.max(160, (lineCount + 2) * 20)) + "px";
+        }, [rawText]);
+        const MonacoEditorComponent = editorModule?.default || null;
+
+        useEffect(() => {
+          let cancelled = false;
+
+          void loadPlaygroundCodeEditorModule()
+            .then((module) => {
+              if (cancelled || !module) return;
+              setEditorModule(module);
+              void module.loader?.init?.()
+                .then((monaco) => {
+                  if (!cancelled) {
+                    ensurePlaygroundCodeEditorTheme(monaco);
+                  }
+                })
+                .catch(() => {});
+            })
+            .catch((error) => {
+              if (cancelled) return;
+              setEditorModuleError(error instanceof Error ? error.message : "Failed to load editor.");
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, []);
+
+        if (MonacoEditorComponent) {
+          const normalizedEventId = String(eventId || "event").replace(/[^A-Za-z0-9_.:-]+/g, "_");
+          return React.createElement("div", {
+              className: "playground-code-preview-editor-shell playground-thread-observability-expanded-raw-editor",
+              style: { height: editorHeight },
+            },
+            React.createElement(MonacoEditorComponent, {
+              path: "thread-trace-raw-" + normalizedEventId + ".json",
+              height: editorHeight,
+              language: "json",
+              theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+              value: rawText,
+              beforeMount: ensurePlaygroundCodeEditorTheme,
+              options: {
+                automaticLayout: true,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                smoothScrolling: true,
+                readOnly: true,
+                fontSize: 12,
+                lineHeight: 20,
+                tabSize: 2,
+                insertSpaces: true,
+                renderLineHighlight: "none",
+                lineNumbersMinChars: 3,
+                overviewRulerBorder: false,
+                hideCursorInOverviewRuler: true,
+                wordWrap: "on",
+                padding: { top: 12, bottom: 12 },
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              },
+            })
+          );
+        }
+
+        if (!editorModuleError) {
+          return React.createElement("div", {
+            className: "playground-code-preview-state playground-thread-observability-expanded-raw-editor",
+            style: { height: editorHeight },
+          },
+            React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+            React.createElement("span", null, "Loading editor...")
+          );
+        }
+
+        return React.createElement("pre", { className: "playground-thread-observability-expanded-raw" }, rawText);
+      }
+
+      function buildThreadTraceTimeline(thread, details, fallbackTitle = "") {
+        const normalizedThread = thread ? normalizeThreadItem(thread) : normalizeThreadItem({
+          id: "",
+          title: fallbackTitle || "Thread",
+        });
+        const logs = Array.isArray(details?.logs) ? details.logs : [];
+        const messages = Array.isArray(details?.messages) ? details.messages : [];
+        const timeline = [];
+        const startedAt = normalizedThread.startedAt || normalizedThread.createdAt || details?.thread?.startedAt || details?.thread?.createdAt || "";
+        const completedAt = normalizedThread.completedAt || normalizedThread.finishedAt || normalizedThread.endedAt || details?.thread?.completedAt || details?.thread?.finishedAt || details?.thread?.endedAt || "";
+        const threadStartMs = Date.parse(String(startedAt || "")) || 0;
+        const threadEndMs = Date.parse(String(completedAt || "")) || 0;
+        const threadDurationMs = threadStartMs && threadEndMs && threadEndMs >= threadStartMs
+          ? threadEndMs - threadStartMs
+          : Number(details?.thread?.durationMs || details?.thread?.duration || 0) || null;
+
+        timeline.push({
+          id: "thread",
+          Icon: GitFork,
+          kind: "thread",
+          type: "thread",
+          title: getTraceThreadTitle(normalizedThread, fallbackTitle),
+          copy: normalizedThread.status ? getTraceStatusLabel(normalizedThread.status) : "Thread",
+          createdAt: startedAt,
+          timestamp: threadStartMs,
+          durationMs: threadDurationMs,
+          raw: normalizedThread,
+          tokenCount: getTraceEventTokens(normalizedThread) || getTraceEventTokens(details?.thread || {}),
+        });
+
+        const sourceEvents = logs.length > 0
+          ? logs.map((log, index) => ({
+              source: "log",
+              record: log,
+              index,
+              idPrefix: "log",
+              type: getTraceEventType(log),
+              title: getTraceEventTitle(log),
+              copy: getTraceEventCopy(log),
+              createdAt: getTraceEventCreatedAt(log),
+              raw: log,
+            }))
+          : messages.map((message, index) => ({
+              source: "message",
+              record: message,
+              index,
+              idPrefix: "message",
+              type: String(message?.role || "message").trim().toLowerCase() + "_message",
+              title: getTraceStatusLabel(message?.role || "message") + " message",
+              copy: readTraceText(message?.content || "", 180),
+              createdAt: getTraceEventCreatedAt(message),
+              raw: message,
+            }));
+
+        sourceEvents
+          .map((log, index) => ({
+            id: String(log.record?.id || log.idPrefix + ":" + index),
+            kind: getTraceEventKindClass(log.type),
+            source: log.source,
+            type: log.type,
+            timestamp: readTraceTimestamp(log.record),
+            title: log.title,
+            copy: log.copy,
+            createdAt: log.createdAt,
+            durationMs: getTraceEventDurationMs(log.record),
+            raw: log.raw,
+            tokenCount: getTraceEventTokens(log.record),
+          }))
+          .filter((entry) => entry.title || entry.copy)
+          .sort((left, right) => {
+            if (left.timestamp !== right.timestamp) {
+              return left.timestamp - right.timestamp;
+            }
+            return left.id.localeCompare(right.id);
+          })
+          .forEach((entry) => {
+            timeline.push({
+              ...entry,
+              Icon: getTraceEventIcon(entry.type),
+            });
+          });
+
+        return timeline;
+      }
+
+      function renderThreadTraceDetailView({
+        thread,
+        details,
+        fallbackThreadId = "",
+        fallbackTitle = "",
+        loadingLabel = "Loading trace...",
+        onOpenChat,
+        onOpenTrace,
+        traceSearchQuery = "",
+        traceEventFilter = "all",
+        traceEventSort = "timeline",
+      }) {
+        return React.createElement(ThreadTraceDetailInspector, {
+          thread,
+          details,
+          fallbackThreadId,
+          fallbackTitle,
+          loadingLabel,
+          onOpenChat,
+          onOpenTrace,
+          traceSearchQuery,
+          traceEventFilter,
+          traceEventSort,
+        });
+      }
+
+      function ThreadTraceDetailInspector({
+        thread,
+        details,
+        fallbackThreadId = "",
+        fallbackTitle = "",
+        loadingLabel = "Loading trace...",
+        onOpenChat,
+        onOpenTrace,
+        traceSearchQuery = "",
+        traceEventFilter = "all",
+        traceEventSort = "timeline",
+      }) {
+        if (!details || details.status === "loading") {
+          return React.createElement("div", { className: "playground-agents-observability-detail is-loading" }, loadingLabel);
+        }
+
+        if (details.status === "error") {
+          return React.createElement("div", { className: "playground-agents-observability-detail is-error" }, details.error || "Failed to load trace data.");
+        }
+
+        return React.createElement(ThreadTraceDetailLoadedInspector, {
+          thread,
+          details,
+          fallbackThreadId,
+          fallbackTitle,
+          onOpenChat,
+          onOpenTrace,
+          traceSearchQuery,
+          traceEventFilter,
+          traceEventSort,
+        });
+      }
+
+      function ThreadTraceDetailLoadedInspector({
+        thread,
+        details,
+        fallbackThreadId = "",
+        fallbackTitle = "",
+        onOpenChat,
+        onOpenTrace,
+        traceSearchQuery = "",
+        traceEventFilter = "all",
+        traceEventSort = "timeline",
+      }) {
+        const mergedThread = details.thread || thread || { id: fallbackThreadId, title: fallbackTitle };
+        const normalizedThread = normalizeThreadItem({
+          ...mergedThread,
+          id: String(mergedThread?.id || fallbackThreadId || "").trim() || String(fallbackThreadId || "").trim(),
+          title: String(mergedThread?.title || fallbackTitle || "").trim() || getTraceThreadTitle(thread, fallbackTitle),
+        });
+        const messages = Array.isArray(details.messages) ? details.messages : [];
+        const steps = Array.isArray(details.steps) ? details.steps : [];
+        const logs = Array.isArray(details.logs) ? details.logs : [];
+        const timeline = useMemo(() => buildThreadTraceTimeline(normalizedThread, details, fallbackTitle), [
+          details,
+          fallbackTitle,
+          normalizedThread.completedAt,
+          normalizedThread.createdAt,
+          normalizedThread.endedAt,
+          normalizedThread.finishedAt,
+          normalizedThread.id,
+          normalizedThread.startedAt,
+          normalizedThread.status,
+          normalizedThread.title,
+        ]);
+        const visibleTimeline = useMemo(() => {
+          const normalizedSearchQuery = String(traceSearchQuery || "").trim().toLowerCase();
+          const normalizedFilter = String(traceEventFilter || "all").trim().toLowerCase() || "all";
+          const normalizedSort = String(traceEventSort || "timeline").trim().toLowerCase() || "timeline";
+          const matchesFilter = (entry) => {
+            if (normalizedFilter === "all") return true;
+            if (normalizedFilter === "messages") return entry.kind === "message";
+            if (normalizedFilter === "tools") return entry.kind === "tool";
+            if (normalizedFilter === "reasoning") return String(entry.type || "").includes("reasoning") || String(entry.type || "").includes("summary");
+            if (normalizedFilter === "subagents") return entry.kind === "subagent";
+            if (normalizedFilter === "permissions") return entry.kind === "permission";
+            return true;
+          };
+          const matchesSearch = (entry) => {
+            if (!normalizedSearchQuery) return true;
+            const haystack = [
+              entry.id,
+              entry.title,
+              entry.copy,
+              entry.type,
+              entry.kind,
+              entry.source,
+            ].join(" ").toLowerCase();
+            return haystack.includes(normalizedSearchQuery);
+          };
+          const items = timeline
+            .filter((entry) => matchesFilter(entry) && matchesSearch(entry));
+          return items.sort((left, right) => {
+            if (normalizedSort === "newest") {
+              return (right.timestamp || 0) - (left.timestamp || 0);
+            }
+            if (normalizedSort === "duration") {
+              const leftDuration = Number(left.durationMs || 0);
+              const rightDuration = Number(right.durationMs || 0);
+              if (leftDuration !== rightDuration) return rightDuration - leftDuration;
+            } else if (normalizedSort === "tokens") {
+              const leftTokens = Number(left.tokenCount || 0);
+              const rightTokens = Number(right.tokenCount || 0);
+              if (leftTokens !== rightTokens) return rightTokens - leftTokens;
+            }
+            if ((left.timestamp || 0) !== (right.timestamp || 0)) {
+              return (left.timestamp || 0) - (right.timestamp || 0);
+            }
+            return String(left.id || "").localeCompare(String(right.id || ""));
+          });
+        }, [timeline, traceEventFilter, traceEventSort, traceSearchQuery]);
+        const [selectedTraceItemId, setSelectedTraceItemId] = useState("");
+        useEffect(() => {
+          if (visibleTimeline.length === 0) {
+            setSelectedTraceItemId("");
+            return;
+          }
+          setSelectedTraceItemId((current) => (
+            current && visibleTimeline.some((entry) => entry.id === current) ? current : ""
+          ));
+        }, [visibleTimeline]);
+        const selectedTraceItem = visibleTimeline.find((entry) => entry.id === selectedTraceItemId) || null;
+        const timelineRangeSource = visibleTimeline.length > 0 ? visibleTimeline : timeline;
+        const timelineStartMs = Math.min(...timelineRangeSource.map((entry) => entry.timestamp).filter((value) => Number.isFinite(value) && value > 0), Date.now());
+        const timelineEndMs = Math.max(
+          ...timelineRangeSource.map((entry) => {
+            const start = Number(entry.timestamp || 0);
+            const duration = Number(entry.durationMs || 0);
+            return start > 0 ? start + Math.max(duration, 1) : duration;
+          }),
+          timelineStartMs + 1
+        );
+        const timelineRangeMs = Math.max(1, timelineEndMs - timelineStartMs);
+        const selectedRaw = selectedTraceItem?.raw || {};
+        const selectedMetadata = selectedRaw?.metadata && typeof selectedRaw.metadata === "object" && !Array.isArray(selectedRaw.metadata)
+          ? selectedRaw.metadata
+          : {};
+        const selectedContent = readTraceText(
+          selectedRaw?.summary
+          || selectedRaw?.message
+          || selectedRaw?.content
+          || selectedMetadata?.summary
+          || selectedMetadata?.message
+          || selectedMetadata?.stdout
+          || selectedMetadata?.stderr
+          || selectedTraceItem?.copy
+          || "",
+          1800
+        );
+        const selectedDurationLabel = selectedTraceItem?.durationMs == null
+          ? "-"
+          : formatTraceDurationMs(selectedTraceItem.durationMs);
+        const selectedTokenLabel = formatTraceTokenLabel(selectedTraceItem?.tokenCount || 0);
+        const SelectedTraceIcon = selectedTraceItem?.Icon || Clock;
+        const selectedProperties = [
+          { label: "Created", value: formatTraceDateTime(selectedTraceItem?.createdAt || selectedRaw?.createdAt || selectedRaw?.timestamp || "") },
+          { label: "ID", value: selectedTraceItem?.id || "-" },
+          { label: "Type", value: getTraceStatusLabel(selectedTraceItem?.type || selectedTraceItem?.kind || "") },
+          { label: "Tokens", value: selectedTokenLabel },
+          { label: "Logs", value: String(logs.length) },
+          { label: "Steps", value: String(steps.length) },
+        ];
+
+        return React.createElement("div", { className: "playground-agents-observability-detail" },
+          React.createElement("div", { className: "playground-agents-observability-tree" },
+            visibleTimeline.length > 0
+              ? visibleTimeline.map((entry) => {
+                  const Icon = entry.Icon || Clock;
+                  const isSelected = selectedTraceItem?.id === entry.id;
+                  const hasTiming = Number.isFinite(entry.timestamp) && entry.timestamp > 0;
+                  const leftPercent = hasTiming
+                    ? Math.max(0, Math.min(100, ((entry.timestamp - timelineStartMs) / timelineRangeMs) * 100))
+                    : 0;
+                  const widthPercent = entry.durationMs == null
+                    ? 1.2
+                    : Math.max(1.2, Math.min(100 - leftPercent, (Math.max(1, entry.durationMs) / timelineRangeMs) * 100));
+                  return React.createElement("div", { key: entry.id, className: "playground-thread-observability-row" },
+                    React.createElement("button", {
+                        type: "button",
+                        className: "playground-agents-observability-node is-" + (entry.kind || "log") + (isSelected ? " is-selected" : ""),
+                        onClick: () => setSelectedTraceItemId((current) => current === entry.id ? "" : entry.id),
+                      },
+                      React.createElement("span", { className: "playground-agents-observability-node-icon", "aria-hidden": "true" },
+                        React.createElement(Icon, { strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", { className: "playground-agents-observability-node-copy" },
+                        React.createElement("div", {
+                          className: "playground-agents-observability-node-title",
+                          title: entry.title,
+                        }, entry.title),
+                        entry.copy || entry.createdAt
+                          ? React.createElement("div", {
+                              className: "playground-agents-observability-node-meta",
+                              title: [entry.copy, entry.createdAt ? formatTraceDateTime(entry.createdAt) : ""].filter(Boolean).join(" - "),
+                            }, entry.copy || formatTraceDateTime(entry.createdAt))
+                          : null
+                      ),
+                      React.createElement("div", { className: "playground-agents-observability-node-duration" },
+                        formatTraceRowTimeLabel(entry)
+                      ),
+                      React.createElement("div", { className: "playground-agents-observability-node-bar", "aria-hidden": "true" },
+                        React.createElement("span", {
+                          className: "playground-agents-observability-node-bar-fill",
+                          style: {
+                            left: leftPercent.toFixed(3) + "%",
+                            width: widthPercent.toFixed(3) + "%",
+                          },
+                        })
+                      )
+                    ),
+                    isSelected
+                      ? React.createElement("div", { className: "playground-thread-observability-expanded" },
+                          React.createElement("div", { className: "playground-thread-observability-expanded-header" },
+                            React.createElement("div", { className: "playground-thread-observability-expanded-chips" },
+                              React.createElement("span", { className: "playground-thread-observability-expanded-chip is-kind" },
+                                React.createElement(SelectedTraceIcon, { strokeWidth: 1.8 }),
+                                React.createElement("span", null, getTraceStatusLabel(selectedTraceItem?.type || selectedTraceItem?.kind || ""))
+                              ),
+                              selectedTraceItem?.tokenCount
+                                ? React.createElement("span", { className: "playground-thread-observability-expanded-chip" },
+                                    React.createElement(Coins, { strokeWidth: 1.8 }),
+                                    React.createElement("span", null, formatTraceTokenLabel(selectedTraceItem.tokenCount, "t"))
+                                  )
+                                : null,
+                              selectedTraceItem?.durationMs != null
+                                ? React.createElement("span", { className: "playground-thread-observability-expanded-chip" },
+                                    React.createElement(Clock, { strokeWidth: 1.8 }),
+                                    React.createElement("span", null, selectedDurationLabel)
+                                  )
+                                : null
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-thread-observability-expanded-section" },
+                            React.createElement("div", { className: "playground-thread-observability-expanded-section-header" },
+                              React.createElement("span", null, "Properties"),
+                              React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                            ),
+                            React.createElement("div", { className: "playground-thread-observability-expanded-properties" },
+                              selectedProperties.map((item) =>
+                                React.createElement("div", { key: item.label, className: "playground-thread-observability-expanded-property" },
+                                  React.createElement("div", { className: "playground-thread-observability-expanded-property-label" }, item.label),
+                                  React.createElement("div", {
+                                    className: "playground-thread-observability-expanded-property-value",
+                                    title: item.value,
+                                  }, item.value)
+                                )
+                              )
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-thread-observability-expanded-section" },
+                            React.createElement("div", { className: "playground-thread-observability-expanded-section-header" },
+                              React.createElement("span", null, selectedTraceItem?.kind === "thread" ? "Thread context" : "Event content"),
+                              React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                            ),
+                            React.createElement("div", { className: "playground-thread-observability-expanded-message" },
+                              selectedContent || selectedTraceItem?.copy || "No content recorded for this event."
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-thread-observability-expanded-section is-raw-event" },
+                            React.createElement("div", { className: "playground-thread-observability-expanded-section-header" },
+                              React.createElement("span", null, "Raw event"),
+                              React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                            ),
+                            React.createElement(ThreadTraceRawEventEditor, {
+                              eventId: selectedTraceItem?.id || "trace-event",
+                              value: selectedRaw,
+                            })
+                          ),
+                          onOpenChat || onOpenTrace
+                            ? React.createElement("div", { className: "playground-agents-observability-actions" },
+                                onOpenChat
+                                  ? React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-environments-action-button",
+                                      onClick: onOpenChat,
+                                    }, "Open Chat")
+                                  : null,
+                                onOpenTrace
+                                  ? React.createElement("button", {
+                                      type: "button",
+                                      className: "playground-environments-action-button is-primary",
+                                      onClick: onOpenTrace,
+                                    }, "Open Trace")
+                                  : null
+                              )
+                            : null
+                        )
+                      : null
+                  );
+                })
+              : React.createElement("div", { className: "playground-agents-observability-empty" }, "No matching trace events.")
+          )
+        );
+      }
+
+      function ThreadObservabilityView({ threadId, threadTitle, backendUrl, requestHeaders, hasRealAccess, onOpenChat }) {
+        const traceToolbarRef = useRef(null);
+        const [traceDetails, setTraceDetails] = useState(null);
+        const [traceSearchQuery, setTraceSearchQuery] = useState("");
+        const [traceEventSort, setTraceEventSort] = useState("timeline");
+        const [traceEventFilter, setTraceEventFilter] = useState("all");
+        const [traceToolbarPopover, setTraceToolbarPopover] = useState("");
+
+        useEffect(() => {
+          if (!traceToolbarPopover) return undefined;
+
+          function handleTraceToolbarPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !traceToolbarRef.current || traceToolbarRef.current.contains(target)) {
+              return;
+            }
+            setTraceToolbarPopover("");
+          }
+
+          document.addEventListener("mousedown", handleTraceToolbarPointerDown);
+          return () => document.removeEventListener("mousedown", handleTraceToolbarPointerDown);
+        }, [traceToolbarPopover]);
+
+        useEffect(() => {
+          let cancelled = false;
+          const normalizedThreadId = String(threadId || "").trim();
+          setTraceDetails(null);
+
+          if (!normalizedThreadId) {
+            setTraceDetails({
+              status: "error",
+              error: "Select a thread to inspect its trace.",
+            });
+            return () => {
+              cancelled = true;
+            };
+          }
+
+          if (!hasRealAccess) {
+            setTraceDetails({
+              status: "error",
+              error: "Sign in with your Computer Agents account to inspect thread traces.",
+            });
+            return () => {
+              cancelled = true;
+            };
+          }
+
+          setTraceDetails({ status: "loading", error: "" });
+          fetchThreadTraceDetails({
+            backendUrl,
+            threadId: normalizedThreadId,
+            headers: requestHeaders,
+            messageLimit: 160,
+            stepLimit: 160,
+          }).then((details) => {
+            if (!cancelled) {
+              setTraceDetails(details);
+            }
+          }).catch((error) => {
+            if (!cancelled) {
+              setTraceDetails({
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load trace data.",
+              });
+            }
+          });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [backendUrl, hasRealAccess, requestHeaders, threadId]);
+
+        const normalizedThreadId = String(threadId || "").trim();
+        const sortOptions = [
+          { id: "timeline", label: "Timeline" },
+          { id: "newest", label: "Newest first" },
+          { id: "duration", label: "Slowest first" },
+          { id: "tokens", label: "Most tokens" },
+        ];
+	        const filterOptions = [
+	          { id: "all", label: "All events" },
+	          { id: "messages", label: "Messages" },
+	          { id: "tools", label: "Tools" },
+	          { id: "reasoning", label: "Reasoning" },
+	          { id: "subagents", label: "Subagents" },
+	          { id: "permissions", label: "Permissions" },
+	        ];
+	        const activeTraceFilterLabel = filterOptions.find((option) => option.id === traceEventFilter)?.label || "All events";
+	        return React.createElement("div", { className: "playground-thread-observability-view" },
+          React.createElement("div", { className: "playground-thread-observability-card" },
+            React.createElement("div", { className: "playground-plugins-section-header" },
+              React.createElement("div", { className: "playground-plugins-section-copy" },
+                React.createElement("h3", { className: "playground-plugins-section-title" }, normalizedThreadId || "Trace")
+              )
+            ),
+            React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row playground-thread-observability-toolbar", ref: traceToolbarRef },
+              React.createElement("div", { className: "playground-plugins-search-shell" },
+                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: traceSearchQuery,
+                  onChange: (event) => setTraceSearchQuery(event.target.value),
+                  className: "playground-plugins-search",
+                  placeholder: "Search trace events",
+                })
+              ),
+              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (traceToolbarPopover === "sort" || traceEventSort !== "timeline" ? " is-active" : ""),
+                    onClick: () => setTraceToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                  },
+                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Sort")
+                  ),
+                  traceToolbarPopover === "sort"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        sortOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (traceEventSort === option.id ? " selected" : ""),
+                              onClick: () => {
+                                setTraceEventSort(option.id);
+                                setTraceToolbarPopover("");
+                              },
+                            },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              traceEventSort === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label)
+                            )
+                          )
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-filter" + (traceToolbarPopover === "filter" || traceEventFilter !== "all" ? " is-active" : ""),
+                    onClick: () => setTraceToolbarPopover((current) => current === "filter" ? "" : "filter"),
+	                  },
+	                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("span", null, "Filter: " + activeTraceFilterLabel)
+	                  ),
+                  traceToolbarPopover === "filter"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        filterOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (traceEventFilter === option.id ? " selected" : ""),
+                              onClick: () => {
+                                setTraceEventFilter(option.id);
+                                setTraceToolbarPopover("");
+                              },
+                            },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              traceEventFilter === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label)
+                            )
+                          )
+                        )
+                      )
+                    : null
+                )
+              )
+            ),
+            renderThreadTraceDetailView({
+              thread: traceDetails?.thread || { id: normalizedThreadId, title: threadTitle },
+              details: traceDetails,
+              fallbackThreadId: normalizedThreadId,
+              fallbackTitle: threadTitle,
+              onOpenChat: null,
+              onOpenTrace: null,
+              traceSearchQuery,
+              traceEventFilter,
+              traceEventSort,
+            })
+          )
+        );
       }
 
       function resolveHistoryStepPrompt(step, messages) {
@@ -44973,6 +48471,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               useCardBackgroundAsWallpaper: normalizedProject.useCardBackgroundAsWallpaper !== false,
               defaultEnvironmentId: normalizedProject.defaultEnvironmentId || null,
               attachments: normalizedProjectAttachments,
+              ...buildPlaygroundProjectMissionControlMetadataFragment(normalizedProject),
             },
           };
         }
@@ -47372,6 +50871,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         topNavActionsPortalId = "",
         onResourcesHeaderChange,
         backRequestToken = 0,
+        resourceBillingPreferences = SETTINGS_DEFAULT_BILLING_PREFERENCES,
+        resourceBillingSaving = false,
+        resourceBillingError = "",
+        resourceBillingSuccess = "",
+        canConfigureResourceBilling = true,
+        onResourceBillingPreferencesChange = null,
       }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
@@ -47425,6 +50930,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const databaseSeededSelectionRef = useRef("");
         const serverResourceModeRefreshRef = useRef(false);
         const resourcesOverviewToolbarRef = useRef(null);
+        const serverLogsToolbarRef = useRef(null);
         const resourcesHomeScrollRef = useRef(null);
         const resourcesDetailScrollRef = useRef(null);
         const [resourceMode, setResourceMode] = useState(embeddedResourcesView === "servers" ? "servers" : "computers");
@@ -47469,6 +50975,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [resourcesOverviewToolbarPopover, setResourcesOverviewToolbarPopover] = useState("");
         const [resourcesOverviewFilter, setResourcesOverviewFilter] = useState("all");
         const [resourcesOverviewSort, setResourcesOverviewSort] = useState("name");
+        const [resourcesOverviewHomeTab, setResourcesOverviewHomeTab] = useState("general");
+        const normalizedResourceBillingPreferences = normalizeDemoSettingsBillingPreferences(resourceBillingPreferences);
         const [loadingEnvironmentId, setLoadingEnvironmentId] = useState("");
         const [loadingEnvironmentAnalyticsId, setLoadingEnvironmentAnalyticsId] = useState("");
         const [environmentHomeAnalyticsLoading, setEnvironmentHomeAnalyticsLoading] = useState(false);
@@ -47526,20 +51034,35 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [isDatabaseDescriptionEditing, setIsDatabaseDescriptionEditing] = useState(false);
         const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
         const [serverDetailsCollapsed, setServerDetailsCollapsed] = useState(false);
-        const [databaseDetailsCollapsed, setDatabaseDetailsCollapsed] = useState(false);
         const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
         const [environmentsHomeResourceCommandRequest, setEnvironmentsHomeResourceCommandRequest] = useState(null);
         const [environmentsHomeActiveResourceCommand, setEnvironmentsHomeActiveResourceCommand] = useState("");
         const [environmentHomeChartTimescale, setEnvironmentHomeChartTimescale] = useState("month");
         const [environmentDetailChartTimescale, setEnvironmentDetailChartTimescale] = useState("day");
         const [serverDetailChartTimescale, setServerDetailChartTimescale] = useState("day");
+        const [databaseDetailChartTimescale, setDatabaseDetailChartTimescale] = useState("day");
         const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
         const [serverActionsPopoverOpen, setServerActionsPopoverOpen] = useState(false);
         const [serverFileActionsPopoverOpen, setServerFileActionsPopoverOpen] = useState(false);
+        const [serverSourceFileMenuPath, setServerSourceFileMenuPath] = useState("");
+        const [serverSourceExpandedFolders, setServerSourceExpandedFolders] = useState(() => new Set());
         const [serverDeploymentHelpOpen, setServerDeploymentHelpOpen] = useState(false);
+        const [serverCustomDomainModalState, setServerCustomDomainModalState] = useState({
+          open: false,
+          domain: "",
+          status: "idle",
+          error: "",
+          result: null,
+        });
+        const [serverCustomDomainMenuDomain, setServerCustomDomainMenuDomain] = useState("");
+        const [serverCustomDomainRemoveState, setServerCustomDomainRemoveState] = useState({
+          domain: "",
+          status: "idle",
+          error: "",
+        });
         const [serverAgentRuntimeRunComposer, setServerAgentRuntimeRunComposer] = useState({
           open: false,
           title: "",
@@ -47616,12 +51139,22 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           lastResponseText: "",
           deployProgress: 0,
         });
+        const [serverDetailTab, setServerDetailTab] = useState("general");
         const [serverAnalyticsView, setServerAnalyticsView] = useState("editor");
         const [serverLogsState, setServerLogsState] = useState({
           kind: "request",
           loadingKey: "",
           error: "",
         });
+        const [serverLogsSearchQuery, setServerLogsSearchQuery] = useState("");
+        const [serverLogsSort, setServerLogsSort] = useState("newest");
+        const [serverLogsToolbarPopover, setServerLogsToolbarPopover] = useState("");
+        const [serverLogsVisibleCountByKind, setServerLogsVisibleCountByKind] = useState({
+          request: 20,
+          runtime: 20,
+          deployment: 20,
+        });
+        const [expandedServerLogKey, setExpandedServerLogKey] = useState("");
         const [serverAuthUsersState, setServerAuthUsersState] = useState({
           error: "",
         });
@@ -47668,13 +51201,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           saveError: "",
           saveMessage: "",
           isSaving: false,
-        });
-        const [databaseAnalyticsVisibility, setDatabaseAnalyticsVisibility] = useState({
-          collections: true,
-          documents: true,
-          reads: true,
-          writes: true,
-          deletes: true,
         });
         const [databaseDocumentViewMode, setDatabaseDocumentViewMode] = useState("preview");
         const [databaseJsonEditorModule, setDatabaseJsonEditorModule] = useState(null);
@@ -47732,6 +51258,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setResourceMode(embeddedResourcesView === "servers" ? "servers" : "computers");
         }, [embeddedInResources, embeddedResourcesView]);
 
+        useEffect(() => {
+          if (resourceMode === "servers") {
+            setResourcesOverviewHomeTab("general");
+          }
+        }, [resourceMode]);
+
         const orderedEnvironments = useMemo(() => {
           return [...environments].sort((left, right) => {
             if (Boolean(left?.isDefault) !== Boolean(right?.isDefault)) {
@@ -47770,6 +51302,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return String(left?.path || "").localeCompare(String(right?.path || ""));
           });
         }, [selectedServerId, serverFilesById]);
+
+        const currentServerFilesTree = useMemo(() => buildPlaygroundEnvironmentTree(currentServerFiles), [currentServerFiles]);
+        const visibleServerSourceFileRows = useMemo(
+          () => buildPlaygroundEnvironmentVisibleRows(currentServerFilesTree, "", serverSourceExpandedFolders, "name-asc"),
+          [currentServerFilesTree, serverSourceExpandedFolders]
+        );
 
         const currentServerEditorEntry = useMemo(() => {
           if (!serverFileEditorState.path) {
@@ -48028,12 +51566,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (!embeddedInResources || typeof onResourcesHeaderChange !== "function") {
             return;
           }
+          const isSourcePreviewOpen = resourceMode === "servers" && Boolean(serverFileEditorState.path);
           onResourcesHeaderChange(
             isHomeViewActive
-              ? { mode: "overview", title: "" }
-              : { mode: "detail", title: selectedResourcesDetailTitle }
+              ? { mode: "overview", title: "", sideDetailOpen: isSourcePreviewOpen }
+              : { mode: "detail", title: selectedResourcesDetailTitle, sideDetailOpen: isSourcePreviewOpen }
           );
-        }, [embeddedInResources, isHomeViewActive, onResourcesHeaderChange, selectedResourcesDetailTitle]);
+        }, [embeddedInResources, isHomeViewActive, onResourcesHeaderChange, resourceMode, selectedResourcesDetailTitle, serverFileEditorState.path]);
 
         useEffect(() => {
           if (!embeddedInResources) {
@@ -48200,6 +51739,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           serverAutosaveQueuedRef.current = null;
           setServerActionsPopoverOpen(false);
           setServerFileActionsPopoverOpen(false);
+          setServerSourceFileMenuPath("");
+          setServerSourceExpandedFolders(new Set());
           setServerDeploymentHelpOpen(false);
           setServerRenameState(null);
           setServerRenameValue("");
@@ -48264,12 +51805,22 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             isSaving: false,
             wordWrap: true,
           });
+          setServerDetailTab("general");
           setServerAnalyticsView("editor");
           setServerLogsState({
             kind: "request",
             loadingKey: "",
             error: "",
           });
+          setServerLogsSearchQuery("");
+          setServerLogsSort("newest");
+          setServerLogsToolbarPopover("");
+          setServerLogsVisibleCountByKind({
+            request: 20,
+            runtime: 20,
+            deployment: 20,
+          });
+          setExpandedServerLogKey("");
         }
 
         function clearServerDeployProgressTimer() {
@@ -49161,6 +52712,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               setSelectedServerId(nextServers[0]?.id || "");
             }
 
+            if (resourceMode === "servers" && !options?.skipCostRefresh) {
+              const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
+              void loadEnvironmentHomeCostSummary(normalizedPeriod, { force: true });
+              void loadEnvironmentHomeCostBreakdown(normalizedPeriod, { force: true });
+              void loadEnvironmentHomeChartSummaries(normalizedPeriod, { force: true });
+              void loadEnvironmentHomeChartBreakdowns(normalizedPeriod, { force: true });
+            }
+
             return nextServers;
           } catch (error) {
             setServerSaveState((current) => ({
@@ -49171,7 +52730,17 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           } finally {
             setServerListLoading(false);
           }
-        }, [backendUrl, isHomeViewActive, requestHeaders]);
+        }, [
+          backendUrl,
+          environmentHomeChartTimescale,
+          isHomeViewActive,
+          loadEnvironmentHomeChartBreakdowns,
+          loadEnvironmentHomeChartSummaries,
+          loadEnvironmentHomeCostBreakdown,
+          loadEnvironmentHomeCostSummary,
+          requestHeaders,
+          resourceMode,
+        ]);
 
         const loadServerDetails = useCallback(async (serverId) => {
           if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
@@ -50204,6 +53773,21 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }, [resourcesOverviewToolbarPopover]);
 
         useEffect(() => {
+          if (!serverLogsToolbarPopover) return undefined;
+
+          function handleServerLogsToolbarPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !serverLogsToolbarRef.current || serverLogsToolbarRef.current.contains(target)) {
+              return;
+            }
+            setServerLogsToolbarPopover("");
+          }
+
+          document.addEventListener("mousedown", handleServerLogsToolbarPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleServerLogsToolbarPopoverPointerDown);
+        }, [serverLogsToolbarPopover]);
+
+        useEffect(() => {
           setResourcesOverviewFilter("all");
           setResourcesOverviewToolbarPopover("");
         }, [resourceMode]);
@@ -50487,6 +54071,21 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           void loadServerAnalytics(selectedServerId);
           void loadServerLogs(selectedServerId, serverLogsState.kind);
         }, [draftServer, loadServerAnalytics, loadServerLogs, resourceMode, selectedServerId, selectedServerSnapshot, serverAnalyticsView, serverLogsState.kind]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers" || serverDetailTab !== "logs") {
+            return;
+          }
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
+          if (!["web_app", "function"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
+            return;
+          }
+          void loadServerAnalytics(selectedServerId);
+          void loadServerLogs(selectedServerId, serverLogsState.kind);
+        }, [draftServer, loadServerAnalytics, loadServerLogs, resourceMode, selectedServerId, selectedServerSnapshot, serverDetailTab, serverLogsState.kind]);
 
         useEffect(() => {
           if (!serverFileEditorState.path) {
@@ -50858,6 +54457,31 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             window.removeEventListener("keydown", handleServerFileActionsPopoverEscape);
           };
         }, [serverFileActionsPopoverOpen]);
+
+        useEffect(() => {
+          if (!serverSourceFileMenuPath) return undefined;
+
+          function handleServerSourceFileMenuPointerDown(event) {
+            const target = event?.target instanceof Element ? event.target : null;
+            if (target?.closest(".playground-servers-source-file-actions-menu-shell")) {
+              return;
+            }
+            setServerSourceFileMenuPath("");
+          }
+
+          function handleServerSourceFileMenuEscape(event) {
+            if (event.key === "Escape") {
+              setServerSourceFileMenuPath("");
+            }
+          }
+
+          document.addEventListener("mousedown", handleServerSourceFileMenuPointerDown);
+          window.addEventListener("keydown", handleServerSourceFileMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleServerSourceFileMenuPointerDown);
+            window.removeEventListener("keydown", handleServerSourceFileMenuEscape);
+          };
+        }, [serverSourceFileMenuPath]);
 
         useEffect(() => {
           if (!serverDetailSelectPopover) return undefined;
@@ -54052,6 +57676,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !entry?.path) {
             return;
           }
+          setServerSourceFileMenuPath("");
           if (!window.confirm('Delete "' + (entry.name || entry.path) + '" from this server source bundle?')) {
             return;
           }
@@ -54087,6 +57712,119 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               message: "",
             }));
           }
+        }
+
+        async function handleServerFileRename(entry) {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !entry?.path || entry.isFolder) {
+            return;
+          }
+          const currentPath = normalizeHistoryPath(entry.path);
+          const rawNextPath = window.prompt("Rename source file", currentPath);
+          const nextPath = normalizeHistoryPath(rawNextPath || "");
+          setServerSourceFileMenuPath("");
+          if (!nextPath || nextPath === currentPath) {
+            return;
+          }
+
+          setServerFileTransferState({
+            isUploading: false,
+            error: "",
+            message: "",
+          });
+
+          try {
+            let content = "";
+            if (serverFileEditorState.path === currentPath && serverFileEditorState.status === "ready") {
+              content = serverFileEditorState.value;
+            } else {
+              const readResponse = await fetch(
+                buildPlaygroundServerFileContentUrl(backendUrl, draftServer.id, currentPath),
+                {
+                  method: "GET",
+                  headers: requestHeaders,
+                }
+              );
+              const readData = await readResponse.json().catch(() => ({}));
+              if (!readResponse.ok) {
+                throw new Error(readData?.message || readData?.error || "Failed to read source file before renaming.");
+              }
+              content = typeof readData?.content === "string" ? readData.content : "";
+            }
+
+            const writeResponse = await fetch(
+              buildPlaygroundServerFileContentUrl(backendUrl, draftServer.id, nextPath),
+              {
+                method: "PUT",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ content }),
+              }
+            );
+            const writeData = await writeResponse.json().catch(() => ({}));
+            if (!writeResponse.ok) {
+              throw new Error(writeData?.message || writeData?.error || "Failed to write renamed source file.");
+            }
+
+            const encodedCurrentPath = currentPath
+              .split("/")
+              .filter(Boolean)
+              .map((segment) => encodeURIComponent(segment))
+              .join("/");
+            const deleteResponse = await fetch(
+              backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/files/" + encodedCurrentPath,
+              {
+                method: "DELETE",
+                headers: requestHeaders,
+              }
+            );
+            const deleteData = await deleteResponse.json().catch(() => ({}));
+            if (!deleteResponse.ok) {
+              throw new Error(deleteData?.message || deleteData?.error || "Renamed file was created, but the old file could not be removed.");
+            }
+
+            await loadServerFiles(draftServer.id);
+            if (serverFileEditorState.path === currentPath) {
+              setServerFileEditorState((current) => ({
+                ...current,
+                path: nextPath,
+                status: "ready",
+                value: content,
+                initialValue: content,
+                error: "",
+                saveError: "",
+                saveMessage: "Renamed",
+              }));
+            }
+            setServerFileTransferState({
+              isUploading: false,
+              error: "",
+              message: "Renamed to " + nextPath,
+            });
+          } catch (error) {
+            setServerFileTransferState({
+              isUploading: false,
+              error: error instanceof Error ? error.message : "Failed to rename source file.",
+              message: "",
+            });
+          }
+        }
+
+        function toggleServerSourceFolderExpansion(path) {
+          const normalizedPath = normalizeHistoryPath(path);
+          if (!normalizedPath) {
+            return;
+          }
+          setServerSourceExpandedFolders((current) => {
+            const next = new Set(current);
+            if (next.has(normalizedPath)) {
+              next.delete(normalizedPath);
+            } else {
+              next.add(normalizedPath);
+            }
+            return next;
+          });
         }
 
         async function handleServerFileOpen(entry) {
@@ -54320,6 +58058,198 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               lastResponseText: "",
               deployProgress: 0,
             });
+          }
+        }
+
+        function syncServerCustomDomainResponse(data) {
+          const updatedServer = getPlaygroundServerResponseRecord(data);
+          if (updatedServer?.id) {
+            upsertLocalServerRecord(updatedServer);
+            if (selectedServerIdRef.current === updatedServer.id) {
+              setDraftServer(updatedServer);
+              serverEditorDirtyRef.current = false;
+            }
+          }
+          return {
+            server: updatedServer,
+            domain: data?.domain || (updatedServer ? getPlaygroundServerCustomDomainState(updatedServer) : null),
+            domains: Array.isArray(data?.domains) ? data.domains : (updatedServer ? getPlaygroundServerCustomDomainStates(updatedServer) : []),
+          };
+        }
+
+        function openServerCustomDomainModal(existingCustomDomain) {
+          setServerCustomDomainMenuDomain("");
+          setServerCustomDomainModalState({
+            open: true,
+            domain: existingCustomDomain?.domain || draftServer?.customDomain || "",
+            status: "idle",
+            error: "",
+            result: existingCustomDomain || null,
+          });
+        }
+
+        function closeServerCustomDomainModal() {
+          setServerCustomDomainModalState({
+            open: false,
+            domain: "",
+            status: "idle",
+            error: "",
+            result: null,
+          });
+        }
+
+        async function handleRemoveServerCustomDomain(domain) {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const normalizedDomain = String(domain || "").trim();
+          if (!normalizedDomain) {
+            return;
+          }
+          if (!window.confirm("Disconnect " + normalizedDomain + "?")) {
+            return;
+          }
+
+          setServerCustomDomainMenuDomain("");
+          setServerCustomDomainRemoveState({
+            domain: normalizedDomain,
+            status: "removing",
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/custom-domain?domain=" + encodeURIComponent(normalizedDomain),
+              {
+                method: "DELETE",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ domain: normalizedDomain }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to disconnect custom domain.");
+            }
+            syncServerCustomDomainResponse(data);
+            setServerCustomDomainRemoveState({
+              domain: "",
+              status: "idle",
+              error: "",
+            });
+          } catch (error) {
+            setServerCustomDomainRemoveState({
+              domain: normalizedDomain,
+              status: "idle",
+              error: error instanceof Error ? error.message : "Failed to disconnect custom domain.",
+            });
+          }
+        }
+
+        async function handleSaveServerCustomDomain() {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const domain = String(serverCustomDomainModalState.domain || "").trim();
+          if (!domain) {
+            setServerCustomDomainModalState((current) => ({
+              ...current,
+              error: "Enter a domain first.",
+            }));
+            return;
+          }
+
+          setServerCustomDomainModalState((current) => ({
+            ...current,
+            status: "saving",
+            error: "",
+          }));
+
+          try {
+            await commitDraftServerIfDirty();
+            const response = await fetch(
+              backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/custom-domain",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ domain }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to add custom domain.");
+            }
+
+            const synced = syncServerCustomDomainResponse(data);
+            setServerCustomDomainModalState((current) => ({
+              ...current,
+              status: "success",
+              error: "",
+              result: synced.domain || current.result,
+            }));
+          } catch (error) {
+            setServerCustomDomainModalState((current) => ({
+              ...current,
+              status: "idle",
+              error: error instanceof Error ? error.message : "Failed to add custom domain.",
+            }));
+          }
+        }
+
+        async function handleCheckServerCustomDomain() {
+          if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const domain = String(serverCustomDomainModalState.domain || draftServer.customDomain || "").trim();
+          if (!domain) {
+            setServerCustomDomainModalState((current) => ({
+              ...current,
+              error: "Enter a domain first.",
+            }));
+            return;
+          }
+
+          setServerCustomDomainModalState((current) => ({
+            ...current,
+            status: "checking",
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(
+              backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/custom-domain/check",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ domain }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to check custom domain.");
+            }
+
+            const synced = syncServerCustomDomainResponse(data);
+            setServerCustomDomainModalState((current) => ({
+              ...current,
+              status: "success",
+              error: "",
+              result: synced.domain || current.result,
+            }));
+          } catch (error) {
+            setServerCustomDomainModalState((current) => ({
+              ...current,
+              status: "idle",
+              error: error instanceof Error ? error.message : "Failed to check custom domain.",
+            }));
           }
         }
 
@@ -56548,8 +60478,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
           const normalizedServerKind = canonicalizePlaygroundServerKind(draftServer.kind);
           const isFunctionServer = normalizedServerKind === "function";
+          const isWebAppServer = normalizedServerKind === "web_app";
+          const isSourceDeployableServer = isWebAppServer || isFunctionServer;
           const isAuthServer = normalizedServerKind === "auth";
           const isAgentRuntimeServer = normalizedServerKind === "agent_runtime";
+          const isTitlelessServerDescription = isSourceDeployableServer || isAuthServer;
           const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
           const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
@@ -56737,10 +60670,22 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             showLegend: false,
             timescaleControl: renderServerDetailTimescaleControl(),
           });
+          const renderServerDetailChartKpis = (items) => React.createElement("div", {
+              className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-server-detail-chart-kpis",
+            },
+            (Array.isArray(items) ? items : []).map((item) =>
+              React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                  React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                ),
+                React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+              )
+            )
+          );
           const serverAnalyticsLogKinds = [
-            { id: "request", label: "Requests", Icon: Globe },
-            { id: "runtime", label: "Console", Icon: Terminal },
-            { id: "deployment", label: "Deploy", Icon: Rocket },
+            { id: "request", label: "Requests", description: "HTTP traffic, status, and latency entries", Icon: Globe },
+            { id: "runtime", label: "Console", description: "Runtime stdout, stderr, and application logs", Icon: Terminal },
+            { id: "deployment", label: "Deploy", description: "Deployment output and build logs", Icon: Rocket },
           ];
           const renderServerAnalyticsKpi = (label, value, tone) => React.createElement("div", {
               className: "playground-servers-analytics-kpi",
@@ -56834,135 +60779,497 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             )
           );
-          const renderServerLogRow = (entry, kind) => {
+          const getServerLogStatusTone = (entry, kind) => {
             const normalizedKind = String(kind || "request");
             if (normalizedKind === "request") {
-              return React.createElement("div", {
-                  key: String(entry?.timestamp || "") + ":" + String(entry?.path || ""),
-                  className: "playground-servers-analytics-log-row is-request",
-                },
-                React.createElement("div", { className: "playground-servers-analytics-log-row-top" },
-                  React.createElement("span", { className: "playground-servers-analytics-log-pill" }, formatPlaygroundServerRequestStatus(entry?.status)),
-                  React.createElement("span", { className: "playground-servers-analytics-log-method" }, String(entry?.method || "GET")),
-                  React.createElement("span", { className: "playground-servers-analytics-log-latency" }, formatPlaygroundServerLatency(entry?.latencyMs)),
-                  React.createElement("span", { className: "playground-servers-analytics-log-time" }, formatPlaygroundFileDate(entry?.timestamp))
-                ),
-                React.createElement("div", { className: "playground-servers-analytics-log-path" }, String(entry?.path || "/"))
+              const status = Number(entry?.status);
+              if (Number.isFinite(status)) {
+                if (status >= 500) return "error";
+                if (status >= 400) return "warning";
+                if (status >= 300) return "info";
+                if (status >= 200) return "success";
+              }
+              return "info";
+            }
+            const statusText = String(entry?.severity || entry?.stream || "").trim().toLowerCase();
+            if (statusText.includes("error") || statusText.includes("fatal") || statusText.includes("stderr")) return "error";
+            if (statusText.includes("warn")) return "warning";
+            if (statusText.includes("success") || statusText.includes("complete")) return "success";
+            return "info";
+          };
+          const renderServerLogStatusPill = (label, tone) => React.createElement("span", {
+              className: "playground-servers-analytics-log-pill is-" + (tone || "info"),
+            },
+            label || "—"
+          );
+          const buildServerLogRowKey = (entry, kind) => [
+            String(kind || "request"),
+            entry?.id,
+            entry?.timestamp || entry?.createdAt || entry?.updatedAt,
+            entry?.method,
+            entry?.path,
+            entry?.status,
+            entry?.stream,
+            entry?.severity,
+            String(entry?.message || "").slice(0, 96),
+          ].map((value) => String(value || "")).join(":");
+          const buildServerLogDetailText = (entry, kind) => {
+            const normalizedKind = String(kind || "request");
+            if (normalizedKind === "request") {
+              return JSON.stringify({
+                method: String(entry?.method || "GET"),
+                path: String(entry?.path || "/"),
+                status: formatPlaygroundServerRequestStatus(entry?.status),
+                latency: formatPlaygroundServerLatency(entry?.latencyMs),
+                time: formatPlaygroundFileDate(entry?.timestamp),
+              }, null, 2);
+            }
+            return String(entry?.message || "").trim() || "No log message available.";
+          };
+          const inferServerLogDetailLanguage = (value, kind) => {
+            const text = String(value || "").trim();
+            if (String(kind || "request") === "request") {
+              return "json";
+            }
+            if (!text) {
+              return "plaintext";
+            }
+            try {
+              JSON.parse(text);
+              return "json";
+            } catch {}
+            const lowerText = text.toLowerCase();
+            if (lowerText.startsWith("<!doctype html") || lowerText.startsWith("<html") || /<\\/?[a-z][\\s\\S]*>/i.test(text)) {
+              return "html";
+            }
+            if (/^\\s*(\\$|>|npm |pnpm |yarn |node |python3? |gcloud |curl |git )/m.test(text)) {
+              return "shell";
+            }
+            if (text.includes("Traceback (most recent call last)") || /\\bFile \"[^\"]+\", line \\d+/m.test(text)) {
+              return "python";
+            }
+            if (/\\b(function|const|let|var|import|export|class|async)\\b/.test(text) || /=>\\s*[{(]/.test(text)) {
+              return "javascript";
+            }
+            return "plaintext";
+          };
+          const getServerLogDetailEditorHeight = (value) => {
+            const lineCount = String(value || "").split(/\\n/).length;
+            return Math.min(420, Math.max(140, (lineCount + 2) * 20)) + "px";
+          };
+          const renderServerLogDetailContent = (entry, kind) => {
+            const detailText = buildServerLogDetailText(entry, kind);
+            if (ServerPreviewEditorComponent) {
+              return React.createElement("div", { className: "playground-code-preview-editor-shell playground-servers-logs-expanded-editor-shell" },
+                React.createElement(ServerPreviewEditorComponent, {
+                  path: "server-log." + (inferServerLogDetailLanguage(detailText, kind) === "json" ? "json" : "log"),
+                  height: getServerLogDetailEditorHeight(detailText),
+                  language: inferServerLogDetailLanguage(detailText, kind),
+                  theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                  value: detailText,
+                  beforeMount: ensurePlaygroundCodeEditorTheme,
+                  options: {
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    smoothScrolling: true,
+                    readOnly: true,
+                    fontSize: 12,
+                    lineHeight: 20,
+                    tabSize: 2,
+                    insertSpaces: true,
+                    renderLineHighlight: "none",
+                    lineNumbersMinChars: 3,
+                    overviewRulerBorder: false,
+                    hideCursorInOverviewRuler: true,
+                    wordWrap: "on",
+                    padding: { top: 12, bottom: 12 },
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                  },
+                })
               );
             }
-            return React.createElement("div", {
-                key: String(entry?.timestamp || "") + ":" + String(entry?.stream || "") + ":" + String(entry?.message || "").slice(0, 24),
-                className: "playground-servers-analytics-log-row",
+            return React.createElement("pre", { className: "playground-servers-logs-expanded-detail" }, detailText);
+          };
+          const toggleServerLogExpansion = (rowKey) => {
+            setExpandedServerLogKey((current) => current === rowKey ? "" : rowKey);
+          };
+          const renderServerLogRow = (entry, kind) => {
+            const normalizedKind = String(kind || "request");
+            const rowKey = buildServerLogRowKey(entry, normalizedKind);
+            const isExpanded = expandedServerLogKey === rowKey;
+            const rowProps = {
+              className: "playground-servers-logs-table-row" + (isExpanded ? " is-expanded" : ""),
+              onClick: () => toggleServerLogExpansion(rowKey),
+              onKeyDown: (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  toggleServerLogExpansion(rowKey);
+                }
               },
-              React.createElement("div", { className: "playground-servers-analytics-log-row-top" },
-                React.createElement("span", { className: "playground-servers-analytics-log-pill" }, normalizedKind === "deployment" ? String(entry?.stream || "deploy") : String(entry?.severity || "INFO")),
-                React.createElement("span", { className: "playground-servers-analytics-log-time" }, formatPlaygroundFileDate(entry?.timestamp))
+              tabIndex: 0,
+              "aria-expanded": isExpanded ? "true" : "false",
+            };
+            const detailRow = isExpanded
+              ? React.createElement("tr", {
+                  className: "playground-servers-logs-table-detail-row",
+                },
+                  React.createElement("td", { colSpan: normalizedKind === "request" ? 5 : 4 },
+                    renderServerLogDetailContent(entry, normalizedKind)
+                  )
+                )
+              : null;
+            if (normalizedKind === "request") {
+              return React.createElement(React.Fragment, { key: rowKey },
+                React.createElement("tr", rowProps,
+                  React.createElement("td", null,
+                    renderServerLogStatusPill(formatPlaygroundServerRequestStatus(entry?.status), getServerLogStatusTone(entry, normalizedKind))
+                  ),
+                  React.createElement("td", null,
+                    React.createElement("div", { className: "playground-agents-overview-table-value" }, String(entry?.method || "GET"))
+                  ),
+                  React.createElement("td", null,
+                    React.createElement("div", { className: "playground-agents-overview-table-value playground-servers-logs-table-message", title: String(entry?.path || "/") }, String(entry?.path || "/"))
+                  ),
+                  React.createElement("td", { className: "is-right" },
+                    React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundServerLatency(entry?.latencyMs))
+                  ),
+                  React.createElement("td", { className: "is-right" },
+                    React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundFileDate(entry?.timestamp))
+                  )
+                ),
+                detailRow
+              );
+            }
+            const statusLabel = normalizedKind === "deployment" ? String(entry?.stream || "deploy") : String(entry?.severity || "INFO");
+            const messageText = String(entry?.message || "");
+            return React.createElement(React.Fragment, { key: rowKey },
+              React.createElement("tr", rowProps,
+                React.createElement("td", null,
+                  renderServerLogStatusPill(statusLabel, getServerLogStatusTone(entry, normalizedKind))
+                ),
+                React.createElement("td", null,
+                  React.createElement("div", { className: "playground-agents-overview-table-value" }, formatPlaygroundServerLogKindLabel(normalizedKind))
+                ),
+                React.createElement("td", null,
+                  React.createElement("div", { className: "playground-agents-overview-table-value playground-servers-logs-table-message", title: messageText }, messageText || "—")
+                ),
+                React.createElement("td", { className: "is-right" },
+                  React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundFileDate(entry?.timestamp))
+                )
               ),
-              React.createElement("pre", { className: "playground-servers-analytics-log-message" }, String(entry?.message || ""))
+              detailRow
             );
           };
+          const serverLogsSortOptions = [
+            { id: "newest", label: "Newest first" },
+            { id: "oldest", label: "Oldest first" },
+          ];
+          const readServerLogTimestampMs = (entry) => {
+            const timestamp = Date.parse(String(entry?.timestamp || entry?.createdAt || entry?.updatedAt || ""));
+            return Number.isFinite(timestamp) ? timestamp : 0;
+          };
+          const getServerLogSearchText = (entry, kind) => {
+            const normalizedKind = String(kind || "request");
+            if (normalizedKind === "request") {
+              return [
+                entry?.timestamp,
+                entry?.method,
+                entry?.path,
+                entry?.status,
+                entry?.latencyMs,
+              ].map((value) => String(value || "")).join(" ");
+            }
+            return [
+              entry?.timestamp,
+              entry?.stream,
+              entry?.severity,
+              entry?.message,
+            ].map((value) => String(value || "")).join(" ");
+          };
+          const normalizedServerLogsSearchQuery = String(serverLogsSearchQuery || "").trim().toLowerCase();
+          const displayedServerLogList = activeServerLogList
+            .filter((entry) => {
+              if (!normalizedServerLogsSearchQuery) {
+                return true;
+              }
+              return getServerLogSearchText(entry, serverLogsState.kind).toLowerCase().includes(normalizedServerLogsSearchQuery);
+            })
+            .slice()
+            .sort((left, right) => {
+              const delta = readServerLogTimestampMs(right) - readServerLogTimestampMs(left);
+              return serverLogsSort === "oldest" ? -delta : delta;
+            });
+          const serverLogsPageSize = 20;
+          const normalizedServerLogsKind = ["request", "runtime", "deployment"].includes(String(serverLogsState.kind || "").trim().toLowerCase())
+            ? String(serverLogsState.kind).trim().toLowerCase()
+            : "request";
+          const serverLogsVisibleCount = Math.max(serverLogsPageSize, Number(serverLogsVisibleCountByKind[normalizedServerLogsKind] || serverLogsPageSize));
+          const visibleServerLogList = displayedServerLogList.slice(0, serverLogsVisibleCount);
+          const hasMoreServerLogs = displayedServerLogList.length > visibleServerLogList.length;
+          const handleLoadMoreServerLogs = () => {
+            setServerLogsVisibleCountByKind((current) => ({
+              ...current,
+              [normalizedServerLogsKind]: Math.max(serverLogsPageSize, Number(current[normalizedServerLogsKind] || serverLogsPageSize)) + serverLogsPageSize,
+            }));
+          };
+          const selectServerLogKind = (kind) => {
+            const normalizedKind = ["request", "runtime", "deployment"].includes(String(kind || "").trim().toLowerCase())
+              ? String(kind).trim().toLowerCase()
+              : "request";
+            setServerLogsState((current) => ({
+              ...current,
+              kind: normalizedKind,
+              error: "",
+            }));
+            setServerLogsToolbarPopover("");
+            setExpandedServerLogKey("");
+            if (draftServer.id) {
+              void loadServerLogs(draftServer.id, normalizedKind);
+            }
+          };
+          const renderServerLogsSurface = () => React.createElement("div", {
+              className: "playground-environments-editor-surface playground-servers-analytics-logs-surface",
+            },
+            React.createElement("div", { className: "playground-plugins-section-header playground-servers-logs-section-header" },
+              React.createElement("div", { className: "playground-plugins-section-copy" },
+                React.createElement("h3", { className: "playground-plugins-section-title" }, "Logs")
+              )
+            ),
+            React.createElement("div", {
+                className: "playground-plugins-search-row playground-resources-overview-search-row playground-servers-logs-search-row",
+                ref: serverLogsToolbarRef,
+              },
+              React.createElement("div", { className: "playground-plugins-search-shell" },
+                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: serverLogsSearchQuery,
+                  onChange: (event) => {
+                    setServerLogsSearchQuery(event.target.value);
+                    setExpandedServerLogKey("");
+                  },
+                  className: "playground-plugins-search",
+                  placeholder: "Search logs",
+                })
+              ),
+              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (serverLogsToolbarPopover === "sort" || serverLogsSort !== "newest" ? " is-active" : ""),
+                    onClick: () => setServerLogsToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                  },
+                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Sort")
+                  ),
+                  serverLogsToolbarPopover === "sort"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        serverLogsSortOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (serverLogsSort === option.id ? " selected" : ""),
+                              onClick: () => {
+                                setServerLogsSort(option.id);
+                                setServerLogsToolbarPopover("");
+                                setExpandedServerLogKey("");
+                              },
+                            },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              serverLogsSort === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label)
+                            )
+                          )
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-filter" + (serverLogsToolbarPopover === "filter" || serverLogsState.kind !== "request" ? " is-active" : ""),
+                    onClick: () => setServerLogsToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                  },
+                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Filter: " + formatPlaygroundServerLogKindLabel(serverLogsState.kind))
+                  ),
+                  serverLogsToolbarPopover === "filter"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        serverAnalyticsLogKinds.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (serverLogsState.kind === option.id ? " selected" : ""),
+                              onClick: () => selectServerLogKind(option.id),
+                            },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              serverLogsState.kind === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label),
+                              React.createElement("span", null, option.description)
+                            )
+                          )
+                        )
+                      )
+                    : null
+                )
+              )
+            ),
+            serverLogsState.error
+              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverLogsState.error)
+              : null,
+            isServerLogsLoading
+              ? React.createElement("div", { className: "playground-files-state playground-servers-logs-loading-state" },
+                  React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                )
+              : displayedServerLogList.length > 0
+                ? React.createElement("div", { className: "playground-agents-overview-table-shell playground-servers-logs-table-shell" },
+                    React.createElement(React.Fragment, null,
+                      React.createElement("table", { className: "playground-agents-overview-table playground-servers-logs-table" },
+                        serverLogsState.kind === "request"
+                          ? React.createElement("thead", null,
+                              React.createElement("tr", null,
+                                React.createElement("th", null, "Status"),
+                                React.createElement("th", null, "Method"),
+                                React.createElement("th", null, "Path"),
+                                React.createElement("th", { className: "is-right" }, "Latency"),
+                                React.createElement("th", { className: "is-right" }, "Time")
+                              )
+                            )
+                          : React.createElement("thead", null,
+                              React.createElement("tr", null,
+                                React.createElement("th", null, "Status"),
+                                React.createElement("th", null, "Type"),
+                                React.createElement("th", null, "Message"),
+                                React.createElement("th", { className: "is-right" }, "Time")
+                              )
+                            ),
+                        React.createElement("tbody", null,
+                          visibleServerLogList.map((entry) => renderServerLogRow(entry, serverLogsState.kind))
+                        )
+                      ),
+                      hasMoreServerLogs
+                        ? React.createElement("div", { className: "playground-servers-logs-load-more-row" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-environments-action-button",
+                              onClick: handleLoadMoreServerLogs,
+                            },
+                              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("span", null, "Load 20 more")
+                            )
+                          )
+                        : null
+                    )
+                  )
+                : React.createElement("div", { className: "playground-files-state" },
+                    normalizedServerLogsSearchQuery
+                      ? "No matching logs found."
+                      : "No " + formatPlaygroundServerLogKindLabel(serverLogsState.kind).toLowerCase() + " logs yet."
+                  )
+          );
 
+          const serverDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+            [
+              {
+                id: "bold",
+                label: "Bold",
+                icon: Bold,
+              },
+              {
+                id: "italic",
+                label: "Italic",
+                icon: Italic,
+              },
+              {
+                id: "underline",
+                label: "Underline",
+                icon: Underline,
+              },
+              {
+                id: "list",
+                label: "List",
+                icon: List,
+              },
+            ].map((action) =>
+              React.createElement("button", {
+                key: action.id,
+                type: "button",
+                className: "playground-tasks-detail-format-button",
+                title: action.label,
+                "aria-label": action.label,
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: () => handleServerDescriptionFormat(action.id),
+              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+            )
+          );
+          const serverDescriptionEditor = React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerDescriptionEditing ? " is-editing" : " is-preview") },
+            !isServerDescriptionEditing
+              ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                  String(draftServer.description || "").trim()
+                    ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                        content: draftServer.description,
+                        className: "playground-tasks-detail-description-preview tb-message-markdown",
+                      })
+                    : React.createElement("div", {
+                        className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                      }, "Add Description here")
+                )
+              : null,
+            React.createElement("textarea", {
+              ref: serverDescriptionTextareaRef,
+              className: "playground-tasks-detail-description-input " + (isServerDescriptionEditing ? "is-editing" : "is-preview"),
+              rows: 1,
+              placeholder: isServerDescriptionEditing ? "Add Description here" : "",
+              value: draftServer.description || "",
+              onFocus: () => setIsServerDescriptionEditing(true),
+              onChange: (event) => {
+                updateServerField("description", event.target.value);
+                resizeEnvironmentDescriptionTextarea(event.currentTarget);
+              },
+              onBlur: () => {
+                setIsServerDescriptionEditing(false);
+                void commitDraftServerIfDirty();
+              },
+            })
+          );
           const descriptionSection = React.createElement("section", {
-              className: "playground-environments-section playground-server-description-section",
+              className: "playground-environments-section playground-server-description-section" + (isTitlelessServerDescription ? " is-titleless" : ""),
               key: "server-description",
             },
             React.createElement("div", { className: "playground-environments-section-body" },
               React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-                React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                  React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                    [
-                      {
-                        id: "bold",
-                        label: "Bold",
-                        icon: Bold,
-                      },
-                      {
-                        id: "italic",
-                        label: "Italic",
-                        icon: Italic,
-                      },
-                      {
-                        id: "underline",
-                        label: "Underline",
-                        icon: Underline,
-                      },
-                      {
-                        id: "list",
-                        label: "List",
-                        icon: List,
-                      },
-                    ].map((action) =>
-                      React.createElement("button", {
-                        key: action.id,
-                        type: "button",
-                        className: "playground-tasks-detail-format-button",
-                        title: action.label,
-                        "aria-label": action.label,
-                        onMouseDown: (event) => event.preventDefault(),
-                        onClick: () => handleServerDescriptionFormat(action.id),
-                      }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                isTitlelessServerDescription
+                  ? React.createElement("div", { className: "playground-server-description-inline-row" },
+                      serverDescriptionEditor,
+                      serverDescriptionFormatActions
                     )
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerDescriptionEditing ? " is-editing" : " is-preview") },
-                  !isServerDescriptionEditing
-                    ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                        String(draftServer.description || "").trim()
-                          ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                              content: draftServer.description,
-                              className: "playground-tasks-detail-description-preview tb-message-markdown",
-                            })
-                          : React.createElement("div", {
-                              className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                            }, "Add Description here")
-                      )
-                    : null,
-                  React.createElement("textarea", {
-                    ref: serverDescriptionTextareaRef,
-                    className: "playground-tasks-detail-description-input " + (isServerDescriptionEditing ? "is-editing" : "is-preview"),
-                    rows: 1,
-                    placeholder: isServerDescriptionEditing ? "Add Description here" : "",
-                    value: draftServer.description || "",
-                    onFocus: () => setIsServerDescriptionEditing(true),
-                    onChange: (event) => {
-                      updateServerField("description", event.target.value);
-                      resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                    },
-                    onBlur: () => {
-                      setIsServerDescriptionEditing(false);
-                      void commitDraftServerIfDirty();
-                    },
-                  })
-                )
+                  : React.createElement(React.Fragment, null,
+                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                        serverDescriptionFormatActions
+                      ),
+                      serverDescriptionEditor
+                    )
               )
             )
           );
 
           const factsSection = React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-environments-home-summary playground-server-detail-summary" },
-              React.createElement("div", { className: "playground-environments-home-summary-kpis" },
-                serverDetailKpis.map((item) =>
-                  React.createElement("div", {
-                      key: item.id,
-                      className: "playground-environments-home-summary-kpi playground-project-overview-summary-kpi",
-                    },
-                    React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                      item.Icon
-                        ? React.createElement(item.Icon, { className: "playground-project-overview-summary-kpi-icon", strokeWidth: 1.85 })
-                        : null,
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                  )
-                )
-              )
-            ),
             React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics" },
               React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card" },
                 React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                   React.createElement("div", { className: "playground-database-overview" },
                     React.createElement("div", { className: "playground-database-overview-chart-block playground-server-detail-chart-block" },
+                      renderServerDetailChartKpis(serverDetailKpis),
                       renderServerDetailRequestChart(),
                       React.createElement("div", { className: "playground-server-detail-fact-rows" },
                         renderServerFactRow("ID",
@@ -57043,6 +61350,121 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             )
           );
+
+          const activeCustomDomains = getPlaygroundServerCustomDomainStates(draftServer);
+          const activeCustomDomain = activeCustomDomains[0] || null;
+          const isCustomDomainCapableServer = normalizedServerKind === "web_app";
+          const customDomainSection = isCustomDomainCapableServer
+            ? React.createElement("section", { className: "playground-server-custom-domain-section playground-server-details-card" },
+                React.createElement("div", { className: "playground-server-custom-domain-header" },
+                  React.createElement("div", null,
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Custom Domains")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button playground-server-custom-domain-add-button",
+                    onClick: () => openServerCustomDomainModal(null),
+                    disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  },
+                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Add Domain")
+                  )
+                ),
+                serverCustomDomainRemoveState.error
+                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverCustomDomainRemoveState.error)
+                  : null,
+                activeCustomDomains.length > 0
+                  ? activeCustomDomains.map((customDomain) => {
+                      const customDomainStatus = customDomain?.status || "";
+                      const isRemovingDomain = serverCustomDomainRemoveState.status === "removing" && serverCustomDomainRemoveState.domain === customDomain.domain;
+                      return React.createElement("div", {
+                        className: "playground-server-custom-domain-card",
+                        key: customDomain.domain,
+                        role: "button",
+                        tabIndex: 0,
+                        onClick: () => openServerCustomDomainModal(customDomain),
+                        onKeyDown: (event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openServerCustomDomainModal(customDomain);
+                          }
+                        },
+                      },
+                        React.createElement("div", { className: "playground-server-custom-domain-main" },
+                          React.createElement("div", { className: "playground-server-custom-domain-icon" },
+                            React.createElement(Globe, { width: 16, height: 16, strokeWidth: 1.8 })
+                          ),
+                          React.createElement("div", { className: "playground-server-custom-domain-copy" },
+                            React.createElement("div", { className: "playground-server-custom-domain-name" }, customDomain.domain),
+                            React.createElement("div", { className: "playground-server-custom-domain-meta" },
+                              customDomain.lastCheckedAt
+                                ? "Last checked " + formatPlaygroundFileDate(customDomain.lastCheckedAt)
+                                : "DNS records ready to verify"
+                            )
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-server-custom-domain-actions" },
+                          React.createElement("span", {
+                            className: "playground-server-custom-domain-status"
+                              + (customDomainStatus === "connected" ? " is-connected" : customDomainStatus === "needs_setup" ? " is-error" : ""),
+                          }, isRemovingDomain ? "Removing..." : formatPlaygroundCustomDomainStatus(customDomainStatus)),
+                          customDomain.url
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "playground-settings-icon-button playground-server-custom-domain-open-button",
+                                onClick: (event) => {
+                                  event.stopPropagation();
+                                  window.open(customDomain.url, "_blank", "noopener,noreferrer");
+                                },
+                                title: "Open custom domain",
+                              }, React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }))
+                            : null,
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-settings-icon-button playground-server-custom-domain-row-menu-button",
+                            onClick: (event) => {
+                              event.stopPropagation();
+                              setServerCustomDomainMenuDomain((current) => current === customDomain.domain ? "" : customDomain.domain);
+                            },
+                            title: "Domain actions",
+                          }, React.createElement(EllipsisVertical, { width: 14, height: 14, strokeWidth: 1.8 }))
+                        ),
+                        serverCustomDomainMenuDomain === customDomain.domain
+                          ? React.createElement("div", {
+                              className: "playground-server-custom-domain-menu",
+                              onClick: (event) => event.stopPropagation(),
+                            },
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-server-custom-domain-menu-row",
+                                onClick: () => openServerCustomDomainModal(customDomain),
+                              },
+                                React.createElement(SquarePen, { width: 13, height: 13, strokeWidth: 1.8 }),
+                                React.createElement("span", null, "Edit")
+                              ),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-server-custom-domain-menu-row is-danger",
+                                onClick: () => void handleRemoveServerCustomDomain(customDomain.domain),
+                                disabled: isRemovingDomain,
+                              },
+                                React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }),
+                                React.createElement("span", null, isRemovingDomain ? "Removing..." : "Remove")
+                              )
+                            )
+                          : null
+                      );
+                    })
+                  : React.createElement("div", { className: "playground-server-custom-domain-empty" },
+                      React.createElement("div", { className: "playground-server-custom-domain-empty-title" }, "No custom domain yet"),
+                      React.createElement("div", { className: "playground-server-custom-domain-empty-copy" },
+                        draftServer.status === "deployed"
+                          ? "Add a domain to generate the DNS records your registrar needs."
+                          : "Deploy this web app before adding a custom domain."
+                      )
+                    )
+              )
+            : null;
 
           const isConnectableServer = normalizedServerKind === "function" || normalizedServerKind === "web_app";
           const activeDatabaseBinding = getCurrentServerBindingByType("database");
@@ -57245,41 +61667,112 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 : serverFileEditorState.saveMessage
                   ? serverFileEditorState.saveMessage
                   : "No unsaved changes";
-          const renderServerSourceFileChip = (entry) => React.createElement("div", {
-              key: entry.id || entry.path,
-              className: "runner-attachment runner-attachment-file" + (serverFileEditorState.path === entry.path ? " runner-attachment-document-active" : ""),
-            },
-            React.createElement("button", {
-              type: "button",
-              className: "runner-attachment-file-button",
-              onClick: () => {
-                if (!entry.isFolder && isPlaygroundTextPreviewable(entry)) {
-                  void handleServerFileOpen(entry);
-                }
+          const renderServerSourceFileRow = (row) => {
+            const entry = row?.entry || {};
+            const normalizedPath = String(entry?.path || entry?.name || "").trim();
+            const isActiveSourceFile = serverFileEditorState.path === entry.path;
+            const isExpandedSourceFolder = entry.isFolder && serverSourceExpandedFolders.has(entry.path);
+            const canOpenSourceFile = !entry.isFolder && isPlaygroundTextPreviewable(entry);
+            const canExpandSourceFolder = entry.isFolder && (
+              entry.hasChildren
+              || isExpandedSourceFolder
+              || (Array.isArray(entry.children) && entry.children.length > 0)
+            );
+            return React.createElement("div", {
+                key: entry.id || entry.path,
+                className: "playground-files-entry-row" + (isActiveSourceFile ? " is-active" : ""),
+                style: { paddingLeft: 12 + Number(row?.level || 0) * 18 + "px" },
+                onClick: () => {
+                  setServerSourceFileMenuPath("");
+                  if (entry.isFolder) {
+                    toggleServerSourceFolderExpansion(entry.path);
+                    return;
+                  }
+                  if (canOpenSourceFile) {
+                    void handleServerFileOpen(entry);
+                  }
+                },
               },
-              disabled: entry.isFolder || !isPlaygroundTextPreviewable(entry),
-              title: entry.path || entry.name || "File",
-            },
-              React.createElement("span", { className: "runner-attachment-file-icon-slot", "aria-hidden": "true" },
-                React.createElement("img", {
-                  src: entry.isFolder ? PLAYGROUND_FOLDER_ICON_URL : PLAYGROUND_TEXT_FILE_ICON_URL,
-                  alt: "",
-                  draggable: false,
-                  className: "runner-attachment-file-icon",
-                })
+              canExpandSourceFolder
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-entry-chevron-button",
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      setServerSourceFileMenuPath("");
+                      toggleServerSourceFolderExpansion(entry.path);
+                    },
+                  }, isExpandedSourceFolder
+                    ? React.createElement(ChevronDown, { className: "playground-files-entry-chevron", strokeWidth: 1.8 })
+                    : React.createElement(ChevronRight, { className: "playground-files-entry-chevron", strokeWidth: 1.8 }))
+                : React.createElement("div", { className: "playground-files-entry-chevron is-placeholder" }),
+              React.createElement("div", { className: "playground-files-entry-main" },
+                React.createElement(PlaygroundFileIcon, { entry }),
+                React.createElement("div", { className: "playground-files-entry-copy" },
+                  React.createElement("div", { className: "playground-files-entry-name" }, entry.name || normalizedPath || "Untitled")
+                )
               ),
-              React.createElement("div", { className: "runner-attachment-file-name" }, entry.name || entry.path || "Untitled")
-            ),
-            React.createElement("button", {
-              type: "button",
-              className: "runner-attachment-remove runner-attachment-remove-file",
-              onClick: (event) => {
-                event.stopPropagation();
-                void handleServerFileDelete(entry);
-              },
-              "aria-label": "Delete " + String(entry.name || entry.path || "file"),
-            }, React.createElement(X, { className: "runner-attachment-remove-icon", strokeWidth: 2 }))
-          );
+              React.createElement("div", { className: "playground-files-entry-meta" },
+                React.createElement("span", { className: "playground-files-entry-date" }, formatPlaygroundFileDate(entry.modifiedTime)),
+                React.createElement("span", { className: "playground-files-entry-size" }, entry.isFolder ? "-" : formatPlaygroundFileSize(entry.size))
+              ),
+              React.createElement("div", { className: "playground-servers-source-file-actions-menu-shell" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-entry-options-button",
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    setServerSourceFileMenuPath((current) => current === entry.path ? "" : entry.path);
+                  },
+                  title: "Source file actions",
+                  "aria-label": "Source file actions",
+                  "aria-expanded": serverSourceFileMenuPath === entry.path ? "true" : "false",
+                }, React.createElement(Ellipsis, { className: "playground-files-entry-options-icon", strokeWidth: 1.8 })),
+                serverSourceFileMenuPath === entry.path
+                  ? React.createElement("div", {
+                      className: "playground-server-custom-domain-menu playground-servers-source-file-menu",
+                      onClick: (event) => event.stopPropagation(),
+                    },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-server-custom-domain-menu-row",
+                        onClick: () => {
+                          setServerSourceFileMenuPath("");
+                          if (entry.isFolder) {
+                            toggleServerSourceFolderExpansion(entry.path);
+                            return;
+                          }
+                          if (canOpenSourceFile) {
+                            void handleServerFileOpen(entry);
+                          }
+                        },
+                        disabled: !entry.isFolder && !canOpenSourceFile,
+                      },
+                        React.createElement(FolderOpen, { width: 13, height: 13, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Open in Files")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-server-custom-domain-menu-row",
+                        onClick: () => void handleServerFileRename(entry),
+                        disabled: entry.isFolder,
+                      },
+                        React.createElement(SquarePen, { width: 13, height: 13, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Rename")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-server-custom-domain-menu-row is-danger",
+                        onClick: () => void handleServerFileDelete(entry),
+                      },
+                        React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Delete")
+                      )
+                    )
+                  : null
+              )
+            );
+          };
           const renderServerDeploymentCodePreview = ({ path, language, value, emptyText, height = "168px" }) => {
             if (!String(value || "").trim()) {
               return React.createElement("div", { className: "playground-files-state" }, emptyText);
@@ -57466,8 +61959,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("div", { className: serverFileEditorStatusClassName }, serverFileEditorStatusText)
               )
             : null;
+          const serverKindLabel = formatPlaygroundServerKindLabel(draftServer.kind);
           const sourceFilesSection = React.createElement("div", { className: "playground-tasks-attachments" },
-            React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
+            React.createElement("div", { className: "playground-tasks-attachments-toolbar playground-servers-source-files-toolbar" },
               React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Source Files"),
               draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
                 ? React.createElement("div", { className: "playground-tasks-attachments-actions" },
@@ -57481,12 +61975,25 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     ),
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-environments-action-button playground-tasks-attachments-environment-button",
+                      className: "playground-environments-action-button playground-tasks-attachments-environment-button playground-servers-source-new-file-button",
                       onClick: () => void handleCreateServerFile(),
                     },
                       React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
                       React.createElement("span", null, "New File")
-                    )
+                    ),
+                    isSourceDeployableServer
+                      ? React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button is-primary playground-tasks-attachments-environment-button playground-servers-source-deploy-button",
+                          onClick: () => void handleDeployServer(),
+                          disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                        },
+                          serverDeploymentState.isDeploying
+                            ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                            : React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy " + serverKindLabel)
+                        )
+                      : null
                   )
                 : null
             ),
@@ -57532,19 +62039,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                         React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                       )
                     : currentServerFiles.length > 0
-                      ? React.createElement(React.Fragment, null,
-                          React.createElement("div", { className: "playground-tasks-attachments-topline" },
-                            React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                            React.createElement("span", null, isServerFileDragging ? "Drop files here" : "Drop files to attach, or"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-tasks-attachments-browse",
-                              onClick: openServerFileUploadPicker,
-                            }, "browse.")
-                          ),
-                          React.createElement("div", { className: "runner-attachments" },
-                            currentServerFiles.map((entry) => renderServerSourceFileChip(entry))
-                          )
+                      ? React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                          React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                          React.createElement("span", null, isServerFileDragging ? "Drop files here" : "Drop files to attach, or"),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-attachments-browse",
+                            onClick: openServerFileUploadPicker,
+                          }, "browse.")
                         )
                       : React.createElement("button", {
                           type: "button",
@@ -57557,6 +62059,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                         )
               )
             ),
+            currentServerFiles.length > 0 && !isLoadingCurrentServerFiles
+              ? React.createElement("div", { className: "playground-files-entry-list playground-servers-source-files-list" },
+                  visibleServerSourceFileRows.map((row) => renderServerSourceFileRow(row))
+                )
+              : null,
             serverFileTransferState.error
               ? React.createElement("div", { className: "playground-environments-error" }, serverFileTransferState.error)
               : null,
@@ -57565,7 +62072,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               : null
           );
 
-          const serverKindLabel = formatPlaygroundServerKindLabel(draftServer.kind);
           const deployActionLabel = serverDeploymentState.isDeploying ? "Deploying..." : "Deploy " + serverKindLabel;
           const requestActionLabel = serverDeploymentState.isInvoking
             ? "Requesting..."
@@ -57614,12 +62120,179 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 "}",
               ].join("\\n");
           function openServerAnalyticsView() {
-            setServerAnalyticsView("analytics");
+            if (isSourceDeployableServer) {
+              handleCloseServerFileEditor();
+              setServerDetailTab("logs");
+            } else {
+              setServerAnalyticsView("analytics");
+            }
             if (draftServer.id) {
               void loadServerAnalytics(draftServer.id, { force: true });
               void loadServerLogs(draftServer.id, serverLogsState.kind);
             }
           }
+          const customDomainModalResult = serverCustomDomainModalState.result || null;
+          const customDomainModalBaseRecords = Array.isArray(customDomainModalResult?.records)
+            ? customDomainModalResult.records.filter((record) => record && typeof record === "object")
+            : [];
+          const customDomainOwnershipSiteId = String(customDomainModalResult?.siteId || customDomainModalResult?.hosting?.siteId || "").trim();
+          const customDomainModalNeedsOwnershipRecord = customDomainOwnershipSiteId
+            && customDomainModalResult?.ownershipState !== "OWNERSHIP_ACTIVE"
+            && customDomainModalResult?.ownershipState !== "OWNERSHIP_PENDING"
+            && !customDomainModalBaseRecords.some((record) => String(record?.value || "").trim() === "hosting-site=" + customDomainOwnershipSiteId);
+          const customDomainModalRecords = customDomainModalNeedsOwnershipRecord
+            ? [
+                ...customDomainModalBaseRecords,
+                {
+                  action: "add",
+                  type: "TXT",
+                  name: String(customDomainModalResult?.domain || serverCustomDomainModalState.domain || "").trim(),
+                  value: "hosting-site=" + customDomainOwnershipSiteId,
+                  source: "ownership",
+                },
+              ]
+            : customDomainModalBaseRecords;
+          const customDomainModalAddRecords = customDomainModalRecords.filter((record) => String(record?.action || "add").toLowerCase() !== "remove");
+          const customDomainModalRemoveRecords = customDomainModalRecords.filter((record) => String(record?.action || "").toLowerCase() === "remove");
+          const customDomainModalStatus = String(serverCustomDomainModalState.status || "idle");
+          const isCustomDomainSaving = customDomainModalStatus === "saving";
+          const isCustomDomainChecking = customDomainModalStatus === "checking";
+          const hasCustomDomainDnsView = Boolean(customDomainModalResult);
+          const customDomainRequiresVerification = customDomainModalResult?.status === "verification_required";
+          const customDomainVerificationMessage = String(customDomainModalResult?.verification?.message || "").includes("Cloud Run")
+            ? "Add the ownership TXT record below, then check again after DNS propagation."
+            : customDomainModalResult?.verification?.message;
+          const customDomainModalMessage = customDomainModalStatus === "success"
+            ? customDomainRequiresVerification
+              ? (customDomainVerificationMessage || "Add the ownership TXT record below, then check again after DNS propagation.")
+              : customDomainModalResult?.status === "connected"
+              ? "Domain is connected."
+              : "Apply the DNS changes below, then check again after propagation."
+            : "";
+          function renderCustomDomainDnsRecord(record, index, actionLabel) {
+            const type = String(record?.type || "").trim() || "DNS";
+            const name = String(record?.name || serverCustomDomainModalState.domain || "").trim();
+            const value = String(record?.value || "").trim();
+            const action = String(record?.action || actionLabel || "add").toLowerCase() === "remove" ? "remove" : "add";
+            return React.createElement("div", { className: "playground-server-custom-domain-record", key: action + ":" + type + ":" + name + ":" + index },
+              React.createElement("div", { className: "playground-server-custom-domain-record-action" + (action === "remove" ? " is-remove" : " is-add") }, action === "remove" ? "Remove" : "Add"),
+              React.createElement("div", { className: "playground-server-custom-domain-record-type" }, type),
+              React.createElement("div", { className: "playground-server-custom-domain-record-name", title: name }, name || "@"),
+              React.createElement("div", { className: "playground-server-custom-domain-record-value", title: value },
+                React.createElement("span", null, value || "Pending"),
+                value
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-server-custom-domain-record-copy-button",
+                      onClick: () => void copyTextToClipboard(value),
+                      title: "Copy value",
+                    }, React.createElement(Copy, { width: 13, height: 13, strokeWidth: 1.8 }))
+                  : null
+              )
+            );
+          }
+          const serverCustomDomainModal = serverCustomDomainModalState.open
+            ? React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop",
+                onClick: closeServerCustomDomainModal,
+              },
+                React.createElement("div", {
+                    className: "playground-tasks-project-modal playground-database-browser-modal playground-server-custom-domain-modal",
+                    onClick: (event) => event.stopPropagation(),
+                  },
+                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                        React.createElement(Globe, { width: 18, height: 18, strokeWidth: 1.9 })
+                      ),
+                      React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "Custom Domain")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: closeServerCustomDomainModal,
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-server-custom-domain-modal-body" },
+                    React.createElement("label", { className: "playground-environments-field playground-server-custom-domain-field" },
+                      React.createElement("span", { className: "playground-server-custom-domain-label-row" },
+                        React.createElement("span", { className: "playground-environments-field-label" }, "Domain"),
+                        customDomainModalResult
+                          ? React.createElement("span", {
+                              className: "playground-server-custom-domain-status"
+                                + (customDomainModalResult.status === "connected" ? " is-connected" : customDomainModalResult.status === "needs_setup" ? " is-error" : ""),
+                            }, formatPlaygroundCustomDomainStatus(customDomainModalResult.status))
+                          : null
+                      ),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: serverCustomDomainModalState.domain,
+                        placeholder: "app.example.com",
+                        autoFocus: true,
+                        onChange: (event) => setServerCustomDomainModalState((current) => ({
+                          ...current,
+                          domain: event.target.value,
+                          error: "",
+                        })),
+                      })
+                    ),
+                    serverCustomDomainModalState.error
+                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverCustomDomainModalState.error)
+                      : null,
+                    hasCustomDomainDnsView
+                      ? React.createElement("div", { className: "playground-server-custom-domain-records" },
+                          React.createElement("div", { className: "playground-server-custom-domain-records-title" }, "DNS Records"),
+                          React.createElement("div", { className: "playground-server-custom-domain-records-copy" },
+                            customDomainModalMessage || "No DNS records were returned yet. Check again in a moment."
+                          ),
+                          customDomainModalRecords.length > 0
+                            ? [
+                                customDomainModalAddRecords.length > 0
+                                  ? customDomainModalAddRecords.map((record, index) => renderCustomDomainDnsRecord(record, index, "add"))
+                                  : null,
+                                customDomainModalRemoveRecords.length > 0
+                                  ? customDomainModalRemoveRecords.map((record, index) => renderCustomDomainDnsRecord(record, index, "remove"))
+                                  : null,
+                              ]
+                            : React.createElement("div", { className: "playground-server-custom-domain-records-empty" },
+                                customDomainRequiresVerification
+                                  ? "Domain ownership verification is still required before DNS routing records can be generated."
+                                  : "No DNS records were returned yet. Check again in a moment."
+                              )
+                        )
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                    hasCustomDomainDnsView
+                      ? React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button",
+                          onClick: () => void handleCheckServerCustomDomain(),
+                          disabled: isCustomDomainSaving || isCustomDomainChecking || !String(serverCustomDomainModalState.domain || "").trim(),
+                        },
+                          isCustomDomainChecking
+                            ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                            : React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, isCustomDomainChecking ? "Checking..." : "Check Status")
+                        )
+                      : null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button is-primary",
+                      onClick: () => void handleSaveServerCustomDomain(),
+                      disabled: isCustomDomainSaving || isCustomDomainChecking || !String(serverCustomDomainModalState.domain || "").trim(),
+                    },
+                      isCustomDomainSaving
+                        ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                        : React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, isCustomDomainSaving ? "Saving..." : hasCustomDomainDnsView ? "Save Domain" : "Next Step")
+                    )
+                  )
+                )
+              )
+            : null;
           const serverDeploymentHelpModal = serverDeploymentHelpOpen
             ? React.createElement("div", {
                 className: "playground-tasks-project-modal-backdrop",
@@ -57781,8 +62454,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             )
           );
+          const serverLogsPageContent = renderServerLogsSurface();
 
-          if (!isAuthServer && !isAgentRuntimeServer && serverAnalyticsView === "analytics") {
+          if (!isSourceDeployableServer && !isAuthServer && !isAgentRuntimeServer && serverAnalyticsView === "analytics") {
             return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
               React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar" },
                 React.createElement("div", { className: "playground-environments-editor-navbar-title" },
@@ -57832,59 +62506,96 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   React.createElement("div", { className: "playground-environments-editor-surface playground-servers-analytics-page" },
                     serverAnalyticsOverview
                   ),
-                  React.createElement("div", { className: "playground-environments-editor-surface playground-servers-analytics-logs-surface" },
-                    React.createElement("div", { className: "playground-servers-source-files-header" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Logs"),
-                      React.createElement("div", { className: "playground-servers-analytics-log-tabs" },
-                        serverAnalyticsLogKinds.map((option) =>
-                          React.createElement("button", {
-                            key: option.id,
-                            type: "button",
-                            className: "playground-code-preview-toolbar-button" + (serverLogsState.kind === option.id ? " is-active" : ""),
-                            onClick: () => {
-                              setServerLogsState((current) => ({
-                                ...current,
-                                kind: option.id,
-                                error: "",
-                              }));
-                              if (draftServer.id) {
-                                void loadServerLogs(draftServer.id, option.id);
-                              }
-                            },
-                          },
-                            React.createElement(option.Icon, { width: 12, height: 12, strokeWidth: 1.8 }),
-                            React.createElement("span", null, option.label)
-                          )
-                        )
-                      )
-                    ),
-                    serverLogsState.error
-                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverLogsState.error)
-                      : null,
-                    isServerLogsLoading
-                      ? React.createElement("div", { className: "playground-files-state" },
-                          React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                        )
-                      : activeServerLogList.length > 0
-                        ? React.createElement("div", { className: "playground-servers-analytics-log-list" },
-                            activeServerLogList.map((entry) => renderServerLogRow(entry, serverLogsState.kind))
-                          )
-                        : React.createElement("div", { className: "playground-files-state" }, "No " + formatPlaygroundServerLogKindLabel(serverLogsState.kind).toLowerCase() + " logs yet.")
-                  ),
-                  activeServerRecentRequests.length > 0 && serverLogsState.kind !== "request"
-                    ? React.createElement("div", { className: "playground-environments-editor-surface playground-servers-analytics-logs-surface" },
-                        React.createElement("div", { className: "playground-servers-source-files-header" },
-                          React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Recent Requests")
-                        ),
-                        React.createElement("div", { className: "playground-servers-analytics-log-list" },
-                          activeServerRecentRequests.slice(0, 8).map((entry) => renderServerLogRow(entry, "request"))
-                        )
-                      )
-                    : null
+                  renderServerLogsSurface()
                 )
               )
             );
           }
+
+          const normalizedServerDetailTab = isSourceDeployableServer && ["general", "logs", "source-files"].includes(serverDetailTab)
+            ? serverDetailTab
+            : "general";
+          const serverDocumentationUrl = isFunctionServer
+            ? ${JSON.stringify(aiosOrigin + "/developers/libraries/functions")}
+            : ${JSON.stringify(aiosOrigin + "/developers/libraries/web-apps")};
+          const serverDetailTabs = isSourceDeployableServer
+            ? React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
+                React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+                  [
+                    { id: "general", label: "General" },
+                    { id: "logs", label: "Logs" },
+                    { id: "source-files", label: "Source Files" },
+                  ].map((tab) =>
+                    React.createElement("button", {
+                        key: tab.id,
+                        type: "button",
+                        className: "playground-project-overview-chart-tab" + (normalizedServerDetailTab === tab.id ? " is-active" : ""),
+                        onClick: () => {
+                          if (tab.id !== "source-files") {
+                            handleCloseServerFileEditor();
+                          }
+                          setServerDetailTab(tab.id);
+                          if (tab.id === "logs" && draftServer.id) {
+                            void loadServerAnalytics(draftServer.id, { force: true });
+                            void loadServerLogs(draftServer.id, serverLogsState.kind);
+                          }
+                        },
+                        "aria-pressed": normalizedServerDetailTab === tab.id ? "true" : "false",
+                        "aria-label": tab.label,
+                      },
+                      tab.label
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-server-detail-tab-actions" },
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-project-overview-chart-tab playground-server-detail-docs-tab",
+                      onClick: () => {
+                        window.open(serverDocumentationUrl, "_blank", "noopener,noreferrer");
+                      },
+                      "aria-label": "Open " + serverKindLabel.toLowerCase() + " documentation",
+                    },
+                    React.createElement("span", null, "Documentation"),
+                    React.createElement(ArrowUpRight, { className: "playground-server-detail-docs-tab-icon", strokeWidth: 1.9 })
+                  ),
+                  isWebAppServer
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-project-overview-chart-tab playground-server-detail-docs-tab",
+                        onClick: () => {
+                          if (draftServer.serviceUrl) {
+                            window.open(draftServer.serviceUrl, "_blank", "noopener,noreferrer");
+                          }
+                        },
+                        disabled: !draftServer.serviceUrl,
+                        "aria-label": "Open web app",
+                        title: draftServer.serviceUrl || "Service URL is available after deployment",
+                      },
+                      React.createElement("span", null, "Open App"),
+                      React.createElement(ArrowUpRight, { className: "playground-server-detail-docs-tab-icon", strokeWidth: 1.9 })
+                    )
+                    : null
+                )
+              )
+            : null;
+          const serverGeneralTabContent = React.createElement(React.Fragment, null,
+            factsSection,
+            customDomainSection,
+            connectionsSection
+          );
+          const serverEditorTabContent = isSourceDeployableServer
+            ? normalizedServerDetailTab === "logs"
+              ? serverLogsPageContent
+              : normalizedServerDetailTab === "source-files"
+                ? sourceFilesSection
+                : serverGeneralTabContent
+            : React.createElement(React.Fragment, null,
+                factsSection,
+                customDomainSection,
+                connectionsSection,
+                sourceFilesSection
+              );
 
           const serverEditorScroll = React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
             React.createElement("div", { className: "playground-server-detail-content" },
@@ -57892,9 +62603,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
                 : null,
               descriptionSection,
-              factsSection,
-              connectionsSection,
-              sourceFilesSection
+              serverDetailTabs,
+              serverEditorTabContent
             )
           );
 
@@ -57916,69 +62626,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             ),
             React.createElement("div", { className: "playground-content-nav-center" }),
-            React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-              draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
-                ? React.createElement("div", {
-                    className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
-                    ref: serverActionsPopoverRef,
-                  },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-content-menu-button",
-                      "aria-label": "Server actions",
-                      "aria-expanded": serverActionsPopoverOpen ? "true" : "false",
-                      onClick: () => setServerActionsPopoverOpen((current) => !current),
-                      disabled: serverSaveState.isSaving || serverDeploymentState.isDeploying,
-                    }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                    serverActionsPopoverOpen
-                      ? React.createElement("div", {
-                          className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                          onClick: (event) => event.stopPropagation(),
-                        },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => openServerRenameDialog(draftServer),
-                          },
-                            React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Rename")
-                            )
-                          ),
-                          !isAuthServer && !isAgentRuntimeServer
-                            ? React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-row",
-                                onClick: () => {
-                                  setServerActionsPopoverOpen(false);
-                                  void handleDeployServer();
-                                },
-                                disabled: serverDeploymentState.isDeploying,
-                              },
-                                React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                  React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
-                                )
-                              )
-                            : null,
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              setServerActionsPopoverOpen(false);
-                              void handleDeleteServer(draftServer.id);
-                            },
-                          },
-                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Delete")
-                            )
-                          )
-                        )
-                      : null
-                  )
-                : null,
-            )
+            React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
           );
 
           if (isAgentRuntimeServer) {
@@ -58249,29 +62897,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               timescaleControl: renderServerDetailTimescaleControl(),
             });
             const agentRuntimeDetailsSection = React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-environments-home-summary playground-server-detail-summary" },
-                React.createElement("div", { className: "playground-environments-home-summary-kpis" },
-                  agentRuntimeDetailKpis.map((item) =>
-                    React.createElement("div", {
-                        key: item.id,
-                        className: "playground-environments-home-summary-kpi playground-project-overview-summary-kpi",
-                      },
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                        item.Icon
-                          ? React.createElement(item.Icon, { className: "playground-project-overview-summary-kpi-icon", strokeWidth: 1.85 })
-                          : null,
-                        React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                    )
-                  )
-                )
-              ),
               React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics" },
                 React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card" },
                   React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                     React.createElement("div", { className: "playground-database-overview" },
                       React.createElement("div", { className: "playground-database-overview-chart-block playground-server-detail-chart-block" },
+                        renderServerDetailChartKpis(agentRuntimeDetailKpis),
                         renderAgentRuntimeDetailActivityChart(),
                         React.createElement("div", { className: "playground-server-detail-fact-rows" },
                           renderServerFactRow("ID", React.createElement("span", {
@@ -59081,29 +63712,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               timescaleControl: renderServerDetailTimescaleControl(),
             });
             const authDetailsSection = React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-environments-home-summary playground-server-detail-summary" },
-                React.createElement("div", { className: "playground-environments-home-summary-kpis" },
-                  authDetailKpis.map((item) =>
-                    React.createElement("div", {
-                        key: item.id,
-                        className: "playground-environments-home-summary-kpi playground-project-overview-summary-kpi",
-                      },
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                        item.Icon
-                          ? React.createElement(item.Icon, { className: "playground-project-overview-summary-kpi-icon", strokeWidth: 1.85 })
-                          : null,
-                        React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                    )
-                  )
-                )
-              ),
               React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics" },
                 React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card" },
                   React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                     React.createElement("div", { className: "playground-database-overview" },
                       React.createElement("div", { className: "playground-database-overview-chart-block playground-server-detail-chart-block" },
+                        renderServerDetailChartKpis(authDetailKpis),
                         renderAuthDetailActivityChart(),
                         React.createElement("div", { className: "playground-server-detail-fact-rows" },
                           renderServerFactRow("ID", React.createElement("span", {
@@ -59124,7 +63738,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("div", { className: "playground-auth-users-section-header" },
                   React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Users")
                 ),
-                React.createElement("div", { className: "playground-tasks-detail-facts playground-database-summary-card playground-auth-users-surface" },
+                React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-auth-users-surface" },
                   React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                   React.createElement("div", { className: "playground-auth-users-toolbar" },
                     React.createElement("label", { className: "playground-auth-users-search" },
@@ -59225,23 +63839,32 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             );
           }
 
+          const activeSourceFilesSidebar = (!isSourceDeployableServer || normalizedServerDetailTab === "source-files") ? sourceFilesSidebar : null;
+
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
-              sourceFilesSidebarTopbar
-                ? React.createElement("div", { className: "playground-servers-editor-topbar has-preview" },
-                    serverMainTopbar,
-                    sourceFilesSidebarTopbar
+              activeSourceFilesSidebar && sourceFilesSidebarTopbar
+                ? React.createElement("div", { className: "playground-servers-editor-layout has-preview" },
+                    React.createElement("div", { className: "playground-servers-editor-main-column" },
+                      serverMainTopbar,
+                      serverEditorScroll,
+                      isSourceDeployableServer ? null : serverBottomBar
+                    ),
+                    React.createElement("div", { className: "playground-servers-editor-sidebar" },
+                      sourceFilesSidebarTopbar,
+                      activeSourceFilesSidebar
+                    )
                   )
-                : serverMainTopbar,
-              React.createElement("div", { className: "playground-servers-editor-layout" + (sourceFilesSidebar ? " has-preview" : "") },
-                serverEditorScroll,
-                sourceFilesSidebar
-                  ? React.createElement("div", { className: "playground-servers-editor-sidebar" }, sourceFilesSidebar)
-                  : null
-              ),
-              serverBottomBar
+                : React.createElement(React.Fragment, null,
+                    serverMainTopbar,
+                    React.createElement("div", { className: "playground-servers-editor-layout" },
+                      serverEditorScroll
+                    ),
+                    isSourceDeployableServer ? null : serverBottomBar
+                  )
             ),
             serverDeploymentHelpModal,
+            serverCustomDomainModal,
             serverRuntimePreviewModal
           );
         }
@@ -59264,98 +63887,67 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const activeDatabaseOperationBuckets = Array.isArray(activeDatabaseAnalytics?.charts?.operations24h)
             ? activeDatabaseAnalytics.charts.operations24h
             : [];
-          const activeDatabaseVolumeBuckets = Array.isArray(activeDatabaseAnalytics?.charts?.volume24h)
-            ? activeDatabaseAnalytics.charts.volume24h
-            : [];
           const isDatabaseAnalyticsLoading = loadingDatabaseAnalyticsId === draftDatabase.id;
           const formatDatabaseTelemetryTotal = (value) => new Intl.NumberFormat("en-US").format(Math.max(0, Number(value || 0)) || 0);
-          const formatDatabaseTelemetryHour = (timestamp) => {
-            const date = new Date(timestamp);
-            if (Number.isNaN(date.getTime())) {
-              return "";
-            }
-            return new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(date);
+          const normalizedDatabaseDetailChartTimescale = normalizePlaygroundEnvironmentHomeChartPeriod(databaseDetailChartTimescale);
+          const databaseDetailActivityBuckets = buildPlaygroundEnvironmentHomeActivityBuckets(normalizedDatabaseDetailChartTimescale);
+          const readDatabaseDetailOperationTimestampMs = (entry) => {
+            const timestamp = Date.parse(String(entry?.bucketStart || entry?.timestamp || entry?.createdAt || entry?.updatedAt || ""));
+            return Number.isFinite(timestamp) ? timestamp : null;
           };
-          const buildZeroDatabaseTelemetryBuckets = (count = 8) => {
-            const anchor = new Date();
-            anchor.setMinutes(0, 0, 0);
-            return Array.from({ length: count }, (_, index) => {
-              const date = new Date(anchor);
-              date.setHours(anchor.getHours() - (count - 1 - index));
+          const resolvedDatabaseDetailOperationBuckets = databaseDetailActivityBuckets.map((bucket) => {
+            const totals = activeDatabaseOperationBuckets.reduce((next, entry) => {
+              const timestampMs = readDatabaseDetailOperationTimestampMs(entry);
+              if (!Number.isFinite(timestampMs) || timestampMs < bucket.startMs || timestampMs >= bucket.endMs) {
+                return next;
+              }
               return {
-                timestamp: date.toISOString(),
-                collections: 0,
-                documents: 0,
-                reads: 0,
-                writes: 0,
-                deletes: 0,
+                reads: next.reads + Math.max(0, Number(entry?.reads || 0)),
+                writes: next.writes + Math.max(0, Number(entry?.writes || 0)),
+                deletes: next.deletes + Math.max(0, Number(entry?.deletes || 0)),
               };
-            });
+            }, { reads: 0, writes: 0, deletes: 0 });
+            return {
+              ...bucket,
+              ...totals,
+              total: totals.reads + totals.writes + totals.deletes,
+            };
+          });
+          const resolvedDatabaseAnalyticsSummary = activeDatabaseAnalyticsSummary || {
+            totalCollections: currentDatabaseCollections.length,
+            totalDocuments: collectionStats,
+            reads24h: 0,
+            writes24h: 0,
+            deletes24h: 0,
           };
-          const buildDatabaseAnalyticsSvgLinePath = (points) => {
-            if (!Array.isArray(points) || points.length === 0) {
-              return "";
-            }
-            return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
-          };
-          const resolvedDatabaseVolumeBuckets = activeDatabaseVolumeBuckets.length > 0
-            ? activeDatabaseVolumeBuckets
-            : buildZeroDatabaseTelemetryBuckets(8).map((bucket) => ({
-                timestamp: bucket.timestamp,
-                collections: 0,
-                documents: 0,
-              }));
-          const resolvedDatabaseOperationBuckets = activeDatabaseOperationBuckets.length > 0
-            ? activeDatabaseOperationBuckets
-            : buildZeroDatabaseTelemetryBuckets(8).map((bucket) => ({
-                timestamp: bucket.timestamp,
-                reads: 0,
-                writes: 0,
-                deletes: 0,
-              }));
-          const renderDatabaseAnalyticsKpi = (label, value, tone) => React.createElement("div", {
-              className: "playground-servers-analytics-kpi",
-              key: label,
+          const databaseDetailKpis = [
+            {
+              id: "collections",
+              value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.totalCollections ?? currentDatabaseCollections.length),
+              label: "Collections",
+              Icon: Database,
             },
-            React.createElement("div", { className: "playground-servers-analytics-kpi-value" }, value),
-            React.createElement("button", {
-                type: "button",
-                className: "playground-database-overview-kpi-label"
-                  + (tone ? " is-" + tone : "")
-                  + (tone && databaseAnalyticsVisibility[tone] === false ? " is-inactive" : ""),
-                onClick: () => {
-                  if (!tone) {
-                    return;
-                  }
-                  setDatabaseAnalyticsVisibility((current) => ({
-                    ...current,
-                    [tone]: current[tone] === false,
-                  }));
-                },
-                "aria-pressed": tone ? (databaseAnalyticsVisibility[tone] === false ? "false" : "true") : "true",
-              },
-              React.createElement("span", { className: "playground-database-overview-kpi-check" },
-                React.createElement(Check, { width: 9, height: 9, strokeWidth: 2.4 })
+            {
+              id: "documents",
+              value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.totalDocuments ?? collectionStats),
+              label: "Documents",
+              Icon: FileText,
+            },
+            {
+              id: "reads",
+              value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.reads24h || 0),
+              label: "Reads (24h)",
+              Icon: Eye,
+            },
+            {
+              id: "writes",
+              value: formatDatabaseTelemetryTotal(
+                Number(resolvedDatabaseAnalyticsSummary.writes24h || 0) + Number(resolvedDatabaseAnalyticsSummary.deletes24h || 0)
               ),
-              React.createElement("span", null, label)
-            )
-          );
-          const renderDatabaseTelemetryChart = (config) => {
-            const buckets = Array.isArray(config?.buckets) ? config.buckets : [];
-            const series = Array.isArray(config?.series)
-              ? config.series.filter((entry) => entry && databaseAnalyticsVisibility[entry.key] !== false)
-              : [];
-            return renderPlaygroundTelemetryTimeseriesChart({
-              ariaLabel: config?.ariaLabel || "Database telemetry chart",
-              labels: buckets,
-              series,
-              emptyText: config?.emptyText || "Select a metric",
-              buildLinePath: buildDatabaseAnalyticsSvgLinePath,
-              getSeriesValue: (entry, bucket) => bucket?.[entry.key],
-              getXAxisLabel: (bucket) => formatDatabaseTelemetryHour(bucket?.timestamp),
-              formatAxisValue: (value) => formatDatabaseTelemetryTotal(value),
-            });
-          };
+              label: "Writes / Deletes",
+              Icon: SquarePen,
+            },
+          ];
           const documentIsDirty = databaseDocumentEditorState.value !== databaseDocumentEditorState.initialValue;
           const parsedDocumentData = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
           const databaseFieldTypeLabels = {
@@ -59367,182 +63959,168 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             array: "Array",
           };
 
-          const renderDatabaseSummaryFact = (label, value) => React.createElement("div", {
+          const renderDatabaseFactRow = (label, control) => React.createElement("div", {
               className: "playground-tasks-detail-fact",
               key: label,
             },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
-            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-              React.createElement("div", { className: "playground-tasks-detail-fact-button" }, value)
+            React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+          );
+          const renderDatabaseDetailTimescaleControl = () => React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+            React.createElement("select", {
+              className: "playground-environments-home-comparison-timescale-select",
+              value: normalizedDatabaseDetailChartTimescale,
+              onChange: (event) => setDatabaseDetailChartTimescale(String(event.target.value || "day")),
+              "aria-label": "Database detail chart timescale",
+            },
+              React.createElement("option", { value: "day" }, "Daily"),
+              React.createElement("option", { value: "week" }, "Weekly"),
+              React.createElement("option", { value: "month" }, "Monthly")
+            )
+          );
+          const renderDatabaseDetailOperationChart = () => renderHomeStackedUsageChartShared({
+            ariaLabel: "Database operations",
+            labels: resolvedDatabaseDetailOperationBuckets.map((bucket) => bucket?.label || ""),
+            series: [
+              {
+                id: "database-operations",
+                label: "Operations",
+                color: "rgb(143,196,255)",
+                values: resolvedDatabaseDetailOperationBuckets.map((bucket) => Number(bucket?.total || 0)),
+              },
+            ],
+            emptyText: isDatabaseAnalyticsLoading ? "Loading database activity..." : "No operation data yet",
+            title: "Database Operations",
+            tickFormatter: (value) => String(Math.round(Number(value) || 0)),
+            isLoading: isDatabaseAnalyticsLoading && !activeDatabaseAnalytics,
+            showLegend: false,
+            timescaleControl: renderDatabaseDetailTimescaleControl(),
+          });
+          const renderDatabaseDetailChartKpis = (items) => React.createElement("div", {
+              className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-server-detail-chart-kpis",
+            },
+            (Array.isArray(items) ? items : []).map((item) =>
+              React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                  React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                ),
+                React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+              )
             )
           );
 
+          const databaseDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+            [
+              {
+                id: "bold",
+                label: "Bold",
+                icon: Bold,
+              },
+              {
+                id: "italic",
+                label: "Italic",
+                icon: Italic,
+              },
+              {
+                id: "underline",
+                label: "Underline",
+                icon: Underline,
+              },
+              {
+                id: "list",
+                label: "List",
+                icon: List,
+              },
+            ].map((action) =>
+              React.createElement("button", {
+                key: action.id,
+                type: "button",
+                className: "playground-tasks-detail-format-button",
+                title: action.label,
+                "aria-label": action.label,
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: () => handleDatabaseDescriptionFormat(action.id),
+              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+            )
+          );
+          const databaseDescriptionEditor = React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isDatabaseDescriptionEditing ? " is-editing" : " is-preview") },
+            !isDatabaseDescriptionEditing
+              ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                  String(draftDatabase.description || "").trim()
+                    ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                        content: draftDatabase.description,
+                        className: "playground-tasks-detail-description-preview tb-message-markdown",
+                      })
+                    : React.createElement("div", {
+                        className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                      }, "Add Description here")
+                )
+              : null,
+            React.createElement("textarea", {
+              ref: databaseDescriptionTextareaRef,
+              className: "playground-tasks-detail-description-input " + (isDatabaseDescriptionEditing ? "is-editing" : "is-preview"),
+              rows: 1,
+              placeholder: isDatabaseDescriptionEditing ? "Add Description here" : "",
+              value: draftDatabase.description || "",
+              onFocus: () => {
+                setIsDatabaseDescriptionEditing(true);
+              },
+              onChange: (event) => {
+                updateDatabaseField("description", event.target.value);
+                resizeEnvironmentDescriptionTextarea(event.currentTarget);
+              },
+              onBlur: () => {
+                setIsDatabaseDescriptionEditing(false);
+                if (String(draftDatabase.name || "").trim()) {
+                  void handleDatabaseSave();
+                }
+              },
+            })
+          );
           const databaseDescriptionSection = React.createElement("section", {
-              className: "playground-environments-section",
+              className: "playground-environments-section playground-server-description-section is-titleless",
               key: "database-description",
             },
             React.createElement("div", { className: "playground-environments-section-body" },
-              React.createElement("div", { className: "playground-tasks-detail-description" },
-                React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                  React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                    [
-                      {
-                        id: "bold",
-                        label: "Bold",
-                        icon: Bold,
-                      },
-                      {
-                        id: "italic",
-                        label: "Italic",
-                        icon: Italic,
-                      },
-                      {
-                        id: "underline",
-                        label: "Underline",
-                        icon: Underline,
-                      },
-                      {
-                        id: "list",
-                        label: "List",
-                        icon: List,
-                      },
-                    ].map((action) =>
-                      React.createElement("button", {
-                        key: action.id,
-                        type: "button",
-                        className: "playground-tasks-detail-format-button",
-                        title: action.label,
-                        "aria-label": action.label,
-                        onMouseDown: (event) => event.preventDefault(),
-                        onClick: () => handleDatabaseDescriptionFormat(action.id),
-                      }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                    )
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isDatabaseDescriptionEditing ? " is-editing" : " is-preview") },
-                  !isDatabaseDescriptionEditing
-                    ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                        String(draftDatabase.description || "").trim()
-                          ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                              content: draftDatabase.description,
-                              className: "playground-tasks-detail-description-preview tb-message-markdown",
-                            })
-                          : React.createElement("div", {
-                              className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                            }, "Add Description here")
-                      )
-                    : null,
-                  React.createElement("textarea", {
-                    ref: databaseDescriptionTextareaRef,
-                    className: "playground-tasks-detail-description-input " + (isDatabaseDescriptionEditing ? "is-editing" : "is-preview"),
-                    rows: 1,
-                    placeholder: isDatabaseDescriptionEditing ? "Add Description here" : "",
-                    value: draftDatabase.description || "",
-                    onFocus: () => {
-                      setIsDatabaseDescriptionEditing(true);
-                    },
-                    onChange: (event) => {
-                      updateDatabaseField("description", event.target.value);
-                      resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                    },
-                    onBlur: () => {
-                      setIsDatabaseDescriptionEditing(false);
-                      if (String(draftDatabase.name || "").trim()) {
-                        void handleDatabaseSave();
-                      }
-                    },
-                  })
+              React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
+                React.createElement("div", { className: "playground-server-description-inline-row" },
+                  databaseDescriptionEditor,
+                  databaseDescriptionFormatActions
                 )
               )
             )
           );
 
-          const detailsSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-database-summary-card" },
-            React.createElement("div", { className: "playground-tasks-detail-facts-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-tasks-detail-facts-toggle" + (databaseDetailsCollapsed ? " is-collapsed" : ""),
-                onClick: () => setDatabaseDetailsCollapsed((current) => !current),
-                title: databaseDetailsCollapsed ? "Expand details" : "Collapse details",
-                "aria-label": databaseDetailsCollapsed ? "Expand details" : "Collapse details",
-                "aria-expanded": databaseDetailsCollapsed ? "false" : "true",
-              }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
-            ),
-            !databaseDetailsCollapsed
-              ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                React.createElement("div", { className: "playground-database-overview" },
-                  React.createElement("div", { className: "playground-servers-analytics-kpi-grid" },
-                    [
-                      renderDatabaseAnalyticsKpi("Collections", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.totalCollections ?? currentDatabaseCollections.length), "collections"),
-                      renderDatabaseAnalyticsKpi("Documents", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.totalDocuments ?? collectionStats), "documents"),
-                      renderDatabaseAnalyticsKpi("Reads", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.reads24h || 0), "reads"),
-                      renderDatabaseAnalyticsKpi("Writes", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.writes24h || 0), "writes"),
-                      renderDatabaseAnalyticsKpi("Deletes", formatDatabaseTelemetryTotal(activeDatabaseAnalyticsSummary?.deletes24h || 0), "deletes"),
-                    ]
-                  ),
-                  React.createElement("div", { className: "playground-database-overview-chart-grid" },
-                    React.createElement("div", { className: "playground-database-overview-chart-block" },
-                      renderDatabaseTelemetryChart({
-                        buckets: resolvedDatabaseVolumeBuckets,
-                        series: [
-                          {
-                            key: "collections",
-                            label: "Collections",
-                            total: activeDatabaseAnalyticsSummary?.totalCollections ?? currentDatabaseCollections.length,
-                            tone: "collections",
-                          },
-                          {
-                            key: "documents",
-                            label: "Documents",
-                            total: activeDatabaseAnalyticsSummary?.totalDocuments ?? collectionStats,
-                            tone: "documents",
-                          },
-                        ],
-                        emptyText: "No database volume data yet",
-                        ariaLabel: "Collections and documents over time",
-                      })
-                      ),
-                      React.createElement("div", { className: "playground-database-overview-chart-block" },
-                        renderDatabaseTelemetryChart({
-                          buckets: resolvedDatabaseOperationBuckets,
-                          series: [
-                            {
-                              key: "reads",
-                              label: "Reads",
-                              total: activeDatabaseAnalyticsSummary?.reads24h || 0,
-                              tone: "reads",
-                            },
-                            {
-                              key: "writes",
-                              label: "Writes",
-                              total: activeDatabaseAnalyticsSummary?.writes24h || 0,
-                              tone: "writes",
-                            },
-                            {
-                              key: "deletes",
-                              label: "Deletes",
-                              total: activeDatabaseAnalyticsSummary?.deletes24h || 0,
-                              tone: "deletes",
-                            },
-                          ],
-                          emptyText: "No operation data yet",
-                          ariaLabel: "Database operations over time",
-                        })
+          const databaseDetailsSection = React.createElement(React.Fragment, null,
+            React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics" },
+              React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card" },
+                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  React.createElement("div", { className: "playground-database-overview" },
+                    React.createElement("div", { className: "playground-database-overview-chart-block playground-server-detail-chart-block" },
+                      renderDatabaseDetailChartKpis(databaseDetailKpis),
+                      renderDatabaseDetailOperationChart(),
+                      React.createElement("div", { className: "playground-server-detail-fact-rows" },
+                        renderDatabaseFactRow("ID",
+                          React.createElement("span", {
+                            className: "playground-environments-editor-fact-value is-id",
+                            title: draftDatabase.id || "Unsaved database",
+                          }, draftDatabase.id || "Unsaved database")
+                        ),
+                        renderDatabaseFactRow("Provider",
+                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftDatabase.provider || "firestore")
+                        ),
+                        renderDatabaseFactRow("Location",
+                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftDatabase.location || "eur3")
+                        ),
+                        renderDatabaseFactRow("Updated",
+                          React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftDatabase.updatedAt))
+                        )
                       )
                     )
-                  ),
-                  React.createElement("div", { className: "playground-database-summary-divider" }),
-                  renderDatabaseSummaryFact("ID", draftDatabase.id || "Unsaved database"),
-                  renderDatabaseSummaryFact("Location", draftDatabase.location || "eur3"),
-                  renderDatabaseSummaryFact("Updated", formatPlaygroundFileDate(draftDatabase.updatedAt))
+                  )
                 )
-              : null
-          );
-
-          const detailsSectionBlock = React.createElement("section", { className: "playground-environments-section", key: "database-details" },
-            React.createElement("div", { className: "playground-environments-section-body" }, detailsSection)
+              )
+            )
           );
 
           function renderDatabaseSelectorRow({
@@ -59687,7 +64265,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             );
           }
 
-          const databaseBrowserSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-database-browser-surface" },
+          const databaseBrowserSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-database-browser-surface" },
             renderDatabaseSelectorRow({
               label: "Collection",
               count: currentDatabaseCollections.length,
@@ -60097,7 +64675,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
-              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar" },
+              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar" },
                 React.createElement("div", { className: "playground-environments-editor-navbar-title" },
                   React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
                     React.createElement("input", {
@@ -60117,61 +64695,17 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   )
                 ),
                 React.createElement("div", { className: "playground-content-nav-center" }),
-                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                  draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
-                    ? React.createElement("div", {
-                        className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
-                        ref: databaseActionsPopoverRef,
-                      },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-content-menu-button",
-                          "aria-label": "Database actions",
-                          "aria-expanded": databaseActionsPopoverOpen ? "true" : "false",
-                          onClick: () => setDatabaseActionsPopoverOpen((current) => !current),
-                          disabled: databaseSaveState.isSaving,
-                        }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                        databaseActionsPopoverOpen
-                          ? React.createElement("div", {
-                              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                              onClick: (event) => event.stopPropagation(),
-                            },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-row",
-                                onClick: () => openDatabaseRenameDialog(draftDatabase),
-                              },
-                                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                  React.createElement("span", null, "Rename")
-                                )
-                              ),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-row",
-                                onClick: () => {
-                                  setDatabaseActionsPopoverOpen(false);
-                                  void handleDeleteDatabase(draftDatabase.id);
-                                },
-                              },
-                                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                  React.createElement("span", null, "Delete")
-                                )
-                              )
-                            )
-                          : null
-                      )
-                    : null
-                )
+                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
               ),
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-                databaseSaveState.error
-                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseSaveState.error)
-                  : null,
-                databaseDescriptionSection,
-                detailsSectionBlock,
-                renderEditorSection("database-browser", "Data", "", databaseBrowserSection, null, false)
+                React.createElement("div", { className: "playground-server-detail-content" },
+                  databaseSaveState.error
+                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseSaveState.error)
+                    : null,
+                  databaseDescriptionSection,
+                  databaseDetailsSection,
+                  renderEditorSection("database-browser", "Data", "", databaseBrowserSection, null, false)
+                )
               )
             ),
             renderDatabaseRenameModal(),
@@ -60256,10 +64790,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             p95RuntimeMs: 0,
           };
           const environmentDetailKpis = [
-            { id: "runs", value: String(resolvedEnvironmentAnalyticsSummary.totalRuns24h || 0), label: "Runs (24h)", Icon: Play },
-            { id: "success-rate", value: formatPlaygroundServerRate(resolvedEnvironmentAnalyticsSummary.successRate24h), label: "Success Rate", Icon: Check },
-            { id: "runtime", value: formatPlaygroundExecutionDuration(resolvedEnvironmentAnalyticsSummary.p95RuntimeMs), label: "P95 Runtime", Icon: Clock },
-            { id: "failed", value: String(Number(resolvedEnvironmentAnalyticsSummary.failedRuns24h || 0) + Number(resolvedEnvironmentAnalyticsSummary.cancelledRuns24h || 0)), label: "Failed / Cancelled", Icon: X },
+            { id: "runs", value: String(resolvedEnvironmentAnalyticsSummary.totalRuns24h || 0), label: "Runs (24h)" },
+            { id: "success-rate", value: formatPlaygroundServerRate(resolvedEnvironmentAnalyticsSummary.successRate24h), label: "Success Rate" },
+            { id: "runtime", value: formatPlaygroundExecutionDuration(resolvedEnvironmentAnalyticsSummary.p95RuntimeMs), label: "P95 Runtime" },
+            { id: "failed", value: String(Number(resolvedEnvironmentAnalyticsSummary.failedRuns24h || 0) + Number(resolvedEnvironmentAnalyticsSummary.cancelledRuns24h || 0)), label: "Failed / Cancelled" },
           ];
           const renderEnvironmentFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
@@ -60296,29 +64830,21 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             timescaleControl: renderEnvironmentDetailTimescaleControl(),
           });
           const environmentFactsSection = React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-environments-home-summary playground-computer-detail-summary" },
-              React.createElement("div", { className: "playground-environments-home-summary-kpis" },
-                environmentDetailKpis.map((item) =>
-                  React.createElement("div", {
-                      key: item.id,
-                      className: "playground-environments-home-summary-kpi playground-project-overview-summary-kpi",
-                    },
-                    React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                      item.Icon
-                        ? React.createElement(item.Icon, { className: "playground-project-overview-summary-kpi-icon", strokeWidth: 1.85 })
-                        : null,
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                  )
-                )
-              )
-            ),
             React.createElement("div", { className: "playground-environments-home-metrics playground-computer-detail-metrics" },
               React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-computer-details-card" },
                 React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                   React.createElement("div", { className: "playground-database-overview" },
                     React.createElement("div", { className: "playground-database-overview-chart-block playground-computer-detail-chart-block" },
+                      React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-computer-detail-chart-kpis" },
+                        environmentDetailKpis.map((item) =>
+                          React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                            React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                              React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                            ),
+                            React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                          )
+                        )
+                      ),
                       shouldShowEnvironmentAnalytics && environmentAnalyticsError
                         ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentAnalyticsError)
                         : null,
@@ -61395,6 +65921,45 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           );
         };
 
+        function getActiveResourcesOverviewHomeTab() {
+          if (isServersMode) {
+            return resourcesOverviewHomeTab === "types" || resourcesOverviewHomeTab === "settings"
+              ? resourcesOverviewHomeTab
+              : "general";
+          }
+          return resourcesOverviewHomeTab === "profiles" ? "profiles" : "general";
+        }
+
+        function renderResourcesOverviewHomeTabs() {
+          const activeTab = getActiveResourcesOverviewHomeTab();
+          const tabs = isServersMode
+            ? [
+                { id: "general", label: "General" },
+                { id: "types", label: "Types" },
+                { id: "settings", label: "Settings" },
+              ]
+            : [
+                { id: "general", label: "General" },
+                { id: "profiles", label: "Profiles" },
+              ];
+          return React.createElement("div", { className: "playground-agents-overview-tabs playground-resources-overview-tabs" },
+            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+              tabs.map((tab) =>
+                React.createElement("button", {
+                  key: tab.id,
+                  type: "button",
+                  className: "playground-project-overview-chart-tab" + (activeTab === tab.id ? " is-active" : ""),
+                  onClick: () => {
+                    setResourcesOverviewHomeTab(tab.id);
+                    setResourcesOverviewToolbarPopover("");
+                  },
+                  "aria-pressed": activeTab === tab.id ? "true" : "false",
+                }, tab.label)
+              )
+            )
+          );
+        }
+
         function renderEnvironmentsHome(overviewListContent = null) {
           const renderHomeResourceIcon = (item, className) => {
             if (item?.resourceType === "computer") {
@@ -61897,11 +66462,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             || !Array.isArray(environmentHomeChartBreakdownsByPeriod[normalizedEnvironmentHomeChartTimescale])
           );
           const environmentsHomeKpis = [
-            { id: "computers", value: String(environmentsHomeSummary.computers), label: "Computers", Icon: HardDrive },
-            { id: "resources", value: String(environmentsHomeSummary.totalResources), label: "Resources", Icon: Server },
-            { id: "computer-ct", value: formatSettingsComputeTokens(totalComputerRuntimeCT), label: "Spent on Computers", Icon: Coins },
-            { id: "resource-ct", value: formatSettingsComputeTokens(totalResourceRuntimeCT), label: "Spent on Resources", Icon: Coins },
-            { id: "total-ct", value: formatSettingsComputeTokens(totalEnvironmentRuntimeCT), label: "Total CT", Icon: Calculator },
+            { id: "computers", value: String(environmentsHomeSummary.computers), label: "Computers" },
+            { id: "resources", value: String(environmentsHomeSummary.totalResources), label: "Resources" },
+            { id: "computer-ct", value: formatSettingsComputeTokens(totalComputerRuntimeCT), label: "Spent on Computers" },
+            { id: "resource-ct", value: formatSettingsComputeTokens(totalResourceRuntimeCT), label: "Spent on Resources" },
+            { id: "total-ct", value: formatSettingsComputeTokens(totalEnvironmentRuntimeCT), label: "Total CT" },
           ];
           const environmentOverviewChartSeries = isServersMode
             ? [
@@ -61929,57 +66494,53 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             ? environmentOverviewPeriodLabel + " CT by Server Type"
             : environmentOverviewPeriodLabel + " CT by Computer Type";
           const environmentOverviewChartLabel = isServersMode ? "server" : "computer";
+          const activeResourcesOverviewHomeTab = getActiveResourcesOverviewHomeTab();
 
           const environmentsHomeHero = React.createElement("section", { className: "playground-environments-home-hero" },
             React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
-            React.createElement("div", { className: "playground-environments-home-summary" },
-              React.createElement("div", { className: "playground-environments-home-summary-kpis" },
-                environmentsHomeKpis.map((item) =>
-                  React.createElement("div", {
-                    key: item.id,
-                    className: "playground-environments-home-summary-kpi playground-project-overview-summary-kpi",
-                  },
-                    React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                      item.Icon
-                        ? React.createElement(item.Icon, { className: "playground-project-overview-summary-kpi-icon", strokeWidth: 1.85 })
-                        : null,
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                  )
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-environments-home-metrics" },
-              React.createElement("section", { className: "playground-tasks-detail-facts" },
-                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                  React.createElement("div", { className: "playground-database-overview" },
-                    React.createElement("div", { className: "playground-database-overview-chart-block" },
-                      renderHomeStackedUsageChart({
-                        ariaLabel: "Overall " + environmentOverviewChartLabel + " activity",
-                        labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
-                        series: environmentOverviewChartSeries,
-                        emptyText: "No usage data yet",
-                        title: environmentOverviewChartTitle,
-                        isLoading: isEnvironmentHomeChartLoading,
-                        timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
-                          React.createElement("select", {
-                            className: "playground-environments-home-comparison-timescale-select",
-                            value: normalizedEnvironmentHomeChartTimescale,
-                            "aria-label": "Environment chart timescale",
-                            onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
-                          },
-                            React.createElement("option", { value: "day" }, "Daily"),
-                            React.createElement("option", { value: "week" }, "Weekly"),
-                            React.createElement("option", { value: "month" }, "Monthly")
-                          )
-                        ),
-                      })
+            renderResourcesOverviewHomeTabs(),
+            activeResourcesOverviewHomeTab === "general"
+              ? React.createElement("div", { className: "playground-environments-home-metrics" },
+                  React.createElement("section", { className: "playground-tasks-detail-facts" },
+                    React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                      React.createElement("div", { className: "playground-database-overview" },
+                        React.createElement("div", { className: "playground-database-overview-chart-block" },
+                          React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
+                            environmentsHomeKpis.map((item) =>
+                              React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                                React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                                  React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                                ),
+                                React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                              )
+                            )
+                          ),
+                          renderHomeStackedUsageChart({
+                            ariaLabel: "Overall " + environmentOverviewChartLabel + " activity",
+                            labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
+                            series: environmentOverviewChartSeries,
+                            emptyText: "No usage data yet",
+                            title: environmentOverviewChartTitle,
+                            isLoading: isEnvironmentHomeChartLoading,
+                            timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+                              React.createElement("select", {
+                                className: "playground-environments-home-comparison-timescale-select",
+                                value: normalizedEnvironmentHomeChartTimescale,
+                                "aria-label": "Environment chart timescale",
+                                onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
+                              },
+                                React.createElement("option", { value: "day" }, "Daily"),
+                                React.createElement("option", { value: "week" }, "Weekly"),
+                                React.createElement("option", { value: "month" }, "Monthly")
+                              )
+                            ),
+                          })
+                        )
+                      )
                     )
                   )
                 )
-              )
-            ),
+              : null,
             overviewListContent
           );
 
@@ -62012,15 +66573,162 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
           return "Web App";
         };
-        const resourcesTopNavActions = topNavActionsContainer
-          ? createPortal(
+        const renderCurrentResourceSettingsControl = (buttonClassName) => {
+          const normalizedButtonClassName = String(buttonClassName || "playground-files-header-icon-button").trim();
+          if (isServersMode && selectedServerId) {
+            const activeServer = draftServer?.id === selectedServerId ? draftServer : null;
+            const normalizedServerId = String(activeServer?.id || "").trim();
+            if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+              return React.createElement("button", {
+                type: "button",
+                className: normalizedButtonClassName,
+                title: "Server actions",
+                "aria-label": "Server actions",
+                disabled: true,
+              }, React.createElement(Settings2, { width: 16, height: 16, strokeWidth: 1.8 }));
+            }
+            const normalizedKind = canonicalizePlaygroundServerKind(activeServer.kind);
+            const isAuthResource = normalizedKind === "auth";
+            const isAgentRuntimeResource = normalizedKind === "agent_runtime";
+            return React.createElement("div", {
+                className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                ref: serverActionsPopoverRef,
+              },
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-header-icon-button is-plain",
-                onClick: isServersMode ? handleCreateServer : handleCreateEnvironment,
-                title: isServersMode ? "Create server" : "Create computer",
-                "aria-label": isServersMode ? "Create server" : "Create computer",
-              }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
+                className: normalizedButtonClassName + (serverActionsPopoverOpen ? " is-active" : ""),
+                title: "Server actions",
+                "aria-label": "Server actions",
+                "aria-expanded": serverActionsPopoverOpen ? "true" : "false",
+                onClick: () => setServerActionsPopoverOpen((current) => !current),
+                disabled: serverSaveState.isSaving || serverDeploymentState.isDeploying,
+              }, React.createElement(Settings2, { width: 16, height: 16, strokeWidth: 1.8 })),
+              serverActionsPopoverOpen
+                ? React.createElement("div", {
+                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                    onClick: (event) => event.stopPropagation(),
+                  },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "tb-popup-row",
+                      onClick: () => openServerRenameDialog(activeServer),
+                    },
+                      React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Rename")
+                      )
+                    ),
+                    !isAuthResource && !isAgentRuntimeResource
+                      ? React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row",
+                          onClick: () => {
+                            setServerActionsPopoverOpen(false);
+                            void handleDeployServer();
+                          },
+                          disabled: serverDeploymentState.isDeploying,
+                        },
+                          React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
+                          )
+                        )
+                      : null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "tb-popup-row",
+                      onClick: () => {
+                        setServerActionsPopoverOpen(false);
+                        void handleDeleteServer(normalizedServerId);
+                      },
+                    },
+                      React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Delete")
+                      )
+                    )
+                  )
+                : null
+            );
+          }
+          if (isServersMode && selectedDatabaseId) {
+            const activeDatabase = draftDatabase?.id === selectedDatabaseId ? draftDatabase : null;
+            const normalizedDatabaseId = String(activeDatabase?.id || "").trim();
+            if (!normalizedDatabaseId || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+              return React.createElement("button", {
+                type: "button",
+                className: normalizedButtonClassName,
+                title: "Database actions",
+                "aria-label": "Database actions",
+                disabled: true,
+              }, React.createElement(Settings2, { width: 16, height: 16, strokeWidth: 1.8 }));
+            }
+            return React.createElement("div", {
+                className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                ref: databaseActionsPopoverRef,
+              },
+              React.createElement("button", {
+                type: "button",
+                className: normalizedButtonClassName + (databaseActionsPopoverOpen ? " is-active" : ""),
+                title: "Database actions",
+                "aria-label": "Database actions",
+                "aria-expanded": databaseActionsPopoverOpen ? "true" : "false",
+                onClick: () => setDatabaseActionsPopoverOpen((current) => !current),
+                disabled: databaseSaveState.isSaving,
+              }, React.createElement(Settings2, { width: 16, height: 16, strokeWidth: 1.8 })),
+              databaseActionsPopoverOpen
+                ? React.createElement("div", {
+                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                    onClick: (event) => event.stopPropagation(),
+                  },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "tb-popup-row",
+                      onClick: () => openDatabaseRenameDialog(activeDatabase),
+                    },
+                      React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Rename")
+                      )
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "tb-popup-row",
+                      onClick: () => {
+                        setDatabaseActionsPopoverOpen(false);
+                        void handleDeleteDatabase(normalizedDatabaseId);
+                      },
+                    },
+                      React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Delete")
+                      )
+                    )
+                  )
+                : null
+            );
+          }
+          return null;
+        };
+        const renderCurrentResourceCreateControl = (buttonClassName) =>
+          React.createElement("div", { className: "playground-files-toolbar-anchor" },
+            React.createElement("button", {
+              type: "button",
+              className: buttonClassName + ((isServersMode ? serverComposerOpen : environmentComposerOpen) ? " is-active" : ""),
+              onClick: isServersMode ? handleCreateServer : handleCreateEnvironment,
+              title: isServersMode ? "Create resource" : "Create computer",
+              "aria-label": isServersMode ? "Create resource" : "Create computer",
+            }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
+          );
+        const renderResourcesTopActionControl = (buttonClassName) => {
+          if (isServersMode && !shouldShowEnvironmentHome && (selectedServerId || selectedDatabaseId)) {
+            return renderCurrentResourceSettingsControl(buttonClassName);
+          }
+          return renderCurrentResourceCreateControl(buttonClassName);
+        };
+        const resourcesTopNavActions = topNavActionsContainer
+          ? createPortal(
+              renderResourcesTopActionControl("playground-files-header-icon-button is-plain"),
               topNavActionsContainer
             )
           : null;
@@ -62261,12 +66969,328 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               renderOverviewResourceActionCell(item)
             );
           };
-          return React.createElement("section", { className: "playground-plugins-section" },
-            React.createElement("div", { className: "playground-plugins-section-header" },
-              React.createElement("div", { className: "playground-plugins-section-copy" },
-                React.createElement("h3", { className: "playground-plugins-section-title" }, overviewTitle)
+          const renderComputerProfilesTable = () => (
+            React.createElement("div", { className: "playground-agents-overview-table-shell is-static" },
+              React.createElement("table", { className: "playground-agents-overview-table" },
+                React.createElement("colgroup", null,
+                  React.createElement("col", { style: { width: "38%" } }),
+                  React.createElement("col", { style: { width: "17%" } }),
+                  React.createElement("col", { style: { width: "110px" } }),
+                  React.createElement("col", { style: { width: "120px" } }),
+                  React.createElement("col", { style: { width: "140px" } }),
+                  React.createElement("col", { style: { width: "120px" } })
+                ),
+                React.createElement("thead", null,
+                  React.createElement("tr", null,
+                    React.createElement("th", null, "Profile"),
+                    React.createElement("th", null, "Resources"),
+                    React.createElement("th", null, "GUI"),
+                    React.createElement("th", null, "Office Apps"),
+                    React.createElement("th", { className: "is-right" }, "CT cost"),
+                    React.createElement("th", { className: "is-right" }, "USD cost")
+                  )
+                ),
+                React.createElement("tbody", null,
+                  PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES.map((profile) =>
+                    React.createElement("tr", { key: profile.id },
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-model-cell" },
+                          React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
+                            profile.guiEnabled
+                              ? React.createElement(Monitor, { width: 16, height: 16, strokeWidth: 1.8 })
+                              : React.createElement(HardDrive, { width: 16, height: 16, strokeWidth: 1.8 })
+                          ),
+                          React.createElement("div", { className: "playground-agents-overview-model-copy" },
+                            React.createElement("div", {
+                              className: "playground-agents-overview-name-title",
+                              title: profile.label,
+                            }, profile.label),
+                            React.createElement("div", {
+                              className: "playground-agents-overview-name-description",
+                              title: profile.description,
+                            }, profile.description)
+                          )
+                        )
+                      ),
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-table-value" }, formatPlaygroundEnvironmentProfileResources(profile))
+                      ),
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-table-value" },
+                          React.createElement("span", { className: "playground-agents-model-access" + (profile.guiEnabled ? " is-available" : " is-locked") }, profile.guiEnabled ? "Enabled" : "CLI")
+                        )
+                      ),
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-table-value" },
+                          React.createElement("span", { className: "playground-agents-model-access" + (profile.id === "desktop" ? " is-available" : " is-locked") }, profile.id === "desktop" ? "Optional" : "Unavailable")
+                        )
+                      ),
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundEnvironmentProfileRate(profile))
+                      ),
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundEnvironmentProfileHourlyPrice(profile))
+                      )
+                    )
+                  )
+                )
               )
-            ),
+            )
+          );
+          const renderServerTypesTable = () => {
+            const serverTypes = [
+              {
+                id: "web_app",
+                label: "Web App",
+                description: "Deploy full web services, dashboards, and API-backed apps.",
+                renderIcon: () => React.createElement(Globe, { width: 16, height: 16, strokeWidth: 1.8 }),
+                runtime: "Node.js service",
+                deployment: "Cloud Run",
+                interfaceLabel: "Public URL",
+                managed: false,
+              },
+              {
+                id: "function",
+                label: "Function",
+                description: "Run serverless handlers for webhooks, jobs, and focused backend tasks.",
+                renderIcon: () => React.createElement(FunctionSquare, { width: 16, height: 16, strokeWidth: 1.8 }),
+                runtime: "Serverless",
+                deployment: "Cloud Function",
+                interfaceLabel: "HTTP endpoint",
+                managed: false,
+              },
+              {
+                id: "database",
+                label: "Database",
+                description: "Managed document storage for app data, collections, and records.",
+                renderIcon: () => React.createElement(Database, { width: 16, height: 16, strokeWidth: 1.8 }),
+                runtime: "Firestore",
+                deployment: "Managed",
+                interfaceLabel: "Collections",
+                managed: true,
+              },
+              {
+                id: "auth",
+                label: "Auth",
+                description: "Managed identity layer for users, sessions, and sign-in providers.",
+                renderIcon: () => React.createElement(Users, { width: 16, height: 16, strokeWidth: 1.8 }),
+                runtime: "Identity",
+                deployment: "Managed",
+                interfaceLabel: "Users",
+                managed: true,
+              },
+              {
+                id: "agent_runtime",
+                label: "Agent Runtime",
+                description: "Managed execution service for agent runtime requests and runs.",
+                renderIcon: () => React.createElement(Bot, { width: 16, height: 16, strokeWidth: 1.8 }),
+                runtime: "Agent service",
+                deployment: "Managed",
+                interfaceLabel: "Runs API",
+                managed: true,
+              },
+            ];
+            return React.createElement("div", { className: "playground-agents-overview-table-shell is-static" },
+              React.createElement("table", { className: "playground-agents-overview-table" },
+                React.createElement("colgroup", null,
+                  React.createElement("col", { style: { width: "38%" } }),
+                  React.createElement("col", { style: { width: "17%" } }),
+                  React.createElement("col", { style: { width: "17%" } }),
+                  React.createElement("col", { style: { width: "16%" } }),
+                  React.createElement("col", { style: { width: "120px" } })
+                ),
+                React.createElement("thead", null,
+                  React.createElement("tr", null,
+                    React.createElement("th", null, "Type"),
+                    React.createElement("th", null, "Runtime"),
+                    React.createElement("th", null, "Deployment"),
+                    React.createElement("th", null, "Interface"),
+                    React.createElement("th", { className: "is-right" }, "Managed")
+                  )
+                ),
+                React.createElement("tbody", null,
+                  serverTypes.map((type) =>
+                    React.createElement("tr", { key: type.id },
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-model-cell" },
+                          React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" }, type.renderIcon()),
+                          React.createElement("div", { className: "playground-agents-overview-model-copy" },
+                            React.createElement("div", {
+                              className: "playground-agents-overview-name-title",
+                              title: type.label,
+                            }, type.label),
+                            React.createElement("div", {
+                              className: "playground-agents-overview-name-description",
+                              title: type.description,
+                            }, type.description)
+                          )
+                        )
+                      ),
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-table-value" }, type.runtime)
+                      ),
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-table-value" }, type.deployment)
+                      ),
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-table-value" }, type.interfaceLabel)
+                      ),
+                      React.createElement("td", null,
+                        React.createElement("div", { className: "playground-agents-overview-table-value is-right" },
+                          React.createElement("span", { className: "playground-agents-model-access" + (type.managed ? " is-available" : " is-locked") }, type.managed ? "Yes" : "No")
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            );
+          };
+          const renderServerResourceSettingsSection = () => {
+            const canEditResourceLimit = Boolean(canConfigureResourceBilling && typeof onResourceBillingPreferencesChange === "function");
+            const deployedContinuousServers = orderedServers.filter((server) => {
+              const normalizedKind = canonicalizePlaygroundServerKind(server?.kind);
+              return normalizedKind !== "function" && String(server?.status || "").trim().toLowerCase() === "deployed";
+            });
+            const idleConsumptionByKind = deployedContinuousServers.reduce((accumulator, server) => {
+              const normalizedKind = canonicalizePlaygroundServerKind(server?.kind);
+              const ratePerMinute = Number(PLAYGROUND_SERVER_IDLE_RATE_PER_MINUTE[normalizedKind] || PLAYGROUND_SERVER_IDLE_RATE_PER_MINUTE.web_app || 0);
+              const dailyCT = Math.max(0, ratePerMinute * 1440 * SETTINGS_CT_PER_DOLLAR);
+              accumulator[normalizedKind] = (accumulator[normalizedKind] || 0) + dailyCT;
+              return accumulator;
+            }, {});
+            const estimatedIdleDailyCT = Object.values(idleConsumptionByKind).reduce((sum, value) => sum + Math.max(0, Number(value || 0)), 0);
+            const idleConsumptionBreakdown = Object.entries(idleConsumptionByKind)
+              .filter(([, value]) => Number(value) > 0)
+              .sort((left, right) => Number(right[1] || 0) - Number(left[1] || 0));
+            const updateResourceBillingPreferences = (patch, immediate = false) => {
+              if (!canEditResourceLimit) {
+                return;
+              }
+              onResourceBillingPreferencesChange(normalizeDemoSettingsBillingPreferences({
+                ...normalizedResourceBillingPreferences,
+                ...patch,
+              }), immediate);
+            };
+
+            return React.createElement("div", { className: "playground-settings-detail-stack playground-resources-overview-settings-stack" },
+              resourceBillingError
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, resourceBillingError)
+                : null,
+              resourceBillingSuccess
+                ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, resourceBillingSuccess)
+                : null,
+              React.createElement("section", { className: "playground-resources-overview-estimate-card" },
+                React.createElement("div", { className: "playground-resources-overview-estimate-copy" },
+                  React.createElement("div", { className: "playground-resources-overview-estimate-label" }, "Estimated Inactive Usage"),
+                  React.createElement("div", { className: "playground-resources-overview-estimate-value" }, formatSettingsComputeTokens(estimatedIdleDailyCT) + " / day"),
+                  React.createElement("div", { className: "playground-resources-overview-estimate-note" },
+                    deployedContinuousServers.length > 0
+                      ? "Based on " + deployedContinuousServers.length + " deployed continuous " + (deployedContinuousServers.length === 1 ? "resource" : "resources") + " sitting idle."
+                      : "No deployed continuous server resources are currently accruing idle runtime."
+                  )
+                ),
+                idleConsumptionBreakdown.length > 0
+                  ? React.createElement("div", { className: "playground-resources-overview-estimate-breakdown" },
+                      idleConsumptionBreakdown.map(([kind, value]) =>
+                        React.createElement("span", { key: kind, className: "playground-resources-overview-estimate-chip" },
+                          formatSettingsUsageResourceKind(kind) + " " + formatSettingsComputeTokens(value) + " / day"
+                        )
+                      )
+                    )
+                  : null
+              ),
+              React.createElement("section", { className: "playground-settings-plans-resource-cap-section playground-resources-overview-settings-card" },
+                React.createElement("div", { className: "playground-tasks-detail-facts playground-settings-plans-resource-cap-facts" },
+                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                    React.createElement("div", { className: "playground-tasks-detail-fact" },
+                      React.createElement("div", { className: "playground-tasks-detail-fact-label" },
+                        React.createElement("div", { className: "playground-settings-plans-resource-cap-label" },
+                          React.createElement("span", null, "Server Resource Usage Limit")
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                        React.createElement("div", { className: "playground-settings-plans-resource-cap-control" },
+                          React.createElement("input", {
+                            id: "resources-server-spend-cap",
+                            type: "number",
+                            min: "0",
+                            step: "1",
+                            className: "playground-settings-input playground-settings-plans-resource-cap-input",
+                            value: normalizedResourceBillingPreferences.monthlyResourceSpendLimit > 0
+                              ? normalizedResourceBillingPreferences.monthlyResourceSpendLimit
+                              : "",
+                            onChange: (event) => updateResourceBillingPreferences({
+                              monthlyResourceSpendLimit: normalizeSettingsSpendLimit(event.target.value),
+                            }, false),
+                            disabled: !canEditResourceLimit || resourceBillingSaving,
+                            placeholder: "None",
+                          }),
+                          React.createElement("span", { className: "playground-settings-plans-resource-cap-suffix" }, "CT / month")
+                        )
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-fact" },
+                      React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Pause resources when the cap is reached"),
+                      React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-toggle" + (normalizedResourceBillingPreferences.pauseOnLimit ? " is-active" : ""),
+                          onClick: () => updateResourceBillingPreferences({
+                            pauseOnLimit: !normalizedResourceBillingPreferences.pauseOnLimit,
+                          }, true),
+                          disabled: !canEditResourceLimit || resourceBillingSaving,
+                          "aria-pressed": normalizedResourceBillingPreferences.pauseOnLimit,
+                        }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-tasks-detail-fact" },
+                      React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Send email alerts before you hit the limit"),
+                      React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-toggle" + (normalizedResourceBillingPreferences.emailAlerts ? " is-active" : ""),
+                          onClick: () => updateResourceBillingPreferences({
+                            emailAlerts: !normalizedResourceBillingPreferences.emailAlerts,
+                          }, true),
+                          disabled: !canEditResourceLimit || resourceBillingSaving,
+                          "aria-pressed": normalizedResourceBillingPreferences.emailAlerts,
+                        }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                      )
+                    )
+                  )
+                ),
+                canConfigureResourceBilling
+                  ? null
+                  : React.createElement("div", { className: "playground-settings-plan-card-copy" },
+                      "Upgrade to Team to configure server resource usage limits."
+                    )
+              )
+            );
+          };
+          const activeResourcesOverviewHomeTab = getActiveResourcesOverviewHomeTab();
+          const sectionTitle = activeResourcesOverviewHomeTab === "profiles"
+            ? "Profiles"
+            : activeResourcesOverviewHomeTab === "types"
+              ? "Types"
+              : activeResourcesOverviewHomeTab === "settings"
+                ? "Settings"
+              : overviewTitle;
+          return React.createElement("section", { className: "playground-plugins-section playground-resources-overview-section " + (isServersMode ? "is-servers-overview" : "is-computers-overview") },
+            activeResourcesOverviewHomeTab === "settings"
+              ? null
+              : React.createElement("div", { className: "playground-plugins-section-header" },
+                  React.createElement("div", { className: "playground-plugins-section-copy" },
+                    React.createElement("h3", { className: "playground-plugins-section-title" }, sectionTitle)
+                  )
+                ),
+            activeResourcesOverviewHomeTab === "profiles"
+              ? renderComputerProfilesTable()
+              : activeResourcesOverviewHomeTab === "types"
+                ? renderServerTypesTable()
+                : activeResourcesOverviewHomeTab === "settings"
+                  ? renderServerResourceSettingsSection()
+              : React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-plugins-search-row playground-resources-overview-search-row", ref: resourcesOverviewToolbarRef },
               React.createElement("div", { className: "playground-plugins-search-shell" },
                 React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
@@ -62398,6 +67422,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     )
                   )
                 )
+              )
           );
         }
 
@@ -62532,14 +67557,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                           )
                         : null
                     ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-header-icon-button" + ((isServersMode ? serverComposerOpen : environmentComposerOpen) ? " is-active" : ""),
-                        onClick: isServersMode ? handleCreateServer : handleCreateEnvironment,
-                        title: isServersMode ? "Create resource" : "Create computer",
-                      }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
-                    )
+                    renderResourcesTopActionControl("playground-files-header-icon-button")
                   )
                 ),
                 React.createElement("div", { className: "playground-agents-list-switch-row" },
@@ -62827,6 +67845,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const agentComposerDeepResearchModelTriggerRef = useRef(null);
         const agentDeepResearchModelTriggerRef = useRef(null);
         const agentsOverviewToolbarRef = useRef(null);
+        const agentsObservabilityToolbarRef = useRef(null);
+        const agentsModelsToolbarRef = useRef(null);
         const lastAppliedFocusedAgentSelectionTokenRef = useRef("");
         const handledBackRequestTokenRef = useRef(backRequestToken);
         const [selectedAgentId, setSelectedAgentId] = useState(initialAgentId || "");
@@ -62841,9 +67861,21 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [draftAgent, setDraftAgent] = useState(null);
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [searchPopupQuery, setSearchPopupQuery] = useState("");
+        const [agentsOverviewHomeTab, setAgentsOverviewHomeTab] = useState("general");
+        const [agentDetailTab, setAgentDetailTab] = useState("general");
         const [agentsOverviewToolbarPopover, setAgentsOverviewToolbarPopover] = useState("");
         const [agentsOverviewFilter, setAgentsOverviewFilter] = useState("all");
         const [agentsOverviewSort, setAgentsOverviewSort] = useState("name");
+        const [agentsObservabilityToolbarPopover, setAgentsObservabilityToolbarPopover] = useState("");
+        const [agentsObservabilityStatusFilter, setAgentsObservabilityStatusFilter] = useState("all");
+        const [agentsObservabilitySort, setAgentsObservabilitySort] = useState("newest");
+        const [agentsObservabilityVisibleThreadLimit, setAgentsObservabilityVisibleThreadLimit] = useState(20);
+        const [agentsModelsToolbarPopover, setAgentsModelsToolbarPopover] = useState("");
+        const [agentsModelsSearchQuery, setAgentsModelsSearchQuery] = useState("");
+        const [agentsModelsProviderFilter, setAgentsModelsProviderFilter] = useState("all");
+        const [agentsModelsSort, setAgentsModelsSort] = useState("provider");
+        const [selectedAgentsObservabilityThreadId, setSelectedAgentsObservabilityThreadId] = useState("");
+        const [agentsObservabilityThreadDetailsById, setAgentsObservabilityThreadDetailsById] = useState({});
         const [loadingAgentId, setLoadingAgentId] = useState("");
         const [loadingAgentAnalyticsId, setLoadingAgentAnalyticsId] = useState("");
         const [isHomeViewActive, setIsHomeViewActive] = useState(() => !String(focusedAgentId || "").trim());
@@ -64098,6 +69130,55 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
         }, [agentsHomeThreadRecords, backendUrl, requestHeaders]);
 
+        const loadAgentsObservabilityThreadDetails = useCallback(async (threadId, options = {}) => {
+          const normalizedThreadId = String(threadId || "").trim();
+          if (!normalizedThreadId) {
+            return null;
+          }
+
+          const cached = agentsObservabilityThreadDetailsById[normalizedThreadId];
+          if (!options?.force && cached?.status === "loaded") {
+            return cached;
+          }
+
+          setAgentsObservabilityThreadDetailsById((current) => ({
+            ...current,
+            [normalizedThreadId]: {
+              ...(current[normalizedThreadId] || {}),
+              status: "loading",
+              error: "",
+            },
+          }));
+
+          let nextDetails = null;
+          try {
+            nextDetails = await fetchThreadTraceDetails({
+              backendUrl,
+              threadId: normalizedThreadId,
+              headers: requestHeaders,
+              messageLimit: 120,
+              stepLimit: 120,
+            });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to load trace data.";
+            setAgentsObservabilityThreadDetailsById((current) => ({
+              ...current,
+              [normalizedThreadId]: {
+                ...(current[normalizedThreadId] || {}),
+                status: "error",
+                error: errorMessage,
+              },
+            }));
+            return null;
+          }
+
+          setAgentsObservabilityThreadDetailsById((current) => ({
+            ...current,
+            [normalizedThreadId]: nextDetails,
+          }));
+          return nextDetails;
+        }, [agentsObservabilityThreadDetailsById, backendUrl, requestHeaders]);
+
         function showAgentsHome() {
           setToolbarPopover("");
           setSearchPopupQuery("");
@@ -64117,6 +69198,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setAgentCreationInstructionContext(null);
           setAgentAssistantOpen(false);
           setAgentAssistantCommandRequest(null);
+          setAgentsOverviewHomeTab("general");
+          setAgentsObservabilityToolbarPopover("");
           setIsHomeViewActive(true);
         }
 
@@ -64186,14 +69269,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           ].filter(Boolean).join("\\n");
         }
 
-        function handleAgentsHomeThreadOpen(threadId) {
+        function handleAgentsHomeThreadOpen(threadId, options = {}) {
           const normalizedThreadId = String(threadId || "").trim();
           if (!normalizedThreadId || typeof onThreadOpen !== "function") {
             return;
           }
           setAgentsHomeActiveCreationCommand("");
           setAgentsHomeCreationCommandRequest(null);
-          onThreadOpen(normalizedThreadId);
+          onThreadOpen(normalizedThreadId, options);
         }
 
         function handleAgentsHomeThreadStartRequest(runRequest) {
@@ -64885,6 +69968,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }, [selectedAgentId]);
 
         useEffect(() => {
+          setAgentDetailTab("general");
+        }, [selectedAgentId]);
+
+        useEffect(() => {
           if (isHomeViewActive || !selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
             return;
           }
@@ -64998,6 +70085,47 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           document.addEventListener("mousedown", handleAgentsOverviewToolbarPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handleAgentsOverviewToolbarPopoverPointerDown);
         }, [agentsOverviewToolbarPopover]);
+
+        useEffect(() => {
+          if (!agentsObservabilityToolbarPopover) return undefined;
+
+          function handleAgentsObservabilityToolbarPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentsObservabilityToolbarRef.current || agentsObservabilityToolbarRef.current.contains(target)) {
+              return;
+            }
+            setAgentsObservabilityToolbarPopover("");
+          }
+
+          document.addEventListener("mousedown", handleAgentsObservabilityToolbarPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleAgentsObservabilityToolbarPopoverPointerDown);
+        }, [agentsObservabilityToolbarPopover]);
+
+        useEffect(() => {
+          if (!agentsModelsToolbarPopover) return undefined;
+
+          function handleAgentsModelsToolbarPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || !agentsModelsToolbarRef.current || agentsModelsToolbarRef.current.contains(target)) {
+              return;
+            }
+            setAgentsModelsToolbarPopover("");
+          }
+
+          document.addEventListener("mousedown", handleAgentsModelsToolbarPopoverPointerDown);
+          return () => document.removeEventListener("mousedown", handleAgentsModelsToolbarPopoverPointerDown);
+        }, [agentsModelsToolbarPopover]);
+
+        useEffect(() => {
+          setAgentsObservabilityVisibleThreadLimit(20);
+        }, [agentsOverviewHomeTab, agentsObservabilitySort, agentsObservabilityStatusFilter, searchPopupQuery]);
+
+        useEffect(() => {
+          if (agentsOverviewHomeTab !== "observability" || !selectedAgentsObservabilityThreadId) {
+            return;
+          }
+          void loadAgentsObservabilityThreadDetails(selectedAgentsObservabilityThreadId);
+        }, [agentsOverviewHomeTab, loadAgentsObservabilityThreadDetails, selectedAgentsObservabilityThreadId]);
 
         useEffect(() => {
           if (!selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
@@ -66220,6 +71348,671 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           );
         };
 
+        function renderAgentsOverviewHomeTabs() {
+          const tabs = [
+            { id: "general", label: "General" },
+            { id: "observability", label: "Traces" },
+            { id: "models", label: "Models" },
+          ];
+          return React.createElement("div", { className: "playground-agents-overview-tabs" },
+            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+              tabs.map((tab) =>
+                React.createElement("button", {
+                  key: tab.id,
+                  type: "button",
+                  className: "playground-project-overview-chart-tab" + (agentsOverviewHomeTab === tab.id ? " is-active" : ""),
+                  onClick: () => {
+                    setAgentsOverviewHomeTab(tab.id);
+                    setAgentsOverviewToolbarPopover("");
+                    setAgentsObservabilityToolbarPopover("");
+                    setAgentsModelsToolbarPopover("");
+                    if (tab.id === "observability") {
+                      void loadAgentsHomeThreads();
+                    } else if (tab.id === "models") {
+                      void loadAgentModelCatalog();
+                    }
+                  },
+                  "aria-pressed": agentsOverviewHomeTab === tab.id ? "true" : "false",
+                }, tab.label)
+              )
+            )
+          );
+        }
+
+        function getAgentsObservabilityThreadTimestamp(thread) {
+          const safeThread = normalizeThreadItem(thread || {});
+          const timestamp = Date.parse(String(safeThread.updatedAt || safeThread.completedAt || safeThread.finishedAt || safeThread.endedAt || safeThread.startedAt || safeThread.createdAt || ""));
+          return Number.isFinite(timestamp) ? timestamp : 0;
+        }
+
+        function getAgentsObservabilityThreadDurationMs(thread, details = null) {
+          const explicitDuration = Number(
+            thread?.durationMs
+            || thread?.duration
+            || details?.thread?.durationMs
+            || details?.thread?.duration
+            || 0
+          );
+          if (Number.isFinite(explicitDuration) && explicitDuration > 0) {
+            return explicitDuration;
+          }
+          const safeThread = normalizeThreadItem(thread || {});
+          const startedAt = Date.parse(String(safeThread.startedAt || safeThread.createdAt || ""));
+          const completedAt = Date.parse(String(safeThread.completedAt || safeThread.finishedAt || safeThread.endedAt || ""));
+          if (Number.isFinite(startedAt) && Number.isFinite(completedAt) && completedAt >= startedAt) {
+            return completedAt - startedAt;
+          }
+          return null;
+        }
+
+        function getAgentsObservabilityAgentLabel(thread, agentsById) {
+          const safeThread = normalizeThreadItem(thread || {});
+          const agentId = String(safeThread.agentId || thread?.agent?.id || thread?.metadata?.agentId || "").trim();
+          const agent = agentId ? agentsById[agentId] : null;
+          if (agent?.name) {
+            return agent.name;
+          }
+          if (thread?.agentName) {
+            return String(thread.agentName).trim();
+          }
+          if (thread?.agent?.name) {
+            return String(thread.agent.name).trim();
+          }
+          return agentId || "No agent";
+        }
+
+        function renderAgentsObservabilityStatusBadge(status) {
+          const normalizedStatus = String(status || "unknown").trim().toLowerCase() || "unknown";
+          return React.createElement("span", {
+            className: "playground-agents-observability-status is-" + normalizedStatus,
+          }, getTraceStatusLabel(normalizedStatus));
+        }
+
+        function renderAgentsObservabilitySection() {
+          const agentsById = {};
+          allKnownAgents.forEach((agent) => {
+            if (!agent?.id) return;
+            agentsById[agent.id] = agent;
+          });
+          const statusOptions = [
+            { id: "all", label: "All statuses" },
+            { id: "running", label: "Running" },
+            { id: "permission_asked", label: "Needs permission" },
+            { id: "completed", label: "Completed" },
+            { id: "failed", label: "Failed" },
+            { id: "cancelled", label: "Cancelled" },
+          ];
+          const sortOptions = [
+            { id: "newest", label: "Newest first" },
+            { id: "oldest", label: "Oldest first" },
+            { id: "cost", label: "Highest CT" },
+            { id: "duration", label: "Longest duration" },
+          ];
+          const normalizedQuery = String(searchPopupQuery || "").trim().toLowerCase();
+          const normalizedThreads = (Array.isArray(agentsHomeThreadRecords) ? agentsHomeThreadRecords : [])
+            .map((thread) => normalizeThreadItem(thread))
+            .filter((thread) => thread?.id);
+          const visibleThreads = normalizedThreads
+            .filter((thread) => {
+              const status = String(thread.status || "").trim().toLowerCase();
+              if (agentsObservabilityStatusFilter !== "all" && status !== agentsObservabilityStatusFilter) {
+                return false;
+              }
+              if (!normalizedQuery) {
+                return true;
+              }
+              const titleParts = getSidebarThreadTitleParts(thread);
+              const haystack = [
+                thread.id,
+                titleParts.displayThreadTitle,
+                titleParts.taskTicketNumber,
+                thread.projectName,
+                thread.environmentName,
+                getAgentsObservabilityAgentLabel(thread, agentsById),
+                status,
+              ].join(" ").toLowerCase();
+              return haystack.includes(normalizedQuery);
+            })
+            .slice()
+            .sort((left, right) => {
+              if (agentsObservabilitySort === "oldest") {
+                return getAgentsObservabilityThreadTimestamp(left) - getAgentsObservabilityThreadTimestamp(right);
+              }
+              if (agentsObservabilitySort === "cost") {
+                const leftCost = readSettingsComputeTokens(left, "totalCT", "totalCost");
+                const rightCost = readSettingsComputeTokens(right, "totalCT", "totalCost");
+                if (leftCost !== rightCost) {
+                  return rightCost - leftCost;
+                }
+              } else if (agentsObservabilitySort === "duration") {
+                const leftDuration = getAgentsObservabilityThreadDurationMs(left) || 0;
+                const rightDuration = getAgentsObservabilityThreadDurationMs(right) || 0;
+                if (leftDuration !== rightDuration) {
+                  return rightDuration - leftDuration;
+                }
+              }
+              return getAgentsObservabilityThreadTimestamp(right) - getAgentsObservabilityThreadTimestamp(left);
+            });
+          const agentsObservabilityPageSize = 20;
+          const visibleThreadLimit = Math.max(agentsObservabilityPageSize, Number(agentsObservabilityVisibleThreadLimit || agentsObservabilityPageSize));
+          const displayedThreads = visibleThreads.slice(0, visibleThreadLimit);
+          const remainingThreadCount = Math.max(0, visibleThreads.length - displayedThreads.length);
+
+          return React.createElement("section", { className: "playground-agents-observability-section" },
+            React.createElement("div", { className: "playground-plugins-section-header" },
+              React.createElement("div", { className: "playground-plugins-section-copy" },
+                React.createElement("h3", { className: "playground-plugins-section-title" }, "Thread traces")
+              )
+            ),
+            React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row", ref: agentsObservabilityToolbarRef },
+              React.createElement("div", { className: "playground-plugins-search-shell" },
+                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: searchPopupQuery,
+                  onChange: (event) => setSearchPopupQuery(event.target.value),
+                  className: "playground-plugins-search",
+                  placeholder: "Search traces",
+                })
+              ),
+              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (agentsObservabilityToolbarPopover === "sort" || agentsObservabilitySort !== "newest" ? " is-active" : ""),
+                    onClick: () => setAgentsObservabilityToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                  },
+                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Sort")
+                  ),
+                  agentsObservabilityToolbarPopover === "sort"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        sortOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (agentsObservabilitySort === option.id ? " selected" : ""),
+                              onClick: () => {
+                                setAgentsObservabilitySort(option.id);
+                                setAgentsObservabilityToolbarPopover("");
+                              },
+                            },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              agentsObservabilitySort === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label)
+                            )
+                          )
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-filter" + (agentsObservabilityToolbarPopover === "status" || agentsObservabilityStatusFilter !== "all" ? " is-active" : ""),
+                    onClick: () => setAgentsObservabilityToolbarPopover((current) => current === "status" ? "" : "status"),
+                  },
+                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Status")
+                  ),
+                  agentsObservabilityToolbarPopover === "status"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        statusOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (agentsObservabilityStatusFilter === option.id ? " selected" : ""),
+                              onClick: () => {
+                                setAgentsObservabilityStatusFilter(option.id);
+                                setAgentsObservabilityToolbarPopover("");
+                              },
+                            },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              agentsObservabilityStatusFilter === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label)
+                            )
+                          )
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button is-bare playground-agents-observability-refresh-button",
+                  onClick: () => void loadAgentsHomeThreads({ force: true }),
+                  disabled: agentsHomeThreadsLoading,
+                },
+                  React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, agentsHomeThreadsLoading ? "Refreshing" : "Refresh")
+                )
+              )
+            ),
+            agentsHomeThreadsError
+              ? React.createElement("div", { className: "playground-plugins-empty" }, agentsHomeThreadsError)
+              : visibleThreads.length === 0
+                ? React.createElement("div", { className: "playground-plugins-empty" },
+                    agentsHomeThreadsLoading ? "Loading traces..." : (normalizedQuery ? "No matching traces found." : "No thread traces yet.")
+                  )
+                : React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-agents-overview-table-shell playground-agents-observability-table-shell" },
+                      React.createElement("table", { className: "playground-agents-overview-table" },
+                        React.createElement("colgroup", null,
+                          React.createElement("col", { style: { width: "35%" } }),
+                          React.createElement("col", { style: { width: "18%" } }),
+                          React.createElement("col", { style: { width: "120px" } }),
+                          React.createElement("col", { style: { width: "130px" } }),
+                          React.createElement("col", { style: { width: "110px" } }),
+                          React.createElement("col", { style: { width: "110px" } })
+                        ),
+                        React.createElement("thead", null,
+                          React.createElement("tr", null,
+                            React.createElement("th", null, "Trace"),
+                            React.createElement("th", null, "Agent"),
+                            React.createElement("th", null, "Status"),
+                            React.createElement("th", { className: "is-right" }, "Started"),
+                            React.createElement("th", { className: "is-right" }, "Duration"),
+                            React.createElement("th", { className: "is-right" }, "Compute")
+                          )
+                        ),
+                        React.createElement("tbody", null,
+                          displayedThreads.map((thread) => {
+                            const threadId = String(thread?.id || "").trim();
+                            const titleParts = getSidebarThreadTitleParts(thread);
+                            const title = titleParts.displayThreadTitle || thread.title || "Untitled thread";
+                            const startedAt = thread.startedAt || thread.createdAt || "";
+                            const durationMs = getAgentsObservabilityThreadDurationMs(thread);
+                            const openRow = () => {
+                              handleAgentsHomeThreadOpen(threadId, {
+                                contentMode: "trace",
+                                threadRecord: thread,
+                              });
+                            };
+
+                            return React.createElement("tr", {
+                                key: threadId,
+                                tabIndex: 0,
+                                role: "button",
+                                "aria-label": "Open trace " + title,
+                                onClick: openRow,
+                                onKeyDown: (event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    openRow();
+                                  }
+                                },
+                              },
+                                React.createElement("td", null,
+                                  React.createElement("div", { className: "playground-agents-overview-name-copy" },
+                                    React.createElement("div", {
+                                      className: "playground-agents-overview-name-title",
+                                      title,
+                                    }, title),
+                                    React.createElement("div", {
+                                      className: "playground-agents-overview-name-description",
+                                      title: threadId,
+                                    }, threadId)
+                                  )
+                                ),
+                                React.createElement("td", null,
+                                  React.createElement("div", {
+                                    className: "playground-agents-overview-table-value",
+                                    title: getAgentsObservabilityAgentLabel(thread, agentsById),
+                                  }, getAgentsObservabilityAgentLabel(thread, agentsById))
+                                ),
+                                React.createElement("td", null, renderAgentsObservabilityStatusBadge(thread.status)),
+                                React.createElement("td", null,
+                                  React.createElement("div", {
+                                    className: "playground-agents-overview-table-value is-right",
+                                    title: startedAt ? new Date(startedAt).toLocaleString() : "",
+                                  }, startedAt ? formatPlaygroundFileDate(startedAt) : "-")
+                                ),
+                                React.createElement("td", null,
+                                  React.createElement("div", { className: "playground-agents-overview-table-value is-right" },
+                                    durationMs == null ? "-" : formatPlaygroundExecutionDuration(durationMs)
+                                  )
+                                ),
+                                React.createElement("td", null,
+                                  React.createElement("div", { className: "playground-agents-overview-table-value is-right" },
+                                    formatSettingsComputeTokens(readSettingsComputeTokens(thread, "totalCT", "totalCost"))
+                                  )
+                                )
+                            );
+                          })
+                        )
+                      )
+                    ),
+                    remainingThreadCount > 0
+                      ? React.createElement("div", { className: "playground-agents-observability-load-more-row" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-agents-observability-load-more-button",
+                            onClick: () => setAgentsObservabilityVisibleThreadLimit((current) => (
+                              Math.max(agentsObservabilityPageSize, Number(current || agentsObservabilityPageSize)) + agentsObservabilityPageSize
+                            )),
+                          },
+                            React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                            React.createElement("span", null, remainingThreadCount > agentsObservabilityPageSize ? "Load 20 more" : "Load " + remainingThreadCount + " more")
+                          )
+                        )
+                      : null
+                  )
+          );
+        }
+
+        function renderAgentsModelsSection() {
+          const renderModelProviderIcon = (modelMeta) => {
+            const providerIcon = getPlaygroundAgentModelProviderIcon(modelMeta);
+            return providerIcon
+              ? React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
+                  React.createElement("img", {
+                    src: providerIcon.src,
+                    alt: "",
+                    draggable: "false",
+                    className: "playground-agents-model-provider-icon" + (providerIcon.className ? " " + providerIcon.className : ""),
+                  })
+                )
+              : React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
+                  React.createElement(Bot, { width: 16, height: 16, strokeWidth: 1.8 })
+                );
+          };
+          const renderModelIntelligence = (model) => {
+            const intelligenceLabel = String(model?.intelligence || model?.intelligenceLabel || "Custom").trim() || "Custom";
+            const intelligenceLevel = Math.max(1, Math.min(4, getPlaygroundAgentIntelligenceLevel(intelligenceLabel)));
+            return React.createElement("span", {
+                className: "playground-agents-model-brains",
+                title: intelligenceLabel,
+                "aria-label": intelligenceLabel + " intelligence, level " + intelligenceLevel + " of 4",
+              },
+              Array.from({ length: 4 }).map((_, index) =>
+                React.createElement(Brain, {
+                  key: String(model?.id || "model") + "-brain-" + index,
+                  className: "playground-agents-model-brain" + (index < intelligenceLevel ? " is-active" : ""),
+                  width: 12,
+                  height: 12,
+                  strokeWidth: 1.9,
+                })
+              )
+            );
+          };
+          const readModelContextValue = (model) => {
+            const raw = String(model?.contextWindow || "").trim().toLowerCase();
+            const match = raw.match(/([0-9]+(?:\.[0-9]+)?)/);
+            if (!match) return 0;
+            const value = Number(match[1]);
+            if (!Number.isFinite(value)) return 0;
+            if (raw.includes("m")) return value * 1000000;
+            if (raw.includes("k")) return value * 1000;
+            return value;
+          };
+          const readModelSpeedRank = (model) => {
+            const normalized = String(model?.speed || "").trim().toLowerCase();
+            if (normalized.includes("very")) return 4;
+            if (normalized.includes("fast")) return 3;
+            if (normalized.includes("medium")) return 2;
+            if (normalized.includes("slow")) return 1;
+            return 0;
+          };
+          const providerFilterOptions = [
+            { id: "all", label: "All models" },
+            { id: "anthropic", label: "Anthropic" },
+            { id: "google", label: "Google" },
+            { id: "openai", label: "OpenAI" },
+            { id: "deepseek", label: "DeepSeek" },
+            { id: "kimi", label: "Kimi" },
+            { id: "custom", label: "Custom" },
+            { id: "available", label: "Available" },
+            { id: "locked", label: "Plan required" },
+          ];
+          const sortOptions = [
+            { id: "provider", label: "Provider" },
+            { id: "name", label: "Name (A-Z)" },
+            { id: "intelligence", label: "Highest intelligence" },
+            { id: "cost", label: "Lowest CT cost" },
+            { id: "context", label: "Largest context" },
+            { id: "speed", label: "Fastest" },
+          ];
+          const normalizedModelsSearchQuery = String(agentsModelsSearchQuery || "").trim().toLowerCase();
+          const visibleModels = (Array.isArray(resolvedAgentModelOptions) ? resolvedAgentModelOptions : [])
+            .filter((model) => model?.id && model?.label)
+            .filter((model) => {
+              const providerKey = getPlaygroundAgentModelProviderFilterKey(model);
+              if (agentsModelsProviderFilter === "available" && model.locked) return false;
+              if (agentsModelsProviderFilter === "locked" && !model.locked) return false;
+              if (
+                agentsModelsProviderFilter !== "all"
+                && agentsModelsProviderFilter !== "available"
+                && agentsModelsProviderFilter !== "locked"
+                && providerKey !== agentsModelsProviderFilter
+              ) {
+                return false;
+              }
+              if (!normalizedModelsSearchQuery) {
+                return true;
+              }
+              const providerLabel = providerKey === "custom" ? "Custom" : getPlaygroundAgentModelProviderLabel(model);
+              const haystack = [
+                model.id,
+                model.label,
+                model.description,
+                model.intelligence,
+                model.intelligenceLabel,
+                model.contextWindow,
+                model.speed,
+                model.source,
+                model.providerType,
+                providerLabel,
+              ].join(" ").toLowerCase();
+              return haystack.includes(normalizedModelsSearchQuery);
+            })
+            .slice()
+            .sort((left, right) => {
+              if (agentsModelsSort === "name") {
+                return String(left?.label || left?.id || "").localeCompare(String(right?.label || right?.id || ""));
+              }
+              if (agentsModelsSort === "intelligence") {
+                const leftLevel = getPlaygroundAgentIntelligenceLevel(left?.intelligence || left?.intelligenceLabel || "");
+                const rightLevel = getPlaygroundAgentIntelligenceLevel(right?.intelligence || right?.intelligenceLabel || "");
+                if (leftLevel !== rightLevel) {
+                  return rightLevel - leftLevel;
+                }
+              } else if (agentsModelsSort === "cost") {
+                const leftCost = getPlaygroundAgentModelWeightedCost(left?.id) || Number.POSITIVE_INFINITY;
+                const rightCost = getPlaygroundAgentModelWeightedCost(right?.id) || Number.POSITIVE_INFINITY;
+                if (leftCost !== rightCost) {
+                  return leftCost - rightCost;
+                }
+              } else if (agentsModelsSort === "context") {
+                const leftContext = readModelContextValue(left);
+                const rightContext = readModelContextValue(right);
+                if (leftContext !== rightContext) {
+                  return rightContext - leftContext;
+                }
+              } else if (agentsModelsSort === "speed") {
+                const leftSpeed = readModelSpeedRank(left);
+                const rightSpeed = readModelSpeedRank(right);
+                if (leftSpeed !== rightSpeed) {
+                  return rightSpeed - leftSpeed;
+                }
+              }
+              const leftProvider = getPlaygroundAgentModelProviderLabel(left);
+              const rightProvider = getPlaygroundAgentModelProviderLabel(right);
+              if (leftProvider !== rightProvider) {
+                return leftProvider.localeCompare(rightProvider);
+              }
+              return String(left?.label || left?.id || "").localeCompare(String(right?.label || right?.id || ""));
+            });
+
+          return React.createElement("section", { className: "playground-plugins-section" },
+            React.createElement("div", { className: "playground-plugins-section-header" },
+              React.createElement("div", { className: "playground-plugins-section-copy" },
+                React.createElement("h3", { className: "playground-plugins-section-title" }, "Models")
+              )
+            ),
+            React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row", ref: agentsModelsToolbarRef },
+              React.createElement("div", { className: "playground-plugins-search-shell" },
+                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: agentsModelsSearchQuery,
+                  onChange: (event) => setAgentsModelsSearchQuery(event.target.value),
+                  className: "playground-plugins-search",
+                  placeholder: "Search models",
+                })
+              ),
+              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-sort" + (agentsModelsToolbarPopover === "sort" || agentsModelsSort !== "provider" ? " is-active" : ""),
+                    onClick: () => setAgentsModelsToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                  },
+                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Sort")
+                  ),
+                  agentsModelsToolbarPopover === "sort"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        sortOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (agentsModelsSort === option.id ? " selected" : ""),
+                              onClick: () => {
+                                setAgentsModelsSort(option.id);
+                                setAgentsModelsToolbarPopover("");
+                              },
+                            },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              agentsModelsSort === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label)
+                            )
+                          )
+                        )
+                      )
+                    : null
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button is-bare is-backlog-filter" + (agentsModelsToolbarPopover === "filter" || agentsModelsProviderFilter !== "all" ? " is-active" : ""),
+                    onClick: () => setAgentsModelsToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                  },
+                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Filter")
+                  ),
+                  agentsModelsToolbarPopover === "filter"
+                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        providerFilterOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-select" + (agentsModelsProviderFilter === option.id ? " selected" : ""),
+                              onClick: () => {
+                                setAgentsModelsProviderFilter(option.id);
+                                setAgentsModelsToolbarPopover("");
+                              },
+                            },
+                            React.createElement("span", { className: "tb-popup-check-slot" },
+                              agentsModelsProviderFilter === option.id
+                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            ),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, option.label)
+                            )
+                          )
+                        )
+                      )
+                    : null
+                )
+              )
+            ),
+            visibleModels.length === 0
+              ? React.createElement("div", { className: "playground-plugins-empty" },
+                  normalizedModelsSearchQuery || agentsModelsProviderFilter !== "all" ? "No matching models found." : "No models available."
+                )
+              : React.createElement("div", { className: "playground-agents-overview-table-shell is-static" },
+                  React.createElement("table", { className: "playground-agents-overview-table" },
+                    React.createElement("colgroup", null,
+                      React.createElement("col", { style: { width: "34%" } }),
+                      React.createElement("col", { style: { width: "16%" } }),
+                      React.createElement("col", { style: { width: "12%" } }),
+                      React.createElement("col", { style: { width: "12%" } }),
+                      React.createElement("col", { style: { width: "12%" } }),
+                      React.createElement("col", { style: { width: "14%" } }),
+                      React.createElement("col", { style: { width: "110px" } })
+                    ),
+                    React.createElement("thead", null,
+                      React.createElement("tr", null,
+                        React.createElement("th", null, "Model"),
+                        React.createElement("th", null, "Provider"),
+                        React.createElement("th", null, "Intelligence"),
+                        React.createElement("th", null, "Context"),
+                        React.createElement("th", null, "Speed"),
+                        React.createElement("th", { className: "is-right" }, "CT cost per 1M tokens"),
+                        React.createElement("th", { className: "is-right" }, "Access")
+                      )
+                    ),
+                    React.createElement("tbody", null,
+                      visibleModels.map((model) => {
+                        const providerKey = getPlaygroundAgentModelProviderFilterKey(model);
+                        const providerLabel = providerKey === "custom" ? "Custom" : getPlaygroundAgentModelProviderLabel(model);
+                        const accessLabel = model.locked ? "Plan required" : "Available";
+                        return React.createElement("tr", { key: model.id },
+                          React.createElement("td", null,
+                            React.createElement("div", { className: "playground-agents-overview-model-cell" },
+                              renderModelProviderIcon(model),
+                              React.createElement("div", { className: "playground-agents-overview-model-copy" },
+                                React.createElement("div", {
+                                  className: "playground-agents-overview-name-title",
+                                  title: model.label || model.id,
+                                }, model.label || model.id),
+                                React.createElement("div", {
+                                  className: "playground-agents-overview-name-description",
+                                  title: model.description || model.id,
+                                }, model.description || model.id)
+                              )
+                            )
+                          ),
+                          React.createElement("td", null,
+                            React.createElement("div", { className: "playground-agents-overview-table-value" }, providerLabel)
+                          ),
+                          React.createElement("td", null,
+                            React.createElement("div", { className: "playground-agents-overview-table-value" }, renderModelIntelligence(model))
+                          ),
+                          React.createElement("td", null,
+                            React.createElement("div", { className: "playground-agents-overview-table-value" }, model.contextWindow || "Custom")
+                          ),
+                          React.createElement("td", null,
+                            React.createElement("div", { className: "playground-agents-overview-table-value" }, model.speed || "Custom")
+                          ),
+                          React.createElement("td", null,
+                            React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundAgentModelComputeTokenCost(model.id))
+                          ),
+                          React.createElement("td", null,
+                            React.createElement("div", { className: "playground-agents-overview-table-value is-right" },
+                              React.createElement("span", { className: "playground-agents-model-access" + (model.locked ? " is-locked" : " is-available") }, accessLabel)
+                            )
+                          )
+                        );
+                      })
+                    )
+                  )
+                )
+          );
+        }
+
         function renderAgentsHome(overviewListContent = null) {
           const allAgents = allKnownAgents.filter((agent) => agent?.id && agent.id !== PLAYGROUND_AGENT_DRAFT_ID);
           const teamAgents = allAgents.filter((agent) => isPlaygroundTeamAgent(agent));
@@ -66267,11 +72060,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           });
           const totalAgentsCT = totalSingleAgentCT + totalTeamAgentCT;
           const agentsHomeKpis = [
-            { id: "agents", value: String(singleAgents.length), label: "Agents", Icon: Bot },
-            { id: "teams", value: String(teamAgents.length), label: "Teams", Icon: Users },
-            { id: "agent-ct", value: formatSettingsComputeTokens(totalSingleAgentCT), label: "Spent on Agents", Icon: Coins },
-            { id: "team-ct", value: formatSettingsComputeTokens(totalTeamAgentCT), label: "Spent on Teams", Icon: Coins },
-            { id: "total-ct", value: formatSettingsComputeTokens(totalAgentsCT), label: "Total CT", Icon: Calculator },
+            { id: "agents", value: String(singleAgents.length), label: "Agents" },
+            { id: "teams", value: String(teamAgents.length), label: "Teams" },
+            { id: "agent-ct", value: formatSettingsComputeTokens(totalSingleAgentCT), label: "Spent on Agents" },
+            { id: "team-ct", value: formatSettingsComputeTokens(totalTeamAgentCT), label: "Spent on Teams" },
+            { id: "total-ct", value: formatSettingsComputeTokens(totalAgentsCT), label: "Total CT" },
           ];
 
           const buildAgentsHomeActivityBuckets = (period) => {
@@ -66500,47 +72293,48 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             })
           );
 
-          return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll" },
-            React.createElement("div", { className: "playground-environments-home-content" },
-              React.createElement("section", { className: "playground-environments-home-hero" },
-              React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your AI workforce."),
-              React.createElement("div", { className: "playground-environments-home-summary" },
-              React.createElement("div", { className: "playground-environments-home-summary-kpis" },
-                agentsHomeKpis.map((item) =>
-                    React.createElement("div", {
-                      key: item.id,
-                      className: "playground-environments-home-summary-kpi playground-project-overview-summary-kpi",
-                    },
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                        item.Icon
-                          ? React.createElement(item.Icon, { className: "playground-project-overview-summary-kpi-icon", strokeWidth: 1.85 })
-                          : null,
-                        React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                    )
-                  )
-                )
-              ),
-                React.createElement("div", { className: "playground-environments-home-metrics" },
-                  React.createElement("div", { className: "playground-tasks-detail-facts" },
-                    React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                      React.createElement("div", { className: "playground-database-overview" },
-                        React.createElement("div", { className: "playground-database-overview-chart-block" },
-                          renderAgentsHomeUsageChart({
-                            ariaLabel: "Agent and team activity over time",
-                            labels: activityBuckets.map((bucket) => String(bucket?.label || "")),
-                            singleValues: singleAgentActivity,
-                            teamValues: teamActivity,
-                            emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
-                          })
+          const agentsHomeHero = React.createElement("section", { className: "playground-environments-home-hero" },
+            React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your AI workforce."),
+            renderAgentsOverviewHomeTabs(),
+            agentsOverviewHomeTab === "observability"
+              ? renderAgentsObservabilitySection()
+              : agentsOverviewHomeTab === "models"
+                ? renderAgentsModelsSection()
+                : React.createElement(React.Fragment, null,
+                  React.createElement("div", { className: "playground-environments-home-metrics" },
+                    React.createElement("div", { className: "playground-tasks-detail-facts" },
+                      React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                        React.createElement("div", { className: "playground-database-overview" },
+                          React.createElement("div", { className: "playground-database-overview-chart-block" },
+                            React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
+                              agentsHomeKpis.map((item) =>
+                                React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                                  React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                                    React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                                  ),
+                                  React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                                )
+                              )
+                            ),
+                            renderAgentsHomeUsageChart({
+                              ariaLabel: "Agent and team activity over time",
+                              labels: activityBuckets.map((bucket) => String(bucket?.label || "")),
+                              singleValues: singleAgentActivity,
+                              teamValues: teamActivity,
+                              emptyText: agentsHomeThreadsLoading ? "Loading activity..." : (agentsHomeThreadsError || "No activity data yet"),
+                            })
+                          )
                         )
                       )
                     )
-                  )
-                ),
-                overviewListContent
-              )
+                  ),
+                  overviewListContent
+                )
+          );
+
+          return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll" },
+            React.createElement("div", { className: "playground-environments-home-content" },
+              agentsHomeHero
             )
           );
         }
@@ -67855,11 +73649,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               ? "7 days"
               : "30 days";
           const agentDetailKpis = [
-            { id: "runs", value: String(totalAgentDetailRuns), label: "Runs " + agentDetailPeriodLabel, Icon: Bot },
-            { id: "total-ct", value: formatSettingsComputeTokens(totalAgentDetailCT), label: "Total CT", Icon: Coins },
-            { id: "avg-ct", value: formatSettingsComputeTokens(averageAgentDetailCT), label: "Avg CT / Run", Icon: Calculator },
-            { id: "success", value: formatPlaygroundServerRate(resolvedAgentAnalyticsSummary.successRate24h), label: "Success Rate (24h)", Icon: Check },
-            { id: "last-used", value: lastAgentDetailThread ? formatPlaygroundFileDate(lastAgentDetailThread.updatedAt || lastAgentDetailThread.createdAt) : "Never", label: "Last Used", Icon: Clock },
+            { id: "runs", value: String(totalAgentDetailRuns), label: "Runs " + agentDetailPeriodLabel },
+            { id: "total-ct", value: formatSettingsComputeTokens(totalAgentDetailCT), label: "Total CT" },
+            { id: "avg-ct", value: formatSettingsComputeTokens(averageAgentDetailCT), label: "Avg CT / Run" },
+            { id: "success", value: formatPlaygroundServerRate(resolvedAgentAnalyticsSummary.successRate24h), label: "Success Rate (24h)" },
+            { id: "last-used", value: lastAgentDetailThread ? formatPlaygroundFileDate(lastAgentDetailThread.updatedAt || lastAgentDetailThread.createdAt) : "Never", label: "Last Used" },
           ];
           const renderAgentDetailTimescaleControl = () => React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
             React.createElement("select", {
@@ -67996,29 +73790,25 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             )
           );
 
-          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-            React.createElement("div", { className: "playground-tasks-detail-section-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                [
-                  { id: "bold", label: "Bold", icon: Bold },
-                  { id: "italic", label: "Italic", icon: Italic },
-                  { id: "underline", label: "Underline", icon: Underline },
-                  { id: "list", label: "List", icon: List },
-                ].map((action) =>
-                  React.createElement("button", {
-                    key: action.id,
-                    type: "button",
-                    className: "playground-tasks-detail-format-button",
-                    title: action.label,
-                    "aria-label": action.label,
-                    onMouseDown: (event) => event.preventDefault(),
-                    onClick: () => handleAgentMarkdownFormat("description", agentDescriptionTextareaRef, action.id),
-                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isAgentDescriptionEditing ? " is-editing" : " is-preview") },
+          const agentDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+            [
+              { id: "bold", label: "Bold", icon: Bold },
+              { id: "italic", label: "Italic", icon: Italic },
+              { id: "underline", label: "Underline", icon: Underline },
+              { id: "list", label: "List", icon: List },
+            ].map((action) =>
+              React.createElement("button", {
+                key: action.id,
+                type: "button",
+                className: "playground-tasks-detail-format-button",
+                title: action.label,
+                "aria-label": action.label,
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: () => handleAgentMarkdownFormat("description", agentDescriptionTextareaRef, action.id),
+              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+            )
+          );
+          const agentDescriptionEditor = React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isAgentDescriptionEditing ? " is-editing" : " is-preview") },
               !isAgentDescriptionEditing
                 ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
                     String(draftAgent.description || "").trim()
@@ -68048,6 +73838,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   setIsAgentDescriptionEditing(false);
                 },
               })
+          );
+          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
+            React.createElement("div", { className: "playground-server-description-inline-row" },
+              agentDescriptionEditor,
+              agentDescriptionFormatActions
             )
           );
 
@@ -68241,24 +74036,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               );
 
           const agentFactsSection = React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-environments-home-summary playground-agents-detail-summary" },
-              React.createElement("div", { className: "playground-environments-home-summary-kpis" },
-                agentDetailKpis.map((item) =>
-                  React.createElement("div", {
-                      key: item.id,
-                      className: "playground-environments-home-summary-kpi playground-project-overview-summary-kpi",
-                    },
-                    React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                      item.Icon
-                        ? React.createElement(item.Icon, { className: "playground-project-overview-summary-kpi-icon", strokeWidth: 1.85 })
-                        : null,
-                      React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                  )
-                )
-              )
-            ),
             React.createElement("div", { className: "playground-environments-home-metrics playground-agents-detail-metrics" },
               React.createElement("div", {
                   className: "playground-tasks-detail-facts playground-environments-editor-facts"
@@ -68267,6 +74044,16 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                   React.createElement("div", { className: "playground-database-overview" },
                     React.createElement("div", { className: "playground-database-overview-chart-block playground-agents-detail-chart-block" },
+                      React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-agents-detail-chart-kpis" },
+                        agentDetailKpis.map((item) =>
+                          React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                            React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                              React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                            ),
+                            React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                          )
+                        )
+                      ),
                       shouldShowAgentAnalytics && agentAnalyticsError
                         ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, agentAnalyticsError)
                         : null,
@@ -68312,8 +74099,25 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               key: "permissions",
               "data-section-id": "permissions",
             },
-            React.createElement("div", { className: "playground-tasks-detail-section-title playground-agents-permissions-title" }, "Permissions"),
             React.createElement("div", { className: "playground-agents-permissions-card" }, agentPermissionsContent)
+          );
+          const agentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs" },
+            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+              [
+                { id: "general", label: "General" },
+                { id: "permissions", label: "Permissions" },
+              ].map((tab) =>
+                React.createElement("button", {
+                    key: tab.id,
+                    type: "button",
+                    className: "playground-project-overview-chart-tab" + (agentDetailTab === tab.id ? " is-active" : ""),
+                    onClick: () => setAgentDetailTab(tab.id),
+                    "aria-pressed": agentDetailTab === tab.id ? "true" : "false",
+                  },
+                  tab.label
+                )
+              )
+            )
           );
 
           const teamSection = isTeamAgent
@@ -68446,12 +74250,16 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   : null,
                 agentProfileSection,
                 descriptionSection,
-                agentFactsSection,
-                agentPermissionsSection,
-                isTeamAgent
-                  ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
-                  : null,
-                instructionsSection
+                agentDetailTabs,
+                agentDetailTab === "permissions"
+                  ? agentPermissionsSection
+                  : React.createElement(React.Fragment, null,
+                      agentFactsSection,
+                      isTeamAgent
+                        ? renderEditorSection("team", "Team Setup", "", teamSection, null, false)
+                        : null,
+                      instructionsSection
+                    )
               )
             )
           );
@@ -72503,7 +78311,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       title: availableSkillEnvironments.length > 0
                         ? "Add files from " + (selectedSkillEnvironment?.name || "an environment")
                         : "No environments available",
-                    }, "From Environment")
+	                    }, "From Environment")
                   )
                 : null
             ),
@@ -73000,7 +78808,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                           title: availableSkillEnvironments.length > 0
                             ? "Add files from " + (selectedSkillEnvironment?.name || "an environment")
                             : "No environments available",
-                        }, "From Environment")
+	                        }, "From Environment")
                       )
                     ),
                     React.createElement("input", {
@@ -73168,9 +78976,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const taskDetailSelectPopoverRef = useRef(null);
         const taskDetailThreadsToolbarRef = useRef(null);
         const taskSkillsActionsRef = useRef(null);
-        const taskDetailMainRef = useRef(null);
-        const taskDescriptionTextareaRef = useRef(null);
-        const missionControlDocumentTextareaRef = useRef(null);
+	        const taskDetailMainRef = useRef(null);
+	        const taskDescriptionTextareaRef = useRef(null);
+	        const missionControlDocumentTextareaRef = useRef(null);
+	        const projectRulesTextareaRef = useRef(null);
+	        const projectRuleComposerTextareaRef = useRef(null);
+	        const projectRuleEditTextareaRef = useRef(null);
         const scheduleTaskTextareaRef = useRef(null);
         const scheduleDescriptionTextareaRef = useRef(null);
         const taskCommentTextareaRef = useRef(null);
@@ -73232,6 +79043,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const projectDraftUseCardBackgroundAsWallpaperRef = useRef(true);
         const projectDescriptionTextareaRef = useRef(null);
         const [isProjectDescriptionEditing, setIsProjectDescriptionEditing] = useState(false);
+        const projectDescriptionEditingRef = useRef(false);
         const [projectComposerEnvironmentPopoverOpen, setProjectComposerEnvironmentPopoverOpen] = useState(false);
         const projectComposerEnvironmentPopoverRef = useRef(null);
         const [projectPreviewedAttachmentId, setProjectPreviewedAttachmentId] = useState("");
@@ -73253,6 +79065,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "overview");
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
         const [projectOverviewChartMode, setProjectOverviewChartMode] = useState("cost");
+        const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState("general");
         const [projectOverviewListMode, setProjectOverviewListMode] = useState("tasks");
         const [projectOverviewTaskSearchQuery, setProjectOverviewTaskSearchQuery] = useState("");
         const [projectOverviewTaskSortMode, setProjectOverviewTaskSortMode] = useState("default");
@@ -73273,6 +79086,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         });
         const [projectOverviewThreadRecords, setProjectOverviewThreadRecords] = useState([]);
         const [projectOverviewFileActivityReloadNonce, setProjectOverviewFileActivityReloadNonce] = useState(0);
+        const [projectOverviewOutcomeEditorState, setProjectOverviewOutcomeEditorState] = useState(null);
         const [projectOverviewSuppressedFileKeys, setProjectOverviewSuppressedFileKeys] = useState(() => {
           if (typeof window === "undefined" || !window.localStorage) {
             return [];
@@ -73290,6 +79104,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           action: "",
           error: "",
         });
+	        const projectOverviewStrategySurfaceRef = useRef(null);
+	        const projectOverviewRulesSurfaceRef = useRef(null);
 	        const projectOverviewFileActivityLoadKeyRef = useRef("");
 	        const projectOverviewServerResourcesLoadKeyRef = useRef("");
 	        const projectListAutoLoadKeyRef = useRef("");
@@ -73403,11 +79219,20 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [backlogComposerSubtaskCommandRequest, setBacklogComposerSubtaskCommandRequest] = useState(null);
         const [backlogComposerMissionControlCommandRequest, setBacklogComposerMissionControlCommandRequest] = useState(null);
         const [missionControlStrategyOpen, setMissionControlStrategyOpen] = useState(false);
-        const missionControlInstructionsTextareaRef = useRef(null);
-        const [missionControlDocumentDraft, setMissionControlDocumentDraft] = useState("");
-        const [missionControlInstructionsDraft, setMissionControlInstructionsDraft] = useState("");
-        const [isMissionControlDocumentEditing, setIsMissionControlDocumentEditing] = useState(false);
-        const [isMissionControlInstructionsEditing, setIsMissionControlInstructionsEditing] = useState(false);
+	        const missionControlInstructionsTextareaRef = useRef(null);
+	        const [missionControlDocumentDraft, setMissionControlDocumentDraft] = useState("");
+	        const [missionControlInstructionsDraft, setMissionControlInstructionsDraft] = useState("");
+	        const [missionControlStrategyDraft, setMissionControlStrategyDraft] = useState(buildEmptyPlaygroundProjectStrategyBrief());
+	        const missionControlStrategyDraftRef = useRef(buildEmptyPlaygroundProjectStrategyBrief());
+	        const missionControlStrategyDraftProjectIdRef = useRef("");
+	        const selectedProjectMissionControlRef = useRef(buildEmptyPlaygroundProjectMissionControl());
+	        const [projectRulesDraft, setProjectRulesDraft] = useState("");
+	        const [projectRuleInputValue, setProjectRuleInputValue] = useState("");
+	        const [projectRuleEditingIndex, setProjectRuleEditingIndex] = useState(-1);
+	        const [projectRuleEditingValue, setProjectRuleEditingValue] = useState("");
+	        const [isMissionControlDocumentEditing, setIsMissionControlDocumentEditing] = useState(false);
+	        const [isMissionControlInstructionsEditing, setIsMissionControlInstructionsEditing] = useState(false);
+	        const [isProjectRulesEditing, setIsProjectRulesEditing] = useState(false);
         const [missionControlDetailsCollapsed, setMissionControlDetailsCollapsed] = useState(false);
         const [missionControlCommentInputValue, setMissionControlCommentInputValue] = useState("");
         const [missionControlSaveState, setMissionControlSaveState] = useState({
@@ -73633,17 +79458,24 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           return selectedProjectSnapshot;
         }, [selectedProjectDetail, selectedProjectId, selectedProjectSnapshot]);
 
+        function setProjectDescriptionEditing(nextEditing) {
+          const normalizedEditing = Boolean(nextEditing);
+          projectDescriptionEditingRef.current = normalizedEditing;
+          setIsProjectDescriptionEditing(normalizedEditing);
+        }
+
         useEffect(() => {
           if (projectComposerOpen || !selectedProject?.id) {
             return;
           }
 
+          const shouldResetProjectDescriptionEditing = projectDraft?.id !== selectedProject.id;
           setProjectDraft((current) => {
             const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
             const projectIndex = projects.findIndex((project) => project.id === normalizedProject.id);
             const wallpaperConfig = getPlaygroundProjectWallpaperConfig(selectedProject, projectIndex >= 0 ? projectIndex : 0);
             if (current?.id === selectedProject.id) {
-              if (isProjectDescriptionEditing || String(current.description || "") === String(normalizedProject.description || "")) {
+              if (projectDescriptionEditingRef.current || String(current.description || "") === String(normalizedProject.description || "")) {
                 return current;
               }
               return {
@@ -73657,8 +79489,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, wallpaperConfig.id),
             };
           });
-          setIsProjectDescriptionEditing(false);
+          if (shouldResetProjectDescriptionEditing) {
+            setProjectDescriptionEditing(false);
+          }
         }, [
+          projectDraft?.id,
           projectComposerOpen,
           projects,
           selectedProject?.description,
@@ -73735,12 +79570,24 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const selectedProjectMissionControl = useMemo(() => {
           return getPlaygroundProjectMissionControlRecord(selectedProject);
         }, [selectedProject]);
-        const selectedProjectMissionInstructions = useMemo(() => {
-          return getPlaygroundProjectMissionInstructions(selectedProject);
-        }, [selectedProject]);
-        const selectedProjectMissionComments = useMemo(() => {
+	        const selectedProjectMissionInstructions = useMemo(() => {
+	          return getPlaygroundProjectMissionInstructions(selectedProject);
+	        }, [selectedProject]);
+	        const selectedProjectStrategyBrief = useMemo(() => {
+	          return getPlaygroundProjectStrategyBriefRecord(selectedProject);
+	        }, [selectedProject]);
+	        const selectedProjectRules = useMemo(() => {
+	          return getPlaygroundProjectRules(selectedProject);
+	        }, [selectedProject]);
+	        const selectedProjectMissionComments = useMemo(() => {
           return normalizePlaygroundTaskCommentList(selectedProjectMissionControl.comments);
         }, [selectedProjectMissionControl.comments]);
+	        useEffect(() => {
+	          selectedProjectMissionControlRef.current = selectedProjectMissionControl;
+	        }, [selectedProjectMissionControl]);
+	        useEffect(() => {
+	          missionControlStrategyDraftRef.current = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft);
+	        }, [missionControlStrategyDraft]);
         const isSelectedProjectMissionControlRunning = missionControlRunState.projectId === selectedProjectId
           && (missionControlRunState.status === "running" || missionControlRunState.status === "syncing");
 
@@ -74288,13 +80135,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
         const loadProjectOverviewFileActivity = useCallback(async function loadProjectOverviewFileActivity() {
           const normalizedProjectId = String(selectedProjectId || "").trim();
-          if (!normalizedProjectId || taskView !== "overview") {
+          if (!normalizedProjectId || taskView !== "overview" || projectOverviewHomeTab !== "files") {
             projectOverviewFileActivityLoadKeyRef.current = "";
             setProjectOverviewThreadRecords([]);
             setProjectOverviewFileActivityState((current) => ({
               ...current,
-              status: normalizedProjectId ? current.status : "idle",
-              error: normalizedProjectId ? current.error : "",
+              status: "idle",
+              error: "",
               items: normalizedProjectId ? current.items : [],
             }));
             return;
@@ -74303,6 +80150,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	          const loadKey = [
 	            normalizedProjectId,
 	            taskView,
+	            projectOverviewHomeTab,
 	            backendUrl,
 	            requestHeadersKey,
 	            selectedProjectOverviewDeletedFileKeysKey,
@@ -74435,6 +80283,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           backendUrl,
           projectOverviewHistoryClient,
           projectOverviewFileActivityReloadNonce,
+          projectOverviewHomeTab,
 	          requestHeaders,
 	          requestHeadersKey,
 	          selectedProject?.defaultEnvironmentId,
@@ -74465,12 +80314,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
 	        const loadProjectOverviewServerResources = useCallback(async function loadProjectOverviewServerResources() {
 	          const normalizedProjectId = String(selectedProjectId || "").trim();
-	          if (!normalizedProjectId || taskView !== "overview") {
+	          if (!normalizedProjectId || taskView !== "overview" || projectOverviewHomeTab !== "files") {
 	            projectOverviewServerResourcesLoadKeyRef.current = "";
 	            setProjectOverviewServerResourcesState((current) => ({
               ...current,
-              status: normalizedProjectId ? current.status : "idle",
-              error: normalizedProjectId ? current.error : "",
+              status: "idle",
+              error: "",
               items: normalizedProjectId ? current.items : [],
 	            }));
 	            return;
@@ -74478,6 +80327,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	          const loadKey = [
 	            normalizedProjectId,
 	            taskView,
+	            projectOverviewHomeTab,
 	            backendUrl,
 	            requestHeadersKey,
 	          ].join("|");
@@ -74544,7 +80394,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               items: [],
             });
           }
-	        }, [backendUrl, requestHeaders, requestHeadersKey, selectedProjectId, taskView]);
+	        }, [backendUrl, projectOverviewHomeTab, requestHeaders, requestHeadersKey, selectedProjectId, taskView]);
 
         useEffect(() => {
           let cancelled = false;
@@ -74790,7 +80640,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               return !(attachmentEnvironmentId === normalizedEnvironmentId && attachmentPath === normalizedPath);
             });
             if (selectedProjectId && remainingProjectAttachments.length !== projectAttachments.length) {
-              await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+              await persistProjectMissionControlRecord(selectedProjectId, buildMissionControlRecordForSave(), {
                 projectOverrides: {
                   attachments: remainingProjectAttachments,
                 },
@@ -74801,7 +80651,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 successMessage: "",
               });
             } else if (selectedProjectId && suppressedFileKey) {
-              await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+              await persistProjectMissionControlRecord(selectedProjectId, buildMissionControlRecordForSave(), {
                 metadataOverrides: {
                   projectOverviewDeletedFileKeys: nextDeletedFileKeys,
                 },
@@ -76430,12 +82280,16 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	            : "";
 	          const normalizedTaskStatus = String(normalizedTask.status || "").trim().toLowerCase();
 	          const projectId = String(normalizedTask.projectId || selectedProjectId || selectedProject?.id || "").trim();
-	          const projectName = String(
-	            selectedProject?.id && projectId && selectedProject.id === projectId
-	              ? selectedProject.name || ""
-	              : selectedProject?.name || ""
-	          ).trim();
-	          const directResponseTask = isPlaygroundDirectResponseTask(normalizedTask);
+		          const projectName = String(
+		            selectedProject?.id && projectId && selectedProject.id === projectId
+		              ? selectedProject.name || ""
+		              : selectedProject?.name || ""
+		          ).trim();
+		          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(selectedProject, {
+		            taskRecord: normalizedTask,
+		          });
+		          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(selectedProject);
+		          const directResponseTask = isPlaygroundDirectResponseTask(normalizedTask);
 	          const independentReviewerId = getPlaygroundIndependentReviewerId(normalizedTask);
 	          const inReviewImplementationGuard = normalizedTaskStatus === "in_review" && !reviewRequestBody
 	            ? [
@@ -76494,11 +82348,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 		            "Assignee: " + assigneeName,
 		            "Review: " + reviewerName,
 		            "Environment: " + environmentName,
-		            skillNames.length > 0
-		              ? (directResponseTask ? "Skills: None needed for this response-only ticket." : "Skills: " + skillNames.join(", "))
-		              : "",
-		            connectorLines.length > 0 ? "Connectors:" + newline + connectorLines.join(newline) : "",
-		            [
+			            skillNames.length > 0
+			              ? (directResponseTask ? "Skills: None needed for this response-only ticket." : "Skills: " + skillNames.join(", "))
+			              : "",
+			            connectorLines.length > 0 ? "Connectors:" + newline + connectorLines.join(newline) : "",
+			            projectStrategySection,
+			            projectRulesSection,
+			            [
 	              "Execution expectations:",
 	              "- The project id and task id above are authoritative. Do not list projects or tasks just to discover this ticket.",
 	              "- Use Task Management, Computer Agents, filesystem, browser, or shell tools only when the ticket cannot be completed from the provided title, description, attachments, and comments.",
@@ -76721,10 +82577,153 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           return summary.length > 260 ? summary.slice(0, 257).trimEnd() + "…" : summary;
         }
 
-        function parsePlaygroundMissionControlResponseContent(content) {
-          const rawContent = String(content || "").trim();
-          if (!rawContent) {
-            return buildEmptyPlaygroundProjectMissionControl();
+        function getPlaygroundProjectStrategyBriefRecord(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : null;
+          const missionControl = getPlaygroundProjectMissionControlRecord(project);
+          const strategyBrief = normalizePlaygroundProjectStrategyBrief(missionControl.strategyBrief);
+          const projectGoal = normalizePlaygroundStrategyText(project?.description || metadata?.description);
+          if (projectGoal) {
+            strategyBrief.mission = projectGoal;
+          } else if (!strategyBrief.mission && missionControl.summary) {
+            strategyBrief.mission = normalizePlaygroundStrategyText(missionControl.summary);
+          }
+          if (!strategyBrief.mission && missionControl.document) {
+            strategyBrief.mission = extractPlaygroundMissionControlSummary(missionControl.document);
+          }
+          return strategyBrief;
+        }
+
+        function getPlaygroundTaskStrategyOutcomeId(taskRecord) {
+          const metadata = taskRecord?.metadata && typeof taskRecord.metadata === "object" && !Array.isArray(taskRecord.metadata)
+            ? taskRecord.metadata
+            : null;
+          const runnerPlayground = metadata?.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+            ? metadata.runnerPlayground
+            : null;
+          return normalizePlaygroundStrategyText(
+            taskRecord?.strategyOutcomeId
+            || metadata?.strategyOutcomeId
+            || runnerPlayground?.strategyOutcomeId
+          );
+        }
+
+        function findPlaygroundStrategyOutcomeForTask(strategyBrief, taskRecord) {
+          const normalizedStrategy = normalizePlaygroundProjectStrategyBrief(strategyBrief);
+          const outcomes = normalizedStrategy.outcomes;
+          if (!outcomes.length || !taskRecord) {
+            return null;
+          }
+          const taskId = normalizePlaygroundStrategyText(taskRecord.id);
+          const taskOutcomeId = getPlaygroundTaskStrategyOutcomeId(taskRecord);
+          const releaseId = normalizePlaygroundStrategyText(taskRecord.releaseId);
+          if (taskOutcomeId) {
+            const matchedOutcome = outcomes.find((outcome) => outcome.id === taskOutcomeId);
+            if (matchedOutcome) {
+              return matchedOutcome;
+            }
+          }
+          if (taskId) {
+            const matchedOutcome = outcomes.find((outcome) => outcome.taskIds.includes(taskId));
+            if (matchedOutcome) {
+              return matchedOutcome;
+            }
+          }
+          if (releaseId) {
+            const matchedOutcome = outcomes.find((outcome) => outcome.releaseId && outcome.releaseId === releaseId);
+            if (matchedOutcome) {
+              return matchedOutcome;
+            }
+          }
+          const taskText = normalizePlaygroundStrategyText([taskRecord.title, taskRecord.description].filter(Boolean).join(" ")).toLowerCase();
+          if (taskText) {
+            return outcomes.find((outcome) => {
+              const title = normalizePlaygroundStrategyText(outcome.title).toLowerCase();
+              return title.length >= 8 && taskText.includes(title);
+            }) || null;
+          }
+          return null;
+        }
+
+        function formatPlaygroundStrategyPromptList(label, values) {
+          const items = normalizePlaygroundStrategyTextList(values);
+          if (!items.length) {
+            return "";
+          }
+          const newline = String.fromCharCode(10);
+          return label + ":" + newline + items.map((item) => "- " + item).join(newline);
+        }
+
+        function buildPlaygroundProjectStrategyBriefPromptSection(project, options = {}) {
+          const strategyBrief = getPlaygroundProjectStrategyBriefRecord(project);
+          const newline = String.fromCharCode(10);
+          const sections = [];
+          if (strategyBrief.mission) {
+            sections.push("Goal: " + strategyBrief.mission);
+          }
+          if (strategyBrief.outcomes.length > 0) {
+            sections.push([
+              "Primary outcomes:",
+              ...strategyBrief.outcomes.map((outcome, index) => {
+                const prefix = String(index + 1) + ". " + (outcome.title || "Outcome");
+                const details = [
+                  outcome.description,
+                  outcome.successCriteria.length > 0 ? "Success: " + outcome.successCriteria.join("; ") : "",
+                ].filter(Boolean).join(" ");
+                return "- " + prefix + (details ? " — " + details : "");
+              }),
+            ].join(newline));
+          }
+          const taskOutcome = findPlaygroundStrategyOutcomeForTask(strategyBrief, options?.taskRecord);
+          if (taskOutcome) {
+            sections.push([
+              "This task supports outcome: " + (taskOutcome.title || taskOutcome.id),
+              taskOutcome.description ? "Outcome context: " + taskOutcome.description : "",
+              taskOutcome.successCriteria.length > 0 ? "Outcome success criteria:" + newline + taskOutcome.successCriteria.map((item) => "- " + item).join(newline) : "",
+            ].filter(Boolean).join(newline));
+          }
+          const scopeLines = [
+            formatPlaygroundStrategyPromptList("In scope", strategyBrief.inScope),
+            formatPlaygroundStrategyPromptList("Out of scope", strategyBrief.outOfScope),
+          ].filter(Boolean).join(newline);
+          if (scopeLines) {
+            sections.push("Scope boundaries:" + newline + scopeLines);
+          }
+          [
+            formatPlaygroundStrategyPromptList("Project success criteria", strategyBrief.successCriteria),
+            formatPlaygroundStrategyPromptList("Risks and assumptions", strategyBrief.risks),
+            formatPlaygroundStrategyPromptList("Key decisions", strategyBrief.decisions),
+          ].filter(Boolean).forEach((section) => sections.push(section));
+          if (!sections.length) {
+            return "";
+          }
+	          return "Project goal and strategy:" + newline + sections.join(newline + newline);
+	        }
+
+	        function normalizePlaygroundMissionControlProjectRulesOutput(value) {
+	          if (Array.isArray(value)) {
+	            return serializePlaygroundProjectRuleEntries(value);
+	          }
+	          const normalized = normalizePlaygroundProjectRuleEntry(value);
+	          if (!normalized) {
+	            return "";
+	          }
+	          const paragraphEntries = splitPlaygroundProjectRuleEntries(normalized);
+	          if (paragraphEntries.length > 1) {
+	            return serializePlaygroundProjectRuleEntries(paragraphEntries);
+	          }
+	          return serializePlaygroundProjectRuleEntries(
+	            normalized
+	              .split(/\\n+/)
+	              .map((entry) => normalizePlaygroundProjectRuleEntry(entry))
+	              .filter(Boolean)
+	          );
+	        }
+	        function parsePlaygroundMissionControlResponseContent(content) {
+	          const rawContent = String(content || "").trim();
+	          if (!rawContent) {
+	            return buildEmptyPlaygroundProjectMissionControl();
           }
 
           const codeBlockMatch = rawContent.match(/\\x60\\x60\\x60mission_control_json\\s*([\\s\\S]*?)\\x60\\x60\\x60/i);
@@ -76739,13 +82738,29 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             || sanitizePlaygroundMissionControlDocument(rawContent)
             || rawContent;
           const summary = String(parsedBlock?.summary || "").trim() || extractPlaygroundMissionControlSummary(document);
-          return normalizePlaygroundProjectMissionControlRecord({
-            summary,
-            document,
-            lastThreadId: "",
-            updatedAt: new Date().toISOString(),
-          });
-        }
+	          const strategyBrief = normalizePlaygroundProjectStrategyBrief(
+	            parsedBlock?.strategyBrief
+	            || parsedBlock?.structuredStrategy
+	            || parsedBlock?.strategy
+	          );
+	          const normalizedRecord = normalizePlaygroundProjectMissionControlRecord({
+	            summary,
+	            document,
+	            strategyBrief,
+	            lastThreadId: "",
+	            updatedAt: new Date().toISOString(),
+	          });
+	          if (
+	            parsedBlock
+	            && typeof parsedBlock === "object"
+	            && !Array.isArray(parsedBlock)
+	            && Object.prototype.hasOwnProperty.call(parsedBlock, "projectRules")
+	          ) {
+	            normalizedRecord.projectRules = normalizePlaygroundMissionControlProjectRulesOutput(parsedBlock.projectRules);
+	            normalizedRecord.projectRulesReplace = parsedBlock.projectRulesReplace === true;
+	          }
+	          return normalizedRecord;
+	        }
 
         async function fetchPlaygroundThreadMessages(threadId) {
           const normalizedThreadId = String(threadId || "").trim();
@@ -76999,42 +83014,54 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               copy: "These files were attached specifically for this Mission Control run.",
             }
           );
-          const projectConnectorsSection = buildPlaygroundConnectorPromptSection(
-            "Project connectors",
-            normalizedProject.connectors
-          );
-          const operatorPrompt = String(options?.userPrompt || "").trim();
-          const projectContextDescription = getPlaygroundProjectMissionInstructions(normalizedProject);
-
-          return [
-            "You are running Mission Control for this software project.",
-	            "Your job is to analyze the available project context, reconcile the current project state, define the right strategy, and update the project structure using the Task Management and Computer Agents skills where appropriate.",
-            "Always use the Task Management skill for releases, tasks, subtasks, blockers, comments, and other planning mutations instead of only describing them in prose.",
+	          const projectConnectorsSection = buildPlaygroundConnectorPromptSection(
+	            "Project connectors",
+	            normalizedProject.connectors
+	          );
+	          const operatorPrompt = String(options?.userPrompt || "").trim();
+	          const projectContextDescription = getPlaygroundProjectMissionInstructions(normalizedProject);
+	          const currentProjectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(normalizedProject);
+	          const currentProjectRulesSection = buildPlaygroundProjectRulesPromptSection(normalizedProject);
+	          return [
+	            "You are running Mission Control for this software project.",
+		            "Your job is to analyze the available project context, reconcile the current project state, define the right strategy, and update the project structure using the Task Management and Computer Agents skills where appropriate.",
+	            "Always use the Task Management skill for releases, tasks, subtasks, blockers, comments, and other planning mutations instead of only describing them in prose.",
             "Always use the Computer Agents skill for live discovery of agents, environments, and skills instead of inventing IDs or writing raw curl requests.",
             "When invoking built-in skills, use the exact invocation names from the available skills list, for example task-management and computer-agents. Do not invoke skills using attachment IDs like task_management or computer_agents.",
             "Project: " + (normalizedProject.name || "Untitled Project"),
             projectContextDescription
-              ? ("Project description:" + newline + projectContextDescription)
-              : "Project description: None provided.",
-            projectAttachmentsSection,
-            runAttachmentsSection,
-            projectConnectorsSection,
-            availableReleasesSection,
-            buildPlaygroundMissionControlTaskSnapshot(tasks),
-            availableAgentsSection,
-            availableEnvironmentsSection,
+              ? ("Project goal:" + newline + projectContextDescription)
+              : "Project goal: None provided.",
+	            projectAttachmentsSection,
+	            runAttachmentsSection,
+	            projectConnectorsSection,
+	            currentProjectStrategySection
+	              ? ("Current structured project strategy:" + newline + currentProjectStrategySection)
+	              : "Current structured project strategy: None yet.",
+	            currentProjectRulesSection
+	              ? ("Current project rules:" + newline + currentProjectRulesSection)
+	              : "Current project rules: None yet.",
+	            availableReleasesSection,
+	            buildPlaygroundMissionControlTaskSnapshot(tasks),
+	            availableAgentsSection,
+	            availableEnvironmentsSection,
             availableSkillsSection,
             operatorPrompt
               ? ("Operator directive for this Mission Control run:" + newline + operatorPrompt)
               : "",
             [
               "Required outputs:",
-              "1. Analyze the project attachments, project description, existing releases, open work, completed work, comments, blocked work, and likely next steps.",
+              "1. Analyze the project attachments, project goal, existing releases, open work, completed work, comments, blocked work, and likely next steps.",
               "2. Use the Computer Agents skill to inspect the live agent roster, environments, and available skills before assigning work.",
-              "3. Form a strategy for the project and explain the direction clearly.",
-              "4. Inspect the available agents and assign the backlog work intentionally.",
-              defaultExecutionAgent
-                ? ("   - Every created or updated execution task and subtask must have an agent assignee. If no better specialist is obvious, set assigneeAgentId to " + defaultExecutionAgent.id + " (" + (defaultExecutionAgent.name || "Assistant") + ").")
+	              "3. Form a strategy for the project and explain the direction clearly.",
+	              "   - Also create compact structured strategy context agents can use inside every task prompt.",
+	              "   - The structured strategy context must express the project goal, primary outcomes, in-scope boundaries, out-of-scope boundaries, success criteria, risks/assumptions, and key decisions.",
+	              "   - Outcomes should be concrete user/business outcomes, not generic task status buckets. Include releaseId or taskIds when an outcome clearly maps to existing work.",
+	              "   - Preserve existing outcome ids when you are updating an existing outcome. Only remove an outcome when it is clearly obsolete or the operator asks for that.",
+	              "   - Update project rules when the project needs durable execution behavior that every future task agent should follow. Do not duplicate generic platform behavior as a rule.",
+	              "4. Inspect the available agents and assign the backlog work intentionally.",
+	              defaultExecutionAgent
+	                ? ("   - Every created or updated execution task and subtask must have an agent assignee. If no better specialist is obvious, set assigneeAgentId to " + defaultExecutionAgent.id + " (" + (defaultExecutionAgent.name || "Assistant") + ").")
                 : "   - Every created or updated execution task and subtask must have an agent assignee. If no better fit is obvious, use the system Assistant agent returned by the Computer Agents or Task Management skill.",
               "5. Create or update the project structure using the Task Management skill whenever the project needs clearer execution steps.",
               "   - If the project is empty or still loosely defined, create at least one release first and then place the new work under releases.",
@@ -77067,12 +83094,16 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               "     - Recommended Next Moves",
               "7. End your final response with a fenced code block labeled mission_control_json.",
               "   - The markdown before that code block must exactly match the strategy document text stored in the JSON document field.",
-              "8. That JSON must contain exactly these keys:",
-              '   - "summary": a 1-2 sentence summary for the Mission Control card',
-              '   - "document": the full strategy document in markdown only, with no conversational preface or trailing commentary',
-            ].join(newline),
-          ].filter(Boolean).join(paragraphBreak);
-        }
+	              "8. That JSON must contain these keys:",
+	              '   - "summary": a 1-2 sentence summary for the Mission Control card',
+	              '   - "document": the full strategy document in markdown only, with no conversational preface or trailing commentary',
+	              '   - "strategyBrief": an object with keys "goal", "outcomes", "inScope", "outOfScope", "successCriteria", "risks", and "decisions"',
+	              '     - "outcomes" must be an array of objects with "id", "title", "description", optional "releaseId", optional "taskIds", and optional "successCriteria"',
+	              '   - "projectRules": optional array of rule strings. Include it only when project rules should be created, replaced, or updated; otherwise omit it.',
+	              '   - "projectRulesReplace": optional true. Include it only when intentionally clearing all existing project rules.',
+	            ].join(newline),
+	          ].filter(Boolean).join(paragraphBreak);
+	        }
 
         function buildPlaygroundMissionControlEnabledSkillsPayload(basePayload) {
           const payload = basePayload && typeof basePayload === "object" ? { ...basePayload } : {};
@@ -78637,10 +84668,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           });
         }
 
-        function handleMissionControlDocumentFormat(formatType) {
-          const textarea = missionControlDocumentTextareaRef.current;
-          if (!textarea) {
-            return;
+	        function handleMissionControlDocumentFormat(formatType) {
+	          const textarea = missionControlDocumentTextareaRef.current;
+	          if (!textarea) {
+	            return;
           }
           const value = String(missionControlDocumentDraft || "");
           const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
@@ -78661,8 +84692,51 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return;
           }
 
-          applyMissionControlDocumentSelection(edit.value, edit.selectionStart, edit.selectionEnd);
-        }
+	          applyMissionControlDocumentSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+	        }
+
+	        function applyProjectRulesSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
+	          setProjectRulesDraft(nextValue);
+	          window.requestAnimationFrame(() => {
+	            const textarea = projectRulesTextareaRef.current;
+	            if (!textarea) {
+	              return;
+	            }
+	            const maxLength = nextValue.length;
+	            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
+	            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
+	            textarea.focus();
+	            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
+	            resizeTaskDescriptionTextarea(textarea);
+	          });
+	        }
+
+	        function handleProjectRulesFormat(formatType) {
+	          const textarea = projectRulesTextareaRef.current;
+	          if (!textarea) {
+	            return;
+	          }
+	          const value = String(projectRulesDraft || "");
+	          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
+	          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
+	          let edit = null;
+
+	          if (formatType === "bold") {
+	            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
+	          } else if (formatType === "italic") {
+	            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
+	          } else if (formatType === "underline") {
+	            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
+	          } else if (formatType === "list") {
+	            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
+	          }
+
+	          if (!edit) {
+	            return;
+	          }
+
+	          applyProjectRulesSelection(edit.value, edit.selectionStart, edit.selectionEnd);
+	        }
 
         async function appendUploadedProjectAttachments(attachments) {
           const normalizedAttachments = normalizePlaygroundTaskAttachmentList(attachments);
@@ -78671,7 +84745,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
           if (missionControlStrategyOpen && selectedProjectId) {
             const nextAttachments = mergePlaygroundAttachmentLists(selectedProject?.attachments, normalizedAttachments);
-            await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+            await persistProjectMissionControlRecord(selectedProjectId, buildMissionControlRecordForSave(), {
               projectOverrides: {
                 attachments: nextAttachments,
               },
@@ -78681,7 +84755,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
           if (!projectComposerOpen && selectedProjectId) {
             const nextAttachments = mergePlaygroundAttachmentLists(selectedProject?.attachments, normalizedAttachments);
-            await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+            await persistProjectMissionControlRecord(selectedProjectId, buildMissionControlRecordForSave(), {
               projectOverrides: {
                 attachments: nextAttachments,
               },
@@ -78713,7 +84787,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (!targetEnvironmentId) {
             setProjectAttachmentTransferState((current) => ({
               ...current,
-              error: "Select a default environment before attaching project files.",
               error: "Select an environment before attaching project files.",
             }));
             return false;
@@ -78748,6 +84821,32 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             }));
             return false;
           }
+        }
+
+        function buildProjectEnvironmentFolderAttachment(entry, environmentId) {
+          const normalizedEnvironmentId = String(environmentId || "").trim();
+          const normalizedPath = normalizeHistoryPath(entry?.path || "");
+          if (!normalizedEnvironmentId || !normalizedPath) {
+            return null;
+          }
+          const folderName = String(entry?.name || normalizedPath.split("/").pop() || "Folder").trim() || "Folder";
+          return buildResolvedTaskAttachmentRecord(normalizePlaygroundTaskAttachmentRecord({
+            id: "workspace-folder:" + normalizedEnvironmentId + ":" + normalizedPath,
+            filename: folderName,
+            mimeType: "inode/directory",
+            type: "document",
+            size: 0,
+            uploadedAt: typeof entry?.modifiedTime === "string" && entry.modifiedTime
+              ? entry.modifiedTime
+              : typeof entry?.createdTime === "string" && entry.createdTime
+                ? entry.createdTime
+                : new Date().toISOString(),
+            environmentId: normalizedEnvironmentId,
+            sourcePath: normalizedPath,
+            workspacePath: normalizedPath,
+            isFolder: true,
+            previewKindOverride: "directory",
+          }));
         }
 
         function openProjectAttachmentPicker() {
@@ -78837,7 +84936,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return;
           }
           const selectedEntries = projectEnvironmentFilePickerInventory.filter((entry) =>
-            !entry.isFolder && projectEnvironmentFilePickerSelectedPaths.includes(normalizeHistoryPath(entry.path))
+            projectEnvironmentFilePickerSelectedPaths.includes(normalizeHistoryPath(entry.path))
           );
           if (!selectedEntries.length) {
             return;
@@ -78854,10 +84953,17 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }));
 
           try {
-            const files = [];
-            const sourcePaths = [];
+            const uploadedAttachments = [];
+            const folderAttachments = [];
 
             for (const entry of selectedEntries) {
+              if (entry.isFolder) {
+                const folderAttachment = buildProjectEnvironmentFolderAttachment(entry, activeProjectAttachmentEnvironmentId);
+                if (folderAttachment) {
+                  folderAttachments.push(folderAttachment);
+                }
+                continue;
+              }
               const downloadUrl = buildPlaygroundEnvironmentDownloadUrl(backendUrl, activeProjectAttachmentEnvironmentId, entry.path);
               const response = await fetch(downloadUrl, {
                 method: "GET",
@@ -78867,20 +84973,26 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 throw new Error("Failed to load " + (entry.name || "file") + " (" + response.status + ")");
               }
               const blob = await response.blob();
-              files.push(new globalThis.File([blob], entry.name || "file", {
+              const file = new globalThis.File([blob], entry.name || "file", {
                 type: entry.mimeType || blob.type || "application/octet-stream",
+              });
+              uploadedAttachments.push(await uploadTaskAttachment(file, {
+                environmentId: activeProjectAttachmentEnvironmentId,
+                sourcePath: entry.path,
               }));
-              sourcePaths.push(entry.path);
             }
 
-            const attached = await appendProjectAttachmentFiles(files, {
-              environmentId: activeProjectAttachmentEnvironmentId,
-              sourcePaths,
-            });
-            if (attached) {
+            const attachmentCandidates = folderAttachments.concat(uploadedAttachments);
+            const attached = await appendUploadedProjectAttachments(attachmentCandidates);
+            if (attached || attachmentCandidates.length > 0) {
               setProjectEnvironmentFilePickerOpen(false);
               setProjectEnvironmentFilePickerSelectedPaths([]);
               setProjectEnvironmentFilePickerSearch("");
+              setProjectAttachmentTransferState((current) => ({
+                ...current,
+                error: "",
+                isProcessing: false,
+              }));
             } else {
               setProjectAttachmentTransferState((current) => ({
                 ...current,
@@ -78888,7 +85000,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               }));
             }
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to attach project environment files.";
+            const errorMessage = error instanceof Error ? error.message : "Failed to attach project environment items.";
             setProjectAttachmentTransferState((current) => ({
               ...current,
               error: errorMessage,
@@ -78917,7 +85029,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
           if (missionControlStrategyOpen && selectedProjectId) {
             try {
-              await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+              await persistProjectMissionControlRecord(selectedProjectId, buildMissionControlRecordForSave(), {
                 projectOverrides: {
                   attachments: currentProjectAttachments.filter((attachment) => attachment.id !== attachmentId),
                 },
@@ -78928,7 +85040,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
           if (!projectComposerOpen && selectedProjectId) {
             try {
-              await persistProjectMissionControlRecord(selectedProjectId, selectedProjectMissionControl, {
+              await persistProjectMissionControlRecord(selectedProjectId, buildMissionControlRecordForSave(), {
                 projectOverrides: {
                   attachments: currentProjectAttachments.filter((attachment) => attachment.id !== attachmentId),
                 },
@@ -78990,15 +85102,22 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       ? React.createElement(ChevronDown, { className: "tb-file-browser-folder-chevron", strokeWidth: 1.75 })
                       : React.createElement(ChevronRight, { className: "tb-file-browser-folder-chevron", strokeWidth: 1.75 })
                   )
-                : React.createElement("div", {
-                    className: "tb-file-browser-check" + (isSelected ? " selected" : ""),
-                    onClick: (event) => {
-                      event.stopPropagation();
-                      toggleProjectEnvironmentFileSelection(normalizedPath);
-                    },
-                  },
-                    isSelected ? React.createElement(Check, { className: "tb-file-browser-check-icon", strokeWidth: 2.2 }) : null
-                  ),
+                : !row.searchMatch
+                  ? React.createElement("span", {
+                      className: "tb-file-browser-item-leading",
+                      "aria-hidden": "true",
+                      style: { cursor: "default", pointerEvents: "none" },
+                    })
+                  : null,
+              React.createElement("div", {
+                className: "tb-file-browser-check" + (isSelected ? " selected" : ""),
+                onClick: (event) => {
+                  event.stopPropagation();
+                  toggleProjectEnvironmentFileSelection(normalizedPath);
+                },
+              },
+                isSelected ? React.createElement(Check, { className: "tb-file-browser-check-icon", strokeWidth: 2.2 }) : null
+              ),
               renderTaskEnvironmentFilePickerIcon(entry),
               React.createElement("span", { className: "tb-file-browser-item-name", title: entry.name }, entry.name),
               React.createElement("span", { className: "tb-file-browser-item-meta", title: metaValue }, metaValue || "-"),
@@ -79012,21 +85131,24 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return null;
           }
 
-          const selectedFilesCount = projectEnvironmentFilePickerInventory.filter((entry) =>
-            !entry.isFolder && projectEnvironmentFilePickerSelectedPaths.includes(normalizeHistoryPath(entry.path))
+          const selectedItemsCount = projectEnvironmentFilePickerInventory.filter((entry) =>
+            projectEnvironmentFilePickerSelectedPaths.includes(normalizeHistoryPath(entry.path))
           ).length;
 
-          return React.createElement("div", { className: "tb-runner-chat" },
-            React.createElement("div", {
-              className: "tb-file-browser-scrim",
-              onClick: () => setProjectEnvironmentFilePickerOpen(false),
+	          const pickerElement = React.createElement("div", { className: "tb-runner-chat playground-project-environment-file-picker-portal" },
+	            React.createElement("div", {
+	              className: "tb-file-browser-scrim",
+	              onClick: () => setProjectEnvironmentFilePickerOpen(false),
             },
               React.createElement("div", {
                 className: "tb-file-browser-modal",
                 onClick: (event) => event.stopPropagation(),
               },
                 React.createElement("div", { className: "tb-file-browser-body" },
-                  renderTaskDetailFileBrowserSidebar("workspace", projectEnvironmentFilePickerSearch, setProjectEnvironmentFilePickerSearch),
+                  renderTaskDetailFileBrowserSidebar("workspace", projectEnvironmentFilePickerSearch, setProjectEnvironmentFilePickerSearch, {
+                    environment: activeProjectAttachmentEnvironment,
+                    showIntegrations: false,
+                  }),
                   React.createElement("div", { className: "tb-file-browser-main" },
                     React.createElement("div", { className: "tb-file-browser-header" },
                       React.createElement("button", {
@@ -79046,7 +85168,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                           }, activeProjectAttachmentEnvironment?.name || "Environment")
                         )
                       ),
-                      React.createElement("div", { className: "tb-file-browser-count" }, selectedFilesCount + (selectedFilesCount === 1 ? " file selected" : " files selected"))
+                      React.createElement("div", { className: "tb-file-browser-count" }, selectedItemsCount + (selectedItemsCount === 1 ? " item selected" : " items selected"))
                     ),
                     React.createElement("div", { className: "tb-file-browser-list" },
                       projectEnvironmentFilePickerState.status === "loading"
@@ -79071,22 +85193,25 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     type: "button",
                     className: "tb-file-browser-footer-button tb-file-browser-footer-button-primary",
                     onClick: () => void handleAttachProjectEnvironmentFiles(),
-                    disabled: selectedFilesCount === 0 || projectAttachmentTransferState.isProcessing,
+                    disabled: selectedItemsCount === 0 || projectAttachmentTransferState.isProcessing,
                   },
                     React.createElement("span", { className: "tb-file-browser-footer-button-content" },
                       projectAttachmentTransferState.isProcessing
                         ? React.createElement("span", { className: "runner-spinner tb-file-browser-footer-button-spinner" })
                         : null,
                       React.createElement("span", { className: "tb-file-browser-footer-button-label" },
-                        projectAttachmentTransferState.isProcessing ? "Attaching Files..." : "Attach Files"
+                        projectAttachmentTransferState.isProcessing ? "Attaching Items..." : "Attach Items"
                       )
                     )
                   )
                 )
               )
-            )
-          );
-        }
+	            )
+	          );
+	          return typeof document !== "undefined" && document.body
+	            ? createPortal(pickerElement, document.body)
+	            : pickerElement;
+	        }
 
         function buildProjectScheduleDraft(projectRecord = selectedProject) {
           const base = buildPlaygroundDefaultScheduleDraft();
@@ -79297,7 +85422,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             ...buildPlaygroundDefaultProjectDraft(),
             defaultEnvironmentId: defaultProjectEnvironmentId,
           });
-          setIsProjectDescriptionEditing(false);
+          setProjectDescriptionEditing(false);
           setProjectComposerEnvironmentPopoverOpen(false);
           setProjectPreviewedAttachmentId("");
           setProjectAttachmentTransferState({
@@ -79349,7 +85474,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             ...nextProjectDraft,
             wallpaperId: getPlaygroundProjectWallpaperId(nextProjectDraft.wallpaperId, wallpaperConfig.id),
           }, current));
-          setIsProjectDescriptionEditing(false);
+          setProjectDescriptionEditing(false);
           setProjectComposerEnvironmentPopoverOpen(false);
           setProjectPreviewedAttachmentId("");
           setProjectAttachmentTransferState({
@@ -79389,7 +85514,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setProjectIconPickerOpen(false);
           setProjectComposerEnvironmentPopoverOpen(false);
           setProjectDraft(buildPlaygroundDefaultProjectDraft());
-          setIsProjectDescriptionEditing(false);
+          setProjectDescriptionEditing(false);
           setProjectPreviewedAttachmentId("");
           setProjectAttachmentTransferState({
             uploadingIds: [],
@@ -79441,6 +85566,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             direction: step > 0 ? "next" : "prev",
             from: buildProjectWallpaperBackgroundImage(currentWallpaperId, projectDraft),
             to: buildProjectWallpaperBackgroundImage(nextWallpaper.id, projectDraft),
+            fromPreview: "url(" + (PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[safeCurrentIndex]?.url || PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].url) + ")",
+            toPreview: "url(" + nextWallpaper.url + ")",
           });
           projectDraftWallpaperIdRef.current = nextWallpaper.id;
           projectDraftUseCardBackgroundAsWallpaperRef.current = true;
@@ -79486,6 +85613,25 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return;
           }
           focusMissionControlSetupTaskInput();
+        }
+
+        async function handleSaveProjectFromStudio() {
+          if (projectSaveState.isSaving) {
+            return;
+          }
+          const nextName = String(projectDraft?.name || "").trim().replace(/\s+/g, " ");
+          if (!nextName) {
+            return;
+          }
+          const saveMode = projectComposerMode === "edit" && projectDraft?.id ? "edit" : "create";
+          const savedProject = await persistProjectComposerDraft({
+            mode: saveMode,
+            closeAfterSave: false,
+            selectAfterSave: true,
+          }).catch(() => null);
+          if (savedProject?.id) {
+            setProjectComposerMode("edit");
+          }
         }
 
         function commitLocalProjectRecord(projectRecord, extra = {}) {
@@ -81137,6 +87283,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }, [selectedProjectId, taskView]);
 
         useEffect(() => {
+          setProjectOverviewHomeTab("general");
+        }, [selectedProjectId]);
+
+        useEffect(() => {
           const pendingRequestToken = String(pendingNavigationMissionControlRequest?.token || "").trim();
           const pendingProjectId = String(pendingNavigationMissionControlRequest?.projectId || "").trim();
           if (!pendingRequestToken || !pendingProjectId) {
@@ -81832,10 +87982,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setIsMissionControlDocumentEditing(false);
         }, [selectedProjectId]);
 
-        useEffect(() => {
-          setIsMissionControlInstructionsEditing(false);
-          setMissionControlCommentInputValue("");
-          setMissionControlSaveState({
+	        useEffect(() => {
+	          setIsMissionControlInstructionsEditing(false);
+	          setIsProjectRulesEditing(false);
+	          setMissionControlCommentInputValue("");
+	          setMissionControlSaveState({
             isSaving: false,
             error: "",
             message: "",
@@ -81854,9 +88005,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           selectedProjectMissionControl.updatedAt,
         ]);
 
-        useEffect(() => {
-          if (isMissionControlInstructionsEditing) {
-            return;
+	        useEffect(() => {
+	          if (isMissionControlInstructionsEditing) {
+	            return;
           }
           setMissionControlInstructionsDraft(String(selectedProjectMissionInstructions || ""));
         }, [
@@ -81864,26 +88015,69 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           selectedProjectId,
           selectedProjectMissionInstructions,
           selectedProjectMissionControl.instructions,
-          selectedProjectMissionControl.updatedAt,
-        ]);
+	          selectedProjectMissionControl.updatedAt,
+	        ]);
 
-        useLayoutEffect(() => {
-          if (!missionControlStrategyOpen) {
-            return;
-          }
-          resizeTaskDescriptionTextarea(missionControlDocumentTextareaRef.current);
-          resizeTaskDescriptionTextarea(missionControlInstructionsTextareaRef.current);
-        }, [missionControlDocumentDraft, missionControlInstructionsDraft, missionControlStrategyOpen, selectedProjectId]);
+	        useEffect(() => {
+	          if (isProjectRulesEditing) {
+	            return;
+	          }
+	          setProjectRulesDraft(String(selectedProjectRules || ""));
+	          setProjectRuleInputValue("");
+	          setProjectRuleEditingIndex(-1);
+	          setProjectRuleEditingValue("");
+	        }, [
+	          isProjectRulesEditing,
+	          selectedProjectId,
+	          selectedProjectRules,
+	        ]);
 
-        useEffect(() => {
-          if (!missionControlStrategyOpen) {
-            return undefined;
-          }
+	        useEffect(() => {
+	          const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief(selectedProjectStrategyBrief);
+	          setMissionControlStrategyDraft((current) => {
+	            const currentStrategyBrief = normalizePlaygroundProjectStrategyBrief(current);
+	            const previousProjectId = missionControlStrategyDraftProjectIdRef.current;
+	            const projectChanged = previousProjectId !== selectedProjectId;
+	            missionControlStrategyDraftProjectIdRef.current = selectedProjectId;
+	            if (
+	              !projectChanged
+	              && hasMeaningfulPlaygroundProjectStrategyBrief(currentStrategyBrief)
+	              && !hasMeaningfulPlaygroundProjectStrategyBrief(nextStrategyBrief)
+	            ) {
+	              return currentStrategyBrief;
+	            }
+	            return nextStrategyBrief;
+	          });
+	        }, [
+	          selectedProjectId,
+	          selectedProjectStrategyBrief,
+	          selectedProjectMissionControl.updatedAt,
+	        ]);
 
-          const textarea = missionControlDocumentTextareaRef.current;
-          const detailMain = taskDetailMainRef.current;
-          if (!textarea || !detailMain) {
-            return undefined;
+	        useLayoutEffect(() => {
+	          if (!missionControlStrategyOpen && projectOverviewHomeTab !== "strategy" && projectOverviewHomeTab !== "rules") {
+	            return;
+	          }
+	          resizeTaskDescriptionTextarea(missionControlDocumentTextareaRef.current);
+	          resizeTaskDescriptionTextarea(missionControlInstructionsTextareaRef.current);
+	          resizeTaskDescriptionTextarea(projectRulesTextareaRef.current);
+	          resizeTaskDescriptionTextarea(projectRuleComposerTextareaRef.current);
+	          resizeTaskDescriptionTextarea(projectRuleEditTextareaRef.current);
+	        }, [missionControlDocumentDraft, missionControlInstructionsDraft, projectRulesDraft, projectRuleInputValue, projectRuleEditingValue, missionControlStrategyOpen, projectOverviewHomeTab, selectedProjectId]);
+
+	        useEffect(() => {
+	          if (!missionControlStrategyOpen && projectOverviewHomeTab !== "strategy" && projectOverviewHomeTab !== "rules") {
+	            return undefined;
+	          }
+
+	          const textarea = projectOverviewHomeTab === "rules"
+	            ? projectRulesTextareaRef.current
+	            : missionControlDocumentTextareaRef.current;
+	          const detailMain = taskDetailMainRef.current || (projectOverviewHomeTab === "rules"
+	            ? projectOverviewRulesSurfaceRef.current
+	            : projectOverviewStrategySurfaceRef.current);
+	          if (!textarea || !detailMain) {
+	            return undefined;
           }
 
           let frameId = 0;
@@ -81892,11 +88086,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             if (frameId) {
               window.cancelAnimationFrame(frameId);
             }
-            frameId = window.requestAnimationFrame(() => {
-              resizeTaskDescriptionTextarea(missionControlDocumentTextareaRef.current);
-              resizeTaskDescriptionTextarea(missionControlInstructionsTextareaRef.current);
-            });
-          };
+	            frameId = window.requestAnimationFrame(() => {
+	              resizeTaskDescriptionTextarea(missionControlDocumentTextareaRef.current);
+	              resizeTaskDescriptionTextarea(missionControlInstructionsTextareaRef.current);
+	              resizeTaskDescriptionTextarea(projectRulesTextareaRef.current);
+	              resizeTaskDescriptionTextarea(projectRuleComposerTextareaRef.current);
+	              resizeTaskDescriptionTextarea(projectRuleEditTextareaRef.current);
+	            });
+	          };
 
           scheduleResize();
           [120, 240, 360].forEach((delay) => {
@@ -81926,7 +88123,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
             observer.disconnect();
           };
-        }, [missionControlDocumentDraft, missionControlInstructionsDraft, missionControlStrategyOpen, selectedProjectId]);
+	        }, [missionControlDocumentDraft, missionControlInstructionsDraft, projectRulesDraft, projectRuleInputValue, projectRuleEditingValue, missionControlStrategyOpen, projectOverviewHomeTab, selectedProjectId]);
 
         useEffect(() => {
           if (!previewedTaskAttachmentId) return;
@@ -83783,6 +89980,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(projectDraft.attachments);
             const normalizedProjectConnectors = normalizePlaygroundTaskConnectorSelections(projectDraft.connectors);
             const isEditMode = mode === "edit" && projectDraft?.id;
+            const projectDraftMetadataSource = isEditMode && selectedProject?.id === projectDraft.id
+              ? (mergePlaygroundProjectRecords(projectDraft, selectedProject) || projectDraft)
+              : projectDraft;
             const response = await fetch(isEditMode
               ? backendUrl + "/projects/" + encodeURIComponent(projectDraft.id)
               : backendUrl + "/projects", {
@@ -83805,11 +90005,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   icon: getPlaygroundProjectIconId(projectDraft.icon),
                   wallpaperId: nextWallpaperId,
                   useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
-                  defaultEnvironmentId: projectDraft.defaultEnvironmentId || null,
-                  attachments: normalizedProjectAttachments,
-                  connectors: normalizedProjectConnectors,
-                },
-              }),
+	                  defaultEnvironmentId: projectDraft.defaultEnvironmentId || null,
+	                  attachments: normalizedProjectAttachments,
+	                  connectors: normalizedProjectConnectors,
+	                  projectRules: String(projectDraft.projectRules || ""),
+	                  ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
+	                },
+	              }),
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
@@ -83824,11 +90026,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               metadata: {
                 ...(projectDraft.metadata && typeof projectDraft.metadata === "object" ? projectDraft.metadata : {}),
                 name: nextName,
-                description: nextDescription,
-                wallpaperId: nextWallpaperId,
-                useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
-              },
-            });
+	                description: nextDescription,
+	                wallpaperId: nextWallpaperId,
+	                useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
+	                projectRules: String(projectDraft.projectRules || ""),
+	                ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
+	              },
+	            });
             if (!savedProject?.id) {
               throw new Error(isEditMode ? "Project update failed." : "Project creation failed.");
             }
@@ -83836,16 +90040,19 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             rememberProjectLocalNameOverride(savedProject.id, nextName);
             projectDraftNameDirtyRef.current = false;
             projectDraftTypedNameRef.current = "";
+            const committedProjectRules = String(savedProject.projectRules || projectDraft.projectRules || "");
             const committedProject = commitLocalProjectRecord({
               ...savedProject,
               name: nextName,
               metadata: {
                 ...(savedProject.metadata && typeof savedProject.metadata === "object" ? savedProject.metadata : {}),
-                name: nextName,
-                description: nextDescription,
-              },
-              summary: savedProject.summary || (isEditMode ? selectedProjectSummary : savedProject.summary),
-            }, {
+		                name: nextName,
+		                description: nextDescription,
+		                projectRules: committedProjectRules,
+		                ...buildPlaygroundProjectMissionControlMetadataFragment(savedProject, projectDraftMetadataSource),
+		              },
+	              summary: savedProject.summary || (isEditMode ? selectedProjectSummary : savedProject.summary),
+	            }, {
               summary: savedProject.summary || (isEditMode ? selectedProjectSummary : savedProject.summary),
               environments: isEditMode ? selectedProjectEnvironments : parsePlaygroundEnvironmentListResponse(data),
               recentThreads: isEditMode ? selectedProjectRecentThreads : [],
@@ -83863,10 +90070,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 description: nextDescription,
                 metadata: {
                   ...(committedProject.metadata && typeof committedProject.metadata === "object" ? committedProject.metadata : {}),
-                  name: nextName,
-                  description: nextDescription,
-                },
-              }));
+	                  name: nextName,
+	                  description: nextDescription,
+	                  projectRules: committedProjectRules,
+	                  ...buildPlaygroundProjectMissionControlMetadataFragment(committedProject, projectDraftMetadataSource),
+	                },
+	              }));
               setProjectSaveState({
                 isSaving: false,
                 error: "",
@@ -83903,9 +90112,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           await persistProjectComposerDraft({ mode: "edit" }).catch(() => null);
         }
 
-        async function saveProjectOverviewDescription(descriptionOverride) {
-          if (!selectedProject?.id) {
-            return;
+	        async function saveProjectOverviewDescription(descriptionOverride) {
+	          if (!selectedProject?.id) {
+	            return;
           }
 
           const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
@@ -83960,11 +90169,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   icon: getPlaygroundProjectIconId(nextProject.icon),
                   wallpaperId: getPlaygroundProjectWallpaperId(nextProject.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
                   useCardBackgroundAsWallpaper: nextProject.useCardBackgroundAsWallpaper !== false,
-                  defaultEnvironmentId: nextProject.defaultEnvironmentId || null,
-                  attachments: normalizedProjectAttachments,
-                  connectors: normalizePlaygroundTaskConnectorSelections(nextProject.connectors),
-                },
-              }),
+	                  defaultEnvironmentId: nextProject.defaultEnvironmentId || null,
+	                  attachments: normalizedProjectAttachments,
+	                  connectors: normalizePlaygroundTaskConnectorSelections(nextProject.connectors),
+	                  projectRules: String(nextProject.projectRules || ""),
+	                  ...buildPlaygroundProjectMissionControlMetadataFragment(nextProject),
+	                },
+	              }),
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
@@ -84277,14 +90488,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     type: "button",
                     className: "playground-tasks-mission-control-button",
                     disabled: !hasStrategyDocument,
-                    onClick: () => {
-                      setTaskDetailPopover("");
-                      setTaskSkillsPopoverOpen(false);
-                      setTaskParentPickerState(null);
-                      setSelectedTaskId("");
-                      setDraftTask(null);
-                      setMissionControlStrategyOpen(true);
-                    },
+	                    onClick: () => {
+	                      openMissionControlStrategySidebar();
+	                    },
                   }, "Strategy"),
                   React.createElement("button", {
                     type: "button",
@@ -84361,28 +90567,85 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             : null;
           const normalizedProject = mergePlaygroundProjectRecords(projectRecord, existingProject) || normalizedInputProject;
-          const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(normalizedProject.attachments);
-          const normalizedProjectConnectors = normalizePlaygroundTaskConnectorSelections(normalizedProject.connectors);
-          const projectIndex = Math.max(0, projects.findIndex((project) => project.id === normalizedProject.id));
-          return {
+          const projectRecordMetadata = projectRecord?.metadata && typeof projectRecord.metadata === "object" && !Array.isArray(projectRecord.metadata)
+            ? projectRecord.metadata
+            : {};
+          const existingProjectMetadata = existingProject?.metadata && typeof existingProject.metadata === "object" && !Array.isArray(existingProject.metadata)
+            ? existingProject.metadata
+            : {};
+	          const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(normalizedProject.attachments);
+	          const normalizedProjectConnectors = normalizePlaygroundTaskConnectorSelections(normalizedProject.connectors);
+	          const normalizedProjectRules = String(normalizedProject.projectRules || "");
+	          const hasMetadataMissionControlOverride = metadataOverrides
+	            && typeof metadataOverrides === "object"
+	            && Object.prototype.hasOwnProperty.call(metadataOverrides, "missionControl");
+	          const hasKnownMissionControlMetadata = hasMetadataMissionControlOverride
+            || Object.prototype.hasOwnProperty.call(projectRecord || {}, "missionControl")
+            || Object.prototype.hasOwnProperty.call(projectRecordMetadata, "missionControl")
+            || Object.prototype.hasOwnProperty.call(existingProject || {}, "missionControl")
+            || Object.prototype.hasOwnProperty.call(existingProjectMetadata, "missionControl");
+	          const rawProjectMissionControlForPayload = hasMetadataMissionControlOverride
+	            ? metadataOverrides.missionControl
+	            : (normalizedProject.missionControl || normalizedProject.metadata?.missionControl);
+	          const normalizedProjectMissionControl = normalizePlaygroundProjectMissionControlRecord(
+	            rawProjectMissionControlForPayload
+	          );
+	          if (
+	            rawProjectMissionControlForPayload
+	            && typeof rawProjectMissionControlForPayload === "object"
+	            && !Array.isArray(rawProjectMissionControlForPayload)
+	            && rawProjectMissionControlForPayload.strategyBriefReplace === true
+	          ) {
+	            normalizedProjectMissionControl.strategyBriefReplace = true;
+	          }
+	          const projectIndex = Math.max(0, projects.findIndex((project) => project.id === normalizedProject.id));
+          const metadataPayload = {
+            ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
+            ...(metadataOverrides && typeof metadataOverrides === "object" ? metadataOverrides : {}),
             name: normalizedProject.name || "Project",
             description: normalizedProject.description,
+            icon: getPlaygroundProjectIconId(normalizedProject.icon),
+            wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
+            useCardBackgroundAsWallpaper: normalizedProject.useCardBackgroundAsWallpaper !== false,
+            defaultEnvironmentId: normalizedProject.defaultEnvironmentId || null,
+            attachments: normalizedProjectAttachments,
+            connectors: hasPlaygroundTaskConnectorSelections(normalizedProjectConnectors) ? normalizedProjectConnectors : null,
+            projectRules: normalizedProjectRules,
+          };
+          if (hasKnownMissionControlMetadata || hasMeaningfulPlaygroundProjectMissionControlRecord(normalizedProjectMissionControl)) {
+            metadataPayload.missionControl = normalizedProjectMissionControl;
+          }
+	          return {
+	            name: normalizedProject.name || "Project",
+	            description: normalizedProject.description,
             color: normalizedProject.color || getPlaygroundProjectAccent(normalizedProject, projectIndex),
             defaultEnvironmentId: normalizedProject.defaultEnvironmentId || undefined,
             attachments: normalizedProjectAttachments,
-            metadata: {
-              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
-              ...(metadataOverrides && typeof metadataOverrides === "object" ? metadataOverrides : {}),
-              name: normalizedProject.name || "Project",
-              description: normalizedProject.description,
-              icon: getPlaygroundProjectIconId(normalizedProject.icon),
-              wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
-              useCardBackgroundAsWallpaper: normalizedProject.useCardBackgroundAsWallpaper !== false,
-              defaultEnvironmentId: normalizedProject.defaultEnvironmentId || null,
-              attachments: normalizedProjectAttachments,
-              connectors: hasPlaygroundTaskConnectorSelections(normalizedProjectConnectors) ? normalizedProjectConnectors : null,
-            },
-          };
+            metadata: metadataPayload,
+	          };
+	        }
+
+        function buildMissionControlRecordForSave(overrides = {}) {
+          const baseMissionControl = normalizePlaygroundProjectMissionControlRecord(
+            selectedProjectMissionControlRef.current || selectedProjectMissionControl
+          );
+          const hasStrategyOverride = overrides
+            && typeof overrides === "object"
+            && Object.prototype.hasOwnProperty.call(overrides, "strategyBrief");
+          const strategyBrief = normalizePlaygroundProjectStrategyBrief(
+            hasStrategyOverride
+              ? overrides.strategyBrief
+              : baseMissionControl.strategyBrief
+          );
+          const record = normalizePlaygroundProjectMissionControlRecord({
+            ...baseMissionControl,
+            ...(overrides && typeof overrides === "object" ? overrides : {}),
+            strategyBrief,
+          });
+          if (hasStrategyOverride) {
+            record.strategyBriefReplace = true;
+          }
+          return record;
         }
 
         async function persistProjectMissionControlRecord(projectId, missionControlRecord, options = {}) {
@@ -84426,6 +90689,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             ...getPlaygroundProjectMissionControlRecord(baseProject),
             ...(missionControlRecord && typeof missionControlRecord === "object" ? missionControlRecord : {}),
           });
+          if (
+            missionControlRecord
+            && typeof missionControlRecord === "object"
+            && !Array.isArray(missionControlRecord)
+            && missionControlRecord.strategyBriefReplace === true
+          ) {
+            normalizedMissionControlRecord.strategyBriefReplace = true;
+          }
           const nextProjectRecord = normalizePlaygroundProjectRecord({
             ...baseProject,
             ...(options.projectOverrides && typeof options.projectOverrides === "object" ? options.projectOverrides : {}),
@@ -84525,8 +90796,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
           missionControlAutosaveQueuedRef.current = {
             projectId: normalizedProjectId,
-            record: normalizePlaygroundProjectMissionControlRecord({
-              ...selectedProjectMissionControl,
+            record: buildMissionControlRecordForSave({
               document: String(nextDocument || ""),
               updatedAt: new Date().toISOString(),
             }),
@@ -84557,13 +90827,107 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
           try {
             await persistProjectMissionControlRecord(normalizedProjectId, {
-              ...selectedProjectMissionControl,
+              ...buildMissionControlRecordForSave(),
               instructions: nextInstructions,
               updatedAt: new Date().toISOString(),
             }, {
               successMessage: "",
             });
           } catch {}
+        }
+
+        function serializePlaygroundStrategyListForInput(values) {
+          return normalizePlaygroundStrategyTextList(values).join(String.fromCharCode(10));
+        }
+
+        async function saveMissionControlStrategyBrief(nextStrategyBrief, options = {}) {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          if (!normalizedProjectId) {
+            return null;
+          }
+          const normalizedStrategyBrief = normalizePlaygroundProjectStrategyBrief(nextStrategyBrief);
+          const currentStrategyBrief = normalizePlaygroundProjectStrategyBrief(
+            (selectedProjectMissionControlRef.current || selectedProjectMissionControl).strategyBrief
+          );
+          if (JSON.stringify(normalizedStrategyBrief) === JSON.stringify(currentStrategyBrief)) {
+            return null;
+          }
+          try {
+            const updatedProject = await persistProjectMissionControlRecord(normalizedProjectId, {
+              ...buildMissionControlRecordForSave(),
+              strategyBrief: normalizedStrategyBrief,
+              updatedAt: new Date().toISOString(),
+            }, {
+              successMessage: "",
+            });
+            if (updatedProject?.id) {
+              const savedStrategyBrief = getPlaygroundProjectStrategyBriefRecord(updatedProject);
+              if (JSON.stringify(savedStrategyBrief.outcomes) !== JSON.stringify(normalizedStrategyBrief.outcomes)) {
+                throw new Error("Outcome changes were not confirmed by the project API.");
+              }
+            }
+            return updatedProject;
+          } catch (error) {
+            if (options?.throwOnError) {
+              throw error;
+            }
+            return null;
+          }
+        }
+
+        function updateMissionControlStrategyDraft(nextStrategyBrief) {
+          setMissionControlStrategyDraft(normalizePlaygroundProjectStrategyBrief(nextStrategyBrief));
+        }
+
+        function updateMissionControlStrategyTextField(field, value) {
+          updateMissionControlStrategyDraft({
+            ...missionControlStrategyDraft,
+            [field]: value,
+          });
+        }
+
+        function updateMissionControlStrategyListField(field, value) {
+          updateMissionControlStrategyDraft({
+            ...missionControlStrategyDraft,
+            [field]: normalizePlaygroundStrategyTextList(value),
+          });
+        }
+
+        function updateMissionControlStrategyOutcome(indexToUpdate, updates) {
+          const outcomes = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft).outcomes;
+          const nextOutcomes = outcomes.map((outcome, index) => index === indexToUpdate
+            ? normalizePlaygroundStrategyOutcomeRecord({ ...outcome, ...updates }, index)
+            : outcome
+          );
+          updateMissionControlStrategyDraft({
+            ...missionControlStrategyDraft,
+            outcomes: nextOutcomes,
+          });
+        }
+
+        function addMissionControlStrategyOutcome() {
+          const outcomes = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft).outcomes;
+          const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief({
+            ...missionControlStrategyDraft,
+            outcomes: outcomes.concat(normalizePlaygroundStrategyOutcomeRecord({
+              id: "outcome-" + String(outcomes.length + 1).padStart(2, "0"),
+              title: "New outcome",
+              description: "",
+              successCriteria: [],
+            }, outcomes.length)),
+          });
+          setMissionControlStrategyDraft(nextStrategyBrief);
+          void saveMissionControlStrategyBrief(nextStrategyBrief);
+        }
+
+        function removeMissionControlStrategyOutcome(indexToRemove) {
+          const outcomes = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft).outcomes;
+          const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief({
+            ...missionControlStrategyDraft,
+            outcomes: outcomes.filter((_, index) => index !== indexToRemove),
+          });
+          setMissionControlStrategyDraft(nextStrategyBrief);
+          void saveMissionControlStrategyBrief(nextStrategyBrief);
         }
 
         async function handleMissionControlEnvironmentSelectionChange(nextEnvironmentId) {
@@ -84574,7 +90938,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return;
           }
           try {
-            await persistProjectMissionControlRecord(normalizedProjectId, selectedProjectMissionControl, {
+            await persistProjectMissionControlRecord(normalizedProjectId, buildMissionControlRecordForSave(), {
               projectOverrides: {
                 defaultEnvironmentId: normalizedEnvironmentId,
               },
@@ -84603,7 +90967,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
           try {
             await persistProjectMissionControlRecord(normalizedProjectId, {
-              ...selectedProjectMissionControl,
+              ...buildMissionControlRecordForSave(),
               comments: normalizePlaygroundTaskCommentList(selectedProjectMissionComments.concat(createdComment)),
               updatedAt: new Date().toISOString(),
             }, {
@@ -84766,6 +91130,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (!selectedProjectId) {
             return;
           }
+          setTaskView("overview");
+          setProjectOverviewHomeTab("strategy");
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
           setTaskParentPickerState(null);
@@ -84777,7 +91143,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setSelectedTaskId("");
           setDraftTask(null);
           setProjectPreviewedAttachmentId("");
-          setMissionControlStrategyOpen(true);
+          setMissionControlStrategyOpen(false);
         }
 
         function openMissionControlComposer(options = {}) {
@@ -84827,7 +91193,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             ...nextProjectDraft,
             wallpaperId: getPlaygroundProjectWallpaperId(nextProjectDraft.wallpaperId, wallpaperConfig.id),
           }, current));
-          setIsProjectDescriptionEditing(false);
+          setProjectDescriptionEditing(false);
           setProjectComposerEnvironmentPopoverOpen(false);
           setProjectPreviewedAttachmentId("");
           setProjectAttachmentTransferState({
@@ -85145,10 +91511,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
 
 	          missionControlSyncThreadIdRef.current = normalizedThreadId;
-	          try {
-	            const threadMessages = await fetchPlaygroundThreadMessages(normalizedThreadId);
-	            const parsedMissionControl = await resolvePlaygroundMissionControlRecordFromMessages(threadMessages);
-	            if (!String(parsedMissionControl.document || "").trim()) {
+		          try {
+		            const threadMessages = await fetchPlaygroundThreadMessages(normalizedThreadId);
+		            const parsedMissionControl = await resolvePlaygroundMissionControlRecordFromMessages(threadMessages);
+		            if (!String(parsedMissionControl.document || "").trim()) {
               setMissionControlRunState((current) => current.threadId === normalizedThreadId
                 ? {
                     ...current,
@@ -85156,17 +91522,37 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     error: "Mission Control finished without a strategy document.",
                   }
                 : current
-              );
-              return;
-	            }
-	            await persistProjectMissionControlRecord(normalizedProjectId, {
-              ...selectedProjectMissionControl,
-              ...parsedMissionControl,
-              lastThreadId: normalizedThreadId,
-              updatedAt: new Date().toISOString(),
-            }, {
-              quiet: true,
-            });
+		              );
+		              return;
+		            }
+		            const hasParsedProjectRules = parsedMissionControl
+		              && typeof parsedMissionControl === "object"
+		              && !Array.isArray(parsedMissionControl)
+		              && Object.prototype.hasOwnProperty.call(parsedMissionControl, "projectRules");
+		            const parsedProjectRules = hasParsedProjectRules
+		              ? String(parsedMissionControl.projectRules || "")
+		              : "";
+		            const shouldPersistParsedProjectRules = hasParsedProjectRules
+		              && (parsedProjectRules.trim() || parsedMissionControl.projectRulesReplace === true);
+		            const projectRuleOverrides = shouldPersistParsedProjectRules
+		              ? {
+		                  projectRules: parsedProjectRules,
+		                }
+		              : null;
+		            await persistProjectMissionControlRecord(normalizedProjectId, {
+	              ...selectedProjectMissionControl,
+	              ...parsedMissionControl,
+	              lastThreadId: normalizedThreadId,
+	              updatedAt: new Date().toISOString(),
+	            }, {
+	              quiet: true,
+	              ...(projectRuleOverrides
+	                ? {
+	                    projectOverrides: projectRuleOverrides,
+	                    metadataOverrides: projectRuleOverrides,
+	                  }
+	                : {}),
+	            });
             if (selectedProjectId === normalizedProjectId) {
               await loadProjectWorkspace(normalizedProjectId);
             }
@@ -86105,6 +92491,188 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	          }
 	        }
 
+	        async function saveProjectRules(rulesOverride) {
+	          if (!selectedProject?.id) {
+	            return;
+	          }
+
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const nextRules = typeof rulesOverride === "string"
+	            ? rulesOverride
+	            : String(projectRulesDraft || "");
+	          if (nextRules === String(normalizedProject.projectRules || "")) {
+	            setProjectSaveState((current) => current.error
+	              ? { isSaving: false, error: "" }
+	              : current
+	            );
+	            return;
+	          }
+
+	          const nextProject = normalizePlaygroundProjectRecord({
+	            ...normalizedProject,
+	            projectRules: nextRules,
+	            metadata: {
+	              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
+	              projectRules: nextRules,
+	            },
+	          });
+	          const nextName = String(nextProject.name || "").trim().replace(/\\s+/g, " ");
+	          if (!nextName) {
+	            return;
+	          }
+
+	          setProjectSaveState({
+	            isSaving: true,
+	            error: "",
+	          });
+
+	          try {
+	            const savePayload = buildPlaygroundProjectSavePayload(nextProject, {
+	              projectRules: nextRules,
+	            });
+	            const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(nextProject.id), {
+	              method: "PATCH",
+	              headers: {
+	                ...requestHeaders,
+	                "Content-Type": "application/json",
+	              },
+	              body: JSON.stringify(savePayload),
+	            });
+	            const data = await response.json().catch(() => ({}));
+	            if (!response.ok) {
+	              throw new Error(data?.message || data?.error || "Failed to update project rules.");
+	            }
+
+	            const updatedProject = getPlaygroundProjectResponseRecord(data, nextProject);
+	            if (!updatedProject?.id) {
+	              throw new Error("Project update failed.");
+	            }
+
+	            commitLocalProjectRecord({
+	              ...updatedProject,
+	              projectRules: nextRules,
+	              metadata: {
+	                ...(updatedProject.metadata && typeof updatedProject.metadata === "object" ? updatedProject.metadata : {}),
+	                projectRules: nextRules,
+	              },
+	              summary: updatedProject.summary || selectedProjectSummary,
+	            }, {
+	              summary: updatedProject.summary || selectedProjectSummary,
+	              environments: selectedProjectEnvironments,
+	              recentThreads: selectedProjectRecentThreads,
+	              threads: selectedProjectRecentThreads,
+	              selectImmediately: true,
+	            });
+	            setProjectDraft((current) => current?.id === updatedProject.id
+	              ? normalizePlaygroundProjectRecord({
+	                  ...current,
+	                  ...updatedProject,
+	                  projectRules: nextRules,
+	                })
+	              : current
+	            );
+	            setProjectSaveState({
+	              isSaving: false,
+	              error: "",
+	            });
+	          } catch (error) {
+	            setProjectSaveState({
+	              isSaving: false,
+	              error: error instanceof Error ? error.message : "Failed to update project rules.",
+	            });
+	          }
+	        }
+
+	        function commitProjectRulesIfDirty() {
+	          const nextRules = String(projectRulesDraft || "");
+	          if (!String(selectedProjectId || "").trim()) {
+	            return;
+	          }
+	          if (nextRules === String(selectedProjectRules || "")) {
+	            return;
+	          }
+	          void saveProjectRules(nextRules);
+	        }
+
+	        async function handleAddProjectRuleEntry() {
+	          const nextEntry = normalizePlaygroundProjectRuleEntry(projectRuleInputValue);
+	          if (!nextEntry || projectSaveState.isSaving) {
+	            return;
+	          }
+
+	          const currentEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
+	          const nextRules = serializePlaygroundProjectRuleEntries([...currentEntries, nextEntry]);
+	          setProjectRuleInputValue("");
+	          setProjectRulesDraft(nextRules);
+	          window.requestAnimationFrame(() => {
+	            resizeTaskDescriptionTextarea(projectRuleComposerTextareaRef.current);
+	            projectRuleComposerTextareaRef.current?.focus();
+	          });
+	          await saveProjectRules(nextRules);
+	        }
+
+	        function beginProjectRuleEntryEdit(index, entry) {
+	          if (projectSaveState.isSaving) {
+	            return;
+	          }
+	          setProjectRuleEditingIndex(index);
+	          setProjectRuleEditingValue(String(entry || ""));
+	          window.requestAnimationFrame(() => {
+	            const textarea = projectRuleEditTextareaRef.current;
+	            if (!textarea) {
+	              return;
+	            }
+	            textarea.focus();
+	            const length = textarea.value.length;
+	            textarea.setSelectionRange(length, length);
+	            resizeTaskDescriptionTextarea(textarea);
+	          });
+	        }
+
+	        function cancelProjectRuleEntryEdit() {
+	          setProjectRuleEditingIndex(-1);
+	          setProjectRuleEditingValue("");
+	        }
+
+	        async function commitProjectRuleEntryEdit(indexToUpdate) {
+	          if (projectSaveState.isSaving) {
+	            return;
+	          }
+	          const currentEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
+	          if (indexToUpdate < 0 || indexToUpdate >= currentEntries.length) {
+	            cancelProjectRuleEntryEdit();
+	            return;
+	          }
+
+	          const nextEntry = normalizePlaygroundProjectRuleEntry(projectRuleEditingValue);
+	          const nextEntries = nextEntry
+	            ? currentEntries.map((entry, index) => index === indexToUpdate ? nextEntry : entry)
+	            : currentEntries.filter((_, index) => index !== indexToUpdate);
+	          const nextRules = serializePlaygroundProjectRuleEntries(nextEntries);
+	          const currentRules = serializePlaygroundProjectRuleEntries(currentEntries);
+	          setProjectRuleEditingIndex(-1);
+	          setProjectRuleEditingValue("");
+	          if (nextRules === currentRules) {
+	            return;
+	          }
+	          setProjectRulesDraft(nextRules);
+	          await saveProjectRules(nextRules);
+	        }
+
+	        async function handleRemoveProjectRuleEntry(indexToRemove) {
+	          if (projectSaveState.isSaving) {
+	            return;
+	          }
+	          const currentEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
+	          const nextRules = serializePlaygroundProjectRuleEntries(
+	            currentEntries.filter((_, index) => index !== indexToRemove)
+	          );
+	          setProjectRuleEditingIndex(-1);
+	          setProjectRuleEditingValue("");
+	          setProjectRulesDraft(nextRules);
+	          await saveProjectRules(nextRules);
+	        }
+
 	        function getProjectFullAutoEligibleTasks() {
 	          if (!selectedProjectId) {
 	            return [];
@@ -86270,6 +92838,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           nextConnectors[connectorKey] = nextSelection;
           const nextMetadata = {
             ...(baseProject.metadata && typeof baseProject.metadata === "object" ? baseProject.metadata : {}),
+            ...buildPlaygroundProjectMissionControlMetadataFragment(baseProject),
           };
           if (hasPlaygroundTaskConnectorSelections(nextConnectors)) {
             nextMetadata.connectors = nextConnectors;
@@ -86548,7 +93117,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           projectDraftTypedNameRef.current = "";
           setProjectComposerMode(normalizedRestoreState.projectComposerMode);
           setProjectDraft(normalizedRestoreState.projectDraft);
-          setIsProjectDescriptionEditing(false);
+          setProjectDescriptionEditing(false);
           setProjectComposerEnvironmentPopoverOpen(false);
           setProjectIconPickerOpen(false);
           setProjectPreviewedAttachmentId("");
@@ -87331,7 +93900,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         function renderTaskAttachmentChip(attachment, options = {}) {
           const resolvedAttachment = buildResolvedTaskAttachmentRecord(attachment) || attachment;
           const previewUrl = resolveTaskAttachmentPreviewUrl(resolvedAttachment);
-          const isImage = resolvedAttachment.type === "image" || String(resolvedAttachment.mimeType || "").toLowerCase().startsWith("image/");
+          const normalizedAttachmentMimeType = String(resolvedAttachment.mimeType || "").toLowerCase();
+          const isFolderAttachment = Boolean(
+            resolvedAttachment.isFolder
+            || resolvedAttachment.type === "directory"
+            || String(resolvedAttachment.previewKindOverride || "").toLowerCase() === "directory"
+            || normalizedAttachmentMimeType === "inode/directory"
+          );
+          const isImage = !isFolderAttachment && (resolvedAttachment.type === "image" || normalizedAttachmentMimeType.startsWith("image/"));
           const activeAttachmentId = typeof options.activeAttachmentId === "string"
             ? options.activeAttachmentId
             : previewedTaskAttachmentId;
@@ -87389,7 +93965,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   },
                     React.createElement("span", { className: "runner-attachment-file-icon-slot", "aria-hidden": "true" },
                       React.createElement("img", {
-                        src: PLAYGROUND_TEXT_FILE_ICON_URL,
+                        src: isFolderAttachment ? PLAYGROUND_FOLDER_ICON_URL : PLAYGROUND_TEXT_FILE_ICON_URL,
                         alt: "",
                         draggable: false,
                         className: "runner-attachment-file-icon",
@@ -87592,7 +94168,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           });
         }
 
-        function renderTaskDetailFileBrowserSidebar(activeSource, searchValue, setSearchValue) {
+        function renderTaskDetailFileBrowserSidebar(activeSource, searchValue, setSearchValue, options = {}) {
+          const sidebarEnvironment = options.environment || activeTaskEnvironment;
+          const showIntegrations = options.showIntegrations !== false;
           return React.createElement("div", { className: "tb-file-browser-sidebar" },
             React.createElement("div", { className: "tb-file-browser-search-wrap" },
               React.createElement("div", { className: "tb-file-browser-search" },
@@ -87613,7 +94191,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   : null
               )
             ),
-            activeTaskEnvironment
+            sidebarEnvironment
               ? React.createElement("div", { className: "tb-file-browser-sidebar-section tb-file-browser-sidebar-section-environments" },
                   React.createElement("div", { className: "tb-file-browser-sidebar-title" }, "Environments"),
                   React.createElement("div", { className: "tb-file-browser-sidebar-list tb-file-browser-sidebar-list-environments" },
@@ -87629,37 +94207,39 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       },
                     },
                       React.createElement(Cloud, { className: "tb-file-browser-source-icon", strokeWidth: 1.75 }),
-                      React.createElement("span", { className: "tb-file-browser-source-label" }, activeTaskEnvironment.name || "Environment")
+                      React.createElement("span", { className: "tb-file-browser-source-label" }, sidebarEnvironment.name || "Environment")
                     )
                   )
                 )
               : null,
-            React.createElement("div", { className: "tb-file-browser-sidebar-section" },
-              React.createElement("div", { className: "tb-file-browser-sidebar-title" }, "Integrations"),
-              React.createElement("div", { className: "tb-file-browser-sidebar-list" },
-                PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) =>
-                  React.createElement("button", {
-                    key: option.key,
-                    type: "button",
-                    className: "tb-file-browser-source-row" + (activeSource === option.source ? " active" : ""),
-                    onClick: () => {
-                      if (activeSource === "workspace") {
-                        setTaskEnvironmentFilePickerOpen(false);
-                        openTaskConnectorBrowser(option.source);
-                        return;
-                      }
-                      switchTaskConnectorBrowserSource(option.source);
-                    },
-                  },
-                    renderTaskConnectorServiceIcon(option.source, "tb-file-browser-source-brand-icon"),
-                    React.createElement("span", { className: "tb-file-browser-source-label" }, option.label),
-                    taskConnectorConfigByKey[option.key]?.connected === false
-                      ? React.createElement("span", { className: "tb-file-browser-source-note" }, "Connect")
-                      : null
+            showIntegrations
+              ? React.createElement("div", { className: "tb-file-browser-sidebar-section" },
+                  React.createElement("div", { className: "tb-file-browser-sidebar-title" }, "Integrations"),
+                  React.createElement("div", { className: "tb-file-browser-sidebar-list" },
+                    PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) =>
+                      React.createElement("button", {
+                        key: option.key,
+                        type: "button",
+                        className: "tb-file-browser-source-row" + (activeSource === option.source ? " active" : ""),
+                        onClick: () => {
+                          if (activeSource === "workspace") {
+                            setTaskEnvironmentFilePickerOpen(false);
+                            openTaskConnectorBrowser(option.source);
+                            return;
+                          }
+                          switchTaskConnectorBrowserSource(option.source);
+                        },
+                      },
+                        renderTaskConnectorServiceIcon(option.source, "tb-file-browser-source-brand-icon"),
+                        React.createElement("span", { className: "tb-file-browser-source-label" }, option.label),
+                        taskConnectorConfigByKey[option.key]?.connected === false
+                          ? React.createElement("span", { className: "tb-file-browser-source-note" }, "Connect")
+                          : null
+                      )
+                    )
                   )
                 )
-              )
-            )
+              : null
           );
         }
 
@@ -88827,22 +95407,48 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }
 
         function renderProjectWallpaperPicker() {
+          const currentWallpaperId = getPlaygroundProjectWallpaperId(projectDraft.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id);
+          const currentWallpaper = getPlaygroundProjectWallpaperConfig(currentWallpaperId, 0);
+          const previewBackgroundImage = "url(" + currentWallpaper.url + ")";
+          const isPreviewTransitioning = projectWallpaperTransition
+            && typeof projectWallpaperTransition.fromPreview === "string"
+            && typeof projectWallpaperTransition.toPreview === "string";
           return React.createElement("div", { className: "playground-tasks-project-wallpaper-picker" },
-            React.createElement("button", {
-              type: "button",
-              className: "playground-tasks-project-wallpaper-picker-button",
-              onClick: () => handleProjectWallpaperStep("prev"),
-              "aria-label": "Previous background image",
-              title: "Previous background image",
-            }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
-            React.createElement("div", { className: "playground-tasks-project-wallpaper-picker-label" }, "Choose Background"),
-            React.createElement("button", {
-              type: "button",
-              className: "playground-tasks-project-wallpaper-picker-button",
-              onClick: () => handleProjectWallpaperStep("next"),
-              "aria-label": "Next background image",
-              title: "Next background image",
-            }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
+            React.createElement("div", {
+                className: "playground-tasks-project-wallpaper-picker-preview" + (isPreviewTransitioning ? " is-" + projectWallpaperTransition.direction : ""),
+                style: isPreviewTransitioning ? undefined : { backgroundImage: previewBackgroundImage },
+                "aria-hidden": "true",
+              },
+              isPreviewTransitioning
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("div", {
+                      className: "playground-tasks-project-wallpaper-picker-preview-image is-outgoing",
+                      style: { backgroundImage: projectWallpaperTransition.fromPreview },
+                    }),
+                    React.createElement("div", {
+                      className: "playground-tasks-project-wallpaper-picker-preview-image is-incoming",
+                      style: { backgroundImage: projectWallpaperTransition.toPreview },
+                    })
+                  )
+                : null
+            ),
+            React.createElement("div", { className: "playground-tasks-project-wallpaper-picker-controls" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-project-wallpaper-picker-button",
+                onClick: () => handleProjectWallpaperStep("prev"),
+                "aria-label": "Previous background image",
+                title: "Previous background image",
+              }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
+              React.createElement("div", { className: "playground-tasks-project-wallpaper-picker-label" }, currentWallpaper.name || "Background"),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-project-wallpaper-picker-button",
+                onClick: () => handleProjectWallpaperStep("next"),
+                "aria-label": "Next background image",
+                title: "Next background image",
+              }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
+            )
           );
         }
 
@@ -88963,7 +95569,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       value: projectDraft.name,
                       onChange: (event) => updateProjectDraftName(event.target.value),
                       placeholder: "Project name",
-                      autoFocus: true,
+                      autoFocus: !embedded,
                     }),
                     projectIconPickerOpen
                       ? React.createElement("div", { className: "playground-tasks-project-icon-picker" },
@@ -88997,6 +95603,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                         title: "Close",
                       }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                 ),
+                embedded ? renderProjectWallpaperPicker() : null,
                 React.createElement("div", { className: "playground-tasks-attachments playground-tasks-project-modal-attachments" },
                   React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
                       React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
@@ -89009,7 +95616,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                           title: activeProjectAttachmentEnvironmentId
                             ? "Add files from " + (activeProjectAttachmentEnvironment?.name || "the selected environment")
                             : "Select an environment first",
-                        }, "From Environment")
+	                        }, "From Computer")
                       )
                     ),
                     React.createElement("input", {
@@ -89113,7 +95720,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   ),
                 React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
                   React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Goal"),
                     React.createElement("div", { className: "playground-tasks-detail-format-actions" },
                       [
                         { id: "bold", label: "Bold", icon: Bold },
@@ -89143,22 +95750,22 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                               })
                             : React.createElement("div", {
                                 className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                              }, "Add a description for the scope, goals, working style, and constraints for this project.")
+                              }, "Define the project goal, scope, working style, and constraints.")
                         )
                       : null,
                     React.createElement("textarea", {
                       ref: projectDescriptionTextareaRef,
                       className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
                       rows: 1,
-                      placeholder: isProjectDescriptionEditing ? "Add a description for the scope, goals, working style, and constraints for this project." : "",
+                      placeholder: isProjectDescriptionEditing ? "Define the project goal, scope, working style, and constraints." : "",
                       value: projectDraft.description,
-                      onFocus: () => setIsProjectDescriptionEditing(true),
+                      onFocus: () => setProjectDescriptionEditing(true),
                       onChange: (event) => {
                         setProjectDraft((current) => ({ ...current, description: event.target.value }));
                         resizeTaskDescriptionTextarea(event.currentTarget);
                       },
                       onBlur: () => {
-                        setIsProjectDescriptionEditing(false);
+                        setProjectDescriptionEditing(false);
                       },
                     })
                   )
@@ -89166,40 +95773,28 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 projectSaveState.error
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, projectSaveState.error)
                   : null,
-                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                  embedded
-                    ? null
-                    : React.createElement("button", {
+                embedded
+                  ? null
+                  : React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                      React.createElement("button", {
                         type: "button",
                         className: "playground-environments-action-button",
                         onClick: () => closeProjectComposer(),
                       }, "Cancel"),
-                  React.createElement("button", {
-                    type: "submit",
-                    className: "playground-environments-action-button" + (embedded ? "" : " is-primary"),
-                    disabled: projectSaveState.isSaving || !String(projectDraft.name || "").trim(),
-                  }, projectSaveState.isSaving
-                    ? "Saving..."
-                    : "Save Project"),
-                  embedded
-                    ? React.createElement("button", {
-                        type: "button",
+                      React.createElement("button", {
+                        type: "submit",
                         className: "playground-environments-action-button is-primary",
-                        onClick: () => void handleGenerateStrategyFromProjectComposer(),
                         disabled: projectSaveState.isSaving || !String(projectDraft.name || "").trim(),
-                      },
-                        React.createElement(ArrowDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, projectSaveState.isSaving ? "Saving..." : "Generate Strategy")
-                      )
-                    : null
-                )
+                      }, projectSaveState.isSaving
+                        ? "Saving..."
+                        : "Save Project")
+                    )
               )
           ;
 
           if (embedded) {
             return React.createElement("div", { className: "playground-mission-control-setup-form" },
-              projectComposerForm,
-              renderProjectWallpaperPicker()
+              projectComposerForm
             );
           }
 
@@ -91634,7 +98229,43 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }
 
         function renderMissionControlSetupEmptyState() {
-          return renderProjectComposerDialog({ embedded: true });
+          const capabilities = [
+            {
+              title: "Generate Strategy",
+              copy: "Turn the project goal into a clear execution plan and working context.",
+              Icon: SquarePen,
+            },
+            {
+              title: "Generate Tickets",
+              copy: "Create structured backlog work with owners, order, and dependencies.",
+              Icon: ListTodo,
+            },
+            {
+              title: "Generate Outcomes",
+              copy: "Define measurable project outcomes and connect them to planned work.",
+              Icon: Award,
+            },
+            {
+              title: "Update Rules",
+              copy: "Capture project-level instructions agents should follow on every task.",
+              Icon: Shield,
+            },
+          ];
+          return React.createElement("div", { className: "playground-mission-control-setup-empty-card" },
+            React.createElement("div", { className: "playground-mission-control-setup-empty-kicker" }, "Mission Control"),
+            React.createElement("div", { className: "playground-mission-control-setup-empty-title" }, "Plan or update this project"),
+            React.createElement("div", { className: "playground-mission-control-capability-list" },
+              capabilities.map((capability) =>
+                React.createElement("div", { key: capability.title, className: "playground-mission-control-capability-item" },
+                  React.createElement(capability.Icon, { className: "playground-mission-control-capability-icon", strokeWidth: 1.8 }),
+                  React.createElement("div", { className: "playground-mission-control-capability-copy-shell" },
+                    React.createElement("div", { className: "playground-mission-control-capability-title" }, capability.title),
+                    React.createElement("div", { className: "playground-mission-control-capability-copy" }, capability.copy)
+                  )
+                )
+              )
+            )
+          );
         }
 
         function renderMissionControlSetupView() {
@@ -91711,6 +98342,54 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               onExternalRunRequestCreate: handleMissionControlSetupRunRequest,
             })
           );
+        }
+
+        function renderMissionControlStudio() {
+          if (!missionControlSetupOpen || !projectComposerOpen) {
+            return null;
+          }
+          const studioElement = React.createElement("div", {
+              className: "playground-mission-control-studio-backdrop",
+              onClick: (event) => event.stopPropagation(),
+            },
+            React.createElement("div", { className: "playground-mission-control-studio" },
+              React.createElement("div", { className: "playground-mission-control-studio-body" },
+                React.createElement("section", { className: "playground-mission-control-studio-settings" },
+                  React.createElement("div", { className: "playground-mission-control-studio-section-header" },
+                    React.createElement("div", { className: "playground-mission-control-studio-section-nav" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-mission-control-studio-back-link",
+                        onClick: () => closeProjectComposer(),
+                        title: "Back",
+                        "aria-label": "Back",
+                      },
+                        React.createElement(ChevronLeft, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Back")
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-mission-control-studio-settings-scroll" },
+                    renderProjectComposerDialog({ embedded: true })
+                  ),
+                  React.createElement("div", { className: "playground-mission-control-studio-settings-footer" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-mission-control-studio-save-button",
+                        onClick: () => void handleSaveProjectFromStudio(),
+                        disabled: projectSaveState.isSaving || !String(projectDraft.name || "").trim(),
+                      }, projectSaveState.isSaving ? "Saving..." : "Save Project")
+                  )
+                ),
+                React.createElement("section", { className: "playground-mission-control-studio-chat" },
+                  renderMissionControlSetupView()
+                )
+              )
+            )
+          );
+          return typeof document !== "undefined" && document.body
+            ? createPortal(studioElement, document.body)
+            : studioElement;
         }
 
 ${PROJECT_OVERVIEW_SCRIPT}
@@ -91867,44 +98546,42 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 )
               ),
               React.createElement("div", {
-                className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll" + (missionControlSetupOpen ? " is-mission-control-setup" : ""),
+                className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll",
               },
-                missionControlSetupOpen
-                  ? renderMissionControlSetupView()
-                  : React.createElement(React.Fragment, null,
-                      taskLoadState.status === "error" && tasks.length > 0
-                        ? React.createElement("div", { className: "playground-environments-error" },
-                            React.createElement("span", null, taskLoadState.error || "Failed to refresh project tasks."),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-environments-action-button",
-                              onClick: () => void loadProjectWorkspace(selectedProjectId),
-                            }, "Retry")
-                          )
-                        : null,
-                      taskLoadState.status === "loading" && tasks.length === 0
-                        ? React.createElement("div", { className: "playground-tasks-loading-state" },
-                            React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                            React.createElement("div", { className: "playground-tasks-loading-copy" }, "Loading project…")
-                          )
-                        : taskLoadState.status === "error" && tasks.length === 0
-                          ? React.createElement("div", { className: "playground-tasks-empty" },
-                              React.createElement("div", { className: "playground-tasks-empty-title" }, "Project workspace unavailable"),
-                              React.createElement("div", { className: "playground-tasks-empty-copy" }, taskLoadState.error || "The tasks API could not be reached for this project."),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-environments-action-button is-primary",
-                                onClick: () => void loadProjectWorkspace(selectedProjectId),
-                              }, "Retry")
-                            )
-                          : React.createElement(React.Fragment, null,
-                              taskView === "overview"
-                                ? renderProjectOverviewView()
-                                : taskView === "board"
-                                  ? renderBoardView()
-                                  : renderBacklogView()
-                            )
-                    )
+                React.createElement(React.Fragment, null,
+                  taskLoadState.status === "error" && tasks.length > 0
+                    ? React.createElement("div", { className: "playground-environments-error" },
+                        React.createElement("span", null, taskLoadState.error || "Failed to refresh project tasks."),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-action-button",
+                          onClick: () => void loadProjectWorkspace(selectedProjectId),
+                        }, "Retry")
+                      )
+                    : null,
+                  taskLoadState.status === "loading" && tasks.length === 0
+                    ? React.createElement("div", { className: "playground-tasks-loading-state" },
+                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                        React.createElement("div", { className: "playground-tasks-loading-copy" }, "Loading project…")
+                      )
+                    : taskLoadState.status === "error" && tasks.length === 0
+                      ? React.createElement("div", { className: "playground-tasks-empty" },
+                          React.createElement("div", { className: "playground-tasks-empty-title" }, "Project workspace unavailable"),
+                          React.createElement("div", { className: "playground-tasks-empty-copy" }, taskLoadState.error || "The tasks API could not be reached for this project."),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-environments-action-button is-primary",
+                            onClick: () => void loadProjectWorkspace(selectedProjectId),
+                          }, "Retry")
+                        )
+                      : React.createElement(React.Fragment, null,
+                          taskView === "overview"
+                            ? renderProjectOverviewView()
+                            : taskView === "board"
+                              ? renderBoardView()
+                              : renderBacklogView()
+                        )
+                )
               )
             )
           );
@@ -91935,9 +98612,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions" })
               ),
               React.createElement("div", {
-                className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll is-mission-control-setup",
+                className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll",
               },
-                renderMissionControlSetupView()
+                React.createElement("div", { className: "playground-tasks-empty" },
+                  React.createElement("div", { className: "playground-tasks-empty-title" }, "Project Studio"),
+                  React.createElement("div", { className: "playground-tasks-empty-copy" }, "Use the full-screen studio to define project settings and run Mission Control.")
+                )
               )
             )
           );
@@ -93938,6 +100618,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           renderTaskParentPickerDialog(),
           renderTaskEnvironmentChangeDialog(),
           renderTaskDeleteDialog(),
+          renderMissionControlStudio(),
           renderProjectComposerDialog(),
           renderReleaseComposerDialog(),
           renderProjectEnvironmentFilePicker()
@@ -96521,9 +103202,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
 		          const ticketNumber = ticketNumbersById[normalizedTask.id] || normalizedTask.ticketNumber || "000";
 		          const newline = String.fromCharCode(10);
 		          const paragraphBreak = newline + newline;
-		          const projectId = String(normalizedTask.projectId || options?.projectId || welcomeWidgetsState.projectId || welcomeWidgetProject?.id || "").trim();
-		          const projectName = String(options?.projectName || welcomeWidgetProject?.name || "").trim();
-	          const directResponseTask = isPlaygroundDirectResponseTask(normalizedTask);
+			          const projectId = String(normalizedTask.projectId || options?.projectId || welcomeWidgetsState.projectId || welcomeWidgetProject?.id || "").trim();
+			          const projectName = String(options?.projectName || welcomeWidgetProject?.name || "").trim();
+		          const projectRecord = options?.projectRecord && typeof options.projectRecord === "object"
+		            ? options.projectRecord
+		            : welcomeWidgetProject;
+		          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(projectRecord, {
+		            taskRecord: normalizedTask,
+		          });
+		          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(projectRecord);
+		          const directResponseTask = isPlaygroundDirectResponseTask(normalizedTask);
 	          const independentReviewerId = getPlaygroundIndependentReviewerId(normalizedTask);
 	          const taskAttachmentsSection = buildPlaygroundAttachmentPromptSection("Task attachments:", normalizedTask.attachments, {
 	            copy: "These files are attached specifically to this task.",
@@ -96551,9 +103239,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            "Status: " + getPlaygroundTaskStatusLabel(normalizedTask.status),
 	            "Priority: " + getPlaygroundTaskPriorityLabel(normalizedTask.priority),
 	            "Assignee: " + getWelcomeWidgetTaskAssigneeName(normalizedTask),
-		            "Review: " + reviewerName,
-		            "Environment: " + getWelcomeWidgetTaskEnvironmentName(normalizedTask),
-		            [
+			            "Review: " + reviewerName,
+			            "Environment: " + getWelcomeWidgetTaskEnvironmentName(normalizedTask),
+			            projectStrategySection,
+			            projectRulesSection,
+			            [
 	              "Execution expectations:",
 	              "- The project id and task id above are authoritative. Do not list projects or tasks just to discover this ticket.",
 	              "- Use Task Management, Computer Agents, filesystem, browser, or shell tools only when the ticket cannot be completed from the provided title, description, attachments, and comments.",
@@ -101839,10 +108529,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          const newline = String.fromCharCode(10);
 	          const paragraphBreak = newline + newline;
 	          const ticketNumber = normalizePlaygroundTaskTicketNumber(normalizedTask.ticketNumber) || "000";
-	          const implementationThreadId = String(options?.implementationThreadId || "").trim();
-	          const projectId = String(options?.projectId || normalizedTask.projectId || "").trim();
-	          const projectName = String(options?.projectName || normalizedTask.projectName || "").trim();
-	          const reviewerName = getRuntimeTaskActorName(normalizedTask.reviewerAgentId, "Reviewer");
+		          const implementationThreadId = String(options?.implementationThreadId || "").trim();
+		          const projectId = String(options?.projectId || normalizedTask.projectId || "").trim();
+		          const projectName = String(options?.projectName || normalizedTask.projectName || "").trim();
+		          const projectRecord = options?.projectRecord && typeof options.projectRecord === "object"
+		            ? options.projectRecord
+		            : projectId
+		              ? realProjects.find((project) => project?.id === projectId) || null
+		              : null;
+		          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(projectRecord, {
+		            taskRecord: normalizedTask,
+		          });
+		          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(projectRecord);
+		          const reviewerName = getRuntimeTaskActorName(normalizedTask.reviewerAgentId, "Reviewer");
 	          const assigneeName = getRuntimeTaskActorName(normalizedTask.assigneeAgentId, "Assignee");
 	          const environmentId = String(normalizedTask.environmentId || "").trim();
 	          const environmentName = environmentId
@@ -101877,9 +108576,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            "Status: In Review",
 	            "Implementation assignee: " + assigneeName,
 	            "Reviewer: " + reviewerName,
-	            implementationThreadId ? "Implementation thread ID to review: " + implementationThreadId : "",
-	            "Environment: " + environmentName,
-	            [
+		            implementationThreadId ? "Implementation thread ID to review: " + implementationThreadId : "",
+		            "Environment: " + environmentName,
+		            projectStrategySection,
+		            projectRulesSection,
+		            [
               "Review expectations:",
               "- The project id, task id, and implementation thread id above are authoritative. Do not list all projects or all tasks just to discover this context.",
               "- Use direct lookups for the provided project/task when you need project management context such as releases, dependencies, comments, or nearby work.",
@@ -101895,7 +108596,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            commentLines.length > 0 ? "Existing comments:" + newline + commentLines.join(newline) : "",
 	            taskAttachmentsSection,
 	          ].filter(Boolean).join(paragraphBreak));
-	        }, [getRuntimeTaskActorName, runtimeEnvironments]);
+		        }, [getRuntimeTaskActorName, realProjects, runtimeEnvironments]);
 
 	        const startAgentReviewThreadForTask = useCallback(async function startAgentReviewThreadForTask(taskRecord, implementationThreadId, taskRunState = {}) {
 	          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
@@ -101903,11 +108604,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          const normalizedImplementationThreadId = String(implementationThreadId || "").trim();
 	          const reviewerAgentId = String(normalizedTask.reviewerAgentId || "").trim();
 	          const reviewProjectId = String(normalizedTask.projectId || taskRunState?.projectId || "").trim();
-	          const reviewProjectName = String(
-	            taskRunState?.projectName
-	            || (reviewProjectId ? (realProjects.find((project) => project?.id === reviewProjectId)?.name || "") : "")
-	            || ""
-	          ).trim();
+		          const reviewProjectRecord = taskRunState?.projectRecord && typeof taskRunState.projectRecord === "object"
+		            ? taskRunState.projectRecord
+		            : reviewProjectId
+		              ? realProjects.find((project) => project?.id === reviewProjectId) || null
+		              : null;
+		          const reviewProjectName = String(
+		            taskRunState?.projectName
+		            || reviewProjectRecord?.name
+		            || ""
+		          ).trim();
 	          if (!hasRealAccess) {
 	            throw new Error("Sign in before starting an agent review.");
 	          }
@@ -101932,11 +108638,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            projectId: normalizedTask.projectId || reviewProjectId,
 	            projectName: reviewProjectName,
 	          });
-	          const reviewPrompt = buildTaskReviewRunPrompt(taskForReview, {
-	            implementationThreadId: normalizedImplementationThreadId,
-	            projectId: reviewProjectId,
-	            projectName: reviewProjectName,
-	          });
+		          const reviewPrompt = buildTaskReviewRunPrompt(taskForReview, {
+		            implementationThreadId: normalizedImplementationThreadId,
+		            projectId: reviewProjectId,
+		            projectName: reviewProjectName,
+		            projectRecord: reviewProjectRecord,
+		          });
 	          const taskPreview = buildTaskReviewThreadPreview(taskForReview, "", normalizedImplementationThreadId, {
 	            projectId: reviewProjectId,
 	            projectName: reviewProjectName,
@@ -103051,6 +109758,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ...normalizeDemoSettingsBillingPreferences(billingPreferencesOverride || settingsBillingPreferences),
               usageBillingEnabled: true,
             };
+            const nextBillingPreferencesBody = {
+              ...nextBillingPreferences,
+              resourceEmailAlerts: nextBillingPreferences.emailAlerts,
+            };
             if (hasRealAccess) {
               const response = await fetch(proxyBackendBase + "/billing/preferences", {
                 method: "PATCH",
@@ -103058,7 +109769,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   ...authRequestHeaders,
                   "Content-Type": "application/json",
                 },
-                body: JSON.stringify(nextBillingPreferences),
+                body: JSON.stringify(nextBillingPreferencesBody),
               });
               const data = await response.json().catch(() => ({}));
               if (!response.ok) {
@@ -108496,7 +115207,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   renderSettingsSummaryCard("Runner Surface", [
                     { label: "Input Mode", value: "Computer Agents" },
                     { label: "Sidebar", value: sidebarOpen ? "Expanded" : "Collapsed" },
-                    { label: "Content Mode", value: contentMode === "changes" ? "Changes" : "Chat" },
+                    { label: "Content Mode", value: contentMode === "trace" ? "Trace" : (contentMode === "changes" ? "Changes" : "Chat") },
                     { label: "Welcome State", value: showInitialThreadWelcome ? "Visible" : "Hidden" },
                   ]),
                   React.createElement("div", { className: "playground-environments-summary-card" },
@@ -109594,6 +116305,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : resourcesView;
         const isResourcesPage = activePage === "resources" || activePage === "agents" || activePage === "environments";
 
+        useEffect(() => {
+          if (activePage !== "resources" || activeResourcesView !== "servers" || !hasSessionAuth) {
+            return;
+          }
+          void loadSettingsPlatformConfig();
+        }, [activePage, activeResourcesView, hasSessionAuth, loadSettingsPlatformConfig]);
+
         const selectedThreadTitle = useMemo(() => {
           if (activePage === "settings") {
             return "Settings";
@@ -109866,16 +116584,40 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           return null;
         }, [cachedSelectedThreadProjectRecord, selectedThreadProjectId, welcomeWidgetProject]);
-        const selectedThreadProjectName = useMemo(() => {
-          return String(
-            selectedThreadProjectRecord?.name
+	        const selectedThreadProjectName = useMemo(() => {
+	          return String(
+	            selectedThreadProjectRecord?.name
             || selectedThreadCachedProjectContext?.projectName
             || rawSelectedThreadMissionControlMetadata?.projectName
             || selectedThreadTaskPreview?.projectName
-            || ""
-          ).trim();
-        }, [rawSelectedThreadMissionControlMetadata?.projectName, selectedThreadCachedProjectContext?.projectName, selectedThreadProjectRecord?.name, selectedThreadTaskPreview?.projectName]);
-        const selectedThreadTaskTitle = useMemo(() => {
+	            || ""
+	          ).trim();
+	        }, [rawSelectedThreadMissionControlMetadata?.projectName, selectedThreadCachedProjectContext?.projectName, selectedThreadProjectRecord?.name, selectedThreadTaskPreview?.projectName]);
+	        const selectedThreadProjectContextPrompt = useMemo(() => {
+	          const previewTaskId = typeof selectedThreadTaskPreview?.taskId === "string"
+	            ? selectedThreadTaskPreview.taskId.trim()
+	            : "";
+	          if (!previewTaskId) {
+	            return "";
+	          }
+	          const previewTaskRecord = normalizePlaygroundTaskRecord({
+	            id: previewTaskId,
+	            projectId: selectedThreadProjectId,
+	            releaseId: selectedThreadTaskPreview?.releaseId,
+	            ticketNumber: selectedThreadTaskPreview?.ticketNumber,
+	            title: selectedThreadTaskPreview?.title,
+	            description: selectedThreadTaskPreview?.description,
+	            status: selectedThreadTaskPreview?.status || "todo",
+	            metadata: selectedThreadTaskPreview?.metadata,
+	          });
+	          return [
+	            buildPlaygroundProjectStrategyBriefPromptSection(selectedThreadProjectRecord, {
+	              taskRecord: previewTaskRecord,
+	            }),
+	            buildPlaygroundProjectRulesPromptSection(selectedThreadProjectRecord),
+	          ].filter(Boolean).join(String.fromCharCode(10) + String.fromCharCode(10));
+	        }, [selectedThreadProjectId, selectedThreadProjectRecord, selectedThreadTaskPreview]);
+	        const selectedThreadTaskTitle = useMemo(() => {
           if (!selectedThreadTaskPreview?.taskId || selectedThreadTaskPreview?.isDeleted) {
             return "";
           }
@@ -110226,10 +116968,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
               reviewRequired: true,
               reviewerAgentId,
             }, normalizedThreadId, {
-              taskId: taskRecord.id,
-              projectId: taskRecord.projectId || selectedThreadProjectId || "",
-              projectName: selectedThreadProjectName || selectedThreadTaskPreview?.projectName || "",
-              threadId: normalizedThreadId,
+	              taskId: taskRecord.id,
+	              projectId: taskRecord.projectId || selectedThreadProjectId || "",
+	              projectName: selectedThreadProjectName || selectedThreadTaskPreview?.projectName || "",
+	              projectRecord: selectedThreadProjectRecord,
+	              threadId: normalizedThreadId,
               ticketNumber: taskRecord.ticketNumber || selectedThreadTaskPreview?.ticketNumber || "",
               title: taskRecord.title || selectedThreadTaskPreview?.title || "Untitled Task",
               runKind: "implementation",
@@ -110256,12 +116999,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [
           activeRunnerThreadId,
           currentThreadId,
-          loadSelectedThreadFollowUpTask,
-          selectedThreadProjectId,
-          selectedThreadProjectName,
-          selectedThreadTaskPreview,
-          startAgentReviewThreadForTask,
-        ]);
+	          loadSelectedThreadFollowUpTask,
+	          selectedThreadProjectId,
+	          selectedThreadProjectName,
+	          selectedThreadProjectRecord,
+	          selectedThreadTaskPreview,
+	          startAgentReviewThreadForTask,
+	        ]);
         const handleThreadFollowUpApprove = useCallback(async function handleThreadFollowUpApprove() {
           const normalizedThreadId = String(activeRunnerThreadId || currentThreadId || selectedThreadTaskPreview?.threadId || "").trim();
           setThreadFollowUpActionState({
@@ -110410,16 +117154,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
               projectConnectors: projectRecord?.connectors,
             });
             const projectLaunchAttachments = normalizePlaygroundTaskAttachmentList(projectRecord?.attachments);
-            const launchPrompt = buildWelcomeWidgetTaskRunPrompt({
-              ...taskToLaunch,
-              connectors: launchConnectors,
-            }, {
-              projectAttachments: projectLaunchAttachments,
-              projectTasks: candidateProjectTasks,
-              projectId: normalizedProjectId,
-              projectName,
-              ticketNumbersById,
-            });
+	            const launchPrompt = buildWelcomeWidgetTaskRunPrompt({
+	              ...taskToLaunch,
+	              connectors: launchConnectors,
+	            }, {
+	              projectAttachments: projectLaunchAttachments,
+	              projectTasks: candidateProjectTasks,
+	              projectId: normalizedProjectId,
+	              projectName,
+	              projectRecord,
+	              ticketNumbersById,
+	            });
             const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(taskToLaunch.id) + "/start-thread", {
               method: "POST",
               headers: {
@@ -111051,6 +117796,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           !threadDeepResearchDetailOpen &&
           hasRealAccess;
         const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen || isThreadPreviewDetailOpen;
+        const isResourcesSideDetailOpen = activePage === "resources" && Boolean(resourcesHeaderState?.sideDetailOpen) && hasRealAccess;
 
         function renderAuthGate() {
           if (
@@ -112672,20 +119418,28 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     setCurrentThreadId(normalizedThreadId);
                     void refreshThreads();
                   },
-                  onThreadOpen: (threadId) => {
+                  onThreadOpen: (threadId, options = {}) => {
                     const normalizedThreadId = String(threadId || "").trim();
                     if (!normalizedThreadId) {
                       return;
                     }
+                    if (options?.threadRecord?.id) {
+                      upsertRealThreadRecord(options.threadRecord);
+                    }
+                    const requestedContentMode = options?.contentMode === "trace"
+                      ? "trace"
+                      : options?.contentMode === "changes"
+                        ? "changes"
+                        : "chat";
                     setThreadAgentSelectionOverride(null);
                     setPendingThreadRunRequest(null);
                     setActivePage("thread");
                     setCurrentThreadId(normalizedThreadId);
-                    setContentMode("chat");
+                    setContentMode(requestedContentMode);
                     setThreadListMode("threads");
                     setChangesNavigationTarget(null);
                     setRunnerRenderKey((current) => current + 1);
-                    void refreshThreads();
+                    void refreshThreads(undefined, normalizedThreadId);
                   },
                   onThreadStarted: (threadId, options = {}) => {
                     const normalizedThreadId = String(threadId || "").trim();
@@ -112834,6 +119588,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 topNavActionsPortalId: "playground-resources-nav-actions",
                 onResourcesHeaderChange: setResourcesHeaderState,
                 backRequestToken: resourcesBackRequestToken,
+                resourceBillingPreferences: settingsBillingPreferences,
+                resourceBillingSaving: settingsPlatformConfigSaving,
+                resourceBillingError: settingsPlatformConfigError,
+                resourceBillingSuccess: settingsPlatformConfigSuccess,
+                canConfigureResourceBilling: settingsCanConfigureBusinessFeatures,
+                onResourceBillingPreferencesChange: queueSettingsResourceCapAutosave,
               })
             : hasDemoAccess
               ? renderDemoFeaturePage("environments")
@@ -113313,7 +120073,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 }, renderCollapsedSidebarRail())
               ),
               React.createElement("main", { className: "playground-main" },
-                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") },
+                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isResourcesSideDetailOpen ? " is-resources-side-detail-open" : "") },
                   activePage === "tools"
                     ? renderPluginsPageNav()
                     : isResourcesPage
@@ -113332,6 +120092,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                   className: "content-mode-button" + (contentMode === "chat" ? " is-active" : ""),
                                   onClick: () => setContentMode("chat")
                                 }, "Chat"),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "content-mode-button" + (contentMode === "trace" ? " is-active" : ""),
+                                  onClick: () => {
+                                    if (!currentThreadId) return;
+                                    setContentMode("trace");
+                                  },
+                                  disabled: !currentThreadId
+                                }, "Trace"),
                                 React.createElement("button", {
                                   type: "button",
                                   className: "content-mode-button" + (contentMode === "changes" ? " is-active" : ""),
@@ -113802,8 +120571,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                     keepFocusOnSubmit: true,
                                     showUsageInStatus: false,
                                     placeholder: "Ask anything",
-                                    privateMode: runnerComposerPrivateMode,
-                                    enableResourceCreationCommand: true,
+	                                    privateMode: runnerComposerPrivateMode,
+	                                    hiddenSystemPrompt: pendingThreadRunRequest && pendingThreadRunRequest.threadId === activeRunnerThreadId
+	                                      ? ""
+	                                      : selectedThreadProjectContextPrompt,
+	                                    enableResourceCreationCommand: true,
                                     resourceCreationCommandHiddenPrompt: buildThreadRunnerResourceHiddenPrompt,
                                     enableAgentCreationCommand: true,
                                     agentCreationCommandHiddenPrompt: buildThreadRunnerAgentHiddenPrompt,
@@ -114053,6 +120825,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                   ? renderDemoThreadChangesSurface()
                                   : renderAuthGate()
                               : null
+                          ),
+                          React.createElement("div", { className: "playground-view-pane" + (contentMode === "trace" ? "" : " is-hidden") },
+                            contentMode === "trace"
+                              ? hasRealAccess
+                                ? React.createElement(ThreadObservabilityView, {
+                                    threadId: activeRunnerThreadId,
+                                    threadTitle: selectedThreadTitle,
+                                    backendUrl: proxyBackendBase,
+                                    requestHeaders: authRequestHeaders,
+                                    hasRealAccess,
+                                    onOpenChat: () => setContentMode("chat"),
+                                  })
+                                : hasDemoAccess
+                                  ? renderDemoThreadChangesSurface()
+                                  : renderAuthGate()
+                              : null
                           )
                         )
                   )
@@ -114276,11 +121064,33 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         threadPreviewAttachment
                           ? React.createElement(RunnerDocumentPreviewDrawer, {
                               attachment: threadPreviewAttachment,
+                              backendUrl: proxyBackendBase,
+                              environmentId: threadPreviewAttachment.environmentId || environmentId || undefined,
                               requestHeaders,
                               apiKey: effectiveApiKey,
                               inline: true,
                               showResizeHandle: false,
                               onClose: () => setThreadPreviewAttachment(null),
+                              onWorkspacePathOpen: (path, options = {}) => {
+                                const normalizedPath = normalizeHistoryPath(path || "");
+                                const normalizedEnvironmentId = String(threadPreviewAttachment.environmentId || environmentId || "").trim();
+                                if (!normalizedPath || !normalizedEnvironmentId) {
+                                  return;
+                                }
+                                setThreadTaskOpenRequest(null);
+                                setThreadSubagentDetailOpen(false);
+                                setThreadDeepResearchDetailOpen(false);
+                                setThreadPreviewAttachment(null);
+                                setEnvironmentId(normalizedEnvironmentId);
+                                setFilesPageNavigationRequest({
+                                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                                  environmentId: normalizedEnvironmentId,
+                                  path: normalizedPath,
+                                  isFolder: Boolean(options?.isFolder),
+                                  contentMode: "files",
+                                });
+                                setActivePage("files");
+                              },
                             })
                           : null
                       )
@@ -116266,7 +123076,7 @@ async function proxyFeedbackSummaryGet(req, res) {
 async function proxyUpstreamTaskJsonRequest(req, res, upstreamPath, method) {
   try {
     const upstreamUrl = parseUpstreamUrl(req, {});
-    const body = method === "GET" || method === "HEAD" || method === "DELETE"
+    const body = method === "GET" || method === "HEAD"
       ? undefined
       : await readRequestBody(req);
     const apiKey = readOptionalApiKey(req, body);
@@ -119053,6 +125863,47 @@ const server = http.createServer((req, res) => {
       res,
       `/servers/${encodeURIComponent(decodeURIComponent(serverDetailMatch[1]))}`,
       "DELETE",
+    );
+    return;
+  }
+
+  const serverCustomDomainMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/custom-domain$/);
+  if (req.method === "GET" && serverCustomDomainMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverCustomDomainMatch[1]))}/custom-domain${url.search || ""}`,
+    );
+    return;
+  }
+
+  if (req.method === "POST" && serverCustomDomainMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverCustomDomainMatch[1]))}/custom-domain`,
+      "POST",
+    );
+    return;
+  }
+
+  if (req.method === "DELETE" && serverCustomDomainMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverCustomDomainMatch[1]))}/custom-domain${url.search || ""}`,
+      "DELETE",
+    );
+    return;
+  }
+
+  const serverCustomDomainCheckMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/custom-domain\/check$/);
+  if (req.method === "POST" && serverCustomDomainCheckMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverCustomDomainCheckMatch[1]))}/custom-domain/check`,
+      "POST",
     );
     return;
   }

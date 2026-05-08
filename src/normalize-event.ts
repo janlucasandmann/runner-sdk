@@ -36,6 +36,28 @@ type StreamErrorEvent = {
   error?: { message?: string };
 };
 
+const AGENT_RUNTIME_INTERRUPTED_MESSAGE =
+  "The agent stopped unexpectedly before it could finish. Please retry this turn. If the issue continues, contact support.";
+
+function isInternalAgentRuntimeFailure(value: string): boolean {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) return false;
+  return (
+    /\bclaw\s+worker\b/i.test(normalized) ||
+    /\bclaude\s+worker\b/i.test(normalized) ||
+    /\bworker\s+(?:exited|closed|is not available|produced no output|request failed|ready timeout)\b/i.test(normalized) ||
+    /\b(?:docker\s+exec|container execution)\s+failed\b/i.test(normalized) ||
+    /\bcontainer no longer exists\b/i.test(normalized) ||
+    /\bexited with code\s+137\b/i.test(normalized)
+  );
+}
+
+function sanitizeRunnerExecutionErrorMessage(value: string): string {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  return isInternalAgentRuntimeFailure(normalized) ? AGENT_RUNTIME_INTERRUPTED_MESSAGE : normalized;
+}
+
 type ToolStartedEvent = {
   type: "tool.started";
   tool?: string;
@@ -827,7 +849,7 @@ export class RunnerEventNormalizer {
   }
 
   private handleResponseFailed(event: FailedEvent): RunnerEventHandleResult {
-    const errorMessage = event.response?.error?.message ?? "Execution failed";
+    const errorMessage = sanitizeRunnerExecutionErrorMessage(event.response?.error?.message ?? "Execution failed");
     const usage = event.response?.usage;
 
     if (errorMessage === "Execution cancelled by user") {
@@ -872,7 +894,7 @@ export class RunnerEventNormalizer {
   }
 
   private handleStreamError(event: StreamErrorEvent): RunnerEventHandleResult {
-    const errorMessage = event.error?.message ?? "Unknown error";
+    const errorMessage = sanitizeRunnerExecutionErrorMessage(event.error?.message ?? "Unknown error");
     if (errorMessage === "Execution cancelled by user") {
       return {
         cancelled: true,

@@ -1,4 +1,4 @@
-export type RunnerDocumentPreviewKind = "pdf" | "text" | "html" | "markdown" | "docx" | "unsupported";
+export type RunnerDocumentPreviewKind = "pdf" | "text" | "html" | "markdown" | "docx" | "directory" | "unsupported";
 
 export interface RunnerPreviewAttachment {
   id: string;
@@ -6,6 +6,8 @@ export interface RunnerPreviewAttachment {
   mimeType: string;
   type: "image" | "document";
   previewKindOverride?: RunnerDocumentPreviewKind;
+  environmentId?: string;
+  isFolder?: boolean;
   uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";
   url?: string;
   previewUrl?: string;
@@ -17,6 +19,18 @@ export interface RunnerPreviewAttachment {
   githubSelectionType?: "repo" | "file";
   htmlPreviewUrl?: string;
   htmlSandbox?: string | null;
+}
+
+export interface RunnerPreviewDirectoryEntry {
+  id: string;
+  name: string;
+  path: string;
+  isFolder: boolean;
+  size?: number;
+  modifiedTime?: string;
+  createdTime?: string;
+  mimeType?: string;
+  hasChildren?: boolean;
 }
 
 const RUNNER_PREVIEW_MIME_TYPES_BY_EXTENSION: Record<string, string> = {
@@ -172,6 +186,19 @@ export function normalizeRunnerPreviewPath(filePath?: string | null): string | n
   return normalized.startsWith("/workspace/") ? normalized : `/workspace/${normalized.replace(/^\/+/, "")}`;
 }
 
+export function normalizeRunnerPreviewWorkspacePath(filePath?: string | null): string {
+  const raw = String(filePath || "").trim().replace(/^['"`]+|['"`]+$/g, "");
+  if (!raw) return "";
+  let normalized = raw.split("\\").join("/");
+  while (normalized.startsWith("/")) {
+    normalized = normalized.slice(1);
+  }
+  if (normalized.startsWith("workspace/")) {
+    normalized = normalized.slice("workspace/".length);
+  }
+  return normalized.replace(/\/+$/, "");
+}
+
 export function getRunnerPreviewFilename(filePath: string): string {
   const segments = filePath.split("/").filter(Boolean);
   return segments[segments.length - 1] || filePath;
@@ -246,6 +273,122 @@ export function buildRunnerPreviewDownloadUrl(
   return `${normalizedBackendUrl}/environments/${encodeURIComponent(environmentId)}/files/download/${encodedPath}`;
 }
 
+export function buildRunnerPreviewDirectoryListUrl(
+  backendUrl?: string | null,
+  environmentId?: string | null,
+  folderPath?: string | null,
+  depth = 1
+): string | null {
+  const normalizedBackendUrl = sanitizeRunnerPreviewBackendUrl(backendUrl);
+  const normalizedEnvironmentId = String(environmentId || "").trim();
+  if (!normalizedBackendUrl || !normalizedEnvironmentId) {
+    return null;
+  }
+  const normalizedFolderPath = normalizeRunnerPreviewWorkspacePath(folderPath);
+  const params = new URLSearchParams();
+  params.set("depth", String(depth));
+  if (normalizedFolderPath) {
+    params.set("path", normalizedFolderPath);
+  }
+  return `${normalizedBackendUrl}/environments/${encodeURIComponent(normalizedEnvironmentId)}/files?${params.toString()}`;
+}
+
+function getRunnerPreviewDirectoryParentPath(filePath: string): string {
+  const segments = normalizeRunnerPreviewWorkspacePath(filePath).split("/").filter(Boolean);
+  segments.pop();
+  return segments.join("/");
+}
+
+export function normalizeRunnerPreviewDirectoryEntries(
+  input: unknown,
+  currentFolderPath?: string | null
+): RunnerPreviewDirectoryEntry[] {
+  const rawItems = Array.isArray(input)
+    ? input
+    : input && typeof input === "object" && Array.isArray((input as { data?: unknown[] }).data)
+      ? (input as { data: unknown[] }).data
+      : input && typeof input === "object" && Array.isArray((input as { files?: unknown[] }).files)
+        ? (input as { files: unknown[] }).files
+        : input && typeof input === "object" && Array.isArray((input as { items?: unknown[] }).items)
+          ? (input as { items: unknown[] }).items
+          : [];
+  const normalizedFolderPath = normalizeRunnerPreviewWorkspacePath(currentFolderPath);
+
+  return rawItems
+    .map((entry): RunnerPreviewDirectoryEntry | null => {
+      if (!entry || typeof entry !== "object") return null;
+      const file = entry as Record<string, unknown>;
+      const rawPath = typeof file.path === "string"
+        ? file.path
+        : typeof file.workspacePath === "string"
+          ? file.workspacePath
+          : "";
+      let normalizedPath = normalizeRunnerPreviewWorkspacePath(rawPath);
+      const explicitName = typeof file.name === "string" ? file.name.trim() : "";
+      if (!normalizedPath && explicitName) {
+        normalizedPath = normalizeRunnerPreviewWorkspacePath([normalizedFolderPath, explicitName].filter(Boolean).join("/"));
+      } else if (
+        normalizedFolderPath &&
+        normalizedPath &&
+        !normalizedPath.startsWith(`${normalizedFolderPath}/`) &&
+        !normalizedPath.includes("/")
+      ) {
+        normalizedPath = `${normalizedFolderPath}/${normalizedPath}`;
+      }
+      if (!normalizedPath || normalizedPath === normalizedFolderPath) return null;
+      if (normalizedFolderPath && getRunnerPreviewDirectoryParentPath(normalizedPath) !== normalizedFolderPath) return null;
+
+      const name = explicitName || normalizedPath.split("/").filter(Boolean).pop() || normalizedPath;
+      const type = typeof file.type === "string" ? file.type.trim().toLowerCase() : "";
+      const mimeType = typeof file.mimeType === "string" ? file.mimeType : "";
+      const isFolder =
+        file.isDirectory === true ||
+        file.isFolder === true ||
+        type === "directory" ||
+        type === "folder" ||
+        mimeType === "inode/directory";
+      const size = typeof file.size === "number" && Number.isFinite(file.size) ? file.size : undefined;
+      const modifiedTime =
+        typeof file.modifiedAt === "string"
+          ? file.modifiedAt
+          : typeof file.lastModified === "string"
+            ? file.lastModified
+            : typeof file.modifiedTime === "string"
+              ? file.modifiedTime
+              : typeof file.updatedAt === "string"
+                ? file.updatedAt
+                : undefined;
+      const createdTime =
+        typeof file.createdAt === "string"
+          ? file.createdAt
+          : typeof file.createdTime === "string"
+            ? file.createdTime
+            : undefined;
+      const hasChildren =
+        typeof file.hasChildren === "boolean"
+          ? file.hasChildren
+          : typeof file.childCount === "number"
+            ? file.childCount > 0
+            : undefined;
+      return {
+        id: normalizedPath,
+        name,
+        path: normalizedPath,
+        isFolder,
+        size,
+        modifiedTime,
+        createdTime,
+        mimeType,
+        hasChildren,
+      };
+    })
+    .filter((entry): entry is RunnerPreviewDirectoryEntry => entry !== null)
+    .sort((left, right) => {
+      if (left.isFolder !== right.isFolder) return left.isFolder ? -1 : 1;
+      return left.name.localeCompare(right.name, undefined, { sensitivity: "base" });
+    });
+}
+
 export function buildRunnerPreviewAttachmentFromPath(
   filePath: string,
   options?: {
@@ -263,6 +406,7 @@ export function buildRunnerPreviewAttachmentFromPath(
     filename,
     mimeType,
     type: inferRunnerPreviewAttachmentType(normalizedPath),
+    environmentId: options?.environmentId || undefined,
     url: previewUrl,
     previewUrl,
   };
@@ -271,10 +415,14 @@ export function buildRunnerPreviewAttachmentFromPath(
 export function getRunnerDocumentPreviewKind(input: {
   filename: string;
   mimeType?: string | null;
+  isFolder?: boolean | null;
 }): RunnerDocumentPreviewKind {
   const extension = getRunnerPreviewExtension(input.filename);
   const mimeType = String(input.mimeType || "").toLowerCase();
 
+  if (input.isFolder || mimeType === "inode/directory") {
+    return "directory";
+  }
   if (mimeType === "application/pdf" || extension === "pdf") {
     return "pdf";
   }

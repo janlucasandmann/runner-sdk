@@ -140,6 +140,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-chart-kpis {
         margin-bottom: 12px;
+        background: rgba(0, 0, 0, 0.35);
       }
 
       .playground-project-overview-summary-kpi {
@@ -529,6 +530,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         align-items: center;
         gap: 18px;
         min-width: 0;
+      }
+
+      .playground-agents-overview-tabs.playground-project-overview-tabs {
+        margin: 0 0 18px;
       }
 
       .playground-project-overview-chart-tab {
@@ -1267,6 +1272,579 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
       }
 
+      .playground-project-overview-strategy-brief {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-project-overview-strategy-card {
+        width: 100%;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.04);
+        -webkit-backdrop-filter: blur(24px);
+        backdrop-filter: blur(24px);
+      }
+
+      .playground-project-overview-strategy-card.is-notes {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-project-overview-strategy-goal {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-project-overview-strategy-goal-text {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 13px;
+        line-height: 1.6;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-strategy-goal-text.is-empty {
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-project-overview-strategy-progress-card.playground-project-overview-chart-card {
+        gap: 14px;
+      }
+
+      .playground-project-overview-outcome-preview-progress-track {
+        height: 2px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-overview-outcome-preview-progress-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-project-overview-strategy-add-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: -2px;
+      }
+
+      .playground-project-overview-strategy-add-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 500;
+      }
+
+      .playground-project-overview-add-outcome-button.playground-files-control-button {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-project-overview-add-outcome-button.playground-files-control-button:hover,
+      .playground-project-overview-add-outcome-button.playground-files-control-button:active,
+      .playground-project-overview-add-outcome-button.playground-files-control-button:focus-visible {
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+      }
+
+      .playground-project-overview-strategy-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .playground-project-overview-strategy-card-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 500;
+      }
+
+      .playground-project-overview-strategy-card-copy {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 1.5;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-outcome-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-project-overview-outcome-preview {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-tasks-backlog-project-icon.is-outcome {
+        color: #fff;
+        background: linear-gradient(135deg, #d8b64f 0%, #b77c1e 52%, #6f4708 100%);
+      }
+
+      .playground-project-overview-outcome-preview .playground-tasks-backlog-item-content {
+        width: 100%;
+      }
+
+      .playground-project-overview-outcome-preview .playground-tasks-backlog-main {
+        margin-left: 2px;
+      }
+
+      .playground-project-overview-outcome-preview-progress {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .playground-project-overview-outcome-editor-modal {
+        max-width: min(720px, calc(100vw - 32px));
+      }
+
+      .playground-project-overview-outcome-delete-button {
+        margin-right: auto;
+      }
+
+      .playground-project-overview-outcome-editor-body {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-project-overview-outcome-ticket-list {
+        max-height: 260px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-overview-outcome-ticket-row {
+        width: 100%;
+        min-width: 0;
+        min-height: 36px;
+        display: grid;
+        grid-template-columns: 16px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-outcome-ticket-row:hover,
+      .playground-project-overview-outcome-ticket-row.is-selected {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-project-overview-outcome-ticket-check {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.32);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-project-overview-outcome-ticket-row.is-selected .playground-project-overview-outcome-ticket-check {
+        color: #000;
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-project-overview-outcome-ticket-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        line-height: 1.25;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-outcome-ticket-status {
+        color: rgba(255, 255, 255, 0.44);
+        font-size: 11px;
+        line-height: 1.25;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-outcome-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+        gap: 14px;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-project-overview-outcome-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-project-overview-outcome-side {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-project-overview-outcome-progress {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-project-overview-outcome-progress-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 11px;
+        line-height: 1.3;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-outcome-progress-track {
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-overview-outcome-progress-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #8bc4ff, #6c4dff);
+      }
+
+      .playground-project-overview-outcome-task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .playground-project-overview-outcome-task-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 24px;
+        color: rgba(255, 255, 255, 0.64);
+        font-size: 11px;
+        line-height: 1.3;
+      }
+
+      .playground-project-overview-outcome-task-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-outcome-task-status {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-project-overview-strategy-notes {
+        margin-top: 0;
+        padding-top: 0;
+      }
+
+      .playground-project-overview-strategy-notes.playground-tasks-detail-description {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        padding-left: 0;
+        padding-right: 0;
+        padding-bottom: 0;
+        border-radius: 0;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      @media (max-width: 760px) {
+        .playground-project-overview-outcome-card {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .playground-project-overview-strategy-tab,
+      .playground-project-overview-rules-tab {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 0;
+      }
+
+      .playground-project-overview-rules-tab {
+        min-height: max(560px, calc(100dvh - 220px));
+      }
+
+      .playground-project-overview-strategy-tab .playground-tasks-detail-scroll,
+      .playground-environments-page:not(.playground-agents-page) .playground-project-overview-strategy-tab .playground-project-overview-strategy-scroll,
+      .playground-environments-page:not(.playground-agents-page) .playground-project-overview-rules-tab .playground-project-overview-rules-scroll {
+        padding: 0;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-project-overview-strategy-tab .playground-tasks-detail-facts,
+      .playground-project-overview-strategy-tab .playground-tasks-detail-description,
+      .playground-project-overview-strategy-tab .playground-tasks-comments,
+      .playground-project-overview-strategy-tab .playground-tasks-comment-dock {
+        width: 100%;
+        box-sizing: border-box;
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      .playground-project-overview-strategy-tab .playground-tasks-comment-dock {
+        padding: 0;
+        background: transparent;
+      }
+
+      .playground-project-overview-strategy-tab .playground-tasks-detail-description,
+      .playground-project-overview-strategy-tab .playground-tasks-comments {
+        margin-top: 0;
+      }
+
+      .playground-project-overview-rules-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-project-overview-rules-empty {
+        min-height: 360px;
+        border-radius: 24px;
+      }
+
+      .playground-project-overview-rule-item {
+        cursor: default;
+      }
+
+      .playground-project-overview-rule-item:hover {
+        background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.05));
+        border-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-project-overview-rule-item .playground-tasks-backlog-leading {
+        flex: 0 0 auto;
+      }
+
+      .playground-project-overview-rule-item .playground-tasks-backlog-item-content {
+        align-items: center;
+      }
+
+      .playground-project-overview-rule-main {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .playground-project-overview-rule-copy {
+        flex: 1 1 auto;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 13px;
+        line-height: 1.55;
+        font-weight: 400;
+        cursor: text;
+      }
+
+      .playground-project-overview-rule-copy.tb-runner-chat {
+        display: block;
+        height: auto;
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow: visible;
+        background: transparent;
+        font-family: inherit;
+      }
+
+      .playground-project-overview-rule-copy.tb-runner-chat .tb-message-markdown {
+        margin: 0 !important;
+        margin-bottom: 0 !important;
+        color: inherit;
+        font-size: inherit;
+        line-height: inherit;
+        font-weight: inherit;
+      }
+
+      .playground-project-overview-rule-copy.tb-runner-chat p {
+        margin: 0 !important;
+      }
+
+      .playground-project-overview-rule-copy.tb-runner-chat .tb-message-markdown-paragraph,
+      .playground-project-overview-rule-copy.tb-runner-chat .tb-message-markdown-list,
+      .playground-project-overview-rule-copy.tb-runner-chat .tb-message-markdown-heading {
+        margin: 0 !important;
+      }
+
+      .playground-project-overview-rule-edit-input {
+        width: 100%;
+        min-width: 0;
+        min-height: 24px;
+        max-height: 160px;
+        padding: 0;
+        border: 0;
+        outline: none;
+        resize: none;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.9);
+        font: inherit;
+        line-height: 1.55;
+      }
+
+      .playground-project-overview-rule-edit-input::placeholder {
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-project-overview-rule-remove {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.42);
+        cursor: pointer;
+        transition: color 160ms ease, background-color 160ms ease, opacity 160ms ease;
+      }
+
+      .playground-project-overview-rule-remove:hover:not(:disabled) {
+        color: rgba(255, 255, 255, 0.86);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-overview-rule-remove:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .playground-project-overview-rules-composer-shell {
+        margin-top: auto;
+        margin-bottom: 10px;
+        position: sticky;
+        bottom: 10px;
+        z-index: 20;
+      }
+
+      .playground-project-overview-rules-runner.tb-runner-chat {
+        height: auto;
+        min-height: 0;
+        display: block;
+        flex: 0 0 auto;
+        overflow: visible;
+        background: transparent;
+      }
+
+      .playground-project-overview-rules-runner.tb-runner-chat .task-input-box {
+        --tb-task-input-overlay: transparent;
+        --tb-task-input-base-bg: transparent;
+        display: flex !important;
+        align-items: center !important;
+        min-height: 52px !important;
+        background: transparent !important;
+      }
+
+      .playground-project-overview-rules-runner.tb-runner-chat .task-input-box::before {
+        background: var(--tb-task-input-border);
+      }
+
+      .playground-project-overview-rules-runner.tb-runner-chat .sidebar-textarea {
+        height: 20px;
+        min-height: 20px !important;
+        max-height: 96px;
+        padding: 0 0 0 30px !important;
+        line-height: 20px !important;
+        overflow: hidden;
+      }
+
+      .playground-project-overview-rules-runner.tb-runner-chat .task-input-controls {
+        flex: 0 0 auto;
+        align-self: center !important;
+        align-items: center !important;
+        padding: 0 10px 0 8px !important;
+      }
+
+      .playground-project-overview-rules-runner.tb-runner-chat .task-input-controls-full {
+        flex-wrap: nowrap !important;
+      }
+
+      .playground-project-overview-rules-runner.tb-runner-chat .tb-composer-textarea-shell {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-project-overview-rules-runner.tb-runner-chat .task-input-spacer {
+        display: none;
+      }
+
+      .playground-project-overview-rules-copy {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
       .playground-project-overview-donut-layout {
         display: grid;
         grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
@@ -1843,7 +2421,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const projectOverviewDraft = projectDraft?.id === normalizedSelectedProjectId
             ? projectDraft
             : selectedProject;
-          const projectOverviewDescription = String(projectOverviewDraft?.description || "");
+          const projectOverviewGoal = String(projectOverviewDraft?.description || "");
           const projectThreads = Array.isArray(projectOverviewThreads) ? projectOverviewThreads : [];
           const normalizedOverviewTasks = Array.isArray(tasks)
             ? tasks.map((task) => normalizePlaygroundTaskRecord(task))
@@ -1853,6 +2431,58 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
           const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
+          const activeProjectOverviewHomeTab = projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "files"
+            ? projectOverviewHomeTab
+            : "general";
+
+          function renderProjectOverviewHomeTabs() {
+            const tabs = [
+	              { id: "general", label: "General" },
+	              { id: "strategy", label: "Strategy" },
+	              { id: "files", label: "Files & Resources" },
+	              { id: "rules", label: "Rules" },
+	            ];
+            return React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs" },
+              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+                tabs.map((tab) =>
+                  React.createElement("button", {
+                    key: tab.id,
+                    type: "button",
+                    className: "playground-project-overview-chart-tab" + (activeProjectOverviewHomeTab === tab.id ? " is-active" : ""),
+                    onClick: () => {
+                      if (typeof setProjectOverviewHomeTab === "function") {
+                        setProjectOverviewHomeTab(tab.id);
+                      }
+                      if (typeof setProjectOverviewTaskToolbarPopover === "function") {
+                        setProjectOverviewTaskToolbarPopover("");
+                      }
+                      if (typeof setProjectOverviewThreadToolbarPopover === "function") {
+                        setProjectOverviewThreadToolbarPopover("");
+                      }
+                      if (typeof setProjectOverviewFileToolbarPopover === "function") {
+                        setProjectOverviewFileToolbarPopover("");
+                      }
+                      if (tab.id === "strategy") {
+                        if (typeof setMissionControlSetupOpen === "function") {
+                          setMissionControlSetupOpen(false);
+                        }
+                        if (typeof setSelectedTaskId === "function") {
+                          setSelectedTaskId("");
+                        }
+                        if (typeof setDraftTask === "function") {
+                          setDraftTask(null);
+                        }
+                        if (typeof setMissionControlStrategyOpen === "function") {
+                          setMissionControlStrategyOpen(false);
+                        }
+                      }
+                    },
+                    "aria-pressed": activeProjectOverviewHomeTab === tab.id ? "true" : "false",
+                  }, tab.label)
+                )
+              )
+            );
+          }
 
           const projectOverviewTimescaleConfig = (() => {
             if (projectOverviewChartTimescale === "day") {
@@ -2889,7 +3519,608 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             return content;
           }
 
-          return React.createElement("div", { className: "playground-tasks-view-section playground-project-overview-view" },
+          function renderProjectOverviewStrategyPanel() {
+            const strategyBrief = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft);
+            const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
+
+            function getOutcomeTasks(outcome) {
+              const taskIds = new Set(normalizePlaygroundIdList(outcome?.taskIds));
+              const releaseId = normalizePlaygroundStrategyText(outcome?.releaseId);
+              if (!taskIds.size && !releaseId) {
+                return [];
+              }
+              return normalizedOverviewTasks.filter((task) => {
+                const taskId = String(task?.id || "").trim();
+                return (taskId && taskIds.has(taskId))
+                  || (releaseId && String(task?.releaseId || "").trim() === releaseId);
+              });
+            }
+
+            function getOutcomeTaskProgressValue(task) {
+              const status = getTaskBoardStatus(task);
+              if (status === "done") return 100;
+              if (status === "in_review") return 80;
+              if (status === "in_progress") return 50;
+              return 0;
+            }
+
+            function getOutcomeProgressInfo(outcome) {
+              const outcomeTasks = getOutcomeTasks(outcome);
+              const doneTasks = outcomeTasks.filter((task) => getTaskBoardStatus(task) === "done");
+              const progress = outcomeTasks.length > 0
+                ? Math.round(outcomeTasks.reduce((sum, task) => sum + getOutcomeTaskProgressValue(task), 0) / outcomeTasks.length)
+                : 0;
+              return {
+                tasks: outcomeTasks,
+                doneTasks,
+                progress,
+                isAchieved: outcomeTasks.length > 0 && doneTasks.length === outcomeTasks.length,
+              };
+            }
+
+            function openProjectOverviewOutcomeEditor(outcome, index) {
+              if (typeof setProjectOverviewOutcomeEditorState === "function") {
+                setProjectOverviewOutcomeEditorState({
+                  index,
+                  draft: buildProjectOverviewOutcomeEditorDraft(outcome, index),
+                });
+              }
+            }
+
+            function openProjectOverviewNewOutcomeEditor() {
+              const nextIndex = strategyBrief.outcomes.length;
+              if (typeof setProjectOverviewOutcomeEditorState === "function") {
+                setProjectOverviewOutcomeEditorState({
+                  index: nextIndex,
+                  isNew: true,
+                  draft: buildProjectOverviewOutcomeEditorDraft({
+                    id: "outcome-" + String(nextIndex + 1).padStart(2, "0"),
+                    title: "",
+                    description: "",
+                    successCriteria: [],
+                    taskIds: [],
+                  }, nextIndex),
+                });
+              }
+            }
+
+            function updateProjectOverviewOutcomeEditorDraft(updates) {
+              if (typeof setProjectOverviewOutcomeEditorState !== "function") return;
+              setProjectOverviewOutcomeEditorState((current) => current
+                ? {
+                    ...current,
+                    draft: {
+                      ...(current.draft || {}),
+                      ...(updates || {}),
+                    },
+                  }
+                : current
+              );
+            }
+
+            function buildProjectOverviewOutcomeEditorDraft(outcome, index = 0) {
+              const normalizedDraft = normalizePlaygroundStrategyOutcomeRecord(outcome, index);
+              return {
+                ...normalizedDraft,
+                successCriteriaInput: serializePlaygroundStrategyListForInput(normalizedDraft.successCriteria),
+              };
+            }
+
+            function getProjectOverviewOutcomeEditorDraft(index = 0) {
+              const rawDraft = projectOverviewOutcomeEditorState?.draft || {};
+              const normalizedDraft = normalizePlaygroundStrategyOutcomeRecord(rawDraft, index);
+              return {
+                ...normalizedDraft,
+                title: typeof rawDraft.title === "string" ? rawDraft.title : normalizedDraft.title,
+                description: typeof rawDraft.description === "string" ? rawDraft.description : normalizedDraft.description,
+                successCriteriaInput: typeof rawDraft.successCriteriaInput === "string"
+                  ? rawDraft.successCriteriaInput
+                  : serializePlaygroundStrategyListForInput(normalizedDraft.successCriteria),
+              };
+            }
+
+            function normalizeProjectOverviewOutcomeEditorDraftForSave(rawDraft, index = 0) {
+              return normalizePlaygroundStrategyOutcomeRecord({
+                ...(rawDraft || {}),
+                successCriteria: typeof rawDraft?.successCriteriaInput === "string"
+                  ? normalizePlaygroundStrategyTextList(rawDraft.successCriteriaInput)
+                  : rawDraft?.successCriteria,
+              }, index);
+            }
+
+            async function saveProjectOverviewOutcomeEditor() {
+              const index = Number(projectOverviewOutcomeEditorState?.index);
+              const draft = normalizeProjectOverviewOutcomeEditorDraftForSave(projectOverviewOutcomeEditorState?.draft, index);
+              if (!Number.isInteger(index) || index < 0 || index > strategyBrief.outcomes.length) {
+                if (typeof setProjectOverviewOutcomeEditorState === "function") {
+                  setProjectOverviewOutcomeEditorState(null);
+                }
+                return;
+              }
+              const isNewOutcome = projectOverviewOutcomeEditorState?.isNew === true || index >= strategyBrief.outcomes.length;
+              const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief({
+                ...missionControlStrategyDraft,
+                outcomes: isNewOutcome
+                  ? strategyBrief.outcomes.concat(draft)
+                  : strategyBrief.outcomes.map((outcome, outcomeIndex) => outcomeIndex === index ? draft : outcome),
+              });
+              if (typeof setMissionControlStrategyDraft === "function") {
+                setMissionControlStrategyDraft(nextStrategyBrief);
+              }
+              try {
+                await saveMissionControlStrategyBrief(nextStrategyBrief, { throwOnError: true });
+              } catch (error) {
+                if (typeof setMissionControlSaveState === "function") {
+                  setMissionControlSaveState({
+                    isSaving: false,
+                    error: error instanceof Error ? error.message : "Failed to save outcome.",
+                    message: "",
+                  });
+                }
+                return;
+              }
+              if (typeof setProjectOverviewOutcomeEditorState === "function") {
+                setProjectOverviewOutcomeEditorState(null);
+              }
+            }
+
+            function deleteProjectOverviewOutcomeEditor() {
+              const index = Number(projectOverviewOutcomeEditorState?.index);
+              if (projectOverviewOutcomeEditorState?.isNew !== true && Number.isInteger(index) && index >= 0) {
+                removeMissionControlStrategyOutcome(index);
+              }
+              if (typeof setProjectOverviewOutcomeEditorState === "function") {
+                setProjectOverviewOutcomeEditorState(null);
+              }
+            }
+
+            function toggleProjectOverviewOutcomeTask(taskId) {
+              const normalizedTaskId = String(taskId || "").trim();
+              if (!normalizedTaskId) return;
+              const currentTaskIds = normalizePlaygroundIdList(projectOverviewOutcomeEditorState?.draft?.taskIds);
+              const nextTaskIds = currentTaskIds.includes(normalizedTaskId)
+                ? currentTaskIds.filter((id) => id !== normalizedTaskId)
+                : currentTaskIds.concat(normalizedTaskId);
+              updateProjectOverviewOutcomeEditorDraft({ taskIds: nextTaskIds });
+            }
+
+            function renderOutcomePreviewRow(outcome, index) {
+              const progressInfo = getOutcomeProgressInfo(outcome);
+              const outcomeNumber = String(index + 1).padStart(3, "0");
+              const linkedLabel = progressInfo.tasks.length
+                ? progressInfo.doneTasks.length + "/" + progressInfo.tasks.length + " tickets done"
+                : "No tickets linked";
+              return React.createElement("div", {
+                  key: outcome.id || index,
+                  className: "playground-tasks-backlog-item playground-project-overview-outcome-preview",
+                  role: "button",
+                  tabIndex: 0,
+                  onClick: () => openProjectOverviewOutcomeEditor(outcome, index),
+                  onKeyDown: (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openProjectOverviewOutcomeEditor(outcome, index);
+                    }
+                  },
+                },
+                React.createElement("div", { className: "playground-tasks-backlog-item-content" },
+                  React.createElement("div", { className: "playground-tasks-backlog-leading" },
+                    React.createElement("div", {
+                      className: "playground-tasks-backlog-project-icon is-outcome",
+                      "aria-hidden": "true",
+                    }, React.createElement(Award, { width: 14, height: 14, strokeWidth: 1.9 })),
+                    React.createElement("div", { className: "playground-tasks-backlog-main" },
+                      React.createElement("span", { className: "playground-tasks-backlog-ticket" }, "Outcome " + outcomeNumber),
+                      React.createElement("span", { className: "playground-tasks-backlog-title" }, outcome.title || "Untitled Outcome")
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-backlog-meta" },
+                    React.createElement("span", { className: "playground-tasks-backlog-ticket" }, linkedLabel)
+                  )
+                ),
+                React.createElement("div", { className: "playground-project-overview-outcome-preview-progress" },
+                  React.createElement("div", { className: "playground-project-overview-outcome-preview-progress-track" },
+                    React.createElement("div", {
+                      className: "playground-project-overview-outcome-preview-progress-fill",
+                      style: { width: String(progressInfo.progress) + "%" },
+                    })
+                  )
+                )
+              );
+            }
+
+            function renderProjectOverviewOutcomeEditorModal() {
+              const index = Number(projectOverviewOutcomeEditorState?.index);
+              const draft = getProjectOverviewOutcomeEditorDraft(index);
+              if (!projectOverviewOutcomeEditorState || !Number.isInteger(index) || index < 0) {
+                return null;
+              }
+              const selectedTaskIds = new Set(normalizePlaygroundIdList(draft.taskIds));
+              const content = React.createElement("div", {
+                  className: "playground-tasks-project-modal-backdrop",
+                  onClick: () => setProjectOverviewOutcomeEditorState(null),
+                },
+                React.createElement("form", {
+                    className: "playground-tasks-project-modal playground-project-overview-outcome-editor-modal",
+                    onClick: (event) => event.stopPropagation(),
+                    onSubmit: (event) => {
+                      event.preventDefault();
+                      void saveProjectOverviewOutcomeEditor();
+                    },
+                  },
+                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                        React.createElement(Award, { width: 18, height: 18, strokeWidth: 1.9 })
+                      ),
+                      React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "Edit Outcome")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: () => setProjectOverviewOutcomeEditorState(null),
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-outcome-editor-body" },
+                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Title"),
+                      React.createElement("input", {
+                        type: "text",
+                        className: "playground-environments-input",
+                        value: draft.title,
+                        placeholder: "Outcome title",
+                        onChange: (event) => updateProjectOverviewOutcomeEditorDraft({ title: event.target.value }),
+                      })
+                    ),
+                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Description"),
+                      React.createElement("textarea", {
+                        className: "playground-environments-textarea",
+                        rows: 4,
+                        value: draft.description,
+                        placeholder: "What this outcome should achieve",
+                        onChange: (event) => updateProjectOverviewOutcomeEditorDraft({ description: event.target.value }),
+                      })
+                    ),
+                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Success Criteria"),
+                      React.createElement("textarea", {
+                        className: "playground-environments-textarea",
+                        rows: 3,
+                        value: draft.successCriteriaInput,
+                        placeholder: "One success criterion per line",
+                        onChange: (event) => updateProjectOverviewOutcomeEditorDraft({ successCriteriaInput: event.target.value }),
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Linked Tickets"),
+                      React.createElement("div", { className: "playground-project-overview-outcome-ticket-list" },
+                        normalizedOverviewTasks.length > 0
+                          ? normalizedOverviewTasks.map((task) => {
+                              const taskId = String(task?.id || "").trim();
+                              const selected = taskId && selectedTaskIds.has(taskId);
+                              const ticketNumber = taskTicketNumbersById[taskId] || task?.ticketNumber || "000";
+                              return React.createElement("button", {
+                                  key: taskId || ticketNumber,
+                                  type: "button",
+                                  className: "playground-project-overview-outcome-ticket-row" + (selected ? " is-selected" : ""),
+                                  onClick: () => toggleProjectOverviewOutcomeTask(taskId),
+                                },
+                                React.createElement("span", { className: "playground-project-overview-outcome-ticket-check" },
+                                  selected ? React.createElement(Check, { width: 11, height: 11, strokeWidth: 2.1 }) : null
+                                ),
+                                React.createElement("span", { className: "playground-project-overview-outcome-ticket-title" },
+                                  ticketNumber + " " + (task?.title || "Untitled Task")
+                                ),
+                                React.createElement("span", { className: "playground-project-overview-outcome-ticket-status" },
+                                  getPlaygroundTaskStatusLabel(getTaskBoardStatus(task))
+                                )
+                              );
+                            })
+                          : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No tickets in this project yet.")
+                      )
+                    )
+                  ),
+                  missionControlSaveState?.error
+                    ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, missionControlSaveState.error)
+                    : null,
+                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button playground-project-overview-outcome-delete-button",
+                      onClick: deleteProjectOverviewOutcomeEditor,
+                    }, "Delete"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: () => setProjectOverviewOutcomeEditorState(null),
+                    }, "Cancel"),
+                    React.createElement("button", {
+                      type: "submit",
+                      className: "playground-environments-action-button is-primary",
+                      disabled: missionControlSaveState.isSaving || !String(draft.title || "").trim(),
+                    }, "Save Outcome")
+                  )
+                )
+              );
+              if (typeof document !== "undefined" && document.body) {
+                return createPortal(content, document.body);
+              }
+              return content;
+            }
+
+            const outcomeProgressItems = strategyBrief.outcomes.map((outcome, index) => ({
+              outcome,
+              index,
+              ...getOutcomeProgressInfo(outcome),
+            }));
+            const allOutcomesCount = outcomeProgressItems.length;
+            const achievedOutcomesCount = outcomeProgressItems.filter((item) => item.isAchieved).length;
+            const notAchievedOutcomesCount = Math.max(0, allOutcomesCount - achievedOutcomesCount);
+            const mappedTicketIds = new Set();
+            outcomeProgressItems.forEach((item) => {
+              item.tasks.forEach((task) => {
+                const taskId = String(task?.id || "").trim();
+                if (taskId) mappedTicketIds.add(taskId);
+              });
+            });
+            const averageOutcomeProgress = allOutcomesCount > 0
+              ? Math.round(outcomeProgressItems.reduce((sum, item) => sum + Number(item.progress || 0), 0) / allOutcomesCount)
+              : 0;
+            const projectReadinessPercent = allOutcomesCount > 0
+              ? Math.round((achievedOutcomesCount / allOutcomesCount) * 100)
+              : 0;
+            const strategyKpis = [
+              { id: "all", value: String(allOutcomesCount), label: "All Outcomes" },
+              { id: "open", value: String(notAchievedOutcomesCount), label: "Not Achieved Yet" },
+              { id: "readiness", value: String(projectReadinessPercent) + "%", label: "Project Readiness" },
+              { id: "mapped", value: String(mappedTicketIds.size), label: "Mapped Tickets" },
+              { id: "average", value: String(averageOutcomeProgress) + "%", label: "Avg Outcome Progress" },
+            ];
+
+            return React.createElement("section", {
+                className: "playground-project-overview-strategy-tab",
+                ref: projectOverviewStrategySurfaceRef,
+              },
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-project-overview-strategy-scroll" },
+                React.createElement("div", { className: "playground-project-overview-strategy-brief" },
+                  React.createElement("div", { className: "playground-project-overview-strategy-goal" },
+                    React.createElement("h2", { className: "playground-project-overview-strategy-card-title" }, "Project Goal"),
+                    React.createElement("p", {
+                      className: "playground-project-overview-strategy-goal-text" + (String(projectOverviewGoal || "").trim() ? "" : " is-empty"),
+                    }, String(projectOverviewGoal || "").trim() || "No project goal set yet.")
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-chart-card playground-project-overview-strategy-progress-card" },
+                    React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
+                      strategyKpis.map((item) =>
+                        React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                          React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                            React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+                          ),
+                          React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                        )
+                      )
+                    ),
+                    React.createElement("div", { className: "playground-project-overview-strategy-add-row" },
+                      React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Outcomes"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button playground-project-overview-add-outcome-button",
+                        onClick: openProjectOverviewNewOutcomeEditor,
+                      },
+                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Add Outcome")
+                      )
+                    ),
+                    strategyBrief.outcomes.length > 0
+                      ? React.createElement("div", { className: "playground-project-overview-outcome-list" },
+                          strategyBrief.outcomes.map((outcome, index) => renderOutcomePreviewRow(outcome, index))
+                        )
+                      : React.createElement("div", { className: "playground-tasks-empty playground-project-overview-rules-empty" },
+                          React.createElement("div", { className: "playground-tasks-empty-title" }, "No outcomes yet"),
+                          React.createElement("div", { className: "playground-tasks-empty-copy" },
+                            "Add outcomes manually or run Mission Control to turn the strategy into measurable project outcomes."
+                          )
+                        )
+                  ),
+                  React.createElement("div", { className: "playground-project-overview-strategy-card is-notes" },
+                    React.createElement("div", { className: "playground-tasks-detail-description playground-project-overview-strategy-notes" },
+                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Full Strategy Notes"),
+                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                          [
+                            { id: "bold", label: "Bold", icon: Bold },
+                            { id: "italic", label: "Italic", icon: Italic },
+                            { id: "underline", label: "Underline", icon: Underline },
+                            { id: "list", label: "List", icon: List },
+                          ].map((action) =>
+                            React.createElement("button", {
+                              key: action.id,
+                              type: "button",
+                              className: "playground-tasks-detail-format-button",
+                              title: action.label,
+                              "aria-label": action.label,
+                              onMouseDown: (event) => event.preventDefault(),
+                              onClick: () => handleMissionControlDocumentFormat(action.id),
+                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isMissionControlDocumentEditing ? " is-editing" : " is-preview") },
+                        !isMissionControlDocumentEditing
+                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                              hasStrategyDocument
+                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                                    content: missionControlDocumentDraft,
+                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
+                                  })
+                                : React.createElement("div", {
+                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                                  }, "Run Mission Control first to generate the project strategy and backlog plan.")
+                            )
+                          : null,
+                        React.createElement("textarea", {
+                          ref: missionControlDocumentTextareaRef,
+                          className: "playground-tasks-detail-description-input " + (isMissionControlDocumentEditing ? "is-editing" : "is-preview"),
+                          rows: 1,
+                          placeholder: isMissionControlDocumentEditing ? "Add Strategy here" : "",
+                          value: missionControlDocumentDraft,
+                          onFocus: () => {
+                            setIsMissionControlDocumentEditing(true);
+                          },
+                          onChange: (event) => {
+                            setMissionControlDocumentDraft(event.target.value);
+                            resizeTaskDescriptionTextarea(event.currentTarget);
+                          },
+                          onBlur: () => {
+                            setIsMissionControlDocumentEditing(false);
+                            commitMissionControlDocumentIfDirty();
+                          },
+                        })
+                      )
+                    )
+                  )
+                ),
+                renderProjectOverviewOutcomeEditorModal()
+              )
+	            );
+	          }
+
+	          function renderProjectOverviewRulesPanel() {
+	            const ruleEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
+	            const canAddRule = Boolean(normalizePlaygroundProjectRuleEntry(projectRuleInputValue))
+	              && !projectSaveState.isSaving;
+
+	            return React.createElement("section", {
+	                className: "playground-project-overview-rules-tab",
+	                ref: projectOverviewRulesSurfaceRef,
+	              },
+	              React.createElement("div", { className: "playground-project-overview-rules-list" },
+	                ruleEntries.length > 0
+	                  ? ruleEntries.map((entry, index) =>
+	                      React.createElement("div", {
+	                        key: String(index) + ":" + entry.slice(0, 48),
+	                        className: "playground-tasks-backlog-item playground-project-overview-rule-item",
+	                      },
+	                        React.createElement("div", { className: "playground-tasks-backlog-item-content" },
+	                          React.createElement("div", { className: "playground-tasks-backlog-leading" },
+	                            React.createElement("span", { className: "playground-tasks-backlog-project-icon is-task" },
+	                              React.createElement(Shield, { width: 13, height: 13, strokeWidth: 1.8 })
+	                            )
+	                          ),
+	                          React.createElement("div", { className: "playground-tasks-backlog-main playground-project-overview-rule-main" },
+	                            projectRuleEditingIndex === index
+	                              ? React.createElement("textarea", {
+	                                  ref: projectRuleEditTextareaRef,
+	                                  rows: 1,
+	                                  className: "playground-project-overview-rule-edit-input",
+	                                  value: projectRuleEditingValue,
+	                                  placeholder: "Add project rule",
+	                                  onChange: (event) => {
+	                                    setProjectRuleEditingValue(event.target.value);
+	                                    resizeTaskDescriptionTextarea(event.currentTarget);
+	                                  },
+	                                  onBlur: () => {
+	                                    void commitProjectRuleEntryEdit(index);
+	                                  },
+	                                  onKeyDown: (event) => {
+	                                    if (event.key === "Enter" && !event.shiftKey) {
+	                                      event.preventDefault();
+	                                      event.currentTarget.blur();
+	                                      return;
+	                                    }
+	                                    if (event.key === "Escape") {
+	                                      event.preventDefault();
+	                                      cancelProjectRuleEntryEdit();
+	                                    }
+	                                  },
+	                                })
+	                              : React.createElement("div", {
+	                                  className: "playground-project-overview-rule-copy tb-runner-chat",
+	                                  role: "button",
+	                                  tabIndex: 0,
+	                                  onClick: () => beginProjectRuleEntryEdit(index, entry),
+	                                  onKeyDown: (event) => {
+	                                    if (event.key === "Enter" || event.key === " ") {
+	                                      event.preventDefault();
+	                                      beginProjectRuleEntryEdit(index, entry);
+	                                    }
+	                                  },
+	                                },
+	                                  React.createElement(PlaygroundTaskDescriptionMarkdown, {
+	                                    content: entry,
+	                                    className: "tb-message-markdown",
+	                                  })
+	                                )
+	                          ),
+	                          React.createElement("div", { className: "playground-tasks-backlog-meta" },
+	                            React.createElement("button", {
+	                              type: "button",
+	                              className: "playground-project-overview-rule-remove",
+	                              onClick: () => void handleRemoveProjectRuleEntry(index),
+	                              disabled: projectSaveState.isSaving,
+	                              title: "Remove rule",
+	                              "aria-label": "Remove rule " + String(index + 1),
+	                            }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }))
+	                          )
+	                        )
+	                      )
+	                    )
+	                  : React.createElement("div", { className: "playground-tasks-empty playground-tasks-backlog-empty playground-project-overview-rules-empty" },
+	                      React.createElement("div", { className: "playground-tasks-empty-title" }, "Rules are empty"),
+	                      React.createElement("div", { className: "playground-tasks-empty-copy" },
+	                        "Add project rules for repository conventions, deployment expectations, commit policy, communication style, or other operating constraints."
+	                      )
+	                    ),
+	                projectSaveState.error
+	                  ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, projectSaveState.error)
+	                  : projectSaveState.isSaving
+	                    ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Saving changes...")
+	                    : null
+	              ),
+	              React.createElement("div", {
+	                  className: "playground-project-overview-rules-composer-shell playground-tasks-backlog-composer-shell" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""),
+	                },
+	                React.createElement("div", { className: "tb-runner-chat playground-project-overview-rules-runner" },
+	                  React.createElement("div", { className: "task-input-box" },
+	                    React.createElement("div", { className: "tb-composer-textarea-shell" },
+	                      React.createElement("textarea", {
+	                        ref: projectRuleComposerTextareaRef,
+	                        rows: 1,
+	                        className: "sidebar-textarea",
+	                        value: projectRuleInputValue,
+	                        placeholder: "Add a project rule",
+	                        onChange: (event) => {
+	                          setProjectRuleInputValue(event.target.value);
+	                          resizeTaskDescriptionTextarea(event.currentTarget);
+	                        },
+	                        onKeyDown: (event) => {
+	                          if (event.key === "Enter" && !event.shiftKey) {
+	                            event.preventDefault();
+	                            void handleAddProjectRuleEntry();
+	                          }
+	                        },
+	                      })
+	                    ),
+	                    React.createElement("div", { className: "task-input-controls task-input-controls-full" },
+	                      React.createElement("div", { className: "task-input-spacer" }),
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "task-run-button task-run-button-full",
+	                        onClick: () => void handleAddProjectRuleEntry(),
+	                        disabled: !canAddRule,
+	                        "aria-label": "Add rule",
+	                        title: "Add rule",
+	                      }, React.createElement(ArrowUp, { className: "task-send-icon", strokeWidth: 2.1 }))
+	                    )
+	                  )
+	                )
+	              )
+	            );
+	          }
+
+	          return React.createElement("div", { className: "playground-tasks-view-section playground-project-overview-view" },
             React.createElement("div", { className: "playground-project-overview-hero-shell" },
               React.createElement("section", { className: "playground-project-overview-summary-surface" },
                 React.createElement("div", { className: "playground-project-overview-summary-header" },
@@ -2918,28 +4149,20 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                            projectFullAutoState?.enabled && projectFullAutoState.projectId === selectedProjectId ? "Stop Auto" : "Full Auto"
 	                          )
 	                        ),
-	                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button",
-                          onClick: openMissionControlStrategySidebar,
-                        },
-                          React.createElement(FileText, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Strategy")
-                        )
                       )
                     ),
-                    String(projectOverviewDescription || "").trim()
-                      ? React.createElement("div", { className: "playground-project-overview-summary-description" },
-                          React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: projectOverviewDescription,
-                            className: "playground-project-overview-summary-description-markdown tb-message-markdown",
-                          })
-                        )
-                      : null
+                    null
                   )
                 )
-              ),
-              React.createElement("div", { className: "playground-project-overview-chart-surface" },
+	              ),
+		              renderProjectOverviewHomeTabs(),
+			              activeProjectOverviewHomeTab === "strategy"
+			                ? renderProjectOverviewStrategyPanel()
+			                : activeProjectOverviewHomeTab === "rules"
+			                  ? renderProjectOverviewRulesPanel()
+			                  : React.createElement(React.Fragment, null,
+		              activeProjectOverviewHomeTab === "general"
+		                ? React.createElement("div", { className: "playground-project-overview-chart-surface" },
                 React.createElement("div", { className: "playground-project-overview-chart-grid" },
                   React.createElement("section", { className: "playground-settings-usage-chart-card playground-project-overview-chart-card" },
                     React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
@@ -3040,11 +4263,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                       projectOverviewIntegrationRows.map((row) => renderProjectOverviewIntegrationRow(row))
                     )
                   )
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-tasks-project-panel-grid" },
-              React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section" },
+	                )
+	              )
+		                : null,
+	            React.createElement("div", { className: "playground-tasks-project-panel-grid" },
+	              activeProjectOverviewHomeTab === "general"
+	                ? React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section" },
                 React.createElement("div", { className: "playground-plugins-section-header playground-project-overview-list-tabs-header" },
                   React.createElement("div", { className: "playground-project-overview-chart-tabs playground-project-overview-list-tabs" },
                     React.createElement("button", {
@@ -3269,10 +4493,12 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                               )
                             )
                     )
-              ),
-              React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
+	              )
+	                : null,
+	              activeProjectOverviewHomeTab === "files"
+	                ? React.createElement("section", { className: "playground-tasks-project-panel playground-project-overview-files-section" },
                 renderOverviewSectionHeader(
-                  "Files",
+                  "Files & Resources",
                   null
                 ),
                 React.createElement("div", { className: "playground-plugins-search-row", ref: projectOverviewFilesToolbarRef },
@@ -3359,7 +4585,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                     },
                   },
                     React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Show all on Files")
+                    React.createElement("span", null, "Show all on Files & Resources")
                   )
                 ),
                 React.createElement("div", { className: "playground-project-overview-files-activity" },
@@ -3483,12 +4709,15 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                             ),
                             overviewResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
                           )
-                        : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                            normalizedSearchQuery ? "No matching resources." : "No project resources have been created yet."
-                          )
-                ),
-                renderProjectOverviewFileMenu()
+	                        : React.createElement("div", { className: "playground-tasks-secondary-copy" },
+	                            normalizedSearchQuery ? "No matching resources." : "No project resources have been created yet."
+	                          )
+		                )
+		              )
+		                  : null,
+	                renderProjectOverviewFileMenu()
               )
+	                )
             )
           );
         }

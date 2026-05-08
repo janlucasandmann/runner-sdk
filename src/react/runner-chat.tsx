@@ -611,6 +611,37 @@ function sanitizeRunnerBudgetMessage(value: string): string {
     );
 }
 
+const AGENT_RUNTIME_INTERRUPTED_MESSAGE =
+  "The agent stopped unexpectedly before it could finish. Please retry this turn. If the issue continues, contact support.";
+
+function isInternalAgentRuntimeFailureMessage(value: string): boolean {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) return false;
+  return (
+    /\bclaw\s+worker\b/i.test(normalized) ||
+    /\bclaude\s+worker\b/i.test(normalized) ||
+    /\bworker\s+(?:exited|closed|is not available|produced no output|request failed|ready timeout)\b/i.test(normalized) ||
+    /\b(?:docker\s+exec|container execution)\s+failed\b/i.test(normalized) ||
+    /\bcontainer no longer exists\b/i.test(normalized) ||
+    /\bexited with code\s+137\b/i.test(normalized)
+  );
+}
+
+function sanitizeRunnerMessage(value: string): string {
+  const normalized = sanitizeRunnerBudgetMessage(value);
+  if (!isInternalAgentRuntimeFailureMessage(normalized)) {
+    return normalized;
+  }
+  const replacement = `Execution failed: ${AGENT_RUNTIME_INTERRUPTED_MESSAGE}`;
+  if (/\[Execution failed\]/i.test(normalized)) {
+    return normalized.replace(/\[Execution failed\][\s\S]*$/i, `[Execution failed]\n${replacement}`);
+  }
+  if (/^execution failed\b/i.test(normalized.trim())) {
+    return replacement;
+  }
+  return AGENT_RUNTIME_INTERRUPTED_MESSAGE;
+}
+
 function isComputeTokenBudgetErrorMessage(value: unknown): boolean {
   if (typeof value !== "string") {
     return false;
@@ -654,7 +685,7 @@ function isComputeTokenBudgetErrorLog(log: RunnerLog | null | undefined): boolea
 
 function normalizeRunnerConversationMessageContent(value: unknown): string {
   if (typeof value === "string") {
-    return sanitizeRunnerBudgetMessage(value);
+    return sanitizeRunnerMessage(value);
   }
   if (!Array.isArray(value)) {
     return "";
@@ -673,7 +704,7 @@ function normalizeRunnerConversationMessageContent(value: unknown): string {
     .filter(Boolean)
     .join("\n")
     .trim();
-  return sanitizeRunnerBudgetMessage(normalized);
+  return sanitizeRunnerMessage(normalized);
 }
 
 function normalizeRunnerConversationMessage(value: unknown): RunnerConversationMessage | null {
@@ -10641,7 +10672,7 @@ export function RunnerChat({
         threadId
       );
       const isAbort = normalizedError.name === "AbortError";
-      const errorMessage = sanitizeRunnerBudgetMessage(normalizedError.message || "Execution failed.");
+      const errorMessage = sanitizeRunnerMessage(normalizedError.message || "Execution failed.");
       const isComputeTokenError = isComputeTokenBudgetErrorMessage(errorMessage);
       updateTurn(turnId, (turn) => ({
         ...turn,
