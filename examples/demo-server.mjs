@@ -52,6 +52,11 @@ const githubOauthAllowedOrigins = [
   "http://localhost:3000",
   "http://localhost:4177",
 ];
+const notionOauthCallbackUri = (
+  process.env.NOTION_OAUTH_REDIRECT_URI
+  || process.env.NOTION_OAUTH_REDIRECT_URL
+  || "https://computer-agents.com/api/notion/callback"
+).trim();
 
 const html = `<!doctype html>
 <html lang="en">
@@ -6669,9 +6674,19 @@ const html = `<!doctype html>
       }
 
       .playground-onboarding-plan-price {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 6px;
         font-size: 34px;
         font-weight: 600;
         color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-onboarding-plan-price-after {
+        font-size: 12px;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.52);
       }
 
       .playground-onboarding-plan-price-copy {
@@ -7065,7 +7080,7 @@ const html = `<!doctype html>
 
       .playground-onboarding-sdk-title {
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 500;
         color: rgba(255, 255, 255, 0.96);
       }
 
@@ -7275,6 +7290,1406 @@ const html = `<!doctype html>
 
         .playground-onboarding-concept-preview-panel {
           min-height: 200px;
+        }
+      }
+
+      .playground-onboarding-scrim {
+        z-index: 2147482000;
+        align-items: stretch;
+        justify-content: stretch;
+        padding: 0;
+        background: rgba(0, 0, 0, 0.96);
+        backdrop-filter: none;
+      }
+
+      .playground-onboarding-modal {
+        width: 100vw;
+        max-height: none;
+        height: 100vh;
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        overflow: hidden;
+        border: 0;
+        border-radius: 0;
+        background: #000;
+        box-shadow: none;
+      }
+
+      .playground-onboarding-pane {
+        min-width: 0;
+        min-height: 0;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 18px 28px 20px;
+      }
+
+      .playground-onboarding-modal.is-welcome .playground-onboarding-pane.is-config.is-welcome {
+        opacity: 0;
+        transform: translateX(-100%);
+        transition:
+          opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+        will-change: opacity, transform;
+      }
+
+      .playground-onboarding-modal.is-welcome.is-welcome-video-started .playground-onboarding-pane.is-config.is-welcome {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .playground-onboarding-modal.is-welcome .playground-onboarding-pane.is-explain.is-welcome {
+        transition:
+          opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+        will-change: opacity, transform;
+      }
+
+      .playground-onboarding-modal.is-onboarding-transition-leaving .playground-onboarding-pane.is-config {
+        opacity: 0;
+        transform: translateX(-100%);
+        transition:
+          opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .playground-onboarding-modal.is-welcome.is-onboarding-transition-leaving .playground-onboarding-pane.is-config.is-welcome {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+
+      .playground-onboarding-modal.is-onboarding-transition-leaving .playground-onboarding-pane.is-explain {
+        opacity: 0;
+        transform: translateX(100%);
+        transition:
+          opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .playground-onboarding-modal.is-onboarding-transition-entering .playground-onboarding-pane.is-config {
+        animation: playgroundOnboardingPaneInLeft 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .playground-onboarding-modal.is-onboarding-transition-entering .playground-onboarding-pane.is-explain {
+        animation: playgroundOnboardingPaneInRight 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .playground-onboarding-modal.is-onboarding-pane-transition-leaving .playground-onboarding-pane.is-config {
+        opacity: 0;
+        transform: translateX(-100%);
+        transition:
+          opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .playground-onboarding-modal.is-onboarding-pane-transition-leaving .playground-onboarding-pane.is-explain {
+        opacity: 0;
+        transform: translateX(100%);
+        transition:
+          opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .playground-onboarding-modal.is-onboarding-pane-transition-entering .playground-onboarding-pane.is-config {
+        animation: playgroundOnboardingPaneInLeft 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .playground-onboarding-modal.is-onboarding-pane-transition-entering .playground-onboarding-pane.is-explain {
+        animation: playgroundOnboardingPaneInRight 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .playground-onboarding-modal.is-onboarding-free-exit-active .playground-onboarding-pane.is-config {
+        opacity: 0;
+        transform: translateX(-100%);
+        transition:
+          opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .playground-onboarding-modal.is-onboarding-free-exit-active .playground-onboarding-pane.is-explain {
+        opacity: 0;
+        transform: translateX(100%);
+        transition:
+          opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .playground-onboarding-modal.is-onboarding-free-exit-fading .playground-onboarding-video-bg {
+        opacity: 0;
+      }
+
+      .playground-onboarding-transition-loader {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+
+      .playground-onboarding-transition-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.36);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1;
+        backdrop-filter: blur(32px);
+        -webkit-backdrop-filter: blur(32px);
+        opacity: 0;
+        transform: scale(0);
+        transform-origin: center center;
+      }
+
+      .playground-onboarding-transition-dot-loader {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .playground-onboarding-transition-dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        animation: playgroundOnboardingTransitionDot 0.95s ease-in-out infinite;
+      }
+
+      .playground-onboarding-modal.is-onboarding-transition-loading .playground-onboarding-transition-label {
+        animation: playgroundOnboardingTransitionLabelIn 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .playground-onboarding-modal.is-onboarding-transition-hiding-label .playground-onboarding-transition-label {
+        animation: playgroundOnboardingTransitionLabelOut 220ms cubic-bezier(0.64, 0, 0.78, 0) both;
+      }
+
+      .playground-onboarding-pane.is-config {
+        background: rgba(0, 0, 0, 0.70);
+        backdrop-filter: blur(100px);
+        -webkit-backdrop-filter: blur(100px);
+      }
+
+      .playground-onboarding-pane.is-config.is-welcome {
+        padding-top: 18px;
+      }
+
+      .playground-onboarding-pane.is-explain {
+        position: relative;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .playground-onboarding-pane.is-explain > *:not(.playground-onboarding-video-bg) {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-onboarding-video-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+        background: #000;
+        opacity: 1;
+        transition: opacity 420ms ease;
+      }
+
+      .playground-onboarding-video-bg-media {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .playground-onboarding-video-bg-video {
+        opacity: 0;
+        transition: opacity 700ms ease;
+      }
+
+      .playground-onboarding-video-bg-video.is-ready {
+        opacity: 1;
+      }
+
+      .playground-onboarding-video-bg-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.8));
+      }
+
+      .playground-onboarding-pane-top,
+      .playground-onboarding-pane-bottom,
+      .playground-onboarding-back-button,
+      .playground-onboarding-step-count,
+      .playground-onboarding-progress-group,
+      .playground-onboarding-config-heading,
+      .playground-onboarding-option-card,
+      .playground-onboarding-agent-row,
+      .playground-onboarding-connector-row,
+      .playground-onboarding-resource-row,
+      .playground-onboarding-plan-action-row,
+      .playground-onboarding-explain-bullet,
+      .playground-onboarding-dots {
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-onboarding-pane-top {
+        flex: 0 0 auto;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 24px;
+      }
+
+      .playground-onboarding-back-button,
+      .playground-onboarding-close {
+        width: auto;
+        height: auto;
+        min-height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 13px;
+        font-weight: 400;
+        gap: 8px;
+      }
+
+      .playground-onboarding-back-button:hover,
+      .playground-onboarding-close:hover {
+        background: transparent;
+        color: #fff;
+      }
+
+      .playground-onboarding-step-count {
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-onboarding-config-scroll {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow: auto;
+        padding-right: 2px;
+        scrollbar-width: none;
+      }
+
+      .playground-onboarding-pane.is-welcome .playground-onboarding-config-scroll {
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-onboarding-config-scroll::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-onboarding-config-stack {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-onboarding-pane.is-welcome .playground-onboarding-config-stack {
+        min-height: 100%;
+        justify-content: center;
+      }
+
+      .playground-onboarding-pane.is-computer .playground-onboarding-config-scroll,
+      .playground-onboarding-pane.is-agents .playground-onboarding-config-scroll,
+      .playground-onboarding-pane.is-connectors .playground-onboarding-config-scroll,
+      .playground-onboarding-pane.is-plan .playground-onboarding-config-scroll {
+        display: flex;
+        align-items: center;
+      }
+
+      .playground-onboarding-pane.is-computer .playground-onboarding-config-stack,
+      .playground-onboarding-pane.is-agents .playground-onboarding-config-stack,
+      .playground-onboarding-pane.is-connectors .playground-onboarding-config-stack,
+      .playground-onboarding-pane.is-plan .playground-onboarding-config-stack {
+        justify-content: center;
+      }
+
+      .playground-onboarding-config-heading {
+        align-items: flex-start;
+        gap: 12px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+      }
+
+      .playground-onboarding-config-heading.is-plain {
+        gap: 0;
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .playground-onboarding-config-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .playground-onboarding-config-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 1.25;
+      }
+
+      .playground-onboarding-config-copy {
+        margin: 4px 0 0;
+        max-width: 520px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.55;
+      }
+
+      .playground-onboarding-pane.is-agents .playground-onboarding-config-copy {
+        max-width: none;
+        white-space: nowrap;
+      }
+
+      .playground-onboarding-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-onboarding-section-title {
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-option-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .playground-onboarding-option-card {
+        min-height: 82px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+        padding: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-onboarding-option-card.is-active {
+        border-color: rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.10);
+      }
+
+      .playground-onboarding-option-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.25;
+      }
+
+      .playground-onboarding-option-copy {
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-onboarding-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-onboarding-form-grid.is-single {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .playground-onboarding-field {
+        gap: 7px;
+      }
+
+      .playground-onboarding-label {
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-onboarding-input,
+      .playground-onboarding-select,
+      .playground-onboarding-textarea {
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.10);
+      }
+
+      .playground-onboarding-select {
+        color-scheme: dark;
+      }
+
+      .playground-onboarding-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex: 0 0 auto;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.10);
+      }
+
+      .playground-onboarding-agent-list,
+      .playground-onboarding-connector-list,
+      .playground-onboarding-resource-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-onboarding-agent-list,
+      .playground-onboarding-connector-list {
+        gap: 14px;
+      }
+
+      .playground-onboarding-agent-row,
+      .playground-onboarding-connector-row,
+      .playground-onboarding-resource-row {
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-onboarding-agent-row,
+      .playground-onboarding-connector-row {
+        padding: 0;
+        padding-bottom: 12px;
+        border: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-onboarding-row-main {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+      }
+
+      .playground-onboarding-row-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.08);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.86);
+        flex: 0 0 auto;
+      }
+
+      .playground-onboarding-connector-logo,
+      .playground-onboarding-row-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        object-fit: cover;
+        display: block;
+        flex: 0 0 auto;
+      }
+
+      .playground-onboarding-connector-logo {
+        border-radius: 0;
+        object-fit: contain;
+      }
+
+      .playground-onboarding-connector-logo.is-github {
+        filter: invert(1);
+        opacity: 0.9;
+      }
+
+      .playground-onboarding-connector-logo-fallback {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.86);
+        background: rgba(255, 255, 255, 0.08);
+        flex: 0 0 auto;
+      }
+
+      .playground-onboarding-row-title {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.25;
+      }
+
+      .playground-onboarding-row-copy {
+        margin-top: 3px;
+        color: rgba(255, 255, 255, 0.50);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-row-status {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.60);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-onboarding-agent-model {
+        min-width: 180px;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.62);
+        text-align: right;
+      }
+
+      .playground-onboarding-agent-model-name {
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.2;
+      }
+
+      .playground-onboarding-connector-action {
+        flex: 0 0 auto;
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 12px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-onboarding-connector-action:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.10);
+      }
+
+      .playground-onboarding-connector-action.is-connected {
+        border-color: transparent;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.56);
+        cursor: default;
+      }
+
+      .playground-onboarding-pane-bottom {
+        flex: 0 0 auto;
+        justify-content: space-between;
+        gap: 14px;
+        padding-top: 14px;
+      }
+
+      .playground-onboarding-dots {
+        gap: 7px;
+      }
+
+      .playground-onboarding-progress-group {
+        gap: 12px;
+      }
+
+      .playground-onboarding-dot {
+        width: 7px;
+        min-width: 7px;
+        max-width: 7px;
+        height: 7px;
+        min-height: 7px;
+        max-height: 7px;
+        flex: 0 0 7px;
+        display: block;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.24);
+      }
+
+      .playground-onboarding-dot.is-active {
+        width: 7px;
+        min-width: 7px;
+        max-width: 7px;
+        height: 7px;
+        min-height: 7px;
+        max-height: 7px;
+        background: #fff;
+      }
+
+      .playground-onboarding-footer-actions {
+        gap: 10px;
+      }
+
+      .playground-onboarding-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 0 16px;
+        border-radius: 999px;
+        font-weight: 400;
+      }
+
+      .playground-onboarding-button.is-link {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-onboarding-button.is-link:hover {
+        background: transparent;
+        color: #fff;
+      }
+
+      .playground-onboarding-button.is-primary {
+        background: #fff;
+        color: #000;
+      }
+
+      .playground-onboarding-button-loader {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .playground-onboarding-button-loader-dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 999px;
+        background: currentColor;
+        animation: playgroundOnboardingTransitionDot 0.95s ease-in-out infinite;
+      }
+
+      .playground-onboarding-free-plan-link {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.50);
+        font-size: 12px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-onboarding-free-plan-link:hover {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .playground-onboarding-explain-inner {
+        width: 100%;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .playground-onboarding-pane.is-explain.is-computer .playground-onboarding-pane-top,
+      .playground-onboarding-pane.is-explain.is-agents .playground-onboarding-pane-top,
+      .playground-onboarding-pane.is-explain.is-connectors .playground-onboarding-pane-top,
+      .playground-onboarding-pane.is-explain.is-plan .playground-onboarding-pane-top {
+        display: none;
+      }
+
+      .playground-onboarding-pane.is-explain.is-computer .playground-onboarding-explain-inner,
+      .playground-onboarding-pane.is-explain.is-agents .playground-onboarding-explain-inner,
+      .playground-onboarding-pane.is-explain.is-connectors .playground-onboarding-explain-inner,
+      .playground-onboarding-pane.is-explain.is-plan .playground-onboarding-explain-inner {
+        align-items: center;
+      }
+
+      .playground-onboarding-explain-kicker {
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.10em;
+        text-transform: uppercase;
+      }
+
+      .playground-onboarding-explain-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.98);
+        font-size: 34px;
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: 0;
+      }
+
+      .playground-onboarding-explain-copy {
+        margin: 0;
+        max-width: 560px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.65;
+      }
+
+      .playground-onboarding-pane.is-explain.is-computer .playground-onboarding-explain-title,
+      .playground-onboarding-pane.is-explain.is-computer .playground-onboarding-explain-copy,
+      .playground-onboarding-pane.is-explain.is-computer .playground-onboarding-explain-list,
+      .playground-onboarding-pane.is-explain.is-agents .playground-onboarding-explain-title,
+      .playground-onboarding-pane.is-explain.is-agents .playground-onboarding-explain-copy,
+      .playground-onboarding-pane.is-explain.is-agents .playground-onboarding-explain-list,
+      .playground-onboarding-pane.is-explain.is-connectors .playground-onboarding-explain-title,
+      .playground-onboarding-pane.is-explain.is-connectors .playground-onboarding-explain-copy,
+      .playground-onboarding-pane.is-explain.is-connectors .playground-onboarding-explain-list,
+      .playground-onboarding-pane.is-explain.is-plan .playground-onboarding-explain-title,
+      .playground-onboarding-pane.is-explain.is-plan .playground-onboarding-explain-copy,
+      .playground-onboarding-pane.is-explain.is-plan .playground-onboarding-explain-list {
+        width: min(100%, 520px);
+        max-width: 520px;
+      }
+
+      .playground-onboarding-pane.is-explain.is-computer .playground-onboarding-explain-title,
+      .playground-onboarding-pane.is-explain.is-agents .playground-onboarding-explain-title,
+      .playground-onboarding-pane.is-explain.is-connectors .playground-onboarding-explain-title,
+      .playground-onboarding-pane.is-explain.is-plan .playground-onboarding-explain-title {
+        font-weight: 500;
+      }
+
+      .playground-onboarding-explain-visual {
+        width: min(180px, 34vw);
+        height: auto;
+        display: block;
+        margin: 0 0 10px;
+      }
+
+      .playground-onboarding-pane.is-explain.is-computer .playground-onboarding-explain-visual,
+      .playground-onboarding-pane.is-explain.is-agents .playground-onboarding-explain-visual {
+        width: 260px;
+        max-width: min(260px, 54vw);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .playground-onboarding-pane.is-explain.is-agents .playground-onboarding-explain-visual {
+        border-radius: 999px;
+      }
+
+      .playground-onboarding-explain-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 4px;
+      }
+
+      .playground-onboarding-explain-bullet {
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .playground-onboarding-explain-bullet-icon {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        color: rgba(255, 255, 255, 0.76);
+        flex: 0 0 auto;
+      }
+
+      .playground-onboarding-explain-bullet-title {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-explain-bullet-copy {
+        margin-top: 3px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-onboarding-plan-card {
+        width: min(100%, 380px);
+        padding: 16px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 0 auto;
+      }
+
+      .playground-onboarding-welcome-intro {
+        width: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 28px;
+        padding: 0 0 42px;
+      }
+
+      .playground-onboarding-welcome-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-welcome-kicker-icon {
+        color: rgba(255, 255, 255, 0.94);
+        flex: 0 0 auto;
+      }
+
+      .playground-onboarding-welcome-title {
+        margin: 0;
+        max-width: 660px;
+        color: rgba(255, 255, 255, 0.98);
+        font-size: clamp(38px, 4.3vw, 58px);
+        font-weight: 500;
+        line-height: 1.04;
+        letter-spacing: 0;
+      }
+
+      .playground-onboarding-welcome-title-accent {
+        color: inherit;
+        font-style: normal;
+        font-weight: inherit;
+      }
+
+      .playground-onboarding-welcome-copy {
+        margin: 0;
+        max-width: 640px;
+        color: rgba(255, 255, 255, 0.64);
+        font-size: 17px;
+        font-weight: 400;
+        line-height: 1.55;
+      }
+
+      .playground-onboarding-welcome-note {
+        margin: -12px 0 0;
+        max-width: 560px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.5;
+      }
+
+      .playground-onboarding-welcome-prompt-stage {
+        width: 100%;
+        min-height: 100%;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+
+      .playground-onboarding-welcome-prompt-wrap {
+        width: min(100%, 56rem);
+        max-width: 56rem;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: 84px 0 98px;
+      }
+
+      .tb-runner-chat.playground-onboarding-welcome-runner-mock {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-height: 0;
+        flex: 0 1 auto;
+        display: block;
+        overflow: visible;
+        background: transparent;
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-onboarding-welcome-prompt-stage .tb-input-width {
+        width: 100%;
+        max-width: 56rem;
+        pointer-events: none;
+      }
+
+      .playground-onboarding-modal.is-welcome .playground-onboarding-welcome-prompt-stage .embedded-runner-input {
+        opacity: 0;
+        transform: scale(0);
+        transform-origin: center center;
+      }
+
+      .playground-onboarding-modal.is-welcome.is-welcome-video-started .playground-onboarding-welcome-prompt-stage .embedded-runner-input {
+        animation: playgroundOnboardingPromptIn 440ms cubic-bezier(0.22, 1, 0.36, 1) 620ms both;
+      }
+
+      .playground-onboarding-welcome-prompt-stage .tb-runner-chat.playground-onboarding-welcome-runner-mock .task-input-box {
+        --tb-task-input-overlay: transparent;
+        --tb-task-input-base-bg: rgba(0, 0, 0, 0.25);
+        pointer-events: none;
+        background: rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+      }
+
+      .playground-onboarding-welcome-prompt-stage .sidebar-textarea {
+        height: 52px;
+        overflow: hidden;
+      }
+
+      .playground-onboarding-welcome-input-guide {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .playground-onboarding-modal.is-welcome.is-welcome-video-started .playground-onboarding-welcome-input-guide {
+        animation: playgroundOnboardingGuideIn 340ms ease 820ms both;
+      }
+
+      .playground-onboarding-welcome-input-guide-lines {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        z-index: 20;
+      }
+
+      .playground-onboarding-welcome-input-guide-line {
+        stroke: rgba(255, 255, 255, 0.42);
+        stroke-width: 1;
+        stroke-linecap: round;
+        stroke-dasharray: 1 6;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .playground-onboarding-welcome-input-guide-item {
+        position: absolute;
+        width: var(--playground-onboarding-guide-width, 120px);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        text-align: left;
+        z-index: 21;
+      }
+
+      .playground-onboarding-welcome-input-guide-item-textarea {
+        left: 20px;
+        top: 20px;
+        --playground-onboarding-guide-width: 270px;
+      }
+
+      .playground-onboarding-welcome-input-guide-item-attach {
+        left: 6px;
+        top: 218px;
+        --playground-onboarding-guide-width: 78px;
+      }
+
+      .playground-onboarding-welcome-input-guide-item-context {
+        left: 96px;
+        top: 218px;
+        --playground-onboarding-guide-width: 82px;
+      }
+
+      .playground-onboarding-welcome-input-guide-item-team {
+        left: 208px;
+        top: 218px;
+        --playground-onboarding-guide-width: 132px;
+      }
+
+      .playground-onboarding-welcome-input-guide-item-computer {
+        right: 48px;
+        top: 218px;
+        align-items: flex-end;
+        text-align: right;
+        --playground-onboarding-guide-width: 142px;
+      }
+
+      .playground-onboarding-welcome-input-guide-item-voice {
+        right: 0;
+        top: 20px;
+        align-items: flex-end;
+        text-align: right;
+        --playground-onboarding-guide-width: 230px;
+      }
+
+      .playground-onboarding-welcome-input-guide-title {
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.25;
+      }
+
+      .playground-onboarding-welcome-input-guide-copy {
+        max-width: 150px;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-welcome-input-guide-item-textarea .playground-onboarding-welcome-input-guide-copy,
+      .playground-onboarding-welcome-input-guide-item-voice .playground-onboarding-welcome-input-guide-copy {
+        max-width: 100%;
+      }
+
+      @keyframes playgroundOnboardingPromptIn {
+        from {
+          opacity: 0;
+          transform: scale(0);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes playgroundOnboardingGuideIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes playgroundOnboardingPaneInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-100%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes playgroundOnboardingPaneInRight {
+        from {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes playgroundOnboardingTransitionLabelIn {
+        from {
+          opacity: 0;
+          transform: scale(0);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes playgroundOnboardingTransitionLabelOut {
+        from {
+          opacity: 1;
+          transform: scale(1);
+        }
+        to {
+          opacity: 0;
+          transform: scale(0);
+        }
+      }
+
+      @keyframes playgroundOnboardingTransitionDot {
+        0%,
+        80%,
+        100% {
+          opacity: 0.24;
+          transform: translateY(0);
+        }
+        40% {
+          opacity: 1;
+          transform: translateY(-1px);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .playground-onboarding-modal.is-welcome .playground-onboarding-pane.is-config.is-welcome,
+        .playground-onboarding-modal.is-welcome .playground-onboarding-welcome-prompt-stage .embedded-runner-input,
+        .playground-onboarding-modal.is-welcome .playground-onboarding-welcome-input-guide,
+        .playground-onboarding-modal.is-onboarding-transition-leaving .playground-onboarding-pane,
+        .playground-onboarding-modal.is-onboarding-transition-entering .playground-onboarding-pane,
+        .playground-onboarding-modal.is-onboarding-pane-transition-leaving .playground-onboarding-pane,
+        .playground-onboarding-modal.is-onboarding-pane-transition-entering .playground-onboarding-pane,
+        .playground-onboarding-modal.is-onboarding-free-exit-active .playground-onboarding-pane,
+        .playground-onboarding-modal.is-onboarding-free-exit-fading .playground-onboarding-video-bg,
+        .playground-onboarding-transition-label {
+          opacity: 1;
+          transform: none;
+          transition: none;
+          animation: none;
+        }
+      }
+
+      @media (max-width: 1040px) {
+        .playground-onboarding-welcome-input-guide-copy {
+          display: none;
+        }
+      }
+
+      .playground-onboarding-computer-card {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(255, 255, 255, 0.10);
+        overflow: hidden;
+      }
+
+      .playground-onboarding-computer-section-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-computer-upload-zone {
+        min-height: 168px;
+        border: 1px dashed rgba(255, 255, 255, 0.20);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.14);
+        overflow: hidden;
+      }
+
+      .playground-onboarding-computer-upload-zone.is-dragging {
+        border-color: rgba(255, 255, 255, 0.46);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-onboarding-computer-upload-zone.is-busy {
+        opacity: 0.76;
+      }
+
+      .playground-onboarding-computer-upload-zone.is-filled {
+        padding: 12px 14px 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-onboarding-computer-upload-button {
+        width: 100%;
+        min-height: 168px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 20px 16px;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.92);
+        cursor: pointer;
+      }
+
+      .playground-onboarding-computer-upload-button:disabled {
+        cursor: default;
+      }
+
+      .playground-onboarding-computer-upload-icon {
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      .playground-onboarding-computer-upload-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-computer-upload-copy {
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-computer-upload-zone.is-filled .playground-tasks-attachments-topline {
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+      }
+
+      .playground-onboarding-computer-upload-attachments-scope.tb-runner-chat {
+        width: auto;
+        height: auto;
+        min-height: 0;
+        flex: 0 0 auto;
+        display: block;
+        overflow: visible;
+        background: transparent;
+      }
+
+      .playground-onboarding-computer-upload-zone.is-filled .playground-onboarding-computer-upload-attachments-scope .runner-attachments {
+        width: auto;
+        max-width: 100%;
+        display: inline-flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 0;
+        margin: 0 auto;
+      }
+
+      .playground-onboarding-computer-upload-list {
+        width: 100%;
+        max-width: 420px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 12px;
+      }
+
+      .playground-onboarding-computer-upload-file {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-computer-upload-error {
+        margin-top: 12px;
+        color: rgb(252, 165, 165);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.4;
+      }
+
+      .playground-onboarding-computer-facts {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-onboarding-computer-fact {
+        min-height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .playground-onboarding-computer-fact-label {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
+      .playground-onboarding-computer-fact-value {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+        text-align: right;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-onboarding-computer-select {
+        width: auto;
+        min-height: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 500;
+        color-scheme: dark;
+      }
+
+      .playground-onboarding-plan-price {
+        font-size: 34px;
+      }
+
+      .playground-onboarding-plan-action-row {
+        justify-content: flex-start;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .playground-onboarding-plan-title-cta {
+        align-self: stretch;
+        border-radius: 15px;
+      }
+
+      @media (max-width: 920px) {
+        .playground-onboarding-modal {
+          grid-template-columns: 1fr;
+          overflow: auto;
+        }
+
+        .playground-onboarding-pane {
+          min-height: 50vh;
+        }
+
+        .playground-onboarding-pane.is-explain {
+          border-left: 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .playground-onboarding-option-grid,
+        .playground-onboarding-form-grid {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -30805,7 +32220,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Mic, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -30973,6 +32388,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       const PLAYGROUND_ONEDRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/5/59/Microsoft_Office_OneDrive_%282019%E2%80%932025%29.svg";
       const PLAYGROUND_NOTION_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg";
       const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
+      const PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM = "onboardingStep";
       const PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM = "showSubscriptionSuccess";
       const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
       const PLAYGROUND_AUTH_REDIRECT_STATE_KEY = "runner_demo_auth_redirect_v1";
@@ -35102,7 +36518,7 @@ ${ENVIRONMENT_CHANGES_CSS}
           modelOptions,
           isFreeTier
             ? ["claude-haiku-4-5", "gemini-3-flash", "gemini-3-1-flash", "gemini-3-flash-preview"]
-            : ["claude-haiku-4-5", "claude-sonnet-4-5", "gemini-3-flash", "gemini-3-1-flash"]
+            : ["kimi-k2.6", "deepseek-v4-pro", "claude-sonnet-4-5", "claude-haiku-4-5", "gemini-3-flash", "gemini-3-1-flash"]
         );
       }
 
@@ -78949,6 +80365,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         detailOnly,
         onCloseDetailOnly,
         standaloneMode,
+        subscriptionTierId = "",
       }) {
         const effectiveApiKey = useMemo(() => String(apiKey || "").trim(), [apiKey]);
         const isDetailOnlyMode = Boolean(detailOnly);
@@ -85413,16 +86830,20 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
         }
 
-        function openProjectComposer() {
+        function openProjectComposer(options = {}) {
           const defaultProjectEnvironmentId = projectComposerDefaultEnvironmentId || null;
-          projectDraftNameDirtyRef.current = false;
-          projectDraftTypedNameRef.current = "";
+          const initialName = String(options?.name || "").trim();
+          const initialDescription = String(options?.description || options?.goal || "").trim();
+          projectDraftNameDirtyRef.current = Boolean(initialName);
+          projectDraftTypedNameRef.current = initialName;
           setProjectComposerMode("create");
           setProjectDraft({
             ...buildPlaygroundDefaultProjectDraft(),
+            ...(initialName ? { name: initialName } : {}),
+            ...(initialDescription ? { description: initialDescription } : {}),
             defaultEnvironmentId: defaultProjectEnvironmentId,
           });
-          setProjectDescriptionEditing(false);
+          setProjectDescriptionEditing(Boolean(initialDescription));
           setProjectComposerEnvironmentPopoverOpen(false);
           setProjectPreviewedAttachmentId("");
           setProjectAttachmentTransferState({
@@ -87212,6 +88633,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const requestedProjectComposerConnectorRestoreState = requestedProjectComposerAction === "restore-connector"
             ? normalizePlaygroundProjectComposerConnectorRestoreState(navigationRequest?.projectComposerConnectorRestoreState)
             : null;
+          const requestedProjectComposerDraft = navigationRequest?.projectComposerDraft && typeof navigationRequest.projectComposerDraft === "object" && !Array.isArray(navigationRequest.projectComposerDraft)
+            ? {
+                name: String(navigationRequest.projectComposerDraft.name || "").trim(),
+                description: String(navigationRequest.projectComposerDraft.description || navigationRequest.projectComposerDraft.goal || "").trim(),
+              }
+            : null;
 
           console.info("[connector-debug] tasks navigation request received", {
             requestToken,
@@ -87256,7 +88683,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           );
           setPendingNavigationProjectComposerRequest(
             requestedProjectComposerAction === "create"
-              ? { token: requestToken, action: "create" }
+              ? {
+                  token: requestToken,
+                  action: "create",
+                  draft: requestedProjectComposerDraft,
+                }
               : requestedProjectComposerAction === "edit" && requestedProjectId
                 ? {
                     token: requestToken,
@@ -87378,7 +88809,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (selectedProjectId) {
             return;
           }
-          openProjectComposer();
+          openProjectComposer(pendingNavigationProjectComposerRequest?.draft || {});
           setPendingNavigationProjectComposerRequest(null);
         }, [pendingNavigationProjectComposerRequest, projects, selectedProject, selectedProjectId, selectedProjectSnapshot]);
 
@@ -90977,15 +92408,15 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           } catch {}
         }
 
-        function buildMissionControlAgentPayload(agentRecord) {
-          const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord || buildPlaygroundMissionControlAgentDraft());
+        function buildMissionControlAgentPayload(agentRecord, modelOptions = PLAYGROUND_AGENT_MODEL_OPTIONS, tierId = subscriptionTierId) {
+          const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord || buildPlaygroundMissionControlAgentDraft(modelOptions, tierId));
           const existingMetadata = normalizedAgent.metadata && typeof normalizedAgent.metadata === "object" && !Array.isArray(normalizedAgent.metadata)
             ? normalizedAgent.metadata
             : {};
           return {
             name: PLAYGROUND_MISSION_CONTROL_AGENT_NAME,
             description: String(normalizedAgent.description || "").trim() || PLAYGROUND_MISSION_CONTROL_AGENT_DESCRIPTION,
-            model: getPlaygroundAgentModelMeta(normalizedAgent.model || "claude-haiku-4-5").id,
+            model: getPlaygroundAgentModelMeta(normalizedAgent.model || resolvePlaygroundMissionControlAgentModelId(modelOptions, tierId), modelOptions).id,
             instructions: String(normalizedAgent.instructions || buildPlaygroundMissionControlAgentInstructions()),
             binary: String(normalizedAgent.binary || "").trim() || "Claude Code CLI",
             reasoningEffort: ["minimal", "low", "medium", "high"].includes(normalizedAgent.reasoningEffort)
@@ -91015,17 +92446,62 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           };
         }
 
+        async function alignMissionControlAgentModel(agentRecord) {
+          const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord);
+          if (!normalizedAgent?.id || normalizedAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+            return normalizedAgent;
+          }
+
+          const desiredModelId = resolvePlaygroundMissionControlAgentModelId(PLAYGROUND_AGENT_MODEL_OPTIONS, subscriptionTierId);
+          if (!desiredModelId || normalizedAgent.model === desiredModelId) {
+            return normalizedAgent;
+          }
+
+          try {
+            const payload = buildMissionControlAgentPayload({
+              ...normalizedAgent,
+              model: desiredModelId,
+            }, PLAYGROUND_AGENT_MODEL_OPTIONS, subscriptionTierId);
+            const response = await fetch(backendUrl + "/agents/" + encodeURIComponent(normalizedAgent.id), {
+              method: "PATCH",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update Mission Control.");
+            }
+            return normalizePlaygroundAgentRecord(getPlaygroundAgentResponseRecord(data) || {
+              ...normalizedAgent,
+              ...payload,
+              id: normalizedAgent.id,
+              updatedAt: new Date().toISOString(),
+            });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to update Mission Control.";
+            if (!isPlaygroundPaidModelSubscriptionError(errorMessage)) {
+              console.warn("Failed to align Mission Control model", error);
+            }
+            return normalizedAgent;
+          }
+        }
+
         async function ensureMissionControlAgent() {
           const existingLocalAgent = missionControlAgent?.id && missionControlAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
             ? normalizePlaygroundAgentRecord(missionControlAgent)
             : null;
           if (existingLocalAgent?.id) {
-            return existingLocalAgent;
+            const alignedAgent = await alignMissionControlAgentModel(existingLocalAgent);
+            setMissionControlAgent(alignedAgent);
+            return alignedAgent;
           }
 
           const existingPropAgent = (Array.isArray(agents) ? agents : []).find((agent) => isPlaygroundMissionControlAgent(agent)) || null;
           if (existingPropAgent?.id && existingPropAgent.id !== PLAYGROUND_AGENT_DRAFT_ID) {
-            const normalizedExistingAgent = normalizePlaygroundAgentRecord(existingPropAgent);
+            const normalizedExistingAgent = await alignMissionControlAgentModel(existingPropAgent);
             setMissionControlAgent(normalizedExistingAgent);
             setMissionControlAgentError("");
             return normalizedExistingAgent;
@@ -91051,13 +92527,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             } catch {}
 
             if (existingRemoteAgent?.id && existingRemoteAgent.id !== PLAYGROUND_AGENT_DRAFT_ID) {
-              const normalizedExistingAgent = normalizePlaygroundAgentRecord(existingRemoteAgent);
+              const normalizedExistingAgent = await alignMissionControlAgentModel(existingRemoteAgent);
               setMissionControlAgent(normalizedExistingAgent);
               return normalizedExistingAgent;
             }
 
-            const draftAgent = buildPlaygroundMissionControlAgentDraft(PLAYGROUND_AGENT_MODEL_OPTIONS, "free");
-            const payload = buildMissionControlAgentPayload(draftAgent);
+            const draftAgent = buildPlaygroundMissionControlAgentDraft(PLAYGROUND_AGENT_MODEL_OPTIONS, subscriptionTierId);
+            const payload = buildMissionControlAgentPayload(draftAgent, PLAYGROUND_AGENT_MODEL_OPTIONS, subscriptionTierId);
             const response = await fetch(backendUrl + "/agents", {
               method: "POST",
               headers: {
@@ -100625,51 +102101,298 @@ ${PROJECT_OVERVIEW_SCRIPT}
         );
       }
 
+      function PlaygroundOnboardingVideoBackground({ onStarted } = {}) {
+        const videoRef = useRef(null);
+        const [videoReady, setVideoReady] = useState(false);
+        const hasNotifiedStartedRef = useRef(false);
+        const notifyStarted = useCallback(() => {
+          if (hasNotifiedStartedRef.current) {
+            return;
+          }
+          hasNotifiedStartedRef.current = true;
+          if (typeof onStarted === "function") {
+            onStarted();
+          }
+        }, [onStarted]);
+
+        useEffect(() => {
+          const video = videoRef.current;
+          if (!video) {
+            return undefined;
+          }
+          const fallbackTimer = window.setTimeout(notifyStarted, 180);
+
+          video.playbackRate = 0.5;
+          video.preload = "auto";
+          video.src = "/img/bg/macapp.mp4";
+
+          const handleCanPlay = () => {
+            setVideoReady(true);
+            notifyStarted();
+            const playResult = video.play();
+            if (playResult && typeof playResult.then === "function") {
+              playResult.catch(() => {});
+            } else {
+              video.play().catch(() => {});
+            }
+          };
+          const handlePlaying = () => {
+            notifyStarted();
+          };
+
+          video.addEventListener("canplaythrough", handleCanPlay);
+          video.addEventListener("playing", handlePlaying);
+          video.load();
+
+          return () => {
+            window.clearTimeout(fallbackTimer);
+            video.removeEventListener("canplaythrough", handleCanPlay);
+            video.removeEventListener("playing", handlePlaying);
+          };
+        }, [notifyStarted]);
+
+        return React.createElement("div", { className: "playground-onboarding-video-bg", "aria-hidden": "true" },
+          React.createElement("img", {
+            className: "playground-onboarding-video-bg-media",
+            src: "/img/bg/macapp-poster.jpg",
+            alt: "",
+          }),
+          React.createElement("video", {
+            ref: videoRef,
+            className: "playground-onboarding-video-bg-media playground-onboarding-video-bg-video" + (videoReady ? " is-ready" : ""),
+            loop: true,
+            muted: true,
+            playsInline: true,
+            autoPlay: true,
+            suppressHydrationWarning: true,
+          }),
+          React.createElement("div", { className: "playground-onboarding-video-bg-overlay" })
+        );
+      }
+
       function PlaygroundOnboardingModal({
         open,
         sessionStatus,
         hasRealAccess,
+        backendUrl = "",
+        requestHeaders = {},
         existingAgentCount,
         environmentCount,
+        defaultEnvironmentId,
         defaultEnvironmentName,
         skillCount,
         currentPlanId,
+        connectorStatuses = {},
+        connectorActions = {},
         onClose,
         onSignIn,
         onUpgradeToIndividual,
+        onCreateProject,
       }) {
         const savedState = useMemo(() => readPlaygroundOnboardingState(), []);
-        const initialStepIndex = Number.isFinite(savedState?.stepIndex)
+        const rawUrlStepIndex = readCurrentSearchParam(PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM);
+        const urlStepIndex = rawUrlStepIndex !== "" ? Number(rawUrlStepIndex) : NaN;
+        const initialStepIndex = Number.isFinite(urlStepIndex)
+          ? Math.max(0, Math.min(4, Math.round(urlStepIndex)))
+          : Number.isFinite(savedState?.stepIndex)
           ? Math.max(0, Math.min(4, Math.round(savedState.stepIndex)))
           : 0;
         const [stepIndex, setStepIndex] = useState(initialStepIndex);
         const totalSteps = 5;
-        const stepLabels = ["Agents", "Environments", "Skills", "Projects", "Individual"];
+        const stepLabels = ["Welcome", "Computer", "Agents", "Connectors", "Plan"];
         const normalizedPlanId = normalizeSettingsTierId(currentPlanId) || "free";
         const isOnPaidPlan = normalizedPlanId !== "free";
         const individualPlan = SETTINGS_PLAN_CATALOG.find((plan) => plan.id === "individual") || SETTINGS_PLAN_CATALOG[0];
         const individualPlanFeatures = [
-          "More compute for heavier daily usage",
-          "A cleaner fit once you start running the platform as your main workspace",
-          "More room for bigger agents, richer environments, and longer project-driven execution",
+          { text: "1.5k Compute Tokens included", icon: BatteryLow },
+          { text: "Access to premium models", icon: Telescope },
+          { text: "Create your own Agents", icon: User },
+          { text: "Create your own Environments", icon: Cloud },
+          { text: "Work with any documents", icon: FileText },
+          { text: "Integrate with all your apps", icon: Cable },
+          { text: "Best-in-class Research models", icon: Telescope },
+          { text: "Best-in-class image models", icon: ImageIcon },
+          { text: "Schedule Tasks", icon: Clock },
+          { text: "API Access", icon: Code },
         ];
+        const [computerSize, setComputerSize] = useState("lite");
+        const [nodeVersion, setNodeVersion] = useState("22");
+        const [pythonVersion, setPythonVersion] = useState("3.12");
+        const [computerInternetEnabled, setComputerInternetEnabled] = useState(true);
+        const onboardingComputerUploadInputRef = useRef(null);
+        const [onboardingComputerUploadedAttachments, setOnboardingComputerUploadedAttachments] = useState([]);
+        const [isOnboardingComputerUploadDragging, setOnboardingComputerUploadDragging] = useState(false);
+        const [onboardingVideoStarted, setOnboardingVideoStarted] = useState(false);
+        const [onboardingCreationTransition, setOnboardingCreationTransition] = useState(null);
+        const onboardingCreationTransitionTimersRef = useRef([]);
+        const [onboardingPaneTransition, setOnboardingPaneTransition] = useState(null);
+        const onboardingPaneTransitionTimersRef = useRef([]);
+        const [onboardingFreeExitPhase, setOnboardingFreeExitPhase] = useState("");
+        const onboardingFreeExitTimersRef = useRef([]);
+        const [onboardingCheckoutLoadingButton, setOnboardingCheckoutLoadingButton] = useState("");
+        const [onboardingComputerUploadState, setOnboardingComputerUploadState] = useState({
+          isUploading: false,
+          error: "",
+        });
+        const onboardingCreationTransitionPhase = onboardingCreationTransition?.phase || "";
+        const onboardingCreationTransitionActive = Boolean(onboardingCreationTransitionPhase);
+        const onboardingCreationTransitionLabel = onboardingCreationTransition?.label || "";
+        const onboardingPaneTransitionPhase = onboardingPaneTransition?.phase || "";
+        const onboardingPaneTransitionActive = Boolean(onboardingPaneTransitionPhase);
+        const onboardingFreeExitActive = Boolean(onboardingFreeExitPhase);
+        const onboardingTransitionActive = onboardingCreationTransitionActive || onboardingPaneTransitionActive || onboardingFreeExitActive;
+        const onboardingCheckoutLoading = Boolean(onboardingCheckoutLoadingButton);
+        const [onboardingProjectName, setOnboardingProjectName] = useState("");
+        const [onboardingProjectGoal, setOnboardingProjectGoal] = useState("");
+        let onboardingBackendUrl = String(backendUrl || "");
+        while (onboardingBackendUrl.endsWith("/")) {
+          onboardingBackendUrl = onboardingBackendUrl.slice(0, -1);
+        }
         const buildSnapshot = useCallback((nextStepIndex = stepIndex) => ({
           stepIndex: nextStepIndex,
         }), [stepIndex]);
 
+        function buildOnboardingReturnUrl(nextStepIndex = stepIndex) {
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.set(PLAYGROUND_ONBOARDING_QUERY_PARAM, "true");
+            url.searchParams.set(PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM, String(Math.max(0, Math.min(totalSteps - 1, Math.round(Number(nextStepIndex) || 0)))));
+            return url.toString();
+          } catch {
+            return window.location.href;
+          }
+        }
+
+        const clearOnboardingCreationTransitionTimers = useCallback(() => {
+          onboardingCreationTransitionTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+          onboardingCreationTransitionTimersRef.current = [];
+        }, []);
+        const clearOnboardingPaneTransitionTimers = useCallback(() => {
+          onboardingPaneTransitionTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+          onboardingPaneTransitionTimersRef.current = [];
+        }, []);
+        const clearOnboardingFreeExitTimers = useCallback(() => {
+          onboardingFreeExitTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+          onboardingFreeExitTimersRef.current = [];
+        }, []);
+
         useEffect(() => {
           if (!open) {
+            setOnboardingVideoStarted(false);
+            setOnboardingCreationTransition(null);
+            setOnboardingPaneTransition(null);
+            setOnboardingFreeExitPhase("");
+            setOnboardingCheckoutLoadingButton("");
+            clearOnboardingCreationTransitionTimers();
+            clearOnboardingPaneTransitionTimers();
+            clearOnboardingFreeExitTimers();
             return;
           }
           writePlaygroundOnboardingState(buildSnapshot());
-        }, [buildSnapshot, open]);
+        }, [buildSnapshot, clearOnboardingCreationTransitionTimers, clearOnboardingFreeExitTimers, clearOnboardingPaneTransitionTimers, open]);
+
+        useEffect(() => () => {
+          clearOnboardingCreationTransitionTimers();
+          clearOnboardingPaneTransitionTimers();
+          clearOnboardingFreeExitTimers();
+        }, [clearOnboardingCreationTransitionTimers, clearOnboardingFreeExitTimers, clearOnboardingPaneTransitionTimers]);
 
         const handleClose = useCallback(() => {
+          clearOnboardingCreationTransitionTimers();
+          clearOnboardingPaneTransitionTimers();
+          clearOnboardingFreeExitTimers();
           clearPlaygroundOnboardingState();
           if (typeof onClose === "function") {
             onClose();
           }
-        }, [onClose]);
+        }, [clearOnboardingCreationTransitionTimers, clearOnboardingFreeExitTimers, clearOnboardingPaneTransitionTimers, onClose]);
+        const handleOnboardingVideoStarted = useCallback(() => {
+          setOnboardingVideoStarted(true);
+        }, []);
+        const launchOnboardingIndividualCheckout = useCallback(async (buttonId) => {
+          if (onboardingTransitionActive || onboardingCheckoutLoading) {
+            return;
+          }
+          if (typeof onUpgradeToIndividual !== "function") {
+            return;
+          }
+          setOnboardingCheckoutLoadingButton(buttonId || "checkout");
+          try {
+            await Promise.resolve(onUpgradeToIndividual());
+          } finally {
+            setOnboardingCheckoutLoadingButton("");
+          }
+        }, [onUpgradeToIndividual, onboardingCheckoutLoading, onboardingTransitionActive]);
+        const beginOnboardingFreeExit = useCallback(() => {
+          if (onboardingTransitionActive) {
+            return;
+          }
+          clearOnboardingCreationTransitionTimers();
+          clearOnboardingPaneTransitionTimers();
+          clearOnboardingFreeExitTimers();
+          setOnboardingFreeExitPhase("leaving");
+          const leaveTimer = window.setTimeout(() => {
+            setOnboardingFreeExitPhase("fading");
+            const fadeTimer = window.setTimeout(() => {
+              clearPlaygroundOnboardingState();
+              if (typeof onClose === "function") {
+                onClose();
+              }
+            }, 460);
+            onboardingFreeExitTimersRef.current = [fadeTimer];
+          }, 520);
+          onboardingFreeExitTimersRef.current = [leaveTimer];
+        }, [
+          clearOnboardingCreationTransitionTimers,
+          clearOnboardingFreeExitTimers,
+          clearOnboardingPaneTransitionTimers,
+          onClose,
+          onboardingTransitionActive,
+        ]);
+        const beginOnboardingCreationTransition = useCallback(({ fromStep, toStep, label }) => {
+          if (onboardingTransitionActive) {
+            return;
+          }
+          clearOnboardingCreationTransitionTimers();
+          clearOnboardingPaneTransitionTimers();
+          clearOnboardingFreeExitTimers();
+          const transitionState = { fromStep, toStep, label };
+          setOnboardingCreationTransition({ ...transitionState, phase: "loading" });
+          const loadingTimer = window.setTimeout(() => {
+            setOnboardingCreationTransition({ ...transitionState, phase: "hiding-label" });
+            const hideTimer = window.setTimeout(() => {
+              setStepIndex(toStep);
+              setOnboardingCreationTransition({ ...transitionState, phase: "entering" });
+              const enterTimer = window.setTimeout(() => {
+                setOnboardingCreationTransition(null);
+                onboardingCreationTransitionTimersRef.current = [];
+              }, 620);
+              onboardingCreationTransitionTimersRef.current = [enterTimer];
+            }, 240);
+            onboardingCreationTransitionTimersRef.current = [hideTimer];
+          }, 4000);
+          onboardingCreationTransitionTimersRef.current = [loadingTimer];
+        }, [clearOnboardingCreationTransitionTimers, clearOnboardingFreeExitTimers, clearOnboardingPaneTransitionTimers, onboardingTransitionActive]);
+        const beginOnboardingPaneTransition = useCallback(({ fromStep, toStep }) => {
+          if (onboardingTransitionActive) {
+            return;
+          }
+          clearOnboardingCreationTransitionTimers();
+          clearOnboardingPaneTransitionTimers();
+          clearOnboardingFreeExitTimers();
+          const transitionState = { fromStep, toStep };
+          setOnboardingPaneTransition({ ...transitionState, phase: "leaving" });
+          const leaveTimer = window.setTimeout(() => {
+            setStepIndex(toStep);
+            setOnboardingPaneTransition({ ...transitionState, phase: "entering" });
+            const enterTimer = window.setTimeout(() => {
+              setOnboardingPaneTransition(null);
+              onboardingPaneTransitionTimersRef.current = [];
+            }, 620);
+            onboardingPaneTransitionTimersRef.current = [enterTimer];
+          }, 520);
+          onboardingPaneTransitionTimersRef.current = [leaveTimer];
+        }, [clearOnboardingCreationTransitionTimers, clearOnboardingFreeExitTimers, clearOnboardingPaneTransitionTimers, onboardingTransitionActive]);
 
         useEffect(() => {
           if (!open) {
@@ -100779,6 +102502,1071 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             );
         }
+
+        const currentComputerName = defaultEnvironmentName || "Default Computer";
+        const splitPages = [
+          {
+            key: "welcome",
+            label: "Welcome",
+          },
+          {
+            key: "computer",
+            label: "Computer",
+            icon: Monitor,
+            configTitle: "Your Computer has been created",
+            configCopy: "This is the default workspace agents will use for files, runtimes, packages, and execution.",
+            kicker: "Step 1",
+            explainImage: "/img/010-svgs/animated_cube_layer.svg",
+            explainTitle: "A real computer for agent work",
+            explainCopy: "",
+            bullets: [
+              { icon: HardDrive, title: "Durable workspace", copy: "Files, generated artifacts, and installed packages stay attached to the computer." },
+              { icon: Cpu, title: "Configurable runtime", copy: "Choose the size and package profile that match the work you want agents to run." },
+              { icon: Package, title: "Ready by default", copy: "A default computer is already selected so new threads and projects can start immediately." },
+            ],
+          },
+          {
+            key: "agents",
+            label: "Agents",
+            icon: Bot,
+            configTitle: "Three agents are ready",
+            configCopy: "",
+            kicker: "Step 2",
+            explainImage: "",
+            explainTitle: "Agents are reusable operators",
+            explainCopy: "Each agent can keep its own instructions, model, and working style while still sharing project context.",
+            bullets: [
+              { icon: MessageSquare, title: "Assistant", copy: "Handles general coordination, explanations, and lightweight follow-up work." },
+              { icon: Code2, title: "Developer", copy: "Works on implementation tasks inside the computer workspace." },
+              { icon: Shield, title: "Reviewer", copy: "Reviews completed work and helps turn feedback into the next action." },
+            ],
+          },
+          {
+            key: "connectors",
+            label: "Connectors",
+            icon: Cable,
+            configTitle: "Connectors and plugins are ready",
+            configCopy: "",
+            kicker: "Step 3",
+            explainImage: "",
+            explainTitle: "Bring your workspace with you",
+            explainCopy: "Connectors let agents inspect repositories, documents, drives, and notes without manual copy-paste.",
+            bullets: [
+              { icon: Code2, title: "Repositories", copy: "Let agents inspect issues, code, branches, and project history." },
+              { icon: FolderOpen, title: "Cloud files", copy: "Use Drive and OneDrive files as live project context." },
+              { icon: FileText, title: "Notes", copy: "Bring Notion pages into planning and execution workflows." },
+            ],
+          },
+          {
+            key: "plan",
+            label: "Plan",
+            icon: Sparkles,
+            configTitle: isOnPaidPlan ? "Your plan is active" : "",
+            configCopy: isOnPaidPlan
+              ? "You already have access to the upgraded workspace."
+              : "",
+            kicker: "Step 4",
+            explainTitle: "Choose how much room you want",
+            explainCopy: "The free plan is enough to explore the platform. Individual gives you more compute and a better fit for sustained project work.",
+            bullets: [
+              { icon: Coins, title: "More compute", copy: "Run longer and heavier agent workflows without stopping early." },
+              { icon: Monitor, title: "Richer computers", copy: "Use more capable workspaces as projects become more demanding." },
+              { icon: Sparkles, title: "14-day trial", copy: "Try the upgraded plan before deciding whether to continue." },
+            ],
+          },
+        ];
+        const activeOnboardingPage = splitPages[stepIndex] || splitPages[0];
+
+        function renderSplitOptionCard({ id, label, copy, active, onClick }) {
+          return React.createElement("button", {
+            key: id,
+            type: "button",
+            className: "playground-onboarding-option-card" + (active ? " is-active" : ""),
+            onClick,
+          },
+            React.createElement("span", { className: "playground-onboarding-option-title" }, label),
+            React.createElement("span", { className: "playground-onboarding-option-copy" }, copy)
+          );
+        }
+
+        function renderSplitField(label, control) {
+          const controlType = String(control?.type || "");
+          const controlClassName = controlType === "textarea"
+            ? "playground-onboarding-textarea"
+            : controlType === "select"
+              ? "playground-onboarding-select"
+              : "playground-onboarding-input";
+          const enhancedControl = React.isValidElement(control)
+            ? React.cloneElement(control, {
+                className: [control.props?.className, controlClassName].filter(Boolean).join(" "),
+              })
+            : control;
+          return React.createElement("label", { className: "playground-onboarding-field" },
+            React.createElement("span", { className: "playground-onboarding-label" }, label),
+            enhancedControl
+          );
+        }
+
+        function renderSplitHeading(page) {
+          const Icon = page.icon || Sparkles;
+          const isPlainHeading = page.key === "computer" || page.key === "agents" || page.key === "connectors" || page.key === "plan";
+          return React.createElement("div", { className: "playground-onboarding-config-heading" + (isPlainHeading ? " is-plain" : "") },
+            isPlainHeading
+              ? null
+              : React.createElement("div", { className: "playground-onboarding-config-icon" },
+                  React.createElement(Icon, { width: 18, height: 18, strokeWidth: 1.9 })
+                ),
+            React.createElement("div", null,
+              React.createElement("h2", { className: "playground-onboarding-config-title" }, page.configTitle),
+              page.configCopy
+                ? React.createElement("p", { className: "playground-onboarding-config-copy" }, page.configCopy)
+                : null
+            )
+          );
+        }
+
+        function renderOnboardingAgentModel(modelId) {
+          const modelMeta = getPlaygroundAgentModelMeta(modelId, PLAYGROUND_AGENT_MODEL_OPTIONS);
+          const providerIcon = getPlaygroundAgentModelProviderIcon(modelMeta);
+          return React.createElement("div", { className: "playground-onboarding-agent-model" },
+            providerIcon
+              ? React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
+                  React.createElement("img", {
+                    src: providerIcon.src,
+                    alt: "",
+                    className: "playground-agents-model-provider-icon" + (providerIcon.className ? " " + providerIcon.className : ""),
+                  })
+                )
+              : null,
+            React.createElement("span", { className: "playground-onboarding-agent-model-name" }, modelMeta.label || modelMeta.id)
+          );
+        }
+
+        function renderSplitRows(rows) {
+          return React.createElement("div", { className: "playground-onboarding-agent-list" },
+            rows.map((row) => {
+              const Icon = row.icon || Check;
+              return React.createElement("div", {
+                key: row.title,
+                className: "playground-onboarding-agent-row",
+              },
+                React.createElement("div", { className: "playground-onboarding-row-main" },
+                  row.profileUrl
+                    ? React.createElement("img", {
+                        className: "playground-onboarding-row-avatar",
+                        src: row.profileUrl,
+                        alt: "",
+                        "aria-hidden": "true",
+                      })
+                    : React.createElement("div", { className: "playground-onboarding-row-icon" },
+                        React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.9 })
+                      ),
+                  React.createElement("div", null,
+                    React.createElement("div", { className: "playground-onboarding-row-title" }, row.title),
+                    React.createElement("div", { className: "playground-onboarding-row-copy" }, row.copy)
+                  )
+                ),
+                row.modelId
+                  ? renderOnboardingAgentModel(row.modelId)
+                  : React.createElement("div", { className: "playground-onboarding-status" },
+                      React.createElement(Check, { width: 13, height: 13, strokeWidth: 2 }),
+                      row.status || "Ready"
+                    )
+              );
+            })
+          );
+        }
+
+        function formatOnboardingComputerProfileRate(profile) {
+          const rate = Number(profile?.minutePrice || 0) * 100;
+          if (!Number.isFinite(rate) || rate <= 0) {
+            return "0 CT / min";
+          }
+          if (Math.abs(rate - Math.round(rate)) < 0.001) {
+            return String(Math.round(rate)) + " CT / min";
+          }
+          if (Math.abs(rate * 10 - Math.round(rate * 10)) < 0.001) {
+            return rate.toFixed(1) + " CT / min";
+          }
+          return rate.toFixed(2) + " CT / min";
+        }
+
+        function formatOnboardingComputerProfileHourlyPrice(profile) {
+          return "$" + (Number(profile?.minutePrice || 0) * 60).toFixed(2) + " / hr";
+        }
+
+        function formatOnboardingComputerProfileResources(profile) {
+          const cpuLabel = Number(profile?.cpuCores || 0) % 1 === 0
+            ? String(Number(profile?.cpuCores || 0))
+            : Number(profile?.cpuCores || 0).toFixed(1).replace(/\\.0$/, "");
+          const memoryGb = Number(profile?.memoryMb || 0) / 1024;
+          const memoryLabel = Math.abs(memoryGb - Math.round(memoryGb)) < 0.001
+            ? String(Math.round(memoryGb))
+            : memoryGb.toFixed(1).replace(/\\.0$/, "");
+          return cpuLabel + " vCPU · " + memoryLabel + " GB RAM";
+        }
+
+        function renderOnboardingComputerFact(label, control) {
+          return React.createElement("div", { className: "playground-onboarding-computer-fact", key: label },
+            React.createElement("div", { className: "playground-onboarding-computer-fact-label" }, label),
+            React.createElement("div", { className: "playground-onboarding-computer-fact-value" }, control)
+          );
+        }
+
+        function renderOnboardingComputerSelect(value, onChange, options, ariaLabel) {
+          return React.createElement("select", {
+            className: "playground-onboarding-computer-select",
+            value,
+            onChange: (event) => onChange(event.target.value),
+            "aria-label": ariaLabel,
+          },
+            options.map((option) =>
+              React.createElement("option", { key: option.value, value: option.value }, option.label)
+            )
+          );
+        }
+
+        function renderOnboardingButtonLoader(dotCount = 3) {
+          return React.createElement("span", { className: "playground-onboarding-button-loader", "aria-hidden": "true" },
+            Array.from({ length: dotCount }, (_, index) =>
+              React.createElement("span", {
+                key: "onboarding-button-loader:" + index,
+                className: "playground-onboarding-button-loader-dot",
+                style: { animationDelay: String(index * 0.08) + "s" },
+              })
+            )
+          );
+        }
+
+        function renderOnboardingButtonContent(label, loading = false) {
+          return React.createElement(React.Fragment, null,
+            React.createElement("span", null, label),
+            loading ? renderOnboardingButtonLoader() : null
+          );
+        }
+
+        function renderWelcomeIntro() {
+          return React.createElement("div", { className: "playground-onboarding-welcome-intro" },
+            React.createElement("div", { className: "playground-onboarding-welcome-kicker" },
+              "Welcome to Computer Agents"
+            ),
+            React.createElement("h1", { className: "playground-onboarding-welcome-title" },
+              "Your AI teammates,",
+              React.createElement("br", null),
+              "in ",
+              React.createElement("span", { className: "playground-onboarding-welcome-title-accent" }, "one workspace"),
+              "."
+            ),
+            React.createElement("p", { className: "playground-onboarding-welcome-copy" },
+              "Assign agents work like you would assign it to a colleague. They pick it up, work inside a real computer, update status, and keep the project moving."
+            ),
+            React.createElement("button", {
+              type: "button",
+              className: "playground-onboarding-button is-primary",
+              onClick: () => beginOnboardingCreationTransition({
+                fromStep: 0,
+                toStep: 1,
+                label: "Creating your first computer",
+              }),
+            },
+              "Create first Computer",
+              React.createElement(ArrowRight, { width: 15, height: 15, strokeWidth: 1.9 })
+            )
+          );
+        }
+
+        function renderWelcomePromptMock() {
+          return React.createElement("div", { className: "playground-onboarding-welcome-prompt-stage", "aria-hidden": "true" },
+            React.createElement("div", { className: "playground-onboarding-welcome-prompt-wrap" },
+              React.createElement("div", { className: "tb-runner-chat playground-onboarding-welcome-runner-mock" },
+                React.createElement("div", { className: "tb-input-width" },
+                  React.createElement("div", { className: "embedded-runner-input" },
+                    React.createElement("div", { className: "task-input-box" },
+                      React.createElement("div", { className: "tb-composer-textarea-shell" },
+                        React.createElement("textarea", {
+                          className: "sidebar-textarea",
+                          rows: 1,
+                          readOnly: true,
+                          tabIndex: -1,
+                          placeholder: "Give it a task...",
+                        })
+                      ),
+                      React.createElement("div", { className: "task-input-controls task-input-controls-full" },
+                        React.createElement("div", { className: "tb-selector-anchor" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "task-attachment-button task-attachment-button-full",
+                            tabIndex: -1,
+                            "aria-label": "Attach files",
+                          },
+                            React.createElement(Plus, { className: "task-attachment-icon", strokeWidth: 1.9 })
+                          )
+                        ),
+                        React.createElement("div", { className: "tb-selector-anchor tb-context-indicator-anchor" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-context-indicator-button",
+                            tabIndex: -1,
+                            "aria-label": "Conversation context remaining",
+                          },
+                            React.createElement("span", {
+                              className: "tb-context-indicator-ring",
+                              style: { "--tb-context-progress": "0.78" },
+                            })
+                          )
+                        ),
+                        React.createElement("div", { className: "tb-selector-anchor" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-inline-selector tb-inline-selector-agent",
+                            tabIndex: -1,
+                          },
+                            React.createElement("span", null, "Default Team"),
+                            React.createElement(ChevronDown, { className: "tb-inline-selector-chevron", strokeWidth: 1.8 })
+                          )
+                        ),
+                        React.createElement("div", { className: "task-input-spacer" }),
+                        React.createElement("div", { className: "tb-selector-anchor" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "tb-inline-selector",
+                            tabIndex: -1,
+                          },
+                            React.createElement("span", null, "Default"),
+                            React.createElement(ChevronDown, { className: "tb-inline-selector-chevron", strokeWidth: 1.8 })
+                          )
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "task-mic-button task-mic-button-full",
+                          tabIndex: -1,
+                          "aria-label": "Start speech to text",
+                        },
+                          React.createElement(Mic, { className: "task-mic-icon", strokeWidth: 1.9 })
+                        )
+                      )
+                    )
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-onboarding-welcome-input-guide" },
+                React.createElement("svg", {
+                  className: "playground-onboarding-welcome-input-guide-lines",
+                  viewBox: "0 0 1000 280",
+                  preserveAspectRatio: "none",
+                  focusable: "false",
+                  "aria-hidden": "true",
+                },
+                  React.createElement("line", { className: "playground-onboarding-welcome-input-guide-line", x1: "100", y1: "64", x2: "100", y2: "104" }),
+                  React.createElement("line", { className: "playground-onboarding-welcome-input-guide-line", x1: "964", y1: "64", x2: "964", y2: "166" }),
+                  React.createElement("line", { className: "playground-onboarding-welcome-input-guide-line", x1: "40", y1: "214", x2: "40", y2: "166" }),
+                  React.createElement("line", { className: "playground-onboarding-welcome-input-guide-line", x1: "134", y1: "214", x2: "88", y2: "166" }),
+                  React.createElement("line", { className: "playground-onboarding-welcome-input-guide-line", x1: "312", y1: "214", x2: "214", y2: "166" }),
+                  React.createElement("line", { className: "playground-onboarding-welcome-input-guide-line", x1: "890", y1: "214", x2: "890", y2: "166" })
+                ),
+                [
+                  { id: "textarea", title: "Give it a task", copy: "Type what the agents should do." },
+                  { id: "voice", title: "Voice", copy: "Dictate requests instead of typing." },
+                  { id: "attach", title: "Attach", copy: "Add files or folders." },
+                  { id: "context", title: "Context", copy: "Inspect memory." },
+                  { id: "team", title: "Agents & Teams", copy: "Choose who should work." },
+                  { id: "computer", title: "Computer", copy: "Pick the computer for the agents to work on." },
+                ].map((item) =>
+                  React.createElement("div", {
+                    key: item.id,
+                    className: "playground-onboarding-welcome-input-guide-item playground-onboarding-welcome-input-guide-item-" + item.id,
+                  },
+                    React.createElement("div", { className: "playground-onboarding-welcome-input-guide-title" }, item.title),
+                    React.createElement("div", { className: "playground-onboarding-welcome-input-guide-copy" }, item.copy)
+                  )
+                )
+              )
+            )
+          );
+        }
+
+        function openOnboardingComputerUploadPicker() {
+          if (onboardingComputerUploadState.isUploading) {
+            return;
+          }
+          onboardingComputerUploadInputRef.current?.click?.();
+        }
+
+        async function uploadOnboardingComputerFiles(files) {
+          const normalizedFiles = (Array.isArray(files) ? files : []).filter((file) =>
+            file
+            && typeof file === "object"
+            && typeof file.name === "string"
+            && typeof file.size === "number"
+          );
+          if (normalizedFiles.length === 0) {
+            return;
+          }
+          const normalizedEnvironmentId = String(defaultEnvironmentId || "").trim();
+          if (!normalizedEnvironmentId || !onboardingBackendUrl) {
+            setOnboardingComputerUploadState({
+              isUploading: false,
+              error: "Sign in and create a default computer before uploading starter files.",
+            });
+            return;
+          }
+
+          setOnboardingComputerUploadState({ isUploading: true, error: "" });
+          try {
+            const uploadedAttachments = [];
+            for (const file of normalizedFiles) {
+              const formData = new FormData();
+              formData.append("file", file);
+              formData.append("path", "");
+              const response = await fetch(
+                onboardingBackendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/files/upload",
+                {
+                  method: "POST",
+                  headers: requestHeaders,
+                  body: formData,
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || ("Failed to upload " + file.name + "."));
+              }
+              const workspacePath = normalizeHistoryPath(file.webkitRelativePath || file.name);
+              uploadedAttachments.push(normalizePlaygroundTaskAttachmentRecord({
+                id: "onboarding-workspace-file:" + normalizedEnvironmentId + ":" + workspacePath + ":" + String(file.lastModified || Date.now()),
+                filename: file.name,
+                mimeType: file.type || "application/octet-stream",
+                type: file.type && file.type.startsWith("image/") ? "image" : "document",
+                size: file.size,
+                uploadedAt: new Date().toISOString(),
+                environmentId: normalizedEnvironmentId,
+                sourcePath: workspacePath,
+                workspacePath,
+              }));
+            }
+            setOnboardingComputerUploadedAttachments((current) => {
+              const next = current.slice();
+              uploadedAttachments.filter(Boolean).forEach((attachment) => {
+                const existingIndex = next.findIndex((item) => item.id === attachment.id);
+                if (existingIndex >= 0) {
+                  next[existingIndex] = attachment;
+                } else {
+                  next.push(attachment);
+                }
+              });
+              return next.slice(-5);
+            });
+            setOnboardingComputerUploadState({ isUploading: false, error: "" });
+          } catch (error) {
+            setOnboardingComputerUploadState({
+              isUploading: false,
+              error: error instanceof Error ? error.message : "Failed to upload starter files.",
+            });
+          }
+        }
+
+        function handleOnboardingComputerUploadInputChange(event) {
+          const files = Array.from(event?.target?.files || []);
+          if (event?.target) {
+            event.target.value = "";
+          }
+          void uploadOnboardingComputerFiles(files);
+        }
+
+        function handleOnboardingComputerUploadDrop(event) {
+          event.preventDefault();
+          setOnboardingComputerUploadDragging(false);
+          void uploadOnboardingComputerFiles(Array.from(event?.dataTransfer?.files || []));
+        }
+
+        function renderOnboardingComputerAttachmentChip(attachment) {
+          const resolvedAttachment = attachment || {};
+          const normalizedAttachmentMimeType = String(resolvedAttachment?.mimeType || "").toLowerCase();
+          const isFolderAttachment = Boolean(
+            resolvedAttachment?.isFolder
+            || resolvedAttachment?.type === "directory"
+            || String(resolvedAttachment?.previewKindOverride || "").toLowerCase() === "directory"
+            || normalizedAttachmentMimeType === "inode/directory"
+          );
+          return React.createElement("div", {
+            key: resolvedAttachment.id,
+            className: "runner-attachment runner-attachment-file",
+          },
+            React.createElement("button", {
+              type: "button",
+              className: "runner-attachment-file-button",
+              tabIndex: -1,
+              "aria-label": "Uploaded " + resolvedAttachment.filename,
+            },
+              React.createElement("span", { className: "runner-attachment-file-icon-slot", "aria-hidden": "true" },
+                React.createElement("img", {
+                  src: isFolderAttachment ? PLAYGROUND_FOLDER_ICON_URL : PLAYGROUND_TEXT_FILE_ICON_URL,
+                  alt: "",
+                  draggable: false,
+                  className: "runner-attachment-file-icon",
+                })
+              ),
+              React.createElement("div", { className: "runner-attachment-file-name", title: resolvedAttachment.filename }, resolvedAttachment.filename)
+            )
+          );
+        }
+
+        function renderOnboardingComputerUploadZone() {
+          const isUploading = onboardingComputerUploadState.isUploading;
+          const hasUploadedAttachments = onboardingComputerUploadedAttachments.length > 0;
+          return React.createElement("div", {
+            className: "playground-onboarding-computer-upload-zone"
+              + (isOnboardingComputerUploadDragging ? " is-dragging" : "")
+              + (isUploading ? " is-busy" : "")
+              + (hasUploadedAttachments ? " is-filled" : ""),
+            onDragOver: (event) => {
+              event.preventDefault();
+              if (!isUploading) {
+                setOnboardingComputerUploadDragging(true);
+              }
+            },
+            onDragLeave: (event) => {
+              if (event.currentTarget.contains(event.relatedTarget)) {
+                return;
+              }
+              setOnboardingComputerUploadDragging(false);
+            },
+            onDrop: handleOnboardingComputerUploadDrop,
+          },
+            React.createElement("input", {
+              ref: onboardingComputerUploadInputRef,
+              type: "file",
+              multiple: true,
+              hidden: true,
+              onChange: handleOnboardingComputerUploadInputChange,
+            }),
+            hasUploadedAttachments
+              ? React.createElement(React.Fragment, null,
+                  React.createElement("div", { className: "playground-tasks-attachments-topline" },
+                    React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
+                    React.createElement("span", null, isUploading
+                      ? "Uploading files..."
+                      : isOnboardingComputerUploadDragging
+                        ? "Drop files here"
+                        : "Drop files to upload, or"
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-tasks-attachments-browse",
+                      disabled: isUploading,
+                      onClick: openOnboardingComputerUploadPicker,
+                    }, "browse.")
+                  ),
+                  React.createElement("div", { className: "tb-runner-chat playground-onboarding-computer-upload-attachments-scope" },
+                    React.createElement("div", { className: "runner-attachments" },
+                      onboardingComputerUploadedAttachments.map((attachment) =>
+                        renderOnboardingComputerAttachmentChip(attachment)
+                      )
+                    )
+                  ),
+                  onboardingComputerUploadState.error
+                    ? React.createElement("div", { className: "playground-onboarding-computer-upload-error" }, onboardingComputerUploadState.error)
+                    : null
+                )
+              : React.createElement("button", {
+                  type: "button",
+                  className: "playground-onboarding-computer-upload-button",
+                  disabled: isUploading,
+                  onClick: openOnboardingComputerUploadPicker,
+                },
+                  React.createElement(ArrowUpFromLine, { className: "playground-onboarding-computer-upload-icon", strokeWidth: 1.75 }),
+                  React.createElement("span", { className: "playground-onboarding-computer-upload-title" },
+                    isUploading
+                      ? "Uploading files..."
+                      : isOnboardingComputerUploadDragging
+                        ? "Drop files here"
+                        : "Drag & drop files here"
+                  ),
+                  React.createElement("span", { className: "playground-onboarding-computer-upload-copy" }, "or click to browse"),
+                  onboardingComputerUploadState.error
+                    ? React.createElement("div", { className: "playground-onboarding-computer-upload-error" }, onboardingComputerUploadState.error)
+                    : null
+                )
+          );
+        }
+
+        function renderComputerConfig() {
+          return React.createElement("div", { className: "playground-onboarding-computer-card" },
+            React.createElement("div", { className: "playground-onboarding-computer-section-title" }, "Default Computer"),
+            renderOnboardingComputerUploadZone(),
+            React.createElement("div", { className: "playground-onboarding-computer-facts" },
+              renderOnboardingComputerFact("ID",
+                React.createElement("span", { title: currentComputerName }, currentComputerName)
+              ),
+              renderOnboardingComputerFact("Created", React.createElement("span", null, "Now")),
+              renderOnboardingComputerFact("Storage", React.createElement("span", null, "4GB")),
+              renderOnboardingComputerFact("Internet",
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-toggle" + (computerInternetEnabled ? " is-active" : ""),
+                  onClick: () => setComputerInternetEnabled((current) => !current),
+                  "aria-pressed": computerInternetEnabled ? "true" : "false",
+                  title: computerInternetEnabled ? "Internet access enabled" : "Internet access disabled",
+                }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+              )
+            )
+          );
+        }
+
+        function renderAgentsConfig() {
+          return React.createElement("section", { className: "playground-onboarding-section" },
+            renderSplitRows([
+              {
+                icon: MessageSquare,
+                title: "Assistant Agent",
+                copy: "General coordination and day-to-day help.",
+                profileUrl: "/img/agent-profile-pics/assistantastro-1.webp",
+                modelId: "deepseek-v4-pro",
+              },
+              {
+                icon: Code2,
+                title: "Developer Agent",
+                copy: "Implementation, debugging, and code changes.",
+                profileUrl: "/img/agent-profile-pics/devastro.webp",
+                modelId: "kimi-k2.6",
+              },
+              {
+                icon: Shield,
+                title: "Reviewer Agent",
+                copy: "Review, acceptance checks, and change requests.",
+                profileUrl: "/img/agent-profile-pics/researchastro.webp",
+                modelId: "deepseek-v4-pro",
+              },
+            ])
+          );
+        }
+
+        function renderOnboardingConnectorLogo(row) {
+          if (row.logoUrl) {
+            return React.createElement("img", {
+              className: "playground-onboarding-connector-logo" + (row.id === "github" ? " is-github" : ""),
+              src: row.logoUrl,
+              alt: "",
+              "aria-hidden": "true",
+            });
+          }
+          const Icon = row.icon || Cable;
+          return React.createElement("div", { className: "playground-onboarding-connector-logo-fallback", "aria-hidden": "true" },
+            React.createElement(Icon, { width: 17, height: 17, strokeWidth: 1.85 })
+          );
+        }
+
+        function renderConnectorsConfig() {
+          const rows = [
+            {
+              id: "googleDrive",
+              title: "Google Drive",
+              copy: "Attach docs, sheets, folders, and shared drive files.",
+              logoUrl: PLAYGROUND_GOOGLE_DRIVE_LOGO_URL,
+              connected: Boolean(connectorStatuses.googleDrive?.connected),
+              onConnect: connectorActions.googleDrive,
+            },
+            {
+              id: "github",
+              title: "GitHub",
+              copy: "Connect repositories, branches, issues, and pull requests.",
+              logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
+              connected: Boolean(connectorStatuses.github?.connected),
+              onConnect: connectorActions.github,
+            },
+            {
+              id: "oneDrive",
+              title: "OneDrive",
+              copy: "Use Microsoft-hosted documents and folders as context.",
+              logoUrl: PLAYGROUND_ONEDRIVE_LOGO_URL,
+              connected: Boolean(connectorStatuses.oneDrive?.connected),
+              onConnect: connectorActions.oneDrive,
+            },
+            {
+              id: "notion",
+              title: "Notion",
+              copy: "Bring docs, wikis, and databases into planning and execution.",
+              logoUrl: PLAYGROUND_NOTION_LOGO_URL,
+              connected: Boolean(connectorStatuses.notion?.connected),
+              onConnect: connectorActions.notion,
+            },
+          ];
+          return React.createElement("section", { className: "playground-onboarding-section" },
+            React.createElement("div", { className: "playground-onboarding-connector-list" },
+              rows.map((row) =>
+                React.createElement("div", { key: row.id, className: "playground-onboarding-connector-row" },
+                  React.createElement("div", { className: "playground-onboarding-row-main" },
+                    renderOnboardingConnectorLogo(row),
+                    React.createElement("div", null,
+                      React.createElement("div", { className: "playground-onboarding-row-title" }, row.title),
+                      React.createElement("div", { className: "playground-onboarding-row-copy" }, row.copy)
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-connector-action" + (row.connected ? " is-connected" : ""),
+                    disabled: row.connected || typeof row.onConnect !== "function",
+                    onClick: () => {
+                      if (typeof row.onConnect === "function") {
+                        writePlaygroundOnboardingState(buildSnapshot(stepIndex));
+                        void row.onConnect({
+                          onboarding: true,
+                          onboardingStepIndex: stepIndex,
+                          redirectTo: buildOnboardingReturnUrl(stepIndex),
+                        });
+                      }
+                    },
+                  }, row.connected ? "Connected" : "Connect")
+                )
+              )
+            )
+          );
+        }
+
+        function renderResourcesConfig() {
+          return React.createElement("section", { className: "playground-onboarding-section" },
+            React.createElement("div", { className: "playground-onboarding-section-title" }, "Resource types"),
+            React.createElement("div", { className: "playground-onboarding-resource-list" },
+              [
+                { icon: Globe, title: "Web apps", copy: "Publish runnable frontends." },
+                { icon: Database, title: "Databases", copy: "Persist product and workflow data." },
+                { icon: Webhook, title: "APIs", copy: "Expose services and automation endpoints." },
+                { icon: Folder, title: "Files & storage", copy: "Keep project artifacts in one place." },
+              ].map((row) => {
+                const Icon = row.icon;
+                return React.createElement("div", {
+                  key: row.title,
+                  className: "playground-onboarding-resource-row",
+                },
+                  React.createElement("div", { className: "playground-onboarding-row-main" },
+                    React.createElement("div", { className: "playground-onboarding-row-icon" },
+                      React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.9 })
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("div", { className: "playground-onboarding-row-title" }, row.title),
+                      React.createElement("div", { className: "playground-onboarding-row-copy" }, row.copy)
+                    )
+                  )
+                );
+              })
+            )
+          );
+        }
+
+        function handleSplitCreateProject() {
+          clearPlaygroundOnboardingState();
+          if (typeof onClose === "function") {
+            onClose();
+          }
+          if (typeof onCreateProject === "function") {
+            onCreateProject({
+              name: onboardingProjectName.trim(),
+              goal: onboardingProjectGoal.trim(),
+            });
+          }
+        }
+
+        function renderProjectConfig() {
+          return React.createElement(React.Fragment, null,
+            React.createElement("section", { className: "playground-onboarding-section" },
+              React.createElement("div", { className: "playground-onboarding-section-title" }, "First project"),
+              React.createElement("div", { className: "playground-onboarding-form-grid is-single" },
+                renderSplitField("Project name",
+                  React.createElement("input", {
+                    type: "text",
+                    value: onboardingProjectName,
+                    onChange: (event) => setOnboardingProjectName(event.target.value),
+                    placeholder: "Website redesign, sales pipeline, data product...",
+                  })
+                ),
+                renderSplitField("Goal",
+                  React.createElement("textarea", {
+                    value: onboardingProjectGoal,
+                    onChange: (event) => setOnboardingProjectGoal(event.target.value),
+                    placeholder: "Describe what agents should help you plan and execute.",
+                    rows: 5,
+                  })
+                )
+              )
+            ),
+            React.createElement("button", {
+              type: "button",
+              className: "playground-onboarding-button is-primary",
+              onClick: handleSplitCreateProject,
+            },
+              React.createElement(Rocket, { width: 15, height: 15, strokeWidth: 1.9 }),
+              "Create First Project"
+            )
+          );
+        }
+
+        function renderPlanConfig() {
+          return React.createElement(React.Fragment, null,
+              React.createElement("section", { className: "playground-onboarding-section" },
+              React.createElement("div", { className: "playground-onboarding-plan-card" },
+                React.createElement("div", { className: "playground-onboarding-sdk-title" }, individualPlan.name + " Plan"),
+                React.createElement("div", { className: "playground-onboarding-plan-price" },
+                  isOnPaidPlan
+                    ? "$" + individualPlan.monthlyPrice
+                    : React.createElement(React.Fragment, null,
+                        "14 Days Free",
+                        React.createElement("span", { className: "playground-onboarding-plan-price-after" }, "$" + individualPlan.monthlyPrice + " / month after")
+                      )
+                ),
+                isOnPaidPlan
+                  ? React.createElement("div", { className: "playground-onboarding-plan-price-copy" }, "per month")
+                  : null,
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-onboarding-button is-primary playground-onboarding-plan-title-cta",
+                  disabled: onboardingTransitionActive || onboardingCheckoutLoading,
+                  onClick: isOnPaidPlan
+                    ? handleClose
+                    : () => void launchOnboardingIndividualCheckout("plan-card"),
+                }, renderOnboardingButtonContent(
+                  isOnPaidPlan ? "Enter Platform" : "Start 14-day Individual trial",
+                  onboardingCheckoutLoadingButton === "plan-card"
+                )),
+                React.createElement("ul", { className: "playground-onboarding-plan-features playground-onboarding-plan-features-inline" },
+                  individualPlanFeatures.map((feature) => {
+                    const FeatureIcon = feature.icon || Check;
+                    return (
+                    React.createElement("li", {
+                      key: feature.text,
+                      className: "playground-onboarding-plan-feature",
+                    },
+                      React.createElement(FeatureIcon, { className: "playground-onboarding-plan-feature-icon", strokeWidth: 2 }),
+                      React.createElement("span", null, feature.text)
+                    )
+                    );
+                  })
+                )
+              )
+            )
+          );
+        }
+
+        function renderSplitConfig(page) {
+          if (page.key === "welcome") {
+            return renderWelcomeIntro();
+          }
+          if (page.key === "computer") {
+            return renderComputerConfig();
+          }
+          if (page.key === "agents") {
+            return renderAgentsConfig();
+          }
+          if (page.key === "connectors") {
+            return renderConnectorsConfig();
+          }
+          return renderPlanConfig();
+        }
+
+        function renderSplitFooter() {
+          const isFinalStep = stepIndex === totalSteps - 1;
+          const showStayOnFreePlan = isFinalStep && !isOnPaidPlan;
+          const handleFooterContinue = () => {
+            if (stepIndex === 0) {
+              beginOnboardingCreationTransition({
+                fromStep: 0,
+                toStep: 1,
+                label: "Creating your first computer",
+              });
+              return;
+            }
+            if (stepIndex === 1) {
+              beginOnboardingCreationTransition({
+                fromStep: 1,
+                toStep: 2,
+                label: "Creating your first agents",
+              });
+              return;
+            }
+            if (stepIndex === 2) {
+              beginOnboardingPaneTransition({
+                fromStep: 2,
+                toStep: 3,
+              });
+              return;
+            }
+            if (stepIndex === 3) {
+              beginOnboardingPaneTransition({
+                fromStep: 3,
+                toStep: 4,
+              });
+              return;
+            }
+            if (isFinalStep) {
+              if (isOnPaidPlan) {
+                handleClose();
+                return;
+              }
+              void launchOnboardingIndividualCheckout("footer-continue");
+              return;
+            }
+            setStepIndex((current) => Math.min(totalSteps - 1, current + 1));
+          };
+          return React.createElement("div", { className: "playground-onboarding-pane-bottom" },
+            React.createElement("div", { className: "playground-onboarding-progress-group" },
+              React.createElement("div", { className: "playground-onboarding-dots" },
+                stepLabels.map((label, index) =>
+                  React.createElement("button", {
+                    key: label,
+                    type: "button",
+                    className: "playground-onboarding-dot" + (index === stepIndex ? " is-active" : ""),
+                    disabled: onboardingTransitionActive,
+                    onClick: () => setStepIndex(index),
+                    "aria-label": "Go to " + label,
+                  })
+                )
+              ),
+              React.createElement("div", { className: "playground-onboarding-step-count" },
+                "Step " + (stepIndex + 1) + " of " + totalSteps
+              )
+            ),
+            React.createElement("div", { className: "playground-onboarding-footer-actions" },
+              showStayOnFreePlan
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "playground-onboarding-free-plan-link",
+                    onClick: beginOnboardingFreeExit,
+                  }, "Stay on free plan")
+                : null,
+              React.createElement("button", {
+                type: "button",
+                className: "playground-onboarding-button is-primary",
+                onClick: handleFooterContinue,
+                disabled: onboardingTransitionActive || onboardingCheckoutLoading,
+              }, renderOnboardingButtonContent(
+                "Continue",
+                onboardingCheckoutLoadingButton === "footer-continue"
+              ))
+            )
+          );
+        }
+
+        function renderSplitExplanation(page) {
+          if (page.key === "welcome") {
+            return null;
+          }
+          return React.createElement("div", { className: "playground-onboarding-explain-inner" },
+            page.explainImage
+              ? React.createElement("img", {
+                  className: "playground-onboarding-explain-visual",
+                  src: page.explainImage,
+                  alt: "",
+                  "aria-hidden": "true",
+                })
+              : null,
+            page.key === "computer" || page.key === "agents" || page.key === "connectors" || page.key === "plan"
+              ? null
+              : React.createElement("div", { className: "playground-onboarding-kicker" }, page.kicker),
+            React.createElement("h1", { className: "playground-onboarding-explain-title" }, page.explainTitle),
+            page.explainCopy
+              ? React.createElement("p", { className: "playground-onboarding-explain-copy" }, page.explainCopy)
+              : null,
+            React.createElement("div", { className: "playground-onboarding-explain-list" },
+              page.bullets.map((item) => {
+                const Icon = item.icon || Check;
+                return React.createElement("div", {
+                  key: item.title,
+                  className: "playground-onboarding-explain-bullet",
+                },
+                  React.createElement("div", { className: "playground-onboarding-explain-bullet-icon" },
+                    React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
+                  ),
+                  React.createElement("div", null,
+                    React.createElement("div", { className: "playground-onboarding-explain-bullet-title" }, item.title),
+                    React.createElement("div", { className: "playground-onboarding-explain-bullet-copy" }, item.copy)
+                  )
+                );
+              })
+            )
+          );
+        }
+
+        const onboardingModalClassName = [
+          "playground-onboarding-modal",
+          "is-" + activeOnboardingPage.key,
+          activeOnboardingPage.key === "welcome" && onboardingVideoStarted ? "is-welcome-video-started" : "",
+          onboardingCreationTransitionPhase === "loading" || onboardingCreationTransitionPhase === "hiding-label" ? "is-onboarding-transition-leaving" : "",
+          onboardingCreationTransitionPhase ? "is-onboarding-transition-" + onboardingCreationTransitionPhase : "",
+          onboardingCreationTransition?.fromStep != null ? "is-onboarding-transition-from-" + onboardingCreationTransition.fromStep : "",
+          onboardingCreationTransition?.toStep != null ? "is-onboarding-transition-to-" + onboardingCreationTransition.toStep : "",
+          onboardingPaneTransitionPhase ? "is-onboarding-pane-transition-" + onboardingPaneTransitionPhase : "",
+          onboardingPaneTransition?.fromStep != null ? "is-onboarding-pane-transition-from-" + onboardingPaneTransition.fromStep : "",
+          onboardingPaneTransition?.toStep != null ? "is-onboarding-pane-transition-to-" + onboardingPaneTransition.toStep : "",
+          onboardingFreeExitPhase ? "is-onboarding-free-exit-active" : "",
+          onboardingFreeExitPhase ? "is-onboarding-free-exit-" + onboardingFreeExitPhase : "",
+        ].filter(Boolean).join(" ");
+
+        return React.createElement("div", { className: "playground-onboarding-scrim" },
+          React.createElement("div", { className: onboardingModalClassName },
+            React.createElement(PlaygroundOnboardingVideoBackground, {
+              onStarted: handleOnboardingVideoStarted,
+            }),
+            onboardingCreationTransitionPhase && onboardingCreationTransitionPhase !== "entering"
+              ? React.createElement("div", { className: "playground-onboarding-transition-loader", "aria-live": "polite" },
+                  React.createElement("div", { className: "playground-onboarding-transition-label" },
+                    React.createElement("span", null, onboardingCreationTransitionLabel),
+                    React.createElement("span", { className: "playground-onboarding-transition-dot-loader", "aria-hidden": "true" },
+                      Array.from({ length: 6 }, (_, index) =>
+                        React.createElement("span", {
+                          key: "onboarding-transition-dot:" + index,
+                          className: "playground-onboarding-transition-dot",
+                          style: { animationDelay: String(index * 0.08) + "s" },
+                        })
+                      )
+                    )
+                  )
+                )
+              : null,
+            React.createElement("section", {
+              className: "playground-onboarding-pane is-config is-" + activeOnboardingPage.key,
+            },
+              activeOnboardingPage.key === "welcome"
+                ? null
+                : React.createElement("div", { className: "playground-onboarding-pane-top" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-onboarding-back-button",
+                      disabled: onboardingTransitionActive,
+                      onClick: () => setStepIndex((current) => Math.max(0, current - 1)),
+                    },
+                      React.createElement(ArrowLeft, { width: 15, height: 15, strokeWidth: 1.9 }),
+                      "Back"
+                    )
+                  ),
+              React.createElement("div", { className: "playground-onboarding-config-scroll" },
+                React.createElement("div", { className: "playground-onboarding-config-stack" },
+                  activeOnboardingPage.key === "welcome"
+                    || !activeOnboardingPage.configTitle
+                    ? null
+                    : renderSplitHeading(activeOnboardingPage),
+                  renderSplitConfig(activeOnboardingPage)
+                )
+              ),
+              renderSplitFooter()
+            ),
+            React.createElement("section", {
+              className: "playground-onboarding-pane is-explain is-" + activeOnboardingPage.key,
+            },
+              activeOnboardingPage.key === "welcome"
+                ? renderWelcomePromptMock()
+                : React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-onboarding-pane-top" },
+                      React.createElement("div", { className: "playground-onboarding-step-count" }, activeOnboardingPage.label),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-onboarding-close",
+                        onClick: handleClose,
+                        "aria-label": "Close onboarding",
+                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.9 }))
+                    ),
+                    renderSplitExplanation(activeOnboardingPage)
+                  )
+            )
+          )
+        );
 
         const conceptPages = [
           {
@@ -100922,7 +103710,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             title: isOnPaidPlan ? "You already have a paid plan" : "Special offer: get 14 days free",
             copy: isOnPaidPlan
               ? "Your account already has the upgraded plan, so you’re ready to use the full platform without changing anything."
-              : "Start Individual with a 14-day free trial and keep the extra compute, richer environments, and workspace headroom once you decide to continue.",
+              : "",
             actionLabel: isOnPaidPlan ? "Enter ACP" : "Upgrade to Individual",
             details: [],
           },
@@ -100965,37 +103753,44 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ),
               React.createElement("div", { className: "playground-onboarding-body" },
                 React.createElement("div", { className: "playground-onboarding-concept-step" },
-                  React.createElement("div", { className: "playground-onboarding-concept-hero" },
-                    React.createElement("div", { className: "playground-onboarding-concept-copy-column" },
-                      React.createElement("p", { className: "playground-onboarding-concept-copy" }, currentPage.copy),
+                    React.createElement("div", { className: "playground-onboarding-concept-hero" },
+                      React.createElement("div", { className: "playground-onboarding-concept-copy-column" },
+                      currentPage.copy
+                        ? React.createElement("p", { className: "playground-onboarding-concept-copy" }, currentPage.copy)
+                        : null,
                       stepIndex === totalSteps - 1
                         ? React.createElement("ul", {
                             className: "playground-onboarding-plan-features playground-onboarding-plan-features-inline",
                           },
-                            individualPlanFeatures.map((feature) =>
+                            individualPlanFeatures.map((feature) => {
+                              const FeatureIcon = feature.icon || Check;
+                              return (
                               React.createElement("li", {
-                                key: feature,
+                                key: feature.text,
                                 className: "playground-onboarding-plan-feature",
                               },
-                                React.createElement(Check, { className: "playground-onboarding-plan-feature-icon", strokeWidth: 2 }),
-                                React.createElement("span", null, feature)
+                                React.createElement(FeatureIcon, { className: "playground-onboarding-plan-feature-icon", strokeWidth: 2 }),
+                                React.createElement("span", null, feature.text)
                               )
-                            )
+                              );
+                            })
                           )
                         : null
                     ),
                     stepIndex === totalSteps - 1
                       ? React.createElement("div", { className: "playground-onboarding-sdk-card" },
-                          !isOnPaidPlan
-                            ? React.createElement("div", { className: "playground-onboarding-plan-offer" }, "14 Days Free")
-                            : null,
                           React.createElement("div", { className: "playground-onboarding-sdk-title" }, individualPlan.name + " Plan"),
                           React.createElement("div", { className: "playground-onboarding-plan-price" },
-                            "$" + individualPlan.monthlyPrice
+                            isOnPaidPlan
+                              ? "$" + individualPlan.monthlyPrice
+                              : React.createElement(React.Fragment, null,
+                                  "14 Days Free",
+                                  React.createElement("span", { className: "playground-onboarding-plan-price-after" }, "$" + individualPlan.monthlyPrice + " / month after")
+                                )
                           ),
-                          React.createElement("div", { className: "playground-onboarding-plan-price-copy" },
-                            isOnPaidPlan ? "per month" : "14 days free, then $" + individualPlan.monthlyPrice + " / month"
-                          ),
+                          isOnPaidPlan
+                            ? React.createElement("div", { className: "playground-onboarding-plan-price-copy" }, "per month")
+                            : null,
                           React.createElement("p", { className: "playground-onboarding-sdk-note" },
                             isOnPaidPlan
                               ? (individualPlan.description || "Personal access with more compute and room to scale.")
@@ -102452,6 +105247,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function closePlaygroundOnboarding() {
           clearPlaygroundOnboardingState();
           removeCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM);
+          removeCurrentSearchParam(PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM);
           setShowPlaygroundOnboarding(false);
           if (sessionState.status === "authenticated" && sessionState.onboardingCompleted === false) {
             setSessionState((current) => ({
@@ -102717,12 +105513,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : options?.projectComposerAction === "edit"
               ? "edit"
               : "";
+          const projectComposerDraft = options?.projectComposerDraft && typeof options.projectComposerDraft === "object" && !Array.isArray(options.projectComposerDraft)
+            ? {
+                name: String(options.projectComposerDraft.name || "").trim(),
+                description: String(options.projectComposerDraft.description || options.projectComposerDraft.goal || "").trim(),
+              }
+            : null;
           setTasksPageNavigationRequest({
             token: Date.now().toString(36) + Math.random().toString(36).slice(2),
             projectId: resolvedProjectId,
             view: normalizedView,
             missionControlAction: normalizedMissionControlAction,
             projectComposerAction: normalizedProjectComposerAction,
+            projectComposerDraft,
             projectRecord: resolvedProjectRecord || undefined,
           });
           setActivePage(normalizedView === "calendar" ? "calendar" : "tasks");
@@ -102843,11 +105646,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
           handleWelcomeWidgetOpen("backlog", { missionControlAction: "run" });
         }
 
-        function handleWelcomeWidgetCreateProject(event) {
-          if (event?.stopPropagation) {
-            event.stopPropagation();
+        function handleWelcomeWidgetCreateProject(eventOrDraft) {
+          const isEvent = eventOrDraft?.stopPropagation;
+          if (isEvent) {
+            eventOrDraft.stopPropagation();
           }
-          handleWelcomeWidgetOpen("backlog", { projectComposerAction: "create" });
+          const projectComposerDraft = !isEvent && eventOrDraft && typeof eventOrDraft === "object" && !Array.isArray(eventOrDraft)
+            ? {
+                name: String(eventOrDraft.name || "").trim(),
+                description: String(eventOrDraft.description || eventOrDraft.goal || "").trim(),
+              }
+            : null;
+          handleWelcomeWidgetOpen("backlog", {
+            projectComposerAction: "create",
+            projectComposerDraft,
+          });
         }
 
         async function loadWelcomeWidgetProjectCustomSkills(projectId) {
@@ -104553,6 +107366,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
               savedAt: Date.now(),
               activePage,
               settingsSection,
+              onboarding: options?.onboarding === true
+                ? {
+                    stepIndex: Number.isFinite(Number(options?.onboardingStepIndex))
+                      ? Math.max(0, Math.round(Number(options.onboardingStepIndex)))
+                      : 0,
+                  }
+                : null,
               connectorBrowser: authState.connectorBrowserSource && authState.connectorBrowserMode
                 ? {
                     mode: authState.connectorBrowserMode,
@@ -104563,9 +107383,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 : null,
               reopenSettingsTriggerComposer: authState.provider === "github" && activePage === "settings" && settingsSection === "webhooks" && settingsCreatingTrigger,
             });
-            const redirectTo = authState.projectConnectorBrowserRestoreState
-              ? (buildPlaygroundConnectorBrowserRestoreRedirectUrl(authState.projectConnectorBrowserRestoreState) || window.location.href)
-              : window.location.href;
+            const explicitRedirectTo = typeof options?.redirectTo === "string" && options.redirectTo.trim()
+              ? options.redirectTo.trim()
+              : "";
+            const redirectTo = explicitRedirectTo || (
+              authState.projectConnectorBrowserRestoreState
+                ? (buildPlaygroundConnectorBrowserRestoreRedirectUrl(authState.projectConnectorBrowserRestoreState) || window.location.href)
+                : window.location.href
+            );
             console.info("[connector-debug] connector auth redirect prepared", {
               provider: authState.provider,
               redirectTo,
@@ -106964,6 +109789,25 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
 
           if (!isConnectorStatusConnected(redirectProvider)) {
+            return;
+          }
+
+          const onboardingContext = redirectState.onboarding && typeof redirectState.onboarding === "object" && !Array.isArray(redirectState.onboarding)
+            ? redirectState.onboarding
+            : null;
+          if (onboardingContext) {
+            const onboardingStepIndex = Number.isFinite(Number(onboardingContext.stepIndex))
+              ? Math.max(0, Math.min(4, Math.round(Number(onboardingContext.stepIndex))))
+              : 0;
+            writePlaygroundOnboardingState({ stepIndex: onboardingStepIndex });
+            try {
+              const url = new URL(window.location.href);
+              url.searchParams.set(PLAYGROUND_ONBOARDING_QUERY_PARAM, "true");
+              url.searchParams.set(PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM, String(onboardingStepIndex));
+              window.history.replaceState({}, "", url.toString());
+            } catch {}
+            setShowPlaygroundOnboarding(true);
+            clearPlaygroundIntegrationRedirectState();
             return;
           }
 
@@ -119831,14 +122675,30 @@ ${PROJECT_OVERVIEW_SCRIPT}
               open: showPlaygroundOnboarding,
               sessionStatus: sessionState.status,
               hasRealAccess,
+              backendUrl: proxyBackendBase,
+              requestHeaders,
               existingAgentCount: realAgents.length,
               environmentCount: realEnvironments.length,
+              defaultEnvironmentId: resolvedEnvironmentId,
               defaultEnvironmentName: resolvedEnvironmentName,
               skillCount: demoSkills.length,
               currentPlanId: settingsCurrentTierId,
+              connectorStatuses: {
+                github: githubStatus,
+                googleDrive: googleDriveStatus,
+                oneDrive: oneDriveStatus,
+                notion: notionStatus,
+              },
+              connectorActions: {
+                github: handleGithubAuthConnect,
+                googleDrive: handleGoogleDriveAuthConnect,
+                oneDrive: handleOneDriveAuthConnect,
+                notion: handleNotionAuthConnect,
+              },
               onClose: closePlaygroundOnboarding,
               onSignIn: handleSignInWithComputerAgents,
               onUpgradeToIndividual: () => handleSettingsSubscribe("individual"),
+              onCreateProject: handleWelcomeWidgetCreateProject,
             })
           : null;
         const subscriptionSuccessPlanLabel = settingsCurrentTierId && settingsCurrentTierId !== "free"
@@ -120407,6 +123267,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             apiKey: effectiveApiKey,
                             upstreamUrl: resolvedUpstreamUrl,
                             speechToTextUrl: speechToTextUrl || "",
+                            subscriptionTierId: accountTierId || "",
                             computerAgents: demoComputerAgents,
                             skills: demoSkills,
                             currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
@@ -120858,6 +123719,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               apiKey: effectiveApiKey,
                               upstreamUrl: resolvedUpstreamUrl,
                               speechToTextUrl: speechToTextUrl || "",
+                              subscriptionTierId: accountTierId || "",
                               computerAgents: demoComputerAgents,
                               skills: demoSkills,
                               currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
@@ -124167,6 +127029,93 @@ async function proxyAiosJsonRequest(req, res, upstreamPath, method) {
   }
 }
 
+function shouldRewriteNotionRedirectUri(value) {
+  if (!value) {
+    return false;
+  }
+  try {
+    const parsed = new URL(value);
+    return parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1" || parsed.hostname === "::1";
+  } catch {
+    return false;
+  }
+}
+
+function normalizeNotionAuthUrlForLocalDemo(authUrl) {
+  if (!authUrl || !notionOauthCallbackUri) {
+    return authUrl;
+  }
+  try {
+    const parsed = new URL(authUrl);
+    const currentRedirectUri = parsed.searchParams.get("redirect_uri") || "";
+    if (shouldRewriteNotionRedirectUri(currentRedirectUri)) {
+      parsed.searchParams.set("redirect_uri", notionOauthCallbackUri);
+    }
+    return parsed.toString();
+  } catch {
+    return authUrl;
+  }
+}
+
+async function proxyAiosNotionLoginRequest(req, res) {
+  try {
+    const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
+    const upstreamTarget = new URL(`${aiosOrigin}/api/notion/login`);
+    upstreamTarget.search = requestUrl.search;
+
+    const headers = {
+      cookie: req.headers.cookie || "",
+      authorization: req.headers.authorization || "",
+      "x-api-key": req.headers["x-api-key"] || "",
+      "content-type": req.headers["content-type"] || "application/json",
+    };
+
+    const body = await readRequestBody(req);
+    const upstream = await fetch(upstreamTarget.toString(), {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const text = await upstream.text();
+    let parsed = {};
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      parsed = { message: text };
+    }
+
+    if (typeof parsed?.authUrl === "string") {
+      const normalizedAuthUrl = normalizeNotionAuthUrlForLocalDemo(parsed.authUrl);
+      if (normalizedAuthUrl !== parsed.authUrl) {
+        console.info("[demo-server] Rewrote local Notion OAuth redirect_uri for demo login.", {
+          callbackUri: notionOauthCallbackUri,
+        });
+      }
+      parsed = {
+        ...parsed,
+        authUrl: normalizedAuthUrl,
+      };
+    }
+
+    const responseHeaders = {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+    };
+    const setCookie = upstream.headers.get("set-cookie");
+    if (setCookie) {
+      responseHeaders["Set-Cookie"] = setCookie;
+    }
+
+    res.writeHead(upstream.status, responseHeaders);
+    res.end(JSON.stringify(parsed));
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to proxy Notion login request",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 async function proxyAiosLatestBriefingHtml(req, res) {
   try {
     const briefingMetaResponse = await fetch(new URL("/api/briefing/url", aiosOrigin).toString(), {
@@ -125514,7 +128463,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === "POST" && url.pathname === "/api/aios/notion/login") {
-    void proxyAiosJsonRequest(req, res, "/api/notion/login", "POST");
+    void proxyAiosNotionLoginRequest(req, res);
     return;
   }
 
