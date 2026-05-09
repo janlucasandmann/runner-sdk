@@ -1,5 +1,6 @@
 import http from "node:http";
 import { execFile } from "node:child_process";
+import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -2858,12 +2859,31 @@ const html = `<!doctype html>
         flex-direction: column;
         align-items: stretch;
         justify-content: center;
+        position: relative;
+        z-index: 40;
         height: 100%;
         min-height: 0;
         box-sizing: border-box;
         padding: 28px 0;
-        overflow-x: hidden;
-        overflow-y: auto;
+        overflow: visible;
+      }
+
+      .playground-shell.is-initial-thread-page .playground-main {
+        z-index: 8;
+      }
+
+      .playground-shell.is-initial-thread-page .playground-content-body,
+      .playground-shell.is-initial-thread-page .playground-view-pane,
+      .playground-shell.is-initial-thread-page .runner-host {
+        overflow: visible;
+      }
+
+      .playground-thread-runner.is-initial-welcome-runner .tb-popup-backdrop {
+        z-index: 70;
+      }
+
+      .playground-thread-runner.is-initial-welcome-runner .tb-popup-menu {
+        z-index: 80;
       }
 
       .playground-thread-runner.is-initial-welcome-runner .workinglogsbox {
@@ -38803,6 +38823,11 @@ ${ENVIRONMENT_CHANGES_CSS}
           connectorItemPath,
           connectorRepoFullName,
           connectorRef,
+          clientUploadId: typeof attachment.clientUploadId === "string" && attachment.clientUploadId.trim()
+            ? attachment.clientUploadId.trim()
+            : undefined,
+          isUploading: Boolean(attachment.isUploading) || undefined,
+          uploadPending: Boolean(attachment.uploadPending) || undefined,
         };
       }
 
@@ -102220,6 +102245,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [pythonVersion, setPythonVersion] = useState("3.12");
         const [computerInternetEnabled, setComputerInternetEnabled] = useState(true);
         const onboardingComputerUploadInputRef = useRef(null);
+        const onboardingComputerUploadVisualTimersRef = useRef([]);
+        const onboardingComputerActiveUploadsRef = useRef(0);
         const [onboardingComputerUploadedAttachments, setOnboardingComputerUploadedAttachments] = useState([]);
         const [isOnboardingComputerUploadDragging, setOnboardingComputerUploadDragging] = useState(false);
         const [onboardingVideoStarted, setOnboardingVideoStarted] = useState(false);
@@ -102275,6 +102302,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           onboardingFreeExitTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
           onboardingFreeExitTimersRef.current = [];
         }, []);
+        const clearOnboardingComputerUploadVisualTimers = useCallback(() => {
+          onboardingComputerUploadVisualTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+          onboardingComputerUploadVisualTimersRef.current = [];
+        }, []);
 
         useEffect(() => {
           if (!open) {
@@ -102286,26 +102317,47 @@ ${PROJECT_OVERVIEW_SCRIPT}
             clearOnboardingCreationTransitionTimers();
             clearOnboardingPaneTransitionTimers();
             clearOnboardingFreeExitTimers();
+            clearOnboardingComputerUploadVisualTimers();
             return;
           }
           writePlaygroundOnboardingState(buildSnapshot());
-        }, [buildSnapshot, clearOnboardingCreationTransitionTimers, clearOnboardingFreeExitTimers, clearOnboardingPaneTransitionTimers, open]);
+        }, [
+          buildSnapshot,
+          clearOnboardingComputerUploadVisualTimers,
+          clearOnboardingCreationTransitionTimers,
+          clearOnboardingFreeExitTimers,
+          clearOnboardingPaneTransitionTimers,
+          open,
+        ]);
 
         useEffect(() => () => {
           clearOnboardingCreationTransitionTimers();
           clearOnboardingPaneTransitionTimers();
           clearOnboardingFreeExitTimers();
-        }, [clearOnboardingCreationTransitionTimers, clearOnboardingFreeExitTimers, clearOnboardingPaneTransitionTimers]);
+          clearOnboardingComputerUploadVisualTimers();
+        }, [
+          clearOnboardingComputerUploadVisualTimers,
+          clearOnboardingCreationTransitionTimers,
+          clearOnboardingFreeExitTimers,
+          clearOnboardingPaneTransitionTimers,
+        ]);
 
         const handleClose = useCallback(() => {
           clearOnboardingCreationTransitionTimers();
           clearOnboardingPaneTransitionTimers();
           clearOnboardingFreeExitTimers();
+          clearOnboardingComputerUploadVisualTimers();
           clearPlaygroundOnboardingState();
           if (typeof onClose === "function") {
             onClose();
           }
-        }, [clearOnboardingCreationTransitionTimers, clearOnboardingFreeExitTimers, clearOnboardingPaneTransitionTimers, onClose]);
+        }, [
+          clearOnboardingComputerUploadVisualTimers,
+          clearOnboardingCreationTransitionTimers,
+          clearOnboardingFreeExitTimers,
+          clearOnboardingPaneTransitionTimers,
+          onClose,
+        ]);
         const handleOnboardingVideoStarted = useCallback(() => {
           setOnboardingVideoStarted(true);
         }, []);
@@ -102886,10 +102938,80 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function openOnboardingComputerUploadPicker() {
-          if (onboardingComputerUploadState.isUploading) {
+          onboardingComputerUploadInputRef.current?.click?.();
+        }
+
+        function buildOnboardingComputerAttachmentFromFile(file, normalizedEnvironmentId, options = {}) {
+          const workspacePath = normalizeHistoryPath(file.webkitRelativePath || file.name);
+          const clientUploadId = "onboarding-upload:" + normalizedEnvironmentId + ":" + workspacePath + ":" + String(file.size || 0) + ":" + String(file.lastModified || 0);
+          return normalizePlaygroundTaskAttachmentRecord({
+            id: options.id || clientUploadId,
+            clientUploadId,
+            filename: file.name,
+            mimeType: file.type || "application/octet-stream",
+            type: file.type && file.type.startsWith("image/") ? "image" : "document",
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+            environmentId: normalizedEnvironmentId,
+            sourcePath: workspacePath,
+            workspacePath,
+            isUploading: Boolean(options.isUploading),
+            uploadPending: Boolean(options.uploadPending),
+          });
+        }
+
+        function upsertOnboardingComputerAttachments(attachments) {
+          const normalizedAttachments = (Array.isArray(attachments) ? attachments : []).filter(Boolean);
+          if (normalizedAttachments.length === 0) {
             return;
           }
-          onboardingComputerUploadInputRef.current?.click?.();
+          setOnboardingComputerUploadedAttachments((current) => {
+            const next = current.slice();
+            normalizedAttachments.forEach((attachment) => {
+              const attachmentClientUploadId = String(attachment.clientUploadId || "");
+              const existingIndex = next.findIndex((item) =>
+                item.id === attachment.id
+                || (attachmentClientUploadId && String(item.clientUploadId || "") === attachmentClientUploadId)
+              );
+              if (existingIndex >= 0) {
+                next[existingIndex] = {
+                  ...next[existingIndex],
+                  ...attachment,
+                };
+              } else {
+                next.push(attachment);
+              }
+            });
+            return next.slice(-5);
+          });
+        }
+
+        function scheduleOnboardingComputerUploadPreviewSettle(attachments) {
+          const attachmentIds = (Array.isArray(attachments) ? attachments : [])
+            .map((attachment) => attachment?.id)
+            .filter(Boolean);
+          if (attachmentIds.length === 0) {
+            return;
+          }
+          const timerId = window.setTimeout(() => {
+            setOnboardingComputerUploadedAttachments((current) =>
+              current.map((attachment) =>
+                attachmentIds.includes(attachment.id)
+                  ? {
+                      ...attachment,
+                      isUploading: false,
+                      uploadPending: true,
+                    }
+                  : attachment
+              )
+            );
+            setOnboardingComputerUploadState((current) => ({
+              isUploading: false,
+              error: current.error || "",
+            }));
+            onboardingComputerUploadVisualTimersRef.current = onboardingComputerUploadVisualTimersRef.current.filter((id) => id !== timerId);
+          }, 1000);
+          onboardingComputerUploadVisualTimersRef.current.push(timerId);
         }
 
         async function uploadOnboardingComputerFiles(files) {
@@ -102911,10 +103033,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return;
           }
 
+          const optimisticAttachments = normalizedFiles.map((file) =>
+            buildOnboardingComputerAttachmentFromFile(file, normalizedEnvironmentId, {
+              isUploading: true,
+              uploadPending: true,
+            })
+          );
+          upsertOnboardingComputerAttachments(optimisticAttachments);
+          scheduleOnboardingComputerUploadPreviewSettle(optimisticAttachments);
+
+          onboardingComputerActiveUploadsRef.current += 1;
           setOnboardingComputerUploadState({ isUploading: true, error: "" });
           try {
             const uploadedAttachments = [];
             for (const file of normalizedFiles) {
+              const optimisticAttachment = buildOnboardingComputerAttachmentFromFile(file, normalizedEnvironmentId);
               const formData = new FormData();
               formData.append("file", file);
               formData.append("path", "");
@@ -102930,37 +103063,39 @@ ${PROJECT_OVERVIEW_SCRIPT}
               if (!response.ok) {
                 throw new Error(data?.message || data?.error || ("Failed to upload " + file.name + "."));
               }
-              const workspacePath = normalizeHistoryPath(file.webkitRelativePath || file.name);
               uploadedAttachments.push(normalizePlaygroundTaskAttachmentRecord({
-                id: "onboarding-workspace-file:" + normalizedEnvironmentId + ":" + workspacePath + ":" + String(file.lastModified || Date.now()),
+                id: "onboarding-workspace-file:" + normalizedEnvironmentId + ":" + optimisticAttachment.workspacePath + ":" + String(file.lastModified || Date.now()),
+                clientUploadId: optimisticAttachment.clientUploadId,
                 filename: file.name,
                 mimeType: file.type || "application/octet-stream",
                 type: file.type && file.type.startsWith("image/") ? "image" : "document",
                 size: file.size,
                 uploadedAt: new Date().toISOString(),
                 environmentId: normalizedEnvironmentId,
-                sourcePath: workspacePath,
-                workspacePath,
+                sourcePath: optimisticAttachment.workspacePath,
+                workspacePath: optimisticAttachment.workspacePath,
+                isUploading: false,
+                uploadPending: false,
               }));
             }
-            setOnboardingComputerUploadedAttachments((current) => {
-              const next = current.slice();
-              uploadedAttachments.filter(Boolean).forEach((attachment) => {
-                const existingIndex = next.findIndex((item) => item.id === attachment.id);
-                if (existingIndex >= 0) {
-                  next[existingIndex] = attachment;
-                } else {
-                  next.push(attachment);
-                }
-              });
-              return next.slice(-5);
-            });
-            setOnboardingComputerUploadState({ isUploading: false, error: "" });
+            upsertOnboardingComputerAttachments(uploadedAttachments);
           } catch (error) {
+            const optimisticIds = new Set(optimisticAttachments.map((attachment) => attachment.id));
+            setOnboardingComputerUploadedAttachments((current) =>
+              current.filter((attachment) => !optimisticIds.has(attachment.id))
+            );
             setOnboardingComputerUploadState({
               isUploading: false,
               error: error instanceof Error ? error.message : "Failed to upload starter files.",
             });
+          } finally {
+            onboardingComputerActiveUploadsRef.current = Math.max(0, onboardingComputerActiveUploadsRef.current - 1);
+            if (onboardingComputerActiveUploadsRef.current === 0) {
+              setOnboardingComputerUploadState((current) => ({
+                isUploading: false,
+                error: current.error || "",
+              }));
+            }
           }
         }
 
@@ -102987,9 +103122,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
             || String(resolvedAttachment?.previewKindOverride || "").toLowerCase() === "directory"
             || normalizedAttachmentMimeType === "inode/directory"
           );
+          const isUploadingAttachment = Boolean(resolvedAttachment?.isUploading);
           return React.createElement("div", {
             key: resolvedAttachment.id,
-            className: "runner-attachment runner-attachment-file",
+            className: "runner-attachment runner-attachment-file" + (isUploadingAttachment ? " runner-attachment-uploading" : ""),
           },
             React.createElement("button", {
               type: "button",
@@ -103005,6 +103141,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   className: "runner-attachment-file-icon",
                 })
               ),
+              isUploadingAttachment
+                ? React.createElement(Loader2, { className: "runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner", strokeWidth: 1.9 })
+                : null,
               React.createElement("div", { className: "runner-attachment-file-name", title: resolvedAttachment.filename }, resolvedAttachment.filename)
             )
           );
@@ -103020,9 +103159,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               + (hasUploadedAttachments ? " is-filled" : ""),
             onDragOver: (event) => {
               event.preventDefault();
-              if (!isUploading) {
-                setOnboardingComputerUploadDragging(true);
-              }
+              setOnboardingComputerUploadDragging(true);
             },
             onDragLeave: (event) => {
               if (event.currentTarget.contains(event.relatedTarget)) {
@@ -103052,7 +103189,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     React.createElement("button", {
                       type: "button",
                       className: "playground-tasks-attachments-browse",
-                      disabled: isUploading,
                       onClick: openOnboardingComputerUploadPicker,
                     }, "browse.")
                   ),
@@ -103070,7 +103206,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
               : React.createElement("button", {
                   type: "button",
                   className: "playground-onboarding-computer-upload-button",
-                  disabled: isUploading,
                   onClick: openOnboardingComputerUploadPicker,
                 },
                   React.createElement(ArrowUpFromLine, { className: "playground-onboarding-computer-upload-icon", strokeWidth: 1.75 }),
@@ -127394,7 +127529,13 @@ async function serveAiosPublicAsset(req, res, assetPath = "") {
           ? "image/jpeg"
           : pathname.endsWith(".gif")
             ? "image/gif"
-            : "application/octet-stream";
+            : pathname.endsWith(".avif")
+              ? "image/avif"
+            : pathname.endsWith(".mp4")
+              ? "video/mp4"
+              : pathname.endsWith(".webm")
+                ? "video/webm"
+                : "application/octet-stream";
 
   for (const root of [aiosPublicRoot, packageRoot]) {
     const localPath = path.join(root, pathname);
@@ -127405,12 +127546,66 @@ async function serveAiosPublicAsset(req, res, assetPath = "") {
     }
 
     try {
-      const file = await fs.readFile(normalized);
-      res.writeHead(200, {
+      const stat = await fs.stat(normalized);
+      const supportsRanges = contentType.startsWith("video/") || contentType.startsWith("audio/");
+      const baseHeaders = {
         "Content-Type": contentType,
+        "Content-Length": stat.size,
         "Cache-Control": "no-store",
-      });
-      res.end(file);
+      };
+
+      if (supportsRanges) {
+        baseHeaders["Accept-Ranges"] = "bytes";
+      }
+
+      const rangeHeader = supportsRanges && typeof req.headers.range === "string" ? req.headers.range : "";
+      const rangeMatch = rangeHeader.match(/^bytes=(\d*)-(\d*)$/);
+      if (rangeMatch) {
+        const [, rawStart, rawEnd] = rangeMatch;
+        let start = rawStart ? Number(rawStart) : 0;
+        let end = rawEnd ? Number(rawEnd) : stat.size - 1;
+
+        if (!rawStart && rawEnd) {
+          const suffixLength = Number(rawEnd);
+          start = Number.isFinite(suffixLength) ? Math.max(stat.size - suffixLength, 0) : 0;
+          end = stat.size - 1;
+        }
+
+        if (
+          !Number.isInteger(start)
+          || !Number.isInteger(end)
+          || start < 0
+          || end < start
+          || start >= stat.size
+        ) {
+          res.writeHead(416, {
+            "Content-Range": `bytes */${stat.size}`,
+            "Cache-Control": "no-store",
+          });
+          res.end();
+          return;
+        }
+
+        end = Math.min(end, stat.size - 1);
+        res.writeHead(206, {
+          ...baseHeaders,
+          "Content-Length": end - start + 1,
+          "Content-Range": `bytes ${start}-${end}/${stat.size}`,
+        });
+        if (req.method === "HEAD") {
+          res.end();
+        } else {
+          createReadStream(normalized, { start, end }).pipe(res);
+        }
+        return;
+      }
+
+      res.writeHead(200, baseHeaders);
+      if (req.method === "HEAD") {
+        res.end();
+      } else {
+        createReadStream(normalized).pipe(res);
+      }
       return;
     } catch {}
   }
@@ -128054,7 +128249,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === "GET" && url.pathname.startsWith("/img/")) {
+  if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/img/")) {
     void serveAiosPublicAsset(req, res);
     return;
   }

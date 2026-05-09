@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="272" height="258" viewBox="0 0 272 258" fill="none" role="img" aria-label="Animated wireframe cube with a horizontal blue layer sweeping downward">
+  <defs>
+    <style>
+      .outer-line {
+        stroke: #ffffff;
+        stroke-width: 1.05;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+      .inner-line {
+        stroke: #ffffff;
+        stroke-width: 1.35;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+      .hidden-line {
+        stroke: #ffffff;
+        stroke-width: 1.1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 1 4;
+        opacity: 0.68;
+        vector-effect: non-scaling-stroke;
+      }
+      .scan-fill {
+        fill: #66a6ff;
+        fill-opacity: 0.2;
+      }
+      .scan-border {
+        fill: none;
+        stroke: #66a6ff;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+    </style>
+  </defs>
+
+  <!-- Blue horizontal layer fill: sweeps top-to-bottom in 1s, then holds until the 4s cycle repeats. -->
+  <g>
+    <polygon class="scan-fill" points="46,78 190,78 235,49 91,49"/>
+    <animateTransform attributeName="transform"
+                      type="translate"
+                      values="0 0; 0 144; 0 144"
+                      keyTimes="0; 0.25; 1"
+                      dur="4s"
+                      repeatCount="indefinite"
+                      calcMode="linear"/>
+    <animate attributeName="opacity"
+             values="0; 1; 1; 0; 0"
+             keyTimes="0; 0.025; 0.225; 0.25; 1"
+             dur="4s"
+             repeatCount="indefinite"
+             calcMode="linear"/>
+  </g>
+
+  <!-- Dotted inner/body diagonals from the source cube. -->
+  <g class="hidden-line">
+    <path d="M46 78 L235 193"/>
+    <path d="M46 222 L235 49"/>
+    <path d="M91 49 L190 222"/>
+    <path d="M91 193 L190 78"/>
+  </g>
+
+  <!-- Wireframe cube and inner grid. -->
+  <g class="outer-line">
+    <!-- Outer top and bottom faces -->
+    <path d="M46 78 L190 78 L235 49 L91 49 Z"/>
+    <path d="M46 222 L190 222 L235 193 L91 193 Z"/>
+
+    <!-- Outer vertical edges -->
+    <path d="M46 78 L46 222"/>
+    <path d="M190 78 L190 222"/>
+    <path d="M235 49 L235 193"/>
+    <path d="M91 49 L91 193"/>
+  </g>
+
+  <g class="inner-line">
+    <!-- Front and back face subdivisions -->
+    <path d="M118 78 L118 222"/>
+    <path d="M46 150 L190 150"/>
+    <path d="M163 49 L163 193"/>
+    <path d="M91 121 L235 121"/>
+
+    <!-- Depth subdivisions / connecting grid lines -->
+    <path d="M118 78 L163 49"/>
+    <path d="M118 150 L163 121"/>
+    <path d="M118 222 L163 193"/>
+    <path d="M46 150 L91 121"/>
+    <path d="M190 150 L235 121"/>
+  </g>
+
+  <!-- Blue horizontal layer border drawn on top so the scan edge remains visible. -->
+  <g>
+    <polygon class="scan-border" points="46,78 190,78 235,49 91,49"/>
+    <animateTransform attributeName="transform"
+                      type="translate"
+                      values="0 0; 0 144; 0 144"
+                      keyTimes="0; 0.25; 1"
+                      dur="4s"
+                      repeatCount="indefinite"
+                      calcMode="linear"/>
+    <animate attributeName="opacity"
+             values="0; 1; 1; 0; 0"
+             keyTimes="0; 0.025; 0.225; 0.25; 1"
+             dur="4s"
+             repeatCount="indefinite"
+             calcMode="linear"/>
+  </g>
+</svg>

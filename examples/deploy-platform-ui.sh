@@ -45,11 +45,14 @@ for public_file in \
   img/bg/blend.avif \
   img/bg/clouds.jpeg \
   img/bg/dune.avif \
+  img/bg/macapp.mp4 \
+  img/bg/macapp-poster.jpg \
   img/bg/moon.avif \
   img/bg/mountain.avif \
   img/bg/newdesert.avif \
   img/bg/road.avif \
   img/bg/water.avif \
+  img/010-svgs/animated_cube_layer.svg \
   img/logos/agentsappicon.png \
   img/logos/apple-touch-icon.png \
   img/logos/browsericon.png \
