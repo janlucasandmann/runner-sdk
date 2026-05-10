@@ -15093,8 +15093,33 @@ const html = `<!doctype html>
         outline: none;
       }
 
+      .playground-files-rename-control {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-files-rename-control.is-grid {
+        justify-content: center;
+      }
+
+      .playground-files-rename-control .playground-files-rename-input {
+        flex: 1 1 auto;
+      }
+
       .playground-files-rename-input.is-grid {
         text-align: center;
+      }
+
+      .playground-files-rename-extension {
+        flex: 0 0 auto;
+        margin-left: 6px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        user-select: none;
       }
 
       .playground-files-context-backdrop {
@@ -43310,6 +43335,37 @@ ${ENVIRONMENT_CHANGES_CSS}
         return segments[segments.length - 1] || normalized;
       }
 
+      function splitPlaygroundProtectedFilename(name, isFolder = false) {
+        const normalizedName = String(name || "").trim();
+        if (!normalizedName || isFolder) {
+          return { basename: normalizedName, extension: "" };
+        }
+        const lastDotIndex = normalizedName.lastIndexOf(".");
+        const hasExtension = lastDotIndex > 0 && lastDotIndex < normalizedName.length - 1;
+        if (!hasExtension) {
+          return { basename: normalizedName, extension: "" };
+        }
+        return {
+          basename: normalizedName.slice(0, lastDotIndex),
+          extension: normalizedName.slice(lastDotIndex),
+        };
+      }
+
+      function buildPlaygroundProtectedFilename(originalName, nextBasename, isFolder = false) {
+        const parts = splitPlaygroundProtectedFilename(originalName, isFolder);
+        let basename = String(nextBasename || "").trim().replace(/[\\/]+/g, "-");
+        if (parts.extension) {
+          if (basename.toLowerCase().endsWith(parts.extension.toLowerCase())) {
+            basename = basename.slice(0, -parts.extension.length).trim();
+          }
+          basename = basename.replace(/\\.+$/g, "").trim();
+        }
+        if (!basename) {
+          return "";
+        }
+        return basename + parts.extension;
+      }
+
       function isHistoryImagePath(value) {
         return /\\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(normalizeHistoryPath(value));
       }
@@ -50349,7 +50405,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return;
           }
 
-          const nextName = String(renameValue || "").trim().replace(/[\\/]+/g, "-");
+          const nextName = buildPlaygroundProtectedFilename(entry.name, renameValue, entry.isFolder);
           if (!nextName) {
             setRenamingPath("");
             setRenameValue("");
@@ -50396,8 +50452,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
         function startRename(entry, options = {}) {
           if (!entry) return;
+          const renameParts = splitPlaygroundProtectedFilename(entry.name || "", entry.isFolder);
           setRenamingPath(entry.path);
-          setRenameValue(entry.name || "");
+          setRenameValue(renameParts.basename || "");
           setSingleSelection(entry.path, {
             showPreview: options.showPreview !== false,
           });
@@ -50919,27 +50976,33 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (renamingPath !== entry.path) {
             return React.createElement("div", { className: "playground-files-entry-name" }, entry.name);
           }
+          const renameParts = splitPlaygroundProtectedFilename(entry.name || "", entry.isFolder);
 
-          return React.createElement("input", {
-            ref: renameInputRef,
-            type: "text",
-            className: "playground-files-rename-input",
-            value: renameValue,
-            onChange: (event) => setRenameValue(event.target.value),
-            onClick: (event) => event.stopPropagation(),
-            onKeyDown: (event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
+          return React.createElement("div", { className: "playground-files-rename-control" },
+            React.createElement("input", {
+              ref: renameInputRef,
+              type: "text",
+              className: "playground-files-rename-input",
+              value: renameValue,
+              onChange: (event) => setRenameValue(event.target.value),
+              onClick: (event) => event.stopPropagation(),
+              onKeyDown: (event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void handleRenameSubmit();
+                } else if (event.key === "Escape") {
+                  event.preventDefault();
+                  handleRenameCancel();
+                }
+              },
+              onBlur: () => {
                 void handleRenameSubmit();
-              } else if (event.key === "Escape") {
-                event.preventDefault();
-                handleRenameCancel();
-              }
-            },
-            onBlur: () => {
-              void handleRenameSubmit();
-            },
-          });
+              },
+            }),
+            renameParts.extension
+              ? React.createElement("span", { className: "playground-files-rename-extension" }, renameParts.extension)
+              : null
+          );
         }
 
         function renderEntryRow(row) {
@@ -51032,26 +51095,34 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             },
               React.createElement(PlaygroundFileIcon, { entry, size: "large" }),
               renamingPath === entry.path
-                ? React.createElement("input", {
-                    ref: renameInputRef,
-                    type: "text",
-                    className: "playground-files-rename-input is-grid",
-                    value: renameValue,
-                    onChange: (event) => setRenameValue(event.target.value),
-                    onClick: (event) => event.stopPropagation(),
-                    onKeyDown: (event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        void handleRenameSubmit();
-                      } else if (event.key === "Escape") {
-                        event.preventDefault();
-                        handleRenameCancel();
-                      }
-                    },
-                    onBlur: () => {
-                      void handleRenameSubmit();
-                    },
-                  })
+                ? (() => {
+                    const renameParts = splitPlaygroundProtectedFilename(entry.name || "", entry.isFolder);
+                    return React.createElement("div", { className: "playground-files-rename-control is-grid" },
+                      React.createElement("input", {
+                        ref: renameInputRef,
+                        type: "text",
+                        className: "playground-files-rename-input is-grid",
+                        value: renameValue,
+                        onChange: (event) => setRenameValue(event.target.value),
+                        onClick: (event) => event.stopPropagation(),
+                        onKeyDown: (event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            void handleRenameSubmit();
+                          } else if (event.key === "Escape") {
+                            event.preventDefault();
+                            handleRenameCancel();
+                          }
+                        },
+                        onBlur: () => {
+                          void handleRenameSubmit();
+                        },
+                      }),
+                      renameParts.extension
+                        ? React.createElement("span", { className: "playground-files-rename-extension" }, renameParts.extension)
+                        : null
+                    );
+                  })()
                 : React.createElement("div", { className: "playground-files-grid-item-name" }, entry.name),
               React.createElement("div", { className: "playground-files-grid-item-meta" },
                 entry.isFolder
@@ -81965,7 +82036,15 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
 
           const currentName = getHistoryPathName(normalizedPath) || String(row?.title || "").trim() || "file";
-          const nextName = String(window.prompt("Rename file", currentName) || "").trim().replace(/[\\/]+/g, "-");
+          const currentNameParts = splitPlaygroundProtectedFilename(currentName, false);
+          const rawNextBasename = window.prompt(
+            currentNameParts.extension ? "Rename file (extension is preserved)" : "Rename file",
+            currentNameParts.basename || currentName
+          );
+          if (rawNextBasename === null) {
+            return;
+          }
+          const nextName = buildPlaygroundProtectedFilename(currentName, rawNextBasename, false);
           if (!nextName || nextName === currentName) {
             return;
           }
