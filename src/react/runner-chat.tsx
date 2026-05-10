@@ -1,4 +1,4 @@
-import { CSSProperties, ChangeEvent, DragEvent as ReactDragEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, ChangeEvent, DragEvent as ReactDragEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, SyntheticEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowUp as LucideArrowUp,
@@ -41,6 +41,7 @@ import {
   Palette as LucidePalette,
   Pencil as LucidePencil,
   PenTool as LucidePenTool,
+  Presentation as LucidePresentation,
   Minus as LucideMinus,
   Plus as LucidePlus,
   RefreshCw as LucideRefreshCw,
@@ -241,6 +242,9 @@ interface RunnerTurn {
   presentation?: "default" | "context-action-notice" | "btw";
   quotedSelection?: RunnerQuotedSelection | null;
   attachments?: RunnerTurnAttachment[] | null;
+  slideCreationCommand?: StagedSlideCreationCommand | null;
+  researchCreationCommand?: StagedResearchCreationCommand | null;
+  adCreationCommand?: StagedAdCreationCommand | null;
 }
 
 export interface RunnerChatAgentTurnClickPayload {
@@ -278,6 +282,9 @@ interface PendingRunnerMessage {
   resourceCreationCommand?: StagedResourceCreationCommand | null;
   agentCreationCommand?: StagedAgentCreationCommand | null;
   skillCreationCommand?: StagedSkillCreationCommand | null;
+  slideCreationCommand?: StagedSlideCreationCommand | null;
+  researchCreationCommand?: StagedResearchCreationCommand | null;
+  adCreationCommand?: StagedAdCreationCommand | null;
 }
 
 interface BaseStagedBacklogCommand {
@@ -297,6 +304,48 @@ type StagedBacklogCommand = StagedBacklogSubtaskCommand | StagedBacklogMissionCo
 type RunnerResourceCreationCommandType = "computer" | "app" | "function";
 type RunnerAgentCreationCommandType = "agent" | "team";
 type RunnerSkillCreationCommandType = "skill";
+type RunnerAdCreationStyleId = "clean" | "bold" | "premium" | "social";
+type RunnerAdCreationQualityId = "low" | "medium" | "high";
+type RunnerAdCreationAspectRatioId = "1:1" | "4:5" | "9:16" | "16:9";
+type RunnerAdCreationVariantCount = 1 | 2 | 4;
+
+interface RunnerAdCreationSettings {
+  style: RunnerAdCreationStyleId;
+  quality: RunnerAdCreationQualityId;
+  aspectRatio: RunnerAdCreationAspectRatioId;
+  variants: RunnerAdCreationVariantCount;
+}
+
+const RUNNER_AD_CT_PER_DOLLAR = 100;
+const RUNNER_AD_GPT_IMAGE_2_OUTPUT_USD_PER_MILLION = 30;
+const RUNNER_AD_CREATION_DEFAULT_SETTINGS: RunnerAdCreationSettings = {
+  style: "premium",
+  quality: "medium",
+  aspectRatio: "1:1",
+  variants: 1,
+};
+const RUNNER_AD_STYLE_OPTIONS: Array<{ id: RunnerAdCreationStyleId; label: string; description: string }> = [
+  { id: "premium", label: "Premium", description: "Polished brand ad" },
+  { id: "bold", label: "Bold", description: "High contrast campaign" },
+  { id: "clean", label: "Clean", description: "Minimal product focus" },
+  { id: "social", label: "Social", description: "Native feed creative" },
+];
+const RUNNER_AD_QUALITY_OPTIONS: Array<{ id: RunnerAdCreationQualityId; label: string; description: string; outputTokens: number }> = [
+  { id: "low", label: "Low", description: "Fast draft", outputTokens: 272 },
+  { id: "medium", label: "Medium", description: "Balanced detail", outputTokens: 1056 },
+  { id: "high", label: "High", description: "Highest detail", outputTokens: 4160 },
+];
+const RUNNER_AD_ASPECT_RATIO_OPTIONS: Array<{ id: RunnerAdCreationAspectRatioId; label: string; description: string }> = [
+  { id: "1:1", label: "1:1", description: "Square" },
+  { id: "4:5", label: "4:5", description: "Social feed" },
+  { id: "9:16", label: "9:16", description: "Story" },
+  { id: "16:9", label: "16:9", description: "Wide" },
+];
+const RUNNER_AD_VARIANT_OPTIONS: Array<{ id: RunnerAdCreationVariantCount; label: string; description: string }> = [
+  { id: 1, label: "1", description: "Single concept" },
+  { id: 2, label: "2", description: "Two variants" },
+  { id: 4, label: "4", description: "Small set" },
+];
 
 interface StagedResourceCreationCommand extends BaseStagedBacklogCommand {
   action: RunnerResourceCreationCommandType;
@@ -308,6 +357,28 @@ interface StagedAgentCreationCommand extends BaseStagedBacklogCommand {
 
 interface StagedSkillCreationCommand extends BaseStagedBacklogCommand {
   action: RunnerSkillCreationCommandType;
+}
+
+interface StagedSlideCreationCommand extends BaseStagedBacklogCommand {
+  action: "slides";
+}
+
+interface StagedResearchCreationCommand extends BaseStagedBacklogCommand {
+  action: "research";
+}
+
+interface StagedAdCreationCommand extends BaseStagedBacklogCommand {
+  action: "ad";
+  style?: RunnerAdCreationStyleId;
+  quality?: RunnerAdCreationQualityId;
+  aspectRatio?: RunnerAdCreationAspectRatioId;
+  variants?: RunnerAdCreationVariantCount;
+  computeTokensPerImage?: number;
+}
+
+interface RunnerSlashCommandInputState {
+  query: string;
+  prompt: string;
 }
 
 interface RunnerTaskPreview {
@@ -578,6 +649,79 @@ function getRecordObject(record: Record<string, unknown> | null | undefined, key
   return null;
 }
 
+function normalizeRunnerAdCreationSettings(value?: Partial<RunnerAdCreationSettings> | null): RunnerAdCreationSettings {
+  const style = RUNNER_AD_STYLE_OPTIONS.some((option) => option.id === value?.style)
+    ? value?.style
+    : RUNNER_AD_CREATION_DEFAULT_SETTINGS.style;
+  const quality = RUNNER_AD_QUALITY_OPTIONS.some((option) => option.id === value?.quality)
+    ? value?.quality
+    : RUNNER_AD_CREATION_DEFAULT_SETTINGS.quality;
+  const aspectRatio = RUNNER_AD_ASPECT_RATIO_OPTIONS.some((option) => option.id === value?.aspectRatio)
+    ? value?.aspectRatio
+    : RUNNER_AD_CREATION_DEFAULT_SETTINGS.aspectRatio;
+  const variants = RUNNER_AD_VARIANT_OPTIONS.some((option) => option.id === value?.variants)
+    ? value?.variants
+    : RUNNER_AD_CREATION_DEFAULT_SETTINGS.variants;
+  return {
+    style: style || RUNNER_AD_CREATION_DEFAULT_SETTINGS.style,
+    quality: quality || RUNNER_AD_CREATION_DEFAULT_SETTINGS.quality,
+    aspectRatio: aspectRatio || RUNNER_AD_CREATION_DEFAULT_SETTINGS.aspectRatio,
+    variants: variants || RUNNER_AD_CREATION_DEFAULT_SETTINGS.variants,
+  };
+}
+
+function getRunnerAdCreationQualityComputeTokensPerImage(quality: RunnerAdCreationQualityId): number {
+  const option = RUNNER_AD_QUALITY_OPTIONS.find((entry) => entry.id === quality) || RUNNER_AD_QUALITY_OPTIONS[1];
+  const dollars = ((option?.outputTokens || 0) / 1_000_000) * RUNNER_AD_GPT_IMAGE_2_OUTPUT_USD_PER_MILLION;
+  return Math.max(1, Math.round(dollars * RUNNER_AD_CT_PER_DOLLAR));
+}
+
+function formatRunnerAdCreationComputeTokens(value: number): string {
+  const normalized = Number(value);
+  if (!Number.isFinite(normalized) || normalized <= 0) {
+    return "0 CT";
+  }
+  return `${Math.round(normalized).toLocaleString("en-US")} CT`;
+}
+
+function buildStagedRunnerAdCreationCommand(settings?: Partial<RunnerAdCreationSettings> | null): StagedAdCreationCommand {
+  const normalizedSettings = normalizeRunnerAdCreationSettings(settings);
+  return {
+    action: "ad",
+    label: buildRunnerAdCreationLabel(),
+    ...normalizedSettings,
+    computeTokensPerImage: getRunnerAdCreationQualityComputeTokensPerImage(normalizedSettings.quality),
+  };
+}
+
+function buildRunnerAdEnabledSkillsPayload(
+  adCreationCommand: StagedAdCreationCommand | null | undefined,
+  enabledSkills: Record<string, unknown> | null
+): Record<string, unknown> | null {
+  if (!adCreationCommand) {
+    return enabledSkills;
+  }
+  const settings = normalizeRunnerAdCreationSettings(adCreationCommand);
+  const computeTokensPerImage = getRunnerAdCreationQualityComputeTokensPerImage(settings.quality);
+  return {
+    ...(enabledSkills || {}),
+    imageGeneration: true,
+    imageGenerationModel: "gpt-image-2",
+    imageGenerationQuality: settings.quality,
+    imageGenerationComputeTokensPerImage: computeTokensPerImage,
+    imageGenerationConfig: {
+      ...(
+        enabledSkills && typeof enabledSkills.imageGenerationConfig === "object" && enabledSkills.imageGenerationConfig && !Array.isArray(enabledSkills.imageGenerationConfig)
+          ? (enabledSkills.imageGenerationConfig as Record<string, unknown>)
+          : {}
+      ),
+      model: "gpt-image-2",
+      quality: settings.quality,
+      computeTokensPerImage,
+    },
+  };
+}
+
 function buildAssistantMessageRunMetadata(message: RunnerConversationMessage): RunnerLog["metadata"] | undefined {
   const baseMetadata =
     message.logMetadata && typeof message.logMetadata === "object" && !Array.isArray(message.logMetadata)
@@ -597,6 +741,93 @@ function buildAssistantMessageRunMetadata(message: RunnerConversationMessage): R
     metadata.actionsCount = message.actionsCount;
   }
   return Object.keys(metadata).length > 0 ? (metadata as RunnerLog["metadata"]) : undefined;
+}
+
+function normalizeSlideCreationCommandFromMetadata(logMetadata: unknown): StagedSlideCreationCommand | null {
+  const metadata = normalizeRecordObject(logMetadata);
+  if (!metadata) {
+    return null;
+  }
+
+  const commandRecord = normalizeRecordObject(metadata.slideCreationCommand);
+  if (commandRecord) {
+    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
+    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
+    if (action === "slides" || label === "/slides") {
+      return {
+        action: "slides",
+        label: buildRunnerSlideCreationLabel(),
+      };
+    }
+  }
+
+  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
+  if (mode === "slides" || mode === "/slides") {
+    return {
+      action: "slides",
+      label: buildRunnerSlideCreationLabel(),
+    };
+  }
+
+  return null;
+}
+
+function normalizeResearchCreationCommandFromMetadata(logMetadata: unknown): StagedResearchCreationCommand | null {
+  const metadata = normalizeRecordObject(logMetadata);
+  if (!metadata) {
+    return null;
+  }
+
+  const commandRecord = normalizeRecordObject(metadata.researchCreationCommand);
+  if (commandRecord) {
+    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
+    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
+    if (action === "research" || label === "/research") {
+      return {
+        action: "research",
+        label: buildRunnerResearchCreationLabel(),
+      };
+    }
+  }
+
+  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
+  if (mode === "research" || mode === "/research") {
+    return {
+      action: "research",
+      label: buildRunnerResearchCreationLabel(),
+    };
+  }
+
+  return null;
+}
+
+function normalizeAdCreationCommandFromMetadata(logMetadata: unknown): StagedAdCreationCommand | null {
+  const metadata = normalizeRecordObject(logMetadata);
+  if (!metadata) {
+    return null;
+  }
+
+  const commandRecord = normalizeRecordObject(metadata.adCreationCommand);
+  if (commandRecord) {
+    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
+    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
+    if (action === "ad" || label === "/ad") {
+      const variants = getRecordNumber(commandRecord, ["variants", "variantCount", "variant_count"]);
+      return buildStagedRunnerAdCreationCommand({
+        style: getRecordString(commandRecord, ["style"]) as RunnerAdCreationStyleId,
+        quality: getRecordString(commandRecord, ["quality"]) as RunnerAdCreationQualityId,
+        aspectRatio: getRecordString(commandRecord, ["aspectRatio", "aspect_ratio"]) as RunnerAdCreationAspectRatioId,
+        variants: (variants as RunnerAdCreationVariantCount | null) || undefined,
+      });
+    }
+  }
+
+  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
+  if (mode === "ad" || mode === "/ad") {
+    return buildStagedRunnerAdCreationCommand();
+  }
+
+  return null;
 }
 
 function sanitizeRunnerBudgetMessage(value: string): string {
@@ -1372,6 +1603,9 @@ export interface RunnerChatExternalRunRequest {
   environmentId?: string | null;
   projectId?: string | null;
   quotedSelection?: RunnerQuotedSelection | null;
+  slideCreationCommand?: StagedSlideCreationCommand | null;
+  researchCreationCommand?: StagedResearchCreationCommand | null;
+  adCreationCommand?: StagedAdCreationCommand | null;
 }
 
 export interface RunnerChatProjectTaskSubmitPayload {
@@ -1987,6 +2221,52 @@ function buildRunnerSkillCreationLabel(commandType: RunnerSkillCreationCommandTy
   return `/${commandType}`;
 }
 
+function buildRunnerSlideCreationLabel(): string {
+  return "/slides";
+}
+
+function buildRunnerSlideCreationHiddenPrompt(): string {
+  return [
+    "The user selected /slides. Treat the visible user request as a request to create PowerPoint-ready slide output.",
+    "Use the image generation skill whenever a visual slide, slide background, diagram, illustration, or polished slide image would improve the result.",
+    "Produce very high quality 16:9 slide assets suitable for use in PowerPoint: clear information hierarchy, crisp readable typography, strong spacing, consistent styling, and presentation-ready composition.",
+    "If the user asks for multiple slides, create a coherent slide set with consistent visual language and clear filenames. Save generated slide assets in the workspace when possible, and summarize what was created.",
+  ].join("\n");
+}
+
+function buildRunnerResearchCreationLabel(): string {
+  return "/research";
+}
+
+function buildRunnerResearchCreationHiddenPrompt(): string {
+  return [
+    "The user selected /research. Treat the visible user request as a request for rigorous research.",
+    "Use the research or deep research skill whenever it is available and appropriate. Prefer primary sources, collect concrete facts, and keep a clear source trail.",
+    "Create a well-structured research summary file in the workspace with concise findings, methodology, sources, and next-step recommendations.",
+    "Use the image generation skill when useful to create supporting images, charts, diagrams, or visual summaries for the research file. Save generated assets with clear filenames and reference them from the summary.",
+  ].join("\n");
+}
+
+function buildRunnerAdCreationLabel(): string {
+  return "/ad";
+}
+
+function buildRunnerAdCreationHiddenPrompt(command?: StagedAdCreationCommand | null): string {
+  const settings = normalizeRunnerAdCreationSettings(command || null);
+  const styleLabel = RUNNER_AD_STYLE_OPTIONS.find((option) => option.id === settings.style)?.label || settings.style;
+  const aspectRatioLabel = RUNNER_AD_ASPECT_RATIO_OPTIONS.find((option) => option.id === settings.aspectRatio)?.label || settings.aspectRatio;
+  const qualityLabel = RUNNER_AD_QUALITY_OPTIONS.find((option) => option.id === settings.quality)?.label || settings.quality;
+  const computeTokensPerImage = getRunnerAdCreationQualityComputeTokensPerImage(settings.quality);
+  return [
+    "The user selected /ad. Treat the visible user request as a request to create a high quality advertisement.",
+    `Ad generation settings: style ${styleLabel}, GPT Image 2 quality ${qualityLabel} (${formatRunnerAdCreationComputeTokens(computeTokensPerImage)} / image), aspect ratio ${aspectRatioLabel}, ${settings.variants} image variant${settings.variants === 1 ? "" : "s"}.`,
+    "Use the image generation skill to produce a polished ad creative whenever possible. Prioritize strong visual hierarchy, clear product or offer focus, professional composition, readable typography, and production-ready brand feel.",
+    "Respect the selected style, image quality, aspect ratio, and variant count unless the user's visible request explicitly overrides them.",
+    "Create ad assets suitable for real campaign use. If the user does not specify a format, choose a practical primary format and mention any assumptions.",
+    "Save generated ad images in the workspace with clear filenames, and summarize the creative direction, intended audience, format, and files created.",
+  ].join("\n");
+}
+
 function parseAutoStageBacklogSubtaskCommand(input: string): { ticketNumber: string; prompt: string } | null {
   const match = input.match(/^\/subtask\s+(\d{3})(?:\s+([\s\S]*))$/i);
   if (!match) {
@@ -2056,6 +2336,72 @@ function parseAutoStageSkillCreationCommand(input: string): { action: RunnerSkil
   return {
     action: "skill",
     prompt: match[2] || "",
+  };
+}
+
+function parseAutoStageSlideCreationCommand(input: string): { prompt: string } | null {
+  const match = input.match(/^\/slides(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    prompt: match[1] || "",
+  };
+}
+
+function parseAutoStageResearchCreationCommand(input: string): { prompt: string } | null {
+  const match = input.match(/^\/research(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    prompt: match[1] || "",
+  };
+}
+
+function parseAutoStageAdCreationCommand(input: string): { prompt: string } | null {
+  const match = input.match(/^\/ad(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    prompt: match[1] || "",
+  };
+}
+
+function resolveRunnerSlashCommandInputState(input: string, cursorIndex: number): RunnerSlashCommandInputState | null {
+  const value = String(input || "");
+  if (!value) {
+    return null;
+  }
+
+  const cursor = Math.min(Math.max(0, Number.isFinite(cursorIndex) ? Math.round(cursorIndex) : value.length), value.length);
+  const slashIndex = value.slice(0, cursor).lastIndexOf("/");
+  if (slashIndex < 0) {
+    return null;
+  }
+
+  const tokenRemainder = value.slice(slashIndex + 1);
+  const tokenSeparatorMatch = tokenRemainder.match(/\s/);
+  const tokenEndIndex = tokenSeparatorMatch
+    ? slashIndex + 1 + (tokenSeparatorMatch.index ?? 0)
+    : value.length;
+  if (cursor > tokenEndIndex) {
+    return null;
+  }
+
+  const query = value.slice(slashIndex + 1, tokenEndIndex).trim().toLowerCase();
+  const promptParts = [
+    value.slice(0, slashIndex).trim(),
+    value.slice(tokenEndIndex).trim(),
+  ].filter(Boolean);
+
+  return {
+    query,
+    prompt: promptParts.join(" "),
   };
 }
 
@@ -5438,6 +5784,9 @@ function buildHydratedTurnsFromMessages(
           presentation: "btw",
           quotedSelection: normalizeQuotedSelection(message.logMetadata?.quotedSelection),
           attachments: normalizeTurnAttachments(message.logMetadata?.attachments, meta?.backendUrl),
+          slideCreationCommand: normalizeSlideCreationCommandFromMetadata(message.logMetadata),
+          researchCreationCommand: normalizeResearchCreationCommandFromMetadata(message.logMetadata),
+          adCreationCommand: normalizeAdCreationCommandFromMetadata(message.logMetadata),
         };
       } else {
         commitPendingBtwTurn();
@@ -5456,6 +5805,9 @@ function buildHydratedTurnsFromMessages(
           presentation: "default",
           quotedSelection: normalizeQuotedSelection(message.logMetadata?.quotedSelection),
           attachments: normalizeTurnAttachments(message.logMetadata?.attachments, meta?.backendUrl),
+          slideCreationCommand: normalizeSlideCreationCommandFromMetadata(message.logMetadata),
+          researchCreationCommand: normalizeResearchCreationCommandFromMetadata(message.logMetadata),
+          adCreationCommand: normalizeAdCreationCommandFromMetadata(message.logMetadata),
         };
       }
       continue;
@@ -6616,6 +6968,9 @@ function mergeHydratedMessageTurnsIntoTurns(
       durationSeconds: turn.durationSeconds ?? messageTurn.durationSeconds ?? null,
       agentName: turn.agentName ?? messageTurn.agentName ?? null,
       environmentName: turn.environmentName ?? messageTurn.environmentName ?? null,
+      slideCreationCommand: turn.slideCreationCommand ?? messageTurn.slideCreationCommand ?? null,
+      researchCreationCommand: turn.researchCreationCommand ?? messageTurn.researchCreationCommand ?? null,
+      adCreationCommand: turn.adCreationCommand ?? messageTurn.adCreationCommand ?? null,
     };
   });
 
@@ -6680,6 +7035,9 @@ function mergeHydratedTurns(existingTurns: RunnerTurn[], hydratedTurns: RunnerTu
       quotedSelection: hydratedTurn.quotedSelection ?? localTurn.quotedSelection ?? null,
       attachments: pickTurnAttachments(hydratedTurn.attachments, localTurn.attachments),
       sourceMessageId: hydratedTurn.sourceMessageId ?? localTurn.sourceMessageId ?? null,
+      slideCreationCommand: hydratedTurn.slideCreationCommand ?? localTurn.slideCreationCommand ?? null,
+      researchCreationCommand: hydratedTurn.researchCreationCommand ?? localTurn.researchCreationCommand ?? null,
+      adCreationCommand: hydratedTurn.adCreationCommand ?? localTurn.adCreationCommand ?? null,
     };
   }
 
@@ -7700,11 +8058,7 @@ export function RunnerChat({
   onDeepResearchDetailOpenChange,
   threadTaskPreview = null,
   threadMissionControlPreview = null,
-  composerProjectTasks = [],
   selectedComposerProjectTask = null,
-  showComposerCreateAgentAction = false,
-  onComposerCreateAgentClick,
-  onComposerProjectTaskChange,
   onComposerProjectTaskSubmit,
   activeTaskPreviewId = null,
   onTaskPreviewClick,
@@ -7742,6 +8096,7 @@ export function RunnerChat({
   followUpError = "",
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
+  const [inputSelectionStart, setInputSelectionStart] = useState(() => initialTask.length);
   const [composerQuotedSelection, setComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
   const [renderedComposerQuotedSelection, setRenderedComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
   const [isComposerQuotedSelectionVisible, setIsComposerQuotedSelectionVisible] = useState(false);
@@ -7902,8 +8257,13 @@ export function RunnerChat({
   const [stagedResourceCreationCommand, setStagedResourceCreationCommand] = useState<StagedResourceCreationCommand | null>(null);
   const [stagedAgentCreationCommand, setStagedAgentCreationCommand] = useState<StagedAgentCreationCommand | null>(null);
   const [stagedSkillCreationCommand, setStagedSkillCreationCommand] = useState<StagedSkillCreationCommand | null>(null);
+  const [stagedSlideCreationCommand, setStagedSlideCreationCommand] = useState<StagedSlideCreationCommand | null>(null);
+  const [stagedResearchCreationCommand, setStagedResearchCreationCommand] = useState<StagedResearchCreationCommand | null>(null);
+  const [stagedAdCreationCommand, setStagedAdCreationCommand] = useState<StagedAdCreationCommand | null>(null);
+  const [adCreationSettings, setAdCreationSettings] = useState<RunnerAdCreationSettings>(RUNNER_AD_CREATION_DEFAULT_SETTINGS);
   const [stagedBacklogSubtaskCommand, setStagedBacklogSubtaskCommand] = useState<StagedBacklogSubtaskCommand | null>(null);
   const [stagedBacklogMissionControlCommand, setStagedBacklogMissionControlCommand] = useState<StagedBacklogMissionControlCommand | null>(null);
+  const [projectCreateMenuStyle, setProjectCreateMenuStyle] = useState<CSSProperties | null>(null);
   const [renderedMainPopup, setRenderedMainPopup] = useState<MainPopupRenderId | null>(null);
   const [mainPopupPhase, setMainPopupPhase] = useState<PopupAnimationPhase>("idle");
   const [renderedSidePopup, setRenderedSidePopup] = useState<SidePopupRenderId | null>(null);
@@ -7921,6 +8281,8 @@ export function RunnerChat({
   const popupAreaRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const projectTasksPopupRef = useRef<HTMLDivElement | null>(null);
+  const projectCreateButtonRef = useRef<HTMLButtonElement | null>(null);
+  const projectCreateMenuRef = useRef<HTMLDivElement | null>(null);
   const forkEnvironmentPopupRef = useRef<HTMLDivElement | null>(null);
   const runSummaryMoreMenuRef = useRef<HTMLSpanElement | null>(null);
   const currentInputRef = useRef(initialTask);
@@ -8092,15 +8454,21 @@ export function RunnerChat({
   const stagedResourceCreationCommandLabel = stagedResourceCreationCommand?.label || "";
   const stagedAgentCreationCommandLabel = stagedAgentCreationCommand?.label || "";
   const stagedSkillCreationCommandLabel = stagedSkillCreationCommand?.label || "";
+  const stagedSlideCreationCommandLabel = stagedSlideCreationCommand?.label || "";
+  const stagedResearchCreationCommandLabel = stagedResearchCreationCommand?.label || "";
+  const stagedAdCreationCommandLabel = stagedAdCreationCommand?.label || "";
   const stagedBacklogCommand = stagedBacklogMissionControlCommand || stagedBacklogSubtaskCommand;
   const stagedComposerLabel =
     stagedBacklogCommand?.label
+    || stagedSlideCreationCommandLabel
+    || stagedAdCreationCommandLabel
+    || stagedResearchCreationCommandLabel
     || stagedSkillCreationCommandLabel
     || stagedAgentCreationCommandLabel
     || stagedResourceCreationCommandLabel
     || stagedThreadContextCommandLabel;
-  const stagedComposerToneValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
-  const stagedComposerOffsetValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand
+  const stagedComposerToneValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedAdCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
+  const stagedComposerOffsetValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedAdCreationCommand
     ? `${Math.max(
         16,
         Math.round(
@@ -8110,20 +8478,13 @@ export function RunnerChat({
         )
       )}px`
     : stagedThreadContextCommandOffset(stagedThreadContextCommand);
-  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedBacklogCommand);
+  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedAdCreationCommand || stagedBacklogCommand);
   const slashCommandInputState = useMemo(() => {
-    if (hasStagedComposerCommand || !input.startsWith("/")) {
+    if (hasStagedComposerCommand) {
       return null;
     }
-    const commandSource = input.slice(1);
-    const separatorIndex = commandSource.indexOf(" ");
-    const query = (separatorIndex === -1 ? commandSource : commandSource.slice(0, separatorIndex)).trim().toLowerCase();
-    const prompt = separatorIndex === -1 ? "" : commandSource.slice(separatorIndex + 1);
-    return {
-      query,
-      prompt,
-    };
-  }, [hasStagedComposerCommand, input]);
+    return resolveRunnerSlashCommandInputState(input, inputSelectionStart);
+  }, [hasStagedComposerCommand, input, inputSelectionStart]);
   const availableSlashCommandItems = useMemo(() => {
     const items: Array<{
       id: string;
@@ -8132,6 +8493,27 @@ export function RunnerChat({
       icon: ReactNode;
       stage: () => void;
     }> = [];
+    items.push({
+      id: "slides",
+      command: "/slides",
+      description: "Create slides",
+      icon: <LucidePresentation className="tb-popup-icon" strokeWidth={1.75} />,
+      stage: () => stageSlideCreationCommand(slashCommandInputState?.prompt || ""),
+    });
+    items.push({
+      id: "ad",
+      command: "/ad",
+      description: "Create ad",
+      icon: <LucideImages className="tb-popup-icon" strokeWidth={1.75} />,
+      stage: () => stageAdCreationCommand(slashCommandInputState?.prompt || ""),
+    });
+    items.push({
+      id: "research",
+      command: "/research",
+      description: "Deep research",
+      icon: <LucideTelescope className="tb-popup-icon" strokeWidth={1.75} />,
+      stage: () => stageResearchCreationCommand(slashCommandInputState?.prompt || ""),
+    });
     if (enableAgentCreationCommand) {
       items.push({
         id: "agent",
@@ -8214,6 +8596,15 @@ export function RunnerChat({
     () => (useComputerAgentsMode ? buildEnabledSkillsPayload(enabledSkillIds, displayedSkills, skillDefaults) : null),
     [displayedSkills, enabledSkillIds, skillDefaults, useComputerAgentsMode]
   );
+  const adCreationComputeTokensPerImage = getRunnerAdCreationQualityComputeTokensPerImage(adCreationSettings.quality);
+  const adCreationTotalComputeTokens = adCreationComputeTokensPerImage * adCreationSettings.variants;
+  function updateAdCreationSettings(patch: Partial<RunnerAdCreationSettings>) {
+    setAdCreationSettings((current) => {
+      const next = normalizeRunnerAdCreationSettings({ ...current, ...patch });
+      setStagedAdCreationCommand((command) => command ? buildStagedRunnerAdCreationCommand(next) : command);
+      return next;
+    });
+  }
   const hasApiKey = apiKey.trim().length > 0;
   const authenticatedAttachmentFetchHeaders = useMemo(
     () => buildRunnerHeaders(requestHeaders, apiKey.trim()),
@@ -8801,6 +9192,9 @@ export function RunnerChat({
       setStagedResourceCreationCommand(null);
       setStagedAgentCreationCommand(null);
       setStagedSkillCreationCommand(null);
+      setStagedSlideCreationCommand(null);
+      setStagedResearchCreationCommand(null);
+      setStagedAdCreationCommand(null);
       setStagedBacklogSubtaskCommand(null);
       setStagedBacklogMissionControlCommand(null);
     }
@@ -9046,6 +9440,9 @@ export function RunnerChat({
     setStagedResourceCreationCommand(null);
     setStagedAgentCreationCommand(null);
     setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedAdCreationCommand(null);
     setInput(prompt);
     currentInputRef.current = prompt;
     speechBaseInputRef.current = prompt;
@@ -9056,6 +9453,9 @@ export function RunnerChat({
     setStagedResourceCreationCommand(null);
     setStagedAgentCreationCommand(null);
     setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedThreadContextCommand(action);
@@ -9075,6 +9475,9 @@ export function RunnerChat({
     setStagedResourceCreationCommand(null);
     setStagedAgentCreationCommand(null);
     setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedAdCreationCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedBacklogSubtaskCommand({
       action: "subtask",
@@ -9092,6 +9495,9 @@ export function RunnerChat({
     setStagedResourceCreationCommand(null);
     setStagedAgentCreationCommand(null);
     setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand({
       action: "mission_control",
@@ -9107,6 +9513,9 @@ export function RunnerChat({
     setStagedThreadContextCommand(null);
     setStagedAgentCreationCommand(null);
     setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedResourceCreationCommand({
@@ -9123,6 +9532,9 @@ export function RunnerChat({
     setStagedThreadContextCommand(null);
     setStagedResourceCreationCommand(null);
     setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedAgentCreationCommand({
@@ -9139,12 +9551,69 @@ export function RunnerChat({
     setStagedThreadContextCommand(null);
     setStagedResourceCreationCommand(null);
     setStagedAgentCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedSkillCreationCommand({
       action,
       label: buildRunnerSkillCreationLabel(action),
     });
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageSlideCreationCommand(prompt = "") {
+    setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedAdCreationCommand(null);
+    setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand(null);
+    setStagedSlideCreationCommand({
+      action: "slides",
+      label: buildRunnerSlideCreationLabel(),
+    });
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageResearchCreationCommand(prompt = "") {
+    setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedAdCreationCommand(null);
+    setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand(null);
+    setStagedResearchCreationCommand({
+      action: "research",
+      label: buildRunnerResearchCreationLabel(),
+    });
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageAdCreationCommand(prompt = "") {
+    setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand(null);
+    setStagedAdCreationCommand(buildStagedRunnerAdCreationCommand(adCreationSettings));
     setInput(prompt);
     currentInputRef.current = prompt;
     speechBaseInputRef.current = prompt;
@@ -10367,6 +10836,9 @@ export function RunnerChat({
       resourceCreationCommand?: StagedResourceCreationCommand | null;
       agentCreationCommand?: StagedAgentCreationCommand | null;
       skillCreationCommand?: StagedSkillCreationCommand | null;
+      slideCreationCommand?: StagedSlideCreationCommand | null;
+      researchCreationCommand?: StagedResearchCreationCommand | null;
+      adCreationCommand?: StagedAdCreationCommand | null;
       resolvedAttachmentsOverride?: RunnerAttachment[] | null;
       githubRepoOverride?: {
         repoFullName: string;
@@ -10387,8 +10859,17 @@ export function RunnerChat({
     const skillCreationHiddenPromptText = options?.skillCreationCommand
       ? String(skillCreationCommandHiddenPrompt?.(options.skillCreationCommand.action) || "").trim()
       : "";
+    const slideCreationHiddenPromptText = options?.slideCreationCommand
+      ? buildRunnerSlideCreationHiddenPrompt()
+      : "";
+    const researchCreationHiddenPromptText = options?.researchCreationCommand
+      ? buildRunnerResearchCreationHiddenPrompt()
+      : "";
+    const adCreationHiddenPromptText = options?.adCreationCommand
+      ? buildRunnerAdCreationHiddenPrompt(options.adCreationCommand)
+      : "";
     const executionTaskText =
-      [hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, taskText]
+      [hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, slideCreationHiddenPromptText, researchCreationHiddenPromptText, adCreationHiddenPromptText, taskText]
         .filter((part) => typeof part === "string" && part.trim().length > 0)
         .join("\n\n");
     const visibleTaskText =
@@ -10420,6 +10901,11 @@ export function RunnerChat({
         ? String(options.agentIdOverride || "").trim()
         : String(effectiveAgentId || "").trim();
     const runAgentName = String(options?.agentNameOverride || "").trim() || selectedAgent?.name || displayedAgentLabel;
+    const baseEnabledSkillsPayload =
+      options?.enabledSkillsOverride !== undefined
+        ? options.enabledSkillsOverride || null
+        : enabledSkillsPayload;
+    const executionEnabledSkillsPayload = buildRunnerAdEnabledSkillsPayload(options?.adCreationCommand || null, baseEnabledSkillsPayload);
     initializedThreadHistoryIdRef.current = threadId;
     const githubRepo =
       options?.githubRepoOverride !== undefined
@@ -10446,10 +10932,13 @@ export function RunnerChat({
         agentName: selectedAgent?.name || displayedAgentLabel,
         attachments: resolvedAttachments || [],
         githubRepo: githubRepo || null,
-        enabledSkills: enabledSkillsPayload || null,
+        enabledSkills: executionEnabledSkillsPayload || null,
         environmentId: typeof runEnvironmentId === "string" ? runEnvironmentId : "",
         projectId: effectiveProjectId || null,
         quotedSelection: options?.quotedSelection || null,
+        slideCreationCommand: options?.slideCreationCommand || null,
+        researchCreationCommand: options?.researchCreationCommand || null,
+        adCreationCommand: options?.adCreationCommand || null,
       });
       if (didHandleExternalRunRequest !== false) {
         if (locallyOwnedExecutionThreadIdRef.current === threadId) {
@@ -10467,6 +10956,9 @@ export function RunnerChat({
 
     const initialTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
     const turnId = options?.turnId || generateId("turn");
+    const slideCreationCommand = options?.slideCreationCommand || null;
+    const researchCreationCommand = options?.researchCreationCommand || null;
+    const adCreationCommand = options?.adCreationCommand || null;
     const startedAtMs = Date.now();
     let releasedPreparationState = false;
     const releasePreparationState = () => {
@@ -10488,6 +10980,9 @@ export function RunnerChat({
         quotedSelection: options?.quotedSelection === undefined ? turn.quotedSelection : options.quotedSelection,
         attachments: pickTurnAttachments(initialTurnAttachments, turn.attachments),
         agentName: runAgentName || turn.agentName || null,
+        slideCreationCommand: slideCreationCommand || turn.slideCreationCommand || null,
+        researchCreationCommand: researchCreationCommand || turn.researchCreationCommand || null,
+        adCreationCommand: adCreationCommand || turn.adCreationCommand || null,
       }));
     } else {
       setTurns((prev) => [
@@ -10504,6 +10999,9 @@ export function RunnerChat({
           environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
           quotedSelection: options?.quotedSelection || null,
           attachments: initialTurnAttachments,
+          slideCreationCommand,
+          researchCreationCommand,
+          adCreationCommand,
         },
       ]);
       setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
@@ -10525,9 +11023,9 @@ export function RunnerChat({
             environmentId: runEnvironmentId,
             ...(runAgentId ? { agentId: runAgentId } : {}),
             ...(options?.enabledSkillsOverride !== undefined
-              ? { enabledSkills: options.enabledSkillsOverride }
-              : enabledSkillsPayload
-                ? { enabledSkills: enabledSkillsPayload }
+              ? { enabledSkills: executionEnabledSkillsPayload || options.enabledSkillsOverride }
+              : executionEnabledSkillsPayload
+                ? { enabledSkills: executionEnabledSkillsPayload }
                 : {}),
           });
         } catch (error) {
@@ -10600,14 +11098,49 @@ export function RunnerChat({
           body: {
             content: visibleTaskText || taskText,
             ...(executionTaskText !== (visibleTaskText || taskText) ? { executionContent: executionTaskText } : {}),
+            ...(options?.slideCreationCommand || options?.researchCreationCommand || options?.adCreationCommand
+              ? {
+                  messageMetadata: {
+                    ...(options?.slideCreationCommand
+                      ? {
+                          slideCreationCommand: {
+                            action: "slides" as const,
+                            label: buildRunnerSlideCreationLabel(),
+                          },
+                        }
+                      : {}),
+                    ...(options?.researchCreationCommand
+                      ? {
+                          researchCreationCommand: {
+                            action: "research" as const,
+                            label: buildRunnerResearchCreationLabel(),
+                          },
+                        }
+                      : {}),
+                    ...(options?.adCreationCommand
+                      ? {
+                          adCreationCommand: {
+                            action: "ad" as const,
+                            label: buildRunnerAdCreationLabel(),
+                            style: normalizeRunnerAdCreationSettings(options.adCreationCommand).style,
+                            quality: normalizeRunnerAdCreationSettings(options.adCreationCommand).quality,
+                            aspectRatio: normalizeRunnerAdCreationSettings(options.adCreationCommand).aspectRatio,
+                            variants: normalizeRunnerAdCreationSettings(options.adCreationCommand).variants,
+                            computeTokensPerImage: getRunnerAdCreationQualityComputeTokensPerImage(normalizeRunnerAdCreationSettings(options.adCreationCommand).quality),
+                          },
+                        }
+                      : {}),
+                  },
+                }
+              : {}),
             ...(resolvedAttachments ? { attachments: resolvedAttachments } : {}),
             ...(githubRepo ? { githubRepo } : {}),
             ...(typeof options?.truncateAtMessageIndex === "number" ? { truncateAtMessageIndex: options.truncateAtMessageIndex } : {}),
             ...(typeof options?.persistFileChanges === "boolean" ? { persistFileChanges: options.persistFileChanges } : {}),
             ...(options?.quotedSelection ? { quotedSelection: options.quotedSelection } : {}),
             ...(options?.enabledSkillsOverride !== undefined
-              ? (options.enabledSkillsOverride ? { enabledSkills: options.enabledSkillsOverride } : {})
-              : (enabledSkillsPayload ? { enabledSkills: enabledSkillsPayload } : {})),
+              ? (executionEnabledSkillsPayload ? { enabledSkills: executionEnabledSkillsPayload } : {})
+              : (executionEnabledSkillsPayload ? { enabledSkills: executionEnabledSkillsPayload } : {})),
             ...(backlogTaskConnectors ? { connectors: backlogTaskConnectors } : {}),
             ...(subtaskBacklogCommand
               ? {
@@ -10780,6 +11313,9 @@ export function RunnerChat({
           githubRepoOverride: externalRunRequest.githubRepo ?? undefined,
           enabledSkillsOverride: externalRunRequest.enabledSkills ?? undefined,
           displayPromptOverride: normalizedDisplayPrompt,
+          slideCreationCommand: externalRunRequest.slideCreationCommand || null,
+          researchCreationCommand: externalRunRequest.researchCreationCommand || null,
+          adCreationCommand: externalRunRequest.adCreationCommand || null,
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -13938,6 +14474,9 @@ export function RunnerChat({
       const resourceCreationCommand = stagedResourceCreationCommand;
       const agentCreationCommand = stagedAgentCreationCommand;
       const skillCreationCommand = stagedSkillCreationCommand;
+      const slideCreationCommand = stagedSlideCreationCommand;
+      const researchCreationCommand = stagedResearchCreationCommand;
+      const adCreationCommand = stagedAdCreationCommand ? buildStagedRunnerAdCreationCommand(adCreationSettings) : null;
       if (stagedThreadContextCommand) {
         const stagedPrompt = textareaAllowsPromptAfterStagedCommand ? taskText : "";
         const shouldPreserveComposerState = stagedThreadContextCommand === "fork";
@@ -14050,6 +14589,9 @@ export function RunnerChat({
             environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
             quotedSelection,
             attachments: queuedTurnAttachments,
+            slideCreationCommand,
+            researchCreationCommand,
+            adCreationCommand,
           },
         ]);
         setPendingQueuedMessages((prev) => [
@@ -14064,6 +14606,9 @@ export function RunnerChat({
             resourceCreationCommand,
             agentCreationCommand,
             skillCreationCommand,
+            slideCreationCommand,
+            researchCreationCommand,
+            adCreationCommand,
           },
         ]);
         return;
@@ -14076,6 +14621,9 @@ export function RunnerChat({
           resourceCreationCommand,
           agentCreationCommand,
           skillCreationCommand,
+          slideCreationCommand,
+          researchCreationCommand,
+          adCreationCommand,
         });
       ensuredThreadId = execution.threadId;
     } catch (error) {
@@ -14116,6 +14664,9 @@ export function RunnerChat({
           resourceCreationCommand: nextQueuedMessage.resourceCreationCommand,
           agentCreationCommand: nextQueuedMessage.agentCreationCommand,
           skillCreationCommand: nextQueuedMessage.skillCreationCommand,
+          slideCreationCommand: nextQueuedMessage.slideCreationCommand,
+          researchCreationCommand: nextQueuedMessage.researchCreationCommand,
+          adCreationCommand: nextQueuedMessage.adCreationCommand,
         });
       } catch (error) {
         const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -14136,10 +14687,26 @@ export function RunnerChat({
 
   function handleInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
     const nextValue = event.target.value;
-    if (!stagedThreadContextCommand && !stagedResourceCreationCommand && !stagedAgentCreationCommand && !stagedSkillCreationCommand && !stagedBacklogCommand) {
+    setInputSelectionStart(event.target.selectionStart ?? nextValue.length);
+    if (!stagedThreadContextCommand && !stagedResourceCreationCommand && !stagedAgentCreationCommand && !stagedSkillCreationCommand && !stagedSlideCreationCommand && !stagedResearchCreationCommand && !stagedAdCreationCommand && !stagedBacklogCommand) {
       const autoStageCommand = parseAutoStageThreadContextCommand(nextValue);
       if (autoStageCommand) {
         stageThreadContextCommand(autoStageCommand.action, autoStageCommand.prompt);
+        return;
+      }
+      const autoStageSlideCreationCommand = parseAutoStageSlideCreationCommand(nextValue);
+      if (autoStageSlideCreationCommand) {
+        stageSlideCreationCommand(autoStageSlideCreationCommand.prompt);
+        return;
+      }
+      const autoStageAdCreationCommand = parseAutoStageAdCreationCommand(nextValue);
+      if (autoStageAdCreationCommand) {
+        stageAdCreationCommand(autoStageAdCreationCommand.prompt);
+        return;
+      }
+      const autoStageResearchCreationCommand = parseAutoStageResearchCreationCommand(nextValue);
+      if (autoStageResearchCreationCommand) {
+        stageResearchCreationCommand(autoStageResearchCreationCommand.prompt);
         return;
       }
       if (enableResourceCreationCommand) {
@@ -14186,6 +14753,11 @@ export function RunnerChat({
     }
   }
 
+  function handleInputSelectionChange(event: SyntheticEvent<HTMLTextAreaElement>) {
+    const target = event.currentTarget;
+    setInputSelectionStart(target.selectionStart ?? target.value.length);
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Backspace" && stagedThreadContextCommand && input.length === 0) {
       event.preventDefault();
@@ -14205,6 +14777,21 @@ export function RunnerChat({
     if (event.key === "Backspace" && stagedSkillCreationCommand && input.length === 0) {
       event.preventDefault();
       setStagedSkillCreationCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedSlideCreationCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedSlideCreationCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedResearchCreationCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedResearchCreationCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedAdCreationCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedAdCreationCommand(null);
       return;
     }
     if (event.key === "Backspace" && stagedBacklogSubtaskCommand && input.length === 0) {
@@ -15975,13 +16562,6 @@ export function RunnerChat({
     { id: "one-drive", label: "OneDrive", source: "one-drive" as const, connected: oneDriveConnected, Icon: IconOneDrive },
     { id: "google-drive", label: "Google Drive", source: "google-drive" as const, connected: googleDriveConnected, Icon: IconGoogleDrive },
   ].filter((connector) => connector.connected);
-  const composerProjectTaskItems = useMemo(
-    () => (Array.isArray(composerProjectTasks) ? composerProjectTasks : [])
-      .filter((task): task is RunnerTaskPreview => Boolean(task?.taskId && task.title)),
-    [composerProjectTasks]
-  );
-  const selectedComposerProjectTaskId = String(selectedComposerProjectTask?.taskId || "").trim();
-  const selectedComposerProjectTaskLabel = String(selectedComposerProjectTask?.title || "").trim();
   useEffect(() => {
     if (!projectTasksPopupOpen) {
       return undefined;
@@ -15990,6 +16570,9 @@ export function RunnerChat({
     const handleDocumentPointerDown = (event: Event) => {
       const target = event.target instanceof Node ? event.target : null;
       if (target && projectTasksPopupRef.current?.contains(target)) {
+        return;
+      }
+      if (target && projectCreateMenuRef.current?.contains(target)) {
         return;
       }
       setProjectTasksPopupOpen(false);
@@ -16005,6 +16588,41 @@ export function RunnerChat({
     return () => {
       document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
       document.removeEventListener("keydown", handleDocumentKeyDown, true);
+    };
+  }, [projectTasksPopupOpen]);
+  useLayoutEffect(() => {
+    if (!projectTasksPopupOpen) {
+      setProjectCreateMenuStyle(null);
+      return undefined;
+    }
+
+    const updateCreateMenuPosition = () => {
+      const button = projectCreateButtonRef.current;
+      if (!button) {
+        setProjectCreateMenuStyle(null);
+        return;
+      }
+      const rect = button.getBoundingClientRect();
+      const menuWidth = 240;
+      const viewportPadding = 8;
+      const left = Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - menuWidth - viewportPadding));
+      const top = Math.max(viewportPadding, rect.top - 8);
+      setProjectCreateMenuStyle({
+        position: "fixed",
+        left,
+        top,
+        bottom: "auto",
+        transform: "translateY(-100%)",
+        zIndex: 1000,
+      });
+    };
+
+    updateCreateMenuPosition();
+    window.addEventListener("resize", updateCreateMenuPosition);
+    window.addEventListener("scroll", updateCreateMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateCreateMenuPosition);
+      window.removeEventListener("scroll", updateCreateMenuPosition, true);
     };
   }, [projectTasksPopupOpen]);
   const scheduleEnabled = (scheduleConfig?.enabled ?? false) || scheduledTask !== null;
@@ -17519,6 +18137,32 @@ export function RunnerChat({
                 !isTurnPermissionAsked &&
                 !isQueuedTurn
               );
+              const runModeLabelConfig = turn.slideCreationCommand
+                ? {
+                    className: "is-slides",
+                    Icon: LucidePresentation,
+                    label: "Slides",
+                  }
+                : turn.adCreationCommand
+                  ? {
+                      className: "is-ad",
+                      Icon: LucideImages,
+                      label: "Ad",
+                    }
+                : turn.researchCreationCommand
+                  ? {
+                      className: "is-research",
+                      Icon: LucideTelescope,
+                      label: "Research",
+                    }
+                  : null;
+              const RunModeLabelIcon = runModeLabelConfig?.Icon || null;
+              const runModeLabel = runModeLabelConfig && RunModeLabelIcon ? (
+                <div className={`tb-run-mode-label ${runModeLabelConfig.className}`}>
+                  <RunModeLabelIcon className="tb-run-mode-label-icon" strokeWidth={1.75} />
+                  <span>{runModeLabelConfig.label}</span>
+                </div>
+              ) : null;
 
               if (actionSummaryLog) {
                 const actionType = actionSummaryLog.metadata?.actionType;
@@ -17646,6 +18290,7 @@ export function RunnerChat({
                         className="tb-user-turn-shell tb-thread-history-anchor"
                         style={promptStyle}
                       >
+                        {runModeLabel}
                         <div className="task-prompt-in-session-context">
                           <CollapsibleRunnerUserPrompt
                             content={stripSystemTags(turn.prompt)}
@@ -17802,6 +18447,7 @@ export function RunnerChat({
                         <div className="tb-user-turn-quote-text">{turn.quotedSelection.text}</div>
                       </div>
                     ) : null}
+                    {runModeLabel}
                     <div
                       className={`task-prompt-in-session-context ${isEditablePromptTurn ? "tb-user-turn-editable" : ""} ${isEditingTurn ? "tb-user-turn-editing" : ""}`.trim()}
                     >
@@ -18071,6 +18717,96 @@ export function RunnerChat({
             <div
               className={`task-input-box ${privateMode ? "task-input-box-private" : ""} ${stagedComposerToneValue ? `task-input-box-thread-context task-input-box-thread-context-${stagedComposerToneValue}` : ""}`.trim()}
             >
+              {stagedAdCreationCommand ? (
+                <div className="tb-popup-menu tb-popup-menu-main tb-ad-creation-popup tb-popup-menu-animate-up-in" role="dialog" aria-label="Create Ad settings">
+                  <div className="tb-ad-creation-popup-header">
+                    <div className="tb-ad-creation-popup-title">Create Ad</div>
+                    <button
+                      type="button"
+                      className="tb-ad-creation-close-button"
+                      onClick={() => setStagedAdCreationCommand(null)}
+                      aria-label="Close Create Ad settings"
+                    >
+                      <LucideX className="tb-ad-creation-close-icon" strokeWidth={1.75} />
+                    </button>
+                  </div>
+                  <div className="tb-ad-creation-options">
+                    <div className="tb-ad-creation-control">
+                      <label className="tb-ad-creation-control-label" htmlFor="tb-ad-creation-style">Style</label>
+                      <div className="tb-ad-creation-select-shell">
+                        <select
+                          id="tb-ad-creation-style"
+                          className="tb-ad-creation-select"
+                          value={adCreationSettings.style}
+                          onChange={(event) => updateAdCreationSettings({ style: event.target.value as RunnerAdCreationStyleId })}
+                          aria-label="Ad style"
+                        >
+                          {RUNNER_AD_STYLE_OPTIONS.map((option) => (
+                            <option key={option.id} value={option.id}>{option.label}</option>
+                          ))}
+                        </select>
+                        <LucideChevronDown className="tb-ad-creation-select-chevron" strokeWidth={1.75} />
+                      </div>
+                    </div>
+                    <div className="tb-ad-creation-control tb-ad-creation-control-quality">
+                      <label className="tb-ad-creation-control-label" htmlFor="tb-ad-creation-quality">Quality</label>
+                      <div className="tb-ad-creation-select-shell tb-ad-creation-select-shell-wide">
+                        <select
+                          id="tb-ad-creation-quality"
+                          className="tb-ad-creation-select"
+                          value={adCreationSettings.quality}
+                          onChange={(event) => updateAdCreationSettings({ quality: event.target.value as RunnerAdCreationQualityId })}
+                          aria-label="GPT Image 2 quality"
+                        >
+                          {RUNNER_AD_QUALITY_OPTIONS.map((option) => (
+                            <option key={option.id} value={option.id}>{option.label}</option>
+                          ))}
+                        </select>
+                        <LucideChevronDown className="tb-ad-creation-select-chevron" strokeWidth={1.75} />
+                      </div>
+                    </div>
+                    <div className="tb-ad-creation-control">
+                      <label className="tb-ad-creation-control-label" htmlFor="tb-ad-creation-aspect-ratio">Aspect Ratio</label>
+                      <div className="tb-ad-creation-select-shell">
+                        <select
+                          id="tb-ad-creation-aspect-ratio"
+                          className="tb-ad-creation-select"
+                          value={adCreationSettings.aspectRatio}
+                          onChange={(event) => updateAdCreationSettings({ aspectRatio: event.target.value as RunnerAdCreationAspectRatioId })}
+                          aria-label="Ad aspect ratio"
+                        >
+                          {RUNNER_AD_ASPECT_RATIO_OPTIONS.map((option) => (
+                            <option key={option.id} value={option.id}>{option.label}</option>
+                          ))}
+                        </select>
+                        <LucideChevronDown className="tb-ad-creation-select-chevron" strokeWidth={1.75} />
+                      </div>
+                    </div>
+                    <div className="tb-ad-creation-control">
+                      <label className="tb-ad-creation-control-label" htmlFor="tb-ad-creation-variants">Images</label>
+                      <div className="tb-ad-creation-select-shell">
+                        <select
+                          id="tb-ad-creation-variants"
+                          className="tb-ad-creation-select"
+                          value={String(adCreationSettings.variants)}
+                          onChange={(event) => updateAdCreationSettings({ variants: Number(event.target.value) as RunnerAdCreationVariantCount })}
+                          aria-label="Ad image variants"
+                        >
+                          {RUNNER_AD_VARIANT_OPTIONS.map((option) => (
+                            <option key={option.id} value={String(option.id)}>{option.label}</option>
+                          ))}
+                        </select>
+                        <LucideChevronDown className="tb-ad-creation-select-chevron" strokeWidth={1.75} />
+                      </div>
+                    </div>
+                    <div className="tb-ad-creation-cost">
+                      <span>{formatRunnerAdCreationComputeTokens(adCreationTotalComputeTokens)}</span>
+                      <span>Total estimate</span>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               {attachments.length > 0 ? (
                 <div className="runner-attachments">
                   {attachments.map((attachment) =>
@@ -18152,6 +18888,9 @@ export function RunnerChat({
                   className={`sidebar-textarea ${hasStagedComposerCommand ? "sidebar-textarea-staged" : ""}`.trim()}
                   value={input}
                   onChange={handleInputChange}
+                  onSelect={handleInputSelectionChange}
+                  onClick={handleInputSelectionChange}
+                  onKeyUp={handleInputSelectionChange}
                   placeholder={hasStagedComposerCommand ? "" : placeholder}
                   onKeyDown={handleKeyDown}
                   readOnly={Boolean(stagedThreadContextCommand && !textareaAllowsPromptAfterStagedCommand)}
@@ -18762,81 +19501,83 @@ export function RunnerChat({
               {useComputerAgentsMode && shouldRenderInlineComposerWithEmptyState ? (
                 <div className="tb-composer-connectors-row" aria-label="Project tasks and plugins">
                   <div className="tb-composer-project-task-area" ref={projectTasksPopupRef}>
-                    {showComposerCreateAgentAction ? (
-                      <button
-                        type="button"
-                        className="tb-composer-project-task-button"
-                        onClick={() => {
-                          setProjectTasksPopupOpen(false);
-                          onComposerCreateAgentClick?.();
-                        }}
-                        disabled={!onComposerCreateAgentClick}
-                      >
-                        <LucideBot className="tb-composer-project-task-icon" strokeWidth={1.75} />
-                        <span>Create an Agent</span>
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          className={`tb-composer-project-task-button ${projectTasksPopupOpen ? "is-open" : ""}`.trim()}
-                          onClick={() => setProjectTasksPopupOpen((current) => !current)}
-                          aria-haspopup="dialog"
-                          aria-expanded={projectTasksPopupOpen}
-                        >
-                          <LucideListTodo className="tb-composer-project-task-icon" strokeWidth={1.75} />
-                          <span>Project Tasks</span>
-                        </button>
-                        {selectedComposerProjectTask ? (
-                          <span className="tb-composer-project-task-chip">
-                            <span className="tb-composer-project-task-chip-label">{selectedComposerProjectTaskLabel || "Selected task"}</span>
-                            <button
-                              type="button"
-                              className="tb-composer-project-task-chip-clear"
-                              onClick={() => onComposerProjectTaskChange?.(null)}
-                              aria-label="Clear selected project task"
-                            >
-                              <LucideX className="tb-composer-project-task-chip-clear-icon" strokeWidth={1.8} />
-                            </button>
-                          </span>
-                        ) : null}
-                        {projectTasksPopupOpen ? (
-                          <div className="tb-composer-project-task-menu" role="dialog" aria-label="Choose project task">
-                            <div className="tb-composer-project-task-menu-title">Open Tickets</div>
-                            <div className="tb-composer-project-task-list">
-                              {composerProjectTaskItems.length > 0 ? (
-                                composerProjectTaskItems.map((task) => {
-                                  const isSelectedTask = String(task.taskId || "").trim() === selectedComposerProjectTaskId;
-                                  const ticketLabel = String(task.ticketNumber || "").trim();
-                                  return (
-                                    <button
-                                      key={task.taskId}
-                                      type="button"
-                                      className={`tb-composer-project-task-row ${isSelectedTask ? "is-selected" : ""}`.trim()}
-                                      onClick={() => {
-                                        onComposerProjectTaskChange?.(task);
-                                        setProjectTasksPopupOpen(false);
-                                      }}
-                                    >
-                                      <LucideBookmark className="tb-composer-project-task-row-icon" strokeWidth={1.8} />
-                                      <span className="tb-composer-project-task-row-main">
-                                        <span className="tb-composer-project-task-row-title">{task.title || "Untitled task"}</span>
-                                        <span className="tb-composer-project-task-row-meta">
-                                          {ticketLabel || "Ticket"}
-                                        </span>
-                                      </span>
-                                      {isSelectedTask ? <LucideCheck className="tb-composer-project-task-row-check" strokeWidth={1.8} /> : null}
-                                    </button>
-                                  );
-                                })
-                              ) : (
-                                <div className="tb-composer-project-task-empty">No open project tickets.</div>
-                              )}
-                            </div>
-                          </div>
-                        ) : null}
-                      </>
-                    )}
+                    <button
+                      ref={projectCreateButtonRef}
+                      type="button"
+                      className={`tb-composer-project-task-button ${projectTasksPopupOpen ? "is-open" : ""}`.trim()}
+                      onClick={() => setProjectTasksPopupOpen((current) => !current)}
+                      aria-haspopup="dialog"
+                      aria-expanded={projectTasksPopupOpen}
+                    >
+                      <LucidePlus className="tb-composer-project-task-icon" strokeWidth={1.75} />
+                      <span>Create</span>
+                    </button>
+                    {projectTasksPopupOpen && projectCreateMenuStyle && typeof document !== "undefined" ? createPortal(
+                      <div ref={projectCreateMenuRef} className="tb-composer-create-menu-portal" style={projectCreateMenuStyle}>
+                        <div className="tb-popup-menu tb-popup-menu-main tb-composer-create-menu tb-popup-menu-animate-up-in" role="dialog" aria-label="Create">
+                          <button
+                            type="button"
+                            className="tb-popup-row tb-popup-row-core-action"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              const prompt = currentInputRef.current || input;
+                              stageResourceCreationCommand("app", prompt);
+                              setProjectTasksPopupOpen(false);
+                              focusComposerSoon();
+                            }}
+                          >
+                            <LucideMonitor className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">Web App</span>
+                            <span className="tb-popup-value">/app</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row tb-popup-row-core-action"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              const prompt = currentInputRef.current || input;
+                              stageSlideCreationCommand(prompt);
+                              setProjectTasksPopupOpen(false);
+                              focusComposerSoon();
+                            }}
+                          >
+                            <LucidePresentation className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">Slides</span>
+                            <span className="tb-popup-value">/slides</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row tb-popup-row-core-action"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              const prompt = currentInputRef.current || input;
+                              stageAdCreationCommand(prompt);
+                              setProjectTasksPopupOpen(false);
+                              focusComposerSoon();
+                            }}
+                          >
+                            <LucideImages className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">Ad</span>
+                            <span className="tb-popup-value">/ad</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row tb-popup-row-core-action"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              const prompt = currentInputRef.current || input;
+                              stageResearchCreationCommand(prompt);
+                              setProjectTasksPopupOpen(false);
+                              focusComposerSoon();
+                            }}
+                          >
+                            <LucideTelescope className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">Research</span>
+                            <span className="tb-popup-value">/research</span>
+                          </button>
+                        </div>
+                      </div>
+                    , rootRef.current || document.body) : null}
                   </div>
                   <div className="tb-composer-connectors-right">
                     {connectedComposerConnectors.length > 0 ? (

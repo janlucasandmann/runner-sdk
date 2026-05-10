@@ -1169,6 +1169,32 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   overflow-wrap: anywhere;
 }
 
+.tb-runner-chat .tb-slide-mode-label,
+.tb-runner-chat .tb-run-mode-label {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 0 0 8px;
+  padding: 4px 9px;
+  border: 1px solid rgba(77, 163, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(77, 163, 255, 0.1);
+  color: rgba(77, 163, 255, 0.95);
+  font-size: 12px;
+  line-height: 1.1;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-slide-mode-label-icon,
+.tb-runner-chat .tb-run-mode-label-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  color: rgba(77, 163, 255, 1);
+}
+
 .tb-runner-chat .task-prompt-in-session-context {
   align-self: flex-end;
   width: fit-content;
@@ -6514,6 +6540,14 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   gap: 8px;
 }
 
+.tb-runner-chat .tb-composer-create-menu-portal {
+  pointer-events: auto;
+}
+
+.tb-runner-chat .tb-composer-create-menu-portal .tb-composer-create-menu {
+  position: static;
+}
+
 .tb-runner-chat .tb-composer-project-task-button,
 .tb-runner-chat .tb-composer-project-task-chip {
   flex: 0 0 auto;
@@ -6820,6 +6854,161 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   max-width: 56rem;
   margin: 0;
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.tb-runner-chat .tb-ad-creation-popup {
+  width: 100%;
+  min-width: 0;
+  max-height: 260px;
+}
+
+.tb-runner-chat .tb-ad-creation-popup-header {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tb-runner-chat .tb-ad-creation-popup-title {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-ad-creation-close-button {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.66);
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.tb-runner-chat .tb-ad-creation-close-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tb-runner-chat .tb-ad-creation-close-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.tb-runner-chat .tb-ad-creation-options {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 4px 0;
+}
+
+.tb-runner-chat .tb-ad-creation-options::-webkit-scrollbar {
+  display: none;
+}
+
+.tb-runner-chat .tb-ad-creation-control {
+  min-height: 36px;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px 0 14px;
+}
+
+.tb-runner-chat .tb-ad-creation-control-quality {
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+.tb-runner-chat .tb-ad-creation-control-label {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-ad-creation-select-shell {
+  position: relative;
+  min-width: 82px;
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+}
+
+.tb-runner-chat .tb-ad-creation-select-shell-wide {
+  min-width: 164px;
+}
+
+.tb-runner-chat .tb-ad-creation-select {
+  width: 100%;
+  height: 26px;
+  border: 0;
+  border-radius: 0;
+  padding: 0 18px 0 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: right;
+  text-align-last: right;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.tb-runner-chat .tb-ad-creation-select option {
+  background: #1f1f1f;
+  color: #fff;
+}
+
+.tb-runner-chat .tb-ad-creation-select-chevron {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.tb-runner-chat .tb-ad-creation-cost {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px 0 14px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-ad-creation-cost span:first-child {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
 }
 
 .tb-runner-chat .task-input-box {
@@ -8355,12 +8544,23 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .tb-runner-chat .tb-popup-menu-slash {
-  width: 260px;
+  width: 100%;
+  max-height: 220px;
   left: 0;
+  overflow-y: auto;
 }
 
 .tb-runner-chat .tb-popup-menu-slash-empty {
   padding: 14px 16px;
+}
+
+.tb-runner-chat .tb-popup-menu-slash .tb-popup-row {
+  min-height: 44px;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-popup-menu-slash .tb-popup-value {
+  margin-left: 0;
 }
 
 .tb-runner-chat .tb-popup-menu-side {
