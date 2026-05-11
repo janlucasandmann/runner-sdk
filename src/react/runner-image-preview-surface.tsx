@@ -3,6 +3,9 @@ import { createPortal } from "react-dom";
 import { LoaderCircle, X as LucideX } from "lucide-react";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 
+const RUNNER_IMAGE_PREVIEW_OBJECT_URL_CACHE_LIMIT = 80;
+const runnerImagePreviewObjectUrlCache = new Map<string, string>();
+
 export interface RunnerImagePreviewSurfaceProps {
   src: string;
   alt?: string;
@@ -57,6 +60,33 @@ function inferImageMimeType(src: string, mimeType?: string): string {
   return "";
 }
 
+function rememberRunnerImagePreviewObjectUrl(cacheKey: string, objectUrl: string): void {
+  if (!cacheKey || !objectUrl) {
+    return;
+  }
+  const existing = runnerImagePreviewObjectUrlCache.get(cacheKey);
+  if (existing) {
+    if (existing !== objectUrl) {
+      URL.revokeObjectURL(existing);
+      runnerImagePreviewObjectUrlCache.set(cacheKey, objectUrl);
+    }
+    return;
+  }
+
+  runnerImagePreviewObjectUrlCache.set(cacheKey, objectUrl);
+  while (runnerImagePreviewObjectUrlCache.size > RUNNER_IMAGE_PREVIEW_OBJECT_URL_CACHE_LIMIT) {
+    const oldestKey = runnerImagePreviewObjectUrlCache.keys().next().value;
+    if (!oldestKey) {
+      break;
+    }
+    const oldestUrl = runnerImagePreviewObjectUrlCache.get(oldestKey);
+    runnerImagePreviewObjectUrlCache.delete(oldestKey);
+    if (oldestUrl) {
+      URL.revokeObjectURL(oldestUrl);
+    }
+  }
+}
+
 export function RunnerImagePreviewSurface({
   src,
   alt,
@@ -89,6 +119,10 @@ export function RunnerImagePreviewSurface({
   }, [fetchHeaders]);
   const hasCustomFetchHeaders = headersSignature !== "";
   const shouldResolvePreview = Boolean(src) && (loadStrategy !== "visible" || isVisible);
+  const objectUrlCacheKey = useMemo(
+    () => JSON.stringify([src, headersSignature, fetchCredentials, resolvedMimeType]),
+    [fetchCredentials, headersSignature, resolvedMimeType, src]
+  );
 
   useEffect(() => {
     setIsVisible(loadStrategy !== "visible");
@@ -151,8 +185,14 @@ export function RunnerImagePreviewSurface({
       return;
     }
 
+    const cachedObjectUrl = runnerImagePreviewObjectUrlCache.get(objectUrlCacheKey);
+    if (cachedObjectUrl) {
+      setResolvedSrc(cachedObjectUrl);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
-    let objectUrl = "";
     const normalizedFetchHeaders = fetchHeaders ? new Headers(fetchHeaders) : undefined;
 
     setResolvedSrc("");
@@ -174,7 +214,8 @@ export function RunnerImagePreviewSurface({
           resolvedMimeType && (!blob.type || blob.type === "application/octet-stream")
             ? new Blob([blob], { type: resolvedMimeType })
             : blob;
-        objectUrl = URL.createObjectURL(normalizedBlob);
+        const objectUrl = URL.createObjectURL(normalizedBlob);
+        rememberRunnerImagePreviewObjectUrl(objectUrlCacheKey, objectUrl);
         setResolvedSrc(objectUrl);
       })
       .catch(() => {
@@ -190,11 +231,8 @@ export function RunnerImagePreviewSurface({
 
     return () => {
       cancelled = true;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
     };
-  }, [fetchCredentials, hasCustomFetchHeaders, headersSignature, resolvedMimeType, shouldForceFetchFallback, src, shouldResolvePreview]);
+  }, [fetchCredentials, hasCustomFetchHeaders, headersSignature, objectUrlCacheKey, resolvedMimeType, shouldForceFetchFallback, src, shouldResolvePreview]);
 
   useEffect(() => {
     if (!lightboxOpen) {

@@ -4880,6 +4880,10 @@ function ReadFileLogBox({
                     content={content}
                     className="tb-log-file-markdown-preview tb-message-markdown"
                     onWorkspacePathClick={onWorkspacePathClick}
+                    imageBackendUrl={backendUrl}
+                    imageEnvironmentId={environmentId}
+                    imageRequestHeaders={requestHeaders}
+                    imageBaseWorkspacePath={filePath}
                   />
                 ) : (
                   <RunnerCodeViewer

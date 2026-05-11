@@ -75,6 +75,15 @@ function getRunnerPreviewAttachmentEnvironmentId(attachment: RunnerPreviewAttach
   return String(idMatch?.[1] || "").trim();
 }
 
+function getRunnerPreviewAttachmentWorkspacePath(attachment: RunnerPreviewAttachment): string {
+  const directWorkspacePath = normalizeRunnerPreviewWorkspacePath(attachment.workspacePath);
+  if (directWorkspacePath) {
+    return `/workspace/${directWorkspacePath}`;
+  }
+  const idMatch = String(attachment.id || "").match(/:(\/workspace\/.+)$/);
+  return String(idMatch?.[1] || "").trim();
+}
+
 function toAbsoluteRunnerWorkspacePath(path: string): string {
   const normalizedPath = normalizeRunnerPreviewWorkspacePath(path);
   return normalizedPath ? `/workspace/${normalizedPath}` : "/workspace";
@@ -126,6 +135,7 @@ export function RunnerDocumentPreviewDrawer({
   const documentPreviewDocxRef = useRef<HTMLDivElement | null>(null);
   const documentPreviewPdfViewportRef = useRef<HTMLDivElement | null>(null);
   const documentPreviewObjectUrlRef = useRef<string | null>(null);
+  const documentPreviewLoadKeyRef = useRef<string>("");
   const documentPreviewPdfCanvasRefs = useRef<Record<number, HTMLCanvasElement | null>>({});
   const documentPreviewPdfPageRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const pdfPreviewRenderTasksRef = useRef<Array<{ cancel?: () => void; promise?: Promise<unknown> }>>([]);
@@ -159,6 +169,7 @@ export function RunnerDocumentPreviewDrawer({
     ? attachment.previewKindOverride ?? getRunnerDocumentPreviewKind(attachment)
     : null;
   const resolvedEnvironmentId = getRunnerPreviewAttachmentEnvironmentId(attachment, environmentId);
+  const resolvedWorkspacePath = getRunnerPreviewAttachmentWorkspacePath(attachment);
   const isExplicitDirectoryAttachment = Boolean(attachment.isFolder || attachmentPreviewKind === "directory");
   const canAttemptDirectoryPreview = Boolean(
     !isImageAttachment &&
@@ -177,6 +188,10 @@ export function RunnerDocumentPreviewDrawer({
   const requestHeadersWithApiKey = useMemo(
     () => buildRunnerPreviewHeaders(requestHeaders, apiKey),
     [apiKey, requestHeaders]
+  );
+  const requestHeadersWithApiKeySignature = useMemo(
+    () => JSON.stringify(Array.from(requestHeadersWithApiKey.entries()).sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))),
+    [requestHeadersWithApiKey]
   );
   const resolvedImagePreviewUrl = useMemo(
     () =>
@@ -236,6 +251,7 @@ export function RunnerDocumentPreviewDrawer({
     setDirectoryLoadingPaths([]);
     setDirectoryErrorByPath({});
     setExpandedDirectoryPaths([]);
+    documentPreviewLoadKeyRef.current = "";
     documentPreviewPdfCanvasRefs.current = {};
     documentPreviewPdfPageRefs.current = {};
   }, [attachment.id, initialDirectoryPath]);
@@ -301,7 +317,7 @@ export function RunnerDocumentPreviewDrawer({
     canAttemptDirectoryPreview,
     directoryPreviewPath,
     isExplicitDirectoryAttachment,
-    requestHeadersWithApiKey,
+    requestHeadersWithApiKeySignature,
     resolvedEnvironmentId,
   ]);
 
@@ -309,6 +325,27 @@ export function RunnerDocumentPreviewDrawer({
     if (documentPreviewDocxRef.current) {
       documentPreviewDocxRef.current.innerHTML = "";
     }
+
+    const previewKind = attachment.previewKindOverride ?? getRunnerDocumentPreviewKind(attachment);
+    const previewUrl =
+      resolveRunnerPreviewAssetUrl(attachment.url, backendUrl, attachment.id) ||
+      resolveRunnerPreviewAssetUrl(attachment.previewUrl, backendUrl, attachment.id);
+    const nextLoadKey = JSON.stringify([
+      attachment.id,
+      attachment.filename,
+      attachment.mimeType,
+      attachment.isFolder === true,
+      previewKind,
+      previewUrl || "",
+      resolvedDirectHtmlPreviewUrl || "",
+      backendUrl || "",
+      requestHeadersWithApiKeySignature,
+    ]);
+
+    if (documentPreviewLoadKeyRef.current === nextLoadKey) {
+      return;
+    }
+    documentPreviewLoadKeyRef.current = nextLoadKey;
 
     if (isImageAttachment) {
       setDocumentPreviewState({
@@ -318,7 +355,6 @@ export function RunnerDocumentPreviewDrawer({
       return;
     }
 
-    const previewKind = attachment.previewKindOverride ?? getRunnerDocumentPreviewKind(attachment);
     if (previewKind === "directory" || (previewKind === "unsupported" && canAttemptDirectoryPreview)) {
       setDocumentPreviewState({
         status: "idle",
@@ -334,9 +370,6 @@ export function RunnerDocumentPreviewDrawer({
       return;
     }
 
-    const previewUrl =
-      resolveRunnerPreviewAssetUrl(attachment.url, backendUrl, attachment.id) ||
-      resolveRunnerPreviewAssetUrl(attachment.previewUrl, backendUrl, attachment.id);
     if (previewKind === "html" && resolvedDirectHtmlPreviewUrl) {
       setDocumentPreviewState({
         status: "ready",
@@ -410,7 +443,20 @@ export function RunnerDocumentPreviewDrawer({
       });
 
     return () => controller.abort();
-  }, [attachment, backendUrl, canAttemptDirectoryPreview, isImageAttachment, requestHeadersWithApiKey, resolvedDirectHtmlPreviewUrl]);
+  }, [
+    attachment.filename,
+    attachment.id,
+    attachment.isFolder,
+    attachment.mimeType,
+    attachment.previewKindOverride,
+    attachment.previewUrl,
+    attachment.url,
+    backendUrl,
+    canAttemptDirectoryPreview,
+    isImageAttachment,
+    requestHeadersWithApiKeySignature,
+    resolvedDirectHtmlPreviewUrl,
+  ]);
 
   useEffect(() => {
     if (
@@ -1187,6 +1233,11 @@ export function RunnerDocumentPreviewDrawer({
                   content={documentPreviewState.text}
                   className="tb-attachment-preview-markdown tb-message-markdown"
                   softBreaks
+                  imageBackendUrl={backendUrl}
+                  imageEnvironmentId={resolvedEnvironmentId}
+                  imageRequestHeaders={requestHeadersWithApiKey}
+                  imageBaseWorkspacePath={resolvedWorkspacePath}
+                  imageMaxHeight={1200}
                 />
               </div>
             )

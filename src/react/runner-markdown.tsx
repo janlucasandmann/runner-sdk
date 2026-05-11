@@ -1,8 +1,10 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { visit } from "unist-util-visit";
 import type { Components } from "react-markdown";
+import { buildRunnerPreviewDownloadUrl } from "./runner-document-preview.js";
+import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
 
 const RUNNER_WORKSPACE_PATH_PROTOCOL = "runner-workspace:";
 const RUNNER_WORKSPACE_PATH_MATCHER = /\/workspace\/\S+/g;
@@ -15,6 +17,14 @@ const RUNNER_WORKSPACE_PATH_DISALLOWED_PARENTS = new Set([
   "image",
   "imageReference",
 ]);
+
+interface RunnerMarkdownImageOptions {
+  backendUrl?: string | null;
+  environmentId?: string | null;
+  requestHeaders?: HeadersInit;
+  baseWorkspacePath?: string | null;
+  maxHeight?: number;
+}
 
 export function stripRunnerSystemTags(text: string): string {
   return text
@@ -207,7 +217,153 @@ function renderRunnerWorkspacePathNodes(
   return nodes;
 }
 
-function createRunnerMarkdownComponents(onWorkspacePathClick?: (path: string) => void): Components {
+function safeDecodeRunnerMarkdownUrl(value: string): string {
+  try {
+    return decodeURI(value);
+  } catch {
+    return value;
+  }
+}
+
+function stripRunnerMarkdownUrlSuffix(value: string): string {
+  const queryIndex = value.indexOf("?");
+  const hashIndex = value.indexOf("#");
+  const suffixIndex = [queryIndex, hashIndex].filter((index) => index >= 0).sort((left, right) => left - right)[0];
+  return suffixIndex >= 0 ? value.slice(0, suffixIndex) : value;
+}
+
+function normalizeRunnerMarkdownWorkspacePath(value: string): string {
+  let normalized = safeDecodeRunnerMarkdownUrl(String(value || "").trim().replace(/^['"`]+|['"`]+$/g, ""));
+  if (!normalized) {
+    return "";
+  }
+  normalized = normalized.split("\\").join("/");
+  normalized = normalized.replace(/^file:\/\//i, "");
+
+  const embeddedWorkspaceMatch = normalized.match(/(?:^|:)\/workspace\/(.+)$/);
+  if (embeddedWorkspaceMatch?.[1]) {
+    normalized = embeddedWorkspaceMatch[1];
+  } else {
+    normalized = normalized.replace(/^\/+/, "");
+    if (normalized.startsWith("workspace/")) {
+      normalized = normalized.slice("workspace/".length);
+    }
+  }
+
+  const segments: string[] = [];
+  for (const segment of stripRunnerMarkdownUrlSuffix(normalized).split("/")) {
+    if (!segment || segment === ".") {
+      continue;
+    }
+    if (segment === "..") {
+      segments.pop();
+      continue;
+    }
+    segments.push(segment);
+  }
+  return segments.join("/");
+}
+
+function parseRunnerMarkdownHtmlAttributes(value: string): Record<string, string> {
+  const attributes: Record<string, string> = {};
+  const attributePattern = /([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>/]+))/g;
+  let match: RegExpExecArray | null = null;
+  while ((match = attributePattern.exec(value)) !== null) {
+    const key = String(match[1] || "").toLowerCase();
+    const attrValue = String(match[2] ?? match[3] ?? match[4] ?? "").trim();
+    if (key) {
+      attributes[key] = attrValue;
+    }
+  }
+  return attributes;
+}
+
+function escapeRunnerMarkdownImageAlt(value: string): string {
+  return String(value || "").replace(/[\[\]\n\r]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function formatRunnerMarkdownImageUrl(value: string): string {
+  const normalized = String(value || "").trim();
+  if (!normalized) {
+    return "";
+  }
+  return /[\s()<>]/.test(normalized) ? `<${normalized.replace(/[<>]/g, "")}>` : normalized;
+}
+
+function normalizeRunnerMarkdownContent(content: string): string {
+  return String(content || "").replace(/<img\b([^>]*)\/?>/gi, (match, rawAttributes) => {
+    const attributes = parseRunnerMarkdownHtmlAttributes(String(rawAttributes || ""));
+    const src = attributes.src || "";
+    if (!src.trim()) {
+      return match;
+    }
+    const alt = escapeRunnerMarkdownImageAlt(attributes.alt || attributes.title || "Image");
+    const imageUrl = formatRunnerMarkdownImageUrl(src);
+    return imageUrl ? `![${alt || "Image"}](${imageUrl})` : match;
+  });
+}
+
+function getRunnerMarkdownWorkspaceDirectory(value?: string | null): string {
+  const normalized = normalizeRunnerMarkdownWorkspacePath(String(value || ""));
+  if (!normalized) {
+    return "";
+  }
+  const segments = normalized.split("/").filter(Boolean);
+  segments.pop();
+  return segments.join("/");
+}
+
+function shouldTreatRunnerMarkdownImageAsWorkspaceRootRelative(src: string, baseDirectory: string): boolean {
+  const normalizedSrc = String(src || "").trim().replace(/^\.?\//, "");
+  if (!normalizedSrc || normalizedSrc.startsWith("../")) {
+    return false;
+  }
+  const firstSegment = normalizedSrc.split("/").filter(Boolean)[0] || "";
+  if (!firstSegment) {
+    return false;
+  }
+  if (["research", "generated_images", "output", "outputs", "artifacts", "images", "img"].includes(firstSegment)) {
+    return true;
+  }
+  const baseFirstSegment = baseDirectory.split("/").filter(Boolean)[0] || "";
+  return Boolean(baseFirstSegment && firstSegment === baseFirstSegment);
+}
+
+function resolveRunnerMarkdownImageDownloadUrl(src: string | undefined, options?: RunnerMarkdownImageOptions): string | null {
+  const rawSrc = String(src || "").trim();
+  if (!rawSrc || !options?.backendUrl || !options.environmentId) {
+    return null;
+  }
+
+  if (/^(?:data:|blob:|https?:\/\/|\/\/)/i.test(rawSrc) || rawSrc.startsWith("#") || rawSrc.startsWith("/api/")) {
+    return null;
+  }
+
+  const sourceWithoutSuffix = stripRunnerMarkdownUrlSuffix(rawSrc);
+  const decodedSource = safeDecodeRunnerMarkdownUrl(sourceWithoutSuffix).split("\\").join("/");
+  const isWorkspaceAbsolute =
+    decodedSource.startsWith("/workspace/") ||
+    decodedSource.startsWith("workspace/") ||
+    decodedSource.startsWith("file:///workspace/");
+  const isRootRelativeWorkspacePath = decodedSource.startsWith("/") && !decodedSource.startsWith("/api/");
+  const baseDirectory = getRunnerMarkdownWorkspaceDirectory(options.baseWorkspacePath);
+  const isLikelyWorkspaceRootRelative = !isWorkspaceAbsolute && !isRootRelativeWorkspacePath && shouldTreatRunnerMarkdownImageAsWorkspaceRootRelative(decodedSource, baseDirectory);
+  const candidatePath =
+    isWorkspaceAbsolute || isRootRelativeWorkspacePath || isLikelyWorkspaceRootRelative
+      ? normalizeRunnerMarkdownWorkspacePath(decodedSource)
+      : normalizeRunnerMarkdownWorkspacePath([baseDirectory, decodedSource].filter(Boolean).join("/"));
+
+  if (!candidatePath) {
+    return null;
+  }
+
+  return buildRunnerPreviewDownloadUrl(options.backendUrl, options.environmentId, `/workspace/${candidatePath}`);
+}
+
+function createRunnerMarkdownComponents(
+  onWorkspacePathClick?: (path: string) => void,
+  imageOptions?: RunnerMarkdownImageOptions
+): Components {
   return {
     ...runnerMarkdownComponents,
     a: ({ node, href, ...props }) => {
@@ -245,6 +401,23 @@ function createRunnerMarkdownComponents(onWorkspacePathClick?: (path: string) =>
       }
 
       return <code className="tb-message-markdown-code" {...props}>{children}</code>;
+    },
+    img: ({ node, src, alt, ...props }) => {
+      const workspaceImageSrc = resolveRunnerMarkdownImageDownloadUrl(src, imageOptions);
+      if (workspaceImageSrc) {
+        return (
+          <RunnerImagePreviewSurface
+            src={workspaceImageSrc}
+            alt={typeof alt === "string" ? alt : "Preview image"}
+            className="tb-message-markdown-image"
+            fetchHeaders={imageOptions?.requestHeaders}
+            loadStrategy="visible"
+            maxHeight={imageOptions?.maxHeight ?? 300}
+          />
+        );
+      }
+
+      return <img className="tb-message-markdown-image" src={src} alt={alt} {...props} />;
     },
   };
 }
@@ -290,6 +463,11 @@ export interface RunnerMarkdownProps {
   softBreaks?: boolean;
   disallowHeadings?: boolean;
   onWorkspacePathClick?: (path: string) => void;
+  imageBackendUrl?: string | null;
+  imageEnvironmentId?: string | null;
+  imageRequestHeaders?: HeadersInit;
+  imageBaseWorkspacePath?: string | null;
+  imageMaxHeight?: number;
 }
 
 export function RunnerMarkdown({
@@ -298,12 +476,45 @@ export function RunnerMarkdown({
   softBreaks = false,
   disallowHeadings = false,
   onWorkspacePathClick,
+  imageBackendUrl,
+  imageEnvironmentId,
+  imageRequestHeaders,
+  imageBaseWorkspacePath,
+  imageMaxHeight,
 }: RunnerMarkdownProps) {
-  const remarkPlugins = [
-    remarkGfm,
-    ...(softBreaks ? [remarkSoftbreaksToBreaks] : []),
-    ...(onWorkspacePathClick ? [remarkLinkRunnerWorkspacePaths] : []),
-  ];
+  const normalizedContent = useMemo(() => normalizeRunnerMarkdownContent(content), [content]);
+  const imageRequestHeadersSignature = useMemo(() => {
+    if (!imageRequestHeaders) {
+      return "";
+    }
+    const headers = new Headers(imageRequestHeaders);
+    return JSON.stringify(Array.from(headers.entries()).sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey)));
+  }, [imageRequestHeaders]);
+  const remarkPlugins = useMemo(
+    () => [
+      remarkGfm,
+      ...(softBreaks ? [remarkSoftbreaksToBreaks] : []),
+      ...(onWorkspacePathClick ? [remarkLinkRunnerWorkspacePaths] : []),
+    ],
+    [onWorkspacePathClick, softBreaks]
+  );
+  const components = useMemo(
+    () => createRunnerMarkdownComponents(onWorkspacePathClick, {
+      backendUrl: imageBackendUrl,
+      environmentId: imageEnvironmentId,
+      requestHeaders: imageRequestHeaders,
+      baseWorkspacePath: imageBaseWorkspacePath,
+      maxHeight: imageMaxHeight,
+    }),
+    [
+      imageBackendUrl,
+      imageBaseWorkspacePath,
+      imageEnvironmentId,
+      imageMaxHeight,
+      imageRequestHeadersSignature,
+      onWorkspacePathClick,
+    ]
+  );
 
   return (
     <div className={className}>
@@ -311,9 +522,9 @@ export function RunnerMarkdown({
         remarkPlugins={remarkPlugins}
         disallowedElements={disallowHeadings ? ["h1", "h2", "h3", "h4", "h5", "h6"] : undefined}
         unwrapDisallowed={disallowHeadings}
-        components={createRunnerMarkdownComponents(onWorkspacePathClick)}
+        components={components}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </div>
   );

@@ -6505,6 +6505,15 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   border-radius: 10px;
 }
 
+.tb-runner-chat .tb-attachment-preview-markdown .tb-message-markdown-image {
+  width: 100%;
+}
+
+.tb-runner-chat .tb-attachment-preview-markdown .tb-message-markdown-image .tb-runner-image-preview-surface-image,
+.tb-runner-chat .tb-attachment-preview-markdown img.tb-message-markdown-image {
+  width: 100%;
+}
+
 .tb-runner-chat .embedded-runner-input {
   width: 100%;
   max-width: none;

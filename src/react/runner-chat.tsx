@@ -2243,7 +2243,9 @@ function buildRunnerResearchCreationHiddenPrompt(): string {
     "The user selected /research. Treat the visible user request as a request for rigorous research.",
     "Use the research or deep research skill whenever it is available and appropriate. Prefer primary sources, collect concrete facts, and keep a clear source trail.",
     "Create a well-structured research summary file in the workspace with concise findings, methodology, sources, and next-step recommendations.",
+    "Include supporting images in the report by default. If research produces images, charts, diagrams, screenshots, or generated visual summaries, embed them directly in the markdown report instead of only listing them separately.",
     "Use the image generation skill when useful to create supporting images, charts, diagrams, or visual summaries for the research file. Save generated assets with clear filenames and reference them from the summary.",
+    "When embedding local workspace images in markdown, use either a path relative to the report file or a workspace-absolute path such as /workspace/research/image.png so the report preview can resolve the image.",
   ].join("\n");
 }
 
