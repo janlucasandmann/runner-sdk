@@ -15,8 +15,10 @@ import {
   ChevronUp,
   ChevronsUp,
   Cloud,
+  Code2,
   Copy,
   Cpu,
+  Ellipsis,
   Equal,
   Eye,
   FileImage,
@@ -39,11 +41,14 @@ import {
   Route,
   Music,
   Paperclip,
+  RefreshCw,
   ScanText,
   Search,
   SlidersHorizontal,
   Telescope,
   Terminal,
+  ThumbsDown,
+  ThumbsUp,
   User,
   Video,
   X,
@@ -6156,6 +6161,7 @@ type WebSearchImage = { url: string; thumbnail?: string; title?: string; source?
 
 function isWebSearchCommand(command?: string): boolean {
   if (!command) return false;
+  if (isWebScrapeCommand(command)) return false;
   return (
     command.includes("/workspace/.scripts/web-search.py") ||
     command.includes("web-search.py") ||
@@ -6182,16 +6188,67 @@ function isWebSearchOutput(output?: string): boolean {
 function extractSearchQuery(command?: string): string | null {
   if (!command) return null;
   const searchingWeb = command.match(/^searching web:\s+(.+)$/i);
-  if (searchingWeb?.[1]) return searchingWeb[1].trim();
+  if (searchingWeb?.[1]) return sanitizeWebSearchQuery(searchingWeb[1]);
   const quoted = command.match(/web-search\.py\s+["']([^"']+)["']/);
-  if (quoted?.[1]) return quoted[1];
+  if (quoted?.[1]) return sanitizeWebSearchQuery(quoted[1]);
   const unquoted = command.match(/web-search\.py\s+(\S+)/);
-  return unquoted?.[1] || null;
+  return unquoted?.[1] ? sanitizeWebSearchQuery(unquoted[1]) : null;
+}
+
+function sanitizeWebSearchQuery(value?: string | null): string | null {
+  const normalized = String(value || "")
+    .replace(/^Firecrawl\s+search\s+results\s+for\s+/i, "")
+    .replace(/^Web\s+search\s+results\s+for\s+query:\s*/i, "")
+    .replace(/\s+include\s+a\s+sources?\s+section[\s\S]*$/i, "")
+    .replace(/\s+with\s+sources?\s*\.?$/i, "")
+    .trim()
+    .replace(/^["'“”]+|["'“”.,:;]+$/g, "")
+    .trim();
+  return normalized || null;
+}
+
+function extractWebSearchQueryFromPayload(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return sanitizeWebSearchQuery(
+      typeof record.query === "string"
+        ? record.query
+        : typeof record.search_query === "string"
+          ? record.search_query
+          : null
+    );
+  }
+  const text = String(value || "");
+  if (!text.trim()) return null;
+  if (text.trim().startsWith("{")) {
+    try {
+      return extractWebSearchQueryFromPayload(JSON.parse(text));
+    } catch {
+      // Fall through to text patterns.
+    }
+  }
+  const quotedSearchResults = text.match(/(?:Firecrawl\s+)?search\s+results\s+for\s+["“]([^"”]+)["”]/i);
+  if (quotedSearchResults?.[1]) return sanitizeWebSearchQuery(quotedSearchResults[1]);
+  const queryLine = text.match(/Web\s+search\s+results\s+for\s+query:\s*([^\n]+)/i);
+  if (queryLine?.[1]) return sanitizeWebSearchQuery(queryLine[1]);
+  return null;
+}
+
+function stripWebSearchSummaryLead(text: string): string {
+  let cleaned = String(text || "").trim();
+  cleaned = cleaned
+    .replace(/^(?:Firecrawl\s+)?search\s+results\s+for\s+(?:"[^"]+"|“[^”]+”|[^.\n]+)\.\s*/i, "")
+    .replace(/^Include\s+a\s+Sources?\s+section\s+in\s+(?:the\s+)?final\s+answer\.?\s*/i, "")
+    .trim();
+  return cleaned;
 }
 
 function cleanSummaryText(text: string): string {
-  return text
+  const cleaned = stripWebSearchSummaryLead(text)
     .replace(/^[\s-]+/, "")
+    .replace(/^(?:Firecrawl\s+)?search\s+results\s+for\s+["“][^"”]+["”]\.?\s*(?:Include\s+a\s+Sources?\s+section\s+in\s+(?:the\s+)?final\s+answer\.?\s*)?/i, "")
+    .replace(/^Web\s+search\s+results\s+for\s+query:\s*[^\n]*\n+/i, "")
     .replace(/^-+\s*/gm, "")
     .replace(/REMINDER:.*?markdown hyperlinks\.?/gi, "")
     .replace(/\n{3,}/g, "\n\n")
@@ -6200,6 +6257,171 @@ function cleanSummaryText(text: string): string {
     .replace(/^,?"url":"[^"]*"\},?/gm, "")
     .replace(/^\{"title":"[^"]*","url":"[^"]*"\},?/gm, "")
     .trim();
+  return stripWebSearchSummaryLead(cleaned);
+}
+
+function formatWebSearchDisplaySummary(text?: string | null): string | null {
+  const cleaned = cleanSummaryText(String(text || ""))
+    .replace(/!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g, "$1")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, "$1")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return cleaned || null;
+}
+
+function extractJsonStringFieldFromText(text: string, fieldName: string): string | null {
+  const escapedFieldName = fieldName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = text.match(new RegExp(`"${escapedFieldName}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`, "i"));
+  if (!match?.[1]) {
+    return null;
+  }
+  try {
+    return JSON.parse(`"${match[1]}"`);
+  } catch {
+    return match[1]
+      .replace(/\\n/g, "\n")
+      .replace(/\\r/g, "\r")
+      .replace(/\\t/g, "\t")
+      .replace(/\\"/g, "\"")
+      .replace(/\\\\/g, "\\");
+  }
+}
+
+function extractJsonArrayFieldFromText(text: string, fieldName: string): unknown[] | null {
+  const escapedFieldName = fieldName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const fieldMatch = new RegExp(`"${escapedFieldName}"\\s*:\\s*\\[`, "i").exec(text);
+  if (!fieldMatch) {
+    return null;
+  }
+  const arrayStart = text.indexOf("[", fieldMatch.index);
+  if (arrayStart < 0) {
+    return null;
+  }
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = arrayStart; index < text.length; index += 1) {
+    const char = text[index];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+    if (char === "\"") {
+      inString = true;
+      continue;
+    }
+    if (char === "[") {
+      depth += 1;
+    } else if (char === "]") {
+      depth -= 1;
+      if (depth === 0) {
+        try {
+          const parsed = JSON.parse(text.slice(arrayStart, index + 1));
+          return Array.isArray(parsed) ? parsed : null;
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function extractWebSearchSummaryFromLooseJsonText(text: string): string | null {
+  const summaryField = extractJsonStringFieldFromText(text, "summary");
+  if (summaryField) {
+    const cleanedSummary = formatWebSearchDisplaySummary(summaryField);
+    if (cleanedSummary) {
+      return cleanedSummary;
+    }
+  }
+
+  const firstResultField = text.match(/"results"\s*:\s*\[\s*"((?:\\.|[^"\\])*)"/i);
+  if (firstResultField?.[1]) {
+    try {
+      const firstResultText = JSON.parse(`"${firstResultField[1]}"`);
+      const cleanedResult = formatWebSearchDisplaySummary(firstResultText);
+      if (cleanedResult) {
+        return cleanedResult;
+      }
+    } catch {
+      const cleanedResult = formatWebSearchDisplaySummary(firstResultField[1]);
+      if (cleanedResult) {
+        return cleanedResult;
+      }
+    }
+  }
+
+  const firecrawlStart = text.search(/(?:Firecrawl\s+)?search\s+results\s+for\s+(?:"[^"]+"|“[^”]+”|[^.\n]+)\.?/i);
+  if (firecrawlStart >= 0) {
+    const sliced = text.slice(firecrawlStart);
+    const beforeStructuredPayload = sliced
+      .split(/\n\s*"(?:search_results|organic_results|image_results|images|results)"\s*:/i)[0]
+      ?.trim();
+    const cleanedSummary = formatWebSearchDisplaySummary(beforeStructuredPayload || sliced);
+    if (cleanedSummary) {
+      return cleanedSummary;
+    }
+  }
+
+  return null;
+}
+
+function extractWebSearchSummaryFromRawOutput(value: unknown): string | null {
+  const text = stripRunnerSystemTags(String(value || "")).trim();
+  if (!text) {
+    return null;
+  }
+
+  if (text.startsWith("{") || text.startsWith("[")) {
+    try {
+      const parsedJson = JSON.parse(text);
+      if (parsedJson && typeof parsedJson === "object") {
+        const record = parsedJson as Record<string, unknown>;
+        if (typeof record.summary === "string") {
+          const cleanedSummary = formatWebSearchDisplaySummary(record.summary);
+          if (cleanedSummary) {
+            return cleanedSummary;
+          }
+        }
+        const nestedRawOutput = extractWebSearchSummaryFromRawOutput(record.raw_output || record.rawOutput || record.output);
+        if (nestedRawOutput) {
+          return nestedRawOutput;
+        }
+      }
+    } catch {
+      const looseSummary = extractWebSearchSummaryFromLooseJsonText(text);
+      if (looseSummary) {
+        return looseSummary;
+      }
+    }
+  }
+
+  const looseSummary = extractWebSearchSummaryFromLooseJsonText(text);
+  if (looseSummary) {
+    return looseSummary;
+  }
+
+  const markdownSection = text.match(
+    /##?\s*Search Results[^\n]*\n+([\s\S]*?)(?=\n##?\s*(?:Sources|Images)\b|$)/i
+  );
+  const firecrawlSection = text.match(
+    /^\s*(?:Firecrawl\s+)?search\s+results\s+for\s+(?:"[^"]+"|“[^”]+”|[^.\n]+)\.?\s*(?:Include\s+a\s+Sources?\s+section\s+in\s+(?:the\s+)?final\s+answer\.?\s*)?([\s\S]*?)(?=\n?Links:\s*\[|\n##?\s*(?:Sources|Images)\b|\nSOURCES:|\nIMAGES:|\nJSON OUTPUT:|$)/i
+  );
+  const summaryCandidate = markdownSection?.[1] || firecrawlSection?.[1] || text;
+  const cleaned = formatWebSearchDisplaySummary(summaryCandidate);
+  if (!cleaned) {
+    return null;
+  }
+  return cleaned;
 }
 
 function isLikelyImageUrl(value?: string | null): boolean {
@@ -6224,7 +6446,10 @@ function buildWebSearchImageEntry(title?: string, thumbnail?: string, source?: s
 }
 
 function buildWebSearchSourceEntry(title?: string, url?: string, domain?: string, snippet?: string, thumbnail?: string): WebSearchResult | null {
-  const normalizedUrl = url?.trim() || "";
+  const normalizedUrl = (url?.trim() || "")
+    .replace(/\\n[\s\S]*$/g, "")
+    .replace(/\n[\s\S]*$/g, "")
+    .replace(/\)+$/g, "");
   if (!normalizedUrl) {
     return null;
   }
@@ -6301,20 +6526,56 @@ function extractFallbackWebSearchSources(text: string): WebSearchResult[] {
   return dedupeWebSearchSources(sources);
 }
 
-function parseWebSearchStructuredPayload(value: unknown): { summary: string | null; sources: WebSearchResult[]; images: WebSearchImage[] } {
-  if (!value || typeof value !== "object") {
-    return { summary: null, sources: [], images: [] };
+function buildWebSearchSummaryFromResultItems(resultItems: unknown[]): string | null {
+  const lines = resultItems
+    .map((item) => {
+      if (typeof item === "string") {
+        const trimmed = item.trim();
+        return trimmed && !/^https?:\/\//i.test(trimmed) ? formatWebSearchDisplaySummary(trimmed) || "" : "";
+      }
+      if (!item || typeof item !== "object") {
+        return "";
+      }
+      const entry = item as Record<string, unknown>;
+      const title = typeof entry.title === "string"
+        ? entry.title.trim()
+        : typeof entry.name === "string"
+          ? entry.name.trim()
+          : "";
+      const snippet = typeof entry.snippet === "string"
+        ? entry.snippet.trim()
+        : typeof entry.description === "string"
+          ? entry.description.trim()
+          : "";
+      const url = typeof entry.url === "string"
+        ? entry.url.trim()
+        : typeof entry.link === "string"
+          ? entry.link.trim()
+          : "";
+      const label = title || snippet || url;
+      if (!label) {
+        return "";
+      }
+      return `- ${formatWebSearchDisplaySummary(label) || label}`;
+    })
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  return lines.length > 0 ? lines.join("\n\n") : null;
+}
+
+function getWebSearchResultItemsFromRecord(record: Record<string, unknown>): unknown[] {
+  const nestedData = record.data && typeof record.data === "object" && !Array.isArray(record.data)
+    ? record.data as Record<string, unknown>
+    : null;
+  if (nestedData) {
+    return [
+      ...getWebSearchResultItemsFromRecord(nestedData),
+      ...(Array.isArray(nestedData.web) ? nestedData.web : []),
+      ...(Array.isArray(nestedData.news) ? nestedData.news : []),
+    ];
   }
-
-  const record = value as Record<string, unknown>;
-  const summary =
-    typeof record.summary === "string"
-      ? cleanSummaryText(record.summary)
-      : typeof record.text === "string"
-        ? cleanSummaryText(record.text)
-        : null;
-
-  const resultItems = Array.isArray(record.search_results)
+  return Array.isArray(record.search_results)
     ? record.search_results
     : Array.isArray(record.results)
       ? record.results
@@ -6323,8 +6584,27 @@ function parseWebSearchStructuredPayload(value: unknown): { summary: string | nu
         : Array.isArray(record.sources)
           ? record.sources
           : [];
+}
 
-  const sources = resultItems
+function getWebSearchImageItemsFromRecord(record: Record<string, unknown>): unknown[] {
+  const nestedData = record.data && typeof record.data === "object" && !Array.isArray(record.data)
+    ? record.data as Record<string, unknown>
+    : null;
+  if (nestedData) {
+    return [
+      ...getWebSearchImageItemsFromRecord(nestedData),
+      ...(Array.isArray(nestedData.images) ? nestedData.images : []),
+    ];
+  }
+  return Array.isArray(record.images)
+    ? record.images
+    : Array.isArray(record.image_results)
+      ? record.image_results
+      : [];
+}
+
+function parseWebSearchSourcesFromItems(resultItems: unknown[]): WebSearchResult[] {
+  return resultItems
     .map((item) => {
       if (typeof item === "string") {
         return /^https?:\/\//i.test(item.trim()) ? buildWebSearchSourceEntry(undefined, item) : null;
@@ -6342,14 +6622,10 @@ function parseWebSearchStructuredPayload(value: unknown): { summary: string | nu
       );
     })
     .filter((item): item is WebSearchResult => Boolean(item));
+}
 
-  const imageItems = Array.isArray(record.images)
-    ? record.images
-    : Array.isArray(record.image_results)
-      ? record.image_results
-      : [];
-
-  const images = imageItems
+function parseWebSearchImagesFromItems(imageItems: unknown[]): WebSearchImage[] {
+  return imageItems
     .map((item) => {
       if (!item || typeof item !== "object") {
         return null;
@@ -6357,7 +6633,9 @@ function parseWebSearchStructuredPayload(value: unknown): { summary: string | nu
       const entry = item as Record<string, unknown>;
       return buildWebSearchImageEntry(
         typeof entry.title === "string" ? entry.title : typeof entry.alt === "string" ? entry.alt : undefined,
-        typeof entry.thumbnail === "string"
+        typeof entry.imageUrl === "string"
+          ? entry.imageUrl
+          : typeof entry.thumbnail === "string"
           ? entry.thumbnail
           : typeof entry.thumbnailUrl === "string"
             ? entry.thumbnailUrl
@@ -6378,10 +6656,91 @@ function parseWebSearchStructuredPayload(value: unknown): { summary: string | nu
       );
     })
     .filter((item): item is WebSearchImage => Boolean(item));
+}
+
+function parseWebSearchRawOutputData(value: unknown): { summary: string | null; sources: WebSearchResult[]; images: WebSearchImage[] } {
+  const text = stripRunnerSystemTags(String(value || "")).trim();
+  if (!text) {
+    return { summary: null, sources: [], images: [] };
+  }
+
+  const looseSummary = extractWebSearchSummaryFromLooseJsonText(text);
+  const looseSearchResults = extractJsonArrayFieldFromText(text, "search_results")
+    || extractJsonArrayFieldFromText(text, "organic_results")
+    || extractJsonArrayFieldFromText(text, "sources")
+    || [];
+  const looseImages = extractJsonArrayFieldFromText(text, "images")
+    || extractJsonArrayFieldFromText(text, "image_results")
+    || [];
+
+  if (text.startsWith("{") || text.startsWith("[")) {
+    try {
+      const parsedJson = JSON.parse(text);
+      if (parsedJson && typeof parsedJson === "object" && !Array.isArray(parsedJson)) {
+        const record = parsedJson as Record<string, unknown>;
+        const resultItems = getWebSearchResultItemsFromRecord(record);
+        const imageItems = getWebSearchImageItemsFromRecord(record);
+        return {
+          summary:
+            (typeof record.summary === "string" ? formatWebSearchDisplaySummary(record.summary) : null)
+            || (typeof record.text === "string" ? formatWebSearchDisplaySummary(record.text) : null)
+            || looseSummary,
+          sources: dedupeWebSearchSources([
+            ...parseWebSearchSourcesFromItems(resultItems),
+            ...parseWebSearchSourcesFromItems(looseSearchResults),
+          ]),
+          images: dedupeWebSearchImages([
+            ...parseWebSearchImagesFromItems(imageItems),
+            ...parseWebSearchImagesFromItems(looseImages),
+          ]),
+        };
+      }
+    } catch {
+      // The raw output can include valid arrays followed by a truncated tool_result object.
+    }
+  }
+
+  return {
+    summary: looseSummary,
+    sources: dedupeWebSearchSources(parseWebSearchSourcesFromItems(looseSearchResults)),
+    images: dedupeWebSearchImages(parseWebSearchImagesFromItems(looseImages)),
+  };
+}
+
+function parseWebSearchStructuredPayload(value: unknown): { summary: string | null; sources: WebSearchResult[]; images: WebSearchImage[] } {
+  if (!value || typeof value !== "object") {
+    return { summary: null, sources: [], images: [] };
+  }
+
+  const record = value as Record<string, unknown>;
+  const rawOutputData = mergeParsedWebSearchData(
+    parseWebSearchRawOutputData(record.raw_output),
+    parseWebSearchRawOutputData(record.rawOutput),
+    parseWebSearchRawOutputData(record.output),
+  );
+  const rawOutputSummary = rawOutputData.summary;
+  const summaryCandidates = [
+    typeof record.summary === "string" ? formatWebSearchDisplaySummary(record.summary) : null,
+    typeof record.text === "string" ? formatWebSearchDisplaySummary(record.text) : null,
+    rawOutputSummary,
+  ];
+  const summary = summaryCandidates.find((candidate) => candidate && candidate.trim()) || null;
+
+  const resultItems = getWebSearchResultItemsFromRecord(record);
+  const imageItems = getWebSearchImageItemsFromRecord(record);
+  const sources = dedupeWebSearchSources([
+    ...parseWebSearchSourcesFromItems(resultItems),
+    ...rawOutputData.sources,
+  ]);
+  const images = dedupeWebSearchImages([
+    ...parseWebSearchImagesFromItems(imageItems),
+    ...rawOutputData.images,
+  ]);
 
   return {
     summary:
       summary ||
+      buildWebSearchSummaryFromResultItems(resultItems) ||
       resultItems
         .find((item) => typeof item === "string" && !/^https?:\/\//i.test(item.trim()))
         ?.toString()
@@ -6490,7 +6849,7 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
         if (arrayEnd?.[1]) {
           const candidate = arrayEnd[1].trim();
           if (candidate.length > 10 && !candidate.startsWith("{") && !candidate.startsWith("[")) {
-            summary = cleanSummaryText(candidate);
+            summary = formatWebSearchDisplaySummary(candidate);
           }
         }
       }
@@ -6498,14 +6857,14 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
       if (!summary) {
         const directArrayEndMatch = candidateOutput.match(/\}]\s*([A-Z][^{}\[\]]{10,}?)(?=##?\s*Images|$)/i);
         if (directArrayEndMatch?.[1]) {
-          summary = cleanSummaryText(directArrayEndMatch[1].trim());
+          summary = formatWebSearchDisplaySummary(directArrayEndMatch[1].trim());
         }
       }
 
       if (!summary) {
         const beforeLinksMatch = candidateOutput.match(/Web search results for query:[^\n]*\n\n([\s\S]*?)(?=Links:|$)/);
         if (beforeLinksMatch?.[1]?.trim()) {
-          summary = cleanSummaryText(beforeLinksMatch[1]);
+          summary = formatWebSearchDisplaySummary(beforeLinksMatch[1]);
         }
       }
 
@@ -6521,7 +6880,7 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
   const markdownSources = candidateOutput.match(/##?\s*Sources\s*\n([\s\S]*?)(?=##?\s*Images|$)/i);
   const markdownImages = candidateOutput.match(/##?\s*Images\s*\n([\s\S]*?)$/i);
   if (markdownResults) {
-    summary = cleanSummaryText(markdownResults[1]);
+    summary = formatWebSearchDisplaySummary(markdownResults[1]);
     if (markdownSources) {
       const pattern = /(?:[-*]|\d+\.)\s*\[([^\]]+)\]\(([^)]+)\)(?:\{([^}]+)\})?/g;
       let match: RegExpExecArray | null = null;
@@ -6572,7 +6931,7 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
       };
 
       if (jsonData.summary) {
-        summary = cleanSummaryText(String(jsonData.summary));
+        summary = formatWebSearchDisplaySummary(String(jsonData.summary));
       }
 
       const resultItems = jsonData.search_results || jsonData.results || jsonData.organic_results || [];
@@ -6596,7 +6955,9 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
           .map((image) =>
             buildWebSearchImageEntry(
               typeof image.title === "string" ? image.title : typeof image.alt === "string" ? image.alt : undefined,
-              typeof image.thumbnail === "string"
+              typeof image.imageUrl === "string"
+                ? image.imageUrl
+                : typeof image.thumbnail === "string"
                 ? image.thumbnail
                 : typeof image.thumbnailUrl === "string"
                   ? image.thumbnailUrl
@@ -6628,9 +6989,18 @@ function parseWebSearchOutput(output?: string): { summary: string | null; source
   }
 
   if (!summary) {
+    const firecrawlSummaryMatch = candidateOutput.match(
+      /^\s*(?:Firecrawl\s+)?search\s+results\s+for\s+(?:"[^"]+"|“[^”]+”|[^.\n]+)\.?\s*([\s\S]*?)(?=Links:|##?\s*Sources|##?\s*Images|SOURCES:|IMAGES:|JSON OUTPUT:|$)/i
+    );
+    if (firecrawlSummaryMatch?.[0]) {
+      summary = formatWebSearchDisplaySummary(firecrawlSummaryMatch[0]);
+    }
+  }
+
+  if (!summary) {
     const summaryMatch = candidateOutput.match(/SUMMARY:\s*([\s\S]*?)(?=SOURCES:|JSON OUTPUT:|IMAGES:|$)/i);
     if (summaryMatch?.[1]) {
-      summary = cleanSummaryText(summaryMatch[1]);
+      summary = formatWebSearchDisplaySummary(summaryMatch[1]);
     }
   }
 
@@ -6725,15 +7095,113 @@ function WebSearchSourceChip({ source }: { source: WebSearchResult }) {
   );
 }
 
-function WebSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function buildWebSearchRawJsonText(params: {
+  query: string | null;
+  parsed: { summary: string | null; sources: WebSearchResult[]; images: WebSearchImage[] };
+  rawOutput: string;
+  output: string;
+  resultValue: unknown;
+  fullReport: string;
+}): string {
+  const { query, parsed, rawOutput, output, resultValue, fullReport } = params;
+  if (resultValue && typeof resultValue === "object") {
+    try {
+      return JSON.stringify(resultValue, null, 2);
+    } catch {}
+  }
+  const candidate = String(output || rawOutput || "").trim();
+  if (candidate.startsWith("{") || candidate.startsWith("[")) {
+    try {
+      return JSON.stringify(JSON.parse(candidate), null, 2);
+    } catch {}
+  }
+  return JSON.stringify({
+    query,
+    summary: parsed.summary,
+    search_results: parsed.sources,
+    images: parsed.images,
+    raw_output: candidate || undefined,
+    full_report: fullReport || undefined,
+  }, null, 2);
+}
+
+function WebSearchSourceCountButton({
+  sources,
+  expanded,
+  onClick,
+}: {
+  sources: WebSearchResult[];
+  expanded: boolean;
+  onClick: () => void;
+}) {
+  const visibleSources = sources.slice(0, 3);
+  return (
+    <button
+      type="button"
+      className={`tb-log-web-search-source-count ${expanded ? "is-expanded" : ""}`.trim()}
+      onClick={onClick}
+      aria-expanded={expanded}
+      aria-label={expanded ? "Hide web search sources" : "Show web search sources"}
+    >
+      <span className="tb-log-web-search-source-count-icons" aria-hidden="true">
+        {visibleSources.map((source, index) => {
+          const domain = getWebSearchSourceDomain(source);
+          const faviconUrl = getWebSearchFaviconUrl(domain);
+          return faviconUrl ? (
+            <img
+              key={`${source.url}-${index}`}
+              src={faviconUrl}
+              alt=""
+              className="tb-log-web-search-source-count-favicon"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <Globe key={`${source.url}-${index}`} className="tb-log-web-search-source-count-icon" strokeWidth={1.5} />
+          );
+        })}
+      </span>
+      <span>{sources.length} {sources.length === 1 ? "source" : "sources"}</span>
+    </button>
+  );
+}
+
+function buildWebSearchDisplaySummaryFromSources(sources: WebSearchResult[]): string | null {
+  const lines = sources
+    .map((source) => {
+      const title = String(source.title || source.snippet || source.url || "").trim();
+      const url = String(source.url || "").trim();
+      if (!title) {
+        return "";
+      }
+      return url ? `- [${title}](${url})` : `- ${title}`;
+    })
+    .filter(Boolean);
+  return lines.length > 0 ? lines.join("\n") : null;
+}
+
+function WebSearchLogBox({
+  log,
+  timeLabel,
+  onPreviewDocument,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
+}) {
   const [collapsed, setCollapsed] = useState(false);
-  const query = extractSearchQuery(log.metadata?.command || "");
+  const [showSources, setShowSources] = useState(false);
+  const [copied, setCopied] = useState(false);
   const rawOutput = typeof log.metadata?.output === "string" ? log.metadata.output : "";
   const structuredCommandOutput = parseStructuredCommandExecutionOutput(rawOutput);
   const output = structuredCommandOutput
     ? [structuredCommandOutput.stdout, structuredCommandOutput.stderr].filter(Boolean).join("\n")
     : rawOutput;
   const resultValue = log.metadata?.result;
+  const query =
+    extractSearchQuery(log.metadata?.command || "") ||
+    extractWebSearchQueryFromPayload(resultValue) ||
+    extractWebSearchQueryFromPayload(output) ||
+    extractWebSearchQueryFromPayload(log.message);
   const fullReport = typeof (log.metadata as Record<string, unknown> | undefined)?.fullReport === "string"
     ? String((log.metadata as Record<string, unknown>).fullReport)
     : "";
@@ -6745,17 +7213,57 @@ function WebSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: strin
         : parseWebSearchStructuredPayload(resultValue);
     const parsedReport = fullReport ? parseWebSearchOutput(fullReport) : { summary: null, sources: [], images: [] };
     const parsedMessage = isWebSearchOutput(log.message) ? parseWebSearchOutput(log.message) : { summary: null, sources: [], images: [] };
+    const structuredParsed = mergeParsedWebSearchData(parsedOutput, parsedResult, parsedReport, parsedMessage);
     const fallbackText = [output, typeof resultValue === "string" ? resultValue : "", fullReport, log.message].filter(Boolean).join("\n");
-    const fallbackSources = fallbackText ? extractFallbackWebSearchSources(fallbackText) : [];
-    return mergeParsedWebSearchData(parsedOutput, parsedResult, parsedReport, parsedMessage, {
+    const fallbackSources = structuredParsed.sources.length === 0 && fallbackText ? extractFallbackWebSearchSources(fallbackText) : [];
+    return mergeParsedWebSearchData(structuredParsed, {
       summary: null,
       sources: fallbackSources,
       images: [],
     });
   }, [fullReport, log.message, output, resultValue]);
+  const displaySummary = useMemo(() =>
+    parsed.summary ||
+    extractWebSearchSummaryFromRawOutput(rawOutput) ||
+    extractWebSearchSummaryFromRawOutput(output) ||
+    (typeof resultValue === "string" ? extractWebSearchSummaryFromRawOutput(resultValue) : null) ||
+    buildWebSearchDisplaySummaryFromSources(parsed.sources),
+  [output, parsed.sources, parsed.summary, rawOutput, resultValue]);
   const isRunning = log.metadata?.status === "running" || log.metadata?.status === "started";
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
   const errorMessage = stripRunnerSystemTags(output || rawOutput).trim();
+  const rawJsonText = useMemo(() => buildWebSearchRawJsonText({
+    query,
+    parsed: { ...parsed, summary: displaySummary },
+    rawOutput,
+    output,
+    resultValue,
+    fullReport,
+  }), [displaySummary, fullReport, output, parsed, query, rawOutput, resultValue]);
+  const rawJsonAttachment = useMemo<RunnerPreviewAttachment>(() => ({
+    ...buildRunnerPreviewAttachmentFromPath("/workspace/web-search-response.json", {
+      idPrefix: "web-search-raw-response",
+    }),
+    filename: "web-search-response.json",
+    mimeType: "application/json",
+    type: "document",
+    previewKindOverride: "text",
+    url: `data:application/json;charset=utf-8,${encodeURIComponent(rawJsonText)}`,
+    previewUrl: `data:application/json;charset=utf-8,${encodeURIComponent(rawJsonText)}`,
+  }), [rawJsonText]);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timeoutId = window.setTimeout(() => setCopied(false), 1200);
+    return () => window.clearTimeout(timeoutId);
+  }, [copied]);
+
+  async function copyWebSearchSummary() {
+    try {
+      await copyRunnerText(displaySummary || rawJsonText);
+      setCopied(true);
+    } catch {}
+  }
 
   return (
     <div className="tb-log-card">
@@ -6763,9 +7271,9 @@ function WebSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: strin
         icon={<Search className="tb-log-card-small-icon" strokeWidth={1.5} />}
         className="tb-log-card-header-web-search"
         label="Web Search"
-        title={query}
+        title={null}
         timeLabel={timeLabel}
-        meta={parsed.sources.length > 0 ? <span className="tb-log-card-pill">{parsed.sources.length} sources</span> : isRunning ? <span className="tb-log-card-status">searching...</span> : null}
+        meta={isRunning ? <span className="tb-log-card-status">searching...</span> : null}
         collapsed={collapsed}
         onToggle={() => setCollapsed((value) => !value)}
       />
@@ -6774,6 +7282,7 @@ function WebSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: strin
           <div className="tb-log-card-state tb-log-card-state-error">{errorMessage || "Web search failed."}</div>
         ) : (
           <>
+            {query ? <div className="tb-log-web-search-query">{query}</div> : null}
             {parsed.images.length > 0 ? (
               <div className="tb-log-image-grid tb-log-web-search-images">
                 {parsed.images.slice(0, 4).map((image, index) => (
@@ -6789,16 +7298,429 @@ function WebSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: strin
                 ))}
               </div>
             ) : null}
-            {parsed.summary ? <RunnerMarkdown content={parsed.summary} className="tb-message-markdown" /> : null}
-            {parsed.sources.length > 0 ? (
-              <div className={parsed.summary ? "tb-log-web-search-source-list is-after-summary" : "tb-log-web-search-source-list"}>
+            {displaySummary ? <RunnerMarkdown content={displaySummary} className="tb-message-markdown tb-log-web-search-summary" /> : null}
+            <div className="tb-log-web-search-footer">
+              <div className="tb-run-summary-action-line tb-log-web-search-action-line is-latest" aria-label="Web search actions">
+                <button
+                  type="button"
+                  className="tb-run-summary-action-button"
+                  data-label={copied ? "Copied" : "Copy"}
+                  title="Copy web search summary"
+                  aria-label="Copy web search summary"
+                  onClick={() => void copyWebSearchSummary()}
+                >
+                  <Copy className="tb-run-summary-action-icon" strokeWidth={2} />
+                </button>
+                <button
+                  type="button"
+                  className="tb-run-summary-action-button"
+                  data-label="Code"
+                  title="Open raw web search JSON"
+                  aria-label="Open raw web search JSON"
+                  onClick={() => onPreviewDocument?.(rawJsonAttachment)}
+                >
+                  <Code2 className="tb-run-summary-action-icon" strokeWidth={2} />
+                </button>
+                <button type="button" className="tb-run-summary-action-button" data-label="Good" title="Mark as helpful" aria-label="Mark as helpful">
+                  <ThumbsUp className="tb-run-summary-action-icon" strokeWidth={2} />
+                </button>
+                <button type="button" className="tb-run-summary-action-button" data-label="Bad" title="Mark as not helpful" aria-label="Mark as not helpful">
+                  <ThumbsDown className="tb-run-summary-action-icon" strokeWidth={2} />
+                </button>
+                <button type="button" className="tb-run-summary-action-button" data-label="Refresh" title="Refresh search" aria-label="Refresh search">
+                  <RefreshCw className="tb-run-summary-action-icon" strokeWidth={2} />
+                </button>
+                <button type="button" className="tb-run-summary-action-button" data-label="More" title="More" aria-label="More">
+                  <Ellipsis className="tb-run-summary-action-icon" strokeWidth={2} />
+                </button>
+              </div>
+              {parsed.sources.length > 0 ? (
+                <WebSearchSourceCountButton
+                  sources={parsed.sources}
+                  expanded={showSources}
+                  onClick={() => setShowSources((value) => !value)}
+                />
+              ) : null}
+            </div>
+            {parsed.sources.length > 0 && showSources ? (
+              <div className={displaySummary ? "tb-log-web-search-source-list is-after-summary" : "tb-log-web-search-source-list"}>
                 {parsed.sources.map((source) => (
                   <WebSearchSourceChip key={`${source.url}-${source.title}`} source={source} />
                 ))}
               </div>
             ) : null}
-            {!parsed.summary && parsed.sources.length === 0 && !isRunning ? <div className="tb-log-card-empty">No search results were parsed.</div> : null}
+            {!displaySummary && parsed.sources.length === 0 && !isRunning ? <div className="tb-log-card-empty">No search results were parsed.</div> : null}
           </>
+        )}
+      </LogPanel>
+    </div>
+  );
+}
+
+type WebScrapeParsed = {
+  title: string | null;
+  url: string | null;
+  markdown: string;
+  json: unknown;
+  rawText: string;
+  mode: "markdown" | "json";
+};
+
+function isWebScrapeCommand(command?: string): boolean {
+  if (!command) return false;
+  const normalized = command.toLowerCase();
+  return (
+    /\bweb_scrape\b/i.test(command) ||
+    normalized.includes("--scrape-url") ||
+    normalized.includes("/v2/scrape") ||
+    normalized.includes("firecrawl.dev/v2/scrape")
+  );
+}
+
+function isWebScrapeJsonCommand(command?: string): boolean {
+  if (!command) return false;
+  const normalized = command.toLowerCase();
+  return (
+    normalized.includes("--json-prompt") ||
+    normalized.includes("--json-schema") ||
+    /\bmode\s*[:=]\s*["']?json/i.test(command)
+  );
+}
+
+function isWebScrapeOutput(output?: string): boolean {
+  if (!output) return false;
+  const structuredCommandOutput = parseStructuredCommandExecutionOutput(output);
+  const candidate = structuredCommandOutput
+    ? [structuredCommandOutput.stdout, structuredCommandOutput.stderr].filter(Boolean).join("\n")
+    : output;
+  return /(?:^|\n)#\s*(?:Scraped Page|Extracted Data):/i.test(candidate);
+}
+
+function extractWebScrapeUrlFromCommand(command?: string): string | null {
+  if (!command) return null;
+  const flagMatch = command.match(/--scrape-url(?:=|\s+)(["'])(.*?)\1/i)
+    || command.match(/--scrape-url(?:=|\s+)(\S+)/i);
+  const value = flagMatch?.[2] || flagMatch?.[1];
+  return value ? value.trim() : null;
+}
+
+function parseWebScrapeStructuredPayload(value: unknown, fallbackUrl?: string | null): WebScrapeParsed | null {
+  if (!value) return null;
+  if (typeof value === "string") {
+    const text = stripRunnerSystemTags(value).trim();
+    if (!text) return null;
+    if (text.startsWith("{")) {
+      try {
+        return parseWebScrapeStructuredPayload(JSON.parse(text), fallbackUrl);
+      } catch {
+        // Fall through to markdown text parsing.
+      }
+    }
+    return parseWebScrapeTextOutput(text, fallbackUrl);
+  }
+  if (typeof value !== "object" || Array.isArray(value)) return null;
+
+  const record = value as Record<string, unknown>;
+  const data = record.data && typeof record.data === "object" && !Array.isArray(record.data)
+    ? record.data as Record<string, unknown>
+    : record;
+  const metadata = data.metadata && typeof data.metadata === "object" && !Array.isArray(data.metadata)
+    ? data.metadata as Record<string, unknown>
+    : {};
+  const url = typeof metadata.sourceURL === "string"
+    ? metadata.sourceURL
+    : typeof record.url === "string"
+      ? record.url
+      : fallbackUrl || null;
+  const title = typeof metadata.title === "string"
+    ? metadata.title
+    : typeof record.title === "string"
+      ? record.title
+      : url;
+  const jsonValue = data.json;
+  if (jsonValue !== undefined) {
+    return {
+      title: title || null,
+      url,
+      markdown: "",
+      json: jsonValue,
+      rawText: JSON.stringify(value, null, 2),
+      mode: "json",
+    };
+  }
+  const markdown = typeof data.markdown === "string"
+    ? data.markdown
+    : typeof data.summary === "string"
+      ? data.summary
+      : "";
+  if (markdown.trim()) {
+    return {
+      title: title || null,
+      url,
+      markdown,
+      json: null,
+      rawText: JSON.stringify(value, null, 2),
+      mode: "markdown",
+    };
+  }
+  return null;
+}
+
+function parseWebScrapeTextOutput(text: string, fallbackUrl?: string | null): WebScrapeParsed | null {
+  const normalized = stripRunnerSystemTags(text).trim();
+  if (!normalized) return null;
+  const titleMatch = normalized.match(/(?:^|\n)#\s*(Scraped Page|Extracted Data):\s*([^\n]+)/i);
+  const isJson = titleMatch?.[1]?.toLowerCase().includes("extracted") || /```json/i.test(normalized);
+  const sourceMatch = normalized.match(/(?:^|\n)Source:\s*(\S+)/i);
+  const title = titleMatch?.[2]?.trim() || null;
+  const url = sourceMatch?.[1]?.trim() || fallbackUrl || null;
+
+  if (isJson) {
+    const jsonFence = normalized.match(/```json\s*([\s\S]*?)```/i);
+    let jsonValue: unknown = null;
+    if (jsonFence?.[1]) {
+      try {
+        jsonValue = JSON.parse(jsonFence[1]);
+      } catch {
+        jsonValue = jsonFence[1].trim();
+      }
+    }
+    return {
+      title,
+      url,
+      markdown: "",
+      json: jsonValue,
+      rawText: normalized,
+      mode: "json",
+    };
+  }
+
+  const sourceLineIndex = sourceMatch ? normalized.indexOf(sourceMatch[0]) + sourceMatch[0].length : -1;
+  const markdown = sourceLineIndex >= 0
+    ? normalized.slice(sourceLineIndex).trim()
+    : normalized.replace(/(?:^|\n)#\s*Scraped Page:[^\n]+\n?/i, "").trim();
+  return {
+    title,
+    url,
+    markdown: markdown || normalized,
+    json: null,
+    rawText: normalized,
+    mode: "markdown",
+  };
+}
+
+function parseWebScrapeLog(log: RunnerLog): WebScrapeParsed | null {
+  const command = log.metadata?.command || "";
+  const rawOutput = String(log.metadata?.output || "");
+  const structuredCommandOutput = parseStructuredCommandExecutionOutput(rawOutput);
+  const output = structuredCommandOutput
+    ? [structuredCommandOutput.stdout, structuredCommandOutput.stderr].filter(Boolean).join("\n")
+    : rawOutput;
+  const fallbackUrl = extractWebScrapeUrlFromCommand(command);
+  const resultValue = log.metadata?.result;
+  return (
+    parseWebScrapeStructuredPayload(resultValue, fallbackUrl) ||
+    parseWebScrapeStructuredPayload(output, fallbackUrl) ||
+    parseWebScrapeStructuredPayload(rawOutput, fallbackUrl) ||
+    parseWebScrapeStructuredPayload(log.message, fallbackUrl)
+  );
+}
+
+function formatWebScrapeTitle(parsed: WebScrapeParsed | null, fallbackUrl?: string | null): string {
+  const candidate = parsed?.title || parsed?.url || fallbackUrl || "Web page";
+  try {
+    if (/^https?:\/\//i.test(candidate)) {
+      return new URL(candidate).hostname.replace(/^www\./, "");
+    }
+  } catch {}
+  return candidate;
+}
+
+function WebScrapeMarkdownLogBox({
+  log,
+  timeLabel,
+  onPreviewDocument,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const parsed = useMemo(() => parseWebScrapeLog(log), [log]);
+  const commandUrl = extractWebScrapeUrlFromCommand(log.metadata?.command || "");
+  const markdown = parsed?.markdown || "";
+  const title = formatWebScrapeTitle(parsed, commandUrl);
+  const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
+  const previewAttachment = useMemo<RunnerPreviewAttachment>(() => ({
+    ...buildRunnerPreviewAttachmentFromPath("/workspace/firecrawl-scrape.md", {
+      idPrefix: "firecrawl-scrape-markdown",
+    }),
+    filename: "firecrawl-scrape.md",
+    mimeType: "text/markdown",
+    type: "document",
+    previewKindOverride: "markdown",
+    url: `data:text/markdown;charset=utf-8,${encodeURIComponent(markdown)}`,
+    previewUrl: `data:text/markdown;charset=utf-8,${encodeURIComponent(markdown)}`,
+  }), [markdown]);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timeoutId = window.setTimeout(() => setCopied(false), 1200);
+    return () => window.clearTimeout(timeoutId);
+  }, [copied]);
+
+  async function handleCopy() {
+    try {
+      await copyRunnerText(markdown || parsed?.rawText || output);
+      setCopied(true);
+    } catch {}
+  }
+
+  return (
+    <div className="tb-log-card">
+      <LogHeader
+        icon={<FileSearch className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Scrape Page"
+        title={title}
+        timeLabel={timeLabel}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        {isError ? (
+          <div className="tb-log-card-state tb-log-card-state-error">{output || "Web scrape failed."}</div>
+        ) : markdown ? (
+          <div className="tb-log-file-preview-frame tb-log-scrape-markdown-frame">
+            <div className="tb-log-file-preview-topbar">
+              <span className="tb-log-file-preview-language">Markdown</span>
+              <div className="tb-log-file-preview-actions">
+                <button
+                  type="button"
+                  className="tb-log-file-preview-icon-button"
+                  onClick={() => onPreviewDocument?.(previewAttachment)}
+                  aria-label="Open scraped markdown preview"
+                  title="Open scraped markdown preview"
+                >
+                  <ListChevronsUpDown className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
+                </button>
+                <button type="button" className="tb-log-file-preview-copy" onClick={handleCopy}>
+                  <Copy className="tb-log-file-preview-action-icon" strokeWidth={1.5} />
+                  <span>{copied ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
+            </div>
+            <div className="tb-log-file-preview-body">
+              <RunnerMarkdown
+                content={markdown}
+                className="tb-log-file-markdown-preview tb-message-markdown"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="tb-log-card-empty">No scraped markdown was parsed.</div>
+        )}
+      </LogPanel>
+    </div>
+  );
+}
+
+function formatJsonTableCell(value: unknown): string {
+  if (value === null) return "null";
+  if (value === undefined) return "";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function buildJsonExtractTable(value: unknown): { columns: string[]; rows: string[][] } {
+  if (Array.isArray(value)) {
+    const objectRows = value.filter((item) => item && typeof item === "object" && !Array.isArray(item)) as Record<string, unknown>[];
+    if (objectRows.length > 0) {
+      const columns = Array.from(new Set(objectRows.flatMap((item) => Object.keys(item)))).slice(0, 8);
+      return {
+        columns,
+        rows: objectRows.slice(0, 50).map((item) => columns.map((column) => formatJsonTableCell(item[column]))),
+      };
+    }
+    return {
+      columns: ["Index", "Value"],
+      rows: value.slice(0, 50).map((item, index) => [String(index + 1), formatJsonTableCell(item)]),
+    };
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const arrayProperty = Object.entries(record)
+      .filter(([, item]) => Array.isArray(item) && item.some((row) => row && typeof row === "object" && !Array.isArray(row)))
+      .sort((left, right) => (right[1] as unknown[]).length - (left[1] as unknown[]).length)[0];
+    if (arrayProperty) {
+      return buildJsonExtractTable(arrayProperty[1]);
+    }
+    return {
+      columns: ["Field", "Value"],
+      rows: Object.entries(record).map(([key, item]) => [key, formatJsonTableCell(item)]),
+    };
+  }
+
+  return {
+    columns: ["Value"],
+    rows: [[formatJsonTableCell(value)]],
+  };
+}
+
+function WebScrapeJsonLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const parsed = useMemo(() => parseWebScrapeLog(log), [log]);
+  const commandUrl = extractWebScrapeUrlFromCommand(log.metadata?.command || "");
+  const table = useMemo(() => buildJsonExtractTable(parsed?.json), [parsed?.json]);
+  const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
+
+  return (
+    <div className="tb-log-card">
+      <LogHeader
+        icon={<Code2 className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label="Extract Data"
+        title={formatWebScrapeTitle(parsed, commandUrl)}
+        timeLabel={timeLabel}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        {isError ? (
+          <div className="tb-log-card-state tb-log-card-state-error">{output || "Web extraction failed."}</div>
+        ) : table.rows.length > 0 ? (
+          <div className="tb-log-json-extract-table-wrap">
+            <table className="tb-log-json-extract-table">
+              <thead>
+                <tr>
+                  {table.columns.map((column) => <th key={column}>{column}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {table.rows.map((row, rowIndex) => (
+                  <tr key={`${rowIndex}-${row.join(":").slice(0, 30)}`}>
+                    {row.map((cell, cellIndex) => <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="tb-log-card-empty">No extracted data was parsed.</div>
         )}
       </LogPanel>
     </div>
@@ -7017,22 +7939,32 @@ function EmailLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string })
   );
 }
 
-function isPdfReaderCommand(command?: string): boolean {
+function isDocumentParseCommand(command?: string): boolean {
   if (!command) return false;
-  return command.includes("/workspace/.scripts/pdf-reader.py") || command.includes("pdf-reader.py");
+  return (
+    command.includes("/workspace/.scripts/document-parse.py") ||
+    command.includes("document-parse.py") ||
+    command.includes("/workspace/.scripts/pdf-reader.py") ||
+    command.includes("pdf-reader.py")
+  );
 }
 
-function extractPdfPath(command?: string): string | null {
+function extractDocumentParsePath(command?: string): string | null {
   if (!command) return null;
-  const quoted = command.match(/pdf-reader\.py\s+["']([^"']+)["']/);
+  const quoted = command.match(/(?:document-parse|pdf-reader)\.py\s+["']([^"']+)["']/);
   if (quoted?.[1]) return quoted[1];
-  const unquoted = command.match(/pdf-reader\.py\s+(\S+\.pdf)/i);
+  const unquoted = command.match(/(?:document-parse|pdf-reader)\.py\s+(\S+\.(?:pdf|docx?|xlsx?|odt|rtf|html?|csv|txt))/i);
   return unquoted?.[1] || null;
 }
 
-function parsePdfReaderOutput(output?: string): Record<string, unknown> | null {
+function parseDocumentParseOutput(output?: string): Record<string, unknown> | null {
   if (!output) return null;
-  const patterns = [/---\s*JSON OUTPUT\s*---\s*(\{[\s\S]*\})/i, /(\{[\s\S]*"success"[\s\S]*\})/, /(\{[\s\S]*"file_path"[\s\S]*\})/];
+  const patterns = [
+    /---\s*DOCUMENT PARSE JSON\s*---\s*(\{[\s\S]*?\})\s*---\s*DOCUMENT PARSE MARKDOWN\s*---/i,
+    /---\s*JSON OUTPUT\s*---\s*(\{[\s\S]*\})/i,
+    /(\{[\s\S]*"success"[\s\S]*\})/,
+    /(\{[\s\S]*"file_path"[\s\S]*\})/,
+  ];
   for (const pattern of patterns) {
     const match = output.match(pattern);
     if (match?.[1]) {
@@ -7044,32 +7976,39 @@ function parsePdfReaderOutput(output?: string): Record<string, unknown> | null {
   return null;
 }
 
-function PdfReaderLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function DocumentParseLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   const [collapsed, setCollapsed] = useState(false);
   const command = log.metadata?.command || "";
   const output = String(log.metadata?.output || "");
-  const parsed = parsePdfReaderOutput(output);
-  const fileName = typeof parsed?.file_name === "string" ? parsed.file_name : extractPdfPath(command);
+  const parsed = parseDocumentParseOutput(output);
+  const fileName =
+    (typeof parsed?.file_name === "string" ? parsed.file_name : null) ||
+    (typeof parsed?.title === "string" ? parsed.title : null) ||
+    extractDocumentParsePath(command);
   const summary = typeof parsed?.summary === "string" ? parsed.summary : null;
-  const pageCount = typeof parsed?.total_pages === "number" ? parsed.total_pages : null;
+  const markdown = typeof parsed?.markdown === "string" ? parsed.markdown : null;
+  const pageCount =
+    (typeof parsed?.page_count === "number" ? parsed.page_count : null) ||
+    (typeof parsed?.total_pages === "number" ? parsed.total_pages : null);
   const wordCount = typeof parsed?.word_count === "number" ? parsed.word_count : null;
   const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const isError = (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0) || parsed?.success === false;
+  const content = markdown || summary || "";
 
   return (
     <div className="tb-log-card">
       <LogHeader
         icon={<FileSearch className="tb-log-card-small-icon" strokeWidth={1.5} />}
-        label="PDF Reader"
+        label="Document Parsing"
         title={fileName || undefined}
         timeLabel={timeLabel}
-        meta={pageCount ? <span className="tb-log-card-pill">{pageCount} pages</span> : isLoading ? <span className="tb-log-card-status">reading...</span> : null}
+        meta={pageCount ? <span className="tb-log-card-pill">{pageCount} pages</span> : isLoading ? <span className="tb-log-card-status">parsing...</span> : null}
         collapsed={collapsed}
         onToggle={() => setCollapsed((value) => !value)}
       />
       <LogPanel collapsed={collapsed}>
         {isError ? (
-          <div className="tb-log-card-state tb-log-card-state-error">{(typeof parsed?.error === "string" ? parsed.error : null) || output || "Failed to read PDF."}</div>
+          <div className="tb-log-card-state tb-log-card-state-error">{(typeof parsed?.error === "string" ? parsed.error : null) || output || "Failed to parse document."}</div>
         ) : (
           <>
             <div className="tb-log-meta-grid">
@@ -7086,7 +8025,7 @@ function PdfReaderLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: strin
                 </div>
               ) : null}
             </div>
-            {summary ? <RunnerMarkdown content={summary} className="tb-message-markdown" /> : <div className="tb-log-card-empty">{isLoading ? "Reading PDF..." : "No summary available."}</div>}
+            {content ? <RunnerMarkdown content={content} className="tb-message-markdown" /> : <div className="tb-log-card-empty">{isLoading ? "Parsing document..." : "No parsed content available."}</div>}
           </>
         )}
       </LogPanel>
@@ -9952,7 +10891,14 @@ export function RunnerWorkLogEntry({
   if (log.eventType === "command_execution") {
     const command = log.metadata?.command || "";
     const output = String(log.metadata?.output || "");
-    if (isWebSearchCommand(command) || isWebSearchOutput(output)) return <WebSearchLogBox log={log} timeLabel={timeLabel} />;
+    if (isWebScrapeCommand(command) || isWebScrapeOutput(output)) {
+      return isWebScrapeJsonCommand(command) || parseWebScrapeLog(log)?.mode === "json"
+        ? <WebScrapeJsonLogBox log={log} timeLabel={timeLabel} />
+        : <WebScrapeMarkdownLogBox log={log} timeLabel={timeLabel} onPreviewDocument={onPreviewDocument} />;
+    }
+    if (isWebSearchCommand(command) || isWebSearchOutput(output)) {
+      return <WebSearchLogBox log={log} timeLabel={timeLabel} onPreviewDocument={onPreviewDocument} />;
+    }
     if (isMemoryCommand(command)) return <MemoryLogBox log={log} timeLabel={timeLabel} />;
     if (isBrowserSkillCommand(command) && !renderBrowserSkillAsGeneric) {
       return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
@@ -10042,7 +10988,7 @@ export function RunnerWorkLogEntry({
         />
       );
     }
-    if (isPdfReaderCommand(command)) return <PdfReaderLogBox log={log} timeLabel={timeLabel} />;
+    if (isDocumentParseCommand(command)) return <DocumentParseLogBox log={log} timeLabel={timeLabel} />;
     if (isLikelyImageGenerationLog(log, command)) {
       return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }

@@ -6168,6 +6168,93 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   margin-bottom: 12px;
 }
 
+.tb-runner-chat .tb-log-web-search-query {
+  margin: -2px 0 12px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-web-search-summary,
+.tb-runner-chat .tb-log-web-search-summary * {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.tb-runner-chat .tb-log-web-search-summary a {
+  color: #ffffff;
+}
+
+.tb-runner-chat .tb-log-web-search-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.tb-runner-chat .tb-run-summary-action-line.tb-log-web-search-action-line {
+  height: 24px;
+  margin-top: 0;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tb-runner-chat .tb-log-web-search-source-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  flex: 0 0 auto;
+  padding: 4px 10px 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 400;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.tb-runner-chat .tb-log-web-search-source-count:hover,
+.tb-runner-chat .tb-log-web-search-source-count.is-expanded {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.tb-runner-chat .tb-log-web-search-source-count-icons {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-log-web-search-source-count-favicon,
+.tb-runner-chat .tb-log-web-search-source-count-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.tb-runner-chat .tb-log-web-search-source-count-favicon + .tb-log-web-search-source-count-favicon,
+.tb-runner-chat .tb-log-web-search-source-count-favicon + .tb-log-web-search-source-count-icon,
+.tb-runner-chat .tb-log-web-search-source-count-icon + .tb-log-web-search-source-count-favicon,
+.tb-runner-chat .tb-log-web-search-source-count-icon + .tb-log-web-search-source-count-icon {
+  margin-left: -7px;
+}
+
 .tb-runner-chat .tb-log-web-search-source-list {
   display: flex;
   flex-wrap: wrap;
@@ -6226,6 +6313,51 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 .tb-runner-chat .tb-log-web-search-image-surface {
   width: 156px;
   height: 114px;
+}
+
+.tb-runner-chat .tb-log-scrape-markdown-frame .tb-log-file-markdown-preview {
+  max-height: 620px;
+}
+
+.tb-runner-chat .tb-log-json-extract-table-wrap {
+  width: 100%;
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+.tb-runner-chat .tb-log-json-extract-table-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+.tb-runner-chat .tb-log-json-extract-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.tb-runner-chat .tb-log-json-extract-table th,
+.tb-runner-chat .tb-log-json-extract-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tb-runner-chat .tb-log-json-extract-table th {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-json-extract-table td {
+  max-width: 360px;
+  color: rgba(255, 255, 255, 0.84);
+  word-break: break-word;
+}
+
+.tb-runner-chat .tb-log-json-extract-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .tb-runner-chat .tb-log-image-large {

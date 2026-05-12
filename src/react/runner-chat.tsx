@@ -244,6 +244,8 @@ interface RunnerTurn {
   attachments?: RunnerTurnAttachment[] | null;
   slideCreationCommand?: StagedSlideCreationCommand | null;
   researchCreationCommand?: StagedResearchCreationCommand | null;
+  scrapeCreationCommand?: StagedScrapeCreationCommand | null;
+  parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
 }
 
@@ -284,6 +286,8 @@ interface PendingRunnerMessage {
   skillCreationCommand?: StagedSkillCreationCommand | null;
   slideCreationCommand?: StagedSlideCreationCommand | null;
   researchCreationCommand?: StagedResearchCreationCommand | null;
+  scrapeCreationCommand?: StagedScrapeCreationCommand | null;
+  parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
 }
 
@@ -365,6 +369,14 @@ interface StagedSlideCreationCommand extends BaseStagedBacklogCommand {
 
 interface StagedResearchCreationCommand extends BaseStagedBacklogCommand {
   action: "research";
+}
+
+interface StagedScrapeCreationCommand extends BaseStagedBacklogCommand {
+  action: "scrape";
+}
+
+interface StagedParseCreationCommand extends BaseStagedBacklogCommand {
+  action: "parse";
 }
 
 interface StagedAdCreationCommand extends BaseStagedBacklogCommand {
@@ -722,6 +734,33 @@ function buildRunnerAdEnabledSkillsPayload(
   };
 }
 
+function buildRunnerScrapeEnabledSkillsPayload(
+  scrapeCreationCommand: StagedScrapeCreationCommand | null | undefined,
+  enabledSkills: Record<string, unknown> | null
+): Record<string, unknown> | null {
+  if (!scrapeCreationCommand) {
+    return enabledSkills;
+  }
+  return {
+    ...(enabledSkills || {}),
+    webSearch: true,
+  };
+}
+
+function buildRunnerParseEnabledSkillsPayload(
+  parseCreationCommand: StagedParseCreationCommand | null | undefined,
+  enabledSkills: Record<string, unknown> | null
+): Record<string, unknown> | null {
+  if (!parseCreationCommand) {
+    return enabledSkills;
+  }
+  return {
+    ...(enabledSkills || {}),
+    pdf: true,
+    documentParsing: true,
+  };
+}
+
 function buildAssistantMessageRunMetadata(message: RunnerConversationMessage): RunnerLog["metadata"] | undefined {
   const baseMetadata =
     message.logMetadata && typeof message.logMetadata === "object" && !Array.isArray(message.logMetadata)
@@ -795,6 +834,64 @@ function normalizeResearchCreationCommandFromMetadata(logMetadata: unknown): Sta
     return {
       action: "research",
       label: buildRunnerResearchCreationLabel(),
+    };
+  }
+
+  return null;
+}
+
+function normalizeScrapeCreationCommandFromMetadata(logMetadata: unknown): StagedScrapeCreationCommand | null {
+  const metadata = normalizeRecordObject(logMetadata);
+  if (!metadata) {
+    return null;
+  }
+
+  const commandRecord = normalizeRecordObject(metadata.scrapeCreationCommand);
+  if (commandRecord) {
+    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
+    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
+    if (action === "scrape" || label === "/scrape") {
+      return {
+        action: "scrape",
+        label: buildRunnerScrapeCreationLabel(),
+      };
+    }
+  }
+
+  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
+  if (mode === "scrape" || mode === "/scrape") {
+    return {
+      action: "scrape",
+      label: buildRunnerScrapeCreationLabel(),
+    };
+  }
+
+  return null;
+}
+
+function normalizeParseCreationCommandFromMetadata(logMetadata: unknown): StagedParseCreationCommand | null {
+  const metadata = normalizeRecordObject(logMetadata);
+  if (!metadata) {
+    return null;
+  }
+
+  const commandRecord = normalizeRecordObject(metadata.parseCreationCommand);
+  if (commandRecord) {
+    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
+    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
+    if (action === "parse" || label === "/parse") {
+      return {
+        action: "parse",
+        label: buildRunnerParseCreationLabel(),
+      };
+    }
+  }
+
+  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
+  if (mode === "parse" || mode === "/parse") {
+    return {
+      action: "parse",
+      label: buildRunnerParseCreationLabel(),
     };
   }
 
@@ -1605,6 +1702,8 @@ export interface RunnerChatExternalRunRequest {
   quotedSelection?: RunnerQuotedSelection | null;
   slideCreationCommand?: StagedSlideCreationCommand | null;
   researchCreationCommand?: StagedResearchCreationCommand | null;
+  scrapeCreationCommand?: StagedScrapeCreationCommand | null;
+  parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
 }
 
@@ -1920,19 +2019,26 @@ const DEFAULT_COMPUTER_AGENT_SKILLS: RunnerChatSkill[] = [
   { id: "web_search", name: "Web Search", enabled: true },
   { id: "deep_research", name: "Deep Research", enabled: true },
   { id: "browser", name: "Browser", enabled: true },
-  { id: "pdf", name: "PDF Processing", enabled: true },
+  { id: "pdf", name: "Document Parsing", enabled: true },
   { id: "frontend_design", name: "Frontend Design", enabled: true },
   { id: "pptx", name: "PowerPoint/PPTX", enabled: true },
   { id: "memory", name: "Memory", enabled: true },
   { id: "task_management", name: "Task Management", enabled: true },
   { id: "computer_agents", name: "Computer Agents", enabled: true },
+  { id: "email", name: "Email", enabled: true },
 ];
-const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "deep_research", "browser", "memory", "task_management", "computer_agents"] as const;
+const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "web_search", "deep_research", "browser", "memory", "task_management", "computer_agents", "email"] as const;
 const RUNNER_CHAT_SKILL_ID_ALIASES: Record<string, string> = {
   deepResearch: "deep_research",
   deep_research: "deep_research",
   "deep-research": "deep_research",
   research: "deep_research",
+  documentParsing: "pdf",
+  document_parsing: "pdf",
+  "document-parsing": "pdf",
+  parse: "pdf",
+  gmail: "email",
+  mail: "email",
 };
 const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v2";
 const RUNNER_CHAT_WORKSPACE_SELECTION_STORAGE_KEY_PREFIX = "tb_runner_chat_workspace_selection_v1";
@@ -2249,6 +2355,36 @@ function buildRunnerResearchCreationHiddenPrompt(): string {
   ].join("\n");
 }
 
+function buildRunnerScrapeCreationLabel(): string {
+  return "/scrape";
+}
+
+function buildRunnerScrapeCreationHiddenPrompt(): string {
+  return [
+    "The user selected /scrape. Treat the visible user request as a request to use Firecrawl-backed web search and scraping.",
+    "Use the web-search skill's Firecrawl functionality. Start with the native WebSearch tool when you need to discover URLs; it is backed by Firecrawl and returns cited web or news sources plus images when available.",
+    "For the most relevant result pages, follow up with Firecrawl scrape via `python3 /workspace/.claude/skills/web-search/scripts/web-search.py --scrape-url \"https://example.com/page\"` to read clean markdown.",
+    "If the user asks for structured fields, tables, products, pricing, contact details, or extracted data, use JSON extraction mode with `--json-prompt` and a concise schema when useful.",
+    "Use location, category, include domains, and exclude domains naturally when the user request benefits from those filters. Cite source URLs and summarize which pages were scraped.",
+    "Do not write ad hoc scraping code unless Firecrawl is unavailable.",
+  ].join("\n");
+}
+
+function buildRunnerParseCreationLabel(): string {
+  return "/parse";
+}
+
+function buildRunnerParseCreationHiddenPrompt(): string {
+  return [
+    "The user selected /parse. Treat the visible user request as a request to parse documents with the Document Parsing skill.",
+    "Use the Firecrawl Parse utility for local or non-public documents: `python3 /workspace/.scripts/document-parse.py \"/path/to/document.pdf\"`.",
+    "Use it for PDFs, DOCX, XLSX, HTML, DOC, ODT, RTF, scanned PDFs, forms, reports, invoices, contracts, and other document files.",
+    "Return Markdown by default. If the user asks for fields, tables, invoices, contacts, entities, or other structured data, use `--json-prompt` or `--json-schema`.",
+    "Use `--pdf-mode ocr` for scanned or image-only PDFs and `--max-pages` to bound very large documents.",
+    "Do not write ad hoc document parsing, PDF extraction, OCR, or spreadsheet parsing code unless Firecrawl Parse is unavailable.",
+  ].join("\n");
+}
+
 function buildRunnerAdCreationLabel(): string {
   return "/ad";
 }
@@ -2354,6 +2490,28 @@ function parseAutoStageSlideCreationCommand(input: string): { prompt: string } |
 
 function parseAutoStageResearchCreationCommand(input: string): { prompt: string } | null {
   const match = input.match(/^\/research(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    prompt: match[1] || "",
+  };
+}
+
+function parseAutoStageScrapeCreationCommand(input: string): { prompt: string } | null {
+  const match = input.match(/^\/scrape(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    prompt: match[1] || "",
+  };
+}
+
+function parseAutoStageParseCreationCommand(input: string): { prompt: string } | null {
+  const match = input.match(/^\/parse(?:\s+([\s\S]*))?$/i);
   if (!match) {
     return null;
   }
@@ -3830,12 +3988,14 @@ function buildEnabledSkillsPayload(
     pptx: "pptx",
     memory: "memory",
     task_management: "taskManagement",
+    email: "email",
   };
 
   const payload: Record<string, unknown> = {};
   for (const [id, key] of Object.entries(defaultSkillMap)) {
     payload[key] = enabled.has(id);
   }
+  payload.documentParsing = enabled.has("pdf");
 
   if (enabled.has("image_generation") && skillDefaults?.imageGeneration) {
     const imageGeneration = skillDefaults.imageGeneration;
@@ -5788,6 +5948,8 @@ function buildHydratedTurnsFromMessages(
           attachments: normalizeTurnAttachments(message.logMetadata?.attachments, meta?.backendUrl),
           slideCreationCommand: normalizeSlideCreationCommandFromMetadata(message.logMetadata),
           researchCreationCommand: normalizeResearchCreationCommandFromMetadata(message.logMetadata),
+          scrapeCreationCommand: normalizeScrapeCreationCommandFromMetadata(message.logMetadata),
+          parseCreationCommand: normalizeParseCreationCommandFromMetadata(message.logMetadata),
           adCreationCommand: normalizeAdCreationCommandFromMetadata(message.logMetadata),
         };
       } else {
@@ -5809,6 +5971,8 @@ function buildHydratedTurnsFromMessages(
           attachments: normalizeTurnAttachments(message.logMetadata?.attachments, meta?.backendUrl),
           slideCreationCommand: normalizeSlideCreationCommandFromMetadata(message.logMetadata),
           researchCreationCommand: normalizeResearchCreationCommandFromMetadata(message.logMetadata),
+          scrapeCreationCommand: normalizeScrapeCreationCommandFromMetadata(message.logMetadata),
+          parseCreationCommand: normalizeParseCreationCommandFromMetadata(message.logMetadata),
           adCreationCommand: normalizeAdCreationCommandFromMetadata(message.logMetadata),
         };
       }
@@ -6972,6 +7136,8 @@ function mergeHydratedMessageTurnsIntoTurns(
       environmentName: turn.environmentName ?? messageTurn.environmentName ?? null,
       slideCreationCommand: turn.slideCreationCommand ?? messageTurn.slideCreationCommand ?? null,
       researchCreationCommand: turn.researchCreationCommand ?? messageTurn.researchCreationCommand ?? null,
+      scrapeCreationCommand: turn.scrapeCreationCommand ?? messageTurn.scrapeCreationCommand ?? null,
+      parseCreationCommand: turn.parseCreationCommand ?? messageTurn.parseCreationCommand ?? null,
       adCreationCommand: turn.adCreationCommand ?? messageTurn.adCreationCommand ?? null,
     };
   });
@@ -7039,6 +7205,8 @@ function mergeHydratedTurns(existingTurns: RunnerTurn[], hydratedTurns: RunnerTu
       sourceMessageId: hydratedTurn.sourceMessageId ?? localTurn.sourceMessageId ?? null,
       slideCreationCommand: hydratedTurn.slideCreationCommand ?? localTurn.slideCreationCommand ?? null,
       researchCreationCommand: hydratedTurn.researchCreationCommand ?? localTurn.researchCreationCommand ?? null,
+      scrapeCreationCommand: hydratedTurn.scrapeCreationCommand ?? localTurn.scrapeCreationCommand ?? null,
+      parseCreationCommand: hydratedTurn.parseCreationCommand ?? localTurn.parseCreationCommand ?? null,
       adCreationCommand: hydratedTurn.adCreationCommand ?? localTurn.adCreationCommand ?? null,
     };
   }
@@ -8261,6 +8429,8 @@ export function RunnerChat({
   const [stagedSkillCreationCommand, setStagedSkillCreationCommand] = useState<StagedSkillCreationCommand | null>(null);
   const [stagedSlideCreationCommand, setStagedSlideCreationCommand] = useState<StagedSlideCreationCommand | null>(null);
   const [stagedResearchCreationCommand, setStagedResearchCreationCommand] = useState<StagedResearchCreationCommand | null>(null);
+  const [stagedScrapeCreationCommand, setStagedScrapeCreationCommand] = useState<StagedScrapeCreationCommand | null>(null);
+  const [stagedParseCreationCommand, setStagedParseCreationCommand] = useState<StagedParseCreationCommand | null>(null);
   const [stagedAdCreationCommand, setStagedAdCreationCommand] = useState<StagedAdCreationCommand | null>(null);
   const [adCreationSettings, setAdCreationSettings] = useState<RunnerAdCreationSettings>(RUNNER_AD_CREATION_DEFAULT_SETTINGS);
   const [stagedBacklogSubtaskCommand, setStagedBacklogSubtaskCommand] = useState<StagedBacklogSubtaskCommand | null>(null);
@@ -8458,6 +8628,8 @@ export function RunnerChat({
   const stagedSkillCreationCommandLabel = stagedSkillCreationCommand?.label || "";
   const stagedSlideCreationCommandLabel = stagedSlideCreationCommand?.label || "";
   const stagedResearchCreationCommandLabel = stagedResearchCreationCommand?.label || "";
+  const stagedScrapeCreationCommandLabel = stagedScrapeCreationCommand?.label || "";
+  const stagedParseCreationCommandLabel = stagedParseCreationCommand?.label || "";
   const stagedAdCreationCommandLabel = stagedAdCreationCommand?.label || "";
   const stagedBacklogCommand = stagedBacklogMissionControlCommand || stagedBacklogSubtaskCommand;
   const stagedComposerLabel =
@@ -8465,12 +8637,14 @@ export function RunnerChat({
     || stagedSlideCreationCommandLabel
     || stagedAdCreationCommandLabel
     || stagedResearchCreationCommandLabel
+    || stagedScrapeCreationCommandLabel
+    || stagedParseCreationCommandLabel
     || stagedSkillCreationCommandLabel
     || stagedAgentCreationCommandLabel
     || stagedResourceCreationCommandLabel
     || stagedThreadContextCommandLabel;
-  const stagedComposerToneValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedAdCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
-  const stagedComposerOffsetValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedAdCreationCommand
+  const stagedComposerToneValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
+  const stagedComposerOffsetValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand
     ? `${Math.max(
         16,
         Math.round(
@@ -8480,7 +8654,7 @@ export function RunnerChat({
         )
       )}px`
     : stagedThreadContextCommandOffset(stagedThreadContextCommand);
-  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedAdCreationCommand || stagedBacklogCommand);
+  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand || stagedBacklogCommand);
   const slashCommandInputState = useMemo(() => {
     if (hasStagedComposerCommand) {
       return null;
@@ -8515,6 +8689,20 @@ export function RunnerChat({
       description: "Deep research",
       icon: <LucideTelescope className="tb-popup-icon" strokeWidth={1.75} />,
       stage: () => stageResearchCreationCommand(slashCommandInputState?.prompt || ""),
+    });
+    items.push({
+      id: "scrape",
+      command: "/scrape",
+      description: "Scrape web pages",
+      icon: <LucideGlobe className="tb-popup-icon" strokeWidth={1.75} />,
+      stage: () => stageScrapeCreationCommand(slashCommandInputState?.prompt || ""),
+    });
+    items.push({
+      id: "parse",
+      command: "/parse",
+      description: "Parse documents",
+      icon: <LucideFileText className="tb-popup-icon" strokeWidth={1.75} />,
+      stage: () => stageParseCreationCommand(slashCommandInputState?.prompt || ""),
     });
     if (enableAgentCreationCommand) {
       items.push({
@@ -9196,6 +9384,8 @@ export function RunnerChat({
       setStagedSkillCreationCommand(null);
       setStagedSlideCreationCommand(null);
       setStagedResearchCreationCommand(null);
+      setStagedScrapeCreationCommand(null);
+      setStagedParseCreationCommand(null);
       setStagedAdCreationCommand(null);
       setStagedBacklogSubtaskCommand(null);
       setStagedBacklogMissionControlCommand(null);
@@ -9444,6 +9634,8 @@ export function RunnerChat({
     setStagedSkillCreationCommand(null);
     setStagedSlideCreationCommand(null);
     setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedAdCreationCommand(null);
     setInput(prompt);
     currentInputRef.current = prompt;
@@ -9457,6 +9649,8 @@ export function RunnerChat({
     setStagedSkillCreationCommand(null);
     setStagedSlideCreationCommand(null);
     setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
@@ -9479,6 +9673,8 @@ export function RunnerChat({
     setStagedSkillCreationCommand(null);
     setStagedSlideCreationCommand(null);
     setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedAdCreationCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedBacklogSubtaskCommand({
@@ -9499,6 +9695,8 @@ export function RunnerChat({
     setStagedSkillCreationCommand(null);
     setStagedSlideCreationCommand(null);
     setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand({
@@ -9517,6 +9715,8 @@ export function RunnerChat({
     setStagedSkillCreationCommand(null);
     setStagedSlideCreationCommand(null);
     setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
@@ -9536,6 +9736,8 @@ export function RunnerChat({
     setStagedSkillCreationCommand(null);
     setStagedSlideCreationCommand(null);
     setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
@@ -9555,6 +9757,8 @@ export function RunnerChat({
     setStagedAgentCreationCommand(null);
     setStagedSlideCreationCommand(null);
     setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
@@ -9574,6 +9778,8 @@ export function RunnerChat({
     setStagedAgentCreationCommand(null);
     setStagedSkillCreationCommand(null);
     setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedAdCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
@@ -9594,11 +9800,55 @@ export function RunnerChat({
     setStagedSkillCreationCommand(null);
     setStagedSlideCreationCommand(null);
     setStagedAdCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedResearchCreationCommand({
       action: "research",
       label: buildRunnerResearchCreationLabel(),
+    });
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageScrapeCreationCommand(prompt = "") {
+    setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedAdCreationCommand(null);
+    setStagedParseCreationCommand(null);
+    setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand(null);
+    setStagedScrapeCreationCommand({
+      action: "scrape",
+      label: buildRunnerScrapeCreationLabel(),
+    });
+    setInput(prompt);
+    currentInputRef.current = prompt;
+    speechBaseInputRef.current = prompt;
+    speechTranscriptRef.current = "";
+  }
+
+  function stageParseCreationCommand(prompt = "") {
+    setStagedThreadContextCommand(null);
+    setStagedResourceCreationCommand(null);
+    setStagedAgentCreationCommand(null);
+    setStagedSkillCreationCommand(null);
+    setStagedSlideCreationCommand(null);
+    setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedAdCreationCommand(null);
+    setStagedBacklogSubtaskCommand(null);
+    setStagedBacklogMissionControlCommand(null);
+    setStagedParseCreationCommand({
+      action: "parse",
+      label: buildRunnerParseCreationLabel(),
     });
     setInput(prompt);
     currentInputRef.current = prompt;
@@ -9613,6 +9863,8 @@ export function RunnerChat({
     setStagedSkillCreationCommand(null);
     setStagedSlideCreationCommand(null);
     setStagedResearchCreationCommand(null);
+    setStagedScrapeCreationCommand(null);
+    setStagedParseCreationCommand(null);
     setStagedBacklogSubtaskCommand(null);
     setStagedBacklogMissionControlCommand(null);
     setStagedAdCreationCommand(buildStagedRunnerAdCreationCommand(adCreationSettings));
@@ -10840,6 +11092,8 @@ export function RunnerChat({
       skillCreationCommand?: StagedSkillCreationCommand | null;
       slideCreationCommand?: StagedSlideCreationCommand | null;
       researchCreationCommand?: StagedResearchCreationCommand | null;
+      scrapeCreationCommand?: StagedScrapeCreationCommand | null;
+      parseCreationCommand?: StagedParseCreationCommand | null;
       adCreationCommand?: StagedAdCreationCommand | null;
       resolvedAttachmentsOverride?: RunnerAttachment[] | null;
       githubRepoOverride?: {
@@ -10867,11 +11121,17 @@ export function RunnerChat({
     const researchCreationHiddenPromptText = options?.researchCreationCommand
       ? buildRunnerResearchCreationHiddenPrompt()
       : "";
+    const scrapeCreationHiddenPromptText = options?.scrapeCreationCommand
+      ? buildRunnerScrapeCreationHiddenPrompt()
+      : "";
+    const parseCreationHiddenPromptText = options?.parseCreationCommand
+      ? buildRunnerParseCreationHiddenPrompt()
+      : "";
     const adCreationHiddenPromptText = options?.adCreationCommand
       ? buildRunnerAdCreationHiddenPrompt(options.adCreationCommand)
       : "";
     const executionTaskText =
-      [hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, slideCreationHiddenPromptText, researchCreationHiddenPromptText, adCreationHiddenPromptText, taskText]
+      [hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, slideCreationHiddenPromptText, researchCreationHiddenPromptText, scrapeCreationHiddenPromptText, parseCreationHiddenPromptText, adCreationHiddenPromptText, taskText]
         .filter((part) => typeof part === "string" && part.trim().length > 0)
         .join("\n\n");
     const visibleTaskText =
@@ -10907,7 +11167,13 @@ export function RunnerChat({
       options?.enabledSkillsOverride !== undefined
         ? options.enabledSkillsOverride || null
         : enabledSkillsPayload;
-    const executionEnabledSkillsPayload = buildRunnerAdEnabledSkillsPayload(options?.adCreationCommand || null, baseEnabledSkillsPayload);
+    const executionEnabledSkillsPayload = buildRunnerParseEnabledSkillsPayload(
+      options?.parseCreationCommand || null,
+      buildRunnerScrapeEnabledSkillsPayload(
+        options?.scrapeCreationCommand || null,
+        buildRunnerAdEnabledSkillsPayload(options?.adCreationCommand || null, baseEnabledSkillsPayload)
+      )
+    );
     initializedThreadHistoryIdRef.current = threadId;
     const githubRepo =
       options?.githubRepoOverride !== undefined
@@ -10940,6 +11206,8 @@ export function RunnerChat({
         quotedSelection: options?.quotedSelection || null,
         slideCreationCommand: options?.slideCreationCommand || null,
         researchCreationCommand: options?.researchCreationCommand || null,
+        scrapeCreationCommand: options?.scrapeCreationCommand || null,
+        parseCreationCommand: options?.parseCreationCommand || null,
         adCreationCommand: options?.adCreationCommand || null,
       });
       if (didHandleExternalRunRequest !== false) {
@@ -10960,6 +11228,8 @@ export function RunnerChat({
     const turnId = options?.turnId || generateId("turn");
     const slideCreationCommand = options?.slideCreationCommand || null;
     const researchCreationCommand = options?.researchCreationCommand || null;
+    const scrapeCreationCommand = options?.scrapeCreationCommand || null;
+    const parseCreationCommand = options?.parseCreationCommand || null;
     const adCreationCommand = options?.adCreationCommand || null;
     const startedAtMs = Date.now();
     let releasedPreparationState = false;
@@ -10984,6 +11254,8 @@ export function RunnerChat({
         agentName: runAgentName || turn.agentName || null,
         slideCreationCommand: slideCreationCommand || turn.slideCreationCommand || null,
         researchCreationCommand: researchCreationCommand || turn.researchCreationCommand || null,
+        scrapeCreationCommand: scrapeCreationCommand || turn.scrapeCreationCommand || null,
+        parseCreationCommand: parseCreationCommand || turn.parseCreationCommand || null,
         adCreationCommand: adCreationCommand || turn.adCreationCommand || null,
       }));
     } else {
@@ -11003,6 +11275,8 @@ export function RunnerChat({
           attachments: initialTurnAttachments,
           slideCreationCommand,
           researchCreationCommand,
+          scrapeCreationCommand,
+          parseCreationCommand,
           adCreationCommand,
         },
       ]);
@@ -11100,7 +11374,7 @@ export function RunnerChat({
           body: {
             content: visibleTaskText || taskText,
             ...(executionTaskText !== (visibleTaskText || taskText) ? { executionContent: executionTaskText } : {}),
-            ...(options?.slideCreationCommand || options?.researchCreationCommand || options?.adCreationCommand
+            ...(options?.slideCreationCommand || options?.researchCreationCommand || options?.scrapeCreationCommand || options?.parseCreationCommand || options?.adCreationCommand
               ? {
                   messageMetadata: {
                     ...(options?.slideCreationCommand
@@ -11116,6 +11390,22 @@ export function RunnerChat({
                           researchCreationCommand: {
                             action: "research" as const,
                             label: buildRunnerResearchCreationLabel(),
+                          },
+                        }
+                      : {}),
+                    ...(options?.scrapeCreationCommand
+                      ? {
+                          scrapeCreationCommand: {
+                            action: "scrape" as const,
+                            label: buildRunnerScrapeCreationLabel(),
+                          },
+                        }
+                      : {}),
+                    ...(options?.parseCreationCommand
+                      ? {
+                          parseCreationCommand: {
+                            action: "parse" as const,
+                            label: buildRunnerParseCreationLabel(),
                           },
                         }
                       : {}),
@@ -11317,6 +11607,8 @@ export function RunnerChat({
           displayPromptOverride: normalizedDisplayPrompt,
           slideCreationCommand: externalRunRequest.slideCreationCommand || null,
           researchCreationCommand: externalRunRequest.researchCreationCommand || null,
+          scrapeCreationCommand: externalRunRequest.scrapeCreationCommand || null,
+          parseCreationCommand: externalRunRequest.parseCreationCommand || null,
           adCreationCommand: externalRunRequest.adCreationCommand || null,
         });
       } catch (error) {
@@ -14478,6 +14770,8 @@ export function RunnerChat({
       const skillCreationCommand = stagedSkillCreationCommand;
       const slideCreationCommand = stagedSlideCreationCommand;
       const researchCreationCommand = stagedResearchCreationCommand;
+      const scrapeCreationCommand = stagedScrapeCreationCommand;
+      const parseCreationCommand = stagedParseCreationCommand;
       const adCreationCommand = stagedAdCreationCommand ? buildStagedRunnerAdCreationCommand(adCreationSettings) : null;
       if (stagedThreadContextCommand) {
         const stagedPrompt = textareaAllowsPromptAfterStagedCommand ? taskText : "";
@@ -14593,6 +14887,8 @@ export function RunnerChat({
             attachments: queuedTurnAttachments,
             slideCreationCommand,
             researchCreationCommand,
+            scrapeCreationCommand,
+            parseCreationCommand,
             adCreationCommand,
           },
         ]);
@@ -14610,6 +14906,8 @@ export function RunnerChat({
             skillCreationCommand,
             slideCreationCommand,
             researchCreationCommand,
+            scrapeCreationCommand,
+            parseCreationCommand,
             adCreationCommand,
           },
         ]);
@@ -14625,6 +14923,8 @@ export function RunnerChat({
           skillCreationCommand,
           slideCreationCommand,
           researchCreationCommand,
+          scrapeCreationCommand,
+          parseCreationCommand,
           adCreationCommand,
         });
       ensuredThreadId = execution.threadId;
@@ -14668,6 +14968,8 @@ export function RunnerChat({
           skillCreationCommand: nextQueuedMessage.skillCreationCommand,
           slideCreationCommand: nextQueuedMessage.slideCreationCommand,
           researchCreationCommand: nextQueuedMessage.researchCreationCommand,
+          scrapeCreationCommand: nextQueuedMessage.scrapeCreationCommand,
+          parseCreationCommand: nextQueuedMessage.parseCreationCommand,
           adCreationCommand: nextQueuedMessage.adCreationCommand,
         });
       } catch (error) {
@@ -14690,7 +14992,7 @@ export function RunnerChat({
   function handleInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
     const nextValue = event.target.value;
     setInputSelectionStart(event.target.selectionStart ?? nextValue.length);
-    if (!stagedThreadContextCommand && !stagedResourceCreationCommand && !stagedAgentCreationCommand && !stagedSkillCreationCommand && !stagedSlideCreationCommand && !stagedResearchCreationCommand && !stagedAdCreationCommand && !stagedBacklogCommand) {
+    if (!stagedThreadContextCommand && !stagedResourceCreationCommand && !stagedAgentCreationCommand && !stagedSkillCreationCommand && !stagedSlideCreationCommand && !stagedResearchCreationCommand && !stagedScrapeCreationCommand && !stagedParseCreationCommand && !stagedAdCreationCommand && !stagedBacklogCommand) {
       const autoStageCommand = parseAutoStageThreadContextCommand(nextValue);
       if (autoStageCommand) {
         stageThreadContextCommand(autoStageCommand.action, autoStageCommand.prompt);
@@ -14709,6 +15011,16 @@ export function RunnerChat({
       const autoStageResearchCreationCommand = parseAutoStageResearchCreationCommand(nextValue);
       if (autoStageResearchCreationCommand) {
         stageResearchCreationCommand(autoStageResearchCreationCommand.prompt);
+        return;
+      }
+      const autoStageScrapeCreationCommand = parseAutoStageScrapeCreationCommand(nextValue);
+      if (autoStageScrapeCreationCommand) {
+        stageScrapeCreationCommand(autoStageScrapeCreationCommand.prompt);
+        return;
+      }
+      const autoStageParseCreationCommand = parseAutoStageParseCreationCommand(nextValue);
+      if (autoStageParseCreationCommand) {
+        stageParseCreationCommand(autoStageParseCreationCommand.prompt);
         return;
       }
       if (enableResourceCreationCommand) {
@@ -14789,6 +15101,16 @@ export function RunnerChat({
     if (event.key === "Backspace" && stagedResearchCreationCommand && input.length === 0) {
       event.preventDefault();
       setStagedResearchCreationCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedScrapeCreationCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedScrapeCreationCommand(null);
+      return;
+    }
+    if (event.key === "Backspace" && stagedParseCreationCommand && input.length === 0) {
+      event.preventDefault();
+      setStagedParseCreationCommand(null);
       return;
     }
     if (event.key === "Backspace" && stagedAdCreationCommand && input.length === 0) {
@@ -15845,6 +16167,7 @@ export function RunnerChat({
     if (skill.id === "pptx") return <LucideLayers className={className} strokeWidth={1.75} />;
     if (skill.id === "memory") return <LucideBrain className={className} strokeWidth={1.75} />;
     if (skill.id === "task_management") return <LucideListTodo className={className} strokeWidth={1.75} />;
+    if (skill.id === "email") return <LucideMail className={className} strokeWidth={1.75} />;
     if (skill.id === "computer_agents") {
       return <img src={RUNNER_TRANSPARENT_LOGO_URL} alt="" aria-hidden="true" draggable={false} className={className} style={{ objectFit: "contain" }} />;
     }
@@ -18157,6 +18480,18 @@ export function RunnerChat({
                       Icon: LucideTelescope,
                       label: "Research",
                     }
+                : turn.scrapeCreationCommand
+                  ? {
+                      className: "is-scrape",
+                      Icon: LucideGlobe,
+                      label: "Scrape",
+                    }
+                : turn.parseCreationCommand
+                  ? {
+                      className: "is-parse",
+                      Icon: LucideFileText,
+                      label: "Parse",
+                    }
                   : null;
               const RunModeLabelIcon = runModeLabelConfig?.Icon || null;
               const runModeLabel = runModeLabelConfig && RunModeLabelIcon ? (
@@ -19576,6 +19911,36 @@ export function RunnerChat({
                             <LucideTelescope className="tb-popup-icon" strokeWidth={1.75} />
                             <span className="tb-popup-label">Research</span>
                             <span className="tb-popup-value">/research</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row tb-popup-row-core-action"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              const prompt = currentInputRef.current || input;
+                              stageScrapeCreationCommand(prompt);
+                              setProjectTasksPopupOpen(false);
+                              focusComposerSoon();
+                            }}
+                          >
+                            <LucideGlobe className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">Scrape</span>
+                            <span className="tb-popup-value">/scrape</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row tb-popup-row-core-action"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              const prompt = currentInputRef.current || input;
+                              stageParseCreationCommand(prompt);
+                              setProjectTasksPopupOpen(false);
+                              focusComposerSoon();
+                            }}
+                          >
+                            <LucideFileText className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">Parse</span>
+                            <span className="tb-popup-value">/parse</span>
                           </button>
                         </div>
                       </div>

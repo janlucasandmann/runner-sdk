@@ -4864,6 +4864,7 @@ const html = `<!doctype html>
         border: 0;
         background: transparent;
         color: inherit;
+        font: inherit;
         text-align: left;
         cursor: pointer;
       }
@@ -8925,6 +8926,8 @@ const html = `<!doctype html>
       .playground-settings-page {
         height: 100%;
         min-height: 0;
+        display: flex;
+        flex-direction: column;
         padding: 0;
         background: transparent;
       }
@@ -8964,6 +8967,40 @@ const html = `<!doctype html>
         font-weight: 500;
         line-height: 1;
         letter-spacing: -0.01em;
+      }
+
+      .playground-settings-title-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 30px;
+      }
+
+      .playground-settings-back-button {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-settings-back-button:hover,
+      .playground-settings-back-button:focus-visible {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        outline: none;
+      }
+
+      .playground-settings-back-icon {
+        width: 15px;
+        height: 15px;
       }
 
       .playground-settings-list-body {
@@ -9045,8 +9082,34 @@ const html = `<!doctype html>
         color: rgba(255, 142, 142, 0.92);
       }
 
-      .playground-settings-detail-scroll {
-        gap: 18px;
+	      .playground-settings-detail-scroll {
+	        gap: 18px;
+	      }
+
+	      .playground-settings-overview-header {
+	        display: flex;
+	        flex-direction: column;
+	        gap: 0;
+	      }
+
+	      .playground-settings-overview-title.playground-environments-home-hero-title {
+	        margin-top: 12px;
+	        margin-bottom: 0;
+	      }
+
+	      .playground-settings-overview-tabs.playground-agents-overview-tabs {
+	        margin: 16px 0 0;
+	      }
+
+	      .playground-settings-page .playground-settings-detail-scroll {
+	        align-items: center;
+	      }
+
+      .playground-settings-page .playground-settings-detail-scroll > * {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin-left: auto;
+        margin-right: auto;
       }
 
       .playground-settings-detail-scroll.is-usage {
@@ -9055,10 +9118,6 @@ const html = `<!doctype html>
 
       .playground-settings-detail-scroll.is-usage::-webkit-scrollbar {
         display: none;
-      }
-
-      .playground-settings-detail-scroll.is-plans {
-        padding-top: 0;
       }
 
       .playground-settings-detail-stack {
@@ -10597,10 +10656,38 @@ const html = `<!doctype html>
         position: relative;
       }
 
+      .playground-settings-plans-overview-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.32fr);
+        gap: 24px;
+        align-items: stretch;
+      }
+
+      .playground-settings-plans-overview-section {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-settings-plans-overview-heading {
+        margin-top: 12px;
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
       .playground-settings-plans-budget-card {
         display: flex;
         flex-direction: column;
         gap: 18px;
+      }
+
+      .playground-settings-plans-overview-section .playground-settings-plans-budget-card {
+        min-height: 194px;
+        border-radius: 15px;
       }
 
       .playground-settings-plans-budget-card-top {
@@ -10614,7 +10701,8 @@ const html = `<!doctype html>
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
+        padding-top: 6px;
       }
 
       .playground-settings-plans-budget-period {
@@ -10628,9 +10716,9 @@ const html = `<!doctype html>
         display: flex;
         align-items: baseline;
         gap: 6px;
-        font-size: 14px;
+        font-size: 26px;
         line-height: 1;
-        font-weight: 400;
+        font-weight: 500;
         color: rgba(255, 255, 255, 0.94);
       }
 
@@ -10644,6 +10732,93 @@ const html = `<!doctype html>
       .playground-settings-plans-budget-reset {
         font-size: 12px;
         color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-settings-plans-budget-icon-button {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.88);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-settings-plans-budget-icon-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-settings-plans-budget-icon-button.is-plain {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-settings-plans-budget-icon-button.is-plain:hover {
+        background: transparent;
+      }
+
+      .playground-settings-plans-budget-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: auto;
+      }
+
+      .playground-settings-plans-budget-action {
+        min-height: 40px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.9);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 400;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-settings-plans-budget-action:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-settings-plans-budget-action.is-primary {
+        border-color: transparent;
+        background: rgba(255, 255, 255, 0.94);
+        color: #050505;
+      }
+
+      .playground-settings-plans-budget-action.is-primary:hover {
+        background: #fff;
+        color: #050505;
+      }
+
+      .playground-settings-plans-budget-action-badge {
+        min-height: 22px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        line-height: 1;
       }
 
       .playground-settings-plans-budget-breakdown {
@@ -10704,9 +10879,13 @@ const html = `<!doctype html>
       }
 
       .playground-settings-plans-budget-card .playground-settings-usage-balance-track {
-        height: 16px;
+        height: 12px;
         border-radius: 5px;
         background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-settings-plans-budget-actions .playground-settings-plans-budget-icon-button.is-trailing {
+        margin-left: auto;
       }
 
       .playground-settings-plans-budget-card .playground-settings-usage-balance-fill,
@@ -10718,6 +10897,50 @@ const html = `<!doctype html>
       .playground-settings-plans-add-more-button.playground-environments-action-button {
         border-radius: 999px !important;
         background: transparent;
+      }
+
+      .playground-settings-plans-quick-links-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-settings-plans-quick-link {
+        min-width: 0;
+        min-height: 56px;
+        padding: 0 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.94);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 400;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-settings-plans-quick-link:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.075);
+        color: #fff;
+      }
+
+      .playground-settings-plans-quick-link-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .playground-settings-plans-quick-link-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .playground-settings-plans-resource-cap-section {
@@ -12001,6 +12224,19 @@ const html = `<!doctype html>
         color: rgba(252, 165, 165, 0.98);
       }
 
+      .playground-settings-account-shell.is-wide .playground-settings-app-primary-button,
+      .playground-settings-account-shell.is-wide .playground-settings-app-secondary-button,
+      .playground-settings-account-shell.is-wide .playground-settings-choice-button,
+      .playground-settings-account-shell.is-wide .playground-settings-danger-button {
+        border-radius: 999px;
+      }
+
+      .playground-settings-account-shell.is-wide .playground-settings-app-primary-button,
+      .playground-settings-account-shell.is-wide .playground-settings-danger-button {
+        align-self: flex-start;
+        width: auto;
+      }
+
       .playground-settings-toggle-pill {
         min-height: 34px;
         padding: 0 12px;
@@ -12219,6 +12455,13 @@ const html = `<!doctype html>
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
+      .playground-settings-usage-period-header.is-chart-footer {
+        padding: 12px 0 0;
+        margin: 12px 0 0;
+        border-top: 0;
+        border-bottom: 0;
+      }
+
       .playground-settings-usage-period-heading {
         display: flex;
         align-items: center;
@@ -12252,7 +12495,7 @@ const html = `<!doctype html>
         min-height: 30px;
         padding: 0 10px;
         border: 0;
-        border-radius: 10px;
+        border-radius: 999px;
         background: transparent;
         color: rgba(255, 255, 255, 0.4);
         font-size: 12px;
@@ -12446,13 +12689,13 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         gap: 14px;
-        padding-top: 10px;
+        padding-top: 0;
       }
 
       .playground-settings-usage-resource-table-wrap .playground-settings-usage-card-header {
         margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 0;
+        border-top: 0;
       }
 
       .playground-settings-usage-resource-table-shell {
@@ -26632,7 +26875,8 @@ ${ENVIRONMENT_CHANGES_CSS}
 
       .playground-agents-page .playground-environments-home-metrics,
       .playground-agents-overview-page .playground-environments-home-metrics,
-      .playground-resources-page .playground-environments-home-metrics {
+      .playground-resources-page .playground-environments-home-metrics,
+      .playground-settings-page .playground-environments-home-metrics {
         margin-top: 0;
         margin-bottom: 0;
         grid-template-columns: minmax(0, 1fr);
@@ -26640,7 +26884,8 @@ ${ENVIRONMENT_CHANGES_CSS}
 
       .playground-agents-page .playground-environments-home-metrics > .playground-tasks-detail-facts,
       .playground-agents-overview-page .playground-environments-home-metrics > .playground-tasks-detail-facts,
-      .playground-resources-page .playground-environments-home-metrics > .playground-tasks-detail-facts {
+      .playground-resources-page .playground-environments-home-metrics > .playground-tasks-detail-facts,
+      .playground-settings-page .playground-environments-home-metrics > .playground-tasks-detail-facts {
         grid-column: 1 / -1;
         width: 100%;
         min-width: 0;
@@ -26648,7 +26893,8 @@ ${ENVIRONMENT_CHANGES_CSS}
 
       .playground-agents-page .playground-project-overview-summary-kpi,
       .playground-agents-overview-page .playground-project-overview-summary-kpi,
-      .playground-resources-page .playground-project-overview-summary-kpi {
+      .playground-resources-page .playground-project-overview-summary-kpi,
+      .playground-settings-page .playground-project-overview-summary-kpi {
         padding: 0;
         border: 0;
         border-radius: 0;
@@ -27723,6 +27969,72 @@ ${ENVIRONMENT_CHANGES_CSS}
       .playground-agents-overview-page .playground-environments-home-metrics .playground-database-overview-chart-block,
       .playground-resources-page .playground-environments-home-metrics .playground-database-overview-chart-block {
         overflow: hidden;
+      }
+
+      .playground-settings-page .playground-environments-home-metrics .playground-database-overview-chart-block {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: linear-gradient(to top, rgba(5, 24, 58, 0.5), rgba(5, 24, 58, 0.9));
+        overflow: hidden;
+      }
+
+      .playground-settings-page .playground-environments-home-metrics .playground-project-overview-chart-kpis {
+        background: rgba(0, 0, 0, 0.35);
+      }
+
+      .playground-settings-usage-top-chart {
+        width: 100%;
+      }
+
+      .playground-settings-usage-chart-kpis {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0;
+        padding: 0;
+      }
+
+      .playground-settings-page .playground-settings-usage-chart-kpi {
+        appearance: none;
+        min-height: 68px;
+        padding: 16px 20px 14px;
+        border: 0;
+        border-bottom: 1px solid transparent;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-settings-usage-chart-kpi.is-active {
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom-color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-settings-usage-chart-kpi:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.22);
+        outline-offset: -2px;
+      }
+
+      .playground-settings-usage-chart-panel {
+        padding-top: 12px;
+      }
+
+      .playground-settings-usage-chart-panel .playground-settings-usage-chart-frame {
+        margin-top: 6px;
+      }
+
+      .playground-settings-usage-chart-loading-frame {
+        height: 288px;
+        min-height: 288px;
+        box-sizing: border-box;
+        margin-top: 6px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
       }
 
       .playground-agents-page .playground-environments-home-metrics .playground-project-overview-chart-kpis,
@@ -32033,6 +32345,9 @@ ${ENVIRONMENT_CHANGES_CSS}
         .playground-settings-usage-secondary-grid {
           grid-template-columns: minmax(0, 1fr);
         }
+        .playground-settings-usage-chart-kpis {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
         .playground-settings-usage-period-header,
         .playground-settings-usage-period-heading,
         .playground-settings-usage-card-header,
@@ -32265,7 +32580,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Mic, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Mic, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -32432,6 +32747,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       const PLAYGROUND_GOOGLE_DRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg";
       const PLAYGROUND_ONEDRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/5/59/Microsoft_Office_OneDrive_%282019%E2%80%932025%29.svg";
       const PLAYGROUND_NOTION_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg";
+      const PLAYGROUND_GMAIL_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg";
       const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
       const PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM = "onboardingStep";
       const PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM = "showSubscriptionSuccess";
@@ -33191,6 +33507,15 @@ ${ENVIRONMENT_CHANGES_CSS}
             title: "Notion connected",
             copy: profile?.workspaceName || profile?.name || profile?.email || "Successfully connected",
             logoUrl: "https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg",
+          };
+        }
+
+        if (id === "gmail") {
+          return {
+            id: "gmail",
+            title: "Gmail connected",
+            copy: profile?.email || profile?.username || "Successfully connected",
+            logoUrl: PLAYGROUND_GMAIL_LOGO_URL,
           };
         }
 
@@ -35638,6 +35963,11 @@ ${ENVIRONMENT_CHANGES_CSS}
           label: "App Platform",
           description: "Create, connect, deploy, and debug web apps, functions, databases, and auth resources.",
         },
+        {
+          id: "email",
+          label: "Email",
+          description: "Search, read, summarize, and send email through the connected Gmail account.",
+        },
       ];
       const PLAYGROUND_RUNNER_SKILL_ID_ALIASES = {
         imageGeneration: "image_generation",
@@ -35669,6 +35999,9 @@ ${ENVIRONMENT_CHANGES_CSS}
         appPlatform: "app_platform",
         app_platform: "app_platform",
         "app-platform": "app_platform",
+        gmail: "email",
+        mail: "email",
+        email: "email",
       };
 
       function dedupePlaygroundAgentIds(ids) {
@@ -38514,6 +38847,10 @@ ${ENVIRONMENT_CHANGES_CSS}
 
       function getPlaygroundTaskConnectorSource(value) {
         return getPlaygroundTaskConnectorOption(value)?.source || "";
+      }
+
+      function getPlaygroundIntegrationProvider(value) {
+        return getPlaygroundTaskConnectorSource(value) || String(value || "").trim().toLowerCase();
       }
 
       function normalizePlaygroundTaskConnectorItem(item) {
@@ -42633,6 +42970,54 @@ ${ENVIRONMENT_CHANGES_CSS}
         const parts = normalizedPath.split("/").filter(Boolean);
         if (parts.length <= 1) return "";
         return parts.slice(0, -1).join("/");
+      }
+
+      function buildPlaygroundEnvironmentSearchRows(inventory, searchValue, options = {}) {
+        const normalizedSearchValue = String(searchValue || "").trim().toLowerCase();
+        if (!normalizedSearchValue) {
+          return [];
+        }
+
+        const entries = Array.isArray(inventory) ? inventory : [];
+        const filesOnly = options.filesOnly === true;
+        const matchingFolderPaths = new Set();
+
+        entries.forEach((entry) => {
+          if (!entry?.isFolder) return;
+          const path = normalizeHistoryPath(entry.path);
+          if (!path) return;
+          const name = String(entry.name || "").toLowerCase();
+          const normalizedPath = path.toLowerCase();
+          if (name.includes(normalizedSearchValue) || normalizedPath.includes(normalizedSearchValue)) {
+            matchingFolderPaths.add(path);
+          }
+        });
+
+        const matchesFolderContext = (path) => {
+          for (const folderPath of matchingFolderPaths) {
+            if (path.startsWith(folderPath + "/")) {
+              return true;
+            }
+          }
+          return false;
+        };
+
+        return sortPlaygroundEnvironmentEntries(
+          entries.filter((entry) => {
+            const path = normalizeHistoryPath(entry?.path);
+            if (!path) return false;
+
+            const name = String(entry.name || "").toLowerCase();
+            const normalizedPath = path.toLowerCase();
+            const directMatch = name.includes(normalizedSearchValue) || normalizedPath.includes(normalizedSearchValue);
+
+            if (filesOnly && entry.isFolder) {
+              return false;
+            }
+
+            return directMatch || (!entry.isFolder && matchesFolderContext(path));
+          })
+        ).map((entry) => ({ entry, level: 0, searchMatch: true }));
       }
 
       function getPlaygroundTopLevelSelectionPaths(paths) {
@@ -69329,6 +69714,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         topNavActionsPortalId = "",
         onResourcesHeaderChange,
         backRequestToken = 0,
+        overviewTabRequest = null,
       }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
@@ -69360,6 +69746,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const agentsObservabilityToolbarRef = useRef(null);
         const agentsModelsToolbarRef = useRef(null);
         const lastAppliedFocusedAgentSelectionTokenRef = useRef("");
+        const lastAppliedOverviewTabRequestRef = useRef("");
         const handledBackRequestTokenRef = useRef(backRequestToken);
         const [selectedAgentId, setSelectedAgentId] = useState(initialAgentId || "");
         const [agentDetailsById, setAgentDetailsById] = useState(() => {
@@ -69466,6 +69853,28 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             ? agentModelOptions
             : PLAYGROUND_AGENT_MODEL_OPTIONS
         ), [agentModelOptions]);
+
+        useEffect(() => {
+          const requestToken = String(overviewTabRequest?.token || "").trim();
+          if (!requestToken || lastAppliedOverviewTabRequestRef.current === requestToken) {
+            return;
+          }
+          lastAppliedOverviewTabRequestRef.current = requestToken;
+          const normalizedTab = String(overviewTabRequest?.tab || "").trim();
+          const nextTab = normalizedTab === "observability" || normalizedTab === "models" ? normalizedTab : "general";
+          selectedAgentIdRef.current = "";
+          setSelectedAgentId("");
+          setDraftAgent(null);
+          setToolbarPopover("");
+          setSearchPopupQuery("");
+          setAgentListActionMenuState(null);
+          setAgentActionsPopoverOpen(false);
+          setAgentComposerOpen(false);
+          setAgentsObservabilityToolbarPopover("");
+          setAgentsModelsToolbarPopover("");
+          setAgentsOverviewHomeTab(nextTab);
+          setIsHomeViewActive(true);
+        }, [overviewTabRequest]);
 
         async function flushQueuedAgentAutosave() {
           if (agentAutosaveInFlightRef.current) {
@@ -77037,6 +77446,45 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               },
             ],
           },
+          email: {
+            name: "Email",
+            description: "Search, read, summarize, and send email through the connected Gmail account.",
+            icon: "mail",
+            markdown: [
+              "# Email Skill",
+              "",
+              "This skill enables agents to search, read, summarize, and send email through the user's connected Gmail account.",
+              "",
+              "## Usage",
+              "",
+              "Invoke this skill when the user explicitly asks to:",
+              "- Search or read messages from their connected mailbox",
+              "- Summarize recent emails, conversations, receipts, or updates",
+              "- Extract structured data from email threads",
+              "- Draft or send an email on their behalf",
+              "",
+              "## Process",
+              "",
+              "1. Check that the mailbox is connected before reading or sending.",
+              "2. Use focused searches, labels, or date windows instead of broad inbox reads.",
+              "3. Use the built-in \`email.py\` helper instead of handwritten Gmail API calls.",
+              "4. Only send when the user explicitly requested it and use the helper confirmation flag.",
+              "",
+              "## Configuration",
+              "",
+              "- **CLI path**: \`/workspace/.claude/skills/email/scripts/email.py\`",
+              "- **Authentication**: The user must connect Gmail from the Integrations screen",
+              "- **Send access**: Sending requires an explicit user request and \`--confirm-send\`",
+            ].join("\\n"),
+            codeFiles: [
+              {
+                id: "email-main",
+                name: "email.py",
+                content: "# Email runtime is managed by the platform.",
+                language: "python",
+              },
+            ],
+          },
         }), []);
 
         function getPlaygroundSkillFamilyId(value) {
@@ -77062,6 +77510,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (normalizedLower.startsWith("skill-task-management-")) return "task_management";
           if (normalizedLower.startsWith("skill-app-platform-")) return "app_platform";
           if (normalizedLower.startsWith("skill-computer-agents-")) return "computer_agents";
+          if (normalizedLower.startsWith("skill-email-")) return "email";
 
           return normalizedLower;
         }
@@ -78113,6 +78562,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (systemSkillFamilyId === "task_management") return ListTodo;
           if (systemSkillFamilyId === "app_platform") return Server;
           if (systemSkillFamilyId === "computer_agents") return Cpu;
+          if (systemSkillFamilyId === "email") return Mail;
           return Layers;
         }
 
@@ -81344,14 +81794,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const taskEnvironmentFilePickerRows = useMemo(() => {
           const searchValue = taskEnvironmentFilePickerSearch.trim().toLowerCase();
           if (searchValue) {
-            return sortPlaygroundEnvironmentEntries(
-              taskEnvironmentFilePickerInventory.filter((entry) =>
-                !entry.isFolder && (
-                  String(entry.name || "").toLowerCase().includes(searchValue)
-                  || String(entry.path || "").toLowerCase().includes(searchValue)
-                )
-              )
-            ).map((entry) => ({ entry, level: 0, searchMatch: true }));
+            return buildPlaygroundEnvironmentSearchRows(taskEnvironmentFilePickerInventory, searchValue, {
+              filesOnly: true,
+            });
           }
           return buildPlaygroundEnvironmentVisibleRows(
             taskEnvironmentFilePickerTree,
@@ -81376,14 +81821,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const projectEnvironmentFilePickerRows = useMemo(() => {
           const searchValue = projectEnvironmentFilePickerSearch.trim().toLowerCase();
           if (searchValue) {
-            return sortPlaygroundEnvironmentEntries(
-              projectEnvironmentFilePickerInventory.filter((entry) =>
-                !entry.isFolder && (
-                  String(entry.name || "").toLowerCase().includes(searchValue)
-                  || String(entry.path || "").toLowerCase().includes(searchValue)
-                )
-              )
-            ).map((entry) => ({ entry, level: 0, searchMatch: true }));
+            return buildPlaygroundEnvironmentSearchRows(projectEnvironmentFilePickerInventory, searchValue, {
+              filesOnly: false,
+            });
           }
           return buildPlaygroundEnvironmentVisibleRows(
             projectEnvironmentFilePickerTree,
@@ -103396,6 +103836,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
               onConnect: connectorActions.oneDrive,
             },
             {
+              id: "gmail",
+              title: "Gmail",
+              copy: "Read inbox context and send follow-up emails from ACP.",
+              logoUrl: PLAYGROUND_GMAIL_LOGO_URL,
+              connected: Boolean(connectorStatuses.gmail?.connected),
+              onConnect: connectorActions.gmail,
+            },
+            {
               id: "notion",
               title: "Notion",
               copy: "Bring docs, wikis, and databases into planning and execution.",
@@ -104270,6 +104718,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [notionStatus, setNotionStatus] = useState(() => readCachedIntegrationStatus("notion"));
         const [googleDriveStatus, setGoogleDriveStatus] = useState(() => readCachedIntegrationStatus("google-drive"));
         const [oneDriveStatus, setOneDriveStatus] = useState(() => readCachedIntegrationStatus("one-drive"));
+        const [gmailStatus, setGmailStatus] = useState(() => readCachedIntegrationStatus("gmail"));
         const [notionDatabases, setNotionDatabases] = useState([]);
         const [settingsEmailStatus, setSettingsEmailStatus] = useState(null);
         const [settingsEmailLoading, setSettingsEmailLoading] = useState(false);
@@ -104332,6 +104781,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [settingsUsageSummary, setSettingsUsageSummary] = useState(createEmptySettingsUsageSummary);
         const [settingsUsageBreakdown, setSettingsUsageBreakdown] = useState([]);
         const [settingsUsageResourceItems, setSettingsUsageResourceItems] = useState([]);
+        const [settingsUsageAgentItems, setSettingsUsageAgentItems] = useState([]);
+        const [settingsUsageEnvironmentItems, setSettingsUsageEnvironmentItems] = useState([]);
+        const [settingsUsageChartTab, setSettingsUsageChartTab] = useState("overall");
         const [settingsUsageLoading, setSettingsUsageLoading] = useState(false);
         const [settingsBillingPeriodOffset, setSettingsBillingPeriodOffset] = useState(0);
         const [settingsInvoices, setSettingsInvoices] = useState([]);
@@ -104356,6 +104808,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [pluginsOverviewToolbarPopover, setPluginsOverviewToolbarPopover] = useState("");
         const [toolsView, setToolsView] = useState("plugins");
         const [resourcesView, setResourcesView] = useState("agents");
+        const [agentsOverviewTabRequest, setAgentsOverviewTabRequest] = useState(null);
         const [selectedPluginId, setSelectedPluginId] = useState("");
         const [toolsSkillsHeaderState, setToolsSkillsHeaderState] = useState({
           mode: "overview",
@@ -104499,7 +104952,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           { id: "memory", name: "Memory", enabled: true },
           { id: "task_management", name: "Task Management", enabled: true },
           { id: "app_platform", name: "App Platform", enabled: true },
-          { id: "computer_agents", name: "Computer Agents", enabled: true }
+          { id: "computer_agents", name: "Computer Agents", enabled: true },
+          { id: "email", name: "Email", enabled: true }
         ];
         const SESSION_API_KEY_SENTINEL = "__runner_playground_session__";
         const hasSessionAuth = sessionState.status === "authenticated";
@@ -105677,7 +106131,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setAccountMenuOpen(false);
           setNotificationsOpen(false);
           setActivePage("settings");
-          setSettingsSection(nextSectionId);
+          setSettingsSection(nextSectionId === "password" || nextSectionId === "delete" ? "profile" : nextSectionId);
         }
 
         function openPluginsPage() {
@@ -107331,6 +107785,32 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
         }
 
+        async function refreshGmailStatus(options = {}) {
+          const { clearPendingOnFailure = false } = options;
+          try {
+            const response = await fetch("/api/aios/gmail/user", {
+              method: "GET",
+              credentials: "include",
+            });
+
+            if (!response.ok) {
+              setGmailStatus({ connected: false });
+              if (clearPendingOnFailure) {
+                removePendingStatusIndicatorId("gmail");
+              }
+              return;
+            }
+
+            const data = await response.json();
+            setGmailStatus({ connected: !!data.connected, profile: data.profile });
+          } catch {
+            setGmailStatus({ connected: false });
+            if (clearPendingOnFailure) {
+              removePendingStatusIndicatorId("gmail");
+            }
+          }
+        }
+
         async function refreshNotionStatus(options = {}) {
           const { clearPendingOnFailure = false } = options;
           try {
@@ -107448,7 +107928,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [hasSessionAuth]);
 
         function getConnectorStatusRefresh(provider) {
-          const normalizedProvider = getPlaygroundTaskConnectorSource(provider) || "";
+          const normalizedProvider = getPlaygroundIntegrationProvider(provider);
           if (normalizedProvider === "github") {
             return refreshGithubStatus;
           }
@@ -107461,11 +107941,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (normalizedProvider === "one-drive") {
             return refreshOneDriveStatus;
           }
+          if (normalizedProvider === "gmail") {
+            return refreshGmailStatus;
+          }
           return null;
         }
 
         function isConnectorStatusConnected(provider) {
-          const normalizedProvider = getPlaygroundTaskConnectorSource(provider) || "";
+          const normalizedProvider = getPlaygroundIntegrationProvider(provider);
           if (normalizedProvider === "github") {
             return Boolean(githubStatus.connected);
           }
@@ -107477,6 +107960,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
           if (normalizedProvider === "one-drive") {
             return Boolean(oneDriveStatus.connected);
+          }
+          if (normalizedProvider === "gmail") {
+            return Boolean(gmailStatus.connected);
           }
           return false;
         }
@@ -107493,7 +107979,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function buildProjectConnectorBrowserAuthState(provider, options = {}) {
-          const normalizedProvider = getPlaygroundTaskConnectorSource(provider) || "";
+          const normalizedProvider = getPlaygroundIntegrationProvider(provider);
           const connectorBrowserContext = options?.connectorBrowser && typeof options.connectorBrowser === "object" && !Array.isArray(options.connectorBrowser)
             ? options.connectorBrowser
             : null;
@@ -107718,6 +108204,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
           removePendingStatusIndicatorId("one-drive");
           setOneDriveStatus({ connected: false });
           setStatusIndicatorItems((current) => current.filter((item) => item.id !== "one-drive"));
+        }
+
+        async function handleGmailAuthConnect(options = {}) {
+          return handleConnectorAuthConnect("gmail", "/api/aios/gmail/login", "Gmail", options);
+        }
+
+        async function handleGmailAuthDisconnect() {
+          await fetch("/api/aios/gmail/disconnect", {
+            method: "POST",
+            credentials: "include",
+          });
+          removePendingStatusIndicatorId("gmail");
+          setGmailStatus({ connected: false });
+          setStatusIndicatorItems((current) => current.filter((item) => item.id !== "gmail"));
         }
 
         async function handleNotionAuthConnect(options = {}) {
@@ -108714,6 +109214,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setSettingsUsageSummary(createEmptySettingsUsageSummary());
             setSettingsUsageBreakdown([]);
             setSettingsUsageResourceItems([]);
+            setSettingsUsageAgentItems([]);
+            setSettingsUsageEnvironmentItems([]);
             return;
           }
 
@@ -108744,6 +109246,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const resourceBreakdownUrl = hasRealAccess
               ? proxyBackendBase + "/costs/breakdown?groupBy=resource&" + usageParams.toString()
               : "/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/costs/breakdown?groupBy=resource&" + usageParams.toString();
+            const agentBreakdownUrl = hasRealAccess
+              ? proxyBackendBase + "/costs/breakdown?groupBy=agent&" + usageParams.toString()
+              : "/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/costs/breakdown?groupBy=agent&" + usageParams.toString();
+            const environmentBreakdownUrl = hasRealAccess
+              ? proxyBackendBase + "/costs/breakdown?groupBy=environment&" + usageParams.toString()
+              : "/api/aios/projects/" + encodeURIComponent(settingsProjectRoutingId) + "/costs/breakdown?groupBy=environment&" + usageParams.toString();
             const usageFetchOptions = hasRealAccess
               ? {
                   method: "GET",
@@ -108755,19 +109263,39 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   credentials: "include",
                   cache: "no-store",
                 };
-            const [summaryResponse, breakdownResponse, resourceBreakdownResponse] = await Promise.all([
+            const [
+              summaryResponse,
+              breakdownResponse,
+              resourceBreakdownResponse,
+              agentBreakdownResponse,
+              environmentBreakdownResponse,
+            ] = await Promise.all([
               fetch(summaryUrl, usageFetchOptions),
               fetch(sourceBreakdownUrl, usageFetchOptions),
               fetch(resourceBreakdownUrl, usageFetchOptions),
+              fetch(agentBreakdownUrl, usageFetchOptions),
+              fetch(environmentBreakdownUrl, usageFetchOptions),
             ]);
 
             const summaryData = await summaryResponse.json().catch(() => ({}));
             const breakdownData = await breakdownResponse.json().catch(() => ({}));
             const resourceBreakdownData = await resourceBreakdownResponse.json().catch(() => ({}));
+            const agentBreakdownData = await agentBreakdownResponse.json().catch(() => ({}));
+            const environmentBreakdownData = await environmentBreakdownResponse.json().catch(() => ({}));
 
             if (!summaryResponse.ok) {
               throw new Error(summaryData?.message || summaryData?.error || "Failed to load usage summary.");
             }
+
+            const normalizeUsageBreakdownEntry = (entry, fallbackId) => ({
+              ...entry,
+              id: String(entry?.id || entry?.resourceId || entry?.agentId || entry?.environmentId || entry?.source || entry?.name || fallbackId || "usage"),
+              name: entry?.name || entry?.displayName || entry?.resourceName || entry?.agentName || entry?.environmentName || entry?.source || entry?.id || fallbackId || "Unknown",
+              totalCT: readSettingsComputeTokens(entry, "totalCT", "totalCost"),
+              agentCT: readSettingsComputeTokens(entry, "agentCT", "agentCost"),
+              environmentCT: readSettingsComputeTokens(entry, "environmentCT", "environmentCost"),
+              threadCount: Number(entry?.threadCount ?? entry?.totalThreads ?? entry?.totalRuns ?? entry?.runCount ?? 0),
+            });
 
             const normalizedByDay = Array.isArray(summaryData?.byDay)
               ? summaryData.byDay.map((entry) => ({
@@ -108780,15 +109308,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
               : [];
             const normalizedSources = Array.isArray(breakdownData?.sources)
               ? breakdownData.sources
-                .map((entry) => ({
-                  ...entry,
-                  id: String(entry?.id || entry?.source || entry?.name || "unattributed"),
-                  name: entry?.name || entry?.displayName || entry?.source || entry?.id || "Unattributed",
-                  totalCT: readSettingsComputeTokens(entry, "totalCT", "totalCost"),
-                  agentCT: readSettingsComputeTokens(entry, "agentCT", "agentCost"),
-                  environmentCT: readSettingsComputeTokens(entry, "environmentCT", "environmentCost"),
-                  threadCount: Number(entry?.threadCount ?? entry?.totalThreads ?? entry?.totalRuns ?? entry?.runCount ?? 0),
-                }))
+                .map((entry) => normalizeUsageBreakdownEntry(entry, "unattributed"))
+                .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0)
+              : [];
+            const normalizedAgentItems = Array.isArray(agentBreakdownData?.agents)
+              ? agentBreakdownData.agents
+                .map((entry) => normalizeUsageBreakdownEntry(entry, "agent"))
+                .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0)
+              : [];
+            const normalizedEnvironmentItems = Array.isArray(environmentBreakdownData?.environments)
+              ? environmentBreakdownData.environments
+                .map((entry) => normalizeUsageBreakdownEntry(entry, "computer"))
                 .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0)
               : [];
             const normalizedResourceItems = Array.isArray(resourceBreakdownData?.resources)
@@ -108821,10 +109351,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
             });
             setSettingsUsageBreakdown(normalizedSources);
             setSettingsUsageResourceItems(normalizedResourceItems);
+            setSettingsUsageAgentItems(normalizedAgentItems);
+            setSettingsUsageEnvironmentItems(normalizedEnvironmentItems);
           } catch (error) {
             setSettingsUsageSummary(createEmptySettingsUsageSummary());
             setSettingsUsageBreakdown([]);
             setSettingsUsageResourceItems([]);
+            setSettingsUsageAgentItems([]);
+            setSettingsUsageEnvironmentItems([]);
           } finally {
             setSettingsUsageLoading(false);
           }
@@ -109887,8 +110421,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (projectComposerConnectorRestoreState && isConnectorStatusConnected(projectComposerConnectorRestoreState.provider)) {
             scheduleProjectComposerConnectorBrowserRestore(projectComposerConnectorRestoreState);
           }
-          PLAYGROUND_TASK_CONNECTOR_OPTIONS.forEach((option) => {
-            const source = option.source;
+          const integrationSourcesToRefresh = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => option.source).concat("gmail");
+          integrationSourcesToRefresh.forEach((source) => {
             const shouldRefresh =
               pendingIds.includes(source)
               || String(redirectState?.provider || "") === source
@@ -109949,7 +110483,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         useEffect(() => {
           const redirectState = readPlaygroundIntegrationRedirectState();
-          const redirectProvider = getPlaygroundTaskConnectorSource(redirectState?.provider) || "";
+          const redirectProvider = getPlaygroundIntegrationProvider(redirectState?.provider);
           console.info("[connector-debug] connector redirect state effect", {
             redirectProvider,
             providerConnected: isConnectorStatusConnected(redirectProvider),
@@ -110038,11 +110572,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
 
           clearPlaygroundIntegrationRedirectState();
-        }, [githubStatus.connected, googleDriveStatus.connected, notionStatus.connected, oneDriveStatus.connected]);
+        }, [githubStatus.connected, gmailStatus.connected, googleDriveStatus.connected, notionStatus.connected, oneDriveStatus.connected]);
 
         useEffect(() => {
           const anyConnectorConnected = Boolean(
             githubStatus.connected
+            || gmailStatus.connected
             || googleDriveStatus.connected
             || notionStatus.connected
             || oneDriveStatus.connected
@@ -110062,7 +110597,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (projectComposerRestoreState && isConnectorStatusConnected(projectComposerRestoreState.provider)) {
             scheduleProjectComposerConnectorBrowserRestore(projectComposerRestoreState);
           }
-        }, [githubStatus.connected, googleDriveStatus.connected, notionStatus.connected, oneDriveStatus.connected]);
+        }, [githubStatus.connected, gmailStatus.connected, googleDriveStatus.connected, notionStatus.connected, oneDriveStatus.connected]);
 
         useEffect(() => {
           if (isDemoMode) {
@@ -110113,6 +110648,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
         useEffect(() => {
           writeCachedIntegrationStatus("one-drive", oneDriveStatus);
         }, [oneDriveStatus]);
+
+        useEffect(() => {
+          writeCachedIntegrationStatus("gmail", gmailStatus);
+        }, [gmailStatus]);
 
         useEffect(() => {
           try {
@@ -110179,6 +110718,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setDismissedStatusIndicatorIds((current) => current.filter((id) => id !== "one-drive"));
           setStatusIndicatorItems((current) => current.some((item) => item.id === nextItem.id) ? current : [...current, nextItem]);
         }, [oneDriveStatus]);
+
+        useEffect(() => {
+          if (!gmailStatus.connected) {
+            return;
+          }
+
+          const pendingIds = readPendingStatusIndicatorIds();
+          if (!pendingIds.includes("gmail")) {
+            return;
+          }
+
+          const nextItem = buildStatusIndicatorItem("gmail", gmailStatus.profile);
+          removePendingStatusIndicatorId("gmail");
+          if (!nextItem) {
+            return;
+          }
+
+          setDismissedStatusIndicatorIds((current) => current.filter((id) => id !== "gmail"));
+          setStatusIndicatorItems((current) => current.some((item) => item.id === nextItem.id) ? current : [...current, nextItem]);
+        }, [gmailStatus]);
 
         useEffect(() => {
           if (activePage !== "settings" || !hasSessionAuth) {
@@ -110263,6 +110822,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           void loadSettingsDiscordStatus();
           void loadSettingsTelegramStatus();
           void refreshGithubStatus();
+          void refreshGmailStatus();
           void refreshGoogleDriveStatus();
           void refreshOneDriveStatus();
           void refreshNotionStatus();
@@ -110368,10 +110928,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return () => document.removeEventListener("mousedown", handlePluginsNavPopoverPointerDown);
         }, [activePage, pluginsNavPopover]);
 
-        useEffect(() => {
-          if (activePage !== "settings" || settingsSection !== "profile") {
-            return;
-          }
+	        useEffect(() => {
+	          if (activePage !== "settings" || (settingsSection !== "profile" && settingsSection !== "password" && settingsSection !== "delete")) {
+	            return;
+	          }
 
           setProfileDraft(buildProfileDraftFromSession());
           setProfileSaveState({ status: "idle", error: "" });
@@ -110835,11 +111395,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const connectedIntegrationCount = useMemo(() => {
           return [
             githubStatus.connected,
+            gmailStatus.connected,
             notionStatus.connected,
             googleDriveStatus.connected,
             oneDriveStatus.connected,
           ].filter(Boolean).length;
-        }, [githubStatus.connected, notionStatus.connected, googleDriveStatus.connected, oneDriveStatus.connected]);
+        }, [githubStatus.connected, gmailStatus.connected, notionStatus.connected, googleDriveStatus.connected, oneDriveStatus.connected]);
         const settingsCurrentTierId = useMemo(() => {
           const activeSubscriptionTier = settingsSubscriptions.find((subscription) =>
             ["active", "on_trial", "past_due"].includes(String(subscription?.status || "").toLowerCase())
@@ -114187,6 +114748,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ? (profile.email || profile.username || "Connected")
               : "Not connected";
           }
+          if (pluginId === "gmail") {
+            const profile = gmailStatus?.profile || {};
+            return gmailStatus?.connected
+              ? (profile.email || profile.username || "Connected")
+              : "Not connected";
+          }
           if (pluginId === "one-drive") {
             const profile = oneDriveStatus?.profile || {};
             return oneDriveStatus?.connected
@@ -114266,6 +114833,21 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   { id: "drive-app", title: "Google Drive", kind: "App", description: "Browse folders and files from connected Drive accounts.", iconKey: "app" },
                   { id: "drive-import", title: "File Import", kind: "Skill", description: "Bring selected Drive files into ACP tasks and threads.", iconKey: "skill" },
                   { id: "drive-access", title: "Access Manager", kind: "Flow", description: "Review and reconnect granted Drive permissions from ACP.", iconKey: "workflow" },
+                ],
+              };
+            case "gmail":
+              return {
+                categoryLabel: "Communication Integration",
+                functionsLabel: "Read, Draft, Send",
+                samplePrompt: "Find recent customer replies in Gmail, summarize what needs action, and draft a short follow-up email.",
+                whenToUse: "Use Gmail when agents need inbox context or should send email from your connected Google Workspace account.",
+                websiteUrl: "https://mail.google.com/",
+                termsUrl: "https://policies.google.com/terms",
+                privacyUrl: "https://policies.google.com/privacy",
+                features: [
+                  { id: "gmail-inbox", title: "Gmail", kind: "App", description: "Read message metadata and snippets from a connected Gmail inbox.", iconKey: "app" },
+                  { id: "gmail-context", title: "Inbox Context", kind: "Skill", description: "Use recent email conversations as context for agent work.", iconKey: "skill" },
+                  { id: "gmail-send", title: "Send Email", kind: "Action", description: "Send follow-up messages through the connected Gmail account.", iconKey: "workflow" },
                 ],
               };
             case "one-drive":
@@ -114420,6 +115002,25 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     { label: "Disconnect Google Drive", onClick: () => { void handleGoogleDriveAuthDisconnect(); }, tone: "destructive" },
                   ]
                 : [{ label: "Connect Google Drive", onClick: () => { void handleGoogleDriveAuthConnect(); }, tone: "primary" }],
+            },
+            {
+              id: "gmail",
+              label: "Gmail",
+              shortLabel: "GM",
+              logoUrl: PLAYGROUND_GMAIL_LOGO_URL,
+              description: "Read and send Gmail messages from ACP workflows.",
+              connected: Boolean(gmailStatus?.connected),
+              statusCopy: getPluginConnectionSummary("gmail"),
+              category: "Channels",
+              ...getPluginStaticDetail("gmail"),
+              capabilities: [
+                "Search and list Gmail messages for task context.",
+                "Summarize inbox threads before replying.",
+                "Send follow-up emails from the connected account.",
+              ],
+              actions: gmailStatus?.connected
+                ? [{ label: "Disconnect Gmail", onClick: () => { void handleGmailAuthDisconnect(); }, tone: "destructive" }]
+                : [{ label: "Connect Gmail", onClick: () => { void handleGmailAuthConnect(); }, tone: "primary" }],
             },
             {
               id: "one-drive",
@@ -115265,6 +115866,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const handleDisconnectAllPlugins = async () => {
             const hasConnectedPlugin = Boolean(
               githubStatus?.connected
+              || gmailStatus?.connected
               || googleDriveStatus?.connected
               || oneDriveStatus?.connected
               || notionStatus?.connected
@@ -115285,6 +115887,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
             if (googleDriveStatus?.connected) {
               await handleGoogleDriveAuthDisconnect();
+            }
+            if (gmailStatus?.connected) {
+              await handleGmailAuthDisconnect();
             }
             if (oneDriveStatus?.connected) {
               await handleOneDriveAuthDisconnect();
@@ -115526,6 +116131,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
               label: "GitHub",
               logoUrl: PLAYGROUND_GITHUB_LOGO_URL,
               copy: "Triages PRs, CI, and releases",
+            },
+            {
+              id: "gmail",
+              label: "Gmail",
+              logoUrl: PLAYGROUND_GMAIL_LOGO_URL,
+              copy: "Reads inbox context and drafts replies",
             },
             {
               id: "notion",
@@ -115818,33 +116429,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
 
         function renderSettingsPage() {
-          const effectiveSettingsSection = settingsSection === "webhooks" || settingsSection === "design"
-            ? "api"
+          const normalizedSettingsSection = settingsSection === "password" || settingsSection === "delete"
+            ? "profile"
             : settingsSection;
-          const navigationGroups = [
-            {
-              label: "Billing",
-              items: [
-                { id: "costs-plans", icon: DollarSign, label: "Plans & Budget", meta: "Subscription and account defaults" },
-                { id: "inference", icon: HardDrive, label: "Inference", meta: "Bring-your-own model endpoints" },
-                { id: "costs-records", icon: ReceiptText, label: "Billing Records", meta: "Invoices and payment history" },
-                { id: "costs-overview", icon: LayoutGrid, label: "Usage Details", meta: "Live runner project state" },
-              ],
-            },
-            {
-              label: "Account",
-              items: [
-                { id: "api", icon: Code, label: "API Keys", meta: "Manual override and backend routing" },
-                { id: "profile", icon: User, label: "Profile", meta: "Name, avatar, and account details" },
-                { id: "password", icon: Key, label: "Password", meta: "Shared sign-in and auth flow" },
-                { id: "delete", icon: Trash2, label: "Delete Account", meta: "Permanently remove this account", danger: true },
-              ],
-            },
-          ];
+          const effectiveSettingsSection = normalizedSettingsSection === "webhooks" || normalizedSettingsSection === "design"
+            ? "api"
+            : normalizedSettingsSection;
+	          const settingsTabs = [
+	            { id: "costs-plans", label: "Plans & Budget", title: "Plans & Budget" },
+	            { id: "costs-overview", label: "Usage", title: "Usage Details" },
+	            { id: "inference", label: "Inference", title: "Inference" },
+	            { id: "costs-records", label: "Billing", title: "Billing" },
+	            { id: "profile", label: "Profile", title: "Profile" },
+	            { id: "api", label: "API", title: "API" },
+	          ];
 
-          const selectedSection = navigationGroups
-            .flatMap((group) => group.items)
-            .find((item) => item.id === effectiveSettingsSection) || navigationGroups[0].items[0];
+	          const selectedSection = settingsTabs.find((item) => item.id === effectiveSettingsSection) || settingsTabs[0];
 
           const settingsDiscordAccountLabel = settingsDiscordStatus?.discordUsername || "";
           const settingsTelegramAccountLabel = getSettingsTelegramDisplayName(settingsTelegramStatus);
@@ -115894,9 +116494,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   : null;
                 const resetCopy = hasValidPeriodDates
                   ? (daysUntilRefresh <= 0
-                    ? "Plan credits refresh today."
-                    : "Plan credits refresh in " + daysUntilRefresh + " day" + (daysUntilRefresh === 1 ? "" : "s") + ".")
-                  : "Plan credits refresh with your next billing cycle.";
+                    ? tierInfo.name + " Plan, refreshing today."
+                    : tierInfo.name + " Plan, refreshing in " + daysUntilRefresh + " day" + (daysUntilRefresh === 1 ? "" : "s") + ".")
+                  : tierInfo.name + " Plan, refreshing with your next billing cycle.";
                 const hasPaidActiveSubscription = settingsSubscriptions.some((subscription) =>
                   ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase()) && !subscription.cancelled
                 );
@@ -116200,27 +116800,53 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   return createPortal(content, document.body);
                 };
 
-                const settingsQuickActionCards = [
+                const settingsQuickLinks = [
                   {
-                    id: "change-plan",
-                    title: "Change Plan",
-                    copy: "Compare the available subscription tiers and update your plan.",
-                    Icon: DollarSign,
-                    onClick: () => setSettingsChangePlanModalOpen(true),
+                    id: "create-api-key",
+                    title: "Create an API Key",
+                    Icon: Key,
+                    onClick: () => setSettingsSection("api"),
+                  },
+                  {
+                    id: "browse-models",
+                    title: "Browse Models",
+                    Icon: Grid3x3,
+                    onClick: () => {
+                      setResourcesView("agents");
+                      setResourcesHeaderState({
+                        mode: "overview",
+                        title: "",
+                      });
+                      setAgentsOverviewTabRequest({
+                        tab: "models",
+                        token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                      });
+                      setActivePage("resources");
+                    },
                   },
                   {
                     id: "configure-inference",
                     title: "Configure Inference",
-                    copy: "Connect your own inference endpoint and route compatible runs there.",
                     Icon: HardDrive,
                     onClick: () => setSettingsSection("inference"),
                   },
                   {
-                    id: "view-usage",
-                    title: "View Usage",
-                    copy: "Inspect current compute consumption, projects, and active workloads.",
-                    Icon: LayoutGrid,
-                    onClick: () => setSettingsSection("costs-overview"),
+                    id: "change-plan",
+                    title: "Change Plan",
+                    Icon: DollarSign,
+                    onClick: () => setSettingsChangePlanModalOpen(true),
+                  },
+                  {
+                    id: "api-reference",
+                    title: "API Reference",
+                    Icon: FileText,
+                    onClick: () => window.open("https://developers.computer-agents.com", "_blank", "noopener,noreferrer"),
+                  },
+                  {
+                    id: "pricing-overview",
+                    title: "Pricing Overview",
+                    Icon: ReceiptText,
+                    onClick: () => window.open("https://computer-agents.com/pricing", "_blank", "noopener,noreferrer"),
                   },
                 ];
 
@@ -116252,53 +116878,70 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 )
                               )
                             : null,
-                          React.createElement("section", { className: "playground-settings-plans-budget-card playground-computer-details-card" },
-                            React.createElement("div", { className: "playground-settings-plans-budget-card-top" },
-                              React.createElement("div", { className: "playground-settings-plans-budget-copy" },
-                                React.createElement("div", { className: "playground-settings-plans-budget-period" }, budgetPeriodLabel),
-                                React.createElement("div", { className: "playground-settings-plans-budget-value" },
-                                  React.createElement("span", null, formatSettingsComputeTokens(totalRemainingCT)),
-                                  React.createElement("span", { className: "playground-settings-plans-budget-value-separator" }, "/"),
-                                  React.createElement("span", { className: "playground-settings-plans-budget-value-total" }, formatSettingsComputeTokens(totalBudgetCT))
+                          React.createElement("div", { className: "playground-settings-plans-overview-grid" },
+                            React.createElement("section", { className: "playground-settings-plans-overview-section" },
+                              React.createElement("div", { className: "playground-settings-plans-overview-heading" }, "Usage"),
+                              React.createElement("div", { className: "playground-settings-plans-budget-card playground-computer-details-card" },
+                                React.createElement("div", { className: "playground-settings-plans-budget-card-top" },
+                                  React.createElement("div", { className: "playground-settings-plans-budget-copy" },
+                                    React.createElement("div", { className: "playground-settings-plans-budget-value" },
+                                      React.createElement("span", null, formatSettingsComputeTokens(totalRemainingCT))
+                                    )
+                                  ),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-settings-plans-budget-icon-button is-plain",
+                                    onClick: () => setSettingsSection("costs-overview"),
+                                    "aria-label": "View usage",
+                                  }, React.createElement(ChartNoAxesColumnIncreasing, { width: 16, height: 16, strokeWidth: 1.8 }))
+                                ),
+                                React.createElement("div", { className: "playground-settings-usage-balance-track" },
+                                  React.createElement("span", {
+                                    className: "playground-settings-usage-balance-fill is-neutral",
+                                    style: { width: String(remainingPercent) + "%" },
+                                  })
+                                ),
+                                React.createElement("div", { className: "playground-settings-plans-budget-reset" }, resetCopy),
+                                React.createElement("div", { className: "playground-settings-plans-budget-actions" },
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-settings-plans-budget-action is-primary",
+                                    onClick: () => setSettingsTopUpModalOpen(true),
+                                  },
+                                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
+                                    React.createElement("span", null, "Add credits")
+                                  ),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-settings-plans-budget-action",
+                                    onClick: () => setSettingsChangePlanModalOpen(true),
+                                  },
+                                    React.createElement(DollarSign, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                    React.createElement("span", null, "Change Plan")
+                                  ),
+                                  React.createElement("button", {
+                                    type: "button",
+                                    className: "playground-settings-plans-budget-icon-button is-plain is-trailing",
+                                    onClick: () => setSettingsSection("costs-records"),
+                                    "aria-label": "Billing records",
+                                  }, React.createElement(ReceiptText, { width: 15, height: 15, strokeWidth: 1.8 }))
                                 )
-                              ),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-environments-action-button playground-settings-plans-add-more-button",
-                                onClick: () => setSettingsTopUpModalOpen(true),
-                              }, "Add more")
+                              )
                             ),
-                            React.createElement("div", { className: "playground-settings-usage-balance-track" },
-                              React.createElement("span", {
-                                className: "playground-settings-usage-balance-fill is-neutral",
-                                style: { width: String(remainingPercent) + "%" },
-                              })
-                            ),
-                            React.createElement("div", { className: "playground-settings-plans-budget-reset" }, resetCopy),
-                            React.createElement("div", { className: "playground-settings-plans-budget-breakdown" },
-                              React.createElement("div", { className: "playground-settings-plans-budget-breakdown-row" },
-                                React.createElement("div", { className: "playground-settings-plans-budget-breakdown-main" },
-                                  React.createElement("div", { className: "playground-settings-plans-budget-breakdown-icon" },
-                                    React.createElement(Coins, { width: 14, height: 14, strokeWidth: 1.8 })
-                                  ),
-                                  React.createElement("div", null,
-                                    React.createElement("div", { className: "playground-settings-plans-budget-breakdown-title" }, "Remaining from Plan"),
-                                    React.createElement("div", { className: "playground-settings-plans-budget-breakdown-copy" }, "Included monthly credits from your " + tierInfo.name + " subscription.")
+                            React.createElement("section", { className: "playground-settings-plans-overview-section" },
+                              React.createElement("div", { className: "playground-settings-plans-overview-heading" }, "Quick Links"),
+                              React.createElement("div", { className: "playground-settings-plans-quick-links-grid" },
+                                settingsQuickLinks.map((link) =>
+                                  React.createElement("button", {
+                                    key: link.id,
+                                    type: "button",
+                                    className: "playground-settings-plans-quick-link",
+                                    onClick: link.onClick,
+                                  },
+                                    React.createElement(link.Icon, { className: "playground-settings-plans-quick-link-icon", strokeWidth: 1.8 }),
+                                    React.createElement("span", { className: "playground-settings-plans-quick-link-label" }, link.title)
                                   )
-                                ),
-                                React.createElement("div", { className: "playground-settings-plans-budget-breakdown-value" }, formatSettingsComputeTokens(remainingPlanCT))
-                              ),
-                              React.createElement("div", { className: "playground-settings-plans-budget-breakdown-row" },
-                                React.createElement("div", { className: "playground-settings-plans-budget-breakdown-main" },
-                                  React.createElement("div", { className: "playground-settings-plans-budget-breakdown-icon" },
-                                    React.createElement(Coins, { width: 14, height: 14, strokeWidth: 1.8 })
-                                  ),
-                                  React.createElement("div", null,
-                                    React.createElement("div", { className: "playground-settings-plans-budget-breakdown-title" }, "Remaining from fixed budget"),
-                                    React.createElement("div", { className: "playground-settings-plans-budget-breakdown-copy" }, hasTopUpBalance ? "Purchased one-time add-ons available on this account." : "No purchased add-on balance on this account yet.")
-                                  )
-                                ),
-                                React.createElement("div", { className: "playground-settings-plans-budget-breakdown-value" }, formatSettingsComputeTokens(topUpBalanceCT))
+                                )
                               )
                             )
                           ),
@@ -116393,27 +117036,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                         "aria-pressed": settingsBillingPreferences.emailAlerts,
                                       }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
                                     )
-                                  )
-                                )
-                              )
-                            ),
-                            React.createElement("section", { className: "playground-settings-plans-quick-actions" },
-                              React.createElement("div", { className: "playground-settings-plans-quick-actions-heading" }, "Quick Actions"),
-                              React.createElement("div", {
-                                  className: "playground-environments-home-card-grid playground-settings-plans-quick-actions-grid",
-                                },
-                                settingsQuickActionCards.map((card) =>
-                                  React.createElement("button", {
-                                      key: card.id,
-                                      type: "button",
-                                      className: "playground-environments-home-card playground-settings-plans-quick-action-card",
-                                      onClick: card.onClick,
-                                    },
-                                    React.createElement("div", { className: "playground-environments-home-card-visual" },
-                                      React.createElement(card.Icon, { className: "playground-environments-home-card-icon", strokeWidth: 1.8 })
-                                    ),
-                                    React.createElement("div", { className: "playground-environments-home-card-title" }, card.title),
-                                    React.createElement("div", { className: "playground-environments-home-card-copy" }, card.copy)
                                   )
                                 )
                               )
@@ -116922,7 +117544,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     },
                     {
                       id: "runtime",
-                      label: "Computers & Resources",
+                      label: "Computers",
                       color: "rgb(103,80,255)",
                       values: dailyData.map((day) => day.runtimeCT),
                     },
@@ -116935,35 +117557,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       values: resourceResidualSeries,
                     });
                   }
-
-                  const sourceChartPalette = [
-                    "rgb(91, 95, 255)",
-                    "rgb(140, 123, 255)",
-                    "rgb(36, 198, 205)",
-                    "rgb(140, 227, 255)",
-                    "rgb(255, 255, 255)",
-                    "rgb(148, 163, 184)",
-                  ];
-                  const visibleSourceItems = sourceItems.length <= 5 ? sourceItems : sourceItems.slice(0, 4);
-                  const remainingSourceCT = sourceItems.length <= 5
-                    ? 0
-                    : sourceItems.slice(4).reduce((sum, item) => sum + Number(item.totalCT || 0), 0);
-                  const donutItems = [
-                    ...visibleSourceItems.map((item, index) => ({
-                      id: item.id,
-                      label: item.displayName || item.name || item.id || "Unattributed",
-                      value: Number(item.totalCT || 0),
-                      color: sourceChartPalette[index % sourceChartPalette.length],
-                    })),
-                    ...(remainingSourceCT > 0
-                      ? [{
-                          id: "other",
-                          label: "Other",
-                          value: remainingSourceCT,
-                          color: sourceChartPalette[visibleSourceItems.length % sourceChartPalette.length],
-                        }]
-                      : []),
-                  ].filter((item) => item.value > 0);
 
                   const averageCtPerThreadValues = dailyData.map((day) =>
                     day.threadCount > 0 ? Math.round(day.dailyCT / day.threadCount) : 0
@@ -116982,124 +117575,341 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       .filter((item) => item.totalCT > 0)
                       .sort((left, right) => right.totalCT - left.totalCT)
                     : [];
+	                  const normalizeUsageChartLabel = (value, fallback) => {
+	                    const label = String(value || fallback || "Unknown").trim();
+	                    if (label.length <= 22) {
+	                      return label;
+	                    }
+	                    return label.slice(0, 19).trimEnd() + "...";
+	                  };
+	                  const agentNameById = new Map(
+	                    (Array.isArray(realAgents) ? realAgents : [])
+	                      .map((agent) => [
+	                        String(agent?.id || "").trim(),
+	                        String(agent?.name || agent?.displayName || agent?.id || "").trim(),
+	                      ])
+	                      .filter(([id, name]) => id && name)
+	                  );
+	                  const environmentNameById = new Map(
+	                    (Array.isArray(realEnvironments) ? realEnvironments : [])
+	                      .map((environment) => [
+	                        String(environment?.id || "").trim(),
+	                        String(environment?.name || environment?.displayName || environment?.id || "").trim(),
+	                      ])
+	                      .filter(([id, name]) => id && name)
+	                  );
+	                  const resolveUsageEntityLabel = (item, lookupMap, fallbackLabel) => {
+	                    const candidateIds = [
+	                      item?.id,
+	                      item?.agentId,
+	                      item?.environmentId,
+	                      item?.resourceId,
+	                    ].map((value) => String(value || "").trim()).filter(Boolean);
+	                    for (const candidateId of candidateIds) {
+	                      const resolvedName = lookupMap.get(candidateId);
+	                      if (resolvedName) {
+	                        return resolvedName;
+	                      }
+	                    }
+	                    return item?.displayName || item?.name || fallbackLabel || "Usage";
+	                  };
+	                  const readUsageRowComponent = (item, component, options = {}) => {
+	                    const totalCT = Math.max(0, Number(item?.totalCT || 0));
+	                    const agentCT = Math.max(0, Number(item?.agentCT || 0));
+                    const environmentCT = Math.max(0, Number(item?.environmentCT || 0));
+                    if (component === "agent") {
+                      return agentCT > 0 ? agentCT : (options.fallbackToTotal === false ? 0 : totalCT);
+                    }
+                    if (component === "environment") {
+                      return environmentCT;
+                    }
+                    if (component === "resource") {
+                      return environmentCT > 0 ? environmentCT : totalCT;
+                    }
+                    if (component === "skill") {
+                      return agentCT > 0 ? agentCT : totalCT;
+                    }
+                    return totalCT;
+                  };
+                  const buildUsageRows = (items, fallbackLabel, options = {}) => (Array.isArray(items) ? items : [])
+	                    .map((item) => {
+	                      const component = options.component || "total";
+	                      const value = readUsageRowComponent(item, component, options);
+	                      const resolvedLabel = typeof options.resolveLabel === "function"
+	                        ? options.resolveLabel(item)
+	                        : (item?.displayName || item?.name || item?.id);
+	                      const agentCT = component === "agent" || component === "skill"
+	                        ? value
+	                        : Math.max(0, Number(item?.agentCT || 0));
+                      const environmentCT = component === "environment" || component === "resource"
+                        ? value
+                        : Math.max(0, Number(item?.environmentCT || 0));
+	                      return {
+	                        id: String(item?.id || item?.resourceId || item?.name || fallbackLabel || "usage"),
+	                        label: normalizeUsageChartLabel(resolvedLabel, fallbackLabel),
+	                        fullLabel: resolvedLabel || fallbackLabel || "Usage",
+	                        totalCT: value,
+	                        agentCT,
+	                        environmentCT,
+                        threadCount: Math.max(0, Number(item?.threadCount || 0)),
+                      };
+                    })
+                    .filter((item) => item.totalCT > 0 || item.threadCount > 0)
+                    .sort((left, right) => right.totalCT - left.totalCT);
+                  const buildUsageBreakdownSeries = (rows, options = {}) => {
+                    const inferenceValues = rows.map((row) => Math.max(0, Number(row.agentCT || 0)));
+                    const computerValues = rows.map((row) => Math.max(0, Number(row.environmentCT || 0)));
+                    const otherValues = rows.map((row) => Math.max(0, Number(row.totalCT || 0) - Number(row.agentCT || 0) - Number(row.environmentCT || 0)));
+                    return [
+                      {
+                        id: "inference",
+                        label: options.inferenceLabel || "Inference",
+                        color: "rgb(143,196,255)",
+                        values: inferenceValues,
+                      },
+                      {
+                        id: "computers",
+                        label: options.environmentLabel || "Computers",
+                        color: "rgb(103,80,255)",
+                        values: computerValues,
+                      },
+                      {
+                        id: "other",
+                        label: "Other Runtime",
+                        color: "rgb(94,234,212)",
+                        values: otherValues,
+                      },
+                    ].filter((entry) => entry.values.some((value) => Number(value || 0) > 0));
+                  };
+                  const getSkillUsageCategory = (item) => {
+                    const haystack = String([
+                      item?.id,
+                      item?.name,
+                      item?.displayName,
+                    ].filter(Boolean).join(" ")).toLowerCase();
+                    if (/(image|gpt-image|imagen|nanobanana|dall[-_ ]?e)/.test(haystack)) {
+                      return { id: "image_generation", label: "Image Generation" };
+                    }
+                    if (/(firecrawl|web[_ -]?search|scrape|crawl|parse|document)/.test(haystack)) {
+                      return { id: "web_search", label: "Web Search & Scraping" };
+                    }
+                    if (/(deep[_ -]?research|research)/.test(haystack)) {
+                      return { id: "deep_research", label: "Deep Research" };
+                    }
+                    if (/(mcp|tool|skill)/.test(haystack)) {
+                      return { id: "tools", label: "Tools" };
+                    }
+                    return { id: "other_skills", label: "Other Skills" };
+                  };
+                  const skillUsageMap = new Map();
+                  sourceItems.forEach((item) => {
+                    const category = getSkillUsageCategory(item);
+                    if (category.id === "other_skills") {
+                      return;
+                    }
+                    const existing = skillUsageMap.get(category.id) || {
+                      id: category.id,
+                      name: category.label,
+                      displayName: category.label,
+                      totalCT: 0,
+                      agentCT: 0,
+                      environmentCT: 0,
+                      threadCount: 0,
+                    };
+                    existing.totalCT += Number(item.totalCT || 0);
+                    existing.agentCT += Number(item.agentCT || 0) > 0 || Number(item.environmentCT || 0) > 0
+                      ? Number(item.agentCT || 0)
+                      : Number(item.totalCT || 0);
+                    existing.environmentCT += Number(item.environmentCT || 0);
+                    existing.threadCount += Number(item.threadCount || 0);
+                    skillUsageMap.set(category.id, existing);
+                  });
+                  resourceUsageRows.forEach((item) => {
+                    const kind = String(item?.kind || item?.resourceKind || item?.resourceType || "").trim().toLowerCase();
+                    if (kind !== "mcp") {
+                      return;
+                    }
+                    const existing = skillUsageMap.get("tools") || {
+                      id: "tools",
+                      name: "Tools",
+                      displayName: "Tools",
+                      totalCT: 0,
+                      agentCT: 0,
+                      environmentCT: 0,
+                      threadCount: 0,
+                    };
+                    const ctAmount = Number(item.agentCT || item.totalCT || 0);
+                    existing.totalCT += ctAmount;
+                    existing.agentCT += ctAmount;
+                    existing.threadCount += Number(item.threadCount || 0);
+                    skillUsageMap.set("tools", existing);
+                  });
+	                  const agentUsageRows = buildUsageRows(settingsUsageAgentItems, "Agent", {
+	                    component: "agent",
+	                    resolveLabel: (item) => resolveUsageEntityLabel(item, agentNameById, "Agent"),
+	                  });
+	                  const computerUsageRows = buildUsageRows(settingsUsageEnvironmentItems, "Computer", {
+	                    component: "environment",
+	                    fallbackToTotal: false,
+	                    resolveLabel: (item) => resolveUsageEntityLabel(item, environmentNameById, "Computer"),
+	                  });
+                  const resourceChartRows = buildUsageRows(
+                    resourceUsageRows.filter((item) => {
+                      const kind = String(item?.kind || item?.resourceKind || item?.resourceType || "").trim().toLowerCase();
+                      return !["llm", "thread_runtime", "computer", "mcp"].includes(kind);
+                    }),
+                    "Resource",
+                    { component: "resource" }
+                  );
+                  const skillUsageRows = buildUsageRows(Array.from(skillUsageMap.values()), "Skill", { component: "skill" });
+                  const getUsageSeriesMax = (labels, series) => Math.max(1, ...labels.map((_, index) =>
+                    series.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
+                  ));
+                  const buildUsageChartTab = (tab) => ({
+                    ...tab,
+                    yMax: getUsageSeriesMax(tab.labels, tab.series),
+                  });
+                  const usageChartTabs = [
+                    buildUsageChartTab({
+                      id: "overall",
+                      label: "Overall CT Usage",
+                      value: formatSettingsComputeTokens(totalUsedCT),
+                      title: "Overall CT Usage",
+                      labels: dailyLabels,
+                      series: resourceSeries,
+                      emptyText: "No usage in this period",
+                      ariaLabel: "Overall compute token usage by day",
+                    }),
+                    buildUsageChartTab({
+                      id: "agents",
+                      label: "Usage by Agents",
+                      value: formatSettingsComputeTokens(Number(safeTotals.agentCT || 0) || agentUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
+                      title: "Usage by Agents",
+                      labels: agentUsageRows.map((item) => item.label),
+                      series: buildUsageBreakdownSeries(agentUsageRows, { inferenceLabel: "Inference" }),
+                      emptyText: "No agent usage in this period",
+                      ariaLabel: "Compute token usage by agent",
+                    }),
+                    buildUsageChartTab({
+                      id: "computers",
+                      label: "Usage by Computers",
+                      value: formatSettingsComputeTokens(computerUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
+                      title: "Usage by Computers",
+                      labels: computerUsageRows.map((item) => item.label),
+                      series: buildUsageBreakdownSeries(computerUsageRows, { environmentLabel: "Computers" }),
+                      emptyText: "No computer usage in this period",
+                      ariaLabel: "Compute token usage by computer",
+                    }),
+                    buildUsageChartTab({
+                      id: "resources",
+                      label: "Usage by Resources",
+                      value: formatSettingsComputeTokens(resourceChartRows.reduce((sum, item) => sum + item.totalCT, 0)),
+                      title: "Usage by Resources",
+                      labels: resourceChartRows.map((item) => item.label),
+                      series: buildUsageBreakdownSeries(resourceChartRows, { environmentLabel: "Resources" }),
+                      emptyText: "No resource usage in this period",
+                      ariaLabel: "Compute token usage by resource",
+                    }),
+                    buildUsageChartTab({
+                      id: "skills",
+                      label: "Usage by Skills",
+                      value: formatSettingsComputeTokens(skillUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
+                      title: "Usage by Skills",
+                      labels: skillUsageRows.map((item) => item.label),
+                      series: buildUsageBreakdownSeries(skillUsageRows, { inferenceLabel: "Skills" }),
+                      emptyText: "No skill usage in this period",
+                      ariaLabel: "Compute token usage by skill",
+                    }),
+                  ];
+                  const activeUsageChart = usageChartTabs.find((tab) => tab.id === settingsUsageChartTab) || usageChartTabs[0];
+                  const renderSettingsUsagePeriodControls = (className) =>
+                    React.createElement("div", { className },
+                      React.createElement("div", { className: "playground-settings-usage-period-heading" },
+                        React.createElement("div", { className: "playground-settings-usage-app-period" },
+                          formatPeriodDate(periodStart) + " - " + formatPeriodDate(periodEnd)
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-settings-usage-nav" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-settings-usage-nav-button",
+                          onClick: () => setSettingsBillingPeriodOffset((current) => current - 1),
+                          title: "Previous period",
+                        }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-settings-usage-nav-current",
+                          onClick: () => setSettingsBillingPeriodOffset(0),
+                          disabled: settingsBillingPeriodOffset === 0,
+                        }, "Current"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-settings-usage-nav-button",
+                          onClick: () => setSettingsBillingPeriodOffset((current) => Math.min(0, current + 1)),
+                          disabled: settingsBillingPeriodOffset >= 0,
+                          title: "Next period",
+                        }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
+                      )
+                    );
 
                   return React.createElement("div", { className: "playground-settings-usage-app-shell" },
-                      React.createElement("div", { className: "playground-settings-usage-period-header" },
-                          React.createElement("div", { className: "playground-settings-usage-period-heading" },
-                            React.createElement("div", { className: "playground-settings-usage-app-period" },
-                              formatPeriodDate(periodStart) + " - " + formatPeriodDate(periodEnd)
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-settings-usage-nav" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-usage-nav-button",
-                              onClick: () => setSettingsBillingPeriodOffset((current) => current - 1),
-                              title: "Previous period",
-                            }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-usage-nav-current",
-                              onClick: () => setSettingsBillingPeriodOffset(0),
-                              disabled: settingsBillingPeriodOffset === 0,
-                            }, "Current"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-usage-nav-button",
-                              onClick: () => setSettingsBillingPeriodOffset((current) => Math.min(0, current + 1)),
-                              disabled: settingsBillingPeriodOffset >= 0,
-                              title: "Next period",
-                            }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-settings-usage-analytics-grid" },
-                          React.createElement("section", { className: "playground-settings-usage-chart-card" },
-                          React.createElement("div", { className: "playground-settings-usage-card-header" },
-                            React.createElement("div", null,
-                              React.createElement("div", { className: "playground-settings-usage-card-title" }, "Daily CT by Resource Type")
-                            )
-                          ),
-                          settingsUsageLoading
-                            ? React.createElement("div", { className: "playground-settings-loading-state" },
-                                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                              )
-                            : renderSettingsUsageMultiStackedChart({
-                                labels: dailyLabels,
-                                series: resourceSeries,
-                                yMax: Math.max(...dailyData.map((day) => day.dailyCT), 1),
-                                tickFormatter: formatSettingsAxisComputeTokens,
-                                tall: true,
-                                ariaLabel: "Daily compute token usage by resource type",
-                                }),
-                          React.createElement("div", {
-                            className: "playground-settings-usage-inline-legend",
-                            style: { justifyContent: "flex-start" },
-                          },
-                            resourceSeries.map((entry) =>
-                              React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
-                                React.createElement("span", {
-                                  className: "playground-settings-usage-legend-swatch",
-                                  style: { background: entry.color },
-                                }),
-                                React.createElement("span", null, entry.label)
-                              )
-                            )
-                          )
-                        ),
-                          React.createElement("section", { className: "playground-settings-usage-chart-card is-donut" },
-                            React.createElement("div", { className: "playground-settings-usage-card-header" },
-                              React.createElement("div", null,
-                                React.createElement("div", { className: "playground-settings-usage-card-title" }, "Usage by Source")
-                              )
-                            ),
-                            settingsUsageLoading
-                              ? React.createElement("div", { className: "playground-settings-loading-state" },
-                                  React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                        React.createElement("div", { className: "playground-settings-usage-top-chart playground-environments-home-metrics" },
+                          React.createElement("div", { className: "playground-tasks-detail-facts" },
+                            React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                              React.createElement("div", { className: "playground-database-overview" },
+                                React.createElement("div", { className: "playground-database-overview-chart-block playground-settings-usage-chart-block" },
+                                  React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-settings-usage-chart-kpis" },
+                                    usageChartTabs.map((tab) =>
+                                      React.createElement("button", {
+                                        key: tab.id,
+                                        type: "button",
+                                        className: "playground-project-overview-summary-kpi playground-settings-usage-chart-kpi" + (activeUsageChart.id === tab.id ? " is-active" : ""),
+                                        onClick: () => setSettingsUsageChartTab(tab.id),
+                                      },
+                                        React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                                          React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, tab.label)
+                                        ),
+                                        React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, tab.value)
+                                      )
+                                    )
+                                  ),
+                                  React.createElement("div", { className: "playground-settings-usage-chart-panel" },
+                                    React.createElement("div", { className: "playground-settings-usage-card-header" },
+                                      React.createElement("div", null,
+                                        React.createElement("div", { className: "playground-settings-usage-card-title" }, activeUsageChart.title)
+                                      )
+                                    ),
+                                    settingsUsageLoading
+                                      ? React.createElement("div", { className: "playground-settings-loading-state playground-settings-usage-chart-loading-frame" },
+                                          React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                                        )
+                                      : renderSettingsUsageMultiStackedChart({
+                                          labels: activeUsageChart.labels,
+                                          series: activeUsageChart.series,
+                                          yMax: activeUsageChart.yMax,
+                                          tickFormatter: formatSettingsAxisComputeTokens,
+                                          tall: true,
+                                          ariaLabel: activeUsageChart.ariaLabel,
+                                          emptyText: activeUsageChart.emptyText,
+                                        }),
+                                    React.createElement("div", {
+                                      className: "playground-settings-usage-inline-legend",
+                                      style: { justifyContent: "flex-start" },
+                                    },
+                                      activeUsageChart.series.map((entry) =>
+                                        React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
+                                          React.createElement("span", {
+                                            className: "playground-settings-usage-legend-swatch",
+                                            style: { background: entry.color },
+                                          }),
+                                          React.createElement("span", null, entry.label)
+                                        )
+                                      )
+                                    )
+                                  ),
+                                  renderSettingsUsagePeriodControls("playground-settings-usage-period-header is-chart-footer")
                                 )
-                              : renderSettingsUsageDonutChart({
-                                  items: donutItems,
-                                  centerLabel: "Total CT",
-                                  centerValue: formatSettingsComputeTokens(totalUsedCT),
-                                  ariaLabel: "Compute token usage by source",
-                                })
-                          )
-                        ),
-                        React.createElement("section", { className: "playground-settings-usage-chart-card" },
-                          React.createElement("div", { className: "playground-settings-usage-card-header" },
-                            React.createElement("div", null,
-                              React.createElement("div", { className: "playground-settings-usage-card-title" }, "Average CT per Thread")
-                            )
-                          ),
-                          settingsUsageLoading
-                            ? React.createElement("div", { className: "playground-settings-loading-state" },
-                                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
                               )
-                            : renderSettingsUsageMixedChart({
-                                labels: dailyLabels,
-                                barValues: averageCtPerThreadValues,
-                                lineValues: [],
-                                yMax: Math.max(maxAverageCtPerThread * 1.2, 5),
-                                tickFormatter: formatSettingsAxisComputeTokens,
-                                barColor: "rgb(143,196,255)",
-                                ariaLabel: "Average compute tokens per thread over time",
-                                emptyText: "No thread usage in this period",
-                              }),
-                          React.createElement("div", {
-                            className: "playground-settings-usage-inline-legend",
-                            style: { justifyContent: "flex-start" },
-                          },
-                            React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                              React.createElement("span", {
-                                className: "playground-settings-usage-legend-swatch",
-                                style: { background: "rgb(143,196,255)" },
-                              }),
-                              React.createElement("span", null, "Average CT / thread")
-                            ),
-                            React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                              React.createElement("span", null, String(safeTotals.totalThreads || 0) + " threads total")
-                            ),
-                            React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                              React.createElement("span", null, averageCtPerThreadOverall > 0 ? (averageCtPerThreadOverall + " CT avg") : "No threads yet")
                             )
                           )
                         ),
@@ -118290,17 +119100,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 )
               );
               break;
-            case "profile":
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                React.createElement("div", { className: "playground-settings-account-shell" },
-                  React.createElement("div", null,
-                    React.createElement("h3", { className: "playground-settings-records-title" }, "Profile"),
-                    React.createElement("p", { className: "playground-settings-records-subtitle" }, "Manage your account email, verification status, and email preferences")
-                  ),
-                  React.createElement("div", { className: "playground-settings-account-block" },
-                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "42rem" } },
-                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-profile-email-address" }, "Email address"),
-                      React.createElement("input", {
+	            case "profile":
+	              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+	                React.createElement("div", { className: "playground-settings-account-shell is-wide" },
+	                  React.createElement("div", { className: "playground-settings-account-block" },
+	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "42rem" } },
+	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-profile-email-address" }, "Email address"),
+	                      React.createElement("input", {
                         id: "settings-profile-email-address",
                         type: "email",
                         className: "playground-settings-input",
@@ -118385,19 +119191,114 @@ ${PROJECT_OVERVIEW_SCRIPT}
                       : null,
                     renderSettingsInlineStatus("error", settingsMarketingConsentError),
                     renderSettingsInlineStatus("success", settingsMarketingConsentSuccess),
-                    React.createElement("div", { className: "playground-settings-account-divider" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-settings-account-signout",
-                        onClick: handleSignOutFromComputerAgents,
-                      },
-                        React.createElement(LogOut, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Sign Out")
-                      )
-                    )
-                  )
-                )
-              );
+	                    React.createElement("div", { className: "playground-settings-account-divider" },
+	                      React.createElement("h3", { className: "playground-settings-records-title" }, "Password"),
+	                      React.createElement("p", { className: "playground-settings-records-subtitle" }, "Update your account password")
+	                    ),
+	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
+	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-current" }, "Current Password"),
+	                      React.createElement("input", {
+	                        id: "settings-password-current",
+	                        type: "password",
+	                        className: "playground-settings-input",
+	                        value: settingsPasswordForm.currentPassword,
+	                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, currentPassword: event.target.value })),
+	                        placeholder: "••••••••",
+	                      })
+	                    ),
+	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
+	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-new" }, "New Password"),
+	                      React.createElement("input", {
+	                        id: "settings-password-new",
+	                        type: "password",
+	                        className: "playground-settings-input",
+	                        value: settingsPasswordForm.newPassword,
+	                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, newPassword: event.target.value })),
+	                        placeholder: "••••••••",
+	                      })
+	                    ),
+	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
+	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-confirm" }, "Confirm New Password"),
+	                      React.createElement("input", {
+	                        id: "settings-password-confirm",
+	                        type: "password",
+	                        className: "playground-settings-input",
+	                        value: settingsPasswordForm.confirmPassword,
+	                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, confirmPassword: event.target.value })),
+	                        placeholder: "••••••••",
+	                      })
+	                    ),
+	                    renderSettingsInlineStatus("error", settingsPasswordError),
+	                    renderSettingsInlineStatus("success", settingsPasswordSuccess),
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-settings-app-primary-button",
+	                      disabled: settingsPasswordLoading || !settingsPasswordForm.currentPassword || !settingsPasswordForm.newPassword || !settingsPasswordForm.confirmPassword,
+	                      onClick: () => {
+	                        void handleSettingsPasswordChange();
+	                      },
+	                    }, settingsPasswordLoading
+	                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
+	                      : "Update Password"),
+	                    React.createElement("div", { className: "playground-settings-account-divider" },
+	                      React.createElement("h3", { className: "playground-settings-records-title" }, "Delete Account"),
+	                      React.createElement("p", { className: "playground-settings-records-subtitle" }, "Permanently remove the signed-in account and purge associated cloud data")
+	                    ),
+	                    renderSettingsNote(
+	                      "Warning",
+	                      React.createElement("span", null,
+	                        "This action permanently deletes threads, integrations, billing references, and account data. It cannot be undone."
+	                      ),
+	                      null,
+	                      { isDanger: true }
+	                    ),
+	                    renderSettingsBanner("error", settingsDeleteError),
+	                    React.createElement("div", { className: "playground-environments-summary-grid" },
+	                      renderSettingsSectionCard(
+	                        "Delete this account",
+	                        "Confirm the account password and type DELETE to continue.",
+	                        React.createElement("div", { className: "playground-settings-card-stack" },
+	                          React.createElement("div", { className: "playground-settings-field" },
+	                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-delete-confirm" }, "Type DELETE"),
+	                            React.createElement("input", {
+	                              id: "settings-delete-confirm",
+	                              className: "playground-settings-input playground-settings-input-danger",
+	                              value: settingsDeleteConfirmation,
+	                              onChange: (event) => setSettingsDeleteConfirmation(event.target.value),
+	                              placeholder: "DELETE",
+	                            })
+	                          ),
+	                          React.createElement("div", { className: "playground-settings-field" },
+	                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-delete-password" }, "Account Password"),
+	                            React.createElement("input", {
+	                              id: "settings-delete-password",
+	                              type: "password",
+	                              className: "playground-settings-input playground-settings-input-danger",
+	                              value: settingsDeletePassword,
+	                              onChange: (event) => setSettingsDeletePassword(event.target.value),
+	                              placeholder: "••••••••",
+	                            })
+	                          )
+	                        ),
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "playground-settings-danger-button",
+	                          disabled: settingsDeleteLoading,
+	                          onClick: () => {
+	                            void handleSettingsDeleteAccount();
+	                          },
+	                        }, settingsDeleteLoading ? "Deleting..." : "Delete My Account")
+	                      ),
+	                      renderSettingsSummaryCard("Account at Risk", [
+	                        { label: "Name", value: accountName || "Unknown account" },
+	                        { label: "Email", value: accountEmail || "No email on file" },
+	                        { label: "Plan", value: formatSubscriptionTier(settingsCurrentTierId) },
+	                        { label: "Project", value: activeProjectId || "No project selected" },
+	                      ])
+	                    )
+	                  )
+	                )
+	              );
               break;
             case "password":
               detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
@@ -118532,45 +119433,45 @@ ${PROJECT_OVERVIEW_SCRIPT}
               );
           }
 
-          return React.createElement("div", { className: "playground-settings-page" },
-            React.createElement("div", { className: "playground-settings-shell playground-environments-shell" },
-              React.createElement("aside", { className: "playground-environments-list-pane playground-settings-list-pane" },
-                React.createElement("div", { className: "playground-files-browser-header playground-environments-list-header" },
-                  React.createElement("div", { className: "playground-files-topbar" },
-                    React.createElement("div", { className: "playground-environments-list-title" }, "Settings")
-                  )
-                ),
-                React.createElement("div", { className: "playground-environments-list-body playground-settings-list-body" },
-                  navigationGroups.map((group) =>
-                    React.createElement("div", { key: group.label, className: "playground-settings-nav-group" },
-                      group.label
-                        ? React.createElement("div", { className: "playground-settings-nav-label" }, group.label)
-                        : null,
-                      group.items.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = selectedSection.id === item.id;
-                        return React.createElement("button", {
-                            key: item.id,
-                            type: "button",
-                            className: "playground-environments-list-item playground-settings-nav-item"
-                              + (isActive ? " is-active" : "")
-                              + (item.danger ? " is-danger" : ""),
-                            onClick: () => setSettingsSection(item.id),
-                          },
-                            React.createElement(Icon, { className: "playground-environments-list-item-icon", strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-environments-list-item-copy" },
-                              React.createElement("div", { className: "playground-environments-list-item-title" }, item.label)
-                            )
-                          );
-                      })
-                    )
-                  )
-                )
-              ),
-              React.createElement("section", { className: "playground-environments-detail" }, detailContent)
-            )
-          );
-        }
+	          const settingsHeader = React.createElement("div", { className: "playground-settings-overview-header" },
+	            React.createElement("div", { className: "playground-environments-home-hero-title playground-settings-overview-title" }, selectedSection.title),
+	            React.createElement("div", { className: "playground-agents-overview-tabs playground-resources-overview-tabs playground-settings-overview-tabs" },
+	              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+	                settingsTabs.map((tab) =>
+	                  React.createElement("button", {
+	                    key: tab.id,
+	                    type: "button",
+	                    className: "playground-project-overview-chart-tab" + (effectiveSettingsSection === tab.id ? " is-active" : ""),
+	                    onClick: () => setSettingsSection(tab.id),
+	                    "aria-pressed": effectiveSettingsSection === tab.id ? "true" : "false",
+	                  }, tab.label)
+	                )
+	              )
+	            )
+	          );
+	          const normalizeSettingsDetailNodes = (content) => {
+	            const nodes = React.Children.toArray(content?.type === React.Fragment ? content.props.children : content);
+	            const filteredNodes = nodes.filter((node) =>
+	              !String(node?.props?.className || "").includes("playground-settings-plans-navbar")
+	            );
+	            if (filteredNodes.length === 1) {
+	              const onlyNode = filteredNodes[0];
+	              if (String(onlyNode?.props?.className || "").includes("playground-settings-detail-scroll")) {
+	                return React.Children.toArray(onlyNode.props.children);
+	              }
+	            }
+	            return filteredNodes;
+	          };
+	          const settingsScrollClassName = "playground-environments-detail-scroll playground-settings-detail-scroll"
+	            + (effectiveSettingsSection === "costs-overview" ? " is-usage" : "");
+
+	          return React.createElement("div", { className: "playground-settings-page" },
+	            React.createElement("div", { className: settingsScrollClassName },
+	              settingsHeader,
+	              normalizeSettingsDetailNodes(detailContent)
+	            )
+	          );
+	        }
 
         useEffect(() => {
           if (!hasRealAccess) {
@@ -122312,10 +123213,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
         }
 
-        function renderNotificationMenu() {
-          if (!notificationsOpen) {
-            return null;
-          }
+	        function renderNotificationMenu() {
+	          if (!notificationsOpen) {
+	            return null;
+	          }
 
           return React.createElement("div", {
             className: "notification-menu-scrim",
@@ -122344,10 +123245,32 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 }, "Mark all as read")
               )
             )
-          );
-        }
+	          );
+	        }
 
-        function renderResourcesPageNav() {
+	        function renderSettingsPageNav() {
+	          return React.createElement("div", { className: "playground-content-nav playground-tools-navbar playground-settings-top-navbar" },
+	            React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tools-navbar-title" },
+	              React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+	                React.createElement("div", { className: "playground-content-title" }, "Settings")
+	              )
+	            ),
+	            React.createElement("div", { className: "playground-content-nav-center" }),
+	            React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tools-navbar-actions" },
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-content-menu-button" + (hasVisibleNotifications ? " has-notifications" : ""),
+	                "aria-label": "Notifications",
+	                "aria-expanded": notificationsOpen ? "true" : "false",
+	                onClick: () => setNotificationsOpen((current) => !current),
+	              },
+	                React.createElement(Bell, { className: "playground-content-menu-icon", strokeWidth: 1.8 })
+	              )
+	            )
+	          );
+	        }
+
+	        function renderResourcesPageNav() {
           const isAgentsView = activeResourcesView === "agents";
           const isComputersView = activeResourcesView === "computers";
           const isServersView = activeResourcesView === "servers";
@@ -122549,6 +123472,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   topNavActionsPortalId: "playground-resources-nav-actions",
                   onResourcesHeaderChange: setResourcesHeaderState,
                   backRequestToken: resourcesBackRequestToken,
+                  overviewTabRequest: agentsOverviewTabRequest,
                 })
               : hasDemoAccess
                 ? renderDemoFeaturePage("agents")
@@ -122899,12 +123823,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
               currentPlanId: settingsCurrentTierId,
               connectorStatuses: {
                 github: githubStatus,
+                gmail: gmailStatus,
                 googleDrive: googleDriveStatus,
                 oneDrive: oneDriveStatus,
                 notion: notionStatus,
               },
               connectorActions: {
                 github: handleGithubAuthConnect,
+                gmail: handleGmailAuthConnect,
                 googleDrive: handleGoogleDriveAuthConnect,
                 oneDrive: handleOneDriveAuthConnect,
                 notion: handleNotionAuthConnect,
@@ -122940,8 +123866,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           : accountMenuPhase === "exit"
             ? "account-menu-animate-up-out"
             : "";
-
-        return (
+	        return (
           React.createElement(React.Fragment, null,
             renderedPlaygroundOnboarding,
             renderedSubscriptionSuccessModal,
@@ -123135,27 +124060,29 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   )
                 )
               : null,
-            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") + (isAgentShellContext ? " is-agents-page" : "") + (isProjectThreadPage ? " is-project-thread-page" : "") + (showInitialThreadWelcome ? " is-initial-thread-page" : "") },
-              React.createElement("aside", { className: "playground-sidebar" + (sidebarOpen ? "" : " is-collapsed") },
-                React.createElement("div", {
-                  className: "playground-sidebar-panel",
-                  "aria-hidden": sidebarOpen ? "false" : "true",
-                }, renderExpandedSidebarContent()),
-                React.createElement("div", {
-                  className: "playground-sidebar-rail",
-                  "aria-hidden": sidebarOpen ? "true" : "false",
-                }, renderCollapsedSidebarRail())
-              ),
-              React.createElement("main", { className: "playground-main" },
-                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isResourcesSideDetailOpen ? " is-resources-side-detail-open" : "") },
-                  activePage === "tools"
-                    ? renderPluginsPageNav()
-                    : isResourcesPage
-                      ? renderResourcesPageNav()
-                    : showInitialThreadWelcome
-                      ? renderInitialThreadWelcomeNav()
-                    : activePage === "settings" || activePage === "files" || activePage === "tasks" || activePage === "calendar"
-                      ? null
+	            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") + (isAgentShellContext ? " is-agents-page" : "") + (isProjectThreadPage ? " is-project-thread-page" : "") + (showInitialThreadWelcome ? " is-initial-thread-page" : "") },
+	              React.createElement("aside", { className: "playground-sidebar" + (sidebarOpen ? "" : " is-collapsed") },
+	                React.createElement("div", {
+	                  className: "playground-sidebar-panel",
+	                  "aria-hidden": sidebarOpen ? "false" : "true",
+	                }, renderExpandedSidebarContent()),
+	                React.createElement("div", {
+	                  className: "playground-sidebar-rail",
+	                  "aria-hidden": sidebarOpen ? "true" : "false",
+	                }, renderCollapsedSidebarRail())
+	              ),
+	              React.createElement("main", { className: "playground-main" },
+	                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isResourcesSideDetailOpen ? " is-resources-side-detail-open" : "") },
+	                  activePage === "tools"
+	                    ? renderPluginsPageNav()
+	                    : isResourcesPage
+	                      ? renderResourcesPageNav()
+	                    : activePage === "settings"
+	                      ? renderSettingsPageNav()
+	                    : showInitialThreadWelcome
+	                      ? renderInitialThreadWelcomeNav()
+	                    : activePage === "files" || activePage === "tasks" || activePage === "calendar"
+	                      ? null
                     : React.createElement("div", { className: "playground-content-nav" },
                         React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle),
                         React.createElement("div", { className: "playground-content-nav-center" },
@@ -128451,6 +129378,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && url.pathname === "/api/aios/gmail/user") {
+    void proxyAiosJsonRequest(req, res, "/api/gmail/user", "GET");
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/aios/github/user") {
     void proxyAiosJsonRequest(req, res, "/api/github/user", "GET");
     return;
@@ -128617,6 +129549,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && url.pathname === "/api/aios/gmail/messages") {
+    void proxyAiosJsonRequest(req, res, "/api/gmail/messages", "GET");
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/aios/onedrive/files") {
     void proxyAiosJsonRequest(req, res, "/api/onedrive/files", "GET");
     return;
@@ -128731,6 +129668,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "POST" && url.pathname === "/api/aios/gmail/login") {
+    void proxyAiosJsonRequest(req, res, "/api/gmail/login", "POST");
+    return;
+  }
+
   if (req.method === "POST" && url.pathname === "/api/aios/github/login") {
     void proxyAiosJsonRequest(req, res, "/api/github/login", "POST");
     return;
@@ -128748,6 +129690,16 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "POST" && url.pathname === "/api/aios/google-drive/disconnect") {
     void proxyAiosJsonRequest(req, res, "/api/google-drive/disconnect", "POST");
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/aios/gmail/disconnect") {
+    void proxyAiosJsonRequest(req, res, "/api/gmail/disconnect", "POST");
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/aios/gmail/send") {
+    void proxyAiosJsonRequest(req, res, "/api/gmail/send", "POST");
     return;
   }
 
