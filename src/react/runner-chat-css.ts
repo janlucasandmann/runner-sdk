@@ -1059,6 +1059,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   margin-bottom: 0;
 }
 
+.tb-runner-chat .tb-turn-user:first-child {
+  padding-top: 12px;
+}
+
 .tb-runner-chat .tb-turn-user:not(:first-child) {
   padding-top: calc(var(--tb-user-turn-shell-gap) + var(--tb-user-turn-actions-reserved-space) - var(--tb-turn-gap));
 }

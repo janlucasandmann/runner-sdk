@@ -1,8 +1,14 @@
 export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-view {
+        position: relative;
+        isolation: isolate;
         width: min(100%, 56rem);
         margin: 0 auto;
         gap: 24px;
+      }
+
+      .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview:has(.playground-project-overview-view.is-rules) {
+        padding-bottom: 10px;
       }
 
       .playground-project-overview-hero-shell {
@@ -80,7 +86,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-top: 36px;
+        margin-top: 0;
         min-height: 40px;
       }
 
@@ -196,8 +202,19 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-summary-mission-button {
+        --playground-project-overview-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
         flex: 0 0 auto;
         margin-left: auto;
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        border: 0;
       }
 
       .playground-project-overview-summary-title-actions {
@@ -213,9 +230,29 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         margin-left: 0;
       }
 
+      .playground-project-overview-summary-mission-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-control-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-project-overview-summary-mission-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
       .playground-project-overview-summary-strategy-button {
         background: transparent;
-        border-color: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.9);
       }
 
@@ -416,18 +453,42 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-chart-card {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
         box-sizing: border-box;
         min-width: 0;
+        position: relative;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         gap: 12px;
         padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 0;
         border-radius: 15px;
-        background: rgba(255, 255, 255, 0.05);
+        background: transparent;
         -webkit-backdrop-filter: blur(50px);
         backdrop-filter: blur(50px);
+      }
+
+      .playground-project-overview-chart-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-project-overview-chart-card.is-donut {
@@ -678,17 +739,57 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-current-tasks-section .playground-plugins-search-shell,
       .playground-project-overview-threads-section .playground-plugins-search-shell,
       .playground-project-overview-files-section .playground-plugins-search-shell {
+        --playground-project-overview-search-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
         flex: 0 1 360px;
         width: min(360px, 100%);
         min-width: 0;
         max-width: 360px;
+        overflow: hidden;
+        border-radius: 999px;
+      }
+
+      .playground-project-overview-current-tasks-section .playground-plugins-search-shell,
+      .playground-project-overview-threads-section .playground-plugins-search-shell {
+        flex-basis: 260px;
+        width: min(260px, 100%);
+        max-width: 260px;
+      }
+
+      .playground-project-overview-current-tasks-section .playground-plugins-search-shell::before,
+      .playground-project-overview-threads-section .playground-plugins-search-shell::before,
+      .playground-project-overview-files-section .playground-plugins-search-shell::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-search-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-project-overview-current-tasks-section .playground-plugins-search,
       .playground-project-overview-threads-section .playground-plugins-search,
       .playground-project-overview-files-section .playground-plugins-search {
         position: relative;
+        z-index: 1;
         min-height: 32px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.05);
         font-size: 12px;
         -webkit-backdrop-filter: blur(50px);
         backdrop-filter: blur(50px);
@@ -697,7 +798,7 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       .playground-project-overview-current-tasks-section .playground-plugins-search-icon,
       .playground-project-overview-threads-section .playground-plugins-search-icon,
       .playground-project-overview-files-section .playground-plugins-search-icon {
-        z-index: 1;
+        z-index: 3;
       }
 
       .playground-project-overview-current-tasks-section .playground-files-control-button,
@@ -708,7 +809,41 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
 
       .playground-project-overview-toolbar-action,
       .playground-project-overview-current-tasks-see-all {
+        --playground-project-overview-action-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
         margin-left: auto;
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        border: 0;
+      }
+
+      .playground-project-overview-toolbar-action::before,
+      .playground-project-overview-current-tasks-see-all::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-action-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-project-overview-toolbar-action > *,
+      .playground-project-overview-current-tasks-see-all > * {
+        position: relative;
+        z-index: 1;
       }
 
       .playground-project-overview-empty-card {
@@ -764,13 +899,45 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-files-section {
+        --playground-project-overview-files-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
         margin-top: 12px;
         margin-bottom: 32px;
         padding: 20px 20px 22px;
+        border: 0;
         border-radius: 15px;
-        background: rgba(255, 255, 255, 0.035);
+        background: transparent;
         -webkit-backdrop-filter: blur(50px);
         backdrop-filter: blur(50px);
+      }
+
+      .playground-project-overview-files-section::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-files-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-project-overview-files-section > * {
+        position: relative;
+        z-index: 1;
       }
 
       .playground-project-overview-files-section > .playground-plugins-section-header {
@@ -1622,7 +1789,9 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-rules-tab {
-        min-height: max(560px, calc(100dvh - 220px));
+        position: relative;
+        min-height: 0;
+        padding-bottom: 0;
       }
 
       .playground-project-overview-strategy-tab .playground-tasks-detail-scroll,
@@ -1661,11 +1830,26 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 8px;
+        overflow: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-project-overview-rules-list::-webkit-scrollbar {
+        display: none;
       }
 
       .playground-project-overview-rules-empty {
         min-height: 360px;
         border-radius: 24px;
+        background: transparent !important;
+      }
+
+      .playground-project-overview-rules-tab .playground-tasks-empty.playground-project-overview-rules-empty {
+        background: transparent !important;
+      }
+
+      .playground-project-overview-rules-empty .playground-tasks-empty-title {
+        font-weight: 500;
       }
 
       .playground-project-overview-rule-item {
@@ -1778,11 +1962,14 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
       }
 
       .playground-project-overview-rules-composer-shell {
-        margin-top: auto;
-        margin-bottom: 10px;
-        position: sticky;
-        bottom: 10px;
-        z-index: 20;
+        position: fixed;
+        left: calc(var(--playground-shell-sidebar-width, 0px) + ((100vw - var(--playground-shell-sidebar-width, 0px)) / 2));
+        right: auto;
+        bottom: 15px;
+        width: min(56rem, calc(100vw - var(--playground-shell-sidebar-width, 0px) - 100px));
+        margin: 0;
+        transform: translateX(-50%);
+        z-index: 50;
       }
 
       .playground-project-overview-rules-runner.tb-runner-chat {
@@ -2434,7 +2621,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const activeProjectOverviewHomeTab = projectOverviewHomeTab === "strategy" || projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "files"
             ? projectOverviewHomeTab
             : "general";
-
           function renderProjectOverviewHomeTabs() {
             const tabs = [
 	              { id: "general", label: "General" },
@@ -4120,7 +4306,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	            );
 	          }
 
-	          return React.createElement("div", { className: "playground-tasks-view-section playground-project-overview-view" },
+	          return React.createElement("div", { className: "playground-tasks-view-section playground-project-overview-view is-" + activeProjectOverviewHomeTab },
             React.createElement("div", { className: "playground-project-overview-hero-shell" },
               React.createElement("section", { className: "playground-project-overview-summary-surface" },
                 React.createElement("div", { className: "playground-project-overview-summary-header" },
