@@ -1955,7 +1955,11 @@ const html = `<!doctype html>
       .playground-content-shell.is-resources-side-detail-open > .playground-content-nav,
       .playground-content-shell:has(.playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav,
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail) > .playground-content-nav {
-        padding-right: calc(5px + var(--playground-thread-task-detail-width));
+        padding-right: calc(6px + var(--playground-thread-task-detail-width));
+      }
+
+      .playground-content-shell.is-thread-side-detail-open > .playground-content-nav {
+        pointer-events: none;
       }
 
       .playground-content-title {
@@ -2287,6 +2291,10 @@ const html = `<!doctype html>
         overflow-x: auto;
       }
 
+      .playground-develop-home .playground-agents-overview-tabs.playground-project-overview-tabs {
+        margin-bottom: 0;
+      }
+
       .playground-develop-tab {
         min-height: 28px;
         padding: 0 0 6px;
@@ -2316,6 +2324,150 @@ const html = `<!doctype html>
       .playground-develop-server-metrics {
         width: 100%;
         margin-top: 0;
+      }
+
+      .playground-develop-server-metrics.playground-environments-home-metrics {
+        margin-top: 0;
+        gap: 10px;
+      }
+
+      .playground-develop-server-metrics-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        margin-bottom: 24px;
+        min-width: 0;
+      }
+
+      .playground-develop-server-metrics-resource-pill {
+        --playground-project-overview-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        min-height: 34px;
+        padding: 5px 12px 5px 6px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.18);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-develop-server-metrics-resource-pill::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-control-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-develop-server-metrics-resource-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .playground-develop-server-metrics-resource-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-develop-server-metrics-resource-pill svg {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-develop-server-metrics-add-button {
+        flex: 0 0 auto;
+      }
+
+      .playground-develop-api-keys-toolbar {
+        justify-content: space-between;
+      }
+
+      .playground-develop-api-keys-toolbar .playground-develop-server-metrics-add-button {
+        margin-left: auto;
+      }
+
+      .playground-develop-webhooks-section {
+        gap: 0;
+      }
+
+      .playground-develop-webhooks-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-left: auto;
+      }
+
+      .playground-develop-api-keys-scroll.playground-environments-detail-scroll {
+        padding: 0;
+      }
+
+      .playground-develop-server-metrics-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 500;
+      }
+
+      .playground-develop-server-metrics-title-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .playground-develop-server-metrics-menu-shell {
+        flex: 0 0 auto;
+      }
+
+      .playground-develop-server-metrics-menu-shell .playground-content-menu-button {
+        width: 30px;
+        height: 30px;
+      }
+
+      .playground-develop-server-metrics-menu-shell .playground-tasks-toolbar-popup-menu {
+        right: 0;
+        left: auto;
+        top: calc(100% + 8px);
+        min-width: 160px;
       }
 
       .playground-develop-home .playground-develop-server-metrics .playground-database-overview-chart-block {
@@ -2370,9 +2522,10 @@ const html = `<!doctype html>
       }
 
       .playground-develop-server-metrics-kpis.playground-settings-usage-chart-kpis {
-        width: 100%;
-        margin-top: 0;
-        margin-left: 0;
+        width: calc(100% + 40px);
+        margin-top: -20px;
+        margin-left: -20px;
+        margin-right: -20px;
         grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 0;
         padding: 0;
@@ -2696,7 +2849,317 @@ const html = `<!doctype html>
         color: #c9b4ff;
       }
 
+      .playground-develop-docs-quickstart-card {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        box-shadow: none;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-develop-docs-quickstart-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-develop-docs-quickstart-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-develop-docs-quickstart-inner {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        align-items: center;
+        gap: 32px;
+        padding: 28px;
+      }
+
+      .playground-develop-docs-quickstart-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+
+      .playground-develop-docs-quickstart-text {
+        max-width: 280px;
+        margin: 16px 0 0;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 2;
+        font-weight: 400;
+      }
+
+      .playground-develop-docs-quickstart-button {
+        appearance: none;
+        margin-top: 24px;
+        min-height: 34px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease;
+      }
+
+      .playground-develop-docs-quickstart-button:hover {
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-develop-docs-code-card {
+        min-width: 0;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .playground-develop-docs-code-toolbar {
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-develop-docs-code-tabs {
+        margin-left: 28px;
+        display: inline-flex;
+        align-items: center;
+        padding: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-develop-docs-code-tab {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        padding: 4px 10px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-develop-docs-code-tab:hover {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-develop-docs-code-tab.is-active {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+
+      .playground-develop-docs-code-copy {
+        appearance: none;
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.52);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-develop-docs-code-copy:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+      }
+
+      .playground-develop-docs-code-body {
+        margin: 0;
+        padding: 10px;
+        overflow-x: auto;
+        color: rgba(255, 255, 255, 0.82);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        line-height: 18px;
+        white-space: pre;
+      }
+
+      .playground-develop-docs-code-line {
+        display: block;
+        min-height: 18px;
+      }
+
+      .playground-develop-docs-code-line-number {
+        display: inline-block;
+        width: 22px;
+        margin-right: 10px;
+        color: #565656;
+        text-align: right;
+        user-select: none;
+      }
+
+      .playground-develop-docs-code-token.is-keyword {
+        color: #5dafff;
+      }
+
+      .playground-develop-docs-code-token.is-string {
+        color: #f0a36d;
+      }
+
+      .playground-develop-docs-code-token.is-identifier {
+        color: #35e8bb;
+      }
+
+      .playground-develop-docs-code-token.is-property {
+        color: #f185d2;
+      }
+
+      .playground-develop-docs-concepts {
+        margin-top: 24px;
+      }
+
+      .playground-develop-docs-concepts-header {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .playground-develop-docs-concepts-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+
+      .playground-develop-docs-concepts-copy {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 2;
+        font-weight: 400;
+      }
+
+      .playground-develop-docs-concepts-view-all {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+        cursor: pointer;
+        transition: color 160ms ease;
+      }
+
+      .playground-develop-docs-concepts-view-all:hover {
+        color: #fff;
+      }
+
+      .playground-develop-docs-concepts-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+      }
+
+      .playground-develop-docs-concept-card {
+        appearance: none;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        display: block;
+        cursor: pointer;
+      }
+
+      .playground-develop-docs-concept-art {
+        position: relative;
+        aspect-ratio: 1.7 / 1;
+        overflow: hidden;
+        border-radius: 15px;
+        background-size: cover;
+        background-position: center;
+      }
+
+      .playground-develop-docs-concept-art::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 56%);
+        opacity: 0.8;
+        pointer-events: none;
+      }
+
+      .playground-develop-docs-concept-art::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.16));
+        pointer-events: none;
+      }
+
+      .playground-develop-docs-concept-copy {
+        margin-top: 12px;
+      }
+
+      .playground-develop-docs-concept-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+
+      .playground-develop-docs-concept-description {
+        margin-top: 6px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 2;
+        font-weight: 400;
+      }
+
       .playground-develop-bottom-grid {
+        margin-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 24px;
         display: grid;
         grid-template-columns: minmax(280px, 0.68fr) minmax(0, 1fr);
         gap: 28px;
@@ -2713,7 +3176,7 @@ const html = `<!doctype html>
         margin: 0;
         font-size: 18px;
         line-height: 1.2;
-        font-weight: 600;
+        font-weight: 500;
         color: rgba(255, 255, 255, 0.96);
       }
 
@@ -2837,8 +3300,14 @@ const html = `<!doctype html>
         .playground-develop-header,
         .playground-develop-demo-card,
         .playground-develop-quickstart,
+        .playground-develop-docs-quickstart-inner,
+        .playground-develop-docs-concepts-grid,
         .playground-develop-bottom-grid {
           grid-template-columns: 1fr;
+        }
+
+        .playground-develop-docs-code-tabs {
+          margin-left: 0;
         }
 
         .playground-develop-demo-card {
@@ -3927,6 +4396,12 @@ const html = `<!doctype html>
         box-sizing: border-box;
         contain: paint;
         overflow: hidden;
+        transition: margin-right 280ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .playground-content-body.is-thread-task-detail-open,
+      .playground-content-body.is-thread-side-detail-open {
+        margin-right: calc(var(--playground-thread-task-detail-width) + 6px);
       }
 
       .playground-content-body.is-files-page,
@@ -3943,15 +4418,15 @@ const html = `<!doctype html>
       .playground-thread-task-drawer {
         position: absolute;
         top: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 12;
+        right: 6px;
+        bottom: 6px;
+        z-index: 120;
         width: var(--playground-thread-task-detail-width);
         min-width: 0;
         display: flex;
         flex-direction: column;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(0, 0, 0, 0.5);
+        border-left: 0;
+        background: transparent;
         opacity: 0;
         transform: translateX(100%);
         pointer-events: none;
@@ -3969,15 +4444,15 @@ const html = `<!doctype html>
       .playground-thread-subagent-drawer {
         position: absolute;
         top: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 12;
+        right: 6px;
+        bottom: 6px;
+        z-index: 120;
         width: var(--playground-thread-task-detail-width);
         min-width: 0;
         display: flex;
         flex-direction: column;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(0, 0, 0, 0.5);
+        border-left: 0;
+        background: transparent;
         opacity: 0;
         transform: translateX(100%);
         pointer-events: none;
@@ -3995,15 +4470,15 @@ const html = `<!doctype html>
       .playground-thread-preview-drawer {
         position: absolute;
         top: 0;
-        right: -6px;
-        bottom: 0;
-        z-index: 12;
-        width: calc(var(--playground-thread-task-detail-width) + 6px);
+        right: 6px;
+        bottom: 6px;
+        z-index: 120;
+        width: var(--playground-thread-task-detail-width);
         min-width: 0;
         display: flex;
         flex-direction: column;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(0, 0, 0, 0.5);
+        border-left: 0;
+        background: transparent;
         opacity: 0;
         transform: translateX(100%);
         pointer-events: none;
@@ -4034,7 +4509,7 @@ const html = `<!doctype html>
         width: 100%;
         height: 100%;
         border-left: 0;
-        background: rgba(0, 0, 0, 0.5);
+        background: transparent;
         box-shadow: none;
         transform: none;
         opacity: 1;
@@ -4044,8 +4519,27 @@ const html = `<!doctype html>
       .playground-thread-preview-drawer .tb-attachment-preview-drawer-header {
         height: 56px;
         min-height: 56px;
-        padding: 0 22px;
+        padding: 0 10px;
         box-sizing: border-box;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-drawer-header-icon-asset,
+      .playground-thread-preview-drawer .tb-attachment-preview-drawer-header-icon,
+      .playground-thread-subagent-drawer .tb-attachment-preview-drawer-header-icon-asset,
+      .playground-thread-subagent-drawer .tb-attachment-preview-drawer-header-icon {
+        display: none;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-drawer-header-copy,
+      .playground-thread-subagent-drawer .tb-attachment-preview-drawer-header-copy {
+        gap: 0;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-drawer-name,
+      .playground-thread-subagent-drawer .tb-attachment-preview-drawer-name,
+      .playground-thread-subagent-drawer .tb-subagent-detail-drawer-title {
+        font-size: 12px;
+        font-weight: 400;
       }
 
       .playground-thread-preview-drawer .tb-attachment-preview-drawer-body {
@@ -4055,10 +4549,55 @@ const html = `<!doctype html>
 
       .playground-thread-preview-drawer .tb-attachment-preview-drawer-body,
       .playground-thread-preview-drawer .tb-attachment-preview-pdf,
+      .playground-thread-preview-drawer .tb-attachment-preview-image-surface,
+      .playground-thread-preview-drawer .tb-attachment-preview-state,
       .playground-thread-preview-drawer .tb-attachment-preview-markdown-shell,
       .playground-thread-preview-drawer .tb-attachment-preview-text,
       .playground-thread-preview-drawer .tb-attachment-preview-docx-shell {
         background: transparent;
+      }
+
+      .playground-content-shell .playground-thread-preview-drawer .tb-runner-document-preview-host,
+      .playground-content-shell .playground-thread-preview-drawer .tb-runner-document-preview-host-inline,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-drawer,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-drawer-inline,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-drawer-header,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-drawer-body,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-code-shell,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-pdf,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-image-surface,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-state,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-markdown-shell,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-text,
+      .playground-content-shell .playground-thread-preview-drawer .tb-attachment-preview-docx-shell {
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-code-shell,
+      .playground-thread-subagent-drawer .tb-attachment-preview-code-shell {
+        height: 100%;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-code-shell .tb-log-card-code,
+      .playground-thread-subagent-drawer .tb-attachment-preview-code-shell .tb-log-card-code {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: 100% !important;
+      }
+
+      .playground-thread-preview-drawer .tb-attachment-preview-code-shell .tb-log-card-code > *,
+      .playground-thread-preview-drawer .tb-attachment-preview-code-shell .monaco-editor,
+      .playground-thread-preview-drawer .tb-attachment-preview-code-shell .overflow-guard,
+      .playground-thread-subagent-drawer .tb-attachment-preview-code-shell .tb-log-card-code > *,
+      .playground-thread-subagent-drawer .tb-attachment-preview-code-shell .monaco-editor,
+      .playground-thread-subagent-drawer .tb-attachment-preview-code-shell .overflow-guard {
+        height: 100% !important;
+        min-height: 0;
       }
 
       .playground-thread-subagent-drawer-host {
@@ -4075,7 +4614,7 @@ const html = `<!doctype html>
         display: flex;
         flex-direction: column;
         grid-template-rows: none;
-        background: transparent;
+        background: transparent !important;
       }
 
       .playground-thread-subagent-drawer-host.tb-runner-chat > .tb-subagent-detail-drawer {
@@ -4093,6 +4632,7 @@ const html = `<!doctype html>
         width: 100%;
         height: 100%;
         border-left: 0;
+        background: transparent;
         box-shadow: none;
         transform: none;
         opacity: 1;
@@ -4101,11 +4641,92 @@ const html = `<!doctype html>
 
       .playground-thread-subagent-drawer .tb-subagent-detail-drawer-header {
         min-height: 56px;
-        padding: 2px 28px 12px;
+        padding: 0 10px;
+        background: transparent;
       }
 
       .playground-thread-subagent-drawer .tb-subagent-detail-drawer-body {
-        padding: 0 26px 26px;
+        padding: 0 10px 10px;
+        background: transparent;
+      }
+
+      .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat > .tb-attachment-preview-drawer {
+        position: relative;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        z-index: auto;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        flex: 1 1 auto;
+        border-left: 0;
+        background: transparent;
+        box-shadow: none;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer {
+        position: relative;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        z-index: auto;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        flex: 1 1 auto;
+        border-left: 0;
+        background: transparent;
+        box-shadow: none;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .playground-thread-subagent-drawer .tb-attachment-preview-drawer-header {
+        height: 56px;
+        min-height: 56px;
+        padding: 0 10px;
+        border-bottom: 0;
+        background: transparent;
+        box-sizing: border-box;
+      }
+
+      .playground-thread-subagent-drawer .tb-attachment-preview-drawer-body,
+      .playground-thread-subagent-drawer .tb-attachment-preview-pdf,
+      .playground-thread-subagent-drawer .tb-attachment-preview-image-surface,
+      .playground-thread-subagent-drawer .tb-attachment-preview-state,
+      .playground-thread-subagent-drawer .tb-attachment-preview-markdown-shell,
+      .playground-thread-subagent-drawer .tb-attachment-preview-text,
+      .playground-thread-subagent-drawer .tb-attachment-preview-docx-shell {
+        background: transparent;
+      }
+
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat > .tb-attachment-preview-drawer,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat > .tb-subagent-detail-drawer,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat > .tb-runner-document-preview-host,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat > .tb-runner-document-preview-host-inline,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-runner-document-preview-host,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-runner-document-preview-host-inline,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-attachment-preview-drawer-header,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-attachment-preview-drawer-body,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-attachment-preview-code-shell,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-attachment-preview-pdf,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-attachment-preview-image-surface,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-attachment-preview-state,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-attachment-preview-markdown-shell,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-attachment-preview-text,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-attachment-preview-docx-shell,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-subagent-detail-drawer-header,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-subagent-detail-drawer-body,
+      .playground-content-shell .playground-thread-subagent-drawer .playground-thread-subagent-drawer-host.tb-runner-chat .tb-subagent-log-shell {
+        background: transparent !important;
+        box-shadow: none !important;
       }
 
       .playground-thread-task-drawer .playground-tasks-detail-scroll {
@@ -5994,7 +6615,7 @@ const html = `<!doctype html>
 
       .playground-content-body.is-thread-task-detail-open .playground-view-pane,
       .playground-content-body.is-thread-side-detail-open .playground-view-pane {
-        right: var(--playground-thread-task-detail-width);
+        right: 0;
       }
 
       .playground-view-pane.is-hidden {
@@ -13057,7 +13678,7 @@ const html = `<!doctype html>
         border-radius: 999px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         background: rgba(255, 255, 255, 0.03);
-        color: rgba(248, 113, 113, 0.95);
+        color: rgba(255, 255, 255, 0.94);
         transition: background 160ms ease, border-color 160ms ease, opacity 160ms ease;
       }
 
@@ -15980,7 +16601,7 @@ const html = `<!doctype html>
       }
 
       .playground-files-entry-icon.is-image {
-        color: #82b8ff;
+        color: rgba(255, 255, 255, 0.88);
       }
 
       .playground-files-entry-icon.is-code {
@@ -24288,11 +24909,14 @@ const html = `<!doctype html>
 
       .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail {
         border-left: 0;
+        background: transparent;
+        box-shadow: none;
       }
 
       .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail .playground-tasks-detail-navbar {
         min-height: 56px;
-        padding: 0 5px 0 0;
+        padding: 0 10px;
+        background: transparent;
         box-sizing: border-box;
       }
 
@@ -34583,7 +35207,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Mic, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
+      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, House, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Mic, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -36074,7 +36698,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       function getSettingsPlanFeatures(tierId, computeTokens) {
         const normalizedTierId = normalizeSettingsTierId(tierId) || "free";
         const usageIcon = SETTINGS_TIER_USAGE_ICONS[normalizedTierId] || Coins;
-        const usageMultiplier = Math.round(computeTokens / 150);
+        const usageMultiplier = Math.round(computeTokens / 100);
         const usageText = normalizedTierId === "free"
           ? computeTokens + " Compute Tokens included"
           : usageMultiplier + "x Usage (" + (computeTokens >= 1000
@@ -107576,6 +108200,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [threadTaskOpenRequest, setThreadTaskOpenRequest] = useState(null);
         const [threadSubagentDetailOpen, setThreadSubagentDetailOpen] = useState(false);
         const [threadDeepResearchDetailOpen, setThreadDeepResearchDetailOpen] = useState(false);
+        const [threadDocumentPreviewOpen, setThreadDocumentPreviewOpen] = useState(false);
         const [threadSubagentDetailHost, setThreadSubagentDetailHost] = useState(null);
         const handleThreadProjectRecordCommitted = useCallback((projectRecord) => {
           if (!projectRecord?.id) {
@@ -107708,6 +108333,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [resourcesServerKind, setResourcesServerKind] = useState("");
         const [developHomeSection, setDevelopHomeSection] = useState("overview");
         const [developServerMetricsChartTab, setDevelopServerMetricsChartTab] = useState("hosting-requests");
+        const [developAnalyticsMenuOpen, setDevelopAnalyticsMenuOpen] = useState(false);
+        const [developApiKeysMenuOpen, setDevelopApiKeysMenuOpen] = useState(false);
+        const [developQuickstartLanguage, setDevelopQuickstartLanguage] = useState("javascript");
         const [developServerOperationalMetrics, setDevelopServerOperationalMetrics] = useState(null);
         const [developServerOperationalMetricsLoading, setDevelopServerOperationalMetricsLoading] = useState(false);
         const [developServerOperationalMetricsError, setDevelopServerOperationalMetricsError] = useState("");
@@ -115773,6 +116401,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
               server,
               analytics: await readAnalyticsResponse("/servers/" + encodeURIComponent(server.id) + "/analytics"),
             })));
+            const activeServerKindCounts = activeServers.reduce((counts, server) => {
+              const kind = canonicalizePlaygroundServerKind(server?.kind);
+              counts[kind] = (counts[kind] || 0) + 1;
+              return counts;
+            }, {});
             serverAnalyticsResults.forEach(({ server, analytics }) => {
               const kind = canonicalizePlaygroundServerKind(server?.kind);
               const trafficBuckets = Array.isArray(analytics?.charts?.traffic24h)
@@ -115814,6 +116447,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
               labels,
               loadedAt: new Date().toISOString(),
               resourceCount: activeServers.length + activeDatabases.length,
+              resourceCounts: {
+                webApps: activeServerKindCounts.web_app || 0,
+                apis: activeServerKindCounts.api || 0,
+                functions: activeServerKindCounts.function || 0,
+                databases: activeDatabases.length,
+              },
               series: {
                 hostingRequests: buildSeries("hostingRequests"),
                 apiRequests: buildSeries("apiRequests"),
@@ -119066,47 +119705,30 @@ ${PROJECT_OVERVIEW_SCRIPT}
           );
 
           if (embedded) {
-            const embeddedHeaderActions = settingsSelectedTrigger
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button",
-                  onClick: () => {
-                    setSettingsSelectedTriggerId("");
-                    setSettingsShowTriggerSecret(false);
-                  },
-                }, React.createElement("span", null, "Back to List"))
-              : showEmbeddedListActions
-                ? React.createElement(React.Fragment, null,
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-header-icon-button is-plain",
-                      onClick: openSettingsTriggerComposer,
-                      title: "New webhook",
-                      "aria-label": "New webhook",
-                    },
-                      React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-header-icon-button is-plain",
-                      onClick: () => {
-                        void loadSettingsTriggers();
-                      },
-                      title: "Refresh",
-                      "aria-label": "Refresh",
-                    },
-                      React.createElement(RefreshCw, { width: 16, height: 16, strokeWidth: 1.8 })
-                    )
-                  )
-                : null;
             const shouldShowEmbeddedEmptyState = !settingsSelectedTrigger && !settingsTriggersLoading && settingsTriggers.length === 0;
-            return React.createElement("section", { className: "playground-plugins-section" },
-              React.createElement("div", { className: "playground-plugins-section-header" },
-                React.createElement("div", { className: "playground-plugins-section-copy" },
-                  React.createElement("h3", { className: "playground-plugins-section-title playground-tools-overview-heading" }, "Actions via Webhooks")
+            const webhookCountLabel = visibleTriggers.length === 1 ? "Webhook" : "Webhooks";
+            return React.createElement("section", { className: "playground-plugins-section playground-develop-webhooks-section" },
+              React.createElement("div", { className: "playground-develop-server-metrics-toolbar playground-develop-api-keys-toolbar playground-develop-webhooks-toolbar" },
+                React.createElement("div", { className: "playground-develop-server-metrics-resource-pill" },
+                  React.createElement("span", { className: "playground-develop-server-metrics-resource-count" }, String(visibleTriggers.length)),
+                  React.createElement("span", { className: "playground-develop-server-metrics-resource-label" }, webhookCountLabel)
                 ),
-                React.createElement("div", { className: "playground-settings-actions" },
-                  embeddedHeaderActions
+                React.createElement("div", { className: "playground-develop-webhooks-actions" },
+                  settingsSelectedTrigger
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
+                        onClick: () => {
+                          setSettingsSelectedTriggerId("");
+                          setSettingsShowTriggerSecret(false);
+                        },
+                      }, "Back to List")
+                    : null,
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
+                    onClick: openSettingsTriggerComposer,
+                  }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), "Add Webhook")
                 )
               ),
               shouldShowEmbeddedEmptyState
@@ -119723,7 +120345,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   id: "free",
                   name: "Free",
                   monthlyPrice: 0,
-                  computeTokens: 150,
+                  computeTokens: 100,
                   description: "Get started with basic usage. Perfect for trying out the platform.",
                 };
                 const userTier = settingsCurrentTierId;
@@ -123777,20 +124399,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return;
           }
 
-          const previewAttachment = buildPlaygroundThreadPreviewAttachment(
-            proxyBackendBase,
-            normalizedEnvironmentId,
-            normalizedPath
-          );
-          if (!previewAttachment) {
-            return;
-          }
-
           setThreadTaskOpenRequest(null);
           setThreadSubagentDetailOpen(false);
           setThreadDeepResearchDetailOpen(false);
-          setThreadPreviewAttachment(previewAttachment);
-        }, [environmentId, proxyBackendBase]);
+          setEnvironmentId(normalizedEnvironmentId);
+          setFilesPageNavigationRequest({
+            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            environmentId: normalizedEnvironmentId,
+            path: normalizedPath,
+            isFolder: false,
+            contentMode: "files",
+          });
+          setActivePage("files");
+        }, [environmentId]);
         const selectedThreadTaskPreviewTaskId = typeof selectedThreadTaskPreview?.taskId === "string"
           ? selectedThreadTaskPreview.taskId.trim()
           : "";
@@ -124959,14 +125580,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }, [threadTaskOpenRequest]);
 
         useEffect(() => {
-          if (activePage === "thread" && threadSubagentDetailOpen && sidebarOpen) {
-            setSidebarOpen(false);
-          }
-        }, [activePage, sidebarOpen, threadSubagentDetailOpen]);
-        useEffect(() => {
           if (activePage !== "thread") {
             setThreadSubagentDetailOpen(false);
             setThreadDeepResearchDetailOpen(false);
+            setThreadDocumentPreviewOpen(false);
           }
         }, [activePage]);
         useEffect(() => {
@@ -124980,10 +125597,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
         }, [activePage]);
         useEffect(() => {
-          if (threadTaskOpenRequest || threadSubagentDetailOpen || threadDeepResearchDetailOpen) {
+          if (threadTaskOpenRequest || threadSubagentDetailOpen || threadDeepResearchDetailOpen || threadDocumentPreviewOpen) {
             setThreadPreviewAttachment(null);
           }
-        }, [threadDeepResearchDetailOpen, threadSubagentDetailOpen, threadTaskOpenRequest]);
+        }, [threadDeepResearchDetailOpen, threadDocumentPreviewOpen, threadSubagentDetailOpen, threadTaskOpenRequest]);
         const threadActionTarget = useMemo(() => {
           if (!threadActionMenuState?.threadId) {
             return null;
@@ -125024,14 +125641,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
           !threadTaskOpenRequest &&
           !threadSubagentDetailOpen &&
           hasRealAccess;
-        const isThreadPreviewDetailOpen =
+        const isThreadDocumentPreviewDetailOpen =
           activePage === "thread" &&
-          Boolean(threadPreviewAttachment) &&
+          Boolean(threadDocumentPreviewOpen) &&
           !threadTaskOpenRequest &&
           !threadSubagentDetailOpen &&
           !threadDeepResearchDetailOpen &&
           hasRealAccess;
-        const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen || isThreadPreviewDetailOpen;
+        const isThreadSideDetailOpen = isThreadTaskDetailOpen || isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen || isThreadDocumentPreviewDetailOpen;
         const isResourcesSideDetailOpen = activePage === "resources" && Boolean(resourcesHeaderState?.sideDetailOpen) && hasRealAccess;
 
         function renderAuthGate() {
@@ -125514,7 +126131,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             id: "free",
             name: "Free",
             monthlyPrice: 0,
-            computeTokens: 150,
+            computeTokens: 100,
           };
           const welcomeTierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === settingsCurrentTierId) || welcomeFallbackTierInfo;
           const welcomeIncludedQuotaCT = Math.max(
@@ -126542,7 +127159,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function renderDevelopHomeNav() {
           return renderUnifiedTopNav({
             className: "playground-develop-navbar",
-            pathItems: [{ label: "Develop" }],
+            pathItems: [{ label: "Develop" }, { label: "Overview" }],
           });
         }
 
@@ -127186,25 +127803,52 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 : apiKeyDialogContent)
             : null;
 
-          return React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
-              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                  React.createElement("div", { className: "playground-settings-plans-title" }, "API Keys")
-                )
+          const apiKeyCountLabel = visibleApiKeys.length === 1 ? "API Key" : "API Keys";
+
+          return React.createElement("div", { className: "playground-develop-api-keys-panel" },
+            React.createElement("div", { className: "playground-develop-server-metrics-toolbar playground-develop-api-keys-toolbar" },
+              React.createElement("div", { className: "playground-develop-server-metrics-resource-pill" },
+                React.createElement("span", { className: "playground-develop-server-metrics-resource-count" }, String(visibleApiKeys.length)),
+                React.createElement("span", { className: "playground-develop-server-metrics-resource-label" }, apiKeyCountLabel)
               ),
-              React.createElement("div", { className: "playground-content-nav-center" }),
-              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
+                onClick: () => setSettingsApiKeyDialogOpen(true),
+              }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), "Add API Key")
+            ),
+            React.createElement("div", { className: "playground-develop-server-metrics-title-row playground-develop-api-keys-title-row" },
+              React.createElement("h2", { className: "playground-develop-server-metrics-title" }, "API Keys"),
+              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
                 React.createElement("button", {
                   type: "button",
-                  className: "playground-settings-icon-button",
-                  onClick: () => setSettingsApiKeyDialogOpen(true),
-                  title: "Create API key",
-                  "aria-label": "Create API key",
-                }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  className: "playground-content-menu-button",
+                  "aria-label": "API key options",
+                  "aria-expanded": developApiKeysMenuOpen ? "true" : "false",
+                  onClick: () => setDevelopApiKeysMenuOpen((current) => !current),
+                }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                developApiKeysMenuOpen
+                  ? React.createElement("div", {
+                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                    },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row",
+                        onClick: () => {
+                          setDevelopApiKeysMenuOpen(false);
+                          openSettingsPage("costs-overview");
+                        },
+                      },
+                        React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, "View Usage")
+                        )
+                      )
+                    )
+                  : null
               )
             ),
-            React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+            React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll playground-develop-api-keys-scroll" },
               React.createElement("div", { className: "playground-settings-account-shell is-wide" },
                 settingsNewlyCreatedKey
                   ? React.createElement("div", { className: "playground-settings-created-key-notice" },
@@ -127248,25 +127892,98 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const activeServerCount = Array.isArray(realServers)
             ? realServers.filter((server) => String(server?.status || server?.state || "").toLowerCase() !== "deleted").length
             : 0;
-          const quickstartLines = [
-            "import ComputerAgents from '@computer-agents/sdk';",
-            "",
-            "const client = new ComputerAgents({",
-            "  apiKey: process.env.COMPUTER_AGENTS_API_KEY,",
-            "});",
-            "",
-            "const thread = await client.threads.create({",
-            "  agent: 'developer',",
-            "  message: 'Review this repository and open a pull request.',",
-            "});",
-            "",
-            "console.log(thread.id);",
-          ];
+          const activeDevelopServers = Array.isArray(realServers)
+            ? realServers.filter((server) => (
+                server?.id
+                && String(server?.status || server?.state || "").toLowerCase() !== "deleted"
+              ))
+            : [];
+          const activeDevelopServerKindCounts = activeDevelopServers.reduce((counts, server) => {
+            const kind = canonicalizePlaygroundServerKind(server?.kind);
+            counts[kind] = (counts[kind] || 0) + 1;
+            return counts;
+          }, {});
+          const activeDevelopDatabaseCount = Math.max(0, Math.round(Number(developServerOperationalMetrics?.resourceCounts?.databases || 0)));
+          const quickstartSnippets = {
+            javascript: [
+              "import { ComputerAgentsClient } from 'computer-agents';",
+              "",
+              "const client = new ComputerAgentsClient();",
+              "",
+              "const result = await client.run('Build a CRM pipeline board', {",
+              "  onEvent: (event) => console.log(event.type)",
+              "});",
+              "",
+              "console.log(result.content);",
+            ],
+            python: [
+              "from computer_agents import ComputerAgentsClient",
+              "",
+              "client = ComputerAgentsClient()",
+              "",
+              "result = client.run(",
+              "    'Build a CRM pipeline board',",
+              "    on_event=lambda event: print(event['type']),",
+              ")",
+              "",
+              "print(result.content)",
+            ],
+          };
+          const activeQuickstartLanguage = quickstartSnippets[developQuickstartLanguage] ? developQuickstartLanguage : "javascript";
+          const quickstartLines = quickstartSnippets[activeQuickstartLanguage];
+          const renderDevelopCodeTokens = (line) => {
+            const parts = [];
+            const pattern = /('(?:[^'\\\\]|\\\\.)*'|"(?:[^"\\\\]|\\\\.)*"|\\b(?:import|from|const|new|await|lambda|print)\\b|\\b(?:ComputerAgentsClient|client|result)\\b|\\b(?:run|onEvent|on_event|console|log|content|event|type)\\b)/g;
+            let cursor = 0;
+            let match;
+            while ((match = pattern.exec(line))) {
+              if (match.index > cursor) {
+                parts.push(line.slice(cursor, match.index));
+              }
+              const token = match[0];
+              const tokenClass = token.startsWith("'") || token.startsWith('"')
+                ? "is-string"
+                : /^(import|from|const|new|await|lambda|print)$/.test(token)
+                  ? "is-keyword"
+                  : /^(run|onEvent|on_event|console|log|content|event|type)$/.test(token)
+                    ? "is-property"
+                    : "is-identifier";
+              parts.push(React.createElement("span", {
+                key: String(match.index) + ":" + token,
+                className: "playground-develop-docs-code-token " + tokenClass,
+              }, token));
+              cursor = match.index + token.length;
+            }
+            if (cursor < line.length) {
+              parts.push(line.slice(cursor));
+            }
+            return parts.length ? parts : "\u00a0";
+          };
           const renderCodeLine = (line, index) =>
-            React.createElement("div", { key: String(index) + ":" + line },
-              React.createElement("span", { className: "playground-develop-code-line-number" }, String(index + 1)),
-              React.createElement("span", null, line)
+            React.createElement("div", { key: String(index) + ":" + line, className: "playground-develop-docs-code-line" },
+              React.createElement("span", { className: "playground-develop-docs-code-line-number" }, String(index + 1)),
+              React.createElement("span", null, renderDevelopCodeTokens(line))
             );
+          const coreConceptCards = [
+            {
+              title: "Threads",
+              description: "Run work in persistent histories with streaming, editable turns, and resumable state.",
+              href: "/developers/core-concepts#threads",
+              image: "/img/001-docs/thread.jpg",
+            },
+            {
+              title: "Computers",
+              description: "Give ACP stateful execution machines with runtimes, GUI access, snapshots, and forks.",
+              href: "/developers/core-concepts#computers",
+              image: "/img/001-docs/computer.jpg",
+            },
+            {
+              title: "Projects",
+              description: "Coordinate mission control, tickets, resources, schedules, and agents in one workspace.",
+              href: "/developers/core-concepts#projects",
+              image: "/img/001-docs/projects.jpg",
+            },
+          ];
           const openDevelopApiKeysSection = (options = {}) => {
             setDevelopHomeSection("api-keys");
             if (options.openCreateDialog) {
@@ -127280,7 +127997,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             { id: "overview", label: "Overview", onClick: () => setDevelopHomeSection("overview") },
             { id: "api-keys", label: "API Keys", onClick: () => openDevelopApiKeysSection() },
             { id: "webhooks", label: "Webhooks", onClick: openDevelopWebhooksSection },
-            { id: "analytics", label: "Analytics", onClick: () => openSettingsPage("costs-overview") },
           ];
           const quickLinks = [
             { label: "Create an API Key", Icon: Key, onClick: () => openDevelopApiKeysSection({ openCreateDialog: true }) },
@@ -127348,6 +128064,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
               title: "Hosting Requests",
               tone: "requests",
               legend: "Web apps",
+              resourceCountKey: "webApps",
+              resourceFallbackCount: activeDevelopServerKindCounts.web_app || 0,
+              resourceSingular: "Web App",
+              resourcePlural: "Web Apps",
               emptyText: "No hosting requests in the last 24 hours",
             },
             {
@@ -127357,6 +128077,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
               title: "API Requests",
               tone: "success",
               legend: "APIs",
+              resourceCountKey: "apis",
+              resourceFallbackCount: activeDevelopServerKindCounts.api || 0,
+              resourceSingular: "API",
+              resourcePlural: "APIs",
               emptyText: "No API requests in the last 24 hours",
             },
             {
@@ -127366,6 +128090,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
               title: "Function Calls",
               tone: "latency",
               legend: "Functions",
+              resourceCountKey: "functions",
+              resourceFallbackCount: activeDevelopServerKindCounts.function || 0,
+              resourceSingular: "Function",
+              resourcePlural: "Functions",
               emptyText: "No function calls in the last 24 hours",
             },
             {
@@ -127375,6 +128103,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
               title: "Database Reads",
               tone: "reads",
               legend: "Reads",
+              resourceCountKey: "databases",
+              resourceFallbackCount: activeDevelopDatabaseCount,
+              resourceSingular: "Database",
+              resourcePlural: "Databases",
               emptyText: "No database reads in the last 24 hours",
             },
             {
@@ -127384,6 +128116,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
               title: "Database Writes",
               tone: "writes",
               legend: "Writes",
+              resourceCountKey: "databases",
+              resourceFallbackCount: activeDevelopDatabaseCount,
+              resourceSingular: "Database",
+              resourcePlural: "Databases",
               emptyText: "No database writes in the last 24 hours",
             },
           ];
@@ -127391,7 +128127,58 @@ ${PROJECT_OVERVIEW_SCRIPT}
             || developOperationalMetricTabs[0];
           const renderDevelopOperationalMetricsChart = () => {
             const activeSeriesValues = getDevelopOperationalSeries(activeDevelopOperationalMetric.key);
+            const activeResourceCount = Math.max(0, Math.round(Number(
+              developServerOperationalMetrics?.resourceCounts?.[activeDevelopOperationalMetric.resourceCountKey]
+              ?? activeDevelopOperationalMetric.resourceFallbackCount
+              ?? 0
+            ) || 0));
+            const activeResourceLabel = activeResourceCount === 1
+              ? activeDevelopOperationalMetric.resourceSingular
+              : activeDevelopOperationalMetric.resourcePlural;
             return React.createElement("section", { className: "playground-develop-server-metrics playground-settings-usage-top-chart playground-environments-home-metrics" },
+              React.createElement("div", { className: "playground-develop-server-metrics-toolbar" },
+                React.createElement("div", { className: "playground-develop-server-metrics-resource-pill" },
+                  React.createElement("span", { className: "playground-develop-server-metrics-resource-count" }, formatDevelopOperationalMetricValue(activeResourceCount)),
+                  React.createElement("span", { className: "playground-develop-server-metrics-resource-label" }, activeResourceLabel),
+                  React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
+                  onClick: () => {},
+                }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), "Add Resource")
+              ),
+              React.createElement("div", { className: "playground-develop-server-metrics-title-row" },
+                React.createElement("h2", { className: "playground-develop-server-metrics-title" }, "Analytics"),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-content-menu-button",
+                    "aria-label": "Analytics options",
+                    "aria-expanded": developAnalyticsMenuOpen ? "true" : "false",
+                    onClick: () => setDevelopAnalyticsMenuOpen((current) => !current),
+                  }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                  developAnalyticsMenuOpen
+                    ? React.createElement("div", {
+                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                      },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row",
+                          onClick: () => {
+                            setDevelopAnalyticsMenuOpen(false);
+                            openSettingsPage("costs-overview");
+                          },
+                        },
+                          React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Show Usage")
+                          )
+                        )
+                      )
+                    : null
+                )
+              ),
               React.createElement("div", { className: "playground-tasks-detail-facts" },
                 React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                   React.createElement("div", { className: "playground-database-overview" },
@@ -127503,44 +128290,78 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     )
                 : React.createElement(React.Fragment, null,
               renderDevelopOperationalMetricsChart(),
-              React.createElement("section", { className: "playground-develop-demo-card" },
-                React.createElement("div", { className: "playground-develop-demo-art" }, "Realtime API"),
-                React.createElement("div", { className: "playground-develop-demo-copy" },
-                  React.createElement("div", { className: "playground-develop-demo-title" }, "Try Computer Agents realtime APIs"),
-                  React.createElement("div", { className: "playground-develop-demo-subtitle" },
-                    "Create threads, stream tool activity, inspect traces, and connect your own runtime workflows from one API surface."
+              React.createElement("section", { className: "playground-develop-docs-quickstart-card" },
+                React.createElement("div", { className: "playground-develop-docs-quickstart-inner" },
+                  React.createElement("div", null,
+                    React.createElement("h2", { className: "playground-develop-docs-quickstart-title" }, "Developer quickstart"),
+                    React.createElement("p", { className: "playground-develop-docs-quickstart-text" },
+                      "Start ACP in minutes. Create a project, get a computer, run a thread, and ship your first working workflow."
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-develop-docs-quickstart-button",
+                      onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers/quickstart")}, "_blank", "noopener,noreferrer"),
+                    }, "Get started")
+                  ),
+                  React.createElement("div", { className: "playground-develop-docs-code-card" },
+                    React.createElement("div", { className: "playground-develop-docs-code-toolbar" },
+                      React.createElement("div", { className: "playground-develop-docs-code-tabs" },
+                        Object.entries({ javascript: "javascript", python: "python" }).map(([language, label]) =>
+                          React.createElement("button", {
+                            key: language,
+                            type: "button",
+                            className: "playground-develop-docs-code-tab" + (activeQuickstartLanguage === language ? " is-active" : ""),
+                            onClick: () => setDevelopQuickstartLanguage(language),
+                          }, label)
+                        )
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-develop-docs-code-copy",
+                        "aria-label": "Copy quickstart code",
+                        title: "Copy quickstart code",
+                        onClick: handleCopyQuickstart,
+                      }, React.createElement(Copy, { width: 16, height: 16, strokeWidth: 1.9 }))
+                    ),
+                    React.createElement("pre", { className: "playground-develop-docs-code-body" },
+                      quickstartLines.map(renderCodeLine)
+                    )
                   )
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-develop-demo-button",
-                  onClick: () => openDevelopApiKeysSection(),
-                }, "Try the demo")
+                )
               ),
-              React.createElement("section", { className: "playground-develop-quickstart" },
-                React.createElement("div", { className: "playground-develop-quickstart-copy" },
-                  React.createElement("h2", { className: "playground-develop-quickstart-title" }, "Developer quickstart"),
-                  React.createElement("p", { className: "playground-develop-quickstart-text" },
-                    "Learn the basics and make your first request with the Computer Agents API."
+              React.createElement("section", { className: "playground-develop-docs-concepts" },
+                React.createElement("div", { className: "playground-develop-docs-concepts-header" },
+                  React.createElement("div", null,
+                    React.createElement("h2", { className: "playground-develop-docs-concepts-title" }, "Core concepts"),
+                    React.createElement("p", { className: "playground-develop-docs-concepts-copy" },
+                      "Understand the primitives that define how ACP organizes work, persists state, and executes actions."
+                    )
                   ),
                   React.createElement("button", {
                     type: "button",
-                    className: "playground-develop-primary-button",
-                    onClick: openDocsPage,
-                  }, "Get started")
+                    className: "playground-develop-docs-concepts-view-all",
+                    onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers/core-concepts")}, "_blank", "noopener,noreferrer"),
+                  }, "View all")
                 ),
-                React.createElement("div", { className: "playground-develop-code-card" },
-                  React.createElement("div", { className: "playground-develop-code-header" },
+                React.createElement("div", { className: "playground-develop-docs-concepts-grid" },
+                  coreConceptCards.map((card) =>
                     React.createElement("button", {
+                      key: card.title,
                       type: "button",
-                      className: "playground-develop-code-copy",
-                      "aria-label": "Copy quickstart code",
-                      title: "Copy",
-                      onClick: handleCopyQuickstart,
-                    }, React.createElement(Copy, { width: 15, height: 15, strokeWidth: 1.8 }))
-                  ),
-                  React.createElement("pre", { className: "playground-develop-code-body" },
-                    quickstartLines.map(renderCodeLine)
+                      className: "playground-develop-docs-concept-card",
+                      onClick: () => window.open(${JSON.stringify(aiosOrigin)} + card.href, "_blank", "noopener,noreferrer"),
+                    },
+                      React.createElement("div", {
+                        className: "playground-develop-docs-concept-art",
+                        style: {
+                          backgroundImage: "linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.18)), url(" + card.image + ")",
+                        },
+                      }),
+                      React.createElement("div", { className: "playground-develop-docs-concept-copy" },
+                        React.createElement("div", { className: "playground-develop-docs-concept-title" }, card.title),
+                        React.createElement("div", { className: "playground-develop-docs-concept-description" }, card.description)
+                      )
+                    )
                   )
                 )
               ),
@@ -127841,7 +128662,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               {
                 id: "configure-home",
                 label: "Home",
-                Icon: LayoutDashboard,
+                Icon: House,
                 active: activePage === "configure",
                 onClick: () => openConfigureHome(),
               },
@@ -127895,7 +128716,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               {
                 id: "develop-home",
                 label: "Home",
-                Icon: LayoutDashboard,
+                Icon: House,
                 active: activePage === "develop",
                 onClick: () => openDevelopHome(),
               },
@@ -129083,7 +129904,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                       void loadThreadGroundTruthStatus(normalizedThreadId);
                                       void refreshThreads();
                                     },
-                                    onDocumentPreviewOpenChange: () => {
+                                    onDocumentPreviewOpenChange: (isOpen) => {
+                                      setThreadDocumentPreviewOpen(isOpen);
                                     },
                                     onDeepResearchDetailOpenChange: (isOpen) => {
                                       setThreadDeepResearchDetailOpen(isOpen);
@@ -129120,6 +129942,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                       setContentMode("changes");
                                     },
                                     subagentDetailPortalTarget: threadSubagentDetailHost,
+                                    documentPreviewPortalTarget: threadSubagentDetailHost,
+                                    documentPreviewPortalOnly: true,
                                     disableSubagentDetailDrawer: isThreadTaskDetailOpen,
                                   })
                                 : hasDemoAccess
@@ -129367,57 +130191,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     : null,
                   activePage === "thread" && hasRealAccess
                     ? React.createElement("aside", {
-                        className: "playground-thread-subagent-drawer" + (isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen ? " is-open" : ""),
-                        "aria-hidden": isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen ? "false" : "true",
+                        className: "playground-thread-subagent-drawer" + (isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen || isThreadDocumentPreviewDetailOpen ? " is-open" : ""),
+                        "aria-hidden": isThreadSubagentDetailOpen || isThreadDeepResearchDetailOpen || isThreadDocumentPreviewDetailOpen ? "false" : "true",
                       },
                         React.createElement("div", {
                           ref: threadSubagentDetailHostRef,
                           className:
                             "playground-thread-subagent-drawer-host tb-runner-chat" +
                             (isThreadSubagentDetailOpen ? " tb-runner-chat-subagent-detail-open" : "") +
-                            (isThreadDeepResearchDetailOpen ? " tb-runner-chat-deep-research-detail-open" : ""),
+                            (isThreadDeepResearchDetailOpen ? " tb-runner-chat-deep-research-detail-open" : "") +
+                            (isThreadDocumentPreviewDetailOpen ? " tb-runner-chat-document-preview-open" : ""),
                         })
                       )
                     : null,
-                  activePage === "thread" && hasRealAccess
-                    ? React.createElement("aside", {
-                        className: "playground-thread-preview-drawer" + (isThreadPreviewDetailOpen ? " is-open" : ""),
-                        "aria-hidden": isThreadPreviewDetailOpen ? "false" : "true",
-                      },
-                        threadPreviewAttachment
-                          ? React.createElement(RunnerDocumentPreviewDrawer, {
-                              attachment: threadPreviewAttachment,
-                              backendUrl: proxyBackendBase,
-                              environmentId: threadPreviewAttachment.environmentId || environmentId || undefined,
-                              requestHeaders,
-                              apiKey: effectiveApiKey,
-                              inline: true,
-                              showResizeHandle: false,
-                              onClose: () => setThreadPreviewAttachment(null),
-                              onWorkspacePathOpen: (path, options = {}) => {
-                                const normalizedPath = normalizeHistoryPath(path || "");
-                                const normalizedEnvironmentId = String(threadPreviewAttachment.environmentId || environmentId || "").trim();
-                                if (!normalizedPath || !normalizedEnvironmentId) {
-                                  return;
-                                }
-                                setThreadTaskOpenRequest(null);
-                                setThreadSubagentDetailOpen(false);
-                                setThreadDeepResearchDetailOpen(false);
-                                setThreadPreviewAttachment(null);
-                                setEnvironmentId(normalizedEnvironmentId);
-                                setFilesPageNavigationRequest({
-                                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                                  environmentId: normalizedEnvironmentId,
-                                  path: normalizedPath,
-                                  isFolder: Boolean(options?.isFolder),
-                                  contentMode: "files",
-                                });
-                                setActivePage("files");
-                              },
-                            })
-                          : null
-                      )
-                    : null
                 ),
               !sidebarOpen
                 ? React.createElement("div", { className: "playground-shell-status-indicators" },

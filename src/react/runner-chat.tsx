@@ -1895,6 +1895,8 @@ export interface RunnerChatProps {
   onResourcePreviewClick?: (resource: RunnerCreatedResourcePreview) => void;
   onAgentTurnClick?: (payload: RunnerChatAgentTurnClickPayload) => void;
   onSummaryWorkspacePathClick?: (payload: RunnerChatSummaryWorkspacePathClickPayload) => void;
+  documentPreviewPortalTarget?: Element | null;
+  documentPreviewPortalOnly?: boolean;
   subagentDetailPortalTarget?: Element | null;
   disableSubagentDetailDrawer?: boolean;
   externalRunRequest?: RunnerChatExternalRunRequest | null;
@@ -8235,6 +8237,8 @@ export function RunnerChat({
   onResourcePreviewClick,
   onAgentTurnClick,
   onSummaryWorkspacePathClick,
+  documentPreviewPortalTarget = null,
+  documentPreviewPortalOnly = false,
   subagentDetailPortalTarget = null,
   disableSubagentDetailDrawer = false,
   externalRunRequest = null,
@@ -8838,7 +8842,7 @@ export function RunnerChat({
     };
   }, [apiKey, currentThreadId, hasApiKey, normalizedBackendUrl, requestHeaders]);
   const summaryPreviewEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
-  const canPreviewSummaryWorkspacePaths = Boolean(summaryPreviewEnvironmentId && onSummaryWorkspacePathClick);
+  const canPreviewSummaryWorkspacePaths = Boolean(summaryPreviewEnvironmentId);
   const retainedSummaryPreviewPaths = useMemo(() => collectThreadRetainedSummaryPreviewPaths(turns), [turns]);
   const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
   const availableEnvironments = useMemo(
@@ -16176,7 +16180,7 @@ export function RunnerChat({
 
   function renderAttachmentPreviewChip(
     attachment: LocalAttachment | RunnerTurnAttachment,
-    options?: { removable?: boolean; onRemove?: () => void }
+    options?: { removable?: boolean; onRemove?: () => void; onPreview?: (attachment: RunnerTurnAttachment) => void }
   ) {
     const filename = getAttachmentDisplayName(attachment);
     const githubBranch = isGithubAttachmentSelection(attachment) ? getGithubAttachmentRef(attachment) : "";
@@ -16241,7 +16245,13 @@ export function RunnerChat({
               <button
                 type="button"
                 className="runner-attachment-file-button"
-                onClick={() => toggleDocumentAttachmentPreview(attachment)}
+                onClick={() => {
+                  if (options?.onPreview && !isLocalAttachmentRecord(attachment)) {
+                    options.onPreview(attachment);
+                    return;
+                  }
+                  toggleDocumentAttachmentPreview(attachment);
+                }}
                 aria-label={`Preview ${filename}`}
               >
                 <span className="runner-attachment-file-icon-slot" aria-hidden="true">
@@ -16401,12 +16411,27 @@ export function RunnerChat({
     );
   }, [handleTurnAgentClick, onAgentTurnClick]);
   const handleSummaryWorkspacePathClick = useCallback((turn: RunnerTurn, path: string, sourceType: RunnerQuotedSelectionSource) => {
-    if (typeof onSummaryWorkspacePathClick !== "function") {
+    const normalizedPath = String(path || "").trim();
+    if (!normalizedPath) {
       return;
     }
 
-    const normalizedPath = String(path || "").trim();
-    if (!normalizedPath) {
+    if (sourceType !== "deep_research_report" && summaryPreviewEnvironmentId) {
+      const previewAttachment: RunnerTurnAttachment = {
+        ...buildRunnerPreviewAttachmentFromPath(normalizedPath, {
+          backendUrl: normalizedBackendUrl,
+          environmentId: summaryPreviewEnvironmentId,
+          idPrefix: "summary-preview",
+        }),
+        workspacePath: normalizedPath,
+      };
+      if (isAttachmentDocumentPreviewable(previewAttachment)) {
+        toggleDocumentAttachmentPreview(previewAttachment);
+        return;
+      }
+    }
+
+    if (typeof onSummaryWorkspacePathClick !== "function") {
       return;
     }
 
@@ -16418,7 +16443,7 @@ export function RunnerChat({
       agentName: turn.agentName || null,
       sourceType,
     });
-  }, [onSummaryWorkspacePathClick, summaryPreviewEnvironmentId, threadId]);
+  }, [normalizedBackendUrl, onSummaryWorkspacePathClick, summaryPreviewEnvironmentId, threadId]);
   const threadHistoryItems = useMemo<RunnerThreadHistoryItem[]>(() => {
     return turns.flatMap((turn, turnIndex) => {
       const items: RunnerThreadHistoryItem[] = [];
@@ -17064,17 +17089,27 @@ export function RunnerChat({
   const showOneDrivePopup = renderedSidePopup === "one-drive";
   const showSchedulePopup = renderedSidePopup === "schedule";
   const showAttachFilesPopup = renderedSidePopup === "attach-files";
-  const documentAttachmentPreviewDrawer = previewedDocumentAttachment ? (
+  const hasPortalDocumentPreview = Boolean(documentPreviewPortalTarget);
+  const shouldReserveDocumentPreviewWidth = Boolean(previewedDocumentAttachment && !hasPortalDocumentPreview);
+  const documentAttachmentPreviewDrawerContent = previewedDocumentAttachment ? (
     <RunnerDocumentPreviewDrawer
       attachment={previewedDocumentAttachment}
       backendUrl={normalizedBackendUrl}
       requestHeaders={requestHeaders}
       apiKey={apiKey.trim()}
+      inline={hasPortalDocumentPreview}
+      surface={hasPortalDocumentPreview}
       onClose={closeDocumentAttachmentPreview}
       onResizeStart={startDocumentPreviewResize}
-      showResizeHandle
+      showResizeHandle={!documentPreviewPortalTarget}
     />
   ) : null;
+  const documentAttachmentPreviewDrawer =
+    documentAttachmentPreviewDrawerContent && documentPreviewPortalTarget && typeof document !== "undefined"
+      ? createPortal(documentAttachmentPreviewDrawerContent, documentPreviewPortalTarget)
+      : documentPreviewPortalOnly
+        ? null
+        : documentAttachmentPreviewDrawerContent;
   const deepResearchDetailDrawerContent = effectiveSelectedDeepResearchDetailPresentation ? (
     <DeepResearchDetailDrawer
       log={effectiveSelectedDeepResearchDetailPresentation.runningCommandLog}
@@ -18276,7 +18311,7 @@ export function RunnerChat({
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${previewedDocumentAttachment ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
       onDragEnterCapture={handleRootFileDragEnter}
       onDragOverCapture={handleRootFileDragOver}
       onDragLeaveCapture={handleRootFileDragLeave}
@@ -18284,9 +18319,11 @@ export function RunnerChat({
       style={
         {
           "--tb-document-preview-width": previewedDocumentAttachment
-            ? documentPreviewDrawerWidth !== null
+            ? shouldReserveDocumentPreviewWidth && documentPreviewDrawerWidth !== null
               ? `${documentPreviewDrawerWidth}px`
-              : "var(--tb-document-preview-max-width)"
+              : shouldReserveDocumentPreviewWidth
+                ? "var(--tb-document-preview-max-width)"
+                : "0px"
             : "0px",
         } as CSSProperties
       }
@@ -18723,7 +18760,16 @@ export function RunnerChat({
                             {summaryPreviewItems.map((item) => (
                               <Fragment key={`${turn.id}:${item.id}`}>
                                 {item.kind === "attachment"
-                                  ? renderAttachmentPreviewChip(item.attachment)
+                                  ? renderAttachmentPreviewChip(item.attachment, {
+                                      onPreview: (attachment) => {
+                                        const normalizedPath = normalizeRunnerPreviewPath(attachment.workspacePath || "");
+                                        if (normalizedPath) {
+                                          handleSummaryWorkspacePathClick(turn, normalizedPath, "run_summary");
+                                        } else {
+                                          toggleDocumentAttachmentPreview(attachment);
+                                        }
+                                      },
+                                    })
                                   : renderRunnerSummaryResourceChip(item.resource, { onClick: onResourcePreviewClick })}
                               </Fragment>
                             ))}
@@ -18937,7 +18983,16 @@ export function RunnerChat({
                           {summaryPreviewItems.map((item) => (
                             <Fragment key={`${turn.id}:${item.id}`}>
                               {item.kind === "attachment"
-                                ? renderAttachmentPreviewChip(item.attachment)
+                                ? renderAttachmentPreviewChip(item.attachment, {
+                                    onPreview: (attachment) => {
+                                      const normalizedPath = normalizeRunnerPreviewPath(attachment.workspacePath || "");
+                                      if (normalizedPath) {
+                                        handleSummaryWorkspacePathClick(turn, normalizedPath, "run_summary");
+                                      } else {
+                                        toggleDocumentAttachmentPreview(attachment);
+                                      }
+                                    },
+                                  })
                                 : renderRunnerSummaryResourceChip(item.resource, { onClick: onResourcePreviewClick })}
                             </Fragment>
                           ))}

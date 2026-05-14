@@ -54,6 +54,7 @@ export interface RunnerDocumentPreviewDrawerProps {
   apiKey?: string;
   className?: string;
   inline?: boolean;
+  surface?: boolean;
   onClose?: () => void;
   onResizeStart?: (event: ReactPointerEvent<HTMLButtonElement>) => void;
   headerActions?: ReactNode;
@@ -125,6 +126,7 @@ export function RunnerDocumentPreviewDrawer({
   apiKey,
   className,
   inline = false,
+  surface = false,
   onClose,
   onResizeStart,
   headerActions,
@@ -1024,10 +1026,14 @@ export function RunnerDocumentPreviewDrawer({
     );
   }
 
+  const previewRootClassName = surface
+    ? `tb-attachment-preview-surface${inline ? " tb-attachment-preview-surface-inline" : ""}${className ? ` ${className}` : ""}`
+    : `tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${className ? ` ${className}` : ""}`;
+
   return (
     <div className={`tb-runner-document-preview-host${inline ? " tb-runner-document-preview-host-inline" : ""}`}>
       <aside
-        className={`tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${className ? ` ${className}` : ""}`}
+        className={previewRootClassName}
         aria-label={`${attachment.filename} preview`}
       >
         {showResizeHandle ? (

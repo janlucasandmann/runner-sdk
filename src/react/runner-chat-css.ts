@@ -7613,6 +7613,26 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   pointer-events: auto;
 }
 
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-surface {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  border-left: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .tb-runner-document-preview-host {
   min-width: 0;
   min-height: 0;
