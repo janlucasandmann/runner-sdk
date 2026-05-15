@@ -541,16 +541,38 @@
   margin-bottom: 0;
   margin-left: 0;
   position: relative;
+  z-index: 0;
   padding: 15px 20px;
   border-radius: var(--tb-runner-radius-md);
   border-bottom-right-radius: 3px;
   overflow: hidden;
   color: white;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: transparent;
+  border: 0;
   font-size: 14px;
   line-height: 1.5;
   font-weight: 500;
+}
+
+.tb-runner-chat .task-prompt-in-session-context::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--tb-runner-input-border);
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+.tb-runner-chat .task-prompt-in-session-context > * {
+  position: relative;
+  z-index: 1;
 }
 
 .tb-runner-chat .tb-user-turn-collapsible-copy {

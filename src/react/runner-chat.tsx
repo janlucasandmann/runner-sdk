@@ -1597,6 +1597,38 @@ function isRunnerHumanAgentOption(option: RunnerChatOption | null | undefined): 
   return kind === "human";
 }
 
+function isRunnerAssistantAgentOption(option: RunnerChatOption | null | undefined): boolean {
+  const normalizedName = String(option?.name || "").trim().toLowerCase();
+  const normalizedId = String(option?.id || "").trim().toLowerCase();
+  return normalizedName === "assistant"
+    || normalizedName === "default"
+    || normalizedName === "default agent"
+    || normalizedId === "agent_assistant"
+    || normalizedId === "agent-assistant"
+    || normalizedId.startsWith("agent-assistant-");
+}
+
+function isRunnerDeveloperAgentOption(option: RunnerChatOption | null | undefined): boolean {
+  const normalizedName = String(option?.name || "").trim().toLowerCase();
+  const normalizedId = String(option?.id || "").trim().toLowerCase();
+  return normalizedName === "developer"
+    || normalizedId === "agent_default"
+    || normalizedId === "agent-default"
+    || normalizedId.startsWith("agent-default-");
+}
+
+function getRunnerPreferredDefaultAgentOption(agents: RunnerChatOption[]): RunnerChatOption | null {
+  const normalizedAgents = Array.isArray(agents) ? agents.filter(Boolean) : [];
+  const singleAgents = normalizedAgents.filter((agent) => !isRunnerTeamAgentOption(agent) && !isRunnerHumanAgentOption(agent));
+  const candidateAgents = singleAgents.length > 0 ? singleAgents : normalizedAgents;
+
+  return candidateAgents.find(isRunnerAssistantAgentOption)
+    || candidateAgents.find((agent) => agent?.isDefault)
+    || candidateAgents.find(isRunnerDeveloperAgentOption)
+    || candidateAgents[0]
+    || null;
+}
+
 function getRunnerAgentOptionPhotoUrl(option: RunnerChatOption | null | undefined): string {
   if (!option) {
     return "";
@@ -8381,10 +8413,10 @@ export function RunnerChat({
   } | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<string>(() => {
     if (agentId) return agentId;
-    return agents[0]?.id || "";
+    return getRunnerPreferredDefaultAgentOption(agents)?.id || "";
   });
   const [agentPopupMode, setAgentPopupMode] = useState<RunnerAgentSelectorMode>(() =>
-    getRunnerAgentSelectorMode(agents.find((agent) => agent.id === agentId) || agents[0] || null)
+    getRunnerAgentSelectorMode(agents.find((agent) => agent.id === agentId) || getRunnerPreferredDefaultAgentOption(agents))
   );
   const hasInitializedOpenAgentPopupModeRef = useRef(false);
   const [activeThreadEnvironmentId, setActiveThreadEnvironmentId] = useState<string | null>(null);
@@ -12307,7 +12339,7 @@ export function RunnerChat({
       if (current && agents.some((agent) => agent.id === current)) {
         return current;
       }
-      return agents[0]?.id || "";
+      return getRunnerPreferredDefaultAgentOption(agents)?.id || "";
     });
   }, [agentId, agents]);
 
@@ -12327,7 +12359,7 @@ export function RunnerChat({
       setInitialAgentTopId(selectedAgentId);
       return;
     }
-    setInitialAgentTopId(agents[0]?.id || null);
+    setInitialAgentTopId(getRunnerPreferredDefaultAgentOption(agents)?.id || null);
   }, [agentId, agents, initialAgentTopId, selectedAgentId]);
 
   useEffect(() => {
@@ -12342,7 +12374,7 @@ export function RunnerChat({
     const nextSelectedAgent =
       agents.find((agent) => agent.id === selectedAgentId) ||
       (agentId ? agents.find((agent) => agent.id === agentId) : null) ||
-      agents[0] ||
+      getRunnerPreferredDefaultAgentOption(agents) ||
       null;
     setAgentPopupMode(getRunnerAgentSelectorMode(nextSelectedAgent));
   }, [activeInputPopup, agentId, agents, selectedAgentId]);
@@ -16327,7 +16359,7 @@ export function RunnerChat({
 
   const effectiveStatus = isPreparingRun ? "running" : status;
   const statusToneValue = statusTone(effectiveStatus);
-  const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) || agents[0];
+  const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) || getRunnerPreferredDefaultAgentOption(agents) || agents[0];
   const selectedEnvironment =
     availableEnvironments.find((environment) => environment.id === selectedEnvironmentId) ||
     availableEnvironments.find((environment) => environment.isDefault) ||

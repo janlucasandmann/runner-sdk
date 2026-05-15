@@ -1804,7 +1804,7 @@ const html = `<!doctype html>
         flex-direction: column;
         gap: 10px;
         margin-top: auto;
-        padding: 12px 0 10px;
+        padding: 12px 0 5px;
       }
 
       .sidebar-footer .status-indicator-stack {
@@ -1891,6 +1891,134 @@ const html = `<!doctype html>
         font-size: 11px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.64);
+      }
+
+      .sidebar-plan-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 0 0 5px;
+        color: rgba(255, 255, 255, 0.94);
+        box-sizing: border-box;
+      }
+
+      .sidebar-plan-name {
+        font-family: Georgia, "Times New Roman", serif;
+        font-style: italic;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.2;
+        color: rgba(255, 255, 255, 0.72);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sidebar-plan-action {
+        --sidebar-plan-action-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        width: 100%;
+        height: 30px;
+        min-height: 30px;
+        padding: 0 12px;
+        position: relative;
+        z-index: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.94);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        overflow: hidden;
+        box-sizing: border-box;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+      }
+
+      .sidebar-plan-action::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--sidebar-plan-action-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .sidebar-plan-action > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .sidebar-plan-action:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+      }
+
+      .sidebar-plan-action.is-upgrade {
+        background: #fff;
+        color: #000;
+      }
+
+      .sidebar-plan-action.is-upgrade:hover {
+        background: rgba(255, 255, 255, 0.9);
+        color: #000;
+      }
+
+      .sidebar-plan-action:disabled {
+        cursor: default;
+        opacity: 0.58;
+      }
+
+      .sidebar-rail-plan {
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+      }
+
+      .sidebar-rail-plan::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .sidebar-rail-plan > * {
+        position: relative;
+        z-index: 1;
       }
 
       .playground-main {
@@ -2120,7 +2248,7 @@ const html = `<!doctype html>
         margin: 0;
         font-size: 17px;
         line-height: 1.2;
-        font-weight: 600;
+        font-weight: 500;
         color: rgba(255, 255, 255, 0.96);
       }
 
@@ -2531,7 +2659,9 @@ const html = `<!doctype html>
         padding: 0;
       }
 
-      .playground-develop-home .playground-develop-server-metrics-kpi {
+      .playground-develop-home .playground-develop-server-metrics-kpi,
+      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi,
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi {
         appearance: none;
         min-height: 68px;
         padding: 16px 20px 14px;
@@ -2545,12 +2675,21 @@ const html = `<!doctype html>
         transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
       }
 
-      .playground-develop-home .playground-develop-server-metrics-kpi.is-active {
+      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi,
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi {
+        cursor: default;
+      }
+
+      .playground-develop-home .playground-develop-server-metrics-kpi.is-active,
+      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi.is-active,
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi.is-active {
         background: rgba(255, 255, 255, 0.05);
         border-bottom-color: rgba(255, 255, 255, 0.96);
       }
 
-      .playground-develop-home .playground-develop-server-metrics-kpi:focus-visible {
+      .playground-develop-home .playground-develop-server-metrics-kpi:focus-visible,
+      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi:focus-visible,
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi:focus-visible {
         outline: 2px solid rgba(255, 255, 255, 0.22);
         outline-offset: -2px;
       }
@@ -13323,7 +13462,7 @@ const html = `<!doctype html>
         width: 100%;
         min-height: 40px;
         padding: 0 16px;
-        border-radius: 10px;
+        border-radius: 999px;
         font-size: 14px;
         font-weight: 500;
         transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, opacity 160ms ease;
@@ -13430,6 +13569,127 @@ const html = `<!doctype html>
       .playground-settings-plan-card-feature-icon {
         flex: 0 0 auto;
         margin-top: 2px;
+        color: currentColor;
+      }
+
+      .playground-settings-plan-table {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-settings-plan-table-card {
+        position: relative;
+        min-width: 0;
+        min-height: 520px;
+        display: flex;
+        flex-direction: column;
+        padding: 24px 22px;
+        background: transparent;
+        box-sizing: border-box;
+        transition: background-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .playground-settings-plan-table-card + .playground-settings-plan-table-card {
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-settings-plan-table-card.is-outlined {
+        background: rgba(102, 166, 255, 0.08);
+        box-shadow: inset 0 0 0 1px rgba(102, 166, 255, 0.72);
+      }
+
+      .playground-settings-plan-table-heading {
+        min-height: 58px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-settings-plan-table-name {
+        font-size: 16px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.98);
+      }
+
+      .playground-settings-plan-table-badge {
+        padding: 6px 9px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 11px;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .playground-settings-plan-table-badge.is-current {
+        border-color: rgba(102, 166, 255, 0.52);
+        color: rgb(143, 196, 255);
+      }
+
+      .playground-settings-plan-table-price {
+        margin-top: 8px;
+        font-size: 36px;
+        font-weight: 600;
+        line-height: 1;
+        color: #fff;
+      }
+
+      .playground-settings-plan-table-price-unit {
+        font-size: 13px;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-settings-plan-table-description {
+        min-height: 68px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 13px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-settings-plan-table-cta {
+        margin-top: 16px;
+      }
+
+      .playground-settings-plan-table-features {
+        flex: 1 1 auto;
+        margin: 18px 0 0;
+        padding: 0 0 4px;
+        list-style: none;
+      }
+
+      .playground-settings-plan-table-feature {
+        min-height: 46px;
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 12px 0;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .playground-settings-plan-table-feature + .playground-settings-plan-table-feature {
+        border-top: 1px dotted rgba(255, 255, 255, 0.22);
+      }
+
+      .playground-settings-plan-table-feature.is-emphasis {
+        color: rgba(255, 255, 255, 0.96);
+        font-weight: 500;
+      }
+
+      .playground-settings-plan-table-feature-icon {
+        flex: 0 0 auto;
+        width: 15px;
+        height: 15px;
+        margin-top: 1px;
         color: currentColor;
       }
 
@@ -18785,6 +19045,30 @@ const html = `<!doctype html>
         margin: 0 auto;
       }
 
+      .playground-resources-page.is-develop-server-kind-page > .playground-environments-detail-scroll.playground-settings-detail-scroll,
+      .playground-resources-page.is-develop-configure-page > .playground-environments-detail-scroll.playground-settings-detail-scroll {
+        padding: 42px 44px 56px;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-resources-detail-content,
+      .playground-resources-page.is-develop-configure-page .playground-resources-detail-content {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        min-height: 100%;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-environments-editor-main.playground-tasks-detail-main,
+      .playground-resources-page.is-develop-configure-page .playground-environments-editor-main.playground-tasks-detail-main {
+        min-height: 0;
+        overflow: visible;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-editor-scroll,
+      .playground-resources-page.is-develop-configure-page .playground-environments-detail-scroll.playground-environments-editor-scroll {
+        padding: 0;
+        overflow: visible;
+      }
+
       .playground-skills-detail-content > .playground-tasks-detail-description.playground-environments-editor-description:first-child {
         margin-bottom: 22px;
       }
@@ -20448,6 +20732,11 @@ const html = `<!doctype html>
         gap: 24px;
       }
 
+      .playground-resources-page.is-develop-configure-page .playground-computer-detail-content {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+      }
+
       .playground-server-detail-content {
         width: min(100%, var(--playground-thread-content-max-width));
         max-width: var(--playground-thread-content-max-width);
@@ -20457,7 +20746,8 @@ const html = `<!doctype html>
         gap: 24px;
       }
 
-      .playground-resources-page.is-servers-view .playground-server-detail-content {
+      .playground-resources-page.is-servers-view .playground-server-detail-content,
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-content {
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
       }
@@ -20471,6 +20761,12 @@ const html = `<!doctype html>
         padding-right: 0;
       }
 
+      .playground-resources-page.is-develop-configure-page .playground-computer-detail-navbar.playground-content-nav {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin: 0 auto 24px;
+      }
+
       .playground-server-detail-navbar.playground-content-nav {
         width: min(100%, var(--playground-thread-content-max-width));
         max-width: var(--playground-thread-content-max-width);
@@ -20478,6 +20774,12 @@ const html = `<!doctype html>
         margin: 0 auto;
         padding-left: 0;
         padding-right: 0;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-navbar.playground-content-nav {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+        margin: 0 auto 24px;
       }
 
       .playground-computer-detail-navbar .playground-environments-editor-title-input {
@@ -20678,12 +20980,120 @@ const html = `<!doctype html>
         min-height: 0;
       }
 
+      .playground-resources-page.is-develop-configure-page .playground-computer-detail-metrics .playground-computer-detail-chart-block.playground-database-overview-chart-block {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        padding: 20px;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        overflow: hidden;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-resources-page.is-develop-configure-page .playground-computer-detail-metrics .playground-computer-detail-chart-block.playground-database-overview-chart-block::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-resources-page.is-develop-configure-page .playground-computer-detail-metrics .playground-computer-detail-chart-block.playground-database-overview-chart-block > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-resources-page.is-develop-configure-page .playground-computer-detail-metrics .playground-project-overview-chart-kpis {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-resources-page.is-develop-configure-page .playground-computer-detail-metrics .playground-project-overview-chart-header {
+        display: none;
+      }
+
+      .playground-resources-page.is-develop-configure-page .playground-computer-detail-fact-rows {
+        margin-top: 2px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
       .playground-server-detail-chart-block.playground-database-overview-chart-block {
         display: flex;
         flex-direction: column;
         gap: 16px;
         height: auto;
         min-height: 0;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-server-detail-chart-block.playground-database-overview-chart-block {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        padding: 20px;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        overflow: hidden;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-server-detail-chart-block.playground-database-overview-chart-block::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-server-detail-chart-block.playground-database-overview-chart-block > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-project-overview-chart-kpis {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-project-overview-chart-header {
+        display: none;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-fact-rows {
+        margin-top: 2px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .playground-computer-detail-chart-block .playground-settings-usage-chart-card {
@@ -23161,6 +23571,150 @@ const html = `<!doctype html>
         color: rgba(254, 202, 202, 0.96);
       }
 
+      .playground-computer-detail-navbar .playground-environments-desktop-header-button.playground-environments-action-button,
+      .playground-computer-detail-navbar .playground-environments-desktop-status {
+        --playground-computer-detail-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        min-height: 30px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-computer-detail-navbar .playground-environments-desktop-header-button.playground-environments-action-button::before,
+      .playground-computer-detail-navbar .playground-environments-desktop-status::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-computer-detail-control-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-computer-detail-navbar .playground-environments-desktop-header-button.playground-environments-action-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-computer-detail-navbar .playground-environments-desktop-header-button.playground-environments-action-button:hover:not(:disabled),
+      .playground-computer-detail-navbar .playground-environments-desktop-header-button.playground-environments-action-button.is-secondary:hover:not(:disabled) {
+        background: transparent;
+        color: #fff;
+      }
+
+      .playground-computer-detail-navbar .playground-environments-desktop-status.is-running {
+        --playground-computer-detail-control-border: linear-gradient(
+          -10deg,
+          rgba(52, 211, 153, 0.55),
+          rgba(52, 211, 153, 0.12),
+          rgba(167, 243, 208, 0.18),
+          rgba(167, 243, 208, 0.45)
+        );
+        background: transparent;
+        color: rgba(167, 243, 208, 0.96);
+      }
+
+      .playground-computer-detail-navbar .playground-environments-desktop-status.is-starting {
+        --playground-computer-detail-control-border: linear-gradient(
+          -10deg,
+          rgba(250, 204, 21, 0.55),
+          rgba(250, 204, 21, 0.12),
+          rgba(254, 240, 138, 0.18),
+          rgba(254, 240, 138, 0.45)
+        );
+        background: transparent;
+        color: rgba(254, 240, 138, 0.96);
+      }
+
+      .playground-computer-detail-navbar .playground-environments-desktop-status.is-error {
+        --playground-computer-detail-control-border: linear-gradient(
+          -10deg,
+          rgba(248, 113, 113, 0.55),
+          rgba(248, 113, 113, 0.12),
+          rgba(254, 202, 202, 0.18),
+          rgba(254, 202, 202, 0.45)
+        );
+        background: transparent;
+        color: rgba(254, 202, 202, 0.96);
+      }
+
+      .playground-computer-detail-navbar .playground-environments-desktop-status.is-stopped {
+        --playground-computer-detail-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.24),
+          rgba(255, 255, 255, 0.08),
+          rgba(255, 255, 255, 0.12),
+          rgba(255, 255, 255, 0.3)
+        );
+        background: transparent;
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-navbar .playground-environments-action-button {
+        --playground-server-detail-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        min-height: 30px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-navbar .playground-environments-action-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-server-detail-control-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-navbar .playground-environments-action-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-navbar .playground-environments-action-button:hover:not(:disabled),
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-navbar .playground-environments-action-button.is-primary:hover:not(:disabled) {
+        background: transparent;
+        color: #fff;
+      }
+
       .playground-environments-desktop-section {
         display: flex;
         flex-direction: column;
@@ -23881,15 +24435,46 @@ const html = `<!doctype html>
       }
 
       .playground-agents-creation-config-box {
+        --playground-agents-creation-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
         width: 100%;
         margin-top: 20px;
         padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        z-index: 0;
+        border: 0;
         border-radius: 15px;
-        background: rgba(255, 255, 255, 0.1);
+        background: transparent;
         display: flex;
         flex-direction: column;
         gap: 16px;
+        overflow: hidden;
+      }
+
+      .playground-agents-creation-config-box::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-agents-creation-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-agents-creation-config-box > * {
+        position: relative;
+        z-index: 1;
       }
 
       .playground-agents-creation-config-box .playground-tasks-detail-description.playground-environments-editor-description {
@@ -23932,14 +24517,39 @@ const html = `<!doctype html>
       }
 
       .playground-agents-creation-action-button.is-secondary {
-        border-color: rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.1);
+        --playground-agents-creation-button-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        border: 0;
+        background: transparent;
         color: #fff;
+        overflow: hidden;
+      }
+
+      .playground-agents-creation-action-button.is-secondary::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-agents-creation-button-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
       }
 
       .playground-agents-creation-action-button.is-secondary:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.14);
-        border-color: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.04);
       }
 
       .playground-agents-creation-action-button.is-primary {
@@ -23955,6 +24565,52 @@ const html = `<!doctype html>
 
       .playground-agents-creation-form .playground-environments-editor-notice {
         margin-top: 16px;
+      }
+
+      .playground-computer-creation-scroll {
+        align-items: center;
+      }
+
+      .playground-computer-creation-form {
+        width: min(100%, 760px);
+        max-width: 760px;
+        justify-content: center;
+      }
+
+      .playground-computer-creation-form .playground-agents-profile-avatar-wrap {
+        margin-top: 0;
+      }
+
+      .playground-computer-creation-form .playground-agents-profile-name-wrap {
+        margin-top: 8px;
+      }
+
+      .playground-computer-creation-avatar .profile-editor-avatar-surface {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-computer-creation-config-box {
+        gap: 18px;
+      }
+
+      .playground-computer-creation-field {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .playground-computer-creation-label {
+        margin: 0;
+      }
+
+      .playground-computer-creation-settings {
+        width: 100%;
+      }
+
+      .playground-computer-creation-actions {
+        margin-top: 0;
       }
 
       .playground-agents-permission-modal {
@@ -24925,7 +25581,9 @@ const html = `<!doctype html>
       }
 
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail)
-        > .playground-content-body.is-tasks-page {
+        > .playground-content-body.is-tasks-page,
+      .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail)
+        > .playground-content-body.is-calendar-page {
         overflow: visible;
       }
 
@@ -25131,26 +25789,13 @@ const html = `<!doctype html>
       }
 
       .playground-projects-overview-add-button {
-        min-height: 34px;
-        padding: 0 14px;
-        border: 1px solid #fff;
-        border-radius: 999px;
-        background: transparent;
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        font-size: 12px;
-        font-weight: 400;
         white-space: nowrap;
-        cursor: pointer;
         box-sizing: border-box;
       }
 
       .playground-projects-overview-add-button svg {
-        width: 13px;
-        height: 13px;
+        width: 14px;
+        height: 14px;
       }
 
       .playground-tasks-detail-scroll {
@@ -27613,6 +28258,10 @@ const html = `<!doctype html>
         z-index: 1;
       }
 
+      .playground-tasks-schedule-detail-shell .playground-tasks-comment-dock {
+        background: transparent;
+      }
+
       .playground-tasks-detail-main.is-project-wallpaper-active .playground-tasks-comment-dock {
         background: transparent;
       }
@@ -29444,6 +30093,14 @@ ${ENVIRONMENT_CHANGES_CSS}
         border-bottom: 0;
       }
 
+      .playground-agents-overview-table-controls {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
       .playground-agents-overview-tabs {
         margin: 16px 0 18px;
         padding-bottom: 0;
@@ -30497,22 +31154,288 @@ ${ENVIRONMENT_CHANGES_CSS}
         overflow: hidden;
       }
 
-      .playground-settings-page .playground-environments-home-metrics .playground-database-overview-chart-block {
-        box-sizing: border-box;
-        width: 100%;
-        padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+	      .playground-settings-page .playground-environments-home-metrics .playground-database-overview-chart-block {
+	        box-sizing: border-box;
+	        width: 100%;
+	        padding: 20px;
+	        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 15px;
-        background: linear-gradient(to top, rgba(5, 24, 58, 0.5), rgba(5, 24, 58, 0.9));
-        overflow: hidden;
-      }
+	        background: linear-gradient(to top, rgba(5, 24, 58, 0.5), rgba(5, 24, 58, 0.9));
+	        overflow: hidden;
+	      }
 
-      .playground-settings-page .playground-environments-home-metrics .playground-project-overview-chart-kpis {
-        background: rgba(0, 0, 0, 0.35);
-      }
+		      .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-home-scroll,
+		      .playground-resources-page.is-develop-configure-page .playground-environments-detail-scroll.playground-environments-home-scroll {
+		        padding: 42px 44px 56px;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-environments-home-content,
+		      .playground-resources-page.is-develop-configure-page .playground-environments-home-content {
+		        width: min(100%, var(--playground-centered-page-max-width));
+		        max-width: var(--playground-centered-page-max-width);
+		        gap: 24px;
+		      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-environments-home-hero,
+	      .playground-resources-page.is-develop-configure-page .playground-environments-home-hero {
+	        margin: 0;
+	        padding: 0;
+	        display: flex;
+	        flex-direction: column;
+	        gap: 0;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-header,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-header {
+	        margin: 0;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-tabs.playground-agents-overview-tabs.playground-project-overview-tabs,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-tabs.playground-agents-overview-tabs.playground-project-overview-tabs {
+	        margin: 16px 0 0;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-toolbar,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-toolbar {
+	        margin-top: 18px;
+	        margin-bottom: 24px;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-metrics.playground-environments-home-metrics,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics.playground-environments-home-metrics {
+	        margin-top: 0;
+	        margin-bottom: 18px;
+	        gap: 10px;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-metrics .playground-database-overview-chart-block,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics .playground-database-overview-chart-block {
+	        --playground-project-overview-chart-border: linear-gradient(
+	          -10deg,
+	          rgba(200, 200, 200, 0.25),
+	          rgba(255, 255, 255, 0.1),
+	          rgba(255, 255, 255, 0.15),
+	          rgba(255, 255, 255, 0.375)
+	        );
+	        position: relative;
+	        box-sizing: border-box;
+	        width: 100%;
+	        padding: 20px;
+	        border: 0;
+	        border-radius: 15px;
+	        background: transparent;
+	        overflow: hidden;
+	        -webkit-backdrop-filter: blur(50px);
+	        backdrop-filter: blur(50px);
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-metrics .playground-database-overview-chart-block::before,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics .playground-database-overview-chart-block::before {
+	        content: "";
+	        pointer-events: none;
+	        position: absolute;
+	        inset: 0;
+	        z-index: 5;
+	        border-radius: inherit;
+	        padding: 1px;
+	        background: var(--playground-project-overview-chart-border);
+	        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+	        mask-clip: content-box, border-box;
+	        mask-composite: exclude;
+	        mask-origin: content-box, border-box;
+	        mask-repeat: repeat, repeat;
+	        mask-size: auto, auto;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-metrics .playground-database-overview-chart-block > *,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics .playground-database-overview-chart-block > * {
+	        position: relative;
+	        z-index: 1;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-metrics .playground-database-overview-timeseries-card,
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-metrics .playground-database-overview-timeseries-chart,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics .playground-database-overview-timeseries-card,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics .playground-database-overview-timeseries-chart {
+	        height: auto;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-metrics .playground-project-overview-chart-kpis,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics .playground-project-overview-chart-kpis {
+	        background: rgba(255, 255, 255, 0.05);
+	      }
+
+		      .playground-resources-page.is-develop-server-kind-page .is-develop-server-kind-list,
+		      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list {
+		        margin-top: 0;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-table-toolbar,
+		      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-table-toolbar {
+		        display: flex;
+		        align-items: center;
+		        justify-content: space-between;
+		        gap: 16px;
+		        padding: 0;
+		        margin: 0 0 14px;
+		        border-bottom: 0;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-table-title,
+		      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-table-title {
+		        flex: 0 0 auto;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-table-controls,
+		      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-table-controls {
+		        min-width: 0;
+		        margin-left: auto;
+		        display: flex;
+		        align-items: center;
+		        justify-content: flex-end;
+		        gap: 10px;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-search-shell,
+		      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-search-shell {
+		        --playground-project-overview-control-border: linear-gradient(
+		          -10deg,
+		          rgba(200, 200, 200, 0.25),
+		          rgba(255, 255, 255, 0.1),
+		          rgba(255, 255, 255, 0.15),
+		          rgba(255, 255, 255, 0.375)
+		        );
+		        position: relative;
+		        overflow: hidden;
+		        border-radius: 999px;
+		        -webkit-backdrop-filter: blur(20px);
+		        backdrop-filter: blur(20px);
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-search-shell::before,
+		      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-search-shell::before {
+		        content: "";
+		        pointer-events: none;
+		        position: absolute;
+		        inset: 0;
+		        z-index: 2;
+		        border-radius: inherit;
+		        padding: 1px;
+		        background: var(--playground-project-overview-control-border);
+		        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+		        mask-clip: content-box, border-box;
+		        mask-composite: exclude;
+		        mask-origin: content-box, border-box;
+		        mask-repeat: repeat, repeat;
+		        mask-size: auto, auto;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-search-shell .playground-plugins-search,
+		      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-search-shell .playground-plugins-search {
+		        border: 0;
+		        background: rgba(255, 255, 255, 0.04);
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .is-develop-server-kind-list .playground-resources-overview-table-shell,
+		      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list .playground-resources-overview-table-shell,
+		      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list .playground-agents-overview-table-shell {
+		        --playground-project-overview-chart-border: linear-gradient(
+		          -10deg,
+		          rgba(200, 200, 200, 0.25),
+		          rgba(255, 255, 255, 0.1),
+		          rgba(255, 255, 255, 0.15),
+		          rgba(255, 255, 255, 0.375)
+		        );
+		        position: relative;
+		        border: 0;
+		        border-radius: 15px;
+		        background: transparent;
+		        -webkit-backdrop-filter: blur(50px);
+		        backdrop-filter: blur(50px);
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .is-develop-server-kind-list .playground-resources-overview-table-shell::before,
+		      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list .playground-resources-overview-table-shell::before,
+		      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list .playground-agents-overview-table-shell::before {
+		        content: "";
+		        pointer-events: none;
+		        position: absolute;
+		        inset: 0;
+		        z-index: 5;
+		        border-radius: inherit;
+		        padding: 1px;
+		        background: var(--playground-project-overview-chart-border);
+		        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+		        mask-clip: content-box, border-box;
+		        mask-composite: exclude;
+		        mask-origin: content-box, border-box;
+		        mask-repeat: repeat, repeat;
+		        mask-size: auto, auto;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .is-develop-server-kind-list .playground-resources-overview-table,
+		      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list .playground-resources-overview-table,
+		      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list .playground-agents-overview-table {
+		        position: relative;
+		        z-index: 1;
+		      }
+
+	      .playground-settings-page .playground-environments-home-metrics .playground-project-overview-chart-kpis {
+	        background: rgba(0, 0, 0, 0.35);
+	      }
 
       .playground-settings-usage-top-chart {
         width: 100%;
+      }
+
+      .playground-settings-page .playground-settings-usage-top-chart .playground-database-overview-chart-block {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        box-sizing: border-box;
+        width: 100%;
+        padding: 20px;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        overflow: hidden;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-settings-page .playground-settings-usage-top-chart .playground-database-overview-chart-block::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-settings-page .playground-settings-usage-top-chart .playground-database-overview-chart-block > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-settings-page .playground-settings-usage-top-chart .playground-project-overview-chart-kpis {
+        width: calc(100% + 40px);
+        margin-top: -20px;
+        margin-left: -20px;
+        margin-right: -20px;
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .playground-settings-usage-chart-kpis {
@@ -30546,7 +31469,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       }
 
       .playground-settings-usage-chart-panel {
-        padding-top: 12px;
+        padding-top: 0;
       }
 
       .playground-settings-usage-chart-panel .playground-settings-usage-chart-frame {
@@ -30598,6 +31521,75 @@ ${ENVIRONMENT_CHANGES_CSS}
         border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
+      .playground-agents-page .playground-agents-detail-main-pane .playground-environments-editor-main.playground-tasks-detail-main,
+      .playground-agents-detail-assistant-page .playground-agents-detail-main-pane .playground-environments-editor-main.playground-tasks-detail-main {
+        min-height: 0;
+        overflow: visible;
+      }
+
+      .playground-agents-page .playground-agents-detail-main-pane .playground-environments-detail-scroll,
+      .playground-agents-detail-assistant-page .playground-agents-detail-main-pane > .playground-environments-detail-scroll.playground-settings-detail-scroll {
+        padding: 42px 44px 56px;
+      }
+
+      .playground-agents-detail-assistant-page .playground-agents-detail-main-pane .playground-environments-detail-scroll.playground-environments-editor-scroll {
+        padding: 0;
+        overflow: visible;
+      }
+
+      .playground-agents-page .playground-agents-detail-content,
+      .playground-agents-detail-assistant-page .playground-agents-detail-content {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+      }
+
+      .playground-agents-detail-content .playground-tasks-detail-facts,
+      .playground-agents-detail-content .playground-environments-section,
+      .playground-agents-detail-content .playground-environments-mcp-card,
+      .playground-agents-detail-content .playground-environments-editor-surface,
+      .playground-agents-detail-content .playground-tasks-detail-description.playground-environments-editor-description {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .playground-agents-detail-content .playground-tasks-detail-facts::before,
+      .playground-agents-detail-content .playground-environments-section::before,
+      .playground-agents-detail-content .playground-environments-mcp-card::before,
+      .playground-agents-detail-content .playground-environments-editor-surface::before,
+      .playground-agents-detail-content .playground-tasks-detail-description.playground-environments-editor-description::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-agents-detail-content .playground-environments-section-header,
+      .playground-agents-detail-content .playground-environments-section-header.is-static {
+        padding: 0 0 12px;
+        margin-top: 12px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-agents-detail-content .playground-environments-section-body {
+        padding: 0;
+        border-top: 0;
+      }
+
+      .playground-agents-detail-content .playground-environments-stack,
+      .playground-agents-detail-content .playground-environments-field-grid {
+        padding-top: 0;
+      }
+
+      .playground-agents-detail-content .playground-tasks-detail-facts-body,
+      .playground-agents-detail-content .playground-database-overview {
+        gap: 0;
+        padding: 0;
+      }
+
       .playground-agents-detail-summary .playground-environments-home-summary-kpis,
       .playground-agents-detail-chart-kpis.playground-project-overview-summary-kpis {
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -30620,6 +31612,59 @@ ${ENVIRONMENT_CHANGES_CSS}
         min-height: 0;
       }
 
+      .playground-agents-page .playground-agents-detail-metrics .playground-agents-detail-chart-block.playground-database-overview-chart-block,
+      .playground-agents-detail-assistant-page .playground-agents-detail-metrics .playground-agents-detail-chart-block.playground-database-overview-chart-block {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        padding: 20px;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        overflow: hidden;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-agents-page .playground-agents-detail-metrics .playground-agents-detail-chart-block.playground-database-overview-chart-block::before,
+      .playground-agents-detail-assistant-page .playground-agents-detail-metrics .playground-agents-detail-chart-block.playground-database-overview-chart-block::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-agents-page .playground-agents-detail-metrics .playground-agents-detail-chart-block.playground-database-overview-chart-block > *,
+      .playground-agents-detail-assistant-page .playground-agents-detail-metrics .playground-agents-detail-chart-block.playground-database-overview-chart-block > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-agents-page .playground-agents-detail-metrics .playground-project-overview-chart-kpis,
+      .playground-agents-detail-assistant-page .playground-agents-detail-metrics .playground-project-overview-chart-kpis {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-agents-page .playground-agents-detail-metrics .playground-project-overview-chart-header,
+      .playground-agents-detail-assistant-page .playground-agents-detail-metrics .playground-project-overview-chart-header {
+        display: none;
+      }
+
       .playground-agents-detail-chart-block .playground-settings-usage-chart-card {
         min-height: 0;
       }
@@ -30628,8 +31673,9 @@ ${ENVIRONMENT_CHANGES_CSS}
         display: flex;
         flex-direction: column;
         gap: 4px;
-        padding-top: 0;
-        border-top: 0;
+        margin-top: 2px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       @media (max-width: 980px) {
@@ -33253,7 +34299,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       }
 
       .playground-tasks-calendar-toolbar {
-        padding: 0 12px;
+        padding: 10px 12px 0;
       }
 
       .playground-tasks-board-toolbar-main {
@@ -33294,6 +34340,37 @@ ${ENVIRONMENT_CHANGES_CSS}
 
       .playground-tasks-calendar-view-switch {
         flex: 0 0 auto;
+        --playground-tasks-calendar-view-switch-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        border: 0;
+        background: transparent;
+        z-index: 0;
+      }
+
+      .playground-tasks-calendar-view-switch::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-tasks-calendar-view-switch-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-tasks-calendar-view-switch > * {
+        position: relative;
+        z-index: 1;
       }
 
       .playground-tasks-calendar-toolbar-plus {
@@ -35503,7 +36580,7 @@ ${ENVIRONMENT_CHANGES_CSS}
           billingLabel: "/ month",
           computeTokens: 1500,
           highlighted: true,
-          description: "Personal access for builders who want premium models, agents, environments, and API access in one plan.",
+          description: "Premium models, agents, computers & API access for independent builders.",
         },
         {
           id: "team",
@@ -35511,7 +36588,7 @@ ${ENVIRONMENT_CHANGES_CSS}
           monthlyPrice: 30,
           billingLabel: "/ seat / month",
           computeTokens: 5000,
-          description: "Shared access for teams with bring-your-own model endpoints and usage-based infrastructure after included credits.",
+          description: "Shared workspaces, premium models & usage-based resources for teams.",
         },
         {
           id: "enterprise",
@@ -35519,7 +36596,7 @@ ${ENVIRONMENT_CHANGES_CSS}
           monthlyPrice: 100,
           billingLabel: "/ seat / month",
           computeTokens: 15000,
-          description: "Enterprise-scale access with higher included usage, team operations, and room for advanced governance and self-hosting requirements.",
+          description: "Higher included usage & priority support for larger teams.",
         },
       ];
       const SETTINGS_TOP_UP_CATALOG = [
@@ -38831,17 +39908,25 @@ ${ENVIRONMENT_CHANGES_CSS}
           return null;
         }
 
-        const explicitDeveloper = normalizedAgents.find((agent) => isPlaygroundDeveloperAgent(agent));
-        if (explicitDeveloper) {
-          return explicitDeveloper;
+        const singleAgents = normalizedAgents.filter((agent) => getPlaygroundAgentListMode(agent) !== "teams");
+        const candidateAgents = singleAgents.length > 0 ? singleAgents : normalizedAgents;
+
+        const explicitAssistant = candidateAgents.find((agent) => isPlaygroundAssistantAgent(agent));
+        if (explicitAssistant) {
+          return explicitAssistant;
         }
 
-        const explicitDefault = normalizedAgents.find((agent) => agent?.isDefault);
+        const explicitDefault = candidateAgents.find((agent) => agent?.isDefault);
         if (explicitDefault) {
           return explicitDefault;
         }
 
-        return normalizedAgents[0] || null;
+        const explicitDeveloper = candidateAgents.find((agent) => isPlaygroundDeveloperAgent(agent));
+        if (explicitDeveloper) {
+          return explicitDeveloper;
+        }
+
+        return candidateAgents[0] || null;
       }
 
       function getPlaygroundAgentEmailAddress(agent) {
@@ -41374,7 +42459,7 @@ ${ENVIRONMENT_CHANGES_CSS}
           contextId: null,
           contextName: null,
           scheduleType: "one-time",
-          cronExpression: buildPlaygroundDailyCronExpression(nextHour),
+          cronExpression: null,
           scheduledTime: nextHour,
           timezone: (() => {
             try {
@@ -42956,7 +44041,9 @@ ${ENVIRONMENT_CHANGES_CSS}
           appId: typeof schedule.appId === "string" && schedule.appId.trim() ? schedule.appId.trim() : null,
           contextId: typeof schedule.contextId === "string" && schedule.contextId.trim()
             ? schedule.contextId.trim()
-            : (typeof schedule.context_id === "string" && schedule.context_id.trim() ? schedule.context_id.trim() : null),
+            : (typeof schedule.context_id === "string" && schedule.context_id.trim()
+              ? schedule.context_id.trim()
+              : (typeof schedule.projectId === "string" && schedule.projectId.trim() ? schedule.projectId.trim() : null)),
           contextName: typeof schedule.contextName === "string" && schedule.contextName.trim()
             ? schedule.contextName.trim()
             : (typeof schedule.context_name === "string" && schedule.context_name.trim() ? schedule.context_name.trim() : null),
@@ -43019,6 +44106,8 @@ ${ENVIRONMENT_CHANGES_CSS}
           : null;
         const directProjectId = typeof metadata?.projectId === "string" ? metadata.projectId.trim() : "";
         if (directProjectId) return directProjectId;
+        const scheduleProjectId = typeof schedule.projectId === "string" ? schedule.projectId.trim() : "";
+        if (scheduleProjectId) return scheduleProjectId;
         const runnerProjectId = typeof metadata?.runnerProjectId === "string" ? metadata.runnerProjectId.trim() : "";
         if (runnerProjectId) return runnerProjectId;
         return typeof schedule.contextId === "string" ? schedule.contextId.trim() : "";
@@ -43313,6 +44402,15 @@ ${ENVIRONMENT_CHANGES_CSS}
           return "0 9 * * *";
         }
         return String(date.getMinutes()) + " " + String(date.getHours()) + " * * *";
+      }
+
+      function formatPlaygroundScheduleClockTime(value) {
+        const date = value instanceof Date ? new Date(value) : new Date(value || "");
+        if (Number.isNaN(date.getTime())) return "";
+        return date.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+        });
       }
 
       function startOfPlaygroundDay(value) {
@@ -43798,9 +44896,74 @@ ${ENVIRONMENT_CHANGES_CSS}
         { id: "weekly", label: "Every week", cron: "0 9 * * 1" },
       ];
 
+      function buildPlaygroundCronExpressionForPreset(presetId, startValue) {
+        const preset = getPlaygroundTaskSchedulePreset(presetId);
+        const date = new Date(startValue || Date.now());
+        if (Number.isNaN(date.getTime())) {
+          return preset.cron;
+        }
+        const minute = String(date.getMinutes());
+        const hour = String(date.getHours());
+        if (preset.id === "weekdays") {
+          return minute + " " + hour + " * * 1-5";
+        }
+        if (preset.id === "weekly") {
+          return minute + " " + hour + " * * " + String(date.getDay());
+        }
+        return minute + " " + hour + " * * *";
+      }
+
+      function normalizePlaygroundTaskScheduleCronParts(expression) {
+        const normalizedExpression = normalizePlaygroundRecurringExpression(expression);
+        const parts = normalizedExpression.split(/\s+/).filter(Boolean);
+        if (parts.length === 6) {
+          return parts.slice(1);
+        }
+        if (parts.length === 7) {
+          return parts.slice(1, 6);
+        }
+        return parts.length === 5 ? parts : [];
+      }
+
+      function getPlaygroundTaskScheduleRecurringBaseLabel(cronExpression) {
+        const presetLabel = PLAYGROUND_TASK_SCHEDULE_PRESETS.find((preset) => preset.cron === cronExpression)?.label || "";
+        if (presetLabel) return presetLabel;
+        const parts = normalizePlaygroundTaskScheduleCronParts(cronExpression);
+        if (parts.length === 5) {
+          const dayOfMonth = String(parts[2] || "").trim();
+          const month = String(parts[3] || "").trim();
+          const dayOfWeek = String(parts[4] || "").trim();
+          if (dayOfMonth === "*" && month === "*" && dayOfWeek === "*") return "Every day";
+          if (dayOfMonth === "*" && month === "*" && dayOfWeek === "1-5") return "Every weekday";
+          if (dayOfMonth === "*" && month === "*" && dayOfWeek && dayOfWeek !== "*") return "Every week";
+        }
+        return "Recurring";
+      }
+
+      function formatPlaygroundRecurringScheduleTimeLabel(cronExpression, fallbackValue) {
+        const cronPattern = parsePlaygroundCalendarCronExpression(cronExpression);
+        if (cronPattern && cronPattern.hours?.length === 1 && cronPattern.minutes?.length === 1) {
+          const date = new Date();
+          date.setHours(cronPattern.hours[0], cronPattern.minutes[0], 0, 0);
+          return formatPlaygroundScheduleClockTime(date);
+        }
+        return formatPlaygroundScheduleClockTime(fallbackValue);
+      }
+
       function getPlaygroundTaskSchedulePresetId(cronExpression) {
         const normalizedCronExpression = typeof cronExpression === "string" ? cronExpression.trim() : "";
-        return PLAYGROUND_TASK_SCHEDULE_PRESETS.find((preset) => preset.cron === normalizedCronExpression)?.id || "";
+        const exactPresetId = PLAYGROUND_TASK_SCHEDULE_PRESETS.find((preset) => preset.cron === normalizedCronExpression)?.id || "";
+        if (exactPresetId) return exactPresetId;
+        const parts = normalizePlaygroundTaskScheduleCronParts(normalizedCronExpression);
+        if (parts.length === 5) {
+          const dayOfMonth = String(parts[2] || "").trim();
+          const month = String(parts[3] || "").trim();
+          const dayOfWeek = String(parts[4] || "").trim();
+          if (dayOfMonth === "*" && month === "*" && dayOfWeek === "*") return "daily";
+          if (dayOfMonth === "*" && month === "*" && dayOfWeek === "1-5") return "weekdays";
+          if (dayOfMonth === "*" && month === "*" && dayOfWeek && dayOfWeek !== "*") return "weekly";
+        }
+        return "";
       }
 
       function getPlaygroundTaskSchedulePreset(presetId) {
@@ -43914,8 +45077,9 @@ ${ENVIRONMENT_CHANGES_CSS}
       function formatPlaygroundTaskScheduleSummary(taskRecord) {
         const scheduleConfig = getPlaygroundTaskScheduleConfig(taskRecord);
         if (scheduleConfig.scheduleType === "recurring") {
-          const presetLabel = PLAYGROUND_TASK_SCHEDULE_PRESETS.find((preset) => preset.cron === scheduleConfig.cronExpression)?.label || "";
-          return presetLabel || "Recurring";
+          const baseLabel = getPlaygroundTaskScheduleRecurringBaseLabel(scheduleConfig.cronExpression);
+          const timeLabel = formatPlaygroundRecurringScheduleTimeLabel(scheduleConfig.cronExpression, scheduleConfig.scheduledStartAt);
+          return timeLabel ? baseLabel + " at " + timeLabel : baseLabel;
         }
         const startLabel = formatPlaygroundTaskDateTime(scheduleConfig.scheduledStartAt);
         return startLabel || "";
@@ -59822,7 +60986,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             isSaving: false,
             error: "",
           });
-          setEnvironmentComposerDraft(buildPlaygroundDefaultEnvironmentDraft());
+          setEnvironmentComposerDraft({
+            ...buildPlaygroundDefaultEnvironmentDraft(),
+            name: "New Computer",
+          });
           setEnvironmentComposerOpen(true);
         }
 
@@ -64342,8 +65509,225 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             );
         }
 
+        function renderEnvironmentComposerDescriptionSection(composerDraft, isSaving, placeholderText) {
+          const descriptionPlaceholder = placeholderText || "Add a short description about what this computer is used for.";
+          return React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                [
+                  { id: "bold", label: "Bold", icon: Bold },
+                  { id: "italic", label: "Italic", icon: Italic },
+                  { id: "underline", label: "Underline", icon: Underline },
+                  { id: "list", label: "List", icon: List },
+                ].map((action) =>
+                  React.createElement("button", {
+                    key: action.id,
+                    type: "button",
+                    className: "playground-tasks-detail-format-button",
+                    title: action.label,
+                    "aria-label": action.label,
+                    disabled: isSaving,
+                    onMouseDown: (event) => event.preventDefault(),
+                    onClick: () => handleEnvironmentComposerDescriptionFormat(action.id),
+                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEnvironmentComposerDescriptionEditing ? " is-editing" : " is-preview") },
+              !isEnvironmentComposerDescriptionEditing
+                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                    String(composerDraft.description || "").trim()
+                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                          content: composerDraft.description,
+                          className: "playground-tasks-detail-description-preview tb-message-markdown",
+                        })
+                      : React.createElement("div", {
+                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                        }, descriptionPlaceholder)
+                  )
+                : null,
+              React.createElement("textarea", {
+                ref: environmentComposerDescriptionTextareaRef,
+                className: "playground-tasks-detail-description-input " + (isEnvironmentComposerDescriptionEditing ? "is-editing" : "is-preview"),
+                rows: 1,
+                placeholder: isEnvironmentComposerDescriptionEditing ? descriptionPlaceholder : "",
+                value: composerDraft.description || "",
+                disabled: isSaving,
+                onFocus: () => setIsEnvironmentComposerDescriptionEditing(true),
+                onChange: (event) => {
+                  updateEnvironmentComposerField("description", event.target.value);
+                  resizeEnvironmentDescriptionTextarea(event.currentTarget);
+                },
+                onBlur: () => {
+                  setIsEnvironmentComposerDescriptionEditing(false);
+                },
+              })
+            )
+          );
+        }
+
+        function renderEnvironmentComposerRuntimeSettings(composerDraft, isSaving) {
+          return React.createElement("div", { className: "playground-environment-composer-runtime-facts playground-computer-creation-settings" },
+            PLAYGROUND_RUNTIME_DEFINITIONS
+              .filter((runtime) => runtime.key === "python" || runtime.key === "nodejs")
+              .map((runtime) => {
+                const currentValue = composerDraft.runtimes?.[runtime.key] || "";
+                const runtimeOptions = currentValue && !(availableRuntimes[runtime.key] || []).includes(currentValue)
+                  ? [currentValue, ...(availableRuntimes[runtime.key] || [])]
+                  : (availableRuntimes[runtime.key] || []);
+                const isPopoverOpen = environmentComposerRuntimePopover === runtime.key;
+
+                return React.createElement("div", { className: "playground-tasks-detail-fact", key: runtime.key },
+                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, runtime.label),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                    React.createElement("div", {
+                        className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isPopoverOpen ? " is-open" : ""),
+                        ref: isPopoverOpen ? environmentComposerRuntimePopoverRef : null,
+                      },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-runtime-value-button playground-tasks-detail-select-trigger" + (currentValue ? "" : " is-empty") + (isPopoverOpen ? " is-active" : ""),
+                        onClick: () => setEnvironmentComposerRuntimePopover((current) => current === runtime.key ? "" : runtime.key),
+                        disabled: isSaving,
+                      },
+                        React.createElement("span", { className: "playground-environments-runtime-value-label" }, currentValue || "Disabled"),
+                        React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
+                      ),
+                      isPopoverOpen
+                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                            React.createElement("button", {
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select" + (!currentValue ? " selected" : ""),
+                                onClick: () => {
+                                  updateEnvironmentComposerRuntime(runtime.key, "");
+                                  setEnvironmentComposerRuntimePopover("");
+                                },
+                              },
+                              React.createElement("span", { className: "tb-popup-check-slot" },
+                                !currentValue
+                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                  : null
+                              ),
+                              React.createElement("span", null, "Disabled")
+                            ),
+                            runtimeOptions.map((option) =>
+                              React.createElement("button", {
+                                  key: runtime.key + ":" + option,
+                                  type: "button",
+                                  className: "tb-popup-row tb-popup-row-select" + (currentValue === option ? " selected" : ""),
+                                  onClick: () => {
+                                    updateEnvironmentComposerRuntime(runtime.key, option);
+                                    setEnvironmentComposerRuntimePopover("");
+                                  },
+                                },
+                                React.createElement("span", { className: "tb-popup-check-slot" },
+                                  currentValue === option
+                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+                                    : null
+                                ),
+                                React.createElement("span", null, option)
+                              )
+                            )
+                          )
+                        : null
+                    )
+                  )
+                );
+              })
+          );
+        }
+
+        function renderEnvironmentCreationSetupPage() {
+          const composerDraft = environmentComposerDraft || buildPlaygroundDefaultEnvironmentDraft();
+          const isSaving = environmentComposerSaveState.isSaving;
+
+          const profileSection = React.createElement("div", { className: "playground-agents-profile-section playground-computer-creation-profile-section" },
+            React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap playground-computer-creation-avatar-wrap" },
+              React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar playground-computer-creation-avatar" },
+                React.createElement("div", { className: "profile-editor-avatar-surface" },
+                  React.createElement(HardDrive, { width: 28, height: 28, strokeWidth: 1.75 })
+                )
+              )
+            ),
+            React.createElement("div", { className: "playground-agents-profile-name-wrap" },
+              React.createElement("input", {
+                type: "text",
+                className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input",
+                value: composerDraft.name || "",
+                placeholder: "New Computer",
+                "aria-label": "Computer name",
+                title: composerDraft.name || "Computer name",
+                autoFocus: true,
+                disabled: isSaving,
+                onKeyDown: (event) => event.stopPropagation(),
+                onChange: (event) => updateEnvironmentComposerField("name", event.target.value),
+              })
+            )
+          );
+
+          return React.createElement("div", {
+              className: "playground-environments-detail-scroll playground-settings-detail-scroll playground-computer-creation-scroll",
+              ref: resourcesDetailScrollRef,
+            },
+            React.createElement("form", {
+                className: "playground-resources-detail-content playground-agents-creation-form playground-computer-creation-form",
+                onKeyDown: handleComposerSubmitShortcut,
+                onSubmit: (event) => void handleEnvironmentComposerSubmit(event),
+              },
+              profileSection,
+              React.createElement("div", { className: "playground-agents-creation-config-box playground-computer-creation-config-box" },
+                renderEnvironmentComposerDescriptionSection(composerDraft, isSaving, "Add Description here"),
+                React.createElement("div", { className: "playground-computer-creation-field" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Computer Profile"),
+                  renderEnvironmentComputeProfileSelector(
+                    composerDraft.computeProfile,
+                    (profileId) => updateEnvironmentComposerField("computeProfile", profileId),
+                    { disabled: isSaving }
+                  ),
+                  React.createElement("div", { className: "playground-environment-profile-note" },
+                    "Lite is the lowest-cost default. Standard and Power add more CPU and memory. Desktop enables the GUI."
+                  )
+                ),
+                composerDraft.computeProfile === "desktop"
+                  ? React.createElement("div", { className: "playground-computer-creation-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Office Apps"),
+                      React.createElement("div", { className: "playground-environment-composer-toggle-row" },
+                        React.createElement("div", { className: "playground-environment-composer-toggle-help" },
+                          "Install Writer and Calc on the Desktop profile for document and spreadsheet work."
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-toggle" + (composerDraft.officeAppsEnabled === true ? " is-active" : ""),
+                          onClick: () => updateEnvironmentComposerField("officeAppsEnabled", !(composerDraft.officeAppsEnabled === true)),
+                          "aria-pressed": composerDraft.officeAppsEnabled === true ? "true" : "false",
+                          title: composerDraft.officeAppsEnabled === true ? "Office apps enabled" : "Office apps disabled",
+                          disabled: isSaving,
+                        }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                      )
+                    )
+                  : null,
+                React.createElement("div", { className: "playground-computer-creation-field" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Runtime Versions"),
+                  renderEnvironmentComposerRuntimeSettings(composerDraft, isSaving)
+                ),
+                React.createElement("div", { className: "playground-agents-creation-actions playground-computer-creation-actions" },
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-agents-creation-action-button is-secondary",
+                    disabled: isSaving || !String(composerDraft.name || "").trim(),
+                  }, isSaving ? "Creating..." : "Create Computer")
+                )
+              ),
+              environmentComposerSaveState.error
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentComposerSaveState.error)
+                : null
+            )
+          );
+        }
+
         function renderEnvironmentComposerDialog() {
-          if (!environmentComposerOpen) {
+          if (!environmentComposerOpen || (embeddedInResources && !isServersMode)) {
             return null;
           }
 
@@ -70139,7 +71523,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
           );
-          const renderEnvironmentDetailTimescaleControl = () => React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
+          const renderEnvironmentDetailTimescaleControl = () => React.createElement("div", { className: "playground-environments-home-comparison-timescale playground-develop-server-metrics-timescale" },
             React.createElement("select", {
               className: "playground-environments-home-comparison-timescale-select",
               value: normalizedEnvironmentDetailChartTimescale,
@@ -70163,21 +71547,22 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               },
             ],
             emptyText: environmentAnalyticsError || "No computer activity yet",
-            title: "CT Cost Created by Computer",
+            title: "Computer Activity",
             tickFormatter: (value) => String(Math.round(Number(value) || 0)),
             isLoading: isEnvironmentAnalyticsLoading && !activeEnvironmentAnalytics,
-            showLegend: false,
+            showLegend: true,
             timescaleControl: renderEnvironmentDetailTimescaleControl(),
+            controlsInFooter: true,
           });
           const environmentFactsSection = React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-environments-home-metrics playground-computer-detail-metrics" },
+            React.createElement("div", { className: "playground-environments-home-metrics playground-computer-detail-metrics playground-develop-server-metrics playground-settings-usage-top-chart" },
               React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-computer-details-card" },
                 React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                   React.createElement("div", { className: "playground-database-overview" },
-                    React.createElement("div", { className: "playground-database-overview-chart-block playground-computer-detail-chart-block" },
-                      React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-computer-detail-chart-kpis" },
+                    React.createElement("div", { className: "playground-database-overview-chart-block playground-settings-usage-chart-block playground-develop-server-metrics-chart-block playground-computer-detail-chart-block" },
+                      React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-settings-usage-chart-kpis playground-develop-server-metrics-kpis playground-computer-detail-chart-kpis" },
                         environmentDetailKpis.map((item) =>
-                          React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
+                          React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi playground-settings-usage-chart-kpi playground-develop-server-metrics-kpi" },
                             React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
                               React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
                             ),
@@ -70333,7 +71718,53 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               ),
             },
           ];
+          const environmentSettingsAction = draftEnvironment.id && !draftEnvironment.isSystem && !draftEnvironment.isDefault
+            ? React.createElement("div", {
+                className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                ref: environmentActionsPopoverRef,
+              },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-content-menu-button",
+                  "aria-label": "Environment actions",
+                  "aria-expanded": environmentActionsPopoverOpen ? "true" : "false",
+                  onClick: () => setEnvironmentActionsPopoverOpen((current) => !current),
+                  disabled: saveState.isSaving,
+                }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                environmentActionsPopoverOpen
+                  ? React.createElement("div", {
+                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                      onClick: (event) => event.stopPropagation(),
+                    },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row",
+                        onClick: () => openEnvironmentRenameDialog(draftEnvironment),
+                      },
+                        React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, "Rename")
+                        )
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row",
+                        onClick: () => {
+                          setEnvironmentActionsPopoverOpen(false);
+                          void handleDeleteEnvironment(draftEnvironment.id);
+                        },
+                      },
+                        React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, "Delete")
+                        )
+                      )
+                    )
+                  : null
+              )
+            : null;
           const environmentDesktopHeaderActions = React.createElement("div", { className: "playground-environments-desktop-header-actions" },
+            environmentSettingsAction,
             React.createElement("span", {
               className: "playground-environments-desktop-status is-" + (
                 normalizedEnvironmentRuntimeStatus === "running"
@@ -70475,30 +71906,26 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 )
               )
             : null;
-          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-            React.createElement("div", { className: "playground-tasks-detail-section-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                [
-                  { id: "bold", label: "Bold", icon: Bold },
-                  { id: "italic", label: "Italic", icon: Italic },
-                  { id: "underline", label: "Underline", icon: Underline },
-                  { id: "list", label: "List", icon: List },
-                ].map((action) =>
-                  React.createElement("button", {
-                    key: action.id,
-                    type: "button",
-                    className: "playground-tasks-detail-format-button",
-                    title: action.label,
-                    "aria-label": action.label,
-                    disabled: isEnvironmentDescriptionLocked,
-                    onMouseDown: (event) => event.preventDefault(),
-                    onClick: () => handleEnvironmentDescriptionFormat(action.id),
-                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEnvironmentDescriptionEditing ? " is-editing" : " is-preview") },
+          const environmentDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+            [
+              { id: "bold", label: "Bold", icon: Bold },
+              { id: "italic", label: "Italic", icon: Italic },
+              { id: "underline", label: "Underline", icon: Underline },
+              { id: "list", label: "List", icon: List },
+            ].map((action) =>
+              React.createElement("button", {
+                key: action.id,
+                type: "button",
+                className: "playground-tasks-detail-format-button",
+                title: action.label,
+                "aria-label": action.label,
+                disabled: isEnvironmentDescriptionLocked,
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: () => handleEnvironmentDescriptionFormat(action.id),
+              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+            )
+          );
+          const environmentDescriptionEditor = React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEnvironmentDescriptionEditing ? " is-editing" : " is-preview") },
               !isEnvironmentDescriptionEditing
                 ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
                     String(draftEnvironment.description || "").trim()
@@ -70532,6 +71959,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   commitDraftEnvironmentIfDirty();
                 },
               })
+          );
+          const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
+            React.createElement("div", { className: "playground-server-description-inline-row" },
+              environmentDescriptionEditor,
+              environmentDescriptionFormatActions
             )
           );
 
@@ -70863,51 +72295,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 draftEnvironment.isSystem
                   ? React.createElement("span", { className: "playground-environments-badge" }, "System")
                   : null,
-                draftEnvironment.id && !draftEnvironment.isSystem && !draftEnvironment.isDefault
-                  ? React.createElement("div", {
-                      className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
-                      ref: environmentActionsPopoverRef,
-                    },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-content-menu-button",
-                        "aria-label": "Environment actions",
-                        "aria-expanded": environmentActionsPopoverOpen ? "true" : "false",
-                        onClick: () => setEnvironmentActionsPopoverOpen((current) => !current),
-                        disabled: saveState.isSaving,
-                      }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                      environmentActionsPopoverOpen
-                        ? React.createElement("div", {
-                            className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                            onClick: (event) => event.stopPropagation(),
-                          },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "tb-popup-row",
-                              onClick: () => openEnvironmentRenameDialog(draftEnvironment),
-                            },
-                              React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, "Rename")
-                              )
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "tb-popup-row",
-                              onClick: () => {
-                                setEnvironmentActionsPopoverOpen(false);
-                                void handleDeleteEnvironment(draftEnvironment.id);
-                              },
-                            },
-                              React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, "Delete")
-                              )
-                            )
-                          )
-                        : null
-                    )
-                  : null,
               )
             ),
             React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
@@ -71107,7 +72494,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           );
         }
 
-        const renderHomeStackedUsageChartShared = ({ ariaLabel, labels, series, emptyText, title, timescaleControl, tickFormatter, isLoading, showLegend = true }) => {
+        const renderHomeStackedUsageChartShared = ({ ariaLabel, labels, series, emptyText, title, timescaleControl, tickFormatter, isLoading, showLegend = true, controlsInFooter = false }) => {
           const normalizedLabels = Array.isArray(labels) ? labels : [];
           const normalizedSeries = Array.isArray(series)
             ? series.filter((entry) => entry && Array.isArray(entry.values))
@@ -71146,6 +72533,22 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             }
             return new Set(next);
           })();
+          const chartLegend = showLegend
+            ? React.createElement("div", {
+                className: "playground-settings-usage-inline-legend" + (controlsInFooter ? " playground-develop-server-metrics-legend" : ""),
+                style: { justifyContent: "flex-start" },
+              },
+                normalizedSeries.map((entry) =>
+                  React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
+                    React.createElement("span", {
+                      className: "playground-settings-usage-legend-swatch",
+                      style: { background: entry.color },
+                    }),
+                    React.createElement("span", null, entry.label)
+                  )
+                )
+              )
+            : null;
 
           return React.createElement("div", { className: "playground-settings-usage-chart-card" },
             isLoading
@@ -71156,7 +72559,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             React.createElement("div", { className: "playground-project-overview-chart-header" },
               React.createElement("div", { className: "playground-project-overview-chart-header-main" },
                 React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
-                timescaleControl || null
+                controlsInFooter ? null : (timescaleControl || null)
               )
             ),
             React.createElement(EnvironmentsHomeResponsiveSvgShared, {
@@ -71242,22 +72645,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 );
               }
             ),
-            showLegend
-              ? React.createElement("div", {
-                  className: "playground-settings-usage-inline-legend",
-                  style: { justifyContent: "flex-start" },
-                },
-                  normalizedSeries.map((entry) =>
-                    React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
-                      React.createElement("span", {
-                        className: "playground-settings-usage-legend-swatch",
-                        style: { background: entry.color },
-                      }),
-                      React.createElement("span", null, entry.label)
-                    )
-                  )
+            controlsInFooter
+              ? React.createElement("div", { className: "playground-develop-server-metrics-footer" },
+                  React.createElement("div", { className: "playground-develop-server-metrics-footer-left" }, chartLegend),
+                  timescaleControl || null
                 )
-              : null
+              : chartLegend
           );
         };
 
@@ -71290,7 +72683,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (tabs.length <= 1) {
             return null;
           }
-          return React.createElement("div", { className: "playground-agents-overview-tabs playground-resources-overview-tabs" },
+          const isDevelopConfigureTabs = embeddedInResources && (!isServersMode || Boolean(normalizedEmbeddedServerKind));
+          return React.createElement("div", {
+              className: "playground-agents-overview-tabs playground-resources-overview-tabs"
+                + (isDevelopConfigureTabs ? " playground-project-overview-tabs playground-develop-tabs playground-develop-server-kind-tabs" : ""),
+            },
             React.createElement("div", { className: "playground-project-overview-chart-tabs" },
               tabs.map((tab) =>
                 React.createElement("button", {
@@ -71550,7 +72947,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             );
           };
 
-          const renderHomeStackedUsageChart = ({ ariaLabel, labels, series, emptyText, title, timescaleControl, tickFormatter, isLoading }) => {
+          const renderHomeStackedUsageChart = ({ ariaLabel, labels, series, emptyText, title, timescaleControl, tickFormatter, isLoading, controlsInFooter = false }) => {
             const normalizedLabels = Array.isArray(labels) ? labels : [];
             const normalizedSeries = Array.isArray(series)
               ? series.filter((entry) => entry && Array.isArray(entry.values))
@@ -71590,6 +72987,23 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               return new Set(next);
             })();
 
+            const chartLegend = React.createElement("div", {
+                className: controlsInFooter
+                  ? "playground-develop-server-metrics-footer-left playground-develop-server-metrics-legend"
+                  : "playground-settings-usage-inline-legend",
+                style: controlsInFooter ? undefined : { justifyContent: "flex-start" },
+              },
+                normalizedSeries.map((entry) =>
+                  React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
+                    React.createElement("span", {
+                      className: "playground-settings-usage-legend-swatch",
+                      style: { background: entry.color },
+                    }),
+                    React.createElement("span", null, entry.label)
+                  )
+                )
+              );
+
             return React.createElement("div", { className: "playground-settings-usage-chart-card" },
               isLoading
                 ? React.createElement("div", { className: "playground-overview-chart-loading", "aria-label": "Loading chart data" },
@@ -71599,7 +73013,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               React.createElement("div", { className: "playground-project-overview-chart-header" },
                 React.createElement("div", { className: "playground-project-overview-chart-header-main" },
                   React.createElement("div", { className: "playground-project-overview-chart-title" }, title || "Activity comparison"),
-                  timescaleControl || null
+                  controlsInFooter ? null : (timescaleControl || null)
                 )
               ),
               React.createElement(EnvironmentsHomeResponsiveSvg, {
@@ -71685,20 +73099,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   );
                 }
               ),
-              React.createElement("div", {
-                className: "playground-settings-usage-inline-legend",
-                style: { justifyContent: "flex-start" },
-              },
-                normalizedSeries.map((entry) =>
-                  React.createElement("div", { key: entry.id || entry.label, className: "playground-settings-usage-legend-item" },
-                    React.createElement("span", {
-                      className: "playground-settings-usage-legend-swatch",
-                      style: { background: entry.color },
-                    }),
-                    React.createElement("span", null, entry.label)
+              controlsInFooter
+                ? React.createElement("div", { className: "playground-develop-server-metrics-footer" },
+                    chartLegend,
+                    timescaleControl || null
                   )
-                )
-              )
+                : chartLegend
             );
           };
 
@@ -71850,59 +73256,128 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             : normalizedEnvironmentHomeChartTimescale === "week"
               ? "Weekly"
               : "Monthly";
-          const environmentOverviewChartTitle = isServersMode
-            ? environmentOverviewPeriodLabel + " CT by Server Type"
-            : environmentOverviewPeriodLabel + " CT by Computer Type";
-          const environmentOverviewChartLabel = isServersMode ? "server" : "computer";
-          const activeResourcesOverviewHomeTab = getActiveResourcesOverviewHomeTab();
+	          const environmentOverviewChartTitle = isServersMode
+	            ? environmentOverviewPeriodLabel + " CT by Server Type"
+	            : environmentOverviewPeriodLabel + " CT by Computer Type";
+	          const environmentOverviewChartLabel = isServersMode ? "server" : "computer";
+	          const activeResourcesOverviewHomeTab = getActiveResourcesOverviewHomeTab();
+	          const isDevelopServerKindHome = embeddedInResources && isServersMode && Boolean(normalizedEmbeddedServerKind);
+	          const isDevelopConfigureHome = embeddedInResources && (!isServersMode || Boolean(normalizedEmbeddedServerKind));
+	          const developServerKindTitle = embeddedServerKindPluralLabel || "Servers";
+	          const developServerKindSingularTitle = embeddedServerKindLabel || developServerKindTitle.replace(/s$/, "");
+	          const developServerKindDocumentationPathByKind = {
+	            web_app: "/developers/libraries/web-apps",
+	            function: "/developers/libraries/functions",
+	            database: "/developers/libraries/databases",
+	            agent_runtime: "/developers/libraries/agent-runtime",
+	            secrets: "/developers/libraries/secrets",
+	          };
+	          const developServerKindDocumentationUrl = ${JSON.stringify(aiosOrigin)} + (developServerKindDocumentationPathByKind[normalizedEmbeddedServerKind] || "/developers");
+	          const developConfigureTitle = isDevelopServerKindHome ? developServerKindTitle : "Computers";
+	          const developConfigureSingularTitle = isDevelopServerKindHome ? developServerKindSingularTitle : "Computer";
+	          const developConfigureCount = Math.max(0, Math.round(Number(
+	            isDevelopServerKindHome ? filteredOverviewServerResources?.length : filteredOverviewEnvironments?.length
+	          ) || 0));
+	          const environmentOverviewMetricsSection = activeResourcesOverviewHomeTab === "general"
+	            ? React.createElement("div", {
+	                className: "playground-environments-home-metrics" + (isDevelopConfigureHome ? " playground-develop-server-metrics playground-develop-server-kind-metrics" : ""),
+	              },
+	                React.createElement("section", { className: "playground-tasks-detail-facts" },
+	                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+	                    React.createElement("div", { className: "playground-database-overview" },
+	                      React.createElement("div", {
+	                        className: "playground-database-overview-chart-block" + (isDevelopConfigureHome ? " playground-settings-usage-chart-block playground-develop-server-metrics-chart-block" : ""),
+	                      },
+	                        React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" + (isDevelopConfigureHome ? " playground-settings-usage-chart-kpis playground-develop-server-metrics-kpis" : "") },
+	                          environmentsHomeKpis.map((item) =>
+	                            React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" + (isDevelopConfigureHome ? " playground-develop-server-metrics-kpi" : "") },
+	                              React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+	                                React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+	                              ),
+	                              React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+	                            )
+	                          )
+	                        ),
+	                        renderHomeStackedUsageChart({
+	                          ariaLabel: "Overall " + environmentOverviewChartLabel + " activity",
+	                          labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
+	                          series: environmentOverviewChartSeries,
+	                          emptyText: "No usage data yet",
+	                          title: environmentOverviewChartTitle,
+	                          isLoading: isEnvironmentHomeChartLoading,
+	                          timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" + (isDevelopConfigureHome ? " playground-develop-server-metrics-timescale" : "") },
+	                            React.createElement("select", {
+	                              className: "playground-environments-home-comparison-timescale-select",
+	                              value: normalizedEnvironmentHomeChartTimescale,
+	                              "aria-label": "Environment chart timescale",
+	                              onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
+	                            },
+	                              React.createElement("option", { value: "day" }, "Daily"),
+	                              React.createElement("option", { value: "week" }, "Weekly"),
+	                              React.createElement("option", { value: "month" }, "Monthly")
+	                            )
+	                          ),
+	                          controlsInFooter: isDevelopConfigureHome,
+	                        })
+	                      )
+	                    )
+	                  )
+	                )
+	              )
+	            : null;
+	          const developServerKindToolbar = React.createElement("div", {
+	              className: "playground-develop-server-metrics-toolbar playground-develop-api-keys-toolbar playground-develop-server-kind-toolbar",
+	            },
+	            React.createElement("div", { className: "playground-develop-server-metrics-resource-pill" },
+	              React.createElement("span", { className: "playground-develop-server-metrics-resource-count" }, String(developConfigureCount)),
+	              React.createElement("span", { className: "playground-develop-server-metrics-resource-label" }, developConfigureCount === 1 ? developConfigureSingularTitle : developConfigureTitle),
+	              React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
+	            ),
+	            React.createElement("button", {
+	              type: "button",
+	              className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
+	              onClick: isDevelopServerKindHome ? () => handleCreateServer(normalizedEmbeddedServerKind) : handleCreateEnvironment,
+	            }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), isDevelopServerKindHome ? "Add Resource" : "Add Computer")
+	          );
 
-          const environmentsHomeHero = React.createElement("section", { className: "playground-environments-home-hero" },
-            React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
-            renderResourcesOverviewHomeTabs(),
-            activeResourcesOverviewHomeTab === "general"
-              ? React.createElement("div", { className: "playground-environments-home-metrics" },
-                  React.createElement("section", { className: "playground-tasks-detail-facts" },
-                    React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                      React.createElement("div", { className: "playground-database-overview" },
-                        React.createElement("div", { className: "playground-database-overview-chart-block" },
-                          React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
-                            environmentsHomeKpis.map((item) =>
-                              React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                                React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                                  React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
-                                ),
-                                React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
-                              )
-                            )
-                          ),
-                          renderHomeStackedUsageChart({
-                            ariaLabel: "Overall " + environmentOverviewChartLabel + " activity",
-                            labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
-                            series: environmentOverviewChartSeries,
-                            emptyText: "No usage data yet",
-                            title: environmentOverviewChartTitle,
-                            isLoading: isEnvironmentHomeChartLoading,
-                            timescaleControl: React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
-                              React.createElement("select", {
-                                className: "playground-environments-home-comparison-timescale-select",
-                                value: normalizedEnvironmentHomeChartTimescale,
-                                "aria-label": "Environment chart timescale",
-                                onChange: (event) => setEnvironmentHomeChartTimescale(String(event.target.value || "month")),
-                              },
-                                React.createElement("option", { value: "day" }, "Daily"),
-                                React.createElement("option", { value: "week" }, "Weekly"),
-                                React.createElement("option", { value: "month" }, "Monthly")
-                              )
-                            ),
-                          })
-                        )
-                      )
-                    )
-                  )
-                )
-              : null,
-            overviewListContent
-          );
+	          const environmentsHomeHero = isDevelopConfigureHome
+	            ? React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero" },
+	                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header" },
+	                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, developConfigureTitle),
+	                  React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
+	                      onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer"),
+	                    }, "Pricing", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 }))
+	                  )
+	                ),
+	                isDevelopServerKindHome
+	                  ? React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs playground-develop-tabs playground-develop-server-kind-tabs" },
+	                      React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "playground-project-overview-chart-tab playground-develop-tab is-active",
+	                          "aria-pressed": "true",
+	                        }, "Overview"),
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "playground-project-overview-chart-tab playground-develop-tab",
+	                          onClick: () => window.open(developServerKindDocumentationUrl, "_blank", "noopener,noreferrer"),
+	                        }, "Documentation")
+	                      )
+	                    )
+	                  : renderResourcesOverviewHomeTabs(),
+	                developServerKindToolbar,
+	                environmentOverviewMetricsSection,
+	                overviewListContent
+	              )
+	            : React.createElement("section", { className: "playground-environments-home-hero" },
+	                React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
+	                renderResourcesOverviewHomeTabs(),
+	                environmentOverviewMetricsSection,
+	                overviewListContent
+	              );
 
           return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll", ref: resourcesHomeScrollRef },
             React.createElement("div", { className: "playground-environments-home-content" },
@@ -72103,9 +73578,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             )
           : null;
 
-        function renderEmbeddedResourcesOverviewSection() {
-          const resourcesOverviewFilterOptions = isServersMode
-            ? (normalizedEmbeddedServerKind
+	        function renderEmbeddedResourcesOverviewSection() {
+	          const isDevelopServerKindOverview = embeddedInResources && isServersMode && Boolean(normalizedEmbeddedServerKind);
+	          const isDevelopConfigureOverview = embeddedInResources && (!isServersMode || Boolean(normalizedEmbeddedServerKind));
+	          const resourcesOverviewFilterOptions = isServersMode
+	            ? (normalizedEmbeddedServerKind
               ? [
                   { id: "all", label: "All " + currentServerResourcesLabel, description: "Show every " + currentServerResourcesLabel.toLowerCase() + " resource" },
                   { id: "published", label: "Published", description: "Only show published resources" },
@@ -72133,11 +73610,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 String(item?.status || "").trim().toLowerCase() === "deployed"
                 || Boolean(String(item?.serviceUrl || item?.customDomain || item?.cloudRunServiceName || "").trim())
               );
-          const overviewItems = baseOverviewItems
-            .filter((item) => {
-              if (resourcesOverviewFilter === "all") {
-                return true;
-              }
+	          const overviewItems = baseOverviewItems
+	            .filter((item) => {
+	              if (resourcesOverviewFilter === "all" || isDevelopServerKindOverview) {
+	                return true;
+	              }
               if (!isServersMode) {
                 const normalizedStatus = String(item?.status || "").trim().toLowerCase();
                 if (resourcesOverviewFilter === "running") {
@@ -72674,15 +74151,141 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             );
           };
-          const activeResourcesOverviewHomeTab = getActiveResourcesOverviewHomeTab();
-          const sectionTitle = activeResourcesOverviewHomeTab === "profiles"
-            ? "Profiles"
-            : activeResourcesOverviewHomeTab === "types"
-              ? "Types"
-              : activeResourcesOverviewHomeTab === "settings"
-                ? "Settings"
-              : overviewTitle;
-          return React.createElement("section", { className: "playground-plugins-section playground-resources-overview-section " + (isServersMode ? "is-servers-overview" : "is-computers-overview") },
+	          const activeResourcesOverviewHomeTab = getActiveResourcesOverviewHomeTab();
+	          const sectionTitle = activeResourcesOverviewHomeTab === "profiles"
+	            ? "Profiles"
+	            : activeResourcesOverviewHomeTab === "types"
+	              ? "Types"
+	              : activeResourcesOverviewHomeTab === "settings"
+	                ? "Settings"
+	              : overviewTitle;
+	          const overviewResourceTable = overviewItems.length === 0
+	            ? React.createElement("div", { className: "playground-plugins-empty" },
+	                normalizedResourcesSearchQuery || resourcesOverviewFilter !== "all"
+	                  ? (isServersMode ? "No matching " + currentServerResourcesLabel.toLowerCase() + " found." : "No matching computers found.")
+	                  : (isServersMode ? "No " + currentServerResourcesLabel.toLowerCase() + " available." : "No computers available.")
+	              )
+	            : React.createElement("div", { className: "playground-resources-overview-table-shell" },
+	                React.createElement("table", { className: "playground-resources-overview-table" },
+	                  React.createElement("colgroup", null,
+	                    overviewTableColumns.map((column) =>
+	                      React.createElement("col", { key: column.id, style: { width: column.width } })
+	                    )
+	                  ),
+	                  React.createElement("thead", null,
+	                    React.createElement("tr", null,
+	                      overviewTableColumns.map((column) =>
+	                        React.createElement("th", {
+	                          key: column.id,
+	                          className: column.align === "right" ? "is-right" : column.align === "action" ? "is-action" : "",
+	                        }, column.label)
+	                      )
+	                    )
+	                  ),
+	                  React.createElement("tbody", null,
+	                    overviewItems.map((item) => isServersMode
+	                      ? renderServerOverviewRow(item)
+	                      : renderComputerOverviewRow(item)
+	                    )
+	                  )
+		                )
+		              );
+			          const developConfigureResourcesLabel = isServersMode ? currentServerResourcesLabel : "Computers";
+			          const overviewSearchSortFilterRow = React.createElement("div", {
+			              className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar",
+			              ref: resourcesOverviewToolbarRef,
+			            },
+			            React.createElement("h2", { className: "playground-develop-server-metrics-title playground-develop-server-kind-table-title" }, "All " + developConfigureResourcesLabel),
+			            React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
+			              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+			                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+			                React.createElement("input", {
+			                  type: "search",
+			                  value: searchPopupQuery,
+			                  onChange: (event) => setSearchPopupQuery(event.target.value),
+			                  className: "playground-plugins-search",
+			                  placeholder: "Search " + developConfigureResourcesLabel.toLowerCase(),
+			                })
+			              ),
+			              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+			              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
+			                React.createElement("button", {
+			                  type: "button",
+		                  className: "playground-files-control-button is-bare is-backlog-sort" + (resourcesOverviewToolbarPopover === "sort" || resourcesOverviewSort !== "name" ? " is-active" : ""),
+		                  onClick: () => setResourcesOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
+		                },
+		                  React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+		                  React.createElement("span", null, "Sort")
+		                ),
+		                resourcesOverviewToolbarPopover === "sort"
+		                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+		                      resourcesOverviewSortOptions.map((option) =>
+		                        React.createElement("button", {
+		                            key: option.id,
+		                            type: "button",
+		                            className: "tb-popup-row tb-popup-row-select" + (resourcesOverviewSort === option.id ? " selected" : ""),
+		                            onClick: () => {
+		                              setResourcesOverviewSort(option.id);
+		                              setResourcesOverviewToolbarPopover("");
+		                            },
+		                          },
+		                          React.createElement("span", { className: "tb-popup-check-slot" },
+		                            resourcesOverviewSort === option.id
+		                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+		                              : null
+		                          ),
+		                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+		                            React.createElement("span", null, option.label)
+		                          )
+		                        )
+		                      )
+		                    )
+		                  : null
+		              ),
+		              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
+		                React.createElement("button", {
+		                  type: "button",
+		                  className: "playground-files-control-button is-bare is-backlog-filter" + (resourcesOverviewToolbarPopover === "filter" || resourcesOverviewFilter !== "all" ? " is-active" : ""),
+		                  onClick: () => setResourcesOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
+		                },
+		                  React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+		                  React.createElement("span", null, "Filter")
+		                ),
+		                resourcesOverviewToolbarPopover === "filter"
+		                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
+		                      resourcesOverviewFilterOptions.map((option) =>
+		                        React.createElement("button", {
+		                            key: option.id,
+		                            type: "button",
+		                            className: "tb-popup-row tb-popup-row-select" + (resourcesOverviewFilter === option.id ? " selected" : ""),
+		                            onClick: () => {
+		                              setResourcesOverviewFilter(option.id);
+		                              setResourcesOverviewToolbarPopover("");
+		                            },
+		                          },
+		                          React.createElement("span", { className: "tb-popup-check-slot" },
+		                            resourcesOverviewFilter === option.id
+		                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+		                              : null
+		                          ),
+		                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+		                            React.createElement("span", null, option.label),
+		                            React.createElement("span", null, option.description)
+		                          )
+		                        )
+		                      )
+		                    )
+			                  : null
+			              )
+			            )
+			            )
+			          );
+		          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general") {
+		            return React.createElement("section", {
+		              className: "playground-plugins-section playground-resources-overview-section " + (isServersMode ? "is-servers-overview" : "is-computers-overview") + " is-develop-server-kind-list",
+		            }, overviewSearchSortFilterRow, overviewResourceTable);
+		          }
+	          return React.createElement("section", { className: "playground-plugins-section playground-resources-overview-section " + (isServersMode ? "is-servers-overview" : "is-computers-overview") },
             activeResourcesOverviewHomeTab === "settings"
               ? null
               : React.createElement("div", { className: "playground-plugins-section-header" },
@@ -72797,47 +74400,24 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("span", null, isServersMode ? "New " + (embeddedServerKindLabel || "Server") : "New Computer")
               )
             ),
-            overviewItems.length === 0
-              ? React.createElement("div", { className: "playground-plugins-empty" },
-                  normalizedResourcesSearchQuery || resourcesOverviewFilter !== "all"
-                    ? (isServersMode ? "No matching " + currentServerResourcesLabel.toLowerCase() + " found." : "No matching computers found.")
-                    : (isServersMode ? "No " + currentServerResourcesLabel.toLowerCase() + " available." : "No computers available.")
-                )
-              : React.createElement("div", { className: "playground-resources-overview-table-shell" },
-                  React.createElement("table", { className: "playground-resources-overview-table" },
-                    React.createElement("colgroup", null,
-                      overviewTableColumns.map((column) =>
-                        React.createElement("col", { key: column.id, style: { width: column.width } })
-                      )
-                    ),
-                    React.createElement("thead", null,
-                      React.createElement("tr", null,
-                        overviewTableColumns.map((column) =>
-                          React.createElement("th", {
-                            key: column.id,
-                            className: column.align === "right" ? "is-right" : column.align === "action" ? "is-action" : "",
-                          }, column.label)
-                        )
-                      )
-                    ),
-                    React.createElement("tbody", null,
-                      overviewItems.map((item) => isServersMode
-                        ? renderServerOverviewRow(item)
-                        : renderComputerOverviewRow(item)
-                      )
-                    )
-                  )
-                )
-              )
-          );
-        }
+		            overviewResourceTable
+		          )
+		        );
+		      }
 
-        if (embeddedInResources) {
-          const embeddedResourcesPageClassName = "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page "
-            + (isServersMode ? "is-servers-view" : "is-computers-view");
+	        if (embeddedInResources) {
+	          const shouldShowEnvironmentCreationSetup = !isServersMode && environmentComposerOpen;
+	          const embeddedResourcesPageClassName = "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page "
+	            + (isServersMode ? "is-servers-view" : "is-computers-view")
+	            + (isServersMode && normalizedEmbeddedServerKind ? " is-develop-server-kind-page" : "")
+	            + (!isServersMode ? " is-develop-configure-page" : "");
           return React.createElement(React.Fragment, null,
             resourcesTopNavActions,
-            shouldShowEnvironmentHome
+            shouldShowEnvironmentCreationSetup
+              ? React.createElement("section", { className: embeddedResourcesPageClassName },
+                  renderEnvironmentCreationSetupPage()
+                )
+              : shouldShowEnvironmentHome
               ? React.createElement("section", { className: embeddedResourcesPageClassName },
                   renderEnvironmentsHome(renderEmbeddedResourcesOverviewSection())
                 )
@@ -76792,7 +78372,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             { id: "observability", label: "Traces" },
             { id: "models", label: "Models" },
           ];
-          return React.createElement("div", { className: "playground-agents-overview-tabs" },
+          return React.createElement("div", {
+              className: "playground-agents-overview-tabs"
+                + (embeddedInResources ? " playground-project-overview-tabs playground-develop-tabs playground-develop-server-kind-tabs" : ""),
+            },
             React.createElement("div", { className: "playground-project-overview-chart-tabs" },
               tabs.map((tab) =>
                 React.createElement("button", {
@@ -77731,15 +79314,52 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             })
           );
 
-          const agentsHomeHero = React.createElement("section", { className: "playground-environments-home-hero" },
-            React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your AI workforce."),
+          const isDevelopConfigureAgentsHome = embeddedInResources;
+          const agentsHomeEntityCount = agentListMode === "teams" ? teamAgents.length : singleAgents.length;
+          const agentsHomeEntitySingular = agentListMode === "teams" ? "Team" : "Agent";
+          const agentsHomeEntityPlural = agentListMode === "teams" ? "Teams" : "Agents";
+          const agentsHomeToolbar = isDevelopConfigureAgentsHome
+            ? React.createElement("div", {
+                className: "playground-develop-server-metrics-toolbar playground-develop-api-keys-toolbar playground-develop-server-kind-toolbar",
+              },
+                React.createElement("div", { className: "playground-develop-server-metrics-resource-pill" },
+                  React.createElement("span", { className: "playground-develop-server-metrics-resource-count" }, String(agentsHomeEntityCount)),
+                  React.createElement("span", { className: "playground-develop-server-metrics-resource-label" }, agentsHomeEntityCount === 1 ? agentsHomeEntitySingular : agentsHomeEntityPlural),
+                  React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
+                  onClick: agentListMode === "teams" ? handleCreateTeam : handleCreateAgent,
+                }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), "Add " + agentsHomeEntitySingular)
+              )
+            : null;
+
+          const agentsHomeHero = React.createElement("section", {
+              className: "playground-environments-home-hero" + (isDevelopConfigureAgentsHome ? " playground-develop-server-kind-hero" : ""),
+            },
+            isDevelopConfigureAgentsHome
+              ? React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header" },
+                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Agents"),
+                  React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
+                      onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer"),
+                    }, "Pricing", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  )
+                )
+              : React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your AI workforce."),
             renderAgentsOverviewHomeTabs(),
+            agentsHomeToolbar,
             agentsOverviewHomeTab === "observability"
               ? renderAgentsObservabilitySection()
               : agentsOverviewHomeTab === "models"
                 ? renderAgentsModelsSection()
                 : React.createElement(React.Fragment, null,
-                  React.createElement("div", { className: "playground-environments-home-metrics" },
+                  React.createElement("div", {
+                    className: "playground-environments-home-metrics" + (isDevelopConfigureAgentsHome ? " playground-develop-server-metrics playground-develop-server-kind-metrics" : ""),
+                  },
                     React.createElement("div", { className: "playground-tasks-detail-facts" },
                       React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                         React.createElement("div", { className: "playground-database-overview" },
@@ -80120,30 +81740,45 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   React.createElement(Bot, { width: 16, height: 16, strokeWidth: 1.8 })
                 );
           };
+          const isDevelopConfigureAgentsOverview = embeddedInResources;
+          const agentsOverviewEntityLabel = agentListMode === "teams" ? "Teams" : "Agents";
 
-          return React.createElement("section", { className: "playground-plugins-section" },
-            React.createElement("div", { className: "playground-plugins-section-header" },
-              React.createElement("div", { className: "playground-plugins-section-copy" },
-                React.createElement("h3", { className: "playground-plugins-section-title" }, agentListMode === "teams" ? "Teams" : "Agents")
-              ),
-              agentListMode === "agents"
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "playground-overview-new-button",
-                    onClick: () => {
-                      setAgentsOverviewToolbarPopover("");
-                      handleCreateAgent();
-                    },
-                    title: "Create agent",
-                    "aria-label": "Create agent",
-                  },
-                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "New Agent")
-                  )
-                : null
-            ),
-            React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row", ref: agentsOverviewToolbarRef },
-              React.createElement("div", { className: "playground-plugins-search-shell" },
+          return React.createElement("section", {
+              className: "playground-plugins-section" + (isDevelopConfigureAgentsOverview ? " playground-resources-overview-section is-develop-server-kind-list" : ""),
+            },
+            isDevelopConfigureAgentsOverview
+              ? null
+              : React.createElement("div", { className: "playground-plugins-section-header" },
+                  React.createElement("div", { className: "playground-plugins-section-copy" },
+                    React.createElement("h3", { className: "playground-plugins-section-title" }, agentsOverviewEntityLabel)
+                  ),
+                  agentListMode === "agents"
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-overview-new-button",
+                        onClick: () => {
+                          setAgentsOverviewToolbarPopover("");
+                          handleCreateAgent();
+                        },
+                        title: "Create agent",
+                        "aria-label": "Create agent",
+                      },
+                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "New Agent")
+                      )
+                    : null
+                ),
+            React.createElement("div", {
+                className: "playground-plugins-search-row playground-agents-overview-search-row" + (isDevelopConfigureAgentsOverview ? " playground-develop-server-kind-table-toolbar" : ""),
+                ref: agentsOverviewToolbarRef,
+              },
+              isDevelopConfigureAgentsOverview
+                ? React.createElement("h2", { className: "playground-develop-server-metrics-title playground-develop-server-kind-table-title" }, "All " + agentsOverviewEntityLabel)
+                : null,
+              React.createElement("div", {
+                  className: isDevelopConfigureAgentsOverview ? "playground-develop-server-kind-table-controls" : "playground-agents-overview-table-controls",
+                },
+              React.createElement("div", { className: "playground-plugins-search-shell" + (isDevelopConfigureAgentsOverview ? " playground-develop-server-kind-search-shell" : "") },
                 React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                 React.createElement("input", {
                   type: "search",
@@ -80239,6 +81874,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     "aria-pressed": agentListMode === "teams",
                   }, "Teams")
                 )
+              )
               )
             ),
             visibleOverviewAgents.length === 0
@@ -80370,7 +82006,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   )
                 )
               : shouldShowAgentsHome
-              ? React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-agents-overview-page" },
+              ? React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-agents-overview-page is-develop-configure-page" },
                   renderAgentsHome(renderEmbeddedAgentsOverviewSection())
                 )
               : React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-agents-detail-assistant-page" },
@@ -84891,9 +86527,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (initialAgentId && assignableActorsById[initialAgentId] && !isPlaygroundHumanAssigneeId(initialAgentId)) {
             return initialAgentId;
           }
-          const explicitDefaultAgent = sortedAgents.find((agent) => agent?.isDefault && agent?.id);
-          if (explicitDefaultAgent?.id) {
-            return explicitDefaultAgent.id;
+          const preferredDefaultAgent = getPlaygroundPreferredDefaultAgent(sortedAgents);
+          if (preferredDefaultAgent?.id) {
+            return preferredDefaultAgent.id;
           }
           return sortedAgents[0]?.id || "";
         }, [assignableActorsById, backlogComposerAgentId, initialAgentId, sortedAgents]);
@@ -90689,12 +92325,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             agentName: defaultAgent?.name || null,
             environmentId: defaultEnvironment?.id || "",
             environmentName: defaultEnvironment?.name || null,
-            contextId: projectRecord?.id || null,
-            contextName: projectRecord?.name || null,
+            contextId: null,
+            contextName: null,
             appId: "runner_project_calendar",
             metadata: {
-              projectId: projectRecord?.id || null,
-              projectName: projectRecord?.name || null,
+              projectId: null,
+              projectName: null,
               taskColor: base.taskColor,
               source: "runner_playground_project_calendar",
             },
@@ -91362,7 +92998,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           nextDraft.scheduleType = "one-time";
           nextDraft.scheduledTime = rawStart.toISOString();
           nextDraft.nextRunAt = nextDraft.scheduledTime;
-          nextDraft.cronExpression = buildPlaygroundDailyCronExpression(nextDraft.scheduledTime);
+          nextDraft.cronExpression = null;
           setSelectedTaskId("");
           setDraftTask(null);
           setScheduleEditorMode("create");
@@ -91375,6 +93011,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
         function openScheduleEditor(scheduleRecord) {
           const resolved = normalizePlaygroundScheduleRecord(scheduleRecord || selectedScheduleSnapshot || buildProjectScheduleDraft(selectedProject));
+          const resolvedProjectId = getPlaygroundScheduleProjectId(resolved);
+          const resolvedProject = resolvedProjectId ? (projectsById[resolvedProjectId] || null) : null;
           scheduleEditorDirtyRef.current = false;
           scheduleAutosaveQueuedRef.current = null;
           if (scheduleAutosaveTimerRef.current) {
@@ -91394,12 +93032,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             ...resolved,
             metadata: {
               ...(resolved.metadata && typeof resolved.metadata === "object" ? resolved.metadata : {}),
-              projectId: selectedProjectId || getPlaygroundScheduleProjectId(resolved) || null,
-              projectName: selectedProject?.name || null,
+              projectId: resolvedProjectId || null,
+              projectName: resolvedProjectId ? (resolvedProject?.name || resolved.contextName || null) : null,
               source: "runner_playground_project_calendar",
             },
-            contextId: selectedProjectId || resolved.contextId,
-            contextName: selectedProject?.name || resolved.contextName,
+            contextId: resolvedProjectId || null,
+            contextName: resolvedProjectId
+              ? (resolvedProject?.name || resolved.contextName || null)
+              : null,
             appId: resolved.appId || "runner_project_calendar",
           });
           setScheduleViewMode("setup");
@@ -91423,7 +93063,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
           if (!trimmedTask) return "Please enter a task.";
           if (!selectedAgent) return "Please choose an agent.";
-          if (!selectedEnvironment) return "Please choose an environment.";
+          if (!selectedEnvironment) return "Please choose a computer.";
           if (normalizedType === "one-time" && !normalizedSchedule.scheduledTime) return "Please choose a date and time.";
           if (normalizedType === "recurring" && !String(normalizedSchedule.cronExpression || "").trim()) return "Please enter a cron expression.";
           return "";
@@ -91436,6 +93076,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const normalizedType = normalizedSchedule.scheduleType === "recurring" ? "recurring" : "one-time";
           const selectedAgent = agentsById[String(normalizedSchedule.agentId || "").trim()] || null;
           const selectedEnvironment = availableBacklogEnvironments.find((environment) => environment.id === String(normalizedSchedule.environmentId || "").trim()) || null;
+          const scheduleProjectId = getPlaygroundScheduleProjectId(normalizedSchedule);
+          const scheduleProject = scheduleProjectId ? (projectsById[scheduleProjectId] || null) : null;
 
           return {
             normalizedSchedule,
@@ -91447,10 +93089,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               agentId: selectedAgent?.id || null,
               agentName: selectedAgent?.name || "Agent",
               environmentId: selectedEnvironment?.id || "",
-              environmentName: selectedEnvironment?.name || "Environment",
+              environmentName: selectedEnvironment?.name || "Computer",
               appId: "runner_project_calendar",
-              contextId: selectedProjectId,
-              contextName: selectedProject?.name || null,
+              contextId: scheduleProjectId || null,
+              contextName: scheduleProject?.name || normalizedSchedule.contextName || null,
               scheduleType: normalizedType,
               scheduledTime: normalizedType === "one-time" ? normalizedSchedule.scheduledTime || null : null,
               cronExpression: normalizedType === "recurring" ? String(normalizedSchedule.cronExpression || "").trim() : null,
@@ -91468,8 +93110,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 attachments: normalizePlaygroundTaskAttachmentList(normalizedSchedule.attachments),
                 connectors: normalizePlaygroundTaskConnectorSelections(normalizedSchedule.connectors),
                 comments: normalizePlaygroundTaskCommentList(normalizedSchedule.comments),
-                projectId: selectedProjectId,
-                projectName: selectedProject?.name || null,
+                projectId: scheduleProjectId || null,
+                projectName: scheduleProject?.name || normalizedSchedule.contextName || null,
                 source: "runner_playground_project_calendar",
               },
             },
@@ -91477,8 +93119,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }
 
         async function persistScheduleDraft(scheduleRecord, options = {}) {
-          if (!selectedProjectId) return null;
-
           const validationError = getScheduleDraftValidationError(scheduleRecord);
           if (validationError) {
             if (options.reportError !== false) {
@@ -91488,6 +93128,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
 
           const { normalizedSchedule, payload } = buildScheduleSavePayload(scheduleRecord);
+          const scheduleRequestProjectId = String(payload.contextId || selectedProjectId || "").trim();
+          if (!scheduleRequestProjectId) {
+            if (options.reportError !== false) {
+              resetScheduleSaveState("Please choose a project before saving this schedule.");
+            }
+            return null;
+          }
           setScheduleSaveState({
             isSaving: true,
             error: "",
@@ -91495,7 +93142,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
           try {
             const isEditing = (options.mode || scheduleEditorMode) === "edit" && normalizedSchedule?.id;
-            const targetUrl = backendUrl + "/projects/" + encodeURIComponent(selectedProjectId) + "/schedules" + (isEditing ? "/" + encodeURIComponent(normalizedSchedule.id) : "");
+            const targetUrl = backendUrl + "/projects/" + encodeURIComponent(scheduleRequestProjectId) + "/schedules" + (isEditing ? "/" + encodeURIComponent(normalizedSchedule.id) : "");
             const response = await fetch(targetUrl, {
               method: isEditing ? "PATCH" : "POST",
               headers: requestHeaders,
@@ -91510,7 +93157,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               ...payload,
               id: isEditing ? normalizedSchedule.id : "",
             });
-            await loadProjectSchedules(selectedProjectId);
+            await loadProjectSchedules(selectedProjectId || scheduleRequestProjectId);
             if (savedSchedule?.id) {
               setSelectedScheduleId(savedSchedule.id);
               setScheduleEditorMode("edit");
@@ -94855,8 +96502,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const nextStart = fromPlaygroundDatetimeLocalValue(taskScheduleDialogState.start);
           const nextScheduleType = taskScheduleDialogState.scheduleType === "recurring" ? "recurring" : "one-time";
           const nextTimezone = String(taskScheduleDialogState.timezone || "").trim() || "UTC";
+          const nextPresetId = taskScheduleDialogState.presetId || getPlaygroundTaskSchedulePresetId(taskScheduleDialogState.cronExpression);
           const nextCronExpression = nextScheduleType === "recurring"
-            ? String(taskScheduleDialogState.cronExpression || "").trim()
+            ? (nextPresetId
+                ? buildPlaygroundCronExpressionForPreset(nextPresetId, nextStart || Date.now())
+                : String(taskScheduleDialogState.cronExpression || "").trim())
             : null;
 
           if (!nextStart) {
@@ -100736,7 +102386,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     onClick: () => setTaskScheduleDialogState((current) => current ? {
                       ...current,
                       scheduleType: "recurring",
-                      cronExpression: current.cronExpression || getPlaygroundTaskSchedulePreset(current.presetId).cron,
+                      presetId: current.presetId || getPlaygroundTaskSchedulePresetId(current.cronExpression) || "daily",
+                      cronExpression: buildPlaygroundCronExpressionForPreset(current.presetId || getPlaygroundTaskSchedulePresetId(current.cronExpression) || "daily", fromPlaygroundDatetimeLocalValue(current.start) || Date.now()),
                       error: "",
                     } : current),
                   }, "Recurring")
@@ -100766,6 +102417,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       ? {
                           ...current,
                           start: event.target.value,
+                          cronExpression: current.scheduleType === "recurring" && (current.presetId || getPlaygroundTaskSchedulePresetId(current.cronExpression))
+                            ? buildPlaygroundCronExpressionForPreset(current.presetId || getPlaygroundTaskSchedulePresetId(current.cronExpression), fromPlaygroundDatetimeLocalValue(event.target.value) || Date.now())
+                            : current.cronExpression,
                           error: "",
                         }
                       : current
@@ -100787,7 +102441,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                               onClick: () => setTaskScheduleDialogState((current) => current ? {
                                 ...current,
                                 presetId: preset.id,
-                                cronExpression: preset.cron,
+                                cronExpression: buildPlaygroundCronExpressionForPreset(preset.id, fromPlaygroundDatetimeLocalValue(current.start) || Date.now()),
                                 error: "",
                               } : current),
                             },
@@ -101551,15 +103205,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             React.createElement("div", { className: "playground-projects-overview-inner" },
               React.createElement("div", { className: "playground-projects-overview-title-block" },
                 React.createElement("div", { className: "playground-projects-overview-title-copy" },
-                  React.createElement("div", { className: "playground-configure-kicker" }, "Project Workspace"),
-                  React.createElement("h1", { className: "playground-configure-title" }, "Organize your work in projects")
+                  React.createElement("h1", { className: "playground-project-overview-summary-title" }, "Organize your work in projects")
                 ),
                 React.createElement("button", {
                   type: "button",
-                  className: "playground-projects-overview-add-button",
+                  className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-projects-overview-add-button",
                   onClick: () => openProjectComposer(),
                 },
-                  React.createElement(Plus, { strokeWidth: 1.9, "aria-hidden": "true" }),
+                  React.createElement(Plus, { strokeWidth: 1.8, "aria-hidden": "true" }),
                   React.createElement("span", null, "Add Project")
                 )
               ),
@@ -102735,7 +104388,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const activeScheduleColorPresentation = getPlaygroundTaskColorPresentation(scheduleDraft?.taskColor);
           const ActiveSchedulePriorityIcon = activeSchedulePriorityPresentation.Icon;
           const selectedScheduleAgent = agentsById[String(scheduleDraft?.agentId || "").trim()] || null;
-          const activeScheduleEnvironmentDisplay = resolvePlaygroundTaskEnvironmentDisplay(scheduleDraft, { projectRecord: selectedProject });
+          const activeScheduleProjectId = getPlaygroundScheduleProjectId(scheduleDraft);
+          const activeScheduleProject = activeScheduleProjectId
+            ? (projectsById[activeScheduleProjectId] || null)
+            : null;
+          const activeScheduleProjectLabel = activeScheduleProjectId
+            ? (activeScheduleProject?.name || scheduleDraft?.contextName || scheduleDraft?.metadata?.projectName || activeScheduleProjectId)
+            : "None";
+          const activeScheduleEnvironmentDisplay = resolvePlaygroundTaskEnvironmentDisplay(scheduleDraft, { projectRecord: activeScheduleProject });
           const selectedScheduleEnvironment = activeScheduleEnvironmentDisplay.environmentId
             ? availableBacklogEnvironments.find((environment) => environment.id === activeScheduleEnvironmentDisplay.environmentId) || null
             : null;
@@ -102870,6 +104530,34 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 scheduleDraft?.agentId === actor.id
                   ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
                   : null
+              )
+            );
+          }
+
+          function renderScheduleTimingCard() {
+            return React.createElement("div", {
+                className: "playground-tasks-detail-facts playground-tasks-schedule-timing-card" + (taskScheduleDialogState ? " is-popover-open" : ""),
+              },
+              React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Schedule")
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                React.createElement("div", { className: "playground-tasks-detail-fact" },
+                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "When"),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                    React.createElement("div", { className: "playground-tasks-schedule-anchor" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (activeScheduleSummaryLabel ? "" : " is-empty") + (taskScheduleDialogState ? " is-active" : ""),
+                        onClick: () => openTaskScheduleDialog("schedule"),
+                      },
+                        React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeScheduleSummaryLabel || "None"),
+                        React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                      ),
+                      renderTaskScheduleDialog()
+                    )
+                  )
+                )
               )
             );
           }
@@ -103028,9 +104716,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       })
                     )
                   ),
+                  renderScheduleTimingCard(),
                   React.createElement("div", {
                     className: "playground-tasks-detail-facts playground-tasks-schedule-detail-facts"
-                      + ((taskDetailSelectPopover || taskSkillsPopoverOpen || taskScheduleDialogState) ? " is-popover-open" : ""),
+                      + ((taskDetailSelectPopover || taskSkillsPopoverOpen) ? " is-popover-open" : ""),
                   },
                     React.createElement("div", { className: "playground-tasks-detail-facts-header" },
                       React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
@@ -103241,7 +104930,65 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                             )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
-                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Environment"),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Project"),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                    renderScheduleDetailSelectControl({
+                      popoverId: "schedule-project",
+                      valueLabel: activeScheduleProjectLabel,
+                      isEmpty: !activeScheduleProjectId,
+                      menuClassName: "playground-tasks-toolbar-popup-menu-wide",
+                      children: [
+                        renderScheduleDetailSelectOptionRow({
+                          key: "__none__",
+                          label: "None",
+                          selected: !activeScheduleProjectId,
+                          onClick: () => {
+                            updateScheduleDraft((current) => ({
+                              ...(current || buildProjectScheduleDraft(selectedProject)),
+                              contextId: null,
+                              contextName: null,
+                              releaseId: null,
+                              dependencyIds: [],
+                              metadata: {
+                                ...((current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)) ? current.metadata : {}),
+                                projectId: null,
+                                projectName: null,
+                              },
+                            }));
+                            setTaskDetailSelectPopover("");
+                          },
+                        }),
+                        ...projects
+                          .slice()
+                          .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
+                          .map((project) =>
+                            renderScheduleDetailSelectOptionRow({
+                              key: project.id,
+                              label: project.name || "Untitled Project",
+                              selected: activeScheduleProjectId === project.id,
+                              onClick: () => {
+                                updateScheduleDraft((current) => ({
+                                  ...(current || buildProjectScheduleDraft(selectedProject)),
+                                  contextId: project.id,
+                                  contextName: project.name || null,
+                                  releaseId: null,
+                                  dependencyIds: [],
+                                  metadata: {
+                                    ...((current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)) ? current.metadata : {}),
+                                    projectId: project.id,
+                                    projectName: project.name || null,
+                                  },
+                                }));
+                                setTaskDetailSelectPopover("");
+                              },
+                            })
+                          ),
+                      ],
+                    })
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-fact" },
+                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Computer"),
                             React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                               renderScheduleDetailSelectControl({
                                 popoverId: "schedule-environment",
@@ -103251,8 +104998,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                                 children: [
                                   renderScheduleDetailSelectOptionRow({
                                     key: "__project_default__",
-                                    label: "Project Default",
-                                    description: selectedScheduleEnvironment?.name || "Uses the project's default environment",
+                                    label: activeScheduleProject ? "Project Default" : "Default",
+                                    description: selectedScheduleEnvironment?.name || (activeScheduleProject ? "Uses the project's default computer" : "Uses your default computer"),
                                     selected: !String(scheduleDraft?.environmentId || "").trim(),
                                     onClick: () => {
                                       updateScheduleDraft((current) => ({
@@ -103314,22 +105061,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                                   }),
                                 ],
                               })
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Schedule"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                              React.createElement("div", { className: "playground-tasks-schedule-anchor" },
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (activeScheduleSummaryLabel ? "" : " is-empty") + (taskScheduleDialogState ? " is-active" : ""),
-                                  onClick: () => openTaskScheduleDialog("schedule"),
-                                },
-                                  React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeScheduleSummaryLabel || "None"),
-                                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
-                                ),
-                                renderTaskScheduleDialog()
-                              )
                             )
                           )
                         )
@@ -103690,13 +105421,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   "aria-label": "Next",
                 }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
               ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-header-icon-button is-plain playground-tasks-calendar-toolbar-plus",
-                onClick: () => openScheduleComposer(),
-                title: "New scheduled task",
-                "aria-label": "New scheduled task",
-              }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
               React.createElement("div", { className: "content-mode-switch playground-tasks-nav playground-tasks-calendar-view-switch" },
                 allowedScheduleCalendarViews.map((viewId) =>
                   React.createElement("button", {
@@ -103706,7 +105430,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     onClick: () => toolbarProps?.onView?.(viewId),
                   }, viewId.charAt(0).toUpperCase() + viewId.slice(1))
                 )
-              )
+              ),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-header-icon-button is-plain playground-tasks-calendar-toolbar-plus",
+                onClick: () => openScheduleComposer(),
+                title: "New scheduled task",
+                "aria-label": "New scheduled task",
+              }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 }))
             )
           );
         }
@@ -104239,19 +105970,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function renderStandaloneCalendarWorkspace() {
           if (!selectedProject) {
-            return React.createElement("div", {
+          return React.createElement("div", {
                 className: "playground-environments-page playground-tasks-project-workspace",
               },
               React.createElement("section", { className: "playground-environments-detail playground-tasks-project-workspace-detail" },
-                React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-tasks-project-navbar" },
-                  React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
-                    React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                      React.createElement("div", { className: "playground-content-title" }, "Calendar")
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-content-nav-center" }),
-                  React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions" })
-                ),
                 React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll is-calendar" },
                   React.createElement("div", { className: "playground-tasks-empty" },
                     React.createElement("div", { className: "playground-tasks-empty-title" }, "No project selected"),
@@ -104266,89 +105988,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
               className: "playground-environments-page playground-tasks-project-workspace",
             },
             React.createElement("section", { className: "playground-environments-detail playground-tasks-project-workspace-detail" },
-              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-tasks-project-navbar" },
-                React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tasks-project-navbar-title" },
-                  React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                    React.createElement("div", { className: "playground-content-title" }, "Calendar")
-                  )
-                ),
-                React.createElement("div", { className: "playground-content-nav-center" }),
-                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tasks-project-navbar-actions", ref: projectSidebarActionsRef },
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-project-search-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-header-icon-button is-plain" + (projectSidebarPopover === "search" ? " is-active" : ""),
-                      onClick: () => setProjectSidebarPopover((current) => current === "search" ? "" : "search"),
-                      title: "Search calendar",
-                    }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
-                    projectSidebarPopover === "search"
-                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          React.createElement("div", { className: "playground-tasks-project-search-header" },
-                            React.createElement("div", { className: "playground-tasks-project-search-title" }, "Search Calendar"),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-tasks-project-search-close",
-                              onClick: () => setProjectSidebarPopover(""),
-                            }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
-                          ),
-                          React.createElement("div", { className: "playground-tasks-project-search-body" },
-                            React.createElement("div", { className: "playground-files-search-field" },
-                              React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
-                              React.createElement("input", {
-                                type: "text",
-                                className: "playground-files-search-field-input",
-                                placeholder: projectSearchPlaceholder,
-                                value: searchQuery,
-                                onChange: (event) => setSearchQuery(event.target.value),
-                              })
-                            ),
-                            React.createElement("div", { className: "playground-tasks-project-search-hint" }, "Filter tasks and schedules by title, task, agent, or environment.")
-                          )
-                        )
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-header-icon-button is-plain" + (projectSidebarPopover === "menu" ? " is-active" : ""),
-                      onClick: () => setProjectSidebarPopover((current) => current === "menu" ? "" : "menu"),
-                      title: "Calendar actions",
-                    }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-                    projectSidebarPopover === "menu"
-                      ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              setProjectSidebarPopover("");
-                              openScheduleComposer();
-                            },
-                          },
-                            React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "New Scheduled Task"),
-                              React.createElement("span", null, "Create a new calendar automation for this project.")
-                            )
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              setProjectSidebarPopover("");
-                              setActivePage("tasks");
-                            },
-                          },
-                            React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Open Project"),
-                              React.createElement("span", null, "Return to the project workspace for backlog and board.")
-                            )
-                          )
-                        )
-                      : null
-                  )
-                )
-              ),
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-project-workspace-scroll is-calendar" },
                 taskLoadState.status === "error" && tasks.length > 0
                   ? React.createElement("div", { className: "playground-environments-error" },
@@ -106143,7 +107782,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     : selectedProject ? renderSelectedProjectWorkspace() : renderProjectLanding()
               )
             ),
-            React.createElement("aside", { className: "playground-environments-detail playground-tasks-detail-panel" + (isTaskDetailOpen ? " is-project-task-detail" : "") },
+            React.createElement("aside", { className: "playground-environments-detail playground-tasks-detail-panel" + (isTaskDetailOpen || isScheduleDetailOpen ? " is-project-task-detail" : "") },
               renderTaskDetail()
             )
           ),
@@ -108331,6 +109970,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [toolsView, setToolsView] = useState("plugins");
         const [resourcesView, setResourcesView] = useState("agents");
         const [resourcesServerKind, setResourcesServerKind] = useState("");
+        const [configureUsageChartTab, setConfigureUsageChartTab] = useState("agents");
+        const [configureAnalyticsMenuOpen, setConfigureAnalyticsMenuOpen] = useState(false);
         const [developHomeSection, setDevelopHomeSection] = useState("overview");
         const [developServerMetricsChartTab, setDevelopServerMetricsChartTab] = useState("hosting-requests");
         const [developAnalyticsMenuOpen, setDevelopAnalyticsMenuOpen] = useState(false);
@@ -108494,6 +110135,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const githubConnectedRef = useRef(Boolean(githubStatus.connected));
         const proactiveDefaultEnvironmentWarmPromisesRef = useRef(new Map());
         const proactiveDefaultEnvironmentWarmCacheUntilMsRef = useRef(new Map());
+        const onboardingDefaultEnvironmentWarmKeyRef = useRef("");
         const threadSubagentDetailHostRef = useCallback((node) => {
           setThreadSubagentDetailHost(node || null);
         }, []);
@@ -108576,9 +110218,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             : hasShellAccess
               ? "Loading"
               : "Sign in";
-        const accountPlanLabel = hasShellAccess
-          ? (accountTierId ? accountTier + " Plan" : "Loading plan")
-          : accountTier;
         const accountAvatarUrl = canRenderAvatarImage(sessionState.photoURL) ? sessionState.photoURL : "";
         const profileEditorAvatarUrl = canRenderAvatarImage(profileDraft.photoURL) && !profileEditorAvatarBroken
           ? String(profileDraft.photoURL || "").trim()
@@ -108885,11 +110524,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
             localStorage.setItem(INITIAL_THREAD_LAST_VISIT_STORAGE_KEY, String(nextVisitedAtMs));
           } catch {}
         }, [showInitialThreadWelcome]);
-        function buildPlaygroundEnvironmentWarmRequestKey(environmentId) {
+        function buildPlaygroundEnvironmentWarmRequestKey(environmentId, agentId = "") {
           return JSON.stringify({
             backendUrl: String(proxyBackendBase || "").replace(/\\/+$/, ""),
             environmentId: String(environmentId || "").trim(),
-            agentId: null,
+            agentId: String(agentId || "").trim() || null,
           });
         }
 
@@ -109517,6 +111156,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function handleOpenSubscriptionSuccessBilling() {
           closeSubscriptionSuccessModal();
+          setSidebarWorkspaceMode("configure");
           setActivePage("settings");
           setSettingsSection("costs-plans");
         }
@@ -109706,9 +111346,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const normalizedSectionId = nextSectionId === "api" ? "costs-plans" : nextSectionId;
           setAccountMenuOpen(false);
           setNotificationsOpen(false);
+          setSidebarWorkspaceMode("configure");
           setActivePage("settings");
           setSettingsSection(normalizedSectionId === "password" || normalizedSectionId === "delete" ? "profile" : normalizedSectionId);
         }
+
+        useEffect(() => {
+          if (activePage === "settings" && sidebarWorkspaceMode !== "configure") {
+            setSidebarWorkspaceMode("configure");
+          }
+        }, [activePage, sidebarWorkspaceMode]);
 
         function openPluginsPage() {
           setAccountMenuOpen(false);
@@ -109719,6 +111366,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function openCalendarPage() {
           setAccountMenuOpen(false);
+          setSidebarWorkspaceMode("work");
           setActivePage("calendar");
         }
 
@@ -113085,6 +114733,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
         }
 
+        function handleSidebarPlanAction() {
+          if (!hasShellAccess) {
+            handleSignInWithComputerAgents();
+            return;
+          }
+
+          if (sidebarPlanIsPaid) {
+            openSettingsPage("costs-plans");
+            return;
+          }
+
+          void handleSettingsSubscribe("individual");
+        }
+
         async function handleSettingsBuyTopUp(packageId) {
           if (!hasSessionAuth) {
             handleSignInWithComputerAgents();
@@ -114370,6 +116032,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
         ]);
 
         useEffect(() => {
+          if (activePage !== "configure" || !hasSessionAuth) {
+            return;
+          }
+
+          void loadSettingsBudgetStatus();
+          void loadSettingsUsageData();
+        }, [
+          activePage,
+          hasSessionAuth,
+          loadSettingsBudgetStatus,
+          loadSettingsUsageData,
+        ]);
+
+        useEffect(() => {
           if (!showInitialThreadWelcome || !hasSessionAuth) {
             return;
           }
@@ -114783,9 +116459,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const normalizedPreferredAgentId = preferredAgentId.trim();
           if (normalizedPreferredAgentId) {
             const preferredRealAgent = realAgents.find((agent) => agent?.id === normalizedPreferredAgentId) || null;
+            const isDefaultTeamAgent = preferredRealAgent?.isDefault && getPlaygroundAgentListMode(preferredRealAgent) === "teams";
+            if (!hasRealAccess && !preferredRealAgent) {
+              return normalizedPreferredAgentId;
+            }
             if (
-              !preferredRealAgent
-              || (!isPlaygroundAgentCreatorAgent(preferredRealAgent) && !isPlaygroundMissionControlAgent(preferredRealAgent))
+              preferredRealAgent
+              && !isDefaultTeamAgent
+              && !isPlaygroundAgentCreatorAgent(preferredRealAgent)
+              && !isPlaygroundMissionControlAgent(preferredRealAgent)
             ) {
               return normalizedPreferredAgentId;
             }
@@ -114797,15 +116479,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
             const defaultAgent = getPlaygroundPreferredDefaultAgent(visibleRealAgents);
             return defaultAgent?.id || "";
           }
-          return hasRealAccess ? "" : computerAgentsMode ? "agent_default" : "";
+          return hasRealAccess ? "" : computerAgentsMode ? "agent_assistant" : "";
         }, [computerAgentsMode, hasRealAccess, preferredAgentId, realAgents]);
-        const proactivelyWarmDefaultEnvironment = useCallback(async function proactivelyWarmDefaultEnvironment(nextEnvironmentId) {
+        const proactivelyWarmDefaultEnvironment = useCallback(async function proactivelyWarmDefaultEnvironment(nextEnvironmentId, nextAgentId = "") {
           const normalizedEnvironmentId = String(nextEnvironmentId || "").trim();
+          const normalizedAgentId = String(nextAgentId || "").trim();
           if (!hasRealAccess || !normalizedEnvironmentId) {
             return;
           }
 
-          const requestKey = buildPlaygroundEnvironmentWarmRequestKey(normalizedEnvironmentId);
+          const requestKey = buildPlaygroundEnvironmentWarmRequestKey(normalizedEnvironmentId, normalizedAgentId);
           const cachedUntilMs = Math.max(
             Number(proactiveDefaultEnvironmentWarmCacheUntilMsRef.current.get(requestKey) || 0),
             readSharedEnvironmentWarmCacheUntilMs(requestKey),
@@ -114828,7 +116511,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   "Content-Type": "application/json",
                 },
                 credentials: "include",
-                body: JSON.stringify({}),
+                body: JSON.stringify({
+                  ...(normalizedAgentId ? { agentId: normalizedAgentId } : {}),
+                }),
               });
 
               if (isUnauthorizedStatus(response.status)) {
@@ -114855,6 +116540,105 @@ ${PROJECT_OVERVIEW_SCRIPT}
           proactiveDefaultEnvironmentWarmPromisesRef.current.set(requestKey, warmPromise);
           return warmPromise;
         }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
+        const ensureAndWarmOnboardingDefaultEnvironment = useCallback(async function ensureAndWarmOnboardingDefaultEnvironment() {
+          if (!hasRealAccess || sessionState.status !== "authenticated" || sessionStreamingConfig.status !== "ready") {
+            return;
+          }
+
+          const sessionWarmKey = JSON.stringify({
+            upstreamUrl: resolvedUpstreamUrl,
+            userId: sessionState.userId || accountEmail || "current",
+            agentId: resolvedPreferredAgentId || null,
+          });
+          if (onboardingDefaultEnvironmentWarmKeyRef.current === sessionWarmKey) {
+            return;
+          }
+          onboardingDefaultEnvironmentWarmKeyRef.current = sessionWarmKey;
+
+          try {
+            const response = await fetch(proxyBackendBase + "/environments/default", {
+              method: "GET",
+              headers: authRequestHeaders,
+              credentials: "include",
+              cache: "no-store",
+            });
+
+            if (isUnauthorizedStatus(response.status)) {
+              onboardingDefaultEnvironmentWarmKeyRef.current = "";
+              triggerPlatformSessionRecovery();
+              return;
+            }
+
+            if (!response.ok) {
+              onboardingDefaultEnvironmentWarmKeyRef.current = "";
+              return;
+            }
+
+            const text = await response.text();
+            let parsed = {};
+            try {
+              parsed = text ? JSON.parse(text) : {};
+            } catch {
+              parsed = {};
+            }
+
+            const defaultEnvironment = getPlaygroundEnvironmentResponseRecord(parsed);
+            const defaultEnvironmentId = String(defaultEnvironment?.id || "").trim();
+            if (!defaultEnvironmentId) {
+              onboardingDefaultEnvironmentWarmKeyRef.current = "";
+              return;
+            }
+
+            setRealEnvironments((current) => {
+              const existing = Array.isArray(current) ? current : [];
+              const existingIndex = existing.findIndex((environment) => environment?.id === defaultEnvironmentId);
+              if (existingIndex < 0) {
+                return [defaultEnvironment, ...existing];
+              }
+              return existing.map((environment, index) => (
+                index === existingIndex ? { ...environment, ...defaultEnvironment } : environment
+              ));
+            });
+
+            await proactivelyWarmDefaultEnvironment(defaultEnvironmentId, resolvedPreferredAgentId);
+          } catch (error) {
+            onboardingDefaultEnvironmentWarmKeyRef.current = "";
+            console.warn("[playground] Failed to prewarm onboarding default environment.", error);
+          }
+        }, [
+          accountEmail,
+          authRequestHeaders,
+          hasRealAccess,
+          proactivelyWarmDefaultEnvironment,
+          proxyBackendBase,
+          resolvedPreferredAgentId,
+          resolvedUpstreamUrl,
+          sessionState.status,
+          sessionState.userId,
+          sessionStreamingConfig.status,
+          triggerPlatformSessionRecovery,
+        ]);
+        useEffect(() => {
+          const shouldWarmDuringOnboarding =
+            hasRealAccess
+            && sessionState.status === "authenticated"
+            && sessionStreamingConfig.status === "ready"
+            && (sessionState.onboardingCompleted === false || showPlaygroundOnboarding);
+
+          if (!shouldWarmDuringOnboarding) {
+            return undefined;
+          }
+
+          void ensureAndWarmOnboardingDefaultEnvironment();
+          return undefined;
+        }, [
+          ensureAndWarmOnboardingDefaultEnvironment,
+          hasRealAccess,
+          sessionState.onboardingCompleted,
+          sessionState.status,
+          sessionStreamingConfig.status,
+          showPlaygroundOnboarding,
+        ]);
         useEffect(() => {
           const shouldWarmDefaultEnvironment =
             hasRealAccess
@@ -114865,13 +116649,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return undefined;
           }
 
-          void proactivelyWarmDefaultEnvironment(defaultShellEnvironmentId);
+          void proactivelyWarmDefaultEnvironment(defaultShellEnvironmentId, resolvedPreferredAgentId);
           return undefined;
         }, [
           activePage,
           defaultShellEnvironmentId,
           hasRealAccess,
           proactivelyWarmDefaultEnvironment,
+          resolvedPreferredAgentId,
           showInitialThreadWelcome,
         ]);
         const buildLiveThreadTaskPreview = useCallback(function buildLiveThreadTaskPreview(taskRecord, existingPreview, threadId = "") {
@@ -115003,6 +116788,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return normalizeSettingsTierId(activeSubscriptionTier || settingsBudgetStatus?.tier || sessionState.subscriptionTier) || "free";
         }, [settingsBudgetStatus, sessionState.subscriptionTier, settingsSubscriptions]);
         const settingsCanConfigureBusinessFeatures = settingsCurrentTierId === "team" || settingsCurrentTierId === "enterprise";
+        const sidebarPlanTierId = hasShellAccess ? (settingsCurrentTierId || accountTierId || "free") : "";
+        const sidebarPlanIsPaid = hasShellAccess && sidebarPlanTierId !== "free";
+        const sidebarPlanName = hasShellAccess
+          ? formatSubscriptionTier(sidebarPlanTierId || "free") + " Plan"
+          : "Computer Agents";
+        const sidebarPlanActionLabel = hasShellAccess
+          ? (sidebarPlanIsPaid ? "Manage Plan" : "Upgrade Plan for $0")
+          : "Sign in";
         const settingsPrimarySubscription = useMemo(() => {
           return settingsSubscriptions.find((subscription) =>
             ["active", "on_trial", "past_due"].includes(String(subscription?.status || "").toLowerCase()) && !subscription?.cancelled
@@ -116205,19 +117998,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (response.ok) {
               const parsed = await parseResponse(response);
               const items = parsePlaygroundEnvironmentListResponse(parsed);
-              setRealEnvironments(items);
-              return;
-            }
-
-            if (isUnauthorizedStatus(response.status)) {
-              setRealEnvironments([]);
-              triggerPlatformSessionRecovery();
-              return;
+              if (items.length > 0 || (sessionState.onboardingCompleted !== false && !showPlaygroundOnboarding)) {
+                setRealEnvironments(items);
+                return;
+              }
+            } else {
+              if (isUnauthorizedStatus(response.status)) {
+                setRealEnvironments([]);
+                triggerPlatformSessionRecovery();
+                return;
+              }
             }
 
             const fallbackResponse = await fetch(proxyBackendBase + "/environments/default", {
               method: "GET",
               headers: authRequestHeaders,
+              credentials: "include",
             });
 
             if (isUnauthorizedStatus(fallbackResponse.status)) {
@@ -116237,7 +118033,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
           } catch {
             setRealEnvironments([]);
           }
-        }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
+        }, [
+          authRequestHeaders,
+          hasRealAccess,
+          proxyBackendBase,
+          sessionState.onboardingCompleted,
+          showPlaygroundOnboarding,
+          triggerPlatformSessionRecovery,
+        ]);
 
         const refreshAgents = useCallback(async function refreshAgents() {
           if (!hasRealAccess) {
@@ -119849,19 +121652,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const isSkillsDetailView = isSkillsView && toolsSkillsHeaderState.mode === "detail";
           const hasMenu = (isPluginsView && !isPluginsDetailView) || isActionsView;
           const toolsOverviewTitle = isActionsView ? "Actions" : isSkillsView ? "Skills" : "Plugins";
+          const toolsWorkspaceRoot = isActionsView ? "Develop" : "Configure";
 
           return renderUnifiedTopNav({
             pathItems: isPluginsDetailView
               ? [
+                  { label: toolsWorkspaceRoot },
                   { label: toolsOverviewTitle, onClick: () => setSelectedPluginId("") },
                   { label: selectedPlugin?.label || "Plugin" },
                 ]
               : isSkillsDetailView
                 ? [
+                    { label: toolsWorkspaceRoot },
                     { label: toolsOverviewTitle, onClick: () => setToolsSkillsBackRequestToken((current) => current + 1) },
                     { label: toolsSkillsHeaderState.title || "Skill" },
                   ]
-                : [{ label: toolsOverviewTitle }],
+                : [{ label: toolsWorkspaceRoot }, { label: toolsOverviewTitle }],
             rightRef: pluginsNavActionsRef,
             extraActions: React.createElement(React.Fragment, null,
               isActionsView && !settingsSelectedTrigger
@@ -120324,7 +122130,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
             ? "costs-plans"
             : normalizedSettingsSection;
 	          const settingsTabs = [
-	            { id: "costs-plans", label: "Plans & Budget", title: "Plans & Budget" },
+	            { id: "costs-plans", label: "Budget", title: "Budget" },
+	            { id: "costs-plan-options", label: "Plans", title: "Plans" },
 	            { id: "costs-overview", label: "Usage", title: "Usage Details" },
 	            { id: "inference", label: "Inference", title: "Inference" },
 	            { id: "costs-records", label: "Billing", title: "Billing" },
@@ -120335,6 +122142,142 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           const settingsDiscordAccountLabel = settingsDiscordStatus?.discordUsername || "";
           const settingsTelegramAccountLabel = getSettingsTelegramDisplayName(settingsTelegramStatus);
+
+          const renderSettingsPlanTable = () => {
+            const fallbackTierInfo = {
+              id: "free",
+              name: "Free",
+              monthlyPrice: 0,
+              computeTokens: 100,
+              description: "Get started with basic usage. Perfect for trying out the platform.",
+            };
+            const userTier = settingsCurrentTierId || "free";
+            const currentTierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === userTier) || fallbackTierInfo;
+            const outlinedTierId = userTier === "free" ? "individual" : userTier;
+            const hasPaidActiveSubscription = settingsSubscriptions.some((subscription) =>
+              ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase()) && !subscription.cancelled
+            );
+
+            return React.createElement("div", { className: "playground-settings-plan-table" },
+              SETTINGS_PLAN_CATALOG.map((plan) => {
+                const isCurrentTier = plan.id === userTier;
+                const isOutlined = plan.id === outlinedTierId;
+                const planFeatures = getSettingsPlanFeatures(plan.id, Number(plan.computeTokens || 0));
+                const activeSubscription = settingsSubscriptions.find((subscription) =>
+                  normalizeSettingsTierId(subscription.tier) === plan.id
+                  && ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase())
+                  && !subscription.cancelled
+                );
+                const cancelledSubscription = settingsSubscriptions.find((subscription) =>
+                  normalizeSettingsTierId(subscription.tier) === plan.id
+                  && subscription.cancelled
+                  && subscription.endsAt
+                  && new Date(subscription.endsAt) > new Date()
+                );
+                const currentPrice = Number(currentTierInfo.monthlyPrice || 0);
+                const isUpgrade = Number(plan.monthlyPrice || 0) > currentPrice;
+                let actionContent = null;
+
+                if (settingsBudgetStatus?.subscriptionSource === "apple" && userTier !== "free") {
+                  actionContent = isCurrentTier
+                    ? React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan")
+                    : React.createElement("div", { className: "playground-settings-plan-card-cta-static is-apple" }, "Manage on your iPhone or iPad");
+                } else if (isCurrentTier && activeSubscription) {
+                  actionContent = React.createElement("button", {
+                      type: "button",
+                      onClick: () => {
+                        void handleSettingsCancelSubscription(activeSubscription.id);
+                      },
+                      disabled: settingsSubscriptionActionId === activeSubscription.id,
+                      className: "playground-settings-plan-card-cta-button is-danger",
+                    },
+                      settingsSubscriptionActionId === activeSubscription.id
+                        ? React.createElement("span", null, "Cancelling...")
+                        : "Cancel Subscription"
+                    );
+                } else if (isCurrentTier && cancelledSubscription) {
+                  actionContent = React.createElement("button", {
+                      type: "button",
+                      onClick: () => {
+                        void handleSettingsReactivateSubscription(cancelledSubscription.id);
+                      },
+                      disabled: settingsSubscriptionActionId === cancelledSubscription.id,
+                      className: "playground-settings-plan-card-cta-button is-light",
+                    },
+                      settingsSubscriptionActionId === cancelledSubscription.id
+                        ? React.createElement("span", null, "Reactivating...")
+                        : "Resubscribe"
+                    );
+                } else if (isCurrentTier) {
+                  actionContent = React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan");
+                } else if (hasPaidActiveSubscription) {
+                  actionContent = React.createElement("button", {
+                      type: "button",
+                      onClick: () => {
+                        void handleSettingsChangePlan(plan.id);
+                      },
+                      disabled: settingsSubscriptionActionId === plan.id,
+                      className: isUpgrade
+                        ? "playground-settings-plan-card-cta-button is-light"
+                        : "playground-settings-plan-card-cta-button is-muted",
+                    },
+                      settingsSubscriptionActionId === plan.id
+                        ? React.createElement("span", null, "Loading...")
+                        : (isUpgrade ? "Upgrade to " + plan.name : "Downgrade to " + plan.name)
+                    );
+                } else {
+                  actionContent = React.createElement("button", {
+                      type: "button",
+                      onClick: () => {
+                        void handleSettingsSubscribe(plan.id);
+                      },
+                      disabled: settingsCheckoutLoading,
+                      className: plan.id === "individual"
+                        ? "playground-settings-plan-card-cta-button is-primary"
+                        : "playground-settings-plan-card-cta-button is-light",
+                    },
+                      settingsCheckoutLoading
+                        ? React.createElement("span", null, "Loading...")
+                        : "Start with " + plan.name
+                    );
+                }
+
+                return React.createElement("section", {
+                    key: plan.id,
+                    className: "playground-settings-plan-table-card" + (isOutlined ? " is-outlined" : ""),
+                  },
+                    React.createElement("div", { className: "playground-settings-plan-table-heading" },
+                      React.createElement("div", { className: "playground-settings-plan-table-name" }, plan.name),
+                      isCurrentTier && cancelledSubscription
+                        ? React.createElement("span", { className: "playground-settings-plan-table-badge is-current" }, "Cancels " + formatSettingsDate(cancelledSubscription.endsAt))
+                        : isCurrentTier
+                          ? React.createElement("span", { className: "playground-settings-plan-table-badge is-current" }, "Current")
+                          : userTier === "free" && plan.id === "individual"
+                            ? React.createElement("span", { className: "playground-settings-plan-table-badge" }, "Recommended")
+                            : null
+                    ),
+                    React.createElement("div", { className: "playground-settings-plan-table-price" },
+                      "$" + plan.monthlyPrice,
+                      React.createElement("span", { className: "playground-settings-plan-table-price-unit" }, " " + (plan.billingLabel || "/ month"))
+                    ),
+                    React.createElement("div", { className: "playground-settings-plan-table-description" }, plan.description),
+                    React.createElement("div", { className: "playground-settings-plan-table-cta" }, actionContent),
+                    React.createElement("ul", { className: "playground-settings-plan-table-features" },
+                      planFeatures.map((feature, index) => {
+                        const FeatureIcon = feature.icon;
+                        return React.createElement("li", {
+                            key: plan.id + ":plan-table-feature:" + index,
+                            className: "playground-settings-plan-table-feature" + (index === 0 ? " is-emphasis" : ""),
+                          },
+                            React.createElement(FeatureIcon, { className: "playground-settings-plan-table-feature-icon", strokeWidth: 1.8 }),
+                            React.createElement("span", null, feature.text)
+                          );
+                      })
+                    )
+                  );
+              })
+            );
+          };
 
           let detailContent = null;
 
@@ -120503,8 +122446,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                           "$" + plan.monthlyPrice,
                           React.createElement("span", { className: "playground-settings-plan-card-price-unit" }, " " + (plan.billingLabel || "/ month"))
                         ),
-                        React.createElement("div", { className: "playground-settings-plan-card-cta" }, actionContent),
                         React.createElement("div", { className: "playground-settings-plan-card-description" }, plan.description),
+                        React.createElement("div", { className: "playground-settings-plan-card-cta" }, actionContent),
                         React.createElement("ul", { className: "playground-settings-plan-card-features" },
                           planFeatures.map((feature, index) => {
                             const FeatureIcon = feature.icon;
@@ -120542,12 +122485,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             className: "tb-popup-row",
                             onClick: () => {
                               setSettingsPlansMenuOpen(false);
-                              setSettingsChangePlanModalOpen(true);
+                              setSettingsSection("costs-plan-options");
                             },
                           },
                             React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                             React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Change Plan")
+                              React.createElement("span", null, "Plans")
                             )
                           )
                         )
@@ -120714,9 +122657,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   },
                   {
                     id: "change-plan",
-                    title: "Change Plan",
+                    title: "Plans",
                     Icon: DollarSign,
-                    onClick: () => setSettingsChangePlanModalOpen(true),
+                    onClick: () => setSettingsSection("costs-plan-options"),
                   },
                   {
                     id: "api-reference",
@@ -120788,18 +122731,18 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                   React.createElement("button", {
                                     type: "button",
                                     className: "playground-settings-plans-budget-action is-primary",
-                                    onClick: () => setSettingsTopUpModalOpen(true),
+                                    onClick: () => setSettingsSection("costs-plan-options"),
                                   },
-                                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
-                                    React.createElement("span", null, "Add credits")
+                                    React.createElement(DollarSign, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                    React.createElement("span", null, "Change Plan")
                                   ),
                                   React.createElement("button", {
                                     type: "button",
                                     className: "playground-settings-plans-budget-action",
-                                    onClick: () => setSettingsChangePlanModalOpen(true),
+                                    onClick: () => setSettingsTopUpModalOpen(true),
                                   },
-                                    React.createElement(DollarSign, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                    React.createElement("span", null, "Change Plan")
+                                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
+                                    React.createElement("span", null, "Add credits")
                                   ),
                                   React.createElement("button", {
                                     type: "button",
@@ -120942,6 +122885,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   ),
                   renderSettingsModalPortal(changePlanModal),
                   renderSettingsModalPortal(topUpModal)
+                );
+              })();
+              break;
+            case "costs-plan-options":
+              detailContent = (() => {
+                return React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+                  React.createElement("div", { className: "playground-settings-plan-app-shell" },
+                    renderSettingsBanner("error", settingsBillingError),
+                    renderSettingsBanner("success", settingsBillingSuccess),
+                    settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "free"
+                      ? React.createElement("div", { className: "playground-settings-plan-system-note" },
+                          React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "IOS"),
+                          React.createElement("div", null,
+                            React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription managed through iPhone or iPad"),
+                            React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, "To change or cancel your plan, open Agentic Compute Platform on your iPhone or iPad.")
+                          )
+                        )
+                      : null,
+                    renderSettingsPlanTable()
+                  )
                 );
               })();
               break;
@@ -127145,14 +129108,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	        function renderSettingsPageNav() {
 	          return renderUnifiedTopNav({
 	            className: "playground-settings-top-navbar",
-	            pathItems: [{ label: "Settings" }],
+	            pathItems: [{ label: "Configure" }, { label: "Settings" }],
 	          });
 	        }
 
         function renderConfigureHomeNav() {
           return renderUnifiedTopNav({
             className: "playground-configure-navbar",
-            pathItems: [{ label: "Configure" }],
+            pathItems: [{ label: "Configure" }, { label: "Overview" }],
           });
         }
 
@@ -127165,23 +129128,47 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function renderResourcesPageNav() {
           const isResourcesDetailView = resourcesHeaderState.mode === "detail";
+          const activeDevelopServerPageItem = activeResourcesView === "servers"
+            ? getDevelopServerPageItem(activeResourcesServerKind)
+            : null;
           const resourcesOverviewTitle = activeResourcesView === "servers"
-            ? (getDevelopServerPageItem(activeResourcesServerKind)?.label || "Servers")
+            ? (activeDevelopServerPageItem?.label || "Servers")
             : activeResourcesView === "computers"
               ? "Computers"
               : "Agents";
+          const isConfigureResourcesPage = !activeDevelopServerPageItem;
+          const resourcesPathItems = activeDevelopServerPageItem
+            ? (
+                isResourcesDetailView
+                  ? [
+                      { label: "Develop" },
+                      {
+                        label: resourcesOverviewTitle,
+                        onClick: () => setResourcesBackRequestToken((current) => current + 1),
+                      },
+                      { label: resourcesHeaderState.title || "Resource" },
+                    ]
+                  : [{ label: "Develop" }, { label: resourcesOverviewTitle }]
+              )
+            : (
+                isResourcesDetailView
+                  ? [
+                      ...(isConfigureResourcesPage ? [{ label: "Configure" }] : []),
+                      {
+                        label: resourcesOverviewTitle,
+                        onClick: () => setResourcesBackRequestToken((current) => current + 1),
+                      },
+                      { label: resourcesHeaderState.title || "Resource" },
+                    ]
+                  : [
+                      ...(isConfigureResourcesPage ? [{ label: "Configure" }] : []),
+                      { label: resourcesOverviewTitle },
+                    ]
+              );
 
           return renderUnifiedTopNav({
             className: "playground-resources-page",
-            pathItems: isResourcesDetailView
-              ? [
-                  {
-                    label: resourcesOverviewTitle,
-                    onClick: () => setResourcesBackRequestToken((current) => current + 1),
-                  },
-                  { label: resourcesHeaderState.title || "Resource" },
-                ]
-              : [{ label: resourcesOverviewTitle }],
+            pathItems: resourcesPathItems,
             extraActions: React.createElement("div", {
               id: "playground-resources-nav-actions",
               className: "playground-resources-nav-actions-slot",
@@ -127266,7 +129253,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
         function renderGenericPageNav() {
           return renderUnifiedTopNav({
-            pathItems: [{ label: selectedThreadTitle || "Home" }],
+            pathItems: activePage === "calendar"
+              ? [{ label: "Create" }, { label: "Calendar" }]
+              : [{ label: selectedThreadTitle || "Home" }],
           });
         }
 
@@ -127496,32 +129485,239 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function renderConfigureHomePage() {
           const connectedPluginsCount = [githubStatus, gmailStatus, googleDriveStatus, oneDriveStatus, notionStatus]
             .filter((status) => Boolean(status?.connected || status?.status === "connected")).length;
-          const configureCards = [
-            {
+          const safeTotals = settingsUsageSummary?.totals || {};
+          const normalizeConfigureUsageLabel = (value, fallback) => {
+            const label = String(value || fallback || "Unknown").trim();
+            if (label.length <= 22) {
+              return label;
+            }
+            return label.slice(0, 19).trimEnd() + "...";
+          };
+          const agentNameById = new Map(
+            (Array.isArray(realAgents) ? realAgents : [])
+              .map((agent) => [
+                String(agent?.id || "").trim(),
+                String(agent?.name || agent?.displayName || agent?.id || "").trim(),
+              ])
+              .filter(([id, name]) => id && name)
+          );
+          const environmentNameById = new Map(
+            (Array.isArray(realEnvironments) ? realEnvironments : [])
+              .map((environment) => [
+                String(environment?.id || "").trim(),
+                String(environment?.name || environment?.displayName || environment?.id || "").trim(),
+              ])
+              .filter(([id, name]) => id && name)
+          );
+          const resolveConfigureUsageEntityLabel = (item, lookupMap, fallbackLabel) => {
+            const candidateIds = [
+              item?.id,
+              item?.agentId,
+              item?.environmentId,
+              item?.resourceId,
+            ].map((value) => String(value || "").trim()).filter(Boolean);
+            for (const candidateId of candidateIds) {
+              const resolvedName = lookupMap.get(candidateId);
+              if (resolvedName) {
+                return resolvedName;
+              }
+            }
+            return item?.displayName || item?.name || fallbackLabel || "Usage";
+          };
+          const readConfigureUsageComponent = (item, component, options = {}) => {
+            const totalCT = Math.max(0, Number(item?.totalCT || 0));
+            const agentCT = Math.max(0, Number(item?.agentCT || 0));
+            const environmentCT = Math.max(0, Number(item?.environmentCT || 0));
+            if (component === "agent") {
+              return agentCT > 0 ? agentCT : (options.fallbackToTotal === false ? 0 : totalCT);
+            }
+            if (component === "environment") {
+              return environmentCT > 0 ? environmentCT : (options.fallbackToTotal === false ? 0 : totalCT);
+            }
+            if (component === "skill") {
+              return agentCT > 0 ? agentCT : totalCT;
+            }
+            return totalCT;
+          };
+          const buildConfigureUsageRows = (items, fallbackLabel, options = {}) => (Array.isArray(items) ? items : [])
+            .map((item) => {
+              const component = options.component || "total";
+              const value = readConfigureUsageComponent(item, component, options);
+              const resolvedLabel = typeof options.resolveLabel === "function"
+                ? options.resolveLabel(item)
+                : (item?.displayName || item?.name || item?.id);
+              const agentCT = component === "agent" || component === "skill"
+                ? value
+                : Math.max(0, Number(item?.agentCT || 0));
+              const environmentCT = component === "environment"
+                ? value
+                : Math.max(0, Number(item?.environmentCT || 0));
+              return {
+                id: String(item?.id || item?.resourceId || item?.name || fallbackLabel || "usage"),
+                label: normalizeConfigureUsageLabel(resolvedLabel, fallbackLabel),
+                fullLabel: resolvedLabel || fallbackLabel || "Usage",
+                totalCT: value,
+                agentCT,
+                environmentCT,
+                threadCount: Math.max(0, Number(item?.threadCount || 0)),
+              };
+            })
+            .filter((item) => item.totalCT > 0 || item.threadCount > 0)
+            .sort((left, right) => right.totalCT - left.totalCT);
+          const buildConfigureUsageBreakdownSeries = (rows, options = {}) => {
+            const inferenceValues = rows.map((row) => Math.max(0, Number(row.agentCT || 0)));
+            const computerValues = rows.map((row) => Math.max(0, Number(row.environmentCT || 0)));
+            const otherValues = rows.map((row) => Math.max(0, Number(row.totalCT || 0) - Number(row.agentCT || 0) - Number(row.environmentCT || 0)));
+            return [
+              {
+                id: "inference",
+                label: options.inferenceLabel || "Inference",
+                color: "rgb(143,196,255)",
+                values: inferenceValues,
+              },
+              {
+                id: "computers",
+                label: options.environmentLabel || "Computers",
+                color: "rgb(103,80,255)",
+                values: computerValues,
+              },
+              {
+                id: "other",
+                label: "Other Runtime",
+                color: "rgb(94,234,212)",
+                values: otherValues,
+              },
+            ].filter((entry) => entry.values.some((value) => Number(value || 0) > 0));
+          };
+          const getConfigureSkillUsageCategory = (item) => {
+            const haystack = String([
+              item?.id,
+              item?.name,
+              item?.displayName,
+            ].filter(Boolean).join(" ")).toLowerCase();
+            if (/(image|gpt-image|imagen|nanobanana|dall[-_ ]?e)/.test(haystack)) {
+              return { id: "image_generation", label: "Image Generation" };
+            }
+            if (/(firecrawl|web[_ -]?search|scrape|crawl|parse|document)/.test(haystack)) {
+              return { id: "web_search", label: "Web Search & Scraping" };
+            }
+            if (/(deep[_ -]?research|research)/.test(haystack)) {
+              return { id: "deep_research", label: "Deep Research" };
+            }
+            if (/(mcp|tool|skill)/.test(haystack)) {
+              return { id: "tools", label: "Tools" };
+            }
+            return { id: "other_skills", label: "Other Skills" };
+          };
+          const skillUsageMap = new Map();
+          const sourceItems = (Array.isArray(settingsUsageBreakdown) ? settingsUsageBreakdown : [])
+            .map((item) => ({
+              ...item,
+              totalCT: Number(item?.totalCT || 0),
+              agentCT: Number(item?.agentCT || 0),
+              environmentCT: Number(item?.environmentCT || 0),
+              displayName: getSettingsSourceLabel(item?.id),
+            }))
+            .filter((item) => item.totalCT > 0);
+          sourceItems.forEach((item) => {
+            const category = getConfigureSkillUsageCategory(item);
+            if (category.id === "other_skills") {
+              return;
+            }
+            const existing = skillUsageMap.get(category.id) || {
+              id: category.id,
+              name: category.label,
+              displayName: category.label,
+              totalCT: 0,
+              agentCT: 0,
+              environmentCT: 0,
+              threadCount: 0,
+            };
+            existing.totalCT += Number(item.totalCT || 0);
+            existing.agentCT += Number(item.agentCT || 0) > 0 || Number(item.environmentCT || 0) > 0
+              ? Number(item.agentCT || 0)
+              : Number(item.totalCT || 0);
+            existing.environmentCT += Number(item.environmentCT || 0);
+            existing.threadCount += Number(item.threadCount || 0);
+            skillUsageMap.set(category.id, existing);
+          });
+          (Array.isArray(settingsUsageResourceItems) ? settingsUsageResourceItems : []).forEach((item) => {
+            const kind = String(item?.kind || item?.resourceKind || item?.resourceType || "").trim().toLowerCase();
+            if (kind !== "mcp") {
+              return;
+            }
+            const existing = skillUsageMap.get("tools") || {
+              id: "tools",
+              name: "Tools",
+              displayName: "Tools",
+              totalCT: 0,
+              agentCT: 0,
+              environmentCT: 0,
+              threadCount: 0,
+            };
+            const ctAmount = Number(item.agentCT || item.totalCT || 0);
+            existing.totalCT += ctAmount;
+            existing.agentCT += ctAmount;
+            existing.threadCount += Number(item.threadCount || 0);
+            skillUsageMap.set("tools", existing);
+          });
+          const agentUsageRows = buildConfigureUsageRows(settingsUsageAgentItems, "Agent", {
+            component: "agent",
+            resolveLabel: (item) => resolveConfigureUsageEntityLabel(item, agentNameById, "Agent"),
+          });
+          const computerUsageRows = buildConfigureUsageRows(settingsUsageEnvironmentItems, "Computer", {
+            component: "environment",
+            fallbackToTotal: false,
+            resolveLabel: (item) => resolveConfigureUsageEntityLabel(item, environmentNameById, "Computer"),
+          });
+          const skillUsageRows = buildConfigureUsageRows(Array.from(skillUsageMap.values()), "Plugin", { component: "skill" });
+          const getConfigureUsageSeriesMax = (labels, series) => Math.max(1, ...labels.map((_, index) =>
+            series.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
+          ));
+          const buildConfigureUsageChartTab = (tab) => ({
+            ...tab,
+            yMax: getConfigureUsageSeriesMax(tab.labels, tab.series),
+          });
+          const configureUsageTabs = [
+            buildConfigureUsageChartTab({
               id: "agents",
-              label: "Agents",
-              Icon: Bot,
-              onClick: () => openResourcesView("agents"),
-            },
-            {
+              label: "Agent Usage",
+              value: formatSettingsComputeTokens(Number(safeTotals.agentCT || 0) || agentUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
+              title: "Agent Usage",
+              resourceCount: runtimeAgents.length,
+              resourceLabel: runtimeAgents.length === 1 ? "Agent" : "Agents",
+              labels: agentUsageRows.map((item) => item.label),
+              series: buildConfigureUsageBreakdownSeries(agentUsageRows, { inferenceLabel: "Agents" }),
+              emptyText: "No agent usage in this period",
+              ariaLabel: "Compute token usage by agent",
+            }),
+            buildConfigureUsageChartTab({
               id: "computers",
-              label: "Computers",
-              Icon: Monitor,
-              onClick: () => openResourcesView("computers"),
-            },
-            {
+              label: "Computer Usage",
+              value: formatSettingsComputeTokens(computerUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
+              title: "Computer Usage",
+              resourceCount: runtimeEnvironments.length,
+              resourceLabel: runtimeEnvironments.length === 1 ? "Computer" : "Computers",
+              labels: computerUsageRows.map((item) => item.label),
+              series: buildConfigureUsageBreakdownSeries(computerUsageRows, { environmentLabel: "Computers" }),
+              emptyText: "No computer usage in this period",
+              ariaLabel: "Compute token usage by computer",
+            }),
+            buildConfigureUsageChartTab({
               id: "plugins",
-              label: "Plugins",
-              Icon: Cable,
-              onClick: handleOpenPluginsShortcut,
-            },
-            {
-              id: "skills",
-              label: "Skills",
-              Icon: Layers,
-              onClick: handleOpenSkillsShortcut,
-            },
+              label: "Plugin Usage",
+              value: formatSettingsComputeTokens(skillUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
+              title: "Plugin Usage",
+              resourceCount: connectedPluginsCount,
+              resourceLabel: connectedPluginsCount === 1 ? "Connected Plugin" : "Connected Plugins",
+              labels: skillUsageRows.map((item) => item.label),
+              series: buildConfigureUsageBreakdownSeries(skillUsageRows, { inferenceLabel: "Plugins" }),
+              emptyText: "No plugin usage in this period",
+              ariaLabel: "Compute token usage by plugin",
+            }),
           ];
+          const activeConfigureUsageChart = configureUsageTabs.find((tab) => tab.id === configureUsageChartTab)
+            || configureUsageTabs[0];
           const resourceRows = [
             {
               title: String(runtimeAgents.length) + " Agents",
@@ -127569,22 +129765,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
               onClick: handleOpenSkillsShortcut,
             },
           ];
-
-          const renderConfigureCard = (card) => {
-            const Icon = card.Icon;
-            return React.createElement("button", {
-              key: card.id,
-              type: "button",
-              className: "playground-configure-feature-card",
-              onClick: card.onClick,
-            },
-              React.createElement("span", { className: "playground-configure-feature-art" },
-                React.createElement(Icon, { className: "playground-configure-feature-icon", strokeWidth: 1.7 })
-              ),
-              React.createElement("span", { className: "playground-configure-feature-label" }, card.label)
-            );
-          };
-
           const renderConfigureRow = (row, className) => {
             const Icon = row.Icon;
             return React.createElement("button", {
@@ -127603,25 +129783,149 @@ ${PROJECT_OVERVIEW_SCRIPT}
               row.meta ? React.createElement("span", { className: "playground-configure-row-meta" }, row.meta) : React.createElement(ChevronRight, { className: "playground-configure-row-meta", strokeWidth: 1.8 })
             );
           };
+          const formatConfigureUsageValue = (value) => {
+            const numericValue = Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0));
+            if (numericValue >= 1000000) {
+              return (numericValue / 1000000).toFixed(numericValue >= 10000000 ? 0 : 1).replace(".0", "") + "M";
+            }
+            if (numericValue >= 1000) {
+              return (numericValue / 1000).toFixed(numericValue >= 10000 ? 0 : 1).replace(".0", "") + "k";
+            }
+            return numericValue.toLocaleString("en-US");
+          };
+          const renderConfigureUsageChart = () =>
+            React.createElement("section", { className: "playground-develop-server-metrics playground-settings-usage-top-chart playground-environments-home-metrics playground-configure-usage-metrics" },
+              React.createElement("div", { className: "playground-develop-server-metrics-title-row" },
+                React.createElement("h2", { className: "playground-develop-server-metrics-title" }, "Analytics"),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-content-menu-button",
+                    "aria-label": "Analytics options",
+                    "aria-expanded": configureAnalyticsMenuOpen ? "true" : "false",
+                    onClick: () => setConfigureAnalyticsMenuOpen((current) => !current),
+                  }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+                  configureAnalyticsMenuOpen
+                    ? React.createElement("div", {
+                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                      },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row",
+                          onClick: () => {
+                            setConfigureAnalyticsMenuOpen(false);
+                            openSettingsPage("costs-overview");
+                          },
+                        },
+                          React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Show Usage")
+                          )
+                        )
+                      )
+                    : null
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-facts" },
+                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  React.createElement("div", { className: "playground-database-overview" },
+                    React.createElement("div", { className: "playground-database-overview-chart-block playground-settings-usage-chart-block playground-develop-server-metrics-chart-block" },
+                      React.createElement("div", {
+                        className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-settings-usage-chart-kpis playground-develop-server-metrics-kpis",
+                        style: { gridTemplateColumns: "repeat(3, minmax(0, 1fr))" },
+                      },
+                        configureUsageTabs.map((tab) =>
+                          React.createElement("button", {
+                            key: tab.id,
+                            type: "button",
+                            className: "playground-project-overview-summary-kpi playground-settings-usage-chart-kpi playground-develop-server-metrics-kpi" + (activeConfigureUsageChart.id === tab.id ? " is-active" : ""),
+                            onClick: () => setConfigureUsageChartTab(tab.id),
+                          },
+                            React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+                              React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, tab.label)
+                            ),
+                            React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, tab.value)
+                          )
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-settings-usage-chart-panel playground-develop-server-metrics-panel" },
+                        settingsUsageLoading
+                          ? React.createElement("div", { className: "playground-settings-loading-state playground-settings-usage-chart-loading-frame" },
+                              React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+                            )
+                          : renderSettingsUsageMultiStackedChart({
+                              labels: activeConfigureUsageChart.labels,
+                              series: activeConfigureUsageChart.series,
+                              yMax: activeConfigureUsageChart.yMax,
+                              tickFormatter: formatSettingsAxisComputeTokens,
+                              tall: true,
+                              ariaLabel: activeConfigureUsageChart.ariaLabel,
+                              emptyText: activeConfigureUsageChart.emptyText,
+                            }),
+                        React.createElement("div", { className: "playground-develop-server-metrics-footer" },
+                          React.createElement("div", { className: "playground-develop-server-metrics-footer-left playground-develop-server-metrics-legend" },
+                            activeConfigureUsageChart.series.map((entry) =>
+                              React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
+                                React.createElement("span", {
+                                  className: "playground-settings-usage-legend-swatch",
+                                  style: { background: entry.color },
+                                }),
+                                React.createElement("span", null, entry.label)
+                              )
+                            ),
+                            React.createElement("span", { className: "playground-develop-server-metrics-source" },
+                              formatConfigureUsageValue(activeConfigureUsageChart.resourceCount) + " " + activeConfigureUsageChart.resourceLabel
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-environments-home-comparison-timescale playground-develop-server-metrics-timescale" },
+                            React.createElement("select", {
+                              className: "playground-environments-home-comparison-timescale-select",
+                              value: "period",
+                              "aria-label": "Configure analytics period",
+                              onChange: () => {},
+                            },
+                              React.createElement("option", { value: "period" }, "Current period")
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            );
 
-          return React.createElement("div", { className: "playground-configure-home" },
-            React.createElement("div", { className: "playground-configure-home-inner" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-configure-announcement",
-                onClick: handleOpenPluginsShortcut,
-              },
-                React.createElement("span", { className: "playground-configure-announcement-badge" }, "New"),
-                React.createElement("span", null, "Connect more apps and skills"),
-                React.createElement(ChevronRight, { className: "playground-configure-announcement-icon", strokeWidth: 1.8 })
+          return React.createElement("div", { className: "playground-configure-home playground-develop-home" },
+            React.createElement("div", { className: "playground-configure-home-inner playground-develop-home-inner" },
+              React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header" },
+                React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Configure"),
+                React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
+                    onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer"),
+                  }, "Pricing", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 })),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
+                    onClick: openDocsPage,
+                  }, "Documentation", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 }))
+                )
               ),
-              React.createElement("div", { className: "playground-configure-hero" },
-                React.createElement("div", { className: "playground-configure-kicker" }, "My Workspace"),
-                React.createElement("h1", { className: "playground-configure-title" }, "Configure your agents, computers, and tools")
+              React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs playground-develop-tabs" },
+                React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-chart-tab playground-develop-tab is-active",
+                  }, "Overview"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-project-overview-chart-tab playground-develop-tab",
+                    onClick: () => openSettingsPage("costs-overview"),
+                  }, "Usage")
+                )
               ),
-              React.createElement("div", { className: "playground-configure-card-grid" },
-                configureCards.map(renderConfigureCard)
-              ),
+              renderConfigureUsageChart(),
               React.createElement("div", { className: "playground-configure-sections" },
                 React.createElement("section", { className: "playground-configure-section" },
                   React.createElement("h2", { className: "playground-configure-section-title" }, "Workspace setup"),
@@ -128695,13 +130999,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 onClick: handleOpenSkillsShortcut,
               },
               {
-                id: "calendar",
-                label: "Calendar",
-                Icon: CalendarIcon,
-                active: activePage === "calendar",
-                onClick: openCalendarPage,
-              },
-              {
                 id: "settings",
                 label: "Settings",
                 Icon: Settings2,
@@ -128750,6 +131047,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
               Icon: FolderOpen,
               active: activePage === "files",
               onClick: handleOpenFilesShortcut,
+            },
+            {
+              id: "calendar",
+              label: "Calendar",
+              Icon: CalendarIcon,
+              active: activePage === "calendar",
+              onClick: openCalendarPage,
             },
           ];
         }
@@ -128848,16 +131152,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
             React.createElement("div", { className: "sidebar-footer" },
               renderStatusIndicators(),
               sidebarFooterNavigationItems.map(renderSidebarNavigationButton),
-              React.createElement("button", {
-                type: "button",
-                className: "sidebar-account-button",
-                onClick: () => toggleAccountMenuFrom("sidebar"),
-                "aria-label": "Open account menu"
-              },
-                renderAccountAvatar("sidebar-account-avatar", "sidebar-account-avatar-image", accountInitials, accountAvatarUrl),
-                React.createElement("div", { className: "sidebar-account-copy" },
-                  React.createElement("span", { className: "sidebar-account-name" }, hasShellAccess ? accountName : "Sign in"),
-                  React.createElement("span", { className: "sidebar-account-tier" }, accountPlanLabel)
+              React.createElement("div", { className: "sidebar-plan-card", "aria-label": "Current plan" },
+                React.createElement("span", { className: "sidebar-plan-name" }, sidebarPlanName),
+                React.createElement("button", {
+                  type: "button",
+                  className: "sidebar-plan-action" + (!sidebarPlanIsPaid ? " is-upgrade" : ""),
+                  onClick: handleSidebarPlanAction,
+                  disabled: settingsCheckoutLoading && !sidebarPlanIsPaid,
+                },
+                  React.createElement("span", null, settingsCheckoutLoading && !sidebarPlanIsPaid ? "Loading..." : sidebarPlanActionLabel)
                 )
               )
             )
@@ -128911,12 +131214,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
               }),
               React.createElement("button", {
                 type: "button",
-                className: "sidebar-rail-account",
-                onClick: () => toggleAccountMenuFrom("sidebar"),
-                "aria-label": "Open account menu",
-                title: hasShellAccess ? accountName : "Sign in"
+                className: "sidebar-rail-button sidebar-rail-plan",
+                onClick: handleSidebarPlanAction,
+                "aria-label": sidebarPlanActionLabel,
+                title: sidebarPlanActionLabel
               },
-                renderAccountAvatar("sidebar-account-avatar", "sidebar-rail-account-image", accountInitials, accountAvatarUrl)
+                React.createElement(ReceiptText, { className: "sidebar-rail-icon", strokeWidth: 1.5 })
               )
             )
           );
@@ -129742,6 +132045,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                       openToolsView("plugins");
                                     },
                                     onOpenPlansBudget: () => {
+                                      setSidebarWorkspaceMode("configure");
                                       setActivePage("settings");
                                       setSettingsSection("costs-plans");
                                     },
