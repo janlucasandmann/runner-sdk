@@ -686,11 +686,14 @@ const html = `<!doctype html>
         padding: 6px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px;
-        background: rgba(36, 36, 38, 0.96);
+        background: rgba(36, 36, 38, 1);
         box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
         backdrop-filter: blur(30px);
         -webkit-backdrop-filter: blur(30px);
         z-index: 120;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
         box-sizing: border-box;
         animation: sidebar-workspace-menu-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
       }
@@ -2680,6 +2683,10 @@ const html = `<!doctype html>
         cursor: default;
       }
 
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-operational-metrics .playground-develop-server-metrics-kpi {
+        cursor: pointer;
+      }
+
       .playground-develop-home .playground-develop-server-metrics-kpi.is-active,
       .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi.is-active,
       .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi.is-active {
@@ -2729,6 +2736,25 @@ const html = `<!doctype html>
 
       .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-reads {
         background: var(--playground-chart-blue);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-compute,
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-errors,
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-4 {
+        background: var(--playground-chart-pink);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resources,
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-3 {
+        background: var(--playground-chart-green);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-1 {
+        background: var(--playground-chart-blue);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-2 {
+        background: var(--playground-chart-yellow);
       }
 
       .playground-develop-server-metrics-footer {
@@ -5193,7 +5219,7 @@ const html = `<!doctype html>
       .playground-thread-welcome-thread-empty {
         padding: 16px 18px;
         border: 1px dashed rgba(255, 255, 255, 0.12);
-        border-radius: 16px;
+        border-radius: 10px;
         color: rgba(255, 255, 255, 0.62);
         font-size: 13px;
       }
@@ -9810,7 +9836,7 @@ const html = `<!doctype html>
 
       .playground-onboarding-config-copy {
         margin: 4px 0 0;
-        max-width: 520px;
+        max-width: 620px;
         color: rgba(255, 255, 255, 0.58);
         font-size: 12px;
         font-weight: 400;
@@ -11952,6 +11978,19 @@ const html = `<!doctype html>
         padding: 28px 0 0;
         font-size: 13px;
         color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-resources-overview-loading {
+        min-height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .playground-resources-overview-loading .playground-files-state-loader {
+        width: 16px;
+        height: 16px;
       }
 
       .playground-plugin-modal-scrim {
@@ -21117,25 +21156,91 @@ const html = `<!doctype html>
         border-bottom: 0;
       }
 
-      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card {
-        padding: 0 20px 20px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.05);
-      }
+	      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card {
+	        --playground-project-overview-chart-border: linear-gradient(
+	          -10deg,
+	          rgba(200, 200, 200, 0.25),
+	          rgba(255, 255, 255, 0.1),
+	          rgba(255, 255, 255, 0.15),
+	          rgba(255, 255, 255, 0.375)
+	        );
+	        position: relative;
+	        margin-bottom: 24px;
+	        padding: 20px;
+	        border: 0;
+	        border-radius: 15px;
+	        overflow: hidden;
+	        background: transparent;
+	        -webkit-backdrop-filter: blur(50px);
+	        backdrop-filter: blur(50px);
+	      }
+
+	      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card::before {
+	        content: "";
+	        pointer-events: none;
+	        position: absolute;
+	        inset: 0;
+	        z-index: 5;
+	        border-radius: inherit;
+	        padding: 1px;
+	        background: var(--playground-project-overview-chart-border);
+	        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+	        mask-clip: content-box, border-box;
+	        mask-composite: exclude;
+	        mask-origin: content-box, border-box;
+	        mask-repeat: repeat, repeat;
+	        mask-size: auto, auto;
+	      }
+
+	      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card > * {
+	        position: relative;
+	        z-index: 1;
+	      }
 
       .playground-server-detail-content .playground-auth-users-section-header {
         border-bottom: 0;
       }
 
-      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card {
-        padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.05);
-      }
+	      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card {
+	        --playground-project-overview-chart-border: linear-gradient(
+	          -10deg,
+	          rgba(200, 200, 200, 0.25),
+	          rgba(255, 255, 255, 0.1),
+	          rgba(255, 255, 255, 0.15),
+	          rgba(255, 255, 255, 0.375)
+	        );
+	        position: relative;
+	        margin-bottom: 24px;
+	        padding: 20px;
+	        border: 0;
+	        border-radius: 15px;
+	        overflow: hidden;
+	        background: transparent;
+	        -webkit-backdrop-filter: blur(50px);
+	        backdrop-filter: blur(50px);
+	      }
+
+	      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card::before {
+	        content: "";
+	        pointer-events: none;
+	        position: absolute;
+	        inset: 0;
+	        z-index: 5;
+	        border-radius: inherit;
+	        padding: 1px;
+	        background: var(--playground-project-overview-chart-border);
+	        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+	        mask-clip: content-box, border-box;
+	        mask-composite: exclude;
+	        mask-origin: content-box, border-box;
+	        mask-repeat: repeat, repeat;
+	        mask-size: auto, auto;
+	      }
+
+	      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card > * {
+	        position: relative;
+	        z-index: 1;
+	      }
 
       .playground-computer-detail-fact-rows {
         display: flex;
@@ -24594,6 +24699,57 @@ const html = `<!doctype html>
         gap: 18px;
       }
 
+      .playground-computer-creation-header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-computer-creation-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.25;
+      }
+
+      .playground-computer-creation-subtitle {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-computer-creation-name-row {
+        width: 100%;
+        min-width: 0;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-computer-creation-name-input {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 1.2;
+        text-align: left;
+      }
+
+      .playground-computer-creation-name-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+        opacity: 1;
+      }
+
       .playground-computer-creation-field {
         display: flex;
         flex-direction: column;
@@ -26396,14 +26552,59 @@ const html = `<!doctype html>
         -webkit-backdrop-filter: blur(50px);
       }
 
-      .playground-tasks-detail-facts::before {
-        content: none;
-        display: none;
-      }
+	      .playground-tasks-detail-facts::before {
+	        content: none;
+	        display: none;
+	      }
 
-      .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-detail-facts {
-        overflow: visible;
-        border: 0;
+	      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card,
+	      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card {
+	        --playground-project-overview-chart-border: linear-gradient(
+	          -10deg,
+	          rgba(200, 200, 200, 0.25),
+	          rgba(255, 255, 255, 0.1),
+	          rgba(255, 255, 255, 0.15),
+	          rgba(255, 255, 255, 0.375)
+	        );
+	        position: relative;
+	        margin-bottom: 24px;
+	        padding: 20px;
+	        border: 0;
+	        border-radius: 15px;
+	        overflow: hidden;
+	        background: transparent;
+	        -webkit-backdrop-filter: blur(50px);
+	        backdrop-filter: blur(50px);
+	      }
+
+	      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card::before,
+	      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card::before {
+	        content: "";
+	        display: block;
+	        pointer-events: none;
+	        position: absolute;
+	        inset: 0;
+	        z-index: 5;
+	        border-radius: inherit;
+	        padding: 1px;
+	        background: var(--playground-project-overview-chart-border);
+	        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+	        mask-clip: content-box, border-box;
+	        mask-composite: exclude;
+	        mask-origin: content-box, border-box;
+	        mask-repeat: repeat, repeat;
+	        mask-size: auto, auto;
+	      }
+
+	      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card > *,
+	      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card > * {
+	        position: relative;
+	        z-index: 1;
+	      }
+
+	      .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-detail-facts {
+	        overflow: visible;
+	        border: 0;
         border-radius: 10px;
         background: transparent;
         box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
@@ -26930,6 +27131,46 @@ const html = `<!doctype html>
       .playground-database-overview-timeseries-dot.is-errors {
         fill: var(--playground-chart-pink);
         stroke: var(--playground-chart-pink);
+      }
+
+      .playground-database-overview-timeseries-line.is-compute,
+      .playground-database-overview-timeseries-line.is-resource-4 {
+        stroke: var(--playground-chart-pink);
+      }
+
+      .playground-database-overview-timeseries-dot.is-compute,
+      .playground-database-overview-timeseries-dot.is-resource-4 {
+        fill: var(--playground-chart-pink);
+        stroke: var(--playground-chart-pink);
+      }
+
+      .playground-database-overview-timeseries-line.is-resources,
+      .playground-database-overview-timeseries-line.is-resource-3 {
+        stroke: var(--playground-chart-green);
+      }
+
+      .playground-database-overview-timeseries-dot.is-resources,
+      .playground-database-overview-timeseries-dot.is-resource-3 {
+        fill: var(--playground-chart-green);
+        stroke: var(--playground-chart-green);
+      }
+
+      .playground-database-overview-timeseries-line.is-resource-1 {
+        stroke: var(--playground-chart-blue);
+      }
+
+      .playground-database-overview-timeseries-dot.is-resource-1 {
+        fill: var(--playground-chart-blue);
+        stroke: var(--playground-chart-blue);
+      }
+
+      .playground-database-overview-timeseries-line.is-resource-2 {
+        stroke: var(--playground-chart-yellow);
+      }
+
+      .playground-database-overview-timeseries-dot.is-resource-2 {
+        fill: var(--playground-chart-yellow);
+        stroke: var(--playground-chart-yellow);
       }
 
       .playground-database-overview-timeseries-series.is-deletes .playground-database-overview-timeseries-check {
@@ -30789,6 +31030,19 @@ ${ENVIRONMENT_CHANGES_CSS}
         margin-left: auto;
       }
 
+      .playground-resources-page.is-computers-view .playground-resources-overview-create-button {
+        min-height: 30px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+      }
+
+      .playground-resources-page.is-computers-view .playground-resources-overview-create-button:hover {
+        color: #000;
+        background: rgba(255, 255, 255, 0.92);
+      }
+
       .playground-resources-overview-settings-stack {
         width: 100%;
       }
@@ -31260,6 +31514,22 @@ ${ENVIRONMENT_CHANGES_CSS}
 	        height: auto;
 	      }
 
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-operational-metrics .playground-database-overview-timeseries-card,
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-operational-metrics .playground-database-overview-timeseries-chart,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-operational-metrics .playground-database-overview-timeseries-card,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-operational-metrics .playground-database-overview-timeseries-chart {
+	        padding: 0;
+	        border: 0;
+	        border-radius: 0;
+	        background: transparent;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-operational-metrics .playground-database-overview-timeseries-frame,
+	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-operational-metrics .playground-database-overview-timeseries-frame {
+	        border: 0;
+	        background: transparent;
+	      }
+
 	      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-metrics .playground-project-overview-chart-kpis,
 	      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-metrics .playground-project-overview-chart-kpis {
 	        background: rgba(255, 255, 255, 0.05);
@@ -31268,6 +31538,10 @@ ${ENVIRONMENT_CHANGES_CSS}
 		      .playground-resources-page.is-develop-server-kind-page .is-develop-server-kind-list,
 		      .playground-resources-page.is-develop-configure-page .is-develop-server-kind-list {
 		        margin-top: 0;
+		      }
+
+		      .playground-resources-page.is-develop-server-kind-page .is-develop-server-kind-list {
+		        margin-bottom: 24px;
 		      }
 
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-table-toolbar,
@@ -36284,7 +36558,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, House, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Mic, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, House, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, MessageCircle, MessageSquare, Mic, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -37759,12 +38033,12 @@ ${ENVIRONMENT_CHANGES_CSS}
             return "Web App";
           case "api":
             return "API";
-          case "function":
-            return "Function";
-          case "auth":
-            return "Auth";
-          case "agent_runtime":
-            return "Agent Runtime";
+	          case "function":
+	            return "Function";
+	          case "auth":
+	            return "Authentication";
+	          case "agent_runtime":
+	            return "Agent Runtime";
           case "database":
             return "Database";
           default:
@@ -46111,16 +46385,16 @@ ${ENVIRONMENT_CHANGES_CSS}
         return "web_app";
       }
 
-      function formatPlaygroundServerKindLabel(kind) {
-        const normalizedKind = canonicalizePlaygroundServerKind(kind);
-        if (normalizedKind === "function") return "Function";
-        if (normalizedKind === "database") return "Database";
-        if (normalizedKind === "api") return "API";
-        if (normalizedKind === "auth") return "Auth";
-        if (normalizedKind === "agent_runtime") return "Agent Runtime";
-        if (normalizedKind === "secrets") return "Secrets";
-        return "Web App";
-      }
+	      function formatPlaygroundServerKindLabel(kind) {
+	        const normalizedKind = canonicalizePlaygroundServerKind(kind);
+	        if (normalizedKind === "function") return "Function";
+	        if (normalizedKind === "database") return "Database";
+	        if (normalizedKind === "api") return "API";
+	        if (normalizedKind === "auth") return "Authentication";
+	        if (normalizedKind === "agent_runtime") return "Agent Runtime";
+	        if (normalizedKind === "secrets") return "Secrets";
+	        return "Web App";
+	      }
 
       function normalizePlaygroundServerOverviewKind(kind) {
         const rawKind = String(kind || "").trim();
@@ -46138,14 +46412,14 @@ ${ENVIRONMENT_CHANGES_CSS}
       }
 
       function formatPlaygroundServerKindPluralLabel(kind) {
-        const normalizedKind = canonicalizePlaygroundServerKind(kind);
-        if (normalizedKind === "web_app") return "Web Apps";
-        if (normalizedKind === "api") return "API";
-        if (normalizedKind === "auth") return "Auth";
-        if (normalizedKind === "agent_runtime") return "Agent Runtime";
-        if (normalizedKind === "secrets") return "Secrets";
-        return formatPlaygroundServerKindLabel(normalizedKind) + "s";
-      }
+	        const normalizedKind = canonicalizePlaygroundServerKind(kind);
+	        if (normalizedKind === "web_app") return "Web Apps";
+	        if (normalizedKind === "api") return "API";
+	        if (normalizedKind === "auth") return "Authentication";
+	        if (normalizedKind === "agent_runtime") return "Agent Runtime";
+	        if (normalizedKind === "secrets") return "Secrets";
+	        return formatPlaygroundServerKindLabel(normalizedKind) + "s";
+	      }
 
       function normalizePlaygroundServerBindingRecord(binding) {
         if (!binding || typeof binding !== "object") {
@@ -56737,6 +57011,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         resourceBillingSuccess = "",
         canConfigureResourceBilling = true,
         onResourceBillingPreferencesChange = null,
+        developServerOperationalMetrics = null,
+        developServerOperationalMetricsLoading = false,
+        developServerOperationalMetricsError = "",
+        developServerMetricsChartTab = "hosting-requests",
+        onDevelopServerMetricsChartTabChange = null,
+        developAnalyticsMenuOpen = false,
+        onDevelopAnalyticsMenuOpenChange = null,
+        onOpenSettingsUsage = null,
       }) {
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
@@ -56794,6 +57076,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const resourcesHomeScrollRef = useRef(null);
         const resourcesDetailScrollRef = useRef(null);
         const [resourceMode, setResourceMode] = useState(embeddedResourcesView === "servers" ? "servers" : "computers");
+        const isServersMode = resourceMode === "servers";
         const [isHomeViewActive, setIsHomeViewActive] = useState(true);
         const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
         const handledBackRequestTokenRef = useRef(backRequestToken);
@@ -57461,6 +57744,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (selectedServerId) {
             return String(draftServer?.name || selectedServerSnapshot?.name || "Server").trim() || "Server";
           }
+          if (environmentComposerOpen && !isServersMode) {
+            return String(environmentComposerDraft?.name || "New Computer").trim() || "New Computer";
+          }
           if (selectedEnvironmentId) {
             return String(draftEnvironment?.name || selectedEnvironmentSnapshot?.name || "Computer").trim() || "Computer";
           }
@@ -57469,6 +57755,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           draftDatabase?.name,
           draftEnvironment?.name,
           draftServer?.name,
+          environmentComposerDraft?.name,
+          environmentComposerOpen,
+          isServersMode,
           resourceMode,
           selectedDatabaseId,
           selectedDatabaseSnapshot?.name,
@@ -60982,6 +61271,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setSearchPopupQuery("");
           setEnvironmentListActionMenuState(null);
           setServerResourceActionMenuState(null);
+          setIsHomeViewActive(false);
           setEnvironmentComposerSaveState({
             isSaving: false,
             error: "",
@@ -65096,10 +65386,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("div", { className: "playground-environment-profile-card-meta" }, formatPlaygroundEnvironmentProfileResources(profile)),
                 compact
                   ? null
-                  : React.createElement("div", { className: "playground-environment-profile-card-copy" }, profile.description),
-                React.createElement("div", { className: "playground-environment-profile-card-footer" },
-                  profile.guiEnabled ? "GUI enabled" : "CLI-first"
-                )
+                  : React.createElement("div", { className: "playground-environment-profile-card-copy" }, profile.description)
               );
             })
           );
@@ -65642,30 +65929,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const composerDraft = environmentComposerDraft || buildPlaygroundDefaultEnvironmentDraft();
           const isSaving = environmentComposerSaveState.isSaving;
 
-          const profileSection = React.createElement("div", { className: "playground-agents-profile-section playground-computer-creation-profile-section" },
-            React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap playground-computer-creation-avatar-wrap" },
-              React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar playground-computer-creation-avatar" },
-                React.createElement("div", { className: "profile-editor-avatar-surface" },
-                  React.createElement(HardDrive, { width: 28, height: 28, strokeWidth: 1.75 })
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-agents-profile-name-wrap" },
-              React.createElement("input", {
-                type: "text",
-                className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input",
-                value: composerDraft.name || "",
-                placeholder: "New Computer",
-                "aria-label": "Computer name",
-                title: composerDraft.name || "Computer name",
-                autoFocus: true,
-                disabled: isSaving,
-                onKeyDown: (event) => event.stopPropagation(),
-                onChange: (event) => updateEnvironmentComposerField("name", event.target.value),
-              })
-            )
-          );
-
           return React.createElement("div", {
               className: "playground-environments-detail-scroll playground-settings-detail-scroll playground-computer-creation-scroll",
               ref: resourcesDetailScrollRef,
@@ -65675,8 +65938,27 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 onKeyDown: handleComposerSubmitShortcut,
                 onSubmit: (event) => void handleEnvironmentComposerSubmit(event),
               },
-              profileSection,
+              React.createElement("div", { className: "playground-computer-creation-header" },
+                React.createElement("h2", { className: "playground-computer-creation-title" }, "Create a new Computer"),
+                React.createElement("p", { className: "playground-computer-creation-subtitle" },
+                  "Computers give agents a dedicated runtime with their own persistent file base for project work."
+                )
+              ),
               React.createElement("div", { className: "playground-agents-creation-config-box playground-computer-creation-config-box" },
+                React.createElement("div", { className: "playground-computer-creation-name-row" },
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input playground-computer-creation-name-input",
+                    value: composerDraft.name || "",
+                    placeholder: "New Computer",
+                    "aria-label": "Computer name",
+                    title: composerDraft.name || "Computer name",
+                    autoFocus: true,
+                    disabled: isSaving,
+                    onKeyDown: (event) => event.stopPropagation(),
+                    onChange: (event) => updateEnvironmentComposerField("name", event.target.value),
+                  })
+                ),
                 renderEnvironmentComposerDescriptionSection(composerDraft, isSaving, "Add Description here"),
                 React.createElement("div", { className: "playground-computer-creation-field" },
                   React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Computer Profile"),
@@ -65684,9 +65966,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     composerDraft.computeProfile,
                     (profileId) => updateEnvironmentComposerField("computeProfile", profileId),
                     { disabled: isSaving }
-                  ),
-                  React.createElement("div", { className: "playground-environment-profile-note" },
-                    "Lite is the lowest-cost default. Standard and Power add more CPU and memory. Desktop enables the GUI."
                   )
                 ),
                 composerDraft.computeProfile === "desktop"
@@ -65713,8 +65992,17 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 ),
                 React.createElement("div", { className: "playground-agents-creation-actions playground-computer-creation-actions" },
                   React.createElement("button", {
-                    type: "submit",
+                    type: "button",
                     className: "playground-agents-creation-action-button is-secondary",
+                    disabled: isSaving,
+                    onClick: () => {
+                      closeEnvironmentComposer();
+                      setIsHomeViewActive(true);
+                    },
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "playground-agents-creation-action-button is-primary",
                     disabled: isSaving || !String(composerDraft.name || "").trim(),
                   }, isSaving ? "Creating..." : "Create Computer")
                 )
@@ -65831,9 +66119,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       composerDraft.computeProfile,
                       (profileId) => updateEnvironmentComposerField("computeProfile", profileId),
                       { disabled: environmentComposerSaveState.isSaving }
-                    ),
-                    React.createElement("div", { className: "playground-environment-profile-note" },
-                      "Lite is the lowest-cost default. Standard and Power add more CPU and memory. Desktop enables the GUI."
                     )
                   ),
                   composerDraft.computeProfile === "desktop"
@@ -72744,9 +73029,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             if (item?.kind === "api") {
               return "API";
             }
-            if (item?.kind === "auth") {
-              return "Auth";
-            }
+	            if (item?.kind === "auth") {
+	              return "Authentication";
+	            }
             if (item?.kind === "agent_runtime") {
               return "Agent Runtime";
             }
@@ -73278,8 +73563,353 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	          const developConfigureCount = Math.max(0, Math.round(Number(
 	            isDevelopServerKindHome ? filteredOverviewServerResources?.length : filteredOverviewEnvironments?.length
 	          ) || 0));
+	          const formatDevelopResourceOperationalMetricValue = (value) => {
+	            const numericValue = Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0));
+	            if (numericValue >= 1000000) {
+	              return (numericValue / 1000000).toFixed(numericValue >= 10000000 ? 0 : 1).replace(".0", "") + "M";
+	            }
+	            if (numericValue >= 1000) {
+	              return (numericValue / 1000).toFixed(numericValue >= 10000 ? 0 : 1).replace(".0", "") + "k";
+	            }
+	            return numericValue.toLocaleString("en-US");
+	          };
+	          const buildDevelopResourceSvgLinePath = (points) => {
+	            if (!Array.isArray(points) || points.length === 0) {
+	              return "";
+	            }
+	            return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
+	          };
+	          const buildDevelopResourceMetricHourLabels = () => {
+	            const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric" });
+	            const anchor = new Date();
+	            anchor.setMinutes(0, 0, 0);
+	            return Array.from({ length: 24 }, (_, index) => {
+	              const date = new Date(anchor);
+	              date.setHours(anchor.getHours() - (23 - index));
+	              return formatter.format(date);
+	            });
+	          };
+	          const developResourceOperationalLabels = Array.isArray(developServerOperationalMetrics?.labels) && developServerOperationalMetrics.labels.length
+	            ? developServerOperationalMetrics.labels
+	            : buildDevelopResourceMetricHourLabels();
+	          const getDevelopResourceOperationalSeries = (key) => {
+	            const values = developServerOperationalMetrics?.series?.[key];
+	            return Array.isArray(values) && values.length === developResourceOperationalLabels.length
+	              ? values.map((value) => Math.max(0, Number(value || 0)))
+	              : developResourceOperationalLabels.map(() => 0);
+	          };
+	          const formatDevelopResourceOperationalTabValue = (tab, value) => {
+	            const formatted = formatDevelopResourceOperationalMetricValue(value);
+	            return tab?.valueSuffix ? formatted + " " + tab.valueSuffix : formatted;
+	          };
+	          const buildDevelopServerKindSharedMetricTabs = (resourceCountKey, resourceLabel) => [
+	            {
+	              id: "compute-tokens",
+	              key: "computeTokens",
+	              label: "CT Consumption",
+	              title: "CT Consumption",
+	              tone: "compute",
+	              legend: "Compute Tokens",
+	              resourceCountKey,
+	              valueSuffix: "CT",
+	              emptyText: "No compute token usage in the last 24 hours",
+	            },
+	            {
+	              id: "resources",
+	              key: "resources",
+	              label: "Resources",
+	              title: "Resources",
+	              tone: "resources",
+	              legend: resourceLabel,
+	              resourceCountKey,
+	              emptyText: "No resources in the last 24 hours",
+	            },
+	            {
+	              id: "errors",
+	              key: "errors",
+	              label: "Errors",
+	              title: "Errors",
+	              tone: "errors",
+	              legend: "Errors",
+	              resourceCountKey,
+	              emptyText: "No errors in the last 24 hours",
+	            },
+	          ];
+	          const getDevelopServerKindOperationalMetricTabs = () => {
+	            if (normalizedEmbeddedServerKind === "web_app") {
+	              return [
+	                {
+	                  id: "hosting-requests",
+	                  key: "hostingRequests",
+	                  label: "Hosting Requests",
+	                  title: "Hosting Requests",
+	                  tone: "requests",
+	                  legend: "Web apps",
+	                  resourceCountKey: "webApps",
+	                  emptyText: "No hosting requests in the last 24 hours",
+	                },
+	                ...buildDevelopServerKindSharedMetricTabs("webApps", "Web apps"),
+	              ];
+	            }
+	            if (normalizedEmbeddedServerKind === "function") {
+	              return [
+	                {
+	                  id: "function-calls",
+	                  key: "functionCalls",
+	                  label: "Function Calls",
+	                  title: "Function Calls",
+	                  tone: "latency",
+	                  legend: "Functions",
+	                  resourceCountKey: "functions",
+	                  emptyText: "No function calls in the last 24 hours",
+	                },
+	                ...buildDevelopServerKindSharedMetricTabs("functions", "Functions"),
+	              ];
+	            }
+	            if (normalizedEmbeddedServerKind === "database") {
+	              return [
+	                {
+	                  id: "database-reads",
+	                  key: "databaseReads",
+	                  label: "Database Reads",
+	                  title: "Database Reads",
+	                  tone: "reads",
+	                  legend: "Reads",
+	                  resourceCountKey: "databases",
+	                  emptyText: "No database reads in the last 24 hours",
+	                },
+	                {
+	                  id: "database-writes",
+	                  key: "databaseWrites",
+	                  label: "Database Writes",
+	                  title: "Database Writes",
+	                  tone: "writes",
+	                  legend: "Writes",
+	                  resourceCountKey: "databases",
+	                  emptyText: "No database writes in the last 24 hours",
+	                },
+	                ...buildDevelopServerKindSharedMetricTabs("databases", "Databases"),
+	              ];
+	            }
+	            if (normalizedEmbeddedServerKind === "agent_runtime") {
+	              return [
+	                {
+	                  id: "runtime-runs",
+	                  key: "agentRuntimeRuns",
+	                  label: "Runtime Runs",
+	                  title: "Runtime Runs",
+	                  tone: "success",
+	                  legend: "Agent runtime",
+	                  resourceCountKey: "agentRuntimes",
+	                  emptyText: "No runtime runs in the last 24 hours",
+	                },
+	                ...buildDevelopServerKindSharedMetricTabs("agentRuntimes", "Agent runtimes"),
+	              ];
+	            }
+	            if (normalizedEmbeddedServerKind === "secrets") {
+	              return [
+	                {
+	                  id: "secret-reads",
+	                  key: "secretReads",
+	                  label: "Secret Reads",
+	                  title: "Secret Reads",
+	                  tone: "success",
+	                  legend: "Secrets",
+	                  resourceCountKey: "secrets",
+	                  emptyText: "No secret reads in the last 24 hours",
+	                },
+	                ...buildDevelopServerKindSharedMetricTabs("secrets", "Secrets"),
+	              ];
+	            }
+		            if (normalizedEmbeddedServerKind === "auth") {
+		              return [
+		                {
+		                  id: "auth-events",
+		                  key: "authEvents",
+		                  label: "Authentication Events",
+		                  title: "Authentication Events",
+		                  tone: "success",
+		                  legend: "Authentication",
+		                  resourceCountKey: "auth",
+		                  emptyText: "No authentication events in the last 24 hours",
+		                },
+		                ...buildDevelopServerKindSharedMetricTabs("auth", "Authentication"),
+		              ];
+		            }
+	            return [
+	              {
+	                id: "api-requests",
+	                key: "apiRequests",
+	                label: "API Requests",
+	                title: "API Requests",
+	                tone: "success",
+	                legend: "APIs",
+	                resourceCountKey: "apis",
+	                emptyText: "No API requests in the last 24 hours",
+	              },
+	              ...buildDevelopServerKindSharedMetricTabs("apis", "APIs"),
+	            ];
+	          };
+	          const developServerKindOperationalMetricTabs = getDevelopServerKindOperationalMetricTabs();
+	          const activeDevelopServerKindOperationalMetric = developServerKindOperationalMetricTabs.find((tab) => tab.id === developServerMetricsChartTab)
+	            || developServerKindOperationalMetricTabs[0];
+	          const setDevelopServerKindMetricTab = typeof onDevelopServerMetricsChartTabChange === "function"
+	            ? onDevelopServerMetricsChartTabChange
+	            : () => {};
+	          const toggleDevelopServerKindAnalyticsMenu = () => {
+	            if (typeof onDevelopAnalyticsMenuOpenChange === "function") {
+	              onDevelopAnalyticsMenuOpenChange((current) => !current);
+	            }
+	          };
+	          const closeDevelopServerKindAnalyticsMenu = () => {
+	            if (typeof onDevelopAnalyticsMenuOpenChange === "function") {
+	              onDevelopAnalyticsMenuOpenChange(false);
+	            }
+	          };
+	          const openDevelopServerKindUsage = () => {
+	            closeDevelopServerKindAnalyticsMenu();
+	            if (typeof onOpenSettingsUsage === "function") {
+	              onOpenSettingsUsage();
+	            }
+	          };
+	          const getDevelopServerKindOperationalChartSeries = (metric) => {
+	            const topSeries = metric?.key && metric.key !== "resources"
+	              ? developServerOperationalMetrics?.topResourceSeries?.[metric.key]
+	              : null;
+	            const normalizedTopSeries = Array.isArray(topSeries)
+	              ? topSeries.filter((entry) => Math.max(0, Number(entry?.total || 0)) > 0).slice(0, 4)
+	              : [];
+	            if (normalizedTopSeries.length > 0) {
+	              return normalizedTopSeries.map((entry, index) => ({
+	                key: String(entry?.id || metric.key + ":" + index),
+	                label: String(entry?.label || metric.legend || metric.label || "Resource"),
+	                tone: "resource-" + String((index % 4) + 1),
+	                values: Array.isArray(entry?.values) && entry.values.length === developResourceOperationalLabels.length
+	                  ? entry.values.map((value) => Math.max(0, Number(value || 0)))
+	                  : developResourceOperationalLabels.map(() => 0),
+	              }));
+	            }
+	            return [{
+	              key: metric.key,
+	              label: metric.legend || metric.label,
+	              tone: metric.tone,
+	              values: getDevelopResourceOperationalSeries(metric.key),
+	            }];
+	          };
+	          const renderDevelopServerKindOperationalMetrics = () => {
+	            const activeChartSeries = getDevelopServerKindOperationalChartSeries(activeDevelopServerKindOperationalMetric);
+	            const activeResourceCount = Math.max(0, Math.round(Number(
+	              developServerOperationalMetrics?.resourceCounts?.[activeDevelopServerKindOperationalMetric.resourceCountKey]
+	              ?? developConfigureCount
+	              ?? 0
+	            ) || 0));
+	            return React.createElement("section", {
+	              className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-develop-server-kind-operational-metrics",
+	            },
+	              React.createElement("div", { className: "playground-develop-server-metrics-title-row" },
+	                React.createElement("h2", { className: "playground-develop-server-metrics-title" }, "Analytics"),
+	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-content-menu-button",
+	                    "aria-label": "Analytics options",
+	                    "aria-expanded": developAnalyticsMenuOpen ? "true" : "false",
+	                    onClick: toggleDevelopServerKindAnalyticsMenu,
+	                  }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
+	                  developAnalyticsMenuOpen
+	                    ? React.createElement("div", {
+	                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+	                      },
+	                        React.createElement("button", {
+	                          type: "button",
+	                          className: "tb-popup-row",
+	                          onClick: openDevelopServerKindUsage,
+	                        },
+	                          React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                            React.createElement("span", null, "Show Usage")
+	                          )
+	                        )
+	                      )
+	                    : null
+	                )
+	              ),
+	              React.createElement("div", { className: "playground-tasks-detail-facts" },
+	                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+	                  React.createElement("div", { className: "playground-database-overview" },
+	                    React.createElement("div", { className: "playground-database-overview-chart-block playground-settings-usage-chart-block playground-develop-server-metrics-chart-block" },
+	                      React.createElement("div", {
+	                        className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-settings-usage-chart-kpis playground-develop-server-metrics-kpis",
+	                        style: { gridTemplateColumns: "repeat(" + String(Math.max(1, developServerKindOperationalMetricTabs.length)) + ", minmax(0, 1fr))" },
+	                      },
+	                        developServerKindOperationalMetricTabs.map((tab) =>
+	                          React.createElement("button", {
+	                            key: tab.id,
+	                            type: "button",
+	                            className: "playground-project-overview-summary-kpi playground-settings-usage-chart-kpi playground-develop-server-metrics-kpi" + (activeDevelopServerKindOperationalMetric.id === tab.id ? " is-active" : ""),
+	                            onClick: () => setDevelopServerKindMetricTab(tab.id),
+	                          },
+	                            React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
+	                              React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, tab.label)
+	                            ),
+	                            React.createElement("div", { className: "playground-project-overview-summary-kpi-value" },
+	                              formatDevelopResourceOperationalTabValue(tab, developServerOperationalMetrics?.totals?.[tab.key] || 0)
+	                            )
+	                          )
+	                        )
+	                      ),
+	                      React.createElement("div", { className: "playground-settings-usage-chart-panel playground-develop-server-metrics-panel" },
+	                        developServerOperationalMetricsLoading
+	                          ? React.createElement("div", { className: "playground-settings-loading-state playground-settings-usage-chart-loading-frame" },
+	                              React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
+	                            )
+	                          : renderPlaygroundTelemetryTimeseriesChart({
+	                              labels: developResourceOperationalLabels,
+	                              series: activeChartSeries,
+	                              emptyText: activeDevelopServerKindOperationalMetric.emptyText,
+	                              ariaLabel: activeDevelopServerKindOperationalMetric.title + " over time",
+	                              chartHeight: 288,
+	                              buildLinePath: buildDevelopResourceSvgLinePath,
+	                              getSeriesValue: (entry, _label, index) => entry?.values?.[index],
+	                              getXAxisLabel: (label) => String(label || ""),
+	                              formatAxisValue: formatDevelopResourceOperationalMetricValue,
+	                            }),
+	                        React.createElement("div", { className: "playground-develop-server-metrics-footer" },
+	                          React.createElement("div", { className: "playground-develop-server-metrics-footer-left playground-develop-server-metrics-legend" },
+	                            activeChartSeries.map((entry) =>
+	                              React.createElement("div", { key: "legend:" + entry.key, className: "playground-settings-usage-legend-item" },
+	                                React.createElement("span", { className: "playground-settings-usage-legend-swatch is-" + entry.tone }),
+	                                React.createElement("span", null, entry.label)
+	                              )
+	                            ),
+	                            developServerOperationalMetricsError
+	                              ? React.createElement("span", { className: "playground-develop-server-metrics-error" }, developServerOperationalMetricsError)
+	                              : React.createElement("span", { className: "playground-develop-server-metrics-source" },
+	                                  formatDevelopResourceOperationalMetricValue(activeResourceCount) + " resources monitored"
+	                                )
+	                          ),
+	                          React.createElement("div", { className: "playground-environments-home-comparison-timescale playground-develop-server-metrics-timescale" },
+	                            React.createElement("select", {
+	                              className: "playground-environments-home-comparison-timescale-select",
+	                              value: "24h",
+	                              "aria-label": "Server metrics period",
+	                              onChange: () => {},
+	                            },
+	                              React.createElement("option", { value: "24h" }, "Last 24 hours")
+	                            )
+	                          )
+	                        )
+	                      )
+	                    )
+	                  )
+	                )
+	              )
+	            );
+	          };
 	          const environmentOverviewMetricsSection = activeResourcesOverviewHomeTab === "general"
-	            ? React.createElement("div", {
+	            ? isDevelopServerKindHome
+	              ? renderDevelopServerKindOperationalMetrics()
+	              : React.createElement("div", {
 	                className: "playground-environments-home-metrics" + (isDevelopConfigureHome ? " playground-develop-server-metrics playground-develop-server-kind-metrics" : ""),
 	              },
 	                React.createElement("section", { className: "playground-tasks-detail-facts" },
@@ -73386,7 +74016,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           );
         }
 
-        const isServersMode = resourceMode === "servers";
         const shouldShowEnvironmentHome = isHomeViewActive || (isServersMode ? (!selectedServerId && !selectedDatabaseId) : !selectedEnvironmentId);
         const embeddedServerKindLabel = normalizedEmbeddedServerKind ? formatPlaygroundServerKindLabel(normalizedEmbeddedServerKind) : "";
         const embeddedServerKindPluralLabel = normalizedEmbeddedServerKind ? formatPlaygroundServerKindPluralLabel(normalizedEmbeddedServerKind) : "";
@@ -73406,9 +74035,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (item?.kind === "api") {
             return "API";
           }
-          if (item?.kind === "auth") {
-            return "Auth";
-          }
+	          if (item?.kind === "auth") {
+	            return "Authentication";
+	          }
           if (item?.kind === "agent_runtime") {
             return "Agent Runtime";
           }
@@ -73942,10 +74571,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 interfaceLabel: "API endpoint",
                 managed: false,
               },
-              {
-                id: "auth",
-                label: "Auth",
-                description: "Managed identity layer for users, sessions, and sign-in providers.",
+	              {
+	                id: "auth",
+	                label: "Authentication",
+	                description: "Managed identity layer for users, sessions, and sign-in providers.",
                 renderIcon: () => React.createElement(Users, { width: 16, height: 16, strokeWidth: 1.8 }),
                 runtime: "Identity",
                 deployment: "Managed",
@@ -74159,12 +74788,29 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	              : activeResourcesOverviewHomeTab === "settings"
 	                ? "Settings"
 	              : overviewTitle;
+	          const isOverviewResourceListLoading = isServersMode
+	            ? normalizedEmbeddedServerKind === "database"
+	              ? (!hasLoadedDatabases || databaseListLoading)
+	              : normalizedEmbeddedServerKind
+	                ? (!hasLoadedServers || serverListLoading)
+	                : (!hasLoadedServers || !hasLoadedDatabases || serverListLoading || databaseListLoading)
+	            : false;
+	          const shouldShowOverviewResourceLoading = overviewItems.length === 0
+	            && isOverviewResourceListLoading
+	            && !normalizedResourcesSearchQuery
+	            && resourcesOverviewFilter === "all";
+	          const overviewResourceLoadingLabel = isServersMode ? currentServerResourcesLabel.toLowerCase() : "computers";
 	          const overviewResourceTable = overviewItems.length === 0
-	            ? React.createElement("div", { className: "playground-plugins-empty" },
-	                normalizedResourcesSearchQuery || resourcesOverviewFilter !== "all"
-	                  ? (isServersMode ? "No matching " + currentServerResourcesLabel.toLowerCase() + " found." : "No matching computers found.")
-	                  : (isServersMode ? "No " + currentServerResourcesLabel.toLowerCase() + " available." : "No computers available.")
-	              )
+	            ? shouldShowOverviewResourceLoading
+	              ? React.createElement("div", { className: "playground-plugins-empty playground-resources-overview-loading" },
+	                  React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
+	                  React.createElement("span", null, "Loading " + overviewResourceLoadingLabel)
+	                )
+	              : React.createElement("div", { className: "playground-plugins-empty" },
+	                  normalizedResourcesSearchQuery || resourcesOverviewFilter !== "all"
+	                    ? (isServersMode ? "No matching " + currentServerResourcesLabel.toLowerCase() + " found." : "No matching computers found.")
+	                    : (isServersMode ? "No " + currentServerResourcesLabel.toLowerCase() + " available." : "No computers available.")
+	                )
 	            : React.createElement("div", { className: "playground-resources-overview-table-shell" },
 	                React.createElement("table", { className: "playground-resources-overview-table" },
 	                  React.createElement("colgroup", null,
@@ -109675,18 +110321,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
             return false;
           }
         }, []);
-        const initialSidebarWorkspaceMode = useMemo(() => {
-          try {
-            const stored = String(localStorage.getItem("runner_demo_sidebar_workspace_mode") || "").trim();
-            return ["work", "configure", "develop"].includes(stored) ? stored : "work";
-          } catch {
-            return "work";
-          }
-        }, []);
+        const initialSidebarWorkspaceMode = "work";
         const [sidebarOpen, setSidebarOpen] = useState(true);
-        const [activePage, setActivePage] = useState(() => (
-          initialSidebarWorkspaceMode === "develop" ? "develop" : "thread"
-        ));
+        const [activePage, setActivePage] = useState("thread");
         const [environmentsOpenToken, setEnvironmentsOpenToken] = useState(0);
         const [environmentsNavigationTargetId, setEnvironmentsNavigationTargetId] = useState("");
         const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -110047,12 +110684,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           document.addEventListener("mousedown", handlePluginsOverviewToolbarPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handlePluginsOverviewToolbarPopoverPointerDown);
         }, [pluginsOverviewToolbarPopover]);
-        useEffect(() => {
-          try {
-            localStorage.setItem("runner_demo_sidebar_workspace_mode", sidebarWorkspaceMode);
-          } catch {
-          }
-        }, [sidebarWorkspaceMode]);
         useEffect(() => {
           if (!sidebarWorkspaceMenuOpen) {
             return undefined;
@@ -118116,12 +118747,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
         }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
 
-        const loadDevelopServerOperationalMetrics = useCallback(async function loadDevelopServerOperationalMetrics() {
+        const loadDevelopServerOperationalMetrics = useCallback(async function loadDevelopServerOperationalMetrics(options = {}) {
           if (!hasRealAccess) {
             setDevelopServerOperationalMetrics(null);
             setDevelopServerOperationalMetricsError("");
             return;
           }
+
+          const rawTargetKind = String(options?.resourceKind || "").trim();
+          const targetKind = rawTargetKind ? canonicalizePlaygroundServerKind(rawTargetKind) : "";
 
           const buildHourlyBuckets = () => {
             const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric" });
@@ -118133,16 +118767,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return {
                 key: date.toISOString().slice(0, 13),
                 label: formatter.format(date),
+                startMs: date.getTime(),
                 hostingRequests: 0,
                 apiRequests: 0,
                 functionCalls: 0,
                 databaseReads: 0,
                 databaseWrites: 0,
+                agentRuntimeRuns: 0,
+                secretReads: 0,
+                authEvents: 0,
+                computeTokens: 0,
+                errors: 0,
               };
             });
             return {
               buckets,
               bucketByKey: new Map(buckets.map((bucket) => [bucket.key, bucket])),
+              bucketIndexByKey: new Map(buckets.map((bucket, index) => [bucket.key, index])),
             };
           };
           const readListResponse = async (path, parser) => {
@@ -118179,17 +118820,78 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setDevelopServerOperationalMetricsLoading(true);
           setDevelopServerOperationalMetricsError("");
           try {
-            const [{ buckets, bucketByKey }, servers, databases] = await Promise.all([
+            const [{ buckets, bucketByKey, bucketIndexByKey }, servers, databases] = await Promise.all([
               Promise.resolve(buildHourlyBuckets()),
               readListResponse("/servers", parsePlaygroundServerListResponse),
               readListResponse("/databases", parsePlaygroundDatabaseListResponse),
             ]);
-            const activeServers = servers.filter((server) => (
+            const activeServerRecords = servers.filter((server) => (
               server?.id
               && !["deleted"].includes(String(server?.status || server?.state || "").toLowerCase())
-              && !["database", "secrets"].includes(canonicalizePlaygroundServerKind(server?.kind))
             ));
+            const activeServers = activeServerRecords.filter((server) => canonicalizePlaygroundServerKind(server?.kind) !== "database");
             const activeDatabases = databases.filter((database) => database?.id && String(database?.status || "").toLowerCase() !== "deleted");
+            const analyticsServers = targetKind && targetKind !== "database"
+              ? activeServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === targetKind)
+              : activeServers;
+            const analyticsDatabases = targetKind && targetKind !== "database" ? [] : activeDatabases;
+            const metricResourceSeries = {
+              hostingRequests: [],
+              apiRequests: [],
+              functionCalls: [],
+              databaseReads: [],
+              databaseWrites: [],
+              agentRuntimeRuns: [],
+              secretReads: [],
+              authEvents: [],
+              computeTokens: [],
+              errors: [],
+            };
+            const createMetricValues = () => buckets.map(() => 0);
+            const readAnalyticsNumber = (source, keys) => {
+              const candidates = Array.isArray(keys) ? keys : [keys];
+              for (const key of candidates) {
+                const value = Number(source?.[key]);
+                if (Number.isFinite(value)) {
+                  return value;
+                }
+              }
+              return 0;
+            };
+            const getResourceSeriesLabel = (resource, fallback) => {
+              const name = typeof resource?.name === "string" && resource.name.trim()
+                ? resource.name.trim()
+                : "";
+              if (name) {
+                return name;
+              }
+              const id = typeof resource?.id === "string" && resource.id.trim()
+                ? resource.id.trim()
+                : "";
+              return id || fallback;
+            };
+            const addToMetricValues = (entry, values, value) => {
+              const hourKey = String(entry?.bucketStart || entry?.timestamp || "").slice(0, 13);
+              const bucketIndex = bucketIndexByKey.get(hourKey);
+              if (typeof bucketIndex !== "number") {
+                return;
+              }
+              values[bucketIndex] += Math.max(0, Number(value || 0));
+            };
+            const pushResourceMetricSeries = (key, resource, values, fallbackLabel) => {
+              if (!metricResourceSeries[key]) {
+                return;
+              }
+              const normalizedValues = Array.isArray(values) && values.length === buckets.length
+                ? values.map((value) => Math.max(0, Number(value || 0)))
+                : createMetricValues();
+              metricResourceSeries[key].push({
+                id: String(resource?.id || key + "-" + metricResourceSeries[key].length),
+                label: getResourceSeriesLabel(resource, fallbackLabel),
+                values: normalizedValues,
+                total: normalizedValues.reduce((sum, value) => sum + Math.max(0, Number(value || 0)), 0),
+              });
+            };
 
             const addToBucket = (entry, field, value) => {
               const hourKey = String(entry?.bucketStart || entry?.timestamp || "").slice(0, 13);
@@ -118200,11 +118902,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
               bucket[field] += Math.max(0, Number(value || 0));
             };
 
-            const serverAnalyticsResults = await Promise.all(activeServers.map(async (server) => ({
+            const serverAnalyticsResults = await Promise.all(analyticsServers.map(async (server) => ({
               server,
               analytics: await readAnalyticsResponse("/servers/" + encodeURIComponent(server.id) + "/analytics"),
             })));
-            const activeServerKindCounts = activeServers.reduce((counts, server) => {
+            const activeServerKindCounts = activeServerRecords.reduce((counts, server) => {
               const kind = canonicalizePlaygroundServerKind(server?.kind);
               counts[kind] = (counts[kind] || 0) + 1;
               return counts;
@@ -118216,45 +118918,148 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 : Array.isArray(analytics?.analytics?.charts?.traffic24h)
                   ? analytics.analytics.charts.traffic24h
                   : [];
+              const requestValues = createMetricValues();
+              const errorValues = createMetricValues();
+              const computeTokenValues = createMetricValues();
               trafficBuckets.forEach((entry) => {
                 const total = Math.max(0, Number(entry?.total || 0));
+                const errors = Math.max(0, Number(entry?.clientErrors || 0)) + Math.max(0, Number(entry?.serverErrors || 0));
+                const computeTokens = Math.max(0, readAnalyticsNumber(entry, [
+                  "computeTokens",
+                  "compute_tokens",
+                  "costCT",
+                  "costCt",
+                  "cost_ct",
+                  "ct",
+                  "totalComputeTokens",
+                  "total_compute_tokens",
+                ]));
                 if (kind === "web_app") {
                   addToBucket(entry, "hostingRequests", total);
+                  addToMetricValues(entry, requestValues, total);
                 } else if (kind === "api") {
                   addToBucket(entry, "apiRequests", total);
+                  addToMetricValues(entry, requestValues, total);
                 } else if (kind === "function") {
                   addToBucket(entry, "functionCalls", total);
+                  addToMetricValues(entry, requestValues, total);
+                } else if (kind === "agent_runtime") {
+                  addToBucket(entry, "agentRuntimeRuns", total);
+                  addToMetricValues(entry, requestValues, total);
+                } else if (kind === "secrets") {
+                  addToBucket(entry, "secretReads", total);
+                  addToMetricValues(entry, requestValues, total);
+                } else if (kind === "auth") {
+                  addToBucket(entry, "authEvents", total);
+                  addToMetricValues(entry, requestValues, total);
                 }
+                addToBucket(entry, "errors", errors);
+                addToBucket(entry, "computeTokens", computeTokens);
+                addToMetricValues(entry, errorValues, errors);
+                addToMetricValues(entry, computeTokenValues, computeTokens);
               });
+              if (kind === "web_app") {
+                pushResourceMetricSeries("hostingRequests", server, requestValues, "Web app");
+              } else if (kind === "api") {
+                pushResourceMetricSeries("apiRequests", server, requestValues, "API");
+              } else if (kind === "function") {
+                pushResourceMetricSeries("functionCalls", server, requestValues, "Function");
+              } else if (kind === "agent_runtime") {
+                pushResourceMetricSeries("agentRuntimeRuns", server, requestValues, "Agent runtime");
+	            } else if (kind === "secrets") {
+	              pushResourceMetricSeries("secretReads", server, requestValues, "Secrets");
+	            } else if (kind === "auth") {
+	              pushResourceMetricSeries("authEvents", server, requestValues, "Authentication");
+	            }
+              pushResourceMetricSeries("errors", server, errorValues, "Resource");
+              pushResourceMetricSeries("computeTokens", server, computeTokenValues, "Resource");
             });
 
-            const databaseAnalyticsResults = await Promise.all(activeDatabases.map(async (database) => ({
+            const databaseAnalyticsResults = await Promise.all(analyticsDatabases.map(async (database) => ({
               database,
               analytics: await readAnalyticsResponse("/databases/" + encodeURIComponent(database.id) + "/analytics"),
             })));
-            databaseAnalyticsResults.forEach(({ analytics }) => {
+            databaseAnalyticsResults.forEach(({ database, analytics }) => {
               const operationBuckets = Array.isArray(analytics?.analytics?.charts?.operations24h)
                 ? analytics.analytics.charts.operations24h
                 : Array.isArray(analytics?.charts?.operations24h)
                   ? analytics.charts.operations24h
                   : [];
+              const readValues = createMetricValues();
+              const writeValues = createMetricValues();
+              const errorValues = createMetricValues();
+              const computeTokenValues = createMetricValues();
               operationBuckets.forEach((entry) => {
                 addToBucket(entry, "databaseReads", entry?.reads);
                 addToBucket(entry, "databaseWrites", entry?.writes);
+                addToBucket(entry, "errors", entry?.errors);
+                addToMetricValues(entry, readValues, entry?.reads);
+                addToMetricValues(entry, writeValues, entry?.writes);
+                addToMetricValues(entry, errorValues, entry?.errors);
+                const computeTokens = Math.max(0, readAnalyticsNumber(entry, [
+                  "computeTokens",
+                  "compute_tokens",
+                  "costCT",
+                  "costCt",
+                  "cost_ct",
+                  "ct",
+                  "totalComputeTokens",
+                  "total_compute_tokens",
+                ]));
+                addToBucket(entry, "computeTokens", computeTokens);
+                addToMetricValues(entry, computeTokenValues, computeTokens);
               });
+              pushResourceMetricSeries("databaseReads", database, readValues, "Database");
+              pushResourceMetricSeries("databaseWrites", database, writeValues, "Database");
+              pushResourceMetricSeries("errors", database, errorValues, "Database");
+              pushResourceMetricSeries("computeTokens", database, computeTokenValues, "Database");
             });
 
             const labels = buckets.map((bucket) => bucket.label);
             const buildSeries = (field) => buckets.map((bucket) => Math.max(0, Number(bucket[field] || 0)));
+            const activeScopedResources = targetKind === "database"
+              ? activeDatabases
+              : targetKind
+                ? activeServerRecords.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === targetKind)
+                : [...activeServerRecords, ...activeDatabases];
+            const resourceCountSeries = buckets.map((bucket) => {
+              const bucketEndMs = Math.max(0, Number(bucket.startMs || 0)) + (60 * 60 * 1000);
+              return activeScopedResources.reduce((count, resource) => {
+                const createdAtMs = Date.parse(String(resource?.createdAt || ""));
+                return count + (!Number.isFinite(createdAtMs) || createdAtMs <= bucketEndMs ? 1 : 0);
+              }, 0);
+            });
+            const sortResourceSeries = (items) => (Array.isArray(items) ? [...items] : [])
+              .sort((left, right) => {
+                const leftTotal = Math.max(0, Number(left?.total || 0));
+                const rightTotal = Math.max(0, Number(right?.total || 0));
+                if (leftTotal !== rightTotal) {
+                  return rightTotal - leftTotal;
+                }
+                return String(left?.label || "").localeCompare(String(right?.label || ""));
+              })
+              .slice(0, 4);
+            const topResourceSeries = Object.fromEntries(
+              Object.entries(metricResourceSeries).map(([key, items]) => [key, sortResourceSeries(items)])
+            );
+            const scopedResourceCount = targetKind === "database"
+              ? activeDatabases.length
+              : targetKind
+                ? activeServerKindCounts[targetKind] || 0
+                : activeServerRecords.length + activeDatabases.length;
             const nextMetrics = {
               labels,
               loadedAt: new Date().toISOString(),
-              resourceCount: activeServers.length + activeDatabases.length,
+              scopeKind: targetKind || "",
+              resourceCount: scopedResourceCount,
               resourceCounts: {
                 webApps: activeServerKindCounts.web_app || 0,
                 apis: activeServerKindCounts.api || 0,
                 functions: activeServerKindCounts.function || 0,
                 databases: activeDatabases.length,
+                agentRuntimes: activeServerKindCounts.agent_runtime || 0,
+                secrets: activeServerKindCounts.secrets || 0,
+                auth: activeServerKindCounts.auth || 0,
               },
               series: {
                 hostingRequests: buildSeries("hostingRequests"),
@@ -118262,13 +119067,26 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 functionCalls: buildSeries("functionCalls"),
                 databaseReads: buildSeries("databaseReads"),
                 databaseWrites: buildSeries("databaseWrites"),
+                agentRuntimeRuns: buildSeries("agentRuntimeRuns"),
+                secretReads: buildSeries("secretReads"),
+                authEvents: buildSeries("authEvents"),
+                computeTokens: buildSeries("computeTokens"),
+                resources: resourceCountSeries,
+                errors: buildSeries("errors"),
               },
+              topResourceSeries,
               totals: {
                 hostingRequests: buckets.reduce((sum, bucket) => sum + bucket.hostingRequests, 0),
                 apiRequests: buckets.reduce((sum, bucket) => sum + bucket.apiRequests, 0),
                 functionCalls: buckets.reduce((sum, bucket) => sum + bucket.functionCalls, 0),
                 databaseReads: buckets.reduce((sum, bucket) => sum + bucket.databaseReads, 0),
                 databaseWrites: buckets.reduce((sum, bucket) => sum + bucket.databaseWrites, 0),
+                agentRuntimeRuns: buckets.reduce((sum, bucket) => sum + bucket.agentRuntimeRuns, 0),
+                secretReads: buckets.reduce((sum, bucket) => sum + bucket.secretReads, 0),
+                authEvents: buckets.reduce((sum, bucket) => sum + bucket.authEvents, 0),
+                computeTokens: buckets.reduce((sum, bucket) => sum + bucket.computeTokens, 0),
+                resources: scopedResourceCount,
+                errors: buckets.reduce((sum, bucket) => sum + bucket.errors, 0),
               },
             };
             setDevelopServerOperationalMetrics(nextMetrics);
@@ -118298,6 +119116,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (isPrivateThreadId(previousThreadId)) {
             discardPrivateThread(previousThreadId);
           }
+          setSidebarWorkspaceMode("work");
           setInitialThreadPrivateMode(false);
           setActivePage("thread");
           setCurrentThreadId("");
@@ -118863,15 +119682,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return view === "actions" ? "develop" : "configure";
         }
 
-        function getDevelopServerPageItems() {
-          return [
-            { id: "web-apps", kind: "web_app", label: "Web Apps", Icon: Globe },
-            { id: "functions", kind: "function", label: "Functions", Icon: FunctionSquare },
-            { id: "databases", kind: "database", label: "Databases", Icon: Database },
-            { id: "agent-runtime", kind: "agent_runtime", label: "Agent Runtime", Icon: Bot },
-            { id: "secrets", kind: "secrets", label: "Secrets", Icon: Shield },
-          ];
-        }
+	        function getDevelopServerPageItems() {
+	          return [
+	            { id: "web-apps", kind: "web_app", label: "Web Apps", Icon: Globe },
+	            { id: "functions", kind: "function", label: "Functions", Icon: FunctionSquare },
+	            { id: "databases", kind: "database", label: "Databases", Icon: Database },
+		            { id: "authentication", kind: "auth", label: "Authentication", Icon: UsersRound },
+	            { id: "agent-runtime", kind: "agent_runtime", label: "Agent Runtime", Icon: Bot },
+	            { id: "secrets", kind: "secrets", label: "Secrets", Icon: Shield },
+	          ];
+	        }
 
         function normalizeDevelopServerPageKind(kind) {
           const normalizedKind = normalizePlaygroundServerOverviewKind(kind);
@@ -126125,6 +126945,34 @@ ${PROJECT_OVERVIEW_SCRIPT}
           void loadSettingsPlatformConfig();
         }, [activePage, activeResourcesView, hasSessionAuth, loadSettingsPlatformConfig]);
 
+        useEffect(() => {
+          if (activePage !== "resources" || activeResourcesView !== "servers" || !activeResourcesServerKind || !hasSessionAuth) {
+            return;
+          }
+          if (developServerOperationalMetricsLoading) {
+            return;
+          }
+          const rawMetricsScopeKind = String(developServerOperationalMetrics?.scopeKind || "").trim();
+          const metricsScopeKind = rawMetricsScopeKind ? canonicalizePlaygroundServerKind(rawMetricsScopeKind) : "";
+          const loadedAt = Date.parse(String(developServerOperationalMetrics?.loadedAt || ""));
+          const shouldRefresh = metricsScopeKind !== activeResourcesServerKind
+            || !Number.isFinite(loadedAt)
+            || Date.now() - loadedAt > 60000;
+          if (!shouldRefresh) {
+            return;
+          }
+          void loadDevelopServerOperationalMetrics({ resourceKind: activeResourcesServerKind });
+        }, [
+          activePage,
+          activeResourcesServerKind,
+          activeResourcesView,
+          developServerOperationalMetrics?.loadedAt,
+          developServerOperationalMetrics?.scopeKind,
+          developServerOperationalMetricsLoading,
+          hasSessionAuth,
+          loadDevelopServerOperationalMetrics,
+        ]);
+
         const selectedThreadTitle = useMemo(() => {
           if (activePage === "settings") {
             return "Settings";
@@ -129189,13 +130037,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
             className: "playground-tasks-unified-navbar",
             pathItems: isProjectDetailView
               ? [
+                  { label: "Create" },
                   {
                     label: "Projects",
                     onClick: () => setTasksProjectBackRequestToken((current) => current + 1),
                   },
                   { label: projectTitle },
                 ]
-              : [{ label: "Projects" }],
+              : [{ label: "Create" }, { label: "Projects" }],
             center: isProjectDetailView
               ? React.createElement("div", { className: "content-mode-switch playground-tasks-nav playground-tasks-project-nav-switch" },
                   PLAYGROUND_PROJECT_VIEW_OPTIONS
@@ -129237,7 +130086,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function renderFilesPageNav() {
           return renderUnifiedTopNav({
             className: "playground-files-unified-navbar",
-            pathItems: [{ label: "Files" }],
+            pathItems: [{ label: "Create" }, { label: "Files" }],
             leftExtra: filesPageTopNav?.left || null,
             center: filesPageTopNav?.center || null,
           });
@@ -129246,7 +130095,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         function renderInitialThreadWelcomeNav() {
           return renderUnifiedTopNav({
             className: "playground-thread-welcome-navbar",
-            pathItems: [{ label: "Home" }],
+            pathItems: [{ label: "Create" }, { label: "Home" }],
             includeGhost: true,
           });
         }
@@ -129476,6 +130325,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 resourceBillingSuccess: settingsPlatformConfigSuccess,
                 canConfigureResourceBilling: settingsCanConfigureBusinessFeatures,
                 onResourceBillingPreferencesChange: queueSettingsResourceCapAutosave,
+                developServerOperationalMetrics,
+                developServerOperationalMetricsLoading,
+                developServerOperationalMetricsError,
+                developServerMetricsChartTab,
+                onDevelopServerMetricsChartTabChange: setDevelopServerMetricsChartTab,
+                developAnalyticsMenuOpen,
+                onDevelopAnalyticsMenuOpenChange: setDevelopAnalyticsMenuOpen,
+                onOpenSettingsUsage: () => openSettingsPage("costs-overview"),
               })
             : hasDemoAccess
               ? renderDemoFeaturePage("environments")
@@ -130964,6 +131821,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
           if (sidebarWorkspaceMode === "configure") {
             return [
               {
+                id: "new-thread",
+                label: "New Thread",
+                Icon: SquarePen,
+                onClick: hasShellAccess ? handleNewThread : handleSignInWithComputerAgents,
+              },
+              {
                 id: "configure-home",
                 label: "Home",
                 Icon: House,
@@ -131010,6 +131873,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           if (sidebarWorkspaceMode === "develop") {
             return [
+              {
+                id: "new-thread",
+                label: "New Thread",
+                Icon: SquarePen,
+                onClick: hasShellAccess ? handleNewThread : handleSignInWithComputerAgents,
+              },
               {
                 id: "develop-home",
                 label: "Home",
@@ -134305,9 +135174,12 @@ async function fetchFeedbackSummarySessionEmail(req) {
   }
 }
 
-function buildFeedbackSummaryLoginUrl(req, options = {}) {
-  const requestUrl = new URL(req.url || "/feedback-summary", `http://localhost:${port}`);
-  const redirectUrl = new URL("/feedback-summary", platformOrigin);
+function buildRestrictedAdminPageLoginUrl(req, pagePath, options = {}) {
+  const normalizedPagePath = String(pagePath || "/feedback-summary").startsWith("/")
+    ? String(pagePath || "/feedback-summary")
+    : `/${String(pagePath || "feedback-summary")}`;
+  const requestUrl = new URL(req.url || normalizedPagePath, `http://localhost:${port}`);
+  const redirectUrl = new URL(normalizedPagePath, platformOrigin);
   if (requestUrl.search) {
     redirectUrl.search = requestUrl.search;
   }
@@ -134319,9 +135191,25 @@ function buildFeedbackSummaryLoginUrl(req, options = {}) {
   return loginUrl.toString();
 }
 
+function buildFeedbackSummaryLoginUrl(req, options = {}) {
+  return buildRestrictedAdminPageLoginUrl(req, "/feedback-summary", options);
+}
+
+function buildUsageSummaryLoginUrl(req, options = {}) {
+  return buildRestrictedAdminPageLoginUrl(req, "/usage-summary", options);
+}
+
 function redirectToFeedbackSummaryLogin(req, res, options = {}) {
   res.writeHead(302, {
     "Location": buildFeedbackSummaryLoginUrl(req, options),
+    "Cache-Control": "no-store",
+  });
+  res.end();
+}
+
+function redirectToUsageSummaryLogin(req, res, options = {}) {
+  res.writeHead(302, {
+    "Location": buildUsageSummaryLoginUrl(req, options),
     "Cache-Control": "no-store",
   });
   res.end();
@@ -134357,6 +135245,44 @@ async function fetchFeedbackSummaryViaDeploymentVm(requestSearch) {
   const markerIndex = stdout.lastIndexOf(statusMarker);
   if (markerIndex === -1) {
     throw new Error("Feedback summary VM fallback did not return a status marker.");
+  }
+  const bodyText = stdout.slice(0, markerIndex).trim();
+  const status = Number(stdout.slice(markerIndex + statusMarker.length).trim()) || 502;
+  let parsed = {};
+  try {
+    parsed = bodyText ? JSON.parse(bodyText) : {};
+  } catch {
+    parsed = { message: bodyText };
+  }
+  return { status, parsed };
+}
+
+async function fetchProductUsageSummaryViaDeploymentVm(requestSearch) {
+  const normalizedSearch = String(requestSearch || "").startsWith("?") ? String(requestSearch || "") : "";
+  const remoteUrl = `http://127.0.0.1:8080/admin/product-usage-summary${normalizedSearch}`;
+  const statusMarker = "__TB_PRODUCT_USAGE_SUMMARY_STATUS__:";
+  const remoteCommand = [
+    "set -e",
+    "admin_key=$(sudo awk -F= '$1==\"ADMIN_API_KEY\"{print $0}' /opt/testbase-cloud/.env | tail -1 | cut -d= -f2-)",
+    `curl -sS -w '\\n${statusMarker}%{http_code}' -H "Authorization: Bearer \${admin_key}" -H "X-Admin-Key: \${admin_key}" ${shellSingleQuote(remoteUrl)}`,
+  ].join("; ");
+
+  const { stdout } = await execFileAsync("gcloud", [
+    "compute",
+    "ssh",
+    "testbase-mig-d25h",
+    "--project=firechatbot-a9654",
+    "--zone=us-central1-a",
+    "--quiet",
+    "--command",
+    remoteCommand,
+  ], {
+    maxBuffer: 1024 * 1024 * 10,
+  });
+
+  const markerIndex = stdout.lastIndexOf(statusMarker);
+  if (markerIndex === -1) {
+    throw new Error("Product usage summary VM fallback did not return a status marker.");
   }
   const bodyText = stdout.slice(0, markerIndex).trim();
   const status = Number(stdout.slice(markerIndex + statusMarker.length).trim()) || 502;
@@ -134488,6 +135414,99 @@ async function proxyFeedbackSummaryGet(req, res) {
   } catch (error) {
     return sendJson(res, 502, {
       error: "Failed to proxy feedback summary request",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+async function proxyProductUsageSummaryGet(req, res) {
+  try {
+    const session = await fetchFeedbackSummarySessionEmail(req);
+    if (session.status === 401 || session.status === 403 || !session.email) {
+      return sendJson(res, 401, {
+        error: "Unauthorized",
+        message: "Sign in with Computer Agents to view product usage summary.",
+        loginUrl: buildUsageSummaryLoginUrl(req),
+      });
+    }
+
+    if (session.email !== feedbackSummaryAllowedEmail) {
+      return sendJson(res, 401, {
+        error: "Unauthorized",
+        message: "Sign in with the product usage admin account.",
+        loginUrl: buildUsageSummaryLoginUrl(req, { signedOut: true }),
+      });
+    }
+
+    const adminKey = await readFeedbackSummaryAdminKey();
+    if (!adminKey) {
+      return sendJson(res, 503, {
+        error: "Product usage summary is not configured",
+        message: "ADMIN_API_KEY is missing on the demo server.",
+      });
+    }
+
+    const upstreamUrl = parseUpstreamUrl(req, {});
+    const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
+    const upstreamTarget = new URL(`${upstreamUrl}/admin/product-usage-summary`);
+    upstreamTarget.search = requestUrl.search;
+    const upstream = await fetch(upstreamTarget.toString(), {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${adminKey}`,
+        "X-Admin-Key": adminKey,
+      },
+    });
+    const text = await upstream.text();
+    let parsed = {};
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      parsed = { message: text };
+    }
+    if (
+      (upstream.status === 401 || upstream.status === 403)
+      && process.env.PRODUCT_USAGE_SUMMARY_DISABLE_VM_FALLBACK !== "1"
+      && normalizeBackendUrl(upstreamUrl) === normalizeBackendUrl("https://api.computer-agents.com/v1")
+    ) {
+      try {
+        const fallback = await fetchProductUsageSummaryViaDeploymentVm(requestUrl.search);
+        if (fallback.status >= 200 && fallback.status < 300) {
+          parsed = fallback.parsed;
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            parsed.viewer = { email: session.email };
+          }
+          return sendJson(res, fallback.status, parsed);
+        }
+        if (fallback.status === 404) {
+          return sendJson(res, 502, {
+            error: "Failed to load product usage summary",
+            message: "The upstream product usage summary endpoint is not deployed yet.",
+          });
+        }
+      } catch (fallbackError) {
+        console.warn("Product usage summary VM fallback failed", fallbackError);
+      }
+    }
+    if (upstream.status === 404) {
+      return sendJson(res, 502, {
+        error: "Failed to load product usage summary",
+        message: "The upstream product usage summary endpoint is not deployed yet.",
+      });
+    }
+    if (upstream.status === 401 || upstream.status === 403) {
+      return sendJson(res, 502, {
+        error: "Failed to load product usage summary",
+        message: "The upstream admin product usage summary request was rejected.",
+      });
+    }
+    if (upstream.ok && parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      parsed.viewer = { email: session.email };
+    }
+    return sendJson(res, upstream.status, parsed);
+  } catch (error) {
+    return sendJson(res, 502, {
+      error: "Failed to proxy product usage summary request",
       message: error instanceof Error ? error.message : String(error),
     });
   }
@@ -136589,6 +137608,611 @@ function serveFeedbackSummaryPage(res) {
 </html>`);
 }
 
+function serveProductUsageSummaryPage(res) {
+  res.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
+  res.end(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Product Usage Summary</title>
+    <style>
+      * { box-sizing: border-box; }
+      :root {
+        --bg: #000;
+        --panel: rgba(255,255,255,.045);
+        --panel-strong: rgba(255,255,255,.075);
+        --border: rgba(255,255,255,.1);
+        --text: rgba(255,255,255,.94);
+        --muted: rgba(255,255,255,.52);
+        --blue: #66a6ff;
+        --green: #45d483;
+        --yellow: #ffe717;
+        --pink: #ff6fb7;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at 24% 0%, rgba(102,166,255,.14), transparent 28%), #000;
+        color: var(--text);
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      }
+      main {
+        width: min(1240px, calc(100vw - 40px));
+        margin: 0 auto;
+        padding: 34px 0 64px;
+      }
+      header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 22px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.04;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+      .subhead {
+        margin-top: 10px;
+        max-width: 680px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      button {
+        height: 34px;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 999px;
+        background: rgba(255,255,255,.045);
+        color: var(--text);
+        padding: 0 14px;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      button.active {
+        background: white;
+        color: black;
+        border-color: white;
+      }
+      button:disabled { opacity: .55; cursor: default; }
+      .status {
+        min-height: 18px;
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .error { color: #ffb4b4; }
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+      .kpis {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin-bottom: 12px;
+      }
+      .card, section {
+        position: relative;
+        border-radius: 15px;
+        background: var(--panel);
+        overflow: hidden;
+      }
+      .card::before, section::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        padding: 1px;
+        border-radius: inherit;
+        background: linear-gradient(135deg, rgba(255,255,255,.24), rgba(255,255,255,.05) 40%, rgba(255,255,255,.11));
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+      }
+      .card {
+        min-height: 116px;
+        padding: 16px;
+      }
+      .label {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.25;
+      }
+      .value {
+        margin-top: 12px;
+        font-size: 34px;
+        line-height: 1;
+        font-weight: 500;
+      }
+      .hint {
+        margin-top: 10px;
+        color: rgba(255,255,255,.45);
+        font-size: 11px;
+      }
+      .two-col {
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        margin-bottom: 12px;
+      }
+      section {
+        min-height: 320px;
+      }
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px 0;
+      }
+      .section-title {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .section-note {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .chart {
+        height: 260px;
+        padding: 6px 14px 12px;
+      }
+      .chart svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      .axis, .gridline {
+        stroke: rgba(255,255,255,.09);
+        stroke-width: 1;
+      }
+      .axis-label {
+        fill: rgba(255,255,255,.4);
+        font-size: 10px;
+      }
+      .legend {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 0 18px 16px;
+      }
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.6);
+        font-size: 11px;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--blue);
+      }
+      .bars {
+        padding: 10px 18px 18px;
+      }
+      .feature-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px dotted rgba(255,255,255,.12);
+      }
+      .feature-row:last-child { border-bottom: 0; }
+      .feature-label {
+        min-width: 0;
+      }
+      .feature-title {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .feature-cat {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .bar-track {
+        margin-top: 8px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.08);
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--blue), rgba(102,166,255,.3));
+      }
+      .feature-count {
+        color: rgba(255,255,255,.82);
+        font-size: 13px;
+      }
+      .table-section {
+        min-height: 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      th, td {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255,255,255,.07);
+        text-align: left;
+        white-space: nowrap;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 11px;
+      }
+      td {
+        color: rgba(255,255,255,.84);
+      }
+      td:first-child {
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      tr:last-child td { border-bottom: 0; }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.08);
+        color: rgba(255,255,255,.72);
+        font-size: 11px;
+        text-transform: capitalize;
+      }
+      .risk-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 12px;
+      }
+      @media (max-width: 980px) {
+        header { flex-direction: column; }
+        .toolbar { justify-content: flex-start; }
+        .kpis, .risk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .two-col { grid-template-columns: 1fr; }
+        table { min-width: 860px; }
+        .table-wrap { overflow-x: auto; }
+      }
+      @media (max-width: 620px) {
+        main { width: min(100vw - 24px, 1240px); padding-top: 24px; }
+        .kpis, .risk-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Product Usage</h1>
+          <div class="subhead">Internal onboarding and retention dashboard built from production product data. Use Cloud Logging for incident-level traces; use this dashboard to see which users and features are actually moving.</div>
+        </div>
+        <div class="toolbar" aria-label="Period">
+          <button type="button" data-days="3">3d</button>
+          <button type="button" data-days="7" class="active">7d</button>
+          <button type="button" data-days="14">14d</button>
+          <button type="button" data-days="30">30d</button>
+          <button id="refresh" type="button">Refresh</button>
+        </div>
+      </header>
+      <div id="status" class="status">Checking session...</div>
+      <div class="grid kpis" id="kpis"></div>
+      <div class="grid risk-grid" id="health"></div>
+      <div class="grid two-col">
+        <section>
+          <div class="section-head">
+            <div class="section-title">Activity and Retention</div>
+            <div class="section-note">Daily users, returners, and threads</div>
+          </div>
+          <div id="activity-chart" class="chart"></div>
+          <div id="activity-legend" class="legend"></div>
+        </section>
+        <section>
+          <div class="section-head">
+            <div class="section-title">Feature Usage</div>
+            <div class="section-note">Most used surfaces in period</div>
+          </div>
+          <div id="features" class="bars"></div>
+        </section>
+      </div>
+      <div class="grid two-col">
+        <section>
+          <div class="section-head">
+            <div class="section-title">Resource Creation</div>
+            <div class="section-note">Agents, computers, projects, servers, files</div>
+          </div>
+          <div id="resource-chart" class="chart"></div>
+          <div id="resource-legend" class="legend"></div>
+        </section>
+        <section>
+          <div class="section-head">
+            <div class="section-title">Server Types</div>
+            <div class="section-note">Created deployable resources</div>
+          </div>
+          <div id="server-kinds" class="bars"></div>
+        </section>
+      </div>
+      <section class="table-section">
+        <div class="section-head">
+          <div class="section-title">Most Active Users</div>
+          <div class="section-note">Sorted by product activity events</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Plan</th>
+                <th>Active days</th>
+                <th>Sessions</th>
+                <th>Active time</th>
+                <th>Threads</th>
+                <th>Messages</th>
+                <th>Agents</th>
+                <th>Computers</th>
+                <th>Files</th>
+                <th>Projects</th>
+                <th>Servers</th>
+                <th>Last active</th>
+              </tr>
+            </thead>
+            <tbody id="top-users"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script>
+      const AIOS_ORIGIN = ${JSON.stringify(aiosOrigin)};
+      let currentDays = 7;
+      const statusEl = document.getElementById("status");
+      const refreshButton = document.getElementById("refresh");
+
+      function buildLoginUrl() {
+        const loginUrl = new URL("/login", AIOS_ORIGIN);
+        loginUrl.searchParams.set("redirect", window.location.href);
+        return loginUrl.toString();
+      }
+
+      function formatNumber(value, digits) {
+        const number = Number(value || 0);
+        return new Intl.NumberFormat(undefined, { maximumFractionDigits: digits == null ? 0 : digits }).format(number);
+      }
+
+      function formatPercent(value) {
+        return Math.round(Number(value || 0) * 100) + "%";
+      }
+
+      function formatMinutes(value) {
+        const minutes = Number(value || 0);
+        if (minutes < 60) return formatNumber(minutes, 1) + " min";
+        return formatNumber(minutes / 60, 1) + " h";
+      }
+
+      function formatDate(value) {
+        if (!value) return "Never";
+        try {
+          return new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+        } catch {
+          return value;
+        }
+      }
+
+      function setStatus(text, isError) {
+        statusEl.textContent = text;
+        statusEl.className = isError ? "status error" : "status";
+      }
+
+      function renderKpis(summary) {
+        const entries = [
+          ["New users", formatNumber(summary.newUsers), "Accounts created in period"],
+          ["Active users", formatNumber(summary.activeUsers), "Users with product activity"],
+          ["Returning users", formatNumber(summary.returningUsers), formatPercent(summary.returnRate) + " of active users"],
+          ["Threads started", formatNumber(summary.threadsStarted), formatNumber(summary.threadsPerActiveUser, 1) + " per active user"],
+          ["Avg active time", formatMinutes(summary.avgActiveMinutes), "30-minute session windows"],
+          ["Agents created", formatNumber(summary.agentsCreated), "Custom non-system agents"],
+          ["Computers created", formatNumber(summary.computersCreated), "Custom non-system computers"],
+          ["Files uploaded", formatNumber(summary.filesUploaded), "Distinct attachment IDs"],
+          ["Projects created", formatNumber(summary.projectsCreated), formatNumber(summary.tasksCreated) + " tasks"],
+          ["Servers created", formatNumber(summary.serversCreated), formatNumber(summary.databasesCreated) + " databases"],
+        ];
+        document.getElementById("kpis").innerHTML = entries.map(function(entry) {
+          return '<div class="card"><div class="label">' + entry[0] + '</div><div class="value">' + entry[1] + '</div><div class="hint">' + entry[2] + '</div></div>';
+        }).join("");
+      }
+
+      function renderHealth(health) {
+        const entries = [
+          ["Failed threads", formatNumber(health.failedThreads), formatPercent(health.failureRate) + " failure rate"],
+          ["Waiting permissions", formatNumber(health.permissionWaitingThreads), "Threads paused for approval"],
+          ["No first thread", formatNumber(health.newUsersWithoutThreads), "New users without any thread"],
+          ["First answer", formatNumber(health.avgFirstAssistantSeconds, 1) + "s", "Avg user message to assistant"],
+        ];
+        document.getElementById("health").innerHTML = entries.map(function(entry) {
+          return '<div class="card"><div class="label">' + entry[0] + '</div><div class="value">' + entry[1] + '</div><div class="hint">' + entry[2] + '</div></div>';
+        }).join("");
+      }
+
+      function createPath(points) {
+        return points.map(function(point, index) {
+          return (index === 0 ? "M" : "L") + point[0] + " " + point[1];
+        }).join(" ");
+      }
+
+      function renderLineChart(containerId, legendId, rows, series) {
+        const container = document.getElementById(containerId);
+        const legend = document.getElementById(legendId);
+        if (!rows.length) {
+          container.innerHTML = '<div class="status">No chart data.</div>';
+          legend.innerHTML = "";
+          return;
+        }
+        const width = 760;
+        const height = 230;
+        const padding = { top: 18, right: 18, bottom: 34, left: 38 };
+        const values = [];
+        rows.forEach(function(row) {
+          series.forEach(function(item) {
+            values.push(Number(row[item.key] || 0));
+          });
+        });
+        const maxValue = Math.max(1, Math.max.apply(null, values));
+        const xSpan = Math.max(1, rows.length - 1);
+        const chartWidth = width - padding.left - padding.right;
+        const chartHeight = height - padding.top - padding.bottom;
+        const grid = [0, .5, 1].map(function(step) {
+          const y = padding.top + chartHeight - chartHeight * step;
+          return '<line class="gridline" x1="' + padding.left + '" y1="' + y + '" x2="' + (width - padding.right) + '" y2="' + y + '"></line>';
+        }).join("");
+        const paths = series.map(function(item) {
+          const points = rows.map(function(row, index) {
+            const x = padding.left + (chartWidth * index / xSpan);
+            const y = padding.top + chartHeight - (Number(row[item.key] || 0) / maxValue) * chartHeight;
+            return [x, y];
+          });
+          return '<path d="' + createPath(points) + '" fill="none" stroke="' + item.color + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>';
+        }).join("");
+        const firstLabel = rows[0] ? rows[0].date.slice(5) : "";
+        const lastLabel = rows[rows.length - 1] ? rows[rows.length - 1].date.slice(5) : "";
+        container.innerHTML =
+          '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img">' +
+          grid +
+          '<text class="axis-label" x="' + padding.left + '" y="' + (height - 10) + '">' + firstLabel + '</text>' +
+          '<text class="axis-label" text-anchor="end" x="' + (width - padding.right) + '" y="' + (height - 10) + '">' + lastLabel + '</text>' +
+          '<text class="axis-label" x="8" y="' + (padding.top + 4) + '">' + formatNumber(maxValue) + '</text>' +
+          '<text class="axis-label" x="8" y="' + (padding.top + chartHeight + 4) + '">0</text>' +
+          paths +
+          '</svg>';
+        legend.innerHTML = series.map(function(item) {
+          return '<span class="legend-item"><span class="dot" style="background:' + item.color + '"></span>' + item.label + '</span>';
+        }).join("");
+      }
+
+      function renderBars(containerId, rows, options) {
+        const container = document.getElementById(containerId);
+        const list = rows || [];
+        if (!list.length) {
+          container.innerHTML = '<div class="status">No entries yet.</div>';
+          return;
+        }
+        const max = Math.max.apply(null, list.map(function(row) { return Number(row.count || 0); })) || 1;
+        container.innerHTML = list.slice(0, options && options.limit ? options.limit : 12).map(function(row) {
+          const label = row.label || row.kind || row.status || "Unknown";
+          const category = row.category || (row.users ? String(row.users) + " users" : "");
+          const width = Math.max(3, Math.round(Number(row.count || 0) / max * 100));
+          return '<div class="feature-row">' +
+            '<div class="feature-label">' +
+              '<div class="feature-title">' + label + '</div>' +
+              '<div class="feature-cat">' + category + '</div>' +
+              '<div class="bar-track"><div class="bar-fill" style="width:' + width + '%"></div></div>' +
+            '</div>' +
+            '<div class="feature-count">' + formatNumber(row.count) + '</div>' +
+          '</div>';
+        }).join("");
+      }
+
+      function renderTopUsers(users) {
+        const tbody = document.getElementById("top-users");
+        if (!users || !users.length) {
+          tbody.innerHTML = '<tr><td colspan="13" class="status">No active users in this period.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = users.map(function(user) {
+          const displayName = user.email || user.name || user.userId;
+          return '<tr>' +
+            '<td title="' + (user.userId || "") + '">' + displayName + '</td>' +
+            '<td><span class="pill">' + (user.tier || "free") + '</span></td>' +
+            '<td>' + formatNumber(user.activeDays) + '</td>' +
+            '<td>' + formatNumber(user.sessions) + '</td>' +
+            '<td>' + formatMinutes(user.activeMinutes) + '</td>' +
+            '<td>' + formatNumber(user.threadsStarted) + ' / ' + formatNumber(user.threadsTotal) + '</td>' +
+            '<td>' + formatNumber(user.userMessages) + '</td>' +
+            '<td>' + formatNumber(user.agentsCreated) + '</td>' +
+            '<td>' + formatNumber(user.computersCreated) + '</td>' +
+            '<td>' + formatNumber(user.filesUploaded) + '</td>' +
+            '<td>' + formatNumber(user.projectsCreated) + '</td>' +
+            '<td>' + formatNumber(user.serversCreated) + '</td>' +
+            '<td>' + formatDate(user.lastActivityAt) + '</td>' +
+          '</tr>';
+        }).join("");
+      }
+
+      async function loadUsage() {
+        refreshButton.disabled = true;
+        setStatus("Loading product usage...", false);
+        try {
+          const response = await fetch("/api/real/admin/product-usage-summary?days=" + encodeURIComponent(currentDays), {
+            cache: "no-store",
+            credentials: "include",
+          });
+          const payload = await response.json().catch(function() { return {}; });
+          if (response.status === 401 || response.status === 403) {
+            window.location.replace(payload.loginUrl || buildLoginUrl());
+            return;
+          }
+          if (!response.ok) {
+            throw new Error(payload.message || payload.error || "Failed to load product usage summary.");
+          }
+          renderKpis(payload.summary || {});
+          renderHealth(payload.health || {});
+          renderLineChart("activity-chart", "activity-legend", payload.timeSeries || [], [
+            { key: "activeUsers", label: "Active users", color: "#66a6ff" },
+            { key: "returningUsers", label: "Returning users", color: "#45d483" },
+            { key: "threadsStarted", label: "Threads", color: "#ffe717" },
+          ]);
+          renderLineChart("resource-chart", "resource-legend", payload.timeSeries || [], [
+            { key: "agentsCreated", label: "Agents", color: "#66a6ff" },
+            { key: "computersCreated", label: "Computers", color: "#45d483" },
+            { key: "projectsCreated", label: "Projects", color: "#ffe717" },
+            { key: "serversCreated", label: "Servers", color: "#ff6fb7" },
+            { key: "filesUploaded", label: "Files", color: "#a78bfa" },
+          ]);
+          renderBars("features", payload.featureUsage || [], { limit: 14 });
+          renderBars("server-kinds", (payload.serverKinds || []).map(function(row) {
+            return { label: String(row.kind || "unknown").replace(/_/g, " "), category: String(row.users || 0) + " users", count: row.count };
+          }), { limit: 10 });
+          renderTopUsers(payload.topUsers || []);
+          setStatus("Loaded " + currentDays + " days for " + (payload.viewer && payload.viewer.email ? payload.viewer.email : "admin") + (payload.generatedAt ? " at " + formatDate(payload.generatedAt) : "."), false);
+        } catch (error) {
+          setStatus(error instanceof Error ? error.message : String(error), true);
+        } finally {
+          refreshButton.disabled = false;
+        }
+      }
+
+      document.querySelectorAll("[data-days]").forEach(function(button) {
+        button.addEventListener("click", function() {
+          currentDays = Number(button.getAttribute("data-days")) || 7;
+          document.querySelectorAll("[data-days]").forEach(function(item) { item.classList.toggle("active", item === button); });
+          void loadUsage();
+        });
+      });
+      refreshButton.addEventListener("click", function() { void loadUsage(); });
+      void loadUsage();
+    </script>
+  </body>
+</html>`);
+}
+
 async function handleFeedbackSummaryPageRequest(req, res) {
   try {
     const session = await fetchFeedbackSummarySessionEmail(req);
@@ -136605,6 +138229,25 @@ async function handleFeedbackSummaryPageRequest(req, res) {
     serveFeedbackSummaryPage(res);
   } catch {
     redirectToFeedbackSummaryLogin(req, res);
+  }
+}
+
+async function handleProductUsageSummaryPageRequest(req, res) {
+  try {
+    const session = await fetchFeedbackSummarySessionEmail(req);
+    if (session.status === 401 || session.status === 403 || !session.email) {
+      redirectToUsageSummaryLogin(req, res);
+      return;
+    }
+
+    if (session.email !== feedbackSummaryAllowedEmail) {
+      redirectToUsageSummaryLogin(req, res, { signedOut: true });
+      return;
+    }
+
+    serveProductUsageSummaryPage(res);
+  } catch {
+    redirectToUsageSummaryLogin(req, res);
   }
 }
 
@@ -136644,6 +138287,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && (url.pathname === "/feedback-summary" || url.pathname === "/feedback-summary/")) {
     void handleFeedbackSummaryPageRequest(req, res);
+    return;
+  }
+
+  if (req.method === "GET" && (url.pathname === "/usage-summary" || url.pathname === "/usage-summary/")) {
+    void handleProductUsageSummaryPageRequest(req, res);
     return;
   }
 
@@ -137010,6 +138658,11 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/real/admin/feedback-summary") {
     void proxyFeedbackSummaryGet(req, res);
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/admin/product-usage-summary") {
+    void proxyProductUsageSummaryGet(req, res);
     return;
   }
 
@@ -137610,11 +139263,31 @@ const server = http.createServer((req, res) => {
 
   const serverAnalyticsMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/analytics$/);
   if (req.method === "GET" && serverAnalyticsMatch) {
-    void proxyUpstreamGet(
-      req,
-      res,
-      `/servers/${encodeURIComponent(decodeURIComponent(serverAnalyticsMatch[1]))}/analytics`,
-    );
+    void (async () => {
+      try {
+        const response = await fetchUpstreamOverviewJson(
+          req,
+          `/servers/${encodeURIComponent(decodeURIComponent(serverAnalyticsMatch[1]))}/analytics`,
+        );
+        if (response.status === 401 || response.status === 403) {
+          sendJson(res, response.status, response.data);
+          return;
+        }
+        if (response.status >= 400) {
+          sendJson(res, 200, {
+            charts: { traffic24h: [] },
+            analytics: { charts: { traffic24h: [] } },
+          });
+          return;
+        }
+        sendJson(res, response.status, response.data);
+      } catch {
+        sendJson(res, 200, {
+          charts: { traffic24h: [] },
+          analytics: { charts: { traffic24h: [] } },
+        });
+      }
+    })();
     return;
   }
 
