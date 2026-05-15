@@ -30,7 +30,7 @@ for public_file in 404.html index.html robots.txt; do
     cp "web/hosting/public/${public_file}" "${TMP_BUILD_DIR}/web/hosting/public/${public_file}"
   fi
 done
-for public_dir in img/05-model-provider-icons; do
+for public_dir in img/05-model-provider-icons img/logos/aios-presentation; do
   mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/$(dirname "${public_dir}")"
   rsync -a "web/hosting/public/${public_dir}/" "${TMP_BUILD_DIR}/web/hosting/public/${public_dir}/"
 done
@@ -39,7 +39,11 @@ for public_file in \
   img/001-docs/screen-environments.png \
   img/001-docs/screen-projects.png \
   img/001-docs/screen-skills.png \
+  img/001-docs/thread.jpg \
+  img/001-docs/computer.jpg \
+  img/001-docs/projects.jpg \
   img/002-hero/inside-rocket.jpg \
+  img/002-hero/projectsheader.webp \
   img/04-skills/gitlab.svg \
   img/bg/bg-abstract.avif \
   img/bg/blend.avif \

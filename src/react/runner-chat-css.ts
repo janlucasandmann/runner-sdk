@@ -9176,7 +9176,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   display: flex;
   flex-direction: column;
   width: 380px;
-  height: 284px;
+  height: 244px;
   padding-bottom: 0;
 }
 
@@ -9702,7 +9702,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .tb-runner-chat .tb-popup-dropzone {
   width: 100%;
-  min-height: 168px;
+  min-height: 128px;
   display: flex;
   flex-direction: column;
   align-items: center;

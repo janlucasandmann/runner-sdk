@@ -8511,7 +8511,7 @@
   display: flex;
   flex-direction: column;
   width: 380px;
-  height: 284px;
+  height: 244px;
   padding-bottom: 0;
 }
 
@@ -9037,7 +9037,7 @@
 
 .tb-runner-chat .tb-popup-dropzone {
   width: 100%;
-  min-height: 168px;
+  min-height: 128px;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -16985,12 +16985,17 @@ export function RunnerChat({
         return;
       }
       const rect = button.getBoundingClientRect();
+      const host = rootRef.current;
+      const hostRect = host?.getBoundingClientRect() ?? { left: 0, top: 0, width: window.innerWidth };
       const menuWidth = 240;
       const viewportPadding = 8;
-      const left = Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - menuWidth - viewportPadding));
-      const top = Math.max(viewportPadding, rect.top - 8);
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.left - hostRect.left, hostRect.width - menuWidth - viewportPadding)
+      );
+      const top = Math.max(viewportPadding, rect.top - hostRect.top - 8);
       setProjectCreateMenuStyle({
-        position: "fixed",
+        position: "absolute",
         left,
         top,
         bottom: "auto",
@@ -19364,14 +19369,6 @@ export function RunnerChat({
                           >
                             <IconGoogleDrive className="tb-popup-icon tb-popup-brand-icon" />
                             <span className="tb-popup-label">{googleDriveConnected ? "Google Drive" : "Connect Google Drive"}</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="tb-popup-row"
-                            onClick={() => openFileBrowserModal("one-drive")}
-                          >
-                            <IconOneDrive className="tb-popup-icon tb-popup-brand-icon" />
-                            <span className="tb-popup-label">{oneDriveConnected ? "OneDrive" : "Connect OneDrive"}</span>
                           </button>
                           <button
                             type="button"
