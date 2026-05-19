@@ -2476,6 +2476,345 @@ const html = `<!doctype html>
         gap: 10px;
       }
 
+      .playground-functions-empty-landing {
+        width: 100%;
+        margin-top: 48px;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-functions-empty-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 200px;
+        align-items: center;
+        gap: 40px;
+      }
+
+      .playground-functions-empty-title {
+        max-width: 560px;
+        margin: 0;
+        color: #fff;
+        font-size: 32px;
+        line-height: 1.02;
+        font-weight: 500;
+        letter-spacing: -0.06em;
+      }
+
+      .playground-functions-empty-copy {
+        max-width: 520px;
+        margin: 20px 0 0;
+        color: rgba(255, 255, 255, 0.64);
+        font-size: 14px;
+        line-height: 1.75;
+        font-weight: 400;
+      }
+
+      .playground-functions-empty-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+
+      .playground-functions-empty-button,
+      .playground-functions-empty-icon-box,
+      .playground-functions-example-icon-box,
+      .playground-functions-examples-all-button {
+        --playground-project-overview-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+      }
+
+      .playground-functions-empty-button::before,
+      .playground-functions-empty-icon-box::before,
+      .playground-functions-example-icon-box::before,
+      .playground-functions-examples-all-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-control-border);
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        mask-composite: exclude;
+        z-index: 1;
+      }
+
+      .playground-functions-empty-button > *,
+      .playground-functions-empty-icon-box > *,
+      .playground-functions-example-icon-box > *,
+      .playground-functions-examples-all-button > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .playground-functions-empty-button {
+        appearance: none;
+        min-height: 40px;
+        padding: 0 20px;
+        border: 0;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1;
+        cursor: pointer;
+        transition: background-color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-functions-empty-button.is-primary {
+        background: #fff;
+        color: #000;
+      }
+
+      .playground-functions-empty-button.is-secondary {
+        background: rgba(255, 255, 255, 0.02);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-functions-empty-button.is-primary:hover {
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-functions-empty-button.is-secondary:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-functions-empty-button:active {
+        transform: translateY(1px);
+      }
+
+      .playground-functions-empty-art {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .playground-functions-empty-image {
+        width: 200px;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        object-fit: contain;
+      }
+
+      .playground-functions-empty-features {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 40px;
+        margin-top: 64px;
+      }
+
+      .playground-functions-empty-feature {
+        min-width: 0;
+      }
+
+      .playground-functions-empty-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.02);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-functions-empty-feature-title {
+        margin-top: 24px;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 500;
+      }
+
+      .playground-functions-empty-feature-copy {
+        max-width: 240px;
+        margin-top: 16px;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.9;
+        font-weight: 400;
+      }
+
+      .playground-functions-examples-section {
+        margin-top: 80px;
+        margin-bottom: 24px;
+      }
+
+      .playground-functions-examples-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .playground-functions-examples-title {
+        max-width: 640px;
+        margin: 0;
+        color: #fff;
+        font-size: 24px;
+        line-height: 1.08;
+        font-weight: 500;
+        letter-spacing: -0.055em;
+      }
+
+      .playground-functions-examples-all-button {
+        appearance: none;
+        min-height: 36px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease;
+      }
+
+      .playground-functions-examples-all-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-functions-examples-slider {
+        display: flex;
+        gap: 20px;
+        margin-top: 36px;
+        padding-bottom: 8px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+      }
+
+      .playground-functions-examples-slider::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-functions-example-card {
+        flex: 0 0 calc((100% - 40px) / 3);
+        min-width: 0;
+        overflow: hidden;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: inherit;
+        text-decoration: none;
+        scroll-snap-align: start;
+      }
+
+      .playground-functions-example-visual {
+        position: relative;
+        height: 128px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-position: center;
+        background-size: cover;
+      }
+
+      .playground-functions-example-visual::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.36);
+      }
+
+      .playground-functions-example-icon-box {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.08);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-functions-example-body {
+        padding: 20px;
+      }
+
+      .playground-functions-example-title {
+        color: #fff;
+        font-size: 15px;
+        line-height: 1.25;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+
+      .playground-functions-example-copy {
+        min-height: 72px;
+        margin-top: 12px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 2;
+        font-weight: 400;
+      }
+
+      .playground-functions-example-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 18px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-functions-examples-controls {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      .playground-functions-examples-arrow {
+        appearance: none;
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.68);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-functions-examples-arrow:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
       .playground-develop-server-metrics-toolbar {
         display: flex;
         align-items: center;
@@ -3472,7 +3811,8 @@ const html = `<!doctype html>
       }
 
       @media (max-width: 920px) {
-        .playground-develop-home {
+        .playground-develop-home,
+        .playground-settings-page {
           padding: 30px 20px 42px;
         }
 
@@ -3483,6 +3823,32 @@ const html = `<!doctype html>
         .playground-develop-docs-concepts-grid,
         .playground-develop-bottom-grid {
           grid-template-columns: 1fr;
+        }
+
+        .playground-functions-empty-hero {
+          grid-template-columns: 1fr;
+        }
+
+        .playground-functions-empty-art {
+          justify-content: flex-start;
+        }
+
+        .playground-functions-empty-title {
+          font-size: 38px;
+        }
+
+        .playground-functions-empty-features {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 28px;
+        }
+
+        .playground-functions-examples-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .playground-functions-example-card {
+          flex-basis: min(78vw, 320px);
         }
 
         .playground-develop-docs-code-tabs {
@@ -11097,10 +11463,16 @@ const html = `<!doctype html>
       .playground-settings-page {
         height: 100%;
         min-height: 0;
-        display: flex;
-        flex-direction: column;
-        padding: 0;
-        background: transparent;
+        display: block;
+        padding: 42px 50px 56px;
+        background: #000;
+        overflow: auto;
+        box-sizing: border-box;
+        scrollbar-width: none;
+      }
+
+      .playground-settings-page::-webkit-scrollbar {
+        display: none;
       }
 
       .playground-settings-shell {
@@ -11253,9 +11625,9 @@ const html = `<!doctype html>
         color: rgba(255, 142, 142, 0.92);
       }
 
-	      .playground-settings-detail-scroll {
-	        gap: 18px;
-	      }
+      .playground-settings-detail-scroll {
+        gap: 38px;
+      }
 
 	      .playground-settings-overview-header {
 	        display: flex;
@@ -11263,24 +11635,31 @@ const html = `<!doctype html>
 	        gap: 0;
 	      }
 
-	      .playground-settings-overview-title.playground-environments-home-hero-title {
-	        margin-top: 12px;
-	        margin-bottom: 0;
-	      }
+      .playground-settings-overview-title.playground-environments-home-hero-title {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
 
 	      .playground-settings-overview-tabs.playground-agents-overview-tabs {
 	        margin: 16px 0 0;
 	      }
 
-	      .playground-settings-page .playground-settings-detail-scroll {
-	        align-items: center;
-	      }
-
-      .playground-settings-page .playground-settings-detail-scroll > * {
+      .playground-settings-page .playground-settings-detail-scroll {
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
-        margin-left: auto;
-        margin-right: auto;
+        min-height: auto;
+        flex: 0 0 auto;
+        padding: 0;
+        margin: 0 auto;
+        overflow: visible;
+        align-items: stretch;
+      }
+
+      .playground-settings-page .playground-settings-detail-scroll > * {
+        width: 100%;
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
       }
 
       .playground-settings-detail-scroll.is-usage {
@@ -15548,6 +15927,214 @@ const html = `<!doctype html>
         margin-bottom: 16px;
       }
 
+      .playground-calendar-upgrade-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 360;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+        padding: 48px 20px;
+        background:
+          radial-gradient(circle at 50% 18%, rgba(102, 166, 255, 0.14), transparent 28%),
+          radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.06), transparent 20%),
+          #000;
+      }
+
+      .playground-calendar-upgrade-backdrop::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(135deg, transparent 0 44%, rgba(255, 255, 255, 0.025) 45%, transparent 56%),
+          radial-gradient(circle at 50% 50%, transparent 0 30%, rgba(0, 0, 0, 0.72) 72%);
+      }
+
+      .playground-calendar-upgrade-shell {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 460px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .playground-calendar-upgrade-close {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 2;
+      }
+
+      .playground-calendar-upgrade-headline {
+        margin: 0 0 18px;
+        color: #fff;
+        font-size: 20px;
+        line-height: 1.25;
+        font-weight: 500;
+        text-align: center;
+      }
+
+      .playground-calendar-upgrade-headline-price {
+        color: #66a6ff;
+      }
+
+      .playground-calendar-upgrade-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        margin-bottom: 34px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 13px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-calendar-upgrade-modal {
+        width: min(384px, 100%);
+        overflow: hidden;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background:
+          linear-gradient(180deg, rgba(28, 86, 164, 0.96) 0, rgba(24, 58, 111, 0.94) 24%, rgba(24, 24, 24, 0.98) 47%, rgba(24, 24, 24, 0.98) 100%);
+        box-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+      }
+
+      .playground-calendar-upgrade-modal-top {
+        padding: 24px 24px 18px;
+      }
+
+      .playground-calendar-upgrade-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .playground-calendar-upgrade-modal-title {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.2;
+        font-weight: 400;
+        color: #fff;
+      }
+
+      .playground-calendar-upgrade-modal-offer {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.36);
+        color: #66a6ff;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .playground-calendar-upgrade-price-row {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .playground-calendar-upgrade-price-old {
+        position: relative;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 28px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-calendar-upgrade-price-old::after {
+        content: "";
+        position: absolute;
+        left: -2px;
+        right: -2px;
+        top: 50%;
+        height: 2px;
+        transform: rotate(-4deg);
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .playground-calendar-upgrade-price-new {
+        color: #fff;
+        font-size: 28px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-calendar-upgrade-modal-copy {
+        margin: 0 0 20px;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.35;
+        font-weight: 500;
+      }
+
+      .playground-calendar-upgrade-modal-button {
+        min-height: 40px;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0 16px;
+        background: #fff;
+        color: #050505;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .playground-calendar-upgrade-modal-button:disabled {
+        cursor: default;
+        opacity: 0.65;
+      }
+
+      .playground-calendar-upgrade-feature-list {
+        display: grid;
+        gap: 2px;
+        padding: 14px 24px 22px;
+      }
+
+      .playground-calendar-upgrade-modal-feature {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 46px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .playground-calendar-upgrade-modal-feature-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #fff;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .playground-calendar-upgrade-modal-feature-icon svg {
+        width: 15px;
+        height: 15px;
+      }
+
       .playground-subscription-success-backdrop {
         position: fixed;
         inset: 0;
@@ -16795,6 +17382,7 @@ const html = `<!doctype html>
       }
 
       .playground-files-browser-body {
+        position: relative;
         min-height: 0;
         flex: 1;
         overflow: auto;
@@ -16813,8 +17401,95 @@ const html = `<!doctype html>
         box-shadow: inset 0 0 0 1px rgba(82, 146, 255, 0.26);
       }
 
+      .playground-files-browser-body.is-file-drop-active {
+        overflow: hidden;
+      }
+
       .playground-files-browser-body.is-changes-view {
         overflow: hidden;
+      }
+
+      .playground-files-screen-drop-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 24;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(28, 28, 28, 0.9);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        pointer-events: none;
+      }
+
+      .playground-files-screen-drop-overlay-panel {
+        width: min(100%, 520px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        text-align: center;
+      }
+
+      .playground-files-screen-drop-overlay-illustration {
+        position: relative;
+        width: 112px;
+        height: 96px;
+        margin-bottom: 4px;
+      }
+
+      .playground-files-screen-drop-overlay-icon-card {
+        position: absolute;
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, rgba(125, 140, 255, 0.96), rgba(66, 88, 244, 0.96));
+        box-shadow: 0 16px 30px rgba(37, 46, 119, 0.32);
+        color: white;
+      }
+
+      .playground-files-screen-drop-overlay-icon-card-back {
+        left: 8px;
+        top: 16px;
+        transform: rotate(-12deg);
+        opacity: 0.95;
+      }
+
+      .playground-files-screen-drop-overlay-icon-card-front {
+        left: 36px;
+        top: 36px;
+        z-index: 2;
+      }
+
+      .playground-files-screen-drop-overlay-icon-card-side {
+        right: 6px;
+        top: 18px;
+        transform: rotate(14deg);
+        opacity: 0.95;
+      }
+
+      .playground-files-screen-drop-overlay-icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      .playground-files-screen-drop-overlay-title {
+        font-size: 17px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: white;
+      }
+
+      .playground-files-screen-drop-overlay-copy {
+        max-width: 360px;
+        font-size: 14px;
+        line-height: 1.45;
+        color: rgba(255, 255, 255, 0.76);
       }
 
       .playground-files-entry-list {
@@ -17072,6 +17747,357 @@ const html = `<!doctype html>
       .playground-files-empty-state-card {
         width: 100%;
         max-width: none;
+      }
+
+      .playground-files-empty-workspace {
+        width: 100%;
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 72px 0 32px;
+        box-sizing: border-box;
+      }
+
+      .playground-files-empty-banner {
+        position: relative;
+        width: 100%;
+        min-height: 230px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(102, 166, 255, 0.16), transparent 25%),
+          radial-gradient(circle at 82% 10%, rgba(255, 255, 255, 0.08), transparent 24%),
+          #08090b;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-files-empty-banner::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.5;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.24) 1px, transparent 1px);
+        background-size: 24px 24px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.5));
+        -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.5));
+      }
+
+      .playground-files-empty-banner::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(90deg, rgba(8, 9, 11, 0.82) 0%, transparent 26%, transparent 74%, rgba(8, 9, 11, 0.82) 100%),
+          linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.36) 100%);
+      }
+
+      .playground-files-empty-banner-content {
+        position: relative;
+        z-index: 3;
+        width: min(100%, 560px);
+        min-height: 230px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 34px 24px;
+        text-align: center;
+        box-sizing: border-box;
+      }
+
+      .playground-files-empty-banner-title {
+        margin: 0;
+        color: #fff;
+        font-size: 21px;
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .playground-files-empty-banner-copy {
+        max-width: 500px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 13px;
+        line-height: 1.55;
+        font-weight: 400;
+      }
+
+      .playground-files-empty-banner-button {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 6px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 999px;
+        background: #fff;
+        color: #050505;
+        font-size: 13px;
+        line-height: 1;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .playground-files-empty-banner-button:disabled {
+        cursor: default;
+        opacity: 0.62;
+      }
+
+      .playground-files-empty-banner-card {
+        position: absolute;
+        z-index: 2;
+        overflow: hidden;
+        border: 2px solid #fff;
+        background: rgba(255, 255, 255, 0.06);
+        box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
+      }
+
+      .playground-files-empty-banner-card img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .playground-files-empty-banner-card.is-left {
+        left: 74px;
+        bottom: 22px;
+        width: 212px;
+        height: 118px;
+      }
+
+      .playground-files-empty-banner-card.is-right {
+        right: 70px;
+        top: 44px;
+        width: 194px;
+        height: 142px;
+      }
+
+      .playground-files-empty-banner-art {
+        position: absolute;
+        z-index: 1;
+        overflow: hidden;
+        opacity: 0.86;
+      }
+
+      .playground-files-empty-banner-art img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .playground-files-empty-banner-art.is-left {
+        left: 38px;
+        top: -20px;
+        width: 170px;
+        height: 190px;
+      }
+
+      .playground-files-empty-banner-art.is-right {
+        right: -2px;
+        top: -12px;
+        width: 162px;
+        height: 152px;
+      }
+
+      .playground-files-empty-banner-badge {
+        position: absolute;
+        z-index: 4;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #fff;
+        color: #050505;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+      }
+
+      .playground-files-empty-banner-badge.is-left {
+        left: 56px;
+        bottom: 85px;
+      }
+
+      .playground-files-empty-banner-badge.is-right {
+        right: 42px;
+        bottom: 54px;
+      }
+
+      @media (max-width: 980px) {
+        .playground-files-empty-banner-card.is-left,
+        .playground-files-empty-banner-card.is-right,
+        .playground-files-empty-banner-art,
+        .playground-files-empty-banner-badge {
+          display: none;
+        }
+
+        .playground-files-empty-banner-content {
+          width: min(100%, 560px);
+        }
+      }
+
+      .playground-files-empty-folder {
+        position: relative;
+        width: min(100%, 920px);
+        margin: 0 auto;
+        padding: 86px 34px 28px;
+        border: 0;
+        border-radius: 18px 18px 10px 10px;
+        background: #0F0F0F;
+        color: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+        overflow: visible;
+      }
+
+      .playground-files-empty-folder-top {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -34px;
+        z-index: 1;
+        width: 100%;
+        height: 92px;
+        overflow: visible;
+        pointer-events: none;
+        display: block;
+      }
+
+      .playground-files-empty-folder-inner {
+        position: relative;
+        z-index: 2;
+      }
+
+      .playground-files-empty-folder-rule {
+        width: 100%;
+        height: 1px;
+        margin: 0 0 22px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-files-empty-folder-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 28px;
+      }
+
+      .playground-files-empty-folder-upload-button {
+        --playground-files-control-button-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        flex: 0 0 auto;
+        overflow: hidden;
+        border: 0;
+        background: transparent;
+      }
+
+      .playground-files-empty-folder-upload-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-files-control-button-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-files-empty-folder-upload-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-files-empty-folder-title {
+        max-width: 430px;
+        margin: 0;
+        color: #fff;
+        font-size: 28px;
+        line-height: normal;
+        font-weight: 500;
+        letter-spacing: -0.055em;
+      }
+
+      .playground-files-empty-folder-title span {
+        display: block;
+        color: rgba(255, 255, 255, 0.54);
+      }
+
+      .playground-files-empty-folder-copy {
+        max-width: 420px;
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1.55;
+        font-weight: 400;
+      }
+
+      .playground-files-empty-folder-table {
+        width: 100%;
+        margin-top: 74px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      .playground-files-empty-folder-table th,
+      .playground-files-empty-folder-table td {
+        padding: 13px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 11px;
+        line-height: 1.45;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: -0.02em;
+        vertical-align: top;
+      }
+
+      .playground-files-empty-folder-table th {
+        color: rgba(255, 255, 255, 0.88);
+        font-weight: 600;
+        text-align: left;
+      }
+
+      .playground-files-empty-folder-table td:first-child {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-files-empty-folder-table-check {
+        color: #fff;
+        margin-right: 8px;
+      }
+
+      @media (max-width: 760px) {
+        .playground-files-empty-folder {
+          padding: 78px 20px 22px;
+        }
+
+        .playground-files-empty-folder-header {
+          flex-direction: column;
+        }
+
+        .playground-files-empty-folder-table {
+          margin-top: 36px;
+        }
       }
 
       .playground-files-state.is-error {
@@ -18493,6 +19519,10 @@ const html = `<!doctype html>
         padding-bottom: 72px;
       }
 
+      .playground-resources-page.is-develop-server-kind-page .playground-servers-editor-layout {
+        padding-bottom: 0;
+      }
+
       .playground-servers-editor-layout.has-preview {
         grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
         padding-bottom: 0;
@@ -19114,6 +20144,10 @@ const html = `<!doctype html>
       .playground-resources-page.is-develop-configure-page .playground-environments-editor-main.playground-tasks-detail-main {
         min-height: 0;
         overflow: visible;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-environments-editor-main.playground-tasks-detail-main.is-code-tab {
+        overflow: hidden;
       }
 
       .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-editor-scroll,
@@ -20695,6 +21729,7 @@ const html = `<!doctype html>
       }
 
       .playground-server-description-section {
+        margin-bottom: 0;
         border: 0;
         border-radius: 0;
         background: transparent;
@@ -20724,6 +21759,60 @@ const html = `<!doctype html>
       .playground-server-description-section .playground-tasks-detail-description.playground-environments-editor-description::before {
         content: none;
         display: none;
+      }
+
+      .playground-server-description-section .playground-tasks-detail-section-header {
+        align-items: flex-start;
+        margin-bottom: 8px;
+      }
+
+      .playground-server-description-title.playground-tasks-detail-section-title {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.3;
+      }
+
+      .playground-server-service-url-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+        margin-top: 4px;
+        margin-bottom: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.25;
+      }
+
+      .playground-server-service-url-value {
+        min-width: 0;
+        max-width: min(520px, 52vw);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-server-service-url-copy {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.54);
+        cursor: pointer;
+        transition: color 160ms ease;
+      }
+
+      .playground-server-service-url-copy:hover {
+        color: rgba(255, 255, 255, 0.9);
       }
 
       .playground-environments-editor-surface {
@@ -20805,6 +21894,23 @@ const html = `<!doctype html>
         max-width: var(--playground-centered-page-max-width);
       }
 
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-content.is-code-tab {
+        min-height: 0;
+        height: 100%;
+        max-height: 100%;
+        flex: 1 1 auto;
+        gap: 12px;
+        overflow: hidden;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-editor-scroll.is-code-tab {
+        height: 100%;
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+        gap: 0;
+      }
+
       .playground-computer-detail-navbar.playground-content-nav {
         width: min(100%, var(--playground-thread-content-max-width));
         max-width: var(--playground-thread-content-max-width);
@@ -20832,7 +21938,7 @@ const html = `<!doctype html>
       .playground-resources-page.is-develop-server-kind-page .playground-server-detail-navbar.playground-content-nav {
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
-        margin: 0 auto 24px;
+        margin: 0 auto 12px;
       }
 
       .playground-computer-detail-navbar .playground-environments-editor-title-input {
@@ -20845,13 +21951,17 @@ const html = `<!doctype html>
 	        line-height: 1.1;
 	      }
 
+      .playground-server-detail-navbar .playground-server-function-title-input {
+        margin-bottom: 6px;
+      }
+
 	      .playground-resource-detail-back-button {
 	        align-self: flex-start;
 	        display: inline-flex;
 	        align-items: center;
 	        gap: 6px;
 	        width: auto;
-	        margin: 0 0 10px;
+	        margin: 0 0 24px;
 	        padding: 0;
 	        border: 0;
 	        background: transparent;
@@ -20912,6 +22022,10 @@ const html = `<!doctype html>
         gap: 0;
       }
 
+      .playground-server-detail-content .playground-tasks-detail-facts.playground-environments-editor-facts.playground-server-details-card {
+        margin-top: 0;
+      }
+
       .playground-computer-detail-content .playground-computer-details-card {
         margin-top: 0;
         padding: 0;
@@ -20948,6 +22062,10 @@ const html = `<!doctype html>
         box-shadow: none;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
+      }
+
+      .playground-server-detail-content .playground-environments-connections-section {
+        margin-bottom: 24px;
       }
 
       .playground-computer-detail-content .playground-environments-section::before,
@@ -21175,6 +22293,211 @@ const html = `<!doctype html>
         margin-top: 2px;
         padding-top: 16px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-server-detail-content .playground-server-invoke-section.playground-server-details-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        overflow: visible;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-server-detail-content .playground-server-invoke-section.playground-server-details-card::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-server-detail-content .playground-server-invoke-section.playground-server-details-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-server-invoke-title {
+        margin-top: 12px;
+        margin-bottom: 12px;
+        padding: 0 0 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.3;
+      }
+
+      .playground-server-invoke-auth-note {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-server-invoke-auth-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-width: 70%;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.64);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .playground-server-invoke-auth-toggle-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .playground-server-invoke-auth-label {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .playground-server-invoke-auth-copy code {
+        display: inline-flex;
+        padding: 1px 5px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.86);
+        font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.95em;
+      }
+
+      .playground-server-invoke-card {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        margin-top: 12px;
+        overflow: hidden;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-server-invoke-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-server-invoke-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-server-invoke-header {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 16px;
+        padding: 14px 16px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-server-invoke-tabs {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        min-width: 0;
+        overflow-x: auto;
+      }
+
+      .playground-server-invoke-tab {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 0 6px;
+        border: 0;
+        border-bottom: 1px solid transparent;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        line-height: 1;
+        font-weight: 400;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+      }
+
+      .playground-server-invoke-tab:hover {
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-server-invoke-tab.is-active {
+        color: rgba(255, 255, 255, 0.96);
+        border-bottom-color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-server-invoke-tab.is-active::after {
+        content: none;
+        display: none;
+      }
+
+      .playground-server-invoke-code-editor {
+        height: var(--playground-server-invoke-code-height, auto);
+        min-height: 0;
+        width: 100%;
+      }
+
+      .playground-server-invoke-code-editor.playground-code-preview-editor-shell {
+        flex: 0 0 auto;
+        background: transparent;
+      }
+
+      .playground-server-invoke-code-editor .monaco-editor,
+      .playground-server-invoke-code-editor .monaco-editor-background,
+      .playground-server-invoke-code-editor .monaco-scrollable-element,
+      .playground-server-invoke-code-editor .monaco-editor .margin,
+      .playground-server-invoke-code-editor .margin,
+      .playground-server-invoke-code-editor .overflow-guard {
+        background: transparent !important;
+      }
+
+      .playground-server-invoke-code-fallback {
+        margin: 0;
+        min-height: 180px;
+        padding: 14px 16px;
+        max-width: 100%;
+        overflow-x: auto;
+        color: rgba(255, 255, 255, 0.9);
+        font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.55;
+        white-space: pre;
       }
 
       .playground-computer-detail-chart-block .playground-settings-usage-chart-card {
@@ -22158,6 +23481,243 @@ const html = `<!doctype html>
         font-size: 12px;
         line-height: 1.5;
         padding: 18px;
+      }
+
+      .playground-servers-code-workspace {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 480px;
+        margin-bottom: 10px;
+        display: grid;
+        grid-template-columns: 252px minmax(0, 1fr);
+        overflow: hidden;
+        border-radius: 10px;
+        background: #000;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-content.is-code-tab .playground-servers-code-workspace {
+        min-height: min(420px, calc(100dvh - 275px));
+        height: calc(100dvh - 275px);
+        max-height: calc(100dvh - 275px);
+      }
+
+      .playground-servers-code-sidebar {
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.05);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        border-top-left-radius: 10px;
+        border-bottom-left-radius: 10px;
+      }
+
+      .playground-servers-code-sidebar-header {
+        min-height: 54px;
+        padding: 14px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-servers-code-sidebar-title {
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 11px;
+        font-weight: 400;
+        letter-spacing: 0;
+        line-height: 1;
+        text-transform: none;
+      }
+
+      .playground-servers-code-add-file-button {
+        min-height: 26px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .playground-servers-code-file-list {
+        min-height: 0;
+        flex: 1;
+        overflow: auto;
+        padding: 0 0 12px;
+      }
+
+      .playground-servers-code-file-list::-webkit-scrollbar,
+      .playground-servers-code-editor-main::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+
+      .playground-servers-code-file-row {
+        width: 100%;
+        min-height: 34px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.82);
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .playground-servers-code-file-row:hover,
+      .playground-servers-code-file-row.is-active {
+        background: rgba(255, 255, 255, 0.09);
+        color: #fff;
+      }
+
+      .playground-servers-code-file-row:disabled {
+        cursor: default;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-servers-code-file-chevron {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .playground-servers-code-file-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-servers-code-file-name {
+        min-width: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+        color: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-servers-code-editor-main {
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: #000;
+        overflow: hidden;
+      }
+
+      .playground-servers-code-editor-body {
+        min-height: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-servers-code-editor-shell {
+        min-height: 0;
+        height: 100%;
+        flex: 1;
+        border-radius: 0;
+        background: #000;
+      }
+
+      .playground-servers-code-editor-shell.playground-code-preview-editor-shell,
+      .playground-servers-code-editor-shell.playground-code-preview-editor-shell .monaco-editor,
+      .playground-servers-code-editor-shell.playground-code-preview-editor-shell .monaco-editor-background,
+      .playground-servers-code-editor-shell.playground-code-preview-editor-shell .monaco-scrollable-element,
+      .playground-servers-code-editor-shell.playground-code-preview-editor-shell .margin,
+      .playground-servers-code-editor-shell.playground-code-preview-editor-shell .overflow-guard {
+        background: #000 !important;
+      }
+
+      .playground-servers-code-editor-statusbar {
+        min-height: 42px;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 16px;
+        background: rgba(255, 255, 255, 0.035);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-servers-code-editor-status-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-servers-code-editor-status-actions .playground-environments-action-button {
+        --playground-server-code-action-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+        min-height: 30px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        font-weight: 400;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-servers-code-editor-status-actions .playground-environments-action-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-server-code-action-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-servers-code-editor-status-actions .playground-environments-action-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-servers-code-editor-status-actions .playground-environments-action-button:hover:not(:disabled),
+      .playground-resources-page.is-develop-server-kind-page .playground-servers-code-editor-status-actions .playground-environments-action-button.is-primary:hover:not(:disabled) {
+        background: transparent;
+        color: #fff;
+      }
+
+      .playground-servers-code-empty {
+        min-height: 100%;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 12px;
+        line-height: 1.5;
+        text-align: center;
+        padding: 24px;
       }
 
       .playground-server-deploy-pill-button {
@@ -25967,6 +27527,9 @@ const html = `<!doctype html>
       .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-projects-overview-surface {
         padding: 42px 50px 56px;
         display: block;
+        flex: 0 0 auto;
+        min-height: 100%;
+        overflow: visible;
       }
 
       .playground-projects-overview-inner {
@@ -26002,7 +27565,7 @@ const html = `<!doctype html>
         padding-bottom: 0;
         border-bottom: 0;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 18px;
       }
@@ -26032,6 +27595,7 @@ const html = `<!doctype html>
       .playground-projects-working-agent-card {
         position: relative;
         width: 100%;
+        height: 710px;
         overflow: hidden;
         border-radius: 20px;
         background: #000;
@@ -26040,8 +27604,10 @@ const html = `<!doctype html>
       .playground-projects-working-agent-image {
         display: block;
         width: 100%;
-        height: auto;
+        height: 710px;
         margin-bottom: -50px;
+        object-fit: cover;
+        object-position: center top;
         border-radius: 20px;
       }
 
@@ -26080,20 +27646,44 @@ const html = `<!doctype html>
         font-weight: 400;
       }
 
+      .playground-projects-working-agent-features {
+        margin-top: 36px;
+        margin-bottom: 24px;
+      }
+
+      .playground-projects-working-agent-features .playground-configure-sections {
+        gap: 48px;
+      }
+
+      .playground-projects-feature-row {
+        cursor: default;
+      }
+
+      .playground-projects-feature-row .playground-configure-row-title,
+      .playground-projects-feature-row .playground-configure-row-subtitle {
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+      }
+
+      .playground-projects-feature-row .playground-configure-row-subtitle {
+        line-height: 1.45;
+      }
+
       .playground-projects-working-agent-logos {
         position: relative;
         width: min(100%, 1100px);
         height: 76px;
-        margin: 46px auto 0;
+        margin: 36px auto 0;
       }
 
       .playground-projects-logo-carousel-line {
         position: absolute;
-        z-index: 3;
+        z-index: 1;
         top: 50%;
         left: 50%;
         width: 2px;
-        height: 150px;
+        height: 120px;
         border-radius: 999px;
         transform: translate(-50%, -50%);
         background: linear-gradient(to bottom, transparent 0%, #3b82f6 20%, #3b82f6 80%, transparent 100%);
@@ -26227,7 +27817,12 @@ const html = `<!doctype html>
         }
 
         .playground-projects-working-agent-logos {
-          margin-top: 24px;
+          margin-top: 14px;
+        }
+
+        .playground-projects-working-agent-features .playground-configure-sections {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 28px;
         }
       }
 
@@ -37140,7 +38735,7 @@ ${ENVIRONMENT_CHANGES_CSS}
           billingLabel: "/ month",
           computeTokens: 1500,
           highlighted: true,
-          description: "Premium models, agents, computers & API access for independent builders.",
+          description: "Build custom agents with premium models, scheduling, and API access.",
         },
         {
           id: "team",
@@ -37148,7 +38743,7 @@ ${ENVIRONMENT_CHANGES_CSS}
           monthlyPrice: 30,
           billingLabel: "/ seat / month",
           computeTokens: 5000,
-          description: "Shared workspaces, premium models & usage-based resources for teams.",
+          description: "Share agents, computers, and resources with spend controls.",
         },
         {
           id: "enterprise",
@@ -37156,7 +38751,7 @@ ${ENVIRONMENT_CHANGES_CSS}
           monthlyPrice: 100,
           billingLabel: "/ seat / month",
           computeTokens: 15000,
-          description: "Higher included usage & priority support for larger teams.",
+          description: "Govern larger workspaces with custom inference and support.",
         },
       ];
       const SETTINGS_TOP_UP_CATALOG = [
@@ -38334,44 +39929,44 @@ ${ENVIRONMENT_CHANGES_CSS}
 
       function getSettingsPlanFeatures(tierId, computeTokens) {
         const normalizedTierId = normalizeSettingsTierId(tierId) || "free";
-        const usageIcon = SETTINGS_TIER_USAGE_ICONS[normalizedTierId] || Coins;
-        const usageMultiplier = Math.round(computeTokens / 100);
-        const usageText = normalizedTierId === "free"
-          ? computeTokens + " Compute Tokens included"
-          : usageMultiplier + "x Usage (" + (computeTokens >= 1000
-            ? String((computeTokens / 1000).toFixed(1)).replace(".0", "") + "k"
-            : computeTokens) + " CT)";
-        const isPaidTier = normalizedTierId !== "free";
-        const features = [
-          { text: usageText, icon: usageIcon },
-        ];
+        const formattedTokens = Number(computeTokens || 0).toLocaleString("en-US");
+        const seatTokenText = formattedTokens + " Compute Tokens included per seat";
+        const featuresByTier = {
+          free: [
+            { text: formattedTokens + " Compute Tokens included", icon: SETTINGS_TIER_USAGE_ICONS.free || Coins },
+            { text: "Run your first persistent agent task", icon: Check },
+            { text: "One cloud computer workspace", icon: Monitor },
+            { text: "Files, documents, and app connectors", icon: FileText },
+            { text: "Cost estimate before every run", icon: Coins },
+            { text: "No credit card required", icon: Shield },
+          ],
+          individual: [
+            { text: formattedTokens + " Compute Tokens included", icon: SETTINGS_TIER_USAGE_ICONS.individual || Coins },
+            { text: "Custom agents and cloud computers", icon: User },
+            { text: "Premium models for research, coding, and images", icon: Telescope },
+            { text: "Calendar and scheduled tasks", icon: Clock },
+            { text: "API access for agent workflows", icon: Code },
+            { text: "Budget caps and usage history", icon: Coins },
+          ],
+          team: [
+            { text: seatTokenText, icon: SETTINGS_TIER_USAGE_ICONS.team || Coins },
+            { text: "Shared projects, agents, and computers", icon: Layers },
+            { text: "Team files, resources, and connectors", icon: FileText },
+            { text: "Scheduled workflows for recurring work", icon: Clock },
+            { text: "Usage-based resources with spend controls", icon: Coins },
+            { text: "Bring your own inference endpoint", icon: HardDrive },
+          ],
+          enterprise: [
+            { text: seatTokenText, icon: SETTINGS_TIER_USAGE_ICONS.enterprise || Coins },
+            { text: "Advanced governance for larger teams", icon: Shield },
+            { text: "Shared workspaces, agents, and resources", icon: Layers },
+            { text: "Custom inference and model routing", icon: HardDrive },
+            { text: "Usage-based infrastructure with spend caps", icon: Coins },
+            { text: "Priority support and rollout assistance", icon: Sparkles },
+          ],
+        };
 
-        if (isPaidTier) {
-          features.push({ text: "Access to premium models", icon: Telescope });
-          features.push({ text: "Create your own Agents", icon: User });
-        }
-
-        if (normalizedTierId === "team" || normalizedTierId === "enterprise") {
-          features.push({ text: "Bring your own inference endpoint", icon: HardDrive });
-          features.push({ text: "Usage-based resources after included credits", icon: Coins });
-          features.push({ text: "Shared workspaces and resources", icon: Layers });
-        }
-
-        features.push(
-          { text: "Create your own Environments", icon: Cloud },
-          { text: "Work with any documents", icon: FileText },
-          { text: "Integrate with all your apps", icon: Cable },
-          { text: "Best-in-class Research models", icon: Telescope },
-          { text: "Best-in-class image models", icon: ImageIcon },
-          { text: "Schedule Tasks", icon: Clock },
-          { text: "API Access", icon: Code }
-        );
-
-        if (normalizedTierId === "enterprise") {
-          features.push({ text: "Advanced governance and priority support", icon: Sparkles });
-        }
-
-        return features;
+        return featuresByTier[normalizedTierId] || featuresByTier.free;
       }
 
       function getSettingsTierLogoUrl(value) {
@@ -39940,6 +41535,20 @@ ${ENVIRONMENT_CHANGES_CSS}
       const PLAYGROUND_ENVIRONMENT_DRAFT_ID = "__playground_new_environment__";
       const PLAYGROUND_SERVER_DRAFT_ID = "__playground_new_server__";
       const PLAYGROUND_DATABASE_DRAFT_ID = "__playground_new_database__";
+      const PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH = "index.js";
+      const PLAYGROUND_DEFAULT_FUNCTION_SOURCE_CONTENT = [
+        "export default async function handler(request) {",
+        "  return {",
+        "    status: 200,",
+        "    headers: {",
+        '      "content-type": "application/json; charset=utf-8",',
+        "    },",
+        "    body: JSON.stringify({",
+        '      message: "Hello from Computer Agents",',
+        "    }),",
+        "  };",
+        "}",
+      ].join("\\n");
       const PLAYGROUND_AGENT_DRAFT_ID = "__playground_new_agent__";
       const PLAYGROUND_AGENT_CREATOR_METADATA_ROLE = "agent_creator";
       const PLAYGROUND_AGENT_CREATOR_NAME = "Agent Creator";
@@ -46673,12 +48282,49 @@ ${ENVIRONMENT_CHANGES_CSS}
         return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/runs/" + encodeURIComponent(runId) + "/cancel";
       }
 
+      function normalizePlaygroundRealApiBackendUrl(backendUrl) {
+        const fallback = typeof window !== "undefined" && window.location?.origin
+          ? window.location.origin + "/api/real"
+          : "/api/real";
+        const rawBackendUrl = String(backendUrl || "").trim().replace(/\\/+$/, "");
+        if (!rawBackendUrl) {
+          return fallback;
+        }
+
+        try {
+          const currentOrigin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
+          const parsedUrl = new URL(rawBackendUrl, currentOrigin || "http://localhost");
+          const normalizedPathname = String(parsedUrl.pathname || "/").replace(/\\/+$/, "") || "/";
+          if (
+            currentOrigin
+            && parsedUrl.origin === currentOrigin
+            && normalizedPathname !== "/api/real"
+            && !normalizedPathname.startsWith("/api/real/")
+          ) {
+            return parsedUrl.origin + "/api/real";
+          }
+        } catch {
+        }
+
+        return rawBackendUrl;
+      }
+
       function buildPlaygroundServerLogsUrl(backendUrl, serverId, kind = "request", limit = 80) {
         if (!backendUrl || !serverId) return "";
         const params = new URLSearchParams();
         params.set("kind", String(kind || "request"));
         params.set("limit", String(Math.max(1, Math.min(250, Number(limit) || 80))));
         return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/logs?" + params.toString();
+      }
+
+      function buildPlaygroundServerDeploymentsUrl(backendUrl, serverId) {
+        if (!backendUrl || !serverId) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/deployments";
+      }
+
+      function buildPlaygroundServerRollbackUrl(backendUrl, serverId) {
+        if (!backendUrl || !serverId) return "";
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/rollback";
       }
 
       function buildPlaygroundDatabaseCollectionsUrl(backendUrl, databaseId) {
@@ -46815,6 +48461,38 @@ ${ENVIRONMENT_CHANGES_CSS}
           createdAt: typeof secret.createdAt === "string" ? secret.createdAt : "",
           updatedAt: typeof secret.updatedAt === "string" ? secret.updatedAt : "",
           lastAccessedAt: typeof secret.lastAccessedAt === "string" ? secret.lastAccessedAt : "",
+        };
+      }
+
+      function normalizePlaygroundServerDeploymentRecord(deployment) {
+        if (!deployment || typeof deployment !== "object") {
+          return null;
+        }
+        const id = typeof deployment.id === "string" && deployment.id.trim()
+          ? deployment.id.trim()
+          : typeof deployment.deploymentId === "string" && deployment.deploymentId.trim()
+            ? deployment.deploymentId.trim()
+            : "";
+        const revision = typeof deployment.revision === "string" ? deployment.revision.trim() : "";
+        const at = typeof deployment.at === "string" && deployment.at ? deployment.at : "";
+        if (!id && !revision && !at) {
+          return null;
+        }
+        return {
+          id: id || revision || at,
+          at,
+          outcome: String(deployment.outcome || "").trim().toLowerCase() || "success",
+          type: typeof deployment.type === "string" ? deployment.type : "",
+          serviceName: typeof deployment.serviceName === "string" ? deployment.serviceName : "",
+          region: typeof deployment.region === "string" ? deployment.region : "",
+          revision,
+          serviceUrl: typeof deployment.serviceUrl === "string" ? deployment.serviceUrl : "",
+          imageUrl: typeof deployment.imageUrl === "string" ? deployment.imageUrl : "",
+          runtime: typeof deployment.runtime === "string" ? deployment.runtime : "",
+          sourceEnvironmentId: typeof deployment.sourceEnvironmentId === "string" ? deployment.sourceEnvironmentId : "",
+          sourcePath: typeof deployment.sourcePath === "string" ? deployment.sourcePath : "",
+          error: typeof deployment.error === "string" ? deployment.error : "",
+          rolledBackToDeploymentId: typeof deployment.rolledBackToDeploymentId === "string" ? deployment.rolledBackToDeploymentId : "",
         };
       }
 
@@ -53075,6 +54753,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [isUploadingFiles, setIsUploadingFiles] = useState(false);
         const [isCreatingFolder, setIsCreatingFolder] = useState(false);
         const [uploadTargetPath, setUploadTargetPath] = useState("");
+        const [isExternalFileDropActive, setIsExternalFileDropActive] = useState(false);
         const [draggedPaths, setDraggedPaths] = useState([]);
         const [dragOverTargetPath, setDragOverTargetPath] = useState("");
         const [contextMenu, setContextMenu] = useState(null);
@@ -53266,6 +54945,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setActiveResizePane("");
           setActionError("");
           setUploadTargetPath("");
+          setIsExternalFileDropActive(false);
           setDraggedPaths([]);
           setDragOverTargetPath("");
           setContextMenu(null);
@@ -55188,17 +56868,24 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           uploadInputRef.current?.click();
         }
 
-        async function handleUploadSelection(event) {
-          const files = Array.from(event.target.files || []);
-          event.target.value = "";
-          if (!selectedEnvironmentId || files.length === 0) return;
+        function isExternalFilesDrag(event) {
+          const types = event.dataTransfer?.types;
+          if (!types) return false;
+          return Array.from(types).includes("Files");
+        }
 
-          const destinationPath = normalizeHistoryPath(uploadTargetPath || currentPath);
+        async function uploadFilesToPath(files, targetPath = currentPath) {
+          const filesToUpload = Array.from(files || []).filter((file) =>
+            file && typeof file.name === "string" && typeof file.size === "number"
+          );
+          if (!selectedEnvironmentId || filesToUpload.length === 0) return;
+
+          const destinationPath = normalizeHistoryPath(targetPath || currentPath);
           setIsUploadingFiles(true);
           setActionError("");
 
           try {
-            for (const file of files) {
+            for (const file of filesToUpload) {
               const formData = new FormData();
               formData.append("file", file);
               formData.append("path", destinationPath);
@@ -55224,6 +56911,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             setIsUploadingFiles(false);
             setUploadTargetPath("");
           }
+        }
+
+        async function handleUploadSelection(event) {
+          const files = Array.from(event.target.files || []);
+          event.target.value = "";
+          await uploadFilesToPath(files, uploadTargetPath || currentPath);
         }
 
         function getMoveTargetPathForContext() {
@@ -55443,6 +57136,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }
 
         function handleFolderDragOver(event, entry) {
+          if (isExternalFilesDrag(event)) {
+            event.preventDefault();
+            event.stopPropagation();
+            setDragOverTargetPath("");
+            setIsExternalFileDropActive(true);
+            event.dataTransfer.dropEffect = "copy";
+            return;
+          }
           if (!entry?.isFolder || !canDropIntoPath(entry.path)) return;
           event.preventDefault();
           event.stopPropagation();
@@ -55457,19 +57158,89 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           event.dataTransfer.dropEffect = "move";
         }
 
+        function handleFilesBrowserDragEnter(event) {
+          if (!isExternalFilesDrag(event)) return;
+          event.preventDefault();
+          event.stopPropagation();
+          setToolbarPopover("");
+          closeContextMenu();
+          setDragOverTargetPath("");
+          setIsExternalFileDropActive(true);
+          event.dataTransfer.dropEffect = "copy";
+        }
+
+        function handleFilesBrowserDragOver(event) {
+          if (isExternalFilesDrag(event)) {
+            event.preventDefault();
+            event.stopPropagation();
+            setDragOverTargetPath("");
+            setIsExternalFileDropActive(true);
+            event.dataTransfer.dropEffect = "copy";
+            return;
+          }
+          handleBrowserDragOver(event);
+        }
+
         function handleDragLeave(event) {
           if (event.currentTarget.contains(event.relatedTarget)) return;
           setDragOverTargetPath("");
         }
 
+        function handleFilesBrowserDragLeave(event) {
+          if (!isExternalFilesDrag(event)) {
+            if (isExternalFileDropActive) {
+              const bounds = event.currentTarget.getBoundingClientRect();
+              const hasLeftBrowser =
+                event.clientX < bounds.left ||
+                event.clientX > bounds.right ||
+                event.clientY < bounds.top ||
+                event.clientY > bounds.bottom;
+              if (hasLeftBrowser) {
+                setIsExternalFileDropActive(false);
+              }
+              return;
+            }
+            handleDragLeave(event);
+            return;
+          }
+          if (event.relatedTarget && event.currentTarget.contains(event.relatedTarget)) {
+            return;
+          }
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const hasLeftBrowser =
+            event.clientX < bounds.left ||
+            event.clientX > bounds.right ||
+            event.clientY < bounds.top ||
+            event.clientY > bounds.bottom;
+          if (hasLeftBrowser) {
+            setIsExternalFileDropActive(false);
+          }
+        }
+
         async function handleFolderDrop(event, entry) {
           if (!entry?.isFolder) return;
+          if (isExternalFilesDrag(event)) {
+            event.preventDefault();
+            event.stopPropagation();
+            setIsExternalFileDropActive(false);
+            setDragOverTargetPath("");
+            await uploadFilesToPath(Array.from(event.dataTransfer?.files || []), entry.path);
+            return;
+          }
           event.preventDefault();
           event.stopPropagation();
           await handleMoveEntries(entry.path);
         }
 
         async function handleBrowserDrop(event) {
+          if (isExternalFilesDrag(event)) {
+            event.preventDefault();
+            event.stopPropagation();
+            setIsExternalFileDropActive(false);
+            setDragOverTargetPath("");
+            await uploadFilesToPath(Array.from(event.dataTransfer?.files || []), currentPath);
+            return;
+          }
           if (!draggedPaths.length) return;
           event.preventDefault();
           await handleMoveEntries(currentPath);
@@ -56878,20 +58649,73 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 ? React.createElement("div", { className: "playground-files-state" }, "Select an environment to browse files.")
                 : !hasVisibleEntries
                   ? isEmptyEnvironmentRoot
-                    ? React.createElement("div", { className: "playground-files-state playground-files-empty-state-card-wrap" },
-                        React.createElement("div", { className: "playground-tasks-empty playground-files-empty-state-card" },
-                          React.createElement(FolderOpen, { width: 28, height: 28, strokeWidth: 1.9 }),
-                          React.createElement("div", { className: "playground-tasks-empty-title" }, "Upload your first files"),
-                          React.createElement("div", { className: "playground-tasks-empty-copy" }, "Add reference docs, specs, or assets to this environment so they are ready to use in threads and tasks."),
-                          React.createElement("div", { className: "playground-tasks-empty-actions" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-tasks-empty-primary-button",
-                              onClick: () => openUploadPicker(currentPath),
-                              disabled: !selectedEnvironmentId || isUploadingFiles,
-                            },
-                              React.createElement(Plus, { width: 12, height: 12, strokeWidth: 2, "aria-hidden": "true" }),
-                              React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files")
+                    ? React.createElement("div", { className: "playground-files-empty-workspace" },
+                        React.createElement("section", { className: "playground-files-empty-folder" },
+                          React.createElement("svg", {
+                            className: "playground-files-empty-folder-top",
+                            viewBox: "0 0 1000 92",
+                            preserveAspectRatio: "none",
+                            "aria-hidden": "true",
+                            focusable: "false",
+                          },
+                            React.createElement("path", {
+                              d: "M0 50 H300 C316 50 320 36 324 23 C328 11 336 4 352 4 H730 C746 4 754 11 758 23 C762 36 766 50 782 50 H1000 V80 H782 C766 80 762 66 758 53 C754 41 746 34 730 34 H352 C336 34 328 41 324 53 C320 66 316 80 300 80 H0 Z",
+                              fill: "#0F0F0F",
+                            }),
+                            React.createElement("path", {
+                              d: "M0 60 H26 C42 60 46 46 50 33 C54 21 62 14 78 14 H244 C260 14 268 21 272 33 C276 46 280 60 296 60 H1000 V80 H296 C280 80 276 66 272 53 C268 41 260 34 244 34 H78 C62 34 54 41 50 53 C46 66 42 80 26 80 H0 Z",
+                              fill: "#66a6ff",
+                            }),
+                            React.createElement("path", {
+                              d: "M0 80 H1000 V92 H0 Z",
+                              fill: "#0F0F0F",
+                            }),
+                          ),
+                          React.createElement("div", { className: "playground-files-empty-folder-inner" },
+                            React.createElement("div", { className: "playground-files-empty-folder-rule" }),
+                            React.createElement("div", { className: "playground-files-empty-folder-header" },
+                              React.createElement("div", null,
+                                React.createElement("h2", { className: "playground-files-empty-folder-title" },
+                                  React.createElement("span", null, "Not a file dump."),
+                                  "Workspace memory."
+                                ),
+                                React.createElement("div", { className: "playground-files-empty-folder-copy" },
+                                  "Files give agents durable context they can read, edit, cite, and reuse across threads, projects, reports, and deployed apps."
+                                )
+                              ),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-files-control-button playground-files-empty-folder-upload-button",
+                                onClick: () => openUploadPicker(currentPath),
+                                disabled: !selectedEnvironmentId || isUploadingFiles,
+                              },
+                                React.createElement(ArrowUpFromLine, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files")
+                              )
+                            ),
+                            React.createElement("table", { className: "playground-files-empty-folder-table" },
+                              React.createElement("thead", null,
+                                React.createElement("tr", null,
+                                  React.createElement("th", null, "File storage"),
+                                  React.createElement("th", null, "Agent workspace")
+                                )
+                              ),
+                              React.createElement("tbody", null,
+                                [
+                                  ["Upload documents, images, PDFs, data, and source code", "Agents can inspect, summarize, transform, and cite each file"],
+                                  ["Organize assets in folders inside each computer", "Every thread can work against the same durable file base"],
+                                  ["Preview and edit text or code without leaving the workspace", "Changes are saved back for later runs, reports, and deploys"],
+                                  ["Attach files to projects, tasks, and generated outputs", "Project context stays connected to the work that created it"],
+                                ].map((row) =>
+                                  React.createElement("tr", { key: row[0] },
+                                    React.createElement("td", null, "- ", row[0]),
+                                    React.createElement("td", null,
+                                      React.createElement("span", { className: "playground-files-empty-folder-table-check", "aria-hidden": "true" }, "✓"),
+                                      row[1]
+                                    )
+                                  )
+                                )
+                              )
                             )
                           )
                         )
@@ -57263,7 +59087,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               React.createElement("div", {
                 className: "playground-files-browser-body"
                   + (isChangesMode ? " is-changes-view" : "")
-                  + (!isChangesMode && isBackgroundDropTarget ? " is-drop-target" : ""),
+                  + (!isChangesMode && isBackgroundDropTarget ? " is-drop-target" : "")
+                  + (!isChangesMode && isExternalFileDropActive ? " is-file-drop-active" : ""),
                 onClick: !isChangesMode
                   ? (event) => {
                       if (event.target === event.currentTarget) {
@@ -57279,10 +59104,32 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       }
                     }
                   : undefined,
-                onDragOver: !isChangesMode ? handleBrowserDragOver : undefined,
-                onDragLeave: !isChangesMode ? handleDragLeave : undefined,
+                onDragEnter: !isChangesMode ? handleFilesBrowserDragEnter : undefined,
+                onDragOver: !isChangesMode ? handleFilesBrowserDragOver : undefined,
+                onDragLeave: !isChangesMode ? handleFilesBrowserDragLeave : undefined,
                 onDrop: !isChangesMode ? (event) => void handleBrowserDrop(event) : undefined,
               },
+                !isChangesMode && isExternalFileDropActive
+                  ? React.createElement("div", { className: "playground-files-screen-drop-overlay" },
+                      React.createElement("div", { className: "playground-files-screen-drop-overlay-panel" },
+                        React.createElement("div", { className: "playground-files-screen-drop-overlay-illustration", "aria-hidden": "true" },
+                          React.createElement("div", { className: "playground-files-screen-drop-overlay-icon-card playground-files-screen-drop-overlay-icon-card-back" },
+                            React.createElement(Code, { className: "playground-files-screen-drop-overlay-icon", strokeWidth: 1.75 })
+                          ),
+                          React.createElement("div", { className: "playground-files-screen-drop-overlay-icon-card playground-files-screen-drop-overlay-icon-card-front" },
+                            React.createElement(ImageIcon, { className: "playground-files-screen-drop-overlay-icon", strokeWidth: 1.75 })
+                          ),
+                          React.createElement("div", { className: "playground-files-screen-drop-overlay-icon-card playground-files-screen-drop-overlay-icon-card-side" },
+                            React.createElement(FileText, { className: "playground-files-screen-drop-overlay-icon", strokeWidth: 1.75 })
+                          )
+                        ),
+                        React.createElement("div", { className: "playground-files-screen-drop-overlay-title" }, "Add files"),
+                        React.createElement("div", { className: "playground-files-screen-drop-overlay-copy" },
+                          isUploadingFiles ? "Uploading files to this folder..." : "Drop files here to upload them to this folder"
+                        )
+                      )
+                    )
+                  : null,
                 isChangesMode
                   ? renderChangesBrowserContent()
                   : renderFilesBrowserContent()
@@ -57356,7 +59203,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         developAnalyticsMenuOpen = false,
         onDevelopAnalyticsMenuOpenChange = null,
         onOpenSettingsUsage = null,
+        onOpenSettingsApi = null,
       }) {
+        backendUrl = normalizePlaygroundRealApiBackendUrl(backendUrl);
         const searchPopupInputRef = useRef(null);
         const editorDirtyRef = useRef(false);
         const environmentDetailMainRef = useRef(null);
@@ -57406,6 +59255,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const databaseAnalyticsByIdRef = useRef({});
         const environmentSeededSelectionRef = useRef("");
         const serverSeededSelectionRef = useRef("");
+        const serverDefaultSourceCreationRef = useRef(new Set());
         const databaseSeededSelectionRef = useRef("");
         const serverResourceModeRefreshRef = useRef(false);
         const resourcesOverviewToolbarRef = useRef(null);
@@ -57442,6 +59292,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [serverFilesById, setServerFilesById] = useState({});
         const [serverAnalyticsById, setServerAnalyticsById] = useState({});
         const [serverLogsById, setServerLogsById] = useState({});
+        const [serverDeploymentsById, setServerDeploymentsById] = useState({});
         const [serverContextsById, setServerContextsById] = useState({});
         const [serverAuthUsersById, setServerAuthUsersById] = useState({});
         const [serverSecretsById, setServerSecretsById] = useState({});
@@ -57470,6 +59321,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [loadingServerAnalyticsId, setLoadingServerAnalyticsId] = useState("");
         const [loadingServerBindingsId, setLoadingServerBindingsId] = useState("");
         const [loadingServerContextId, setLoadingServerContextId] = useState("");
+        const [loadingServerDeploymentsId, setLoadingServerDeploymentsId] = useState("");
         const [loadingServerAuthUsersId, setLoadingServerAuthUsersId] = useState("");
         const [loadingServerSecretsId, setLoadingServerSecretsId] = useState("");
         const [loadingServerAgentRuntimeRunsId, setLoadingServerAgentRuntimeRunsId] = useState("");
@@ -57621,7 +59473,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           lastResponseText: "",
           deployProgress: 0,
         });
+        const [serverDeploymentHistoryState, setServerDeploymentHistoryState] = useState({
+          error: "",
+          rollingBackDeploymentId: "",
+        });
         const [serverDetailTab, setServerDetailTab] = useState("general");
+        const [serverInvokeSnippetTab, setServerInvokeSnippetTab] = useState("curl");
+        const [copiedFunctionServiceUrl, setCopiedFunctionServiceUrl] = useState("");
         const [serverAnalyticsView, setServerAnalyticsView] = useState("editor");
         const [serverLogsState, setServerLogsState] = useState({
           kind: "request",
@@ -57798,6 +59656,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           });
         }, [selectedServerId, serverFilesById]);
 
+        const hasLoadedCurrentServerFiles = useMemo(() => {
+          return Boolean(selectedServerId)
+            && selectedServerId !== PLAYGROUND_SERVER_DRAFT_ID
+            && Object.prototype.hasOwnProperty.call(serverFilesById, selectedServerId);
+        }, [selectedServerId, serverFilesById]);
+
         const currentServerFilesTree = useMemo(() => buildPlaygroundEnvironmentTree(currentServerFiles), [currentServerFiles]);
         const visibleServerSourceFileRows = useMemo(
           () => buildPlaygroundEnvironmentVisibleRows(currentServerFilesTree, "", serverSourceExpandedFolders, "name-asc"),
@@ -57824,6 +59688,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
           return serverLogsById[selectedServerId] || {};
         }, [selectedServerId, serverLogsById]);
+
+        const currentServerDeployments = useMemo(() => {
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+          return Array.isArray(serverDeploymentsById[selectedServerId]) ? serverDeploymentsById[selectedServerId] : [];
+        }, [selectedServerId, serverDeploymentsById]);
 
         const currentServerContext = useMemo(() => {
           if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
@@ -58370,6 +60241,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             message: "",
             lastResponseText: "",
             deployProgress: 0,
+          });
+          setServerDeploymentHistoryState({
+            error: "",
+            rollingBackDeploymentId: "",
           });
           setServerFileEditorState({
             path: "",
@@ -59748,8 +61623,18 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               }
             );
             const data = await response.json().catch(() => ({}));
+            if (response.status === 404) {
+              setServerLogsById((current) => ({
+                ...current,
+                [normalizedServerId]: {
+                  ...(current[normalizedServerId] || {}),
+                  [normalizedKind]: [],
+                },
+              }));
+              return [];
+            }
             if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load logs.");
+              throw new Error("Failed to load logs.");
             }
 
             const nextLogs = Array.isArray(data?.logs) ? data.logs : [];
@@ -59774,6 +61659,70 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             }));
           }
         }, [backendUrl, requestHeaders, serverLogsById]);
+
+        const loadServerDeployments = useCallback(async (serverId, options = {}) => {
+          const normalizedServerId = String(serverId || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return [];
+          }
+
+          const force = options?.force === true;
+          const existingDeployments = serverDeploymentsById[normalizedServerId];
+          if (!force && Array.isArray(existingDeployments)) {
+            return existingDeployments;
+          }
+
+          setLoadingServerDeploymentsId(normalizedServerId);
+          setServerDeploymentHistoryState((current) => ({
+            ...current,
+            error: "",
+          }));
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerDeploymentsUrl(backendUrl, normalizedServerId),
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (response.status === 404) {
+              setServerDeploymentsById((current) => ({
+                ...current,
+                [normalizedServerId]: [],
+              }));
+              return [];
+            }
+            if (!response.ok) {
+              throw new Error("Failed to load deployments.");
+            }
+
+            const sourceDeployments = Array.isArray(data?.deployments)
+              ? data.deployments
+              : Array.isArray(data?.data)
+                ? data.data
+                : [];
+            const deployments = sourceDeployments
+              .map(normalizePlaygroundServerDeploymentRecord)
+              .filter(Boolean);
+            setServerDeploymentsById((current) => ({
+              ...current,
+              [normalizedServerId]: deployments,
+            }));
+            return deployments;
+          } catch (error) {
+            if (selectedServerIdRef.current === normalizedServerId) {
+              setServerDeploymentHistoryState((current) => ({
+                ...current,
+                error: error instanceof Error ? error.message : "Failed to load deployments.",
+              }));
+            }
+            return [];
+          } finally {
+            setLoadingServerDeploymentsId((current) => current === normalizedServerId ? "" : current);
+          }
+        }, [backendUrl, requestHeaders, serverDeploymentsById]);
 
         const loadServerBindings = useCallback(async (serverId, options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
@@ -60628,10 +62577,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
           if (["function", "web_app"].includes(seedServerKind)) {
             void loadServerContext(selectedServerId);
+            void loadServerDeployments(selectedServerId);
           } else {
             void loadServerBindings(selectedServerId);
           }
-        }, [loadServerBindings, loadServerContext, loadServerDetails, loadServerFiles, loadServerSecrets, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
+        }, [loadServerBindings, loadServerContext, loadServerDeployments, loadServerDetails, loadServerFiles, loadServerSecrets, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -60708,6 +62658,23 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }, [draftServer, loadServerAnalytics, resourceMode, selectedServerId, selectedServerSnapshot, serverAnalyticsById]);
 
         useEffect(() => {
+          if (resourceMode !== "servers") {
+            return;
+          }
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
+          if (!["web_app", "function"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
+            return;
+          }
+          if (Array.isArray(serverDeploymentsById[selectedServerId])) {
+            return;
+          }
+          void loadServerDeployments(selectedServerId);
+        }, [draftServer, loadServerDeployments, resourceMode, selectedServerId, selectedServerSnapshot, serverDeploymentsById]);
+
+        useEffect(() => {
           if (resourceMode !== "servers" || serverAnalyticsView !== "analytics") {
             return;
           }
@@ -60723,7 +62690,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }, [draftServer, loadServerAnalytics, loadServerLogs, resourceMode, selectedServerId, selectedServerSnapshot, serverAnalyticsView, serverLogsState.kind]);
 
         useEffect(() => {
-          if (resourceMode !== "servers" || serverDetailTab !== "logs") {
+          if (resourceMode !== "servers" || !["logs", "history"].includes(serverDetailTab)) {
             return;
           }
           if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
@@ -60733,9 +62700,55 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (!["web_app", "function"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
             return;
           }
-          void loadServerAnalytics(selectedServerId);
-          void loadServerLogs(selectedServerId, serverLogsState.kind);
-        }, [draftServer, loadServerAnalytics, loadServerLogs, resourceMode, selectedServerId, selectedServerSnapshot, serverDetailTab, serverLogsState.kind]);
+          if (serverDetailTab === "logs") {
+            void loadServerAnalytics(selectedServerId);
+            void loadServerLogs(selectedServerId, serverLogsState.kind);
+          } else {
+            void loadServerDeployments(selectedServerId);
+          }
+        }, [draftServer, loadServerAnalytics, loadServerDeployments, loadServerLogs, resourceMode, selectedServerId, selectedServerSnapshot, serverDetailTab, serverLogsState.kind]);
+
+        useEffect(() => {
+          if (resourceMode !== "servers" || serverDetailTab !== "code") {
+            return;
+          }
+          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
+          const activeServerKind = canonicalizePlaygroundServerKind(activeServer?.kind);
+          if (!["function", "web_app"].includes(activeServerKind)) {
+            return;
+          }
+          if (!hasLoadedCurrentServerFiles || loadingServerFilesId === selectedServerId) {
+            return;
+          }
+          if (serverFileEditorState.path && currentServerFiles.some((entry) => entry.path === serverFileEditorState.path)) {
+            return;
+          }
+
+          const preferredEntry = currentServerFiles.find((entry) => !entry?.isFolder && entry.path === PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH && isPlaygroundTextPreviewable(entry))
+            || currentServerFiles.find((entry) => !entry?.isFolder && isPlaygroundTextPreviewable(entry))
+            || null;
+          if (preferredEntry?.path) {
+            void loadServerFileContent(selectedServerId, preferredEntry.path);
+            return;
+          }
+          if (activeServerKind === "function") {
+            void createDefaultFunctionSourceFile(selectedServerId);
+          }
+        }, [
+          currentServerFiles,
+          draftServer,
+          hasLoadedCurrentServerFiles,
+          loadServerFileContent,
+          loadingServerFilesId,
+          resourceMode,
+          selectedServerId,
+          selectedServerSnapshot,
+          serverDetailTab,
+          serverFileEditorState.path,
+        ]);
 
         useEffect(() => {
           if (!serverFileEditorState.path) {
@@ -64815,9 +66828,66 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
         }
 
+        async function createDefaultFunctionSourceFile(serverId) {
+          const normalizedServerId = String(serverId || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+            return;
+          }
+          if (serverDefaultSourceCreationRef.current.has(normalizedServerId)) {
+            return;
+          }
+          serverDefaultSourceCreationRef.current.add(normalizedServerId);
+
+          setServerFileTransferState({
+            isUploading: false,
+            error: "",
+            message: "Creating " + PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH + "...",
+          });
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerFileContentUrl(backendUrl, normalizedServerId, PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH),
+              {
+                method: "PUT",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  content: PLAYGROUND_DEFAULT_FUNCTION_SOURCE_CONTENT,
+                }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to create default source file.");
+            }
+
+            await loadServerFiles(normalizedServerId);
+            await loadServerFileContent(normalizedServerId, PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH, {
+              fallbackValue: PLAYGROUND_DEFAULT_FUNCTION_SOURCE_CONTENT,
+            });
+            setServerFileTransferState({
+              isUploading: false,
+              error: "",
+              message: "Created " + PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH,
+            });
+          } catch (error) {
+            setServerFileTransferState({
+              isUploading: false,
+              error: error instanceof Error ? error.message : "Failed to create default source file.",
+              message: "",
+            });
+          }
+        }
+
         async function handleDeployServer() {
           if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
             return;
+          }
+
+          if (serverFileEditorState.status === "ready" && serverFileEditorState.path && serverFileEditorState.value !== serverFileEditorState.initialValue) {
+            await handleServerFileSave();
           }
 
           await commitDraftServerIfDirty();
@@ -64880,6 +66950,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             });
             void loadServerContext(draftServer.id, { force: true });
             void loadServerAnalytics(draftServer.id, { force: true });
+            void loadServerDeployments(draftServer.id, { force: true });
             void loadServerLogs(draftServer.id, "deployment", { force: true });
           } catch (error) {
             clearServerDeployProgressTimer();
@@ -64891,6 +66962,96 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               lastResponseText: "",
               deployProgress: 0,
             });
+          }
+        }
+
+        async function handleRollbackServerDeployment(deployment) {
+          const normalizedServerId = String(draftServer?.id || "").trim();
+          const deploymentId = String(deployment?.id || "").trim();
+          const revision = String(deployment?.revision || "").trim();
+          if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID || !deploymentId) {
+            return;
+          }
+
+          const rollbackLabel = revision || deploymentId;
+          const confirmed = window.confirm("Roll back " + (draftServer.name || "this server") + " to " + rollbackLabel + "?");
+          if (!confirmed) {
+            return;
+          }
+
+          setServerDeploymentHistoryState({
+            error: "",
+            rollingBackDeploymentId: deploymentId,
+          });
+          setServerDeploymentState({
+            isDeploying: false,
+            isInvoking: false,
+            error: "",
+            message: "Rolling back to " + rollbackLabel + "...",
+            lastResponseText: "",
+            deployProgress: 0,
+          });
+
+          try {
+            const response = await fetch(
+              buildPlaygroundServerRollbackUrl(backendUrl, normalizedServerId),
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ deploymentId }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to roll back deployment.");
+            }
+
+            const updatedServer = getPlaygroundServerResponseRecord(data);
+            if (updatedServer) {
+              upsertLocalServerRecord(updatedServer);
+              if (selectedServerIdRef.current === updatedServer.id) {
+                setDraftServer(updatedServer);
+                serverEditorDirtyRef.current = false;
+              }
+            }
+
+            const rollbackDeployment = normalizePlaygroundServerDeploymentRecord(data?.deployment);
+            setServerDeploymentState({
+              isDeploying: false,
+              isInvoking: false,
+              error: "",
+              message: rollbackDeployment?.serviceUrl
+                ? "Rolled back to " + rollbackLabel + " at " + rollbackDeployment.serviceUrl
+                : "Rolled back to " + rollbackLabel,
+              lastResponseText: "",
+              deployProgress: 0,
+            });
+            void loadServerDeployments(normalizedServerId, { force: true });
+            void loadServerContext(normalizedServerId, { force: true });
+            void loadServerAnalytics(normalizedServerId, { force: true });
+            void loadServerLogs(normalizedServerId, "deployment", { force: true });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to roll back deployment.";
+            setServerDeploymentHistoryState((current) => ({
+              ...current,
+              error: errorMessage,
+            }));
+            setServerDeploymentState({
+              isDeploying: false,
+              isInvoking: false,
+              error: errorMessage,
+              message: "",
+              lastResponseText: "",
+              deployProgress: 0,
+            });
+          } finally {
+            setServerDeploymentHistoryState((current) => ({
+              ...current,
+              rollingBackDeploymentId: current.rollingBackDeploymentId === deploymentId ? "" : current.rollingBackDeploymentId,
+            }));
           }
         }
 
@@ -65091,6 +67252,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return;
           }
 
+          if (serverFileEditorState.status === "ready" && serverFileEditorState.path && serverFileEditorState.value !== serverFileEditorState.initialValue) {
+            await handleServerFileSave();
+          }
+
           setServerDeploymentState((current) => ({
             ...current,
             isInvoking: true,
@@ -65176,10 +67341,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             target: normalizedTarget,
             title,
             path: isConfigTarget
-              ? "testbase-runtime.json"
+              ? "computer-agents-runtime.json"
               : runtimeTarget === "browser"
-                ? "testbase.runtime.browser.mjs"
-                : "testbase.runtime.server.mjs",
+                ? "computer-agents.runtime.browser.mjs"
+                : "computer-agents.runtime.server.mjs",
             language: isConfigTarget ? "json" : "javascript",
             value: "",
             loading: true,
@@ -65220,10 +67385,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               target: normalizedTarget,
               title,
               path: isConfigTarget
-                ? "testbase-runtime.json"
+                ? "computer-agents-runtime.json"
                 : runtimeTarget === "browser"
-                  ? "testbase.runtime.browser.mjs"
-                  : "testbase.runtime.server.mjs",
+                  ? "computer-agents.runtime.browser.mjs"
+                  : "computer-agents.runtime.server.mjs",
               language: isConfigTarget ? "json" : "javascript",
               value: nextValue,
               loading: false,
@@ -67860,6 +70025,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const isAgentRuntimeServer = normalizedServerKind === "agent_runtime";
           const isSecretsServer = normalizedServerKind === "secrets";
           const isTitlelessServerDescription = isSourceDeployableServer || isAuthServer || isSecretsServer;
+          const shouldRenderTitlelessServerDescription = isTitlelessServerDescription && !isFunctionServer;
           const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
           const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
@@ -68011,12 +70177,98 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 }));
           const serverDetailTrafficLabels = resolvedServerDetailTrafficBuckets.map((bucket) => bucket?.label || "");
           const serverDetailTrafficCounts = resolvedServerDetailTrafficBuckets.map((bucket) => Number(bucket?.total || 0));
-          const serverDetailKpis = [
-            { id: "requests", value: String(resolvedServerAnalyticsSummary.totalRequests24h || 0), label: "Requests (24h)", Icon: Globe },
-            { id: "success-rate", value: formatPlaygroundServerRate(resolvedServerAnalyticsSummary.successRate24h), label: "Success Rate", Icon: Check },
-            { id: "latency", value: formatPlaygroundServerLatency(resolvedServerAnalyticsSummary.p95LatencyMs), label: "P95 Latency", Icon: Clock },
-            { id: "errors", value: String(Number(resolvedServerAnalyticsSummary.clientErrors24h || 0) + Number(resolvedServerAnalyticsSummary.serverErrors24h || 0)), label: "4xx / 5xx", Icon: X },
-          ];
+          const readServerMetricNumber = (...values) => {
+            for (const value of values) {
+              if (value == null || value === "") {
+                continue;
+              }
+              const numeric = Number(value);
+              if (Number.isFinite(numeric)) {
+                return numeric;
+              }
+            }
+            return 0;
+          };
+          const readServerNestedMetricNumber = (source, paths) => {
+            const candidates = [];
+            (Array.isArray(paths) ? paths : []).forEach((path) => {
+              const parts = String(path || "").split(".").filter(Boolean);
+              let current = source;
+              parts.forEach((part) => {
+                current = current && typeof current === "object" ? current[part] : undefined;
+              });
+              candidates.push(current);
+            });
+            for (const value of candidates) {
+              if (value == null || value === "") {
+                continue;
+              }
+              const numeric = Number(value);
+              if (Number.isFinite(numeric)) {
+                return numeric;
+              }
+            }
+            return null;
+          };
+          const averageServerBucketMetric = (buckets, paths) => {
+            const values = (Array.isArray(buckets) ? buckets : [])
+              .map((bucket) => readServerNestedMetricNumber(bucket, paths))
+              .filter((value) => Number.isFinite(value) && value > 0);
+            if (values.length === 0) {
+              return 0;
+            }
+            return values.reduce((sum, value) => sum + value, 0) / values.length;
+          };
+          const functionMemoryMb = readServerMetricNumber(
+            readServerNestedMetricNumber(resolvedServerAnalyticsSummary, [
+              "avgMemoryMb",
+              "averageMemoryMb",
+              "memoryMb",
+              "memoryUsageMb",
+              "avgMemoryUsageMb",
+              "memory.avgMb",
+              "memory.averageMb",
+            ]),
+            averageServerBucketMetric(activeServerStatusBuckets, ["avgMemoryMb", "memoryMb", "memoryUsageMb", "memory.avgMb"]),
+            averageServerBucketMetric(activeServerTrafficBuckets, ["avgMemoryMb", "memoryMb", "memoryUsageMb", "memory.avgMb"])
+          );
+          const functionCpuTimeMs = readServerMetricNumber(
+            readServerNestedMetricNumber(resolvedServerAnalyticsSummary, [
+              "avgCpuTimeMs",
+              "cpuTimeMs",
+              "cpuMs",
+              "avgCpuMs",
+              "cpu.avgMs",
+              "cpu.averageMs",
+            ]),
+            averageServerBucketMetric(activeServerStatusBuckets, ["avgCpuTimeMs", "cpuTimeMs", "cpuMs", "cpu.avgMs"]),
+            averageServerBucketMetric(activeServerTrafficBuckets, ["avgCpuTimeMs", "cpuTimeMs", "cpuMs", "cpu.avgMs"])
+          );
+          const formatFunctionMemory = (value) => {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric) || numeric <= 0) {
+              return "0 MB";
+            }
+            if (numeric >= 1024) {
+              const gb = numeric / 1024;
+              return (Math.abs(gb - Math.round(gb)) < 0.05 ? String(Math.round(gb)) : gb.toFixed(1).replace(/\\.0$/, "")) + " GB";
+            }
+            return String(Math.round(numeric)) + " MB";
+          };
+          const serverDetailKpis = isFunctionServer
+            ? [
+                { id: "invocations", value: String(resolvedServerAnalyticsSummary.totalRequests24h || 0), label: "Invocations", Icon: Globe },
+                { id: "memory", value: formatFunctionMemory(functionMemoryMb), label: "Memory", Icon: HardDrive },
+                { id: "cpu-time", value: formatPlaygroundServerLatency(functionCpuTimeMs), label: "CPU time", Icon: Cpu },
+                { id: "execution-time", value: formatPlaygroundServerLatency(resolvedServerAnalyticsSummary.p95LatencyMs), label: "Execution time", Icon: Clock },
+                { id: "errors", value: String(Number(resolvedServerAnalyticsSummary.clientErrors24h || 0) + Number(resolvedServerAnalyticsSummary.serverErrors24h || 0)), label: "Errors", Icon: X },
+              ]
+            : [
+                { id: "requests", value: String(resolvedServerAnalyticsSummary.totalRequests24h || 0), label: "Requests (24h)", Icon: Globe },
+                { id: "success-rate", value: formatPlaygroundServerRate(resolvedServerAnalyticsSummary.successRate24h), label: "Success Rate", Icon: Check },
+                { id: "latency", value: formatPlaygroundServerLatency(resolvedServerAnalyticsSummary.p95LatencyMs), label: "P95 Latency", Icon: Clock },
+                { id: "errors", value: String(Number(resolvedServerAnalyticsSummary.clientErrors24h || 0) + Number(resolvedServerAnalyticsSummary.serverErrors24h || 0)), label: "4xx / 5xx", Icon: X },
+              ];
           const renderServerDetailTimescaleControl = () => React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
             React.createElement("select", {
               className: "playground-environments-home-comparison-timescale-select",
@@ -68030,18 +70282,20 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             )
           );
           const renderServerDetailRequestChart = () => renderHomeStackedUsageChartShared({
-            ariaLabel: "Server requests",
+            ariaLabel: isFunctionServer ? "Function invocations" : "Server requests",
             labels: serverDetailTrafficLabels,
             series: [
               {
                 id: "server-requests",
-                label: "Requests",
+                label: isFunctionServer ? "Invocations" : "Requests",
                 color: "rgb(143,196,255)",
                 values: serverDetailTrafficCounts,
               },
             ],
-            emptyText: isServerAnalyticsLoading ? "Loading request data..." : "No request data yet",
-            title: "Server Requests",
+            emptyText: isServerAnalyticsLoading
+              ? (isFunctionServer ? "Loading invocation data..." : "Loading request data...")
+              : (isFunctionServer ? "No invocation data yet" : "No request data yet"),
+            title: isFunctionServer ? "Function Invocations" : "Server Requests",
             tickFormatter: (value) => String(Math.round(Number(value) || 0)),
             isLoading: isServerAnalyticsLoading && !activeServerAnalytics,
             showLegend: false,
@@ -68049,6 +70303,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           });
           const renderServerDetailChartKpis = (items) => React.createElement("div", {
               className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-server-detail-chart-kpis",
+              style: { gridTemplateColumns: "repeat(" + Math.max(1, (Array.isArray(items) ? items.length : 0) || 4) + ", minmax(0, 1fr))" },
             },
             (Array.isArray(items) ? items : []).map((item) =>
               React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
@@ -68405,6 +70660,130 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               void loadServerLogs(draftServer.id, normalizedKind);
             }
           };
+          const formatServerDeploymentOutcomeLabel = (outcome) => {
+            const normalizedOutcome = String(outcome || "").trim().toLowerCase();
+            if (normalizedOutcome === "rollback") return "Rollback";
+            if (normalizedOutcome === "failed" || normalizedOutcome === "error") return "Failed";
+            return "Success";
+          };
+          const getServerDeploymentOutcomeTone = (deployment) => {
+            const normalizedOutcome = String(deployment?.outcome || "").trim().toLowerCase();
+            if (normalizedOutcome === "failed" || normalizedOutcome === "error") return "error";
+            if (normalizedOutcome === "rollback") return "warning";
+            return "success";
+          };
+          const readServerDeploymentTimestampMs = (deployment) => {
+            const timestamp = Date.parse(String(deployment?.at || deployment?.createdAt || deployment?.updatedAt || ""));
+            return Number.isFinite(timestamp) ? timestamp : 0;
+          };
+          const renderServerDeploymentsSurface = () => {
+            const deployments = Array.isArray(currentServerDeployments) ? currentServerDeployments : [];
+            const sortedDeployments = deployments.slice().sort((left, right) => readServerDeploymentTimestampMs(right) - readServerDeploymentTimestampMs(left));
+            const activeDeploymentId = String(draftServer?.metadata?.activeDeploymentId || "").trim();
+            const activeRevision = String(activeServerDeploymentRecord?.revision || draftServer?.metadata?.lastDeployment?.revision || "").trim();
+            const isServerDeploymentsLoading = loadingServerDeploymentsId === draftServer.id;
+            return React.createElement("div", {
+                className: "playground-environments-editor-surface playground-servers-analytics-logs-surface playground-servers-deployments-surface",
+              },
+              React.createElement("div", { className: "playground-plugins-section-header playground-servers-logs-section-header" },
+                React.createElement("div", { className: "playground-plugins-section-copy" },
+                  React.createElement("h3", { className: "playground-plugins-section-title" }, "Deployments")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => void loadServerDeployments(draftServer.id, { force: true }),
+                  disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isServerDeploymentsLoading,
+                },
+                  isServerDeploymentsLoading
+                    ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                    : React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Refresh")
+                )
+              ),
+              serverDeploymentHistoryState.error
+                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverDeploymentHistoryState.error)
+                : null,
+              isServerDeploymentsLoading && sortedDeployments.length === 0
+                ? React.createElement("div", { className: "playground-files-state playground-servers-logs-loading-state" },
+                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                  )
+                : sortedDeployments.length > 0
+                  ? React.createElement("div", { className: "playground-agents-overview-table-shell playground-servers-logs-table-shell" },
+                      React.createElement("table", { className: "playground-agents-overview-table playground-servers-logs-table playground-servers-deployments-table" },
+                        React.createElement("thead", null,
+                          React.createElement("tr", null,
+                            React.createElement("th", null, "Status"),
+                            React.createElement("th", null, "Revision"),
+                            React.createElement("th", null, "Runtime"),
+                            React.createElement("th", null, "Source"),
+                            React.createElement("th", { className: "is-right" }, "Time"),
+                            React.createElement("th", { className: "is-right" }, "Action")
+                          )
+                        ),
+                        React.createElement("tbody", null,
+                          sortedDeployments.map((deployment) => {
+                            const deploymentId = String(deployment?.id || "").trim();
+                            const revision = String(deployment?.revision || "").trim();
+                            const isActiveDeployment = Boolean(
+                              (activeDeploymentId && deploymentId && activeDeploymentId === deploymentId)
+                              || (activeRevision && revision && activeRevision === revision)
+                            );
+                            const canRollback = !isActiveDeployment
+                              && Boolean(deploymentId)
+                              && Boolean(revision)
+                              && !["failed", "error"].includes(String(deployment?.outcome || "").trim().toLowerCase());
+                            const isRollingBack = serverDeploymentHistoryState.rollingBackDeploymentId === deploymentId;
+                            return React.createElement("tr", {
+                                key: deploymentId || revision || deployment?.at,
+                                className: "playground-servers-logs-table-row",
+                              },
+                              React.createElement("td", null,
+                                renderServerLogStatusPill(formatServerDeploymentOutcomeLabel(deployment?.outcome), getServerDeploymentOutcomeTone(deployment))
+                              ),
+                              React.createElement("td", null,
+                                React.createElement("div", {
+                                  className: "playground-agents-overview-table-value playground-servers-logs-table-message",
+                                  title: revision || "No revision",
+                                }, revision || "—")
+                              ),
+                              React.createElement("td", null,
+                                React.createElement("div", { className: "playground-agents-overview-table-value" }, deployment?.runtime || "—")
+                              ),
+                              React.createElement("td", null,
+                                React.createElement("div", {
+                                  className: "playground-agents-overview-table-value playground-servers-logs-table-message",
+                                  title: deployment?.sourcePath || deployment?.sourceEnvironmentId || "",
+                                }, deployment?.sourcePath || deployment?.sourceEnvironmentId || "—")
+                              ),
+                              React.createElement("td", { className: "is-right" },
+                                React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundFileDate(deployment?.at))
+                              ),
+                              React.createElement("td", { className: "is-right" },
+                                isActiveDeployment
+                                  ? React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, "Active")
+                                  : canRollback
+                                    ? React.createElement("button", {
+                                        type: "button",
+                                        className: "playground-environments-action-button",
+                                        onClick: () => void handleRollbackServerDeployment(deployment),
+                                        disabled: isRollingBack,
+                                      },
+                                        isRollingBack
+                                          ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                                          : React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                        React.createElement("span", null, isRollingBack ? "Rolling back" : "Rollback")
+                                      )
+                                    : React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, "—")
+                              )
+                            );
+                          })
+                        )
+                      )
+                    )
+                  : React.createElement("div", { className: "playground-files-state" }, "No deployments yet.")
+            );
+          };
           const renderServerLogsSurface = () => React.createElement("div", {
               className: "playground-environments-editor-surface playground-servers-analytics-logs-surface",
             },
@@ -68619,19 +70998,19 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             })
           );
           const descriptionSection = React.createElement("section", {
-              className: "playground-environments-section playground-server-description-section" + (isTitlelessServerDescription ? " is-titleless" : ""),
+              className: "playground-environments-section playground-server-description-section" + (shouldRenderTitlelessServerDescription ? " is-titleless" : ""),
               key: "server-description",
             },
             React.createElement("div", { className: "playground-environments-section-body" },
               React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-                isTitlelessServerDescription
+                shouldRenderTitlelessServerDescription
                   ? React.createElement("div", { className: "playground-server-description-inline-row" },
                       serverDescriptionEditor,
                       serverDescriptionFormatActions
                     )
                   : React.createElement(React.Fragment, null,
                       React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                        React.createElement("div", { className: "playground-tasks-detail-section-title playground-server-description-title" }, "Description"),
                         serverDescriptionFormatActions
                       ),
                       serverDescriptionEditor
@@ -68639,6 +71018,225 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             )
           );
+
+          const functionInvokePayload = JSON.stringify({ name: "Functions" });
+          const functionInvokeSlug = String(draftServer.slug || draftServer.name || "hello-world")
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "") || "hello-world";
+          const functionInvokeUrl = String(draftServer.serviceUrl || "").trim()
+            || ("https://api.computer-agents.com/functions/v1/" + functionInvokeSlug);
+          const functionDeployedServiceUrl = String(draftServer.serviceUrl || "").trim();
+          const functionAuthMetadata = draftServer?.metadata?.functionAuth && typeof draftServer.metadata.functionAuth === "object" && !Array.isArray(draftServer.metadata.functionAuth)
+            ? draftServer.metadata.functionAuth
+            : {};
+          const functionApiKeyAuthEnabled = functionAuthMetadata.apiKeyAuthEnabled !== false
+            && draftServer?.metadata?.functionApiKeyAuthEnabled !== false;
+          const setFunctionApiKeyAuthEnabled = (nextEnabled) => {
+            updateDraftServer((current) => {
+              const normalized = normalizePlaygroundServerRecord(current || draftServer || selectedServerSnapshot || buildPlaygroundDefaultServerDraft());
+              const metadata = normalized?.metadata && typeof normalized.metadata === "object" && !Array.isArray(normalized.metadata)
+                ? { ...normalized.metadata }
+                : {};
+              const functionAuth = metadata.functionAuth && typeof metadata.functionAuth === "object" && !Array.isArray(metadata.functionAuth)
+                ? { ...metadata.functionAuth }
+                : {};
+              functionAuth.apiKeyAuthEnabled = Boolean(nextEnabled);
+              metadata.functionAuth = functionAuth;
+              metadata.functionApiKeyAuthEnabled = Boolean(nextEnabled);
+              return {
+                ...normalized,
+                metadata,
+              };
+            });
+          };
+          const functionInvokeSnippetTabs = [
+            { id: "curl", label: "cURL" },
+            { id: "javascript", label: "JavaScript" },
+            { id: "swift", label: "Swift" },
+            { id: "flutter", label: "Flutter" },
+            { id: "python", label: "Python" },
+          ];
+          const functionInvokeSnippets = {
+            curl: [
+              "curl -L -X POST '" + functionInvokeUrl + "' \\\\",
+              ...(functionApiKeyAuthEnabled ? ["  -H \\\"Authorization: Bearer $COMPUTER_AGENTS_API_KEY\\\" \\\\"] : []),
+              "  -H 'Content-Type: application/json' \\\\",
+              "  --data '" + functionInvokePayload.replace(/'/g, "'\\\\''") + "'",
+            ].join("\\n"),
+            javascript: [
+              ...(functionApiKeyAuthEnabled ? [
+                "const apiKey = process.env.COMPUTER_AGENTS_API_KEY;",
+                "",
+              ] : []),
+              "const response = await fetch('" + functionInvokeUrl + "', {",
+              "  method: 'POST',",
+              "  headers: {",
+              ...(functionApiKeyAuthEnabled ? ["    Authorization: 'Bearer ' + apiKey,"] : []),
+              "    'Content-Type': 'application/json',",
+              "  },",
+              "  body: JSON.stringify(" + functionInvokePayload + "),",
+              "});",
+              "",
+              "const data = await response.json();",
+              "console.log(data);",
+            ].join("\\n"),
+            swift: [
+              ...(functionApiKeyAuthEnabled ? ["let apiKey = \\\"COMPUTER_AGENTS_API_KEY\\\""] : []),
+              "let url = URL(string: \\\"" + functionInvokeUrl + "\\\")!",
+              "var request = URLRequest(url: url)",
+              "request.httpMethod = \\\"POST\\\"",
+              ...(functionApiKeyAuthEnabled ? ["request.setValue(\\\"Bearer \\\\(apiKey)\\\", forHTTPHeaderField: \\\"Authorization\\\")"] : []),
+              "request.setValue(\\\"application/json\\\", forHTTPHeaderField: \\\"Content-Type\\\")",
+              "request.httpBody = try JSONSerialization.data(withJSONObject: [\\\"name\\\": \\\"Functions\\\"])",
+              "",
+              "let (data, _) = try await URLSession.shared.data(for: request)",
+              "print(String(data: data, encoding: .utf8) ?? \\\"\\\")",
+            ].join("\\n"),
+            flutter: [
+              ...(functionApiKeyAuthEnabled ? [
+                "const apiKey = 'COMPUTER_AGENTS_API_KEY';",
+                "",
+              ] : []),
+              "final response = await http.post(",
+              "  Uri.parse('" + functionInvokeUrl + "'),",
+              "  headers: {",
+              ...(functionApiKeyAuthEnabled ? ["    'Authorization': 'Bearer $apiKey',"] : []),
+              "    'Content-Type': 'application/json',",
+              "  },",
+              "  body: jsonEncode(" + functionInvokePayload + "),",
+              ");",
+              "",
+              "print(response.body);",
+            ].join("\\n"),
+            python: [
+              "import os",
+              "import requests",
+              "",
+              ...(functionApiKeyAuthEnabled ? [
+                "api_key = os.environ['COMPUTER_AGENTS_API_KEY']",
+                "",
+              ] : []),
+              "response = requests.post(",
+              "    '" + functionInvokeUrl + "',",
+              "    headers={",
+              ...(functionApiKeyAuthEnabled ? ["        'Authorization': f'Bearer {api_key}',"] : []),
+              "        'Content-Type': 'application/json',",
+              "    },",
+              "    json=" + functionInvokePayload.replace(/"/g, "'") + ",",
+              ")",
+              "",
+              "print(response.json())",
+            ].join("\\n"),
+          };
+          const activeFunctionInvokeSnippet = functionInvokeSnippets[serverInvokeSnippetTab] || functionInvokeSnippets.curl;
+          const functionInvokeSnippetLanguage = ({
+            curl: "shell",
+            javascript: "javascript",
+            swift: "swift",
+            flutter: "dart",
+            python: "python",
+          })[serverInvokeSnippetTab] || "shell";
+          const functionInvokeSnippetExtension = ({
+            curl: "sh",
+            javascript: "js",
+            swift: "swift",
+            flutter: "dart",
+            python: "py",
+          })[serverInvokeSnippetTab] || "sh";
+          const functionInvokeSnippetLineCount = String(activeFunctionInvokeSnippet || "").split(/\\n/).length || 1;
+          const functionInvokeCodeHeight = Math.max(72, functionInvokeSnippetLineCount * 20 + 24) + "px";
+          const FunctionInvokeEditorComponent = serverPreviewEditorModule?.default || null;
+          const functionInvokeCodePreview = FunctionInvokeEditorComponent
+            ? React.createElement("div", {
+                className: "playground-server-invoke-code-editor playground-code-preview-editor-shell",
+                style: { "--playground-server-invoke-code-height": functionInvokeCodeHeight },
+              },
+                React.createElement(FunctionInvokeEditorComponent, {
+                  path: "function-invoke-" + functionInvokeSlug + "." + functionInvokeSnippetExtension,
+                  height: functionInvokeCodeHeight,
+                  language: functionInvokeSnippetLanguage,
+                  theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                  value: activeFunctionInvokeSnippet,
+                  beforeMount: ensurePlaygroundCodeEditorTheme,
+                  options: {
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    smoothScrolling: true,
+                    readOnly: true,
+                    fontSize: 12,
+                    lineHeight: 20,
+                    tabSize: 2,
+                    insertSpaces: true,
+                    renderLineHighlight: "none",
+                    lineNumbersMinChars: 3,
+                    overviewRulerBorder: false,
+                    hideCursorInOverviewRuler: true,
+                    wordWrap: "on",
+                    padding: { top: 12, bottom: 12 },
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                  },
+                })
+              )
+            : !serverPreviewEditorModuleError
+              ? React.createElement("div", {
+                  className: "playground-code-preview-state playground-server-invoke-code-editor",
+                  style: { "--playground-server-invoke-code-height": functionInvokeCodeHeight },
+                },
+                  React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                  React.createElement("span", null, "Loading editor...")
+                )
+              : React.createElement("pre", {
+                  className: "playground-server-invoke-code-fallback",
+                  style: { minHeight: functionInvokeCodeHeight },
+                }, activeFunctionInvokeSnippet);
+          const functionInvokeSection = isFunctionServer
+            ? React.createElement("section", { className: "playground-server-invoke-section playground-server-details-card" },
+                React.createElement("div", { className: "playground-server-invoke-title" }, "Invoke function"),
+                React.createElement("div", { className: "playground-server-invoke-auth-note" },
+                  React.createElement("div", { className: "playground-server-invoke-auth-copy" },
+                    React.createElement("div", { className: "playground-server-invoke-auth-toggle-copy" },
+                      React.createElement("span", { className: "playground-server-invoke-auth-label" }, "Require Computer Agents API key"),
+                      React.createElement("span", null,
+                        functionApiKeyAuthEnabled
+	                          ? React.createElement(React.Fragment, null,
+	                            "Calls must include a Computer Agents API key in the ",
+	                            React.createElement("code", null, "Authorization"),
+	                            " header. Recommended: keep this as the platform guard and implement user/session-specific authentication in your function code."
+	                          )
+	                          : "API key authentication is off. This function can receive unauthenticated requests. Turn this off only for public endpoints or when the function implements its own authentication."
+	                      )
+	                    )
+	                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "switch",
+                    "aria-checked": functionApiKeyAuthEnabled ? "true" : "false",
+                    className: "playground-environments-toggle" + (functionApiKeyAuthEnabled ? " is-active" : ""),
+                    onClick: () => setFunctionApiKeyAuthEnabled(!functionApiKeyAuthEnabled),
+                  }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                ),
+                React.createElement("div", { className: "playground-server-invoke-card" },
+                  React.createElement("div", { className: "playground-server-invoke-header" },
+                    React.createElement("div", { className: "playground-server-invoke-tabs", role: "tablist", "aria-label": "Function invoke examples" },
+                      functionInvokeSnippetTabs.map((tab) =>
+                        React.createElement("button", {
+                          key: tab.id,
+                          type: "button",
+                          role: "tab",
+                          className: "playground-server-invoke-tab" + (serverInvokeSnippetTab === tab.id ? " is-active" : ""),
+                          "aria-selected": serverInvokeSnippetTab === tab.id ? "true" : "false",
+                          onClick: () => setServerInvokeSnippetTab(tab.id),
+                        }, tab.label)
+                      )
+                    )
+                  ),
+                  functionInvokeCodePreview
+                )
+              )
+            : null;
 
           const factsSection = React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics" },
@@ -68655,7 +71253,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                             title: draftServer.id || "Unsaved server",
                           }, draftServer.id || "Unsaved server")
                         ),
-                        renderServerFactRow("Service URL",
+                        !isFunctionServer ? renderServerFactRow("Service URL",
                           draftServer.serviceUrl
                             ? React.createElement("button", {
                                 type: "button",
@@ -68664,8 +71262,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                                 title: draftServer.serviceUrl,
                               }, draftServer.serviceUrl)
                             : React.createElement("div", { className: "playground-tasks-detail-fact-button is-empty" }, "Not deployed")
-                        ),
-                        renderServerFactRow("Auth",
+                        ) : null,
+                        !isFunctionServer ? renderServerFactRow("Auth",
                           renderServerDetailSelectControl({
                             popoverId: "server-auth",
                             valueLabel: draftServer.authMode === "private" ? "Private" : "Public",
@@ -68690,7 +71288,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                               }),
                             ],
                           })
-                        ),
+                        ) : null,
                         renderServerFactRow("Runtime",
                           renderServerDetailSelectControl({
                             popoverId: "server-runtime",
@@ -69385,43 +71983,110 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             : null;
           const serverKindLabel = formatPlaygroundServerKindLabel(draftServer.kind);
-          const sourceFilesSection = React.createElement("div", { className: "playground-tasks-attachments" },
-            React.createElement("div", { className: "playground-tasks-attachments-toolbar playground-servers-source-files-toolbar" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Source Files"),
-              draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
-                ? React.createElement("div", { className: "playground-tasks-attachments-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button playground-tasks-attachments-environment-button",
-                      onClick: () => setServerDeploymentHelpOpen(true),
-                    },
-                      React.createElement(CircleHelp, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Help")
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button playground-tasks-attachments-environment-button playground-servers-source-new-file-button",
-                      onClick: () => void handleCreateServerFile(),
-                    },
-                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "New File")
-                    ),
-                    isSourceDeployableServer
-                      ? React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button is-primary playground-tasks-attachments-environment-button playground-servers-source-deploy-button",
-                          onClick: () => void handleDeployServer(),
-                          disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                        },
-                          serverDeploymentState.isDeploying
-                            ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                            : React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy " + serverKindLabel)
-                        )
-                      : null
-                  )
-                : null
-            ),
+          const renderServerCodeFileRow = (row) => {
+            const entry = row?.entry || {};
+            const normalizedPath = String(entry?.path || entry?.name || "").trim();
+            const isActiveSourceFile = serverFileEditorState.path === entry.path;
+            const isExpandedSourceFolder = entry.isFolder && serverSourceExpandedFolders.has(entry.path);
+            const canOpenSourceFile = !entry.isFolder && isPlaygroundTextPreviewable(entry);
+            const canExpandSourceFolder = entry.isFolder && (
+              entry.hasChildren
+              || isExpandedSourceFolder
+              || (Array.isArray(entry.children) && entry.children.length > 0)
+            );
+            return React.createElement("button", {
+                key: entry.id || entry.path || normalizedPath,
+                type: "button",
+                className: "playground-servers-code-file-row" + (isActiveSourceFile ? " is-active" : ""),
+                style: { paddingLeft: 14 + Number(row?.level || 0) * 16 + "px" },
+                disabled: !entry.isFolder && !canOpenSourceFile,
+                onClick: () => {
+                  setServerSourceFileMenuPath("");
+                  if (entry.isFolder) {
+                    toggleServerSourceFolderExpansion(entry.path);
+                    return;
+                  }
+                  if (canOpenSourceFile) {
+                    void handleServerFileOpen(entry);
+                  }
+                },
+              },
+              canExpandSourceFolder
+                ? isExpandedSourceFolder
+                  ? React.createElement(ChevronDown, { className: "playground-servers-code-file-chevron", strokeWidth: 1.8 })
+                  : React.createElement(ChevronRight, { className: "playground-servers-code-file-chevron", strokeWidth: 1.8 })
+                : React.createElement("span", { className: "playground-servers-code-file-chevron", "aria-hidden": "true" }),
+              React.createElement("span", { className: "playground-servers-code-file-icon", "aria-hidden": "true" },
+                React.createElement(PlaygroundFileIcon, { entry })
+              ),
+              React.createElement("span", { className: "playground-servers-code-file-name" }, entry.name || normalizedPath || "Untitled")
+            );
+          };
+          const renderServerCodeEditorBody = () => {
+            if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+              return React.createElement("div", { className: "playground-servers-code-empty" }, "Create this " + serverKindLabel.toLowerCase() + " before editing code.");
+            }
+            if (serverFileEditorState.status === "loading") {
+              return React.createElement("div", { className: "playground-code-preview-state" },
+                React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                React.createElement("span", null, "Opening source file...")
+              );
+            }
+            if (serverFileEditorState.status === "error") {
+              return React.createElement("div", { className: "playground-code-preview-state is-error" }, serverFileEditorState.error || "Failed to open source file.");
+            }
+            if (serverFileEditorState.status !== "ready" || !serverFileEditorState.path) {
+              return React.createElement("div", { className: "playground-servers-code-empty" },
+                isLoadingCurrentServerFiles || serverFileTransferState.isUploading
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                      React.createElement("span", null, serverFileTransferState.isUploading ? "Uploading source files..." : "Loading source files...")
+                    )
+                  : "Select a file to start editing."
+              );
+            }
+            if (ServerPreviewEditorComponent) {
+              return React.createElement("div", { className: "playground-code-preview-editor-shell playground-servers-code-editor-shell" },
+                React.createElement(ServerPreviewEditorComponent, {
+                  path: currentServerEditorEntry?.path || serverFileEditorState.path,
+                  height: "100%",
+                  language: getPlaygroundCodeEditorLanguage(currentServerEditorEntry || {
+                    path: serverFileEditorState.path,
+                    name: currentServerEditorEntry?.name || serverFileEditorState.path,
+                  }),
+                  theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+                  value: serverFileEditorState.value,
+                  onChange: handleServerFileEditorChange,
+                  beforeMount: ensurePlaygroundCodeEditorTheme,
+                  options: {
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    smoothScrolling: true,
+                    fontSize: 12,
+                    lineHeight: 20,
+                    tabSize: 2,
+                    insertSpaces: true,
+                    renderLineHighlight: "gutter",
+                    lineNumbersMinChars: 3,
+                    overviewRulerBorder: false,
+                    hideCursorInOverviewRuler: true,
+                    wordWrap: serverFileEditorState.wordWrap ? "on" : "off",
+                    padding: { top: 12, bottom: 12 },
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                  },
+                })
+              );
+            }
+            return React.createElement("textarea", {
+              className: "playground-code-preview-textarea playground-servers-source-editor-textarea playground-servers-code-editor-shell",
+              value: serverFileEditorState.value,
+              onChange: (event) => handleServerFileEditorChange(event.target.value),
+              spellCheck: false,
+              wrap: serverFileEditorState.wordWrap ? "soft" : "off",
+            });
+          };
+          const sourceFilesSection = React.createElement("div", { className: "playground-servers-code-workspace" },
             React.createElement("input", {
               ref: serverFileUploadInputRef,
               type: "file",
@@ -69429,9 +72094,21 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               hidden: true,
               onChange: (event) => void handleServerFileUploadSelection(event),
             }),
-            React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
+            React.createElement("aside", { className: "playground-servers-code-sidebar" },
+              React.createElement("div", { className: "playground-servers-code-sidebar-header" },
+                React.createElement("div", { className: "playground-servers-code-sidebar-title" }, "Files"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button playground-servers-code-add-file-button",
+                  onClick: () => void handleCreateServerFile(),
+                  disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                },
+                  React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Add File")
+                )
+              ),
               React.createElement("div", {
-                className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isServerFileDragging ? " dragging" : "") + (currentServerFiles.length > 0 ? " is-filled" : ""),
+                className: "playground-servers-code-file-list",
                 onDragOver: (event) => {
                   event.preventDefault();
                   if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || serverFileTransferState.isUploading) {
@@ -69455,46 +72132,49 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   void handleServerFileUploadFiles(droppedFiles);
                 },
               },
-                !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
-                  ? React.createElement("div", {
-                      className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                    }, "Create the function to start adding source files.")
-                  : isLoadingCurrentServerFiles
-                    ? React.createElement("div", { className: "playground-files-state" },
-                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                isLoadingCurrentServerFiles
+                  ? React.createElement("div", { className: "playground-servers-code-empty" },
+                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                    )
+                  : visibleServerSourceFileRows.length > 0
+                    ? visibleServerSourceFileRows.map((row) => renderServerCodeFileRow(row))
+                    : React.createElement("div", { className: "playground-servers-code-empty" },
+                        draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
+                          ? "No source files yet."
+                          : "Create this " + serverKindLabel.toLowerCase() + " first."
                       )
-                    : currentServerFiles.length > 0
-                      ? React.createElement("div", { className: "playground-tasks-attachments-topline" },
-                          React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                          React.createElement("span", null, isServerFileDragging ? "Drop files here" : "Drop files to attach, or"),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-tasks-attachments-browse",
-                            onClick: openServerFileUploadPicker,
-                          }, "browse.")
-                        )
-                      : React.createElement("button", {
-                          type: "button",
-                          className: "playground-tasks-attachments-empty-button",
-                          onClick: openServerFileUploadPicker,
-                        },
-                          React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                          React.createElement("span", { className: "tb-popup-dropzone-title" }, isServerFileDragging ? "Drop files here" : "Drag & drop files here"),
-                          React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
-                        )
               )
             ),
-            currentServerFiles.length > 0 && !isLoadingCurrentServerFiles
-              ? React.createElement("div", { className: "playground-files-entry-list playground-servers-source-files-list" },
-                  visibleServerSourceFileRows.map((row) => renderServerSourceFileRow(row))
+            React.createElement("section", { className: "playground-servers-code-editor-main" },
+              React.createElement("div", { className: "playground-servers-code-editor-body" }, renderServerCodeEditorBody()),
+              React.createElement("div", { className: "playground-servers-code-editor-statusbar" },
+                React.createElement("div", { className: serverFileTransferState.error ? "playground-servers-source-preview-status is-error" : serverFileEditorStatusClassName },
+                  serverFileTransferState.error
+                    || ((serverFileEditorState.status === "ready" && (serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.saveError || serverFileEditorState.saveMessage))
+                      ? serverFileEditorStatusText
+                      : (serverFileTransferState.message || serverFileEditorStatusText))
+                ),
+                React.createElement("div", { className: "playground-servers-code-editor-status-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: handleServerFileEditorRevert,
+                    disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
+                  }, React.createElement("span", null, "Revert")),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button is-primary",
+                    onClick: () => void handleServerFileSave(),
+                    disabled: !serverFileEditorIsDirty || serverFileEditorState.isSaving || serverFileEditorState.status !== "ready",
+                  },
+                    serverFileEditorState.isSaving
+                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                      : React.createElement(HardDrive, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, serverFileEditorState.isSaving ? "Saving..." : "Save")
+                  )
                 )
-              : null,
-            serverFileTransferState.error
-              ? React.createElement("div", { className: "playground-environments-error" }, serverFileTransferState.error)
-              : null,
-            serverFileTransferState.isUploading
-              ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading source files...")
-              : null
+              )
+            )
           );
 
           const deployActionLabel = serverDeploymentState.isDeploying ? "Deploying..." : "Deploy " + serverKindLabel;
@@ -69948,7 +72628,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             );
           }
 
-          const normalizedServerDetailTab = isSourceDeployableServer && ["general", "logs", "source-files"].includes(serverDetailTab)
+          const normalizedServerDetailTab = isSourceDeployableServer && ["general", "code", "logs", "history"].includes(serverDetailTab)
             ? serverDetailTab
             : "general";
           const serverDocumentationUrl = isFunctionServer
@@ -69959,21 +72639,28 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("div", { className: "playground-project-overview-chart-tabs" },
                   [
                     { id: "general", label: "General" },
+                    { id: "code", label: "Code" },
                     { id: "logs", label: "Logs" },
-                    { id: "source-files", label: "Source Files" },
+                    { id: "history", label: "History" },
                   ].map((tab) =>
                     React.createElement("button", {
                         key: tab.id,
                         type: "button",
                         className: "playground-project-overview-chart-tab" + (normalizedServerDetailTab === tab.id ? " is-active" : ""),
                         onClick: () => {
-                          if (tab.id !== "source-files") {
+                          if (tab.id !== "code") {
                             handleCloseServerFileEditor();
                           }
                           setServerDetailTab(tab.id);
+                          if (tab.id === "code" && draftServer.id) {
+                            void loadServerFiles(draftServer.id);
+                          }
                           if (tab.id === "logs" && draftServer.id) {
                             void loadServerAnalytics(draftServer.id, { force: true });
                             void loadServerLogs(draftServer.id, serverLogsState.kind);
+                          }
+                          if (tab.id === "history" && draftServer.id) {
+                            void loadServerDeployments(draftServer.id);
                           }
                         },
                         "aria-pressed": normalizedServerDetailTab === tab.id ? "true" : "false",
@@ -70016,29 +72703,61 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             : null;
           const serverGeneralTabContent = React.createElement(React.Fragment, null,
+            descriptionSection,
             factsSection,
+            functionInvokeSection,
             customDomainSection,
             connectionsSection
           );
           const serverEditorTabContent = isSourceDeployableServer
             ? normalizedServerDetailTab === "logs"
               ? serverLogsPageContent
-              : normalizedServerDetailTab === "source-files"
-                ? sourceFilesSection
-                : serverGeneralTabContent
+              : normalizedServerDetailTab === "history"
+                ? renderServerDeploymentsSurface()
+                : normalizedServerDetailTab === "code"
+                  ? sourceFilesSection
+                  : serverGeneralTabContent
             : React.createElement(React.Fragment, null,
                 factsSection,
+                functionInvokeSection,
                 customDomainSection,
                 connectionsSection,
                 sourceFilesSection
               );
+          const sourceServerDeploymentNotice = isSourceDeployableServer
+            ? serverDeploymentState.error
+              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverDeploymentState.error)
+              : serverDeploymentState.isDeploying
+                ? React.createElement("div", { className: "playground-environments-muted playground-environments-editor-notice" }, "Deploying " + serverKindLabel.toLowerCase() + "...")
+                : serverDeploymentState.isInvoking
+                  ? React.createElement("div", { className: "playground-environments-muted playground-environments-editor-notice" }, "Testing live invocation...")
+                  : serverDeploymentState.message
+                    ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, serverDeploymentState.message)
+                    : null
+            : null;
+          const serverDetailContentClassName = "playground-server-detail-content" + (
+            isSourceDeployableServer && normalizedServerDetailTab === "code"
+              ? " is-code-tab"
+              : ""
+          );
+          const serverEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
+            isSourceDeployableServer && normalizedServerDetailTab === "code"
+              ? " is-code-tab"
+              : ""
+          );
 
-          const serverEditorScroll = React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-            React.createElement("div", { className: "playground-server-detail-content" },
+          const serverEditorScrollClassName = "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" + (
+            isSourceDeployableServer && normalizedServerDetailTab === "code"
+              ? " is-code-tab"
+              : ""
+          );
+          const serverEditorScroll = React.createElement("div", { className: serverEditorScrollClassName },
+            React.createElement("div", { className: serverDetailContentClassName },
               serverSaveState.error
                 ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
                 : null,
-              descriptionSection,
+              sourceServerDeploymentNotice,
+              isSourceDeployableServer ? null : descriptionSection,
               serverDetailTabs,
               serverEditorTabContent
             )
@@ -70047,10 +72766,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	          const serverMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar" },
 	            React.createElement("div", { className: "playground-environments-editor-navbar-title" },
 	              React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-	                serverResourceDetailBackButton,
+	                isFunctionServer ? null : serverResourceDetailBackButton,
 	                React.createElement("input", {
 	                  type: "text",
-	                  className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input",
+	                  className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input" + (isFunctionServer ? " playground-server-function-title-input" : ""),
                   value: draftServer.name || "",
                   placeholder: "Server",
                   "aria-label": "Server name",
@@ -70059,11 +72778,69 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   onBlur: () => {
                     void commitDraftServerIfDirty();
                   },
-                })
+                }),
+                isFunctionServer && functionDeployedServiceUrl
+                  ? React.createElement("div", { className: "playground-server-service-url-row" },
+                      React.createElement("span", {
+                        className: "playground-server-service-url-value",
+                        title: functionDeployedServiceUrl,
+                      }, functionDeployedServiceUrl),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-server-service-url-copy",
+                        onClick: async () => {
+                          const copied = await copyTextToClipboard(functionDeployedServiceUrl);
+                          if (!copied) {
+                            return;
+                          }
+                          setCopiedFunctionServiceUrl(functionDeployedServiceUrl);
+                          window.setTimeout(() => {
+                            setCopiedFunctionServiceUrl((currentValue) =>
+                              currentValue === functionDeployedServiceUrl ? "" : currentValue
+                            );
+                          }, 3000);
+                        },
+                        title: copiedFunctionServiceUrl === functionDeployedServiceUrl ? "Copied" : "Copy service URL",
+                        "aria-label": copiedFunctionServiceUrl === functionDeployedServiceUrl ? "Copied" : "Copy service URL",
+                      },
+                        copiedFunctionServiceUrl === functionDeployedServiceUrl
+                          ? React.createElement(Check, { width: 12, height: 12, strokeWidth: 2 })
+                          : React.createElement(Copy, { width: 12, height: 12, strokeWidth: 1.8 })
+                      )
+                    )
+                  : null
               )
             ),
             React.createElement("div", { className: "playground-content-nav-center" }),
-            React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
+            React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+              isSourceDeployableServer
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button",
+                      onClick: () => void handleInvokeServer(),
+                      disabled: serverDeploymentState.isInvoking || !draftServer.serviceUrl,
+                      title: draftServer.serviceUrl ? "Invoke the live " + serverKindLabel.toLowerCase() : "Deploy first to enable test invocation",
+                    },
+                      serverDeploymentState.isInvoking
+                        ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                        : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, serverDeploymentState.isInvoking ? "Testing..." : "Test Invoke")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-environments-action-button is-primary",
+                      onClick: () => void handleDeployServer(),
+                      disabled: serverDeploymentState.isDeploying || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                    },
+                      serverDeploymentState.isDeploying
+                        ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                        : React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
+                    )
+                  )
+                : null
+            )
           );
 
           if (isSecretsServer) {
@@ -71529,10 +74306,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             );
           }
 
-          const activeSourceFilesSidebar = (!isSourceDeployableServer || normalizedServerDetailTab === "source-files") ? sourceFilesSidebar : null;
+          const activeSourceFilesSidebar = isSourceDeployableServer ? null : sourceFilesSidebar;
 
           return React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
+            React.createElement("div", { className: serverEditorMainClassName, ref: serverDetailMainRef },
               activeSourceFilesSidebar && sourceFilesSidebarTopbar
                 ? React.createElement("div", { className: "playground-servers-editor-layout has-preview" },
                     React.createElement("div", { className: "playground-servers-editor-main-column" },
@@ -74662,6 +77439,175 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	              onClick: isDevelopServerKindHome ? () => handleCreateServer(normalizedEmbeddedServerKind) : handleCreateEnvironment,
 	            }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), isDevelopServerKindHome ? "Add Resource" : "Add Computer")
 	          );
+	          const shouldShowDevelopFunctionsEmptyLanding = isDevelopServerKindHome
+	            && normalizedEmbeddedServerKind === "function"
+	            && developConfigureCount === 0
+	            && !normalizedResourcesSearchQuery;
+	          const functionEmptyFeatures = [
+	            {
+	              title: "Fully managed",
+	              description: "Create backend logic from the same workspace where agents write, test, and deploy code.",
+	              Icon: Code2,
+	            },
+	            {
+	              title: "Global invocation",
+	              description: "Expose APIs, webhooks, transformations, and automation handlers that run on demand.",
+	              Icon: Globe,
+	            },
+	            {
+	              title: "Connected resources",
+	              description: "Bind functions to databases, auth, secrets, web apps, and agent runtimes.",
+	              Icon: Database,
+	            },
+	            {
+	              title: "Secure by default",
+	              description: "Keep credentials out of code and control access through managed project resources.",
+	              Icon: Shield,
+	            },
+	          ];
+	          const functionExampleCards = [
+	            {
+	              title: "Hello world",
+	              description: "Return a JSON response from the smallest possible deployable function.",
+	              href: "https://github.com/computer-agents/functions-examples/tree/main/hello-world",
+	              background: "/img/bg/mountain.avif",
+	              Icon: MessageSquare,
+	            },
+	            {
+	              title: "Contact form to database",
+	              description: "Validate a form submission and store it in a connected Computer Agents database.",
+	              href: "https://github.com/computer-agents/functions-examples/tree/main/database-contact-form",
+	              background: "/img/bg/water.avif",
+	              Icon: Database,
+	            },
+	            {
+	              title: "Signed webhook handler",
+	              description: "Verify incoming webhooks with a signing secret from a connected Secrets vault.",
+	              href: "https://github.com/computer-agents/functions-examples/tree/main/secure-webhook",
+	              background: "/img/bg/desert.avif",
+	              Icon: Key,
+	            },
+	            {
+	              title: "Trigger an agent run",
+	              description: "Expose an API endpoint that starts a connected Agent Runtime for async work.",
+	              href: "https://github.com/computer-agents/functions-examples/tree/main/agent-run-api",
+	              background: "/img/bg/forest.avif",
+	              Icon: Bot,
+	            },
+	          ];
+	          const scrollDevelopFunctionExamples = (direction) => {
+	            if (typeof document === "undefined") {
+	              return;
+	            }
+	            const slider = document.querySelector(".playground-functions-examples-slider");
+	            if (!slider || typeof slider.scrollBy !== "function") {
+	              return;
+	            }
+	            const card = slider.querySelector("[data-function-example-card]");
+	            const amount = card?.getBoundingClientRect ? Math.max(card.getBoundingClientRect().width + 20, 280) : 320;
+	            slider.scrollBy({ left: Number(direction || 1) * amount, behavior: "smooth" });
+	          };
+	          const renderDevelopFunctionsEmptyLanding = () =>
+	            React.createElement("section", { className: "playground-functions-empty-landing" },
+	              React.createElement("div", { className: "playground-functions-empty-hero" },
+	                React.createElement("div", { className: "playground-functions-empty-copy-block" },
+	                  React.createElement("h2", { className: "playground-functions-empty-title" }, "Deploy backend logic from agent workspaces."),
+	                  React.createElement("p", { className: "playground-functions-empty-copy" },
+	                    "Let agents create, deploy, invoke, and inspect JavaScript functions for APIs, webhooks, data transformations, scheduled jobs, and product automation."
+	                  ),
+	                  React.createElement("div", { className: "playground-functions-empty-actions" },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-functions-empty-button is-primary",
+	                      onClick: () => handleCreateServer("function"),
+	                    }, React.createElement("span", null, "Start now")),
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-functions-empty-button is-secondary",
+	                      onClick: () => window.open(developServerKindDocumentationUrl, "_blank", "noopener,noreferrer"),
+	                    },
+	                      React.createElement("span", null, "View Docs"),
+	                      React.createElement(ArrowUpRight, { width: 13, height: 13, strokeWidth: 1.8 })
+	                    )
+	                  )
+	                ),
+	                React.createElement("div", { className: "playground-functions-empty-art", "aria-hidden": "true" },
+	                  React.createElement("img", {
+	                    className: "playground-functions-empty-image",
+	                    src: "/dist/react/assets/server-function.webp",
+	                    alt: "",
+	                    draggable: "false",
+	                  })
+	                )
+	              ),
+	              React.createElement("div", { className: "playground-functions-empty-features" },
+	                functionEmptyFeatures.map((feature) =>
+	                  React.createElement("div", { key: feature.title, className: "playground-functions-empty-feature" },
+	                    React.createElement("div", { className: "playground-functions-empty-icon-box" },
+	                      React.createElement(feature.Icon, { width: 18, height: 18, strokeWidth: 1.8 })
+	                    ),
+	                    React.createElement("div", { className: "playground-functions-empty-feature-title" }, feature.title),
+	                    React.createElement("div", { className: "playground-functions-empty-feature-copy" }, feature.description)
+	                  )
+	                )
+	              ),
+	              React.createElement("div", { className: "playground-functions-examples-section" },
+	                React.createElement("div", { className: "playground-functions-examples-header" },
+	                  React.createElement("h3", { className: "playground-functions-examples-title" }, "What you can build with Functions"),
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-functions-examples-all-button",
+	                    onClick: () => window.open("https://github.com/computer-agents/functions-examples", "_blank", "noopener,noreferrer"),
+	                  },
+	                    React.createElement("span", null, "View all examples"),
+	                    React.createElement(ArrowUpRight, { width: 13, height: 13, strokeWidth: 1.8 })
+	                  )
+	                ),
+	                React.createElement("div", { className: "playground-functions-examples-slider" },
+	                  functionExampleCards.map((example) =>
+	                    React.createElement("a", {
+	                      key: example.title,
+	                      className: "playground-functions-example-card",
+	                      href: example.href,
+	                      target: "_blank",
+	                      rel: "noreferrer",
+	                      "data-function-example-card": "true",
+	                    },
+	                      React.createElement("div", {
+	                        className: "playground-functions-example-visual",
+	                        style: { backgroundImage: "url(" + example.background + ")" },
+	                      },
+	                        React.createElement("div", { className: "playground-functions-example-icon-box" },
+	                          React.createElement(example.Icon, { width: 22, height: 22, strokeWidth: 1.7 })
+	                        )
+	                      ),
+	                      React.createElement("div", { className: "playground-functions-example-body" },
+	                        React.createElement("div", { className: "playground-functions-example-title" }, example.title),
+	                        React.createElement("div", { className: "playground-functions-example-copy" }, example.description),
+	                        React.createElement("div", { className: "playground-functions-example-link" },
+	                          "View example",
+	                          React.createElement(ArrowUpRight, { width: 12, height: 12, strokeWidth: 1.8 })
+	                        )
+	                      )
+	                    )
+	                  )
+	                ),
+	                React.createElement("div", { className: "playground-functions-examples-controls" },
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-functions-examples-arrow",
+	                    "aria-label": "Previous function example",
+	                    onClick: () => scrollDevelopFunctionExamples(-1),
+	                  }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
+	                  React.createElement("button", {
+	                    type: "button",
+	                    className: "playground-functions-examples-arrow",
+	                    "aria-label": "Next function example",
+	                    onClick: () => scrollDevelopFunctionExamples(1),
+	                  }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
+	                )
+	              )
+	            );
 
 	          const environmentsHomeHero = isDevelopConfigureHome
 	            ? React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero" },
@@ -74691,9 +77637,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	                      )
 	                    )
 	                  : renderResourcesOverviewHomeTabs(),
-	                developServerKindToolbar,
-	                environmentOverviewMetricsSection,
-	                overviewListContent
+	                shouldShowDevelopFunctionsEmptyLanding ? null : developServerKindToolbar,
+	                shouldShowDevelopFunctionsEmptyLanding
+	                  ? renderDevelopFunctionsEmptyLanding()
+	                  : React.createElement(React.Fragment, null,
+	                      environmentOverviewMetricsSection,
+	                      overviewListContent
+	                    )
 	              )
 	            : React.createElement("section", { className: "playground-environments-home-hero" },
 	                React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
@@ -87426,10 +90376,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         onCloseDetailOnly,
         standaloneMode,
         subscriptionTierId = "",
+        onUpgradeToIndividual,
       }) {
         const effectiveApiKey = useMemo(() => String(apiKey || "").trim(), [apiKey]);
         const isDetailOnlyMode = Boolean(detailOnly);
         const isStandaloneCalendarMode = standaloneMode === "calendar";
+        const normalizedSubscriptionTierId = normalizeSettingsTierId(subscriptionTierId) || "free";
+        const isCalendarCreationLocked = normalizedSubscriptionTierId === "free";
         const editorDirtyRef = useRef(false);
         const taskAutosaveInFlightRef = useRef(false);
         const taskAutosaveQueuedRef = useRef(null);
@@ -87646,6 +90599,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           status: "idle",
           error: "",
         });
+        const [calendarUpgradeModalOpen, setCalendarUpgradeModalOpen] = useState(false);
+        const [calendarUpgradeCheckoutLoading, setCalendarUpgradeCheckoutLoading] = useState(false);
         const [scheduleViewMode, setScheduleViewMode] = useState("calendar");
         const [scheduleEditorMode, setScheduleEditorMode] = useState("create");
         const [selectedScheduleId, setSelectedScheduleId] = useState("");
@@ -94315,7 +97270,38 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           resetScheduleSaveState("");
         }
 
+        function openCalendarUpgradeModal() {
+          setTaskDetailPopover("");
+          setTaskDetailSelectPopover("");
+          setTaskSkillsPopoverOpen(false);
+          setProjectSidebarPopover("");
+          setCalendarUpgradeModalOpen(true);
+        }
+
+        function canCreateScheduledTask() {
+          if (!isCalendarCreationLocked) {
+            return true;
+          }
+          openCalendarUpgradeModal();
+          return false;
+        }
+
+        async function handleCalendarUpgradeCheckout() {
+          if (calendarUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function") {
+            return;
+          }
+          setCalendarUpgradeCheckoutLoading(true);
+          try {
+            await Promise.resolve(onUpgradeToIndividual());
+          } finally {
+            setCalendarUpgradeCheckoutLoading(false);
+          }
+        }
+
         function openScheduleComposer() {
+          if (!canCreateScheduledTask()) {
+            return;
+          }
           scheduleEditorDirtyRef.current = false;
           scheduleAutosaveQueuedRef.current = null;
           if (scheduleAutosaveTimerRef.current) {
@@ -94338,6 +97324,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }
 
         function openScheduleComposerFromSlot(slotInfo) {
+          if (!canCreateScheduledTask()) {
+            return;
+          }
           scheduleEditorDirtyRef.current = false;
           scheduleAutosaveQueuedRef.current = null;
           if (scheduleAutosaveTimerRef.current) {
@@ -104662,52 +107651,57 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           return React.createElement(ProjectWorkingAgentLogoCarousel);
         }
 
-        function renderProjectWorkingAgentLogoCarouselStatic() {
-          const logoPaths = [
-            "/img/logos/aios-presentation/logo1.webp",
-            "/img/logos/aios-presentation/logo2.webp",
-            "/img/logos/aios-presentation/logo3.webp",
-            "/img/logos/aios-presentation/logo4.webp",
-            "/img/logos/aios-presentation/logo5.webp",
-            "/img/logos/aios-presentation/logo6.webp",
-            "/img/logos/aios-presentation/logo7.webp",
-            "/img/logos/aios-presentation/logo8.png",
-            "/img/logos/aios-presentation/logo9.png",
-            "/img/logos/aios-presentation/logo10.png",
-            "/img/logos/aios-presentation/logo11.png",
-            "/img/logos/aios-presentation/logo12.png",
-          ];
-          const repeatedLogos = logoPaths.concat(logoPaths, logoPaths, logoPaths);
-
-          return React.createElement("div", { className: "playground-projects-working-agent-logos", "aria-hidden": "true" },
-            React.createElement("div", { className: "playground-projects-logo-carousel-line" }),
-            React.createElement("div", { className: "playground-projects-logo-carousel-center" },
-              React.createElement("img", {
-                src: "/img/logos/aios-presentation/logoCentral.png",
-                alt: "",
-                draggable: false,
-              })
-            ),
-            React.createElement("div", { className: "playground-projects-logo-carousel-mask" },
-              React.createElement("div", { className: "playground-projects-logo-carousel-track" },
-                repeatedLogos.map((logoPath, index) =>
-                  React.createElement("div", {
-                    key: logoPath + "-" + index,
-                    className: "playground-projects-logo-carousel-item",
-                  },
-                    React.createElement("img", {
-                      src: logoPath,
-                      alt: "",
-                      draggable: false,
-                    })
-                  )
-                )
-              )
-            )
-          );
-        }
-
         function renderProjectWorkingAgentEmptyState() {
+          const planningRows = [
+            {
+              title: "Mission Control",
+              subtitle: "Turn a short goal into strategy, releases, tickets, and the next steps agents should follow.",
+              Icon: Rocket,
+            },
+            {
+              title: "Backlog and board",
+              subtitle: "Track planned, active, blocked, in-review, and finished work with owners, priorities, and blockers.",
+              Icon: LayoutGrid,
+            },
+            {
+              title: "Releases",
+              subtitle: "Group tasks into concrete milestones so agents work toward outcomes instead of isolated tickets.",
+              Icon: CalendarIcon,
+            },
+          ];
+          const executionRows = [
+            {
+              title: "Task threads",
+              subtitle: "Start agent runs from tickets with project files, comments, reviewers, and previous work attached.",
+              Icon: MessageSquare,
+            },
+            {
+              title: "Project resources",
+              subtitle: "Let agents create and maintain web apps, functions, databases, auth, secrets, and deployments.",
+              Icon: Server,
+            },
+            {
+              title: "Full-auto workflows",
+              subtitle: "Run tasks one after another, create follow-ups when gaps appear, and trigger Mission Control when scope changes.",
+              Icon: Play,
+            },
+          ];
+          const renderProjectFeatureRow = (row) => {
+            const Icon = row.Icon;
+            return React.createElement("div", {
+                key: row.title,
+                className: "playground-configure-resource-row playground-projects-feature-row",
+              },
+              React.createElement("span", { className: "playground-configure-resource-icon" },
+                React.createElement(Icon, { strokeWidth: 1.75 })
+              ),
+              React.createElement("span", { className: "playground-configure-row-copy" },
+                React.createElement("span", { className: "playground-configure-row-title" }, row.title),
+                React.createElement("span", { className: "playground-configure-row-subtitle" }, row.subtitle)
+              )
+            );
+          };
+
           return React.createElement("div", { className: "playground-projects-working-agent-section" },
             React.createElement("div", { className: "playground-projects-working-agent-card" },
               React.createElement("img", {
@@ -104728,6 +107722,22 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   "A project gives every agent the surrounding plan: strategy, tickets, releases, files, comments, reviewers, resources, and run history. Agents can return to the same workspace and continue the work instead of restarting from a prompt."
                 ),
                 renderProjectWorkingAgentLogoCarousel()
+              )
+            ),
+            React.createElement("div", { className: "playground-projects-working-agent-features" },
+              React.createElement("div", { className: "playground-configure-sections" },
+                React.createElement("section", { className: "playground-configure-section" },
+                  React.createElement("h2", { className: "playground-configure-section-title" }, "Project setup"),
+                  React.createElement("div", { className: "playground-configure-resource-list" },
+                    planningRows.map(renderProjectFeatureRow)
+                  )
+                ),
+                React.createElement("section", { className: "playground-configure-section" },
+                  React.createElement("h2", { className: "playground-configure-section-title" }, "Create or configure"),
+                  React.createElement("div", { className: "playground-configure-action-list" },
+                    executionRows.map(renderProjectFeatureRow)
+                  )
+                )
               )
             )
           );
@@ -107099,6 +110109,98 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           );
         }
 
+        function renderCalendarUpgradeModal() {
+          if (!calendarUpgradeModalOpen) {
+            return null;
+          }
+
+          const calendarUpgradeFeatures = [
+            { icon: CalendarIcon, label: "Calendar and scheduled tasks" },
+            { icon: Coins, label: "1,500 Compute Tokens included" },
+            { icon: User, label: "Custom agents and cloud computers" },
+            { icon: Telescope, label: "Premium models for research, coding, and images" },
+            { icon: Code, label: "API access for agent workflows" },
+            { icon: Shield, label: "Budget caps and usage history" },
+          ];
+          const modalElement = React.createElement("div", {
+              className: "playground-calendar-upgrade-backdrop",
+              onClick: () => setCalendarUpgradeModalOpen(false),
+            },
+            React.createElement("button", {
+              type: "button",
+              className: "playground-files-header-icon-button is-plain playground-calendar-upgrade-close",
+              onClick: () => setCalendarUpgradeModalOpen(false),
+              title: "Close",
+              "aria-label": "Close",
+            }, React.createElement(X, { width: 18, height: 18, strokeWidth: 1.8 })),
+            React.createElement("div", {
+                className: "playground-calendar-upgrade-shell",
+                onClick: (event) => event.stopPropagation(),
+              },
+              React.createElement("h2", {
+                id: "playground-calendar-upgrade-title",
+                className: "playground-calendar-upgrade-headline",
+              },
+                "Try Individual for ",
+                React.createElement("span", { className: "playground-calendar-upgrade-headline-price" }, "$0.00"),
+                " for 14 Days"
+              ),
+              React.createElement("div", { className: "playground-calendar-upgrade-pill" }, "Schedule tasks, agents, and follow-ups automatically"),
+              React.createElement("section", {
+                  className: "playground-calendar-upgrade-modal",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "aria-labelledby": "playground-calendar-upgrade-title",
+                },
+                React.createElement("div", { className: "playground-calendar-upgrade-modal-top" },
+                  React.createElement("div", { className: "playground-calendar-upgrade-modal-header" },
+                    React.createElement("div", { className: "playground-calendar-upgrade-modal-title" }, "Individual"),
+                    React.createElement("div", { className: "playground-calendar-upgrade-modal-offer" }, "Limited Time Offer")
+                  ),
+                  React.createElement("div", { className: "playground-calendar-upgrade-price-row" },
+                    React.createElement("span", { className: "playground-calendar-upgrade-price-old" }, "$19.99"),
+                    React.createElement("span", { className: "playground-calendar-upgrade-price-new" }, "$0")
+                  ),
+                  React.createElement("p", { className: "playground-calendar-upgrade-modal-copy" },
+                    "Try 14 days for $0.00, then $19.99 monthly"
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-calendar-upgrade-modal-button",
+                    onClick: () => void handleCalendarUpgradeCheckout(),
+                    disabled: calendarUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function",
+                  },
+                    calendarUpgradeCheckoutLoading
+                      ? React.createElement(React.Fragment, null,
+                          React.createElement(Loader2, { className: "playground-files-state-loader", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("span", null, "Opening checkout...")
+                        )
+                      : "Claim $0.00 offer"
+                  )
+                ),
+                React.createElement("div", { className: "playground-calendar-upgrade-feature-list" },
+                  calendarUpgradeFeatures.map((feature) => {
+                    const FeatureIcon = feature.icon || Check;
+                    return React.createElement("div", {
+                      key: feature.label,
+                      className: "playground-calendar-upgrade-modal-feature",
+                    },
+                      React.createElement("span", { className: "playground-calendar-upgrade-modal-feature-icon" },
+                        React.createElement(FeatureIcon, { strokeWidth: 1.75 })
+                      ),
+                      React.createElement("span", null, feature.label)
+                    );
+                  })
+                )
+              )
+            )
+          );
+
+          return typeof document !== "undefined" && document.body
+            ? createPortal(modalElement, document.body)
+            : modalElement;
+        }
+
         function renderMissionControlSetupEmptyState() {
           const capabilities = [
             {
@@ -109209,6 +112311,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             renderTaskDeleteDialog(),
             renderProjectComposerDialog(),
             renderReleaseComposerDialog(),
+            renderCalendarUpgradeModal(),
             renderProjectEnvironmentFilePicker()
           );
         }
@@ -109303,6 +112406,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
           renderMissionControlStudio(),
           renderProjectComposerDialog(),
           renderReleaseComposerDialog(),
+          renderCalendarUpgradeModal(),
           renderProjectEnvironmentFilePicker()
         );
       }
@@ -109410,16 +112514,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const isOnPaidPlan = normalizedPlanId !== "free";
         const individualPlan = SETTINGS_PLAN_CATALOG.find((plan) => plan.id === "individual") || SETTINGS_PLAN_CATALOG[0];
         const individualPlanFeatures = [
-          { text: "1.5k Compute Tokens included", icon: BatteryLow },
-          { text: "Access to premium models", icon: Telescope },
-          { text: "Create your own Agents", icon: User },
-          { text: "Create your own Environments", icon: Cloud },
-          { text: "Work with any documents", icon: FileText },
-          { text: "Integrate with all your apps", icon: Cable },
-          { text: "Best-in-class Research models", icon: Telescope },
-          { text: "Best-in-class image models", icon: ImageIcon },
-          { text: "Schedule Tasks", icon: Clock },
-          { text: "API Access", icon: Code },
+          { text: "1,500 Compute Tokens included", icon: BatteryLow },
+          { text: "Custom agents and cloud computers", icon: User },
+          { text: "Premium models for research, coding, and images", icon: Telescope },
+          { text: "Calendar and scheduled tasks", icon: Clock },
+          { text: "API access for agent workflows", icon: Code },
+          { text: "Budget caps and usage history", icon: Shield },
         ];
         const [computerSize, setComputerSize] = useState("lite");
         const [nodeVersion, setNodeVersion] = useState("22");
@@ -131195,6 +134295,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 developAnalyticsMenuOpen,
                 onDevelopAnalyticsMenuOpenChange: setDevelopAnalyticsMenuOpen,
                 onOpenSettingsUsage: () => openSettingsPage("costs-overview"),
+                onOpenSettingsApi: () => openSettingsPage("api"),
               })
             : hasDemoAccess
               ? renderDemoFeaturePage("environments")
@@ -132768,7 +135869,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 type: "subtitle",
                 label: "Resources",
               },
-              ...getDevelopServerPageItems().map((item) => ({
+              ...getDevelopServerPageItems().filter((item) => item.kind !== "api").map((item) => ({
                 id: "server-" + item.id,
                 label: item.label,
                 Icon: item.Icon,
@@ -133605,7 +136706,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             apiKey: effectiveApiKey,
                             upstreamUrl: resolvedUpstreamUrl,
                             speechToTextUrl: speechToTextUrl || "",
-                            subscriptionTierId: accountTierId || "",
+                            subscriptionTierId: settingsCurrentTierId || accountTierId || "",
+                            onUpgradeToIndividual: () => handleSettingsSubscribe("individual"),
                             computerAgents: demoComputerAgents,
                             skills: demoSkills,
                             currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
@@ -134066,7 +137168,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               apiKey: effectiveApiKey,
                               upstreamUrl: resolvedUpstreamUrl,
                               speechToTextUrl: speechToTextUrl || "",
-                              subscriptionTierId: accountTierId || "",
+                              subscriptionTierId: settingsCurrentTierId || accountTierId || "",
+                              onUpgradeToIndividual: () => handleSettingsSubscribe("individual"),
                               computerAgents: demoComputerAgents,
                               skills: demoSkills,
                               currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",
@@ -140186,6 +143289,29 @@ const server = http.createServer((req, res) => {
       req,
       res,
       `/servers/${encodeURIComponent(decodeURIComponent(serverLogsMatch[1]))}/logs`,
+      { emptyOn404: true },
+    );
+    return;
+  }
+
+  const serverDeploymentsMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/deployments$/);
+  if (req.method === "GET" && serverDeploymentsMatch) {
+    void proxyUpstreamGet(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverDeploymentsMatch[1]))}/deployments`,
+      { emptyOn404: true },
+    );
+    return;
+  }
+
+  const serverRollbackMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/rollback$/);
+  if (req.method === "POST" && serverRollbackMatch) {
+    void proxyUpstreamJsonRequest(
+      req,
+      res,
+      `/servers/${encodeURIComponent(decodeURIComponent(serverRollbackMatch[1]))}/rollback`,
+      "POST",
     );
     return;
   }

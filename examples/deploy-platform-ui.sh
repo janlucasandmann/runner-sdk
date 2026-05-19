@@ -42,13 +42,16 @@ for public_file in \
   img/001-docs/thread.jpg \
   img/001-docs/computer.jpg \
   img/001-docs/projects.jpg \
+  img/001-docs/server-function.webp \
   img/002-hero/inside-rocket.jpg \
   img/002-hero/projectsheader.webp \
   img/04-skills/gitlab.svg \
   img/bg/bg-abstract.avif \
   img/bg/blend.avif \
   img/bg/clouds.jpeg \
+  img/bg/desert.avif \
   img/bg/dune.avif \
+  img/bg/forest.avif \
   img/bg/macapp.mp4 \
   img/bg/macapp-poster.jpg \
   img/bg/moon.avif \
@@ -76,7 +79,11 @@ for public_file in \
   img/logos/terminalicon.png \
   img/logos/txtfile.png; do
   mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/$(dirname "${public_file}")"
-  cp "web/hosting/public/${public_file}" "${TMP_BUILD_DIR}/web/hosting/public/${public_file}"
+  if [[ -f "web/hosting/public/${public_file}" ]]; then
+    cp "web/hosting/public/${public_file}" "${TMP_BUILD_DIR}/web/hosting/public/${public_file}"
+  else
+    echo "Warning: optional platform asset missing: web/hosting/public/${public_file}" >&2
+  fi
 done
 mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/img/agent-profile-pics"
 for public_file in \
