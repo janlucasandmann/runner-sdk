@@ -22130,19 +22130,26 @@ const html = `<!doctype html>
 	        margin-bottom: 6px;
 	      }
 
-      .playground-server-detail-navbar.is-function-detail-navbar,
-      .playground-server-detail-navbar.is-database-detail-navbar,
-      .playground-server-detail-navbar.is-auth-detail-navbar {
-        align-items: flex-start;
-      }
+	      .playground-server-detail-navbar.is-function-detail-navbar,
+	      .playground-server-detail-navbar.is-database-detail-navbar,
+	      .playground-server-detail-navbar.is-auth-detail-navbar,
+	      .playground-server-detail-navbar.is-secrets-detail-navbar,
+	      .playground-server-detail-navbar.is-agent-runtime-detail-navbar {
+	        align-items: flex-start;
+	      }
 
       .playground-server-detail-navbar .playground-database-title-input {
         margin-bottom: 6px;
       }
 
-      .playground-server-detail-navbar .playground-auth-title-input {
-        margin-bottom: 6px;
-      }
+	      .playground-server-detail-navbar .playground-auth-title-input {
+	        margin-bottom: 6px;
+	      }
+
+	      .playground-server-detail-navbar .playground-secrets-title-input,
+	      .playground-server-detail-navbar .playground-agent-runtime-title-input {
+	        margin-bottom: 6px;
+	      }
 
 	      .playground-resource-detail-back-button {
 	        align-self: flex-start;
@@ -22482,6 +22489,52 @@ const html = `<!doctype html>
         margin-top: 2px;
         padding-top: 16px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-agent-runtime-settings-card.playground-server-details-card {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        padding: 20px;
+        border: 0;
+        border-radius: 15px;
+        background: #000;
+        overflow: visible;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-agent-runtime-settings-card.playground-server-details-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-agent-runtime-settings-card.playground-server-details-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-agent-runtime-settings-card .playground-server-detail-fact-rows {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
       }
 
       .playground-server-detail-content .playground-server-invoke-section.playground-server-details-card {
@@ -24375,7 +24428,6 @@ const html = `<!doctype html>
         padding: 0 3px;
         border-radius: 6px;
         position: relative;
-        top: -2px;
         background: rgba(255, 255, 255, 0.08);
         color: rgba(255, 255, 255, 0.62);
         font-size: 10px;
@@ -24488,6 +24540,10 @@ const html = `<!doctype html>
       }
 
       .playground-database-browser-mode-switch {
+        float: right;
+        position: absolute;
+        right: 12px;
+        margin-top: -5px;
         width: auto;
         min-width: 120px;
         gap: 6px;
@@ -24513,6 +24569,11 @@ const html = `<!doctype html>
         font-weight: 400;
         line-height: 1.4;
         cursor: pointer;
+      }
+
+      .playground-database-browser-add-field:disabled {
+        opacity: 0.45;
+        cursor: default;
       }
 
       .playground-database-browser-fields-body {
@@ -28799,6 +28860,24 @@ const html = `<!doctype html>
 	        display: none;
 	      }
 
+	      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-agent-runtime-settings-card.playground-server-details-card::before {
+	        content: "";
+	        display: block;
+	        pointer-events: none;
+	        position: absolute;
+	        inset: 0;
+	        z-index: 5;
+	        border-radius: inherit;
+	        padding: 1px;
+	        background: var(--playground-project-overview-chart-border);
+	        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+	        mask-clip: content-box, border-box;
+	        mask-composite: exclude;
+	        mask-origin: content-box, border-box;
+	        mask-repeat: repeat, repeat;
+	        mask-size: auto, auto;
+	      }
+
 	      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card,
 	      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card {
 	        --playground-project-overview-chart-border: linear-gradient(
@@ -28848,7 +28927,40 @@ const html = `<!doctype html>
 	        padding: 0;
 	      }
 
+	      .playground-resources-page.is-develop-server-kind-page.is-database-data-tab {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        height: 100%;
+	        max-height: 100%;
+	        overflow: hidden;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page > .playground-environments-detail-scroll.playground-settings-detail-scroll.is-database-data-tab,
+	      .playground-resources-page.is-develop-server-kind-page > .playground-environments-detail-scroll.playground-settings-detail-scroll:has(.playground-environments-editor-main.playground-tasks-detail-main.is-database-data-tab) {
+	        flex: 1 1 0;
+	        min-height: 0;
+	        height: 100%;
+	        max-height: 100%;
+	        padding-bottom: 24px;
+	        overflow: hidden;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-resources-detail-content.is-database-data-tab,
+	      .playground-resources-page.is-develop-server-kind-page .playground-resources-detail-content:has(.playground-environments-editor-main.playground-tasks-detail-main.is-database-data-tab) {
+	        flex: 1 1 0;
+	        min-height: 0;
+	        height: 100%;
+	        max-height: 100%;
+	        display: flex;
+	        flex-direction: column;
+	        overflow: hidden;
+	      }
+
 	      .playground-resources-page.is-develop-server-kind-page .playground-environments-editor-main.playground-tasks-detail-main.is-database-data-tab {
+	        flex: 1 1 0;
+	        min-height: 0;
+	        height: 100%;
+	        max-height: 100%;
 	        overflow: hidden;
 	      }
 
@@ -28857,9 +28969,10 @@ const html = `<!doctype html>
 	      }
 
 	      .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-editor-scroll.is-database-data-tab {
-	        flex: 1 1 auto;
+	        flex: 1 1 0;
 	        min-height: 0;
 	        height: 100%;
+	        max-height: 100%;
 	        overflow: hidden;
 	      }
 
@@ -28871,10 +28984,40 @@ const html = `<!doctype html>
 	      }
 
 	      .playground-server-detail-content.is-database-data-tab {
-	        flex: 1 1 auto;
+	        flex: 1 1 0;
 	        min-height: 0;
 	        height: 100%;
+	        max-height: 100%;
 	        gap: 12px;
+	        overflow: hidden;
+	      }
+
+	      .playground-database-detail-content.is-database-data-tab {
+	        display: flex;
+	        flex-direction: column;
+	      }
+
+	      .playground-database-detail-header-area {
+	        flex: 0 0 auto;
+	        min-height: 0;
+	      }
+
+	      .playground-database-detail-tab-panel {
+	        min-width: 0;
+	        min-height: 0;
+	      }
+
+	      .playground-database-detail-tab-panel.is-data {
+	        flex: 1 1 0;
+	        height: 100%;
+	        max-height: 100%;
+	        display: flex;
+	        flex-direction: column;
+	        overflow: hidden;
+	      }
+
+	      .playground-database-detail-tab-panel.is-general {
+	        flex: 0 0 auto;
 	      }
 
 	      .playground-server-detail-content.is-auth-users-tab {
@@ -28885,9 +29028,50 @@ const html = `<!doctype html>
 	      }
 
 	      .playground-server-detail-content.is-database-data-tab .playground-database-browser-surface.playground-server-details-card {
-	        flex: 1 1 auto;
+	        flex: 1 1 0;
 	        min-height: 0;
+	        height: 100%;
+	        max-height: 100%;
+	        margin-top: 6px;
 	        margin-bottom: 0;
+	        display: flex;
+	        flex-direction: column;
+	        padding-bottom: 0;
+	        overflow: hidden;
+	      }
+
+	      .playground-server-detail-content.is-database-data-tab .playground-database-browser-tab-body {
+	        flex: 1 1 0;
+	        min-height: 0;
+	        height: 100%;
+	        display: flex;
+	        flex-direction: column;
+	        gap: 12px;
+	        overflow: hidden;
+	      }
+
+	      .playground-server-detail-content.is-database-data-tab .playground-database-browser-columns {
+	        flex: 1 1 0;
+	        min-height: 0;
+	        height: 100%;
+	        max-height: 100%;
+	        overflow: hidden;
+	      }
+
+	      .playground-server-detail-content.is-database-data-tab .playground-database-browser-pane,
+	      .playground-server-detail-content.is-database-data-tab .playground-database-browser-fields-card {
+	        min-height: 0;
+	        overflow: hidden;
+	      }
+
+	      .playground-server-detail-content.is-database-data-tab > .playground-agents-overview-tabs,
+	      .playground-server-detail-content.is-database-data-tab > .playground-database-storage-location-note,
+	      .playground-server-detail-content.is-database-data-tab > .playground-environments-error {
+	        flex: 0 0 auto;
+	      }
+
+	      .playground-server-detail-content.is-database-data-tab .playground-database-storage-location-note {
+	        margin-bottom: 12px;
 	      }
 
 	      .playground-server-detail-content.is-auth-users-tab .playground-auth-users-surface.playground-server-details-card {
@@ -28930,11 +29114,61 @@ const html = `<!doctype html>
 	        min-height: 180px;
 	      }
 
+	      .playground-resources-page.is-develop-server-kind-page .playground-environments-editor-main.playground-tasks-detail-main.is-secrets-tab,
+	      .playground-resources-page.is-develop-server-kind-page .playground-environments-editor-main.playground-tasks-detail-main.is-agent-runtime-threads-tab {
+	        overflow: hidden;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-editor-scroll.is-secrets-tab,
+	      .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-editor-scroll.is-agent-runtime-threads-tab {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        height: 100%;
+	        overflow: hidden;
+	      }
+
+	      .playground-server-detail-content.is-secrets-tab,
+	      .playground-server-detail-content.is-agent-runtime-threads-tab {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        height: 100%;
+	        gap: 12px;
+	      }
+
+	      .playground-server-detail-content.is-secrets-tab .playground-auth-users-surface.playground-server-details-card,
+	      .playground-server-detail-content.is-agent-runtime-threads-tab .playground-auth-users-surface.playground-server-details-card {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        margin-bottom: 0;
+	      }
+
+	      .playground-server-detail-content.is-secrets-tab .playground-auth-users-surface .playground-tasks-detail-facts-body,
+	      .playground-server-detail-content.is-agent-runtime-threads-tab .playground-auth-users-surface .playground-tasks-detail-facts-body {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        display: flex;
+	        flex-direction: column;
+	      }
+
+	      .playground-server-detail-content.is-secrets-tab .playground-auth-users-table-shell,
+	      .playground-server-detail-content.is-agent-runtime-threads-tab .playground-auth-users-table-shell {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        overflow: auto;
+	      }
+
+	      .playground-server-detail-content.is-secrets-tab .playground-auth-users-surface .playground-files-state,
+	      .playground-server-detail-content.is-agent-runtime-threads-tab .playground-auth-users-surface .playground-files-state {
+	        flex: 1 1 auto;
+	        min-height: 180px;
+	      }
+
 	      .playground-database-browser-columns {
 	        display: grid;
 	        grid-template-columns: minmax(180px, 0.84fr) minmax(220px, 1fr) minmax(0, 1.7fr);
-	        min-height: min(620px, calc(100dvh - 260px));
-	        height: 100%;
+	        min-height: min(420px, calc(100dvh - 260px));
+	        height: min(620px, calc(100dvh - 260px));
+	        max-height: min(620px, calc(100dvh - 260px));
 	        width: 100%;
 	      }
 
@@ -28952,13 +29186,22 @@ const html = `<!doctype html>
 
 	      .playground-database-browser-pane-header {
 	        flex: 0 0 auto;
-	        min-height: 44px;
-	        padding: 0 14px;
+	        min-height: 78px;
+	        padding: 10px 14px;
+	        display: flex;
+	        flex-direction: column;
+	        align-items: center;
+	        justify-content: space-between;
+	        gap: 9px;
+	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	      }
+
+	      .playground-database-browser-pane-title-row {
+	        width: 100%;
 	        display: flex;
 	        align-items: center;
 	        justify-content: space-between;
 	        gap: 10px;
-	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	      }
 
 	      .playground-database-browser-pane-title {
@@ -28972,11 +29215,106 @@ const html = `<!doctype html>
 	        line-height: 1.3;
 	      }
 
+	      .playground-database-browser-pane-title svg {
+	        flex: 0 0 auto;
+	        color: rgba(255, 255, 255, 0.72);
+	      }
+
+	      .playground-database-browser-pane-action-row {
+	        width: 100%;
+	        display: flex;
+	        align-items: center;
+	        justify-content: space-between;
+	        gap: 10px;
+	      }
+
+	      .playground-database-browser-pane-menu-shell {
+	        position: relative;
+	        flex: 0 0 auto;
+	      }
+
+	      .playground-database-browser-pane-menu-button {
+	        width: 22px;
+	        height: 22px;
+	        padding: 0;
+	        border: 0;
+	        border-radius: 0;
+	        background: transparent;
+	        color: rgba(255, 255, 255, 0.62);
+	        display: inline-flex;
+	        align-items: center;
+	        justify-content: center;
+	        cursor: pointer;
+	        transition: color 160ms ease;
+	      }
+
+	      .playground-database-browser-pane-menu-button:hover:not(:disabled) {
+	        color: rgba(255, 255, 255, 0.96);
+	      }
+
+	      .playground-database-browser-pane-menu-button:disabled {
+	        opacity: 0.36;
+	        cursor: default;
+	      }
+
+	      .playground-database-browser-pane-menu {
+	        position: absolute;
+	        top: calc(100% + 8px);
+	        right: 0;
+	        z-index: 80;
+	        min-width: 176px;
+	        padding: 6px;
+	        border: 1px solid rgba(255, 255, 255, 0.08);
+	        border-radius: 12px;
+	        background: #323232;
+	        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.32);
+	      }
+
+	      .playground-database-browser-pane-menu-item {
+	        width: 100%;
+	        min-height: 32px;
+	        padding: 0 10px;
+	        border: 0;
+	        border-radius: 8px;
+	        background: transparent;
+	        color: rgba(255, 255, 255, 0.9);
+	        display: flex;
+	        align-items: center;
+	        justify-content: flex-start;
+	        gap: 8px;
+	        font-size: 12px;
+	        font-weight: 400;
+	        line-height: 1.35;
+	        text-align: left;
+	        cursor: pointer;
+	      }
+
+	      .playground-database-browser-pane-menu-item:hover:not(:disabled) {
+	        background: rgba(255, 255, 255, 0.08);
+	        color: #fff;
+	      }
+
+	      .playground-database-browser-pane-menu-item.is-danger {
+	        color: rgba(255, 138, 138, 0.94);
+	      }
+
+	      .playground-database-browser-pane-menu-item:disabled {
+	        opacity: 0.45;
+	        cursor: default;
+	      }
+
 	      .playground-database-browser-pane-list {
 	        flex: 1 1 auto;
 	        min-height: 0;
 	        overflow: auto;
 	        padding: 8px 0;
+	        scrollbar-width: none;
+	      }
+
+	      .playground-database-browser-pane-list::-webkit-scrollbar,
+	      .playground-database-browser-fields-pane .playground-database-browser-fields-body::-webkit-scrollbar,
+	      .playground-database-browser-fields-pane .playground-database-browser-json-editor-shell::-webkit-scrollbar {
+	        display: none;
 	      }
 
 	      .playground-database-browser-pane-row {
@@ -29039,8 +29377,12 @@ const html = `<!doctype html>
 
 	      .playground-database-browser-fields-pane .playground-database-browser-fields-header {
 	        flex: 0 0 auto;
-	        min-height: 44px;
-	        padding: 0 14px;
+	        min-height: 78px;
+	        padding: 10px 14px;
+	        flex-direction: column;
+	        align-items: stretch;
+	        justify-content: space-between;
+	        gap: 9px;
 	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	      }
 
@@ -29049,12 +29391,14 @@ const html = `<!doctype html>
 	        min-height: 0;
 	        overflow: auto;
 	        padding: 14px 16px;
+	        scrollbar-width: none;
 	      }
 
 	      .playground-database-browser-fields-pane .playground-database-browser-json-editor-shell {
 	        flex: 1 1 auto;
 	        min-height: 0;
 	        height: auto;
+	        scrollbar-width: none;
 	      }
 
 	      .playground-database-browser-fields-pane .playground-files-state {
@@ -39039,7 +39383,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, House, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, House, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -39191,10 +39535,10 @@ ${ENVIRONMENT_CHANGES_CSS}
                       onClose();
                     }
                   },
-                }, "Go to platform"),
-              )
-            )
-          );
+		                }, "Go to platform")
+		              )
+		            )
+		          );
       }
 
       const STATUS_INDICATOR_PENDING_STORAGE_KEY = "runner_demo_pending_status_indicators_v1";
@@ -43758,28 +44102,29 @@ ${ENVIRONMENT_CHANGES_CSS}
           : typeof databaseBinding?.location === "string" && databaseBinding.location.trim()
             ? databaseBinding.location.trim()
             : draft.databaseLocation;
-        const databaseMode = typeof server.databaseMode === "string" && ["none", "existing", "create"].includes(server.databaseMode)
-          ? server.databaseMode
-          : databaseId
-            ? "existing"
-            : databaseName || databaseDescription
-              ? "create"
-              : "none";
+	        const databaseMode = typeof server.databaseMode === "string" && ["none", "existing", "create"].includes(server.databaseMode)
+	          ? server.databaseMode
+	          : databaseId
+	            ? "existing"
+	            : databaseName || databaseDescription
+	              ? "create"
+	              : "none";
+	        const normalizedKind = canonicalizePlaygroundServerKind(server.kind || draft.kind);
 
-        return {
-          ...draft,
+	        return {
+	          ...draft,
           id: typeof server.id === "string" ? server.id : draft.id,
           userId: typeof server.userId === "string" ? server.userId : draft.userId,
           projectId: typeof server.projectId === "string" && server.projectId.trim() ? server.projectId.trim() : null,
           name: typeof server.name === "string" && server.name.trim() ? server.name : draft.name,
           description: typeof server.description === "string" ? server.description : draft.description,
-          kind: canonicalizePlaygroundServerKind(server.kind || draft.kind),
+	          kind: normalizedKind,
           sourceType: ["manual", "computer", "git"].includes(server.sourceType) ? server.sourceType : draft.sourceType,
           sourceEnvironmentId: typeof server.sourceEnvironmentId === "string" && server.sourceEnvironmentId.trim() ? server.sourceEnvironmentId.trim() : null,
           sourcePath: typeof server.sourcePath === "string" ? server.sourcePath : draft.sourcePath,
           region: typeof server.region === "string" && server.region.trim() ? server.region.trim() : draft.region,
           runtime: typeof server.runtime === "string" && server.runtime.trim() ? server.runtime.trim() : draft.runtime,
-          authMode: ["public", "private"].includes(server.authMode) ? server.authMode : draft.authMode,
+	          authMode: normalizedKind === "agent_runtime" ? "private" : (["public", "private"].includes(server.authMode) ? server.authMode : draft.authMode),
           serviceUrl: typeof server.serviceUrl === "string" ? server.serviceUrl : draft.serviceUrl,
           customDomain: typeof server.customDomain === "string" ? server.customDomain : draft.customDomain,
           cloudRunServiceName: typeof server.cloudRunServiceName === "string" ? server.cloudRunServiceName : draft.cloudRunServiceName,
@@ -60176,10 +60521,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [environmentHomeChartTimescale, setEnvironmentHomeChartTimescale] = useState("month");
         const [environmentDetailChartTimescale, setEnvironmentDetailChartTimescale] = useState("day");
         const [serverDetailChartTimescale, setServerDetailChartTimescale] = useState("day");
-        const [databaseDetailChartTimescale, setDatabaseDetailChartTimescale] = useState("day");
-        const [databaseDetailTab, setDatabaseDetailTab] = useState("data");
-        const [authDetailTab, setAuthDetailTab] = useState("users");
-        const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
+	        const [databaseDetailChartTimescale, setDatabaseDetailChartTimescale] = useState("day");
+	        const [databaseDetailTab, setDatabaseDetailTab] = useState("data");
+	        const [authDetailTab, setAuthDetailTab] = useState("users");
+	        const [secretsDetailTab, setSecretsDetailTab] = useState("secrets");
+	        const [agentRuntimeDetailTab, setAgentRuntimeDetailTab] = useState("general");
+	        const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
@@ -60377,6 +60724,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           error: "",
           isSaving: false,
         });
+        const [databaseCollectionActionsOpen, setDatabaseCollectionActionsOpen] = useState(false);
+        const [databaseDocumentActionsOpen, setDatabaseDocumentActionsOpen] = useState(false);
         const [databaseFieldExpansionState, setDatabaseFieldExpansionState] = useState({});
         const [databaseFieldComposerState, setDatabaseFieldComposerState] = useState({
           open: false,
@@ -60914,10 +61263,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
         useEffect(() => {
           selectedDatabaseCollectionIdRef.current = selectedDatabaseCollectionId;
+          setDatabaseCollectionActionsOpen(false);
         }, [selectedDatabaseCollectionId]);
 
         useEffect(() => {
           selectedDatabaseDocumentIdRef.current = selectedDatabaseDocumentId;
+          setDatabaseDocumentActionsOpen(false);
         }, [selectedDatabaseDocumentId]);
 
         useEffect(() => {
@@ -61017,9 +61368,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             signins: true,
             email: true,
             external: true,
-          });
-          setAuthDetailTab("users");
-          setServerRuntimePreviewState({
+	          });
+	          setAuthDetailTab("users");
+	          setSecretsDetailTab("secrets");
+		          setAgentRuntimeDetailTab("general");
+	          setServerRuntimePreviewState({
             open: false,
             target: "",
             title: "",
@@ -65323,10 +65676,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             const nextAgentRuntime = await persistServerRecord(normalizePlaygroundServerRecord({
               ...buildPlaygroundDefaultServerDraft(),
               projectId: normalizedServer.projectId,
-              name: (String(normalizedServer.name || "").trim() || "New Resource") + " Agent Runtime",
-              description: "Agent runtime for " + (String(normalizedServer.name || "").trim() || "this server") + ".",
-              kind: "agent_runtime",
-            }));
+	              name: (String(normalizedServer.name || "").trim() || "New Resource") + " Agent Runtime",
+	              description: "Agent runtime for " + (String(normalizedServer.name || "").trim() || "this server") + ".",
+	              kind: "agent_runtime",
+	              authMode: "private",
+	            }));
             if (!nextAgentRuntime?.id) {
               throw new Error("Agent runtime creation failed.");
             }
@@ -66749,6 +67103,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !collectionId) {
             return;
           }
+          setDatabaseCollectionActionsOpen(false);
           if (!window.confirm("Delete this collection and all documents inside it?")) {
             return;
           }
@@ -67171,6 +67526,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (!draftDatabase?.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId || !documentId) {
             return;
           }
+          setDatabaseDocumentActionsOpen(false);
           if (!window.confirm("Delete this document?")) {
             return;
           }
@@ -69246,14 +69602,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                                 ),
                                 React.createElement("span", null, option)
                               )
-                            )
-                          )
-                        : null
-                    )
-                  )
-                );
-              })
-          );
+	                            )
+	                          )
+		                  : null
+		                )
+		              )
+		            );
+		              })
+	          );
         }
 
         function renderEnvironmentCreationSetupPage() {
@@ -70428,7 +70784,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	                placeholder: "eur3",
 	              })
 	            ));
-	          } else if (!isAuthComposer && !isSecretsComposer) {
+		          } else if (!isAuthComposer && !isAgentRuntimeComposer && !isSecretsComposer) {
 	            settingRows.push(renderServerCreationFactRow(
 	              "auth",
 	              "Auth",
@@ -70757,7 +71113,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                                 })
                               )
                             )
-                          : !isAuthComposer && !isSecretsComposer
+	                          : !isAuthComposer && !isAgentRuntimeComposer && !isSecretsComposer
                             ? React.createElement("div", { className: "playground-tasks-detail-fact" },
                                 React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Auth"),
                                 React.createElement("div", { className: "playground-tasks-detail-fact-control" },
@@ -70844,7 +71200,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const isAuthServer = normalizedServerKind === "auth";
           const isAgentRuntimeServer = normalizedServerKind === "agent_runtime";
           const isSecretsServer = normalizedServerKind === "secrets";
-          const isTitlelessServerDescription = isSourceDeployableServer || isAuthServer || isSecretsServer;
+	          const isTitlelessServerDescription = isSourceDeployableServer || isAuthServer || isSecretsServer;
           const shouldRenderTitlelessServerDescription = isTitlelessServerDescription && !isFunctionServer;
           const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
           const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
@@ -71840,20 +72196,21 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             )
           );
 
-          const functionInvokePayload = JSON.stringify({ name: "Functions" });
-          const functionInvokeSlug = String(draftServer.slug || draftServer.name || "hello-world")
+	          const isFunctionInvokeCapableServer = isFunctionServer || isAgentRuntimeServer;
+	          const functionInvokePayload = JSON.stringify(isAgentRuntimeServer ? { prompt: "Run this agent workflow." } : { name: "Functions" });
+	          const functionInvokeSlug = String(draftServer.slug || draftServer.name || (isAgentRuntimeServer ? "agent-runtime" : "hello-world"))
             .trim()
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "") || "hello-world";
+	            .replace(/^-+|-+$/g, "") || (isAgentRuntimeServer ? "agent-runtime" : "hello-world");
           const functionInvokeUrl = String(draftServer.serviceUrl || "").trim()
             || ("https://api.computer-agents.com/functions/v1/" + functionInvokeSlug);
           const functionDeployedServiceUrl = String(draftServer.serviceUrl || "").trim();
           const functionAuthMetadata = draftServer?.metadata?.functionAuth && typeof draftServer.metadata.functionAuth === "object" && !Array.isArray(draftServer.metadata.functionAuth)
             ? draftServer.metadata.functionAuth
             : {};
-          const functionApiKeyAuthEnabled = functionAuthMetadata.apiKeyAuthEnabled !== false
-            && draftServer?.metadata?.functionApiKeyAuthEnabled !== false;
+	          const functionApiKeyAuthEnabled = isAgentRuntimeServer || (functionAuthMetadata.apiKeyAuthEnabled !== false
+	            && draftServer?.metadata?.functionApiKeyAuthEnabled !== false);
           const setFunctionApiKeyAuthEnabled = (nextEnabled) => {
             updateDraftServer((current) => {
               const normalized = normalizePlaygroundServerRecord(current || draftServer || selectedServerSnapshot || buildPlaygroundDefaultServerDraft());
@@ -71910,7 +72267,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               "request.httpMethod = \\\"POST\\\"",
               ...(functionApiKeyAuthEnabled ? ["request.setValue(\\\"Bearer \\\\(apiKey)\\\", forHTTPHeaderField: \\\"Authorization\\\")"] : []),
               "request.setValue(\\\"application/json\\\", forHTTPHeaderField: \\\"Content-Type\\\")",
-              "request.httpBody = try JSONSerialization.data(withJSONObject: [\\\"name\\\": \\\"Functions\\\"])",
+	              "request.httpBody = try JSONSerialization.data(withJSONObject: " + (isAgentRuntimeServer ? "[\\\"prompt\\\": \\\"Run this agent workflow.\\\"]" : "[\\\"name\\\": \\\"Functions\\\"]") + ")",
               "",
               "let (data, _) = try await URLSession.shared.data(for: request)",
               "print(String(data: data, encoding: .utf8) ?? \\\"\\\")",
@@ -72013,31 +72370,39 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   className: "playground-server-invoke-code-fallback",
                   style: { minHeight: functionInvokeCodeHeight },
                 }, activeFunctionInvokeSnippet);
-          const functionInvokeSection = isFunctionServer
-            ? React.createElement("section", { className: "playground-server-invoke-section playground-server-details-card" },
-                React.createElement("div", { className: "playground-server-invoke-title" }, "Invoke function"),
-                React.createElement("div", { className: "playground-server-invoke-auth-note" },
-                  React.createElement("div", { className: "playground-server-invoke-auth-copy" },
-                    React.createElement("div", { className: "playground-server-invoke-auth-toggle-copy" },
-                      React.createElement("span", { className: "playground-server-invoke-auth-label" }, "Require Computer Agents API key"),
-                      React.createElement("span", null,
-                        functionApiKeyAuthEnabled
-	                          ? React.createElement(React.Fragment, null,
-	                            "Calls must include a Computer Agents API key in the ",
-	                            React.createElement("code", null, "Authorization"),
+	          const functionInvokeSection = isFunctionInvokeCapableServer
+	            ? React.createElement("section", { className: "playground-server-invoke-section playground-server-details-card" },
+	                React.createElement("div", { className: "playground-server-invoke-title" }, "Invoke function"),
+	                React.createElement("div", { className: "playground-server-invoke-auth-note" },
+	                  React.createElement("div", { className: "playground-server-invoke-auth-copy" },
+	                    React.createElement("div", { className: "playground-server-invoke-auth-toggle-copy" },
+	                      React.createElement("span", { className: "playground-server-invoke-auth-label" }, isAgentRuntimeServer ? "Computer Agents API key required" : "Require Computer Agents API key"),
+	                      React.createElement("span", null,
+	                        isAgentRuntimeServer
+		                      ? React.createElement(React.Fragment, null,
+		                          "Agent runtimes always require a Computer Agents API key in the ",
+		                          React.createElement("code", null, "Authorization"),
+		                          " header."
+		                        )
+		                      : functionApiKeyAuthEnabled
+		                          ? React.createElement(React.Fragment, null,
+		                            "Calls must include a Computer Agents API key in the ",
+		                            React.createElement("code", null, "Authorization"),
 	                            " header. Recommended: keep this as the platform guard and implement user/session-specific authentication in your function code."
 	                          )
 	                          : "API key authentication is off. This function can receive unauthenticated requests. Turn this off only for public endpoints or when the function implements its own authentication."
 	                      )
 	                    )
 	                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    role: "switch",
-                    "aria-checked": functionApiKeyAuthEnabled ? "true" : "false",
-                    className: "playground-environments-toggle" + (functionApiKeyAuthEnabled ? " is-active" : ""),
-                    onClick: () => setFunctionApiKeyAuthEnabled(!functionApiKeyAuthEnabled),
-                  }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+	                  isAgentRuntimeServer
+	                    ? null
+	                    : React.createElement("button", {
+	                        type: "button",
+	                        role: "switch",
+	                        "aria-checked": functionApiKeyAuthEnabled ? "true" : "false",
+	                        className: "playground-environments-toggle" + (functionApiKeyAuthEnabled ? " is-active" : ""),
+	                        onClick: () => setFunctionApiKeyAuthEnabled(!functionApiKeyAuthEnabled),
+	                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
                 ),
                 React.createElement("div", { className: "playground-server-invoke-card" },
                   React.createElement("div", { className: "playground-server-invoke-header" },
@@ -72614,7 +72979,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       )
                     )
                   : null
-              )
+                )
             );
           };
           const renderServerDeploymentCodePreview = ({ path, language, value, emptyText, height = "168px" }) => {
@@ -73525,8 +73890,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 )
               )
             : null;
-          const sourceDeployableDangerSection = isSourceDeployableServer
-            ? React.createElement("section", { className: "playground-server-danger-section playground-server-details-card" },
+	          const serverDangerSection = isSourceDeployableServer || isAgentRuntimeServer
+	            ? React.createElement("section", { className: "playground-server-danger-section playground-server-details-card" },
                 React.createElement("div", { className: "playground-server-danger-copy-row" },
                   React.createElement("span", { className: "playground-server-danger-icon", "aria-hidden": "true" },
                     React.createElement(AlertCircle, { width: 15, height: 15, strokeWidth: 2 })
@@ -73557,7 +73922,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             functionInvokeSection,
             customDomainSection,
             connectionsSection,
-            sourceDeployableDangerSection
+	            serverDangerSection
           );
           const serverEditorTabContent = isSourceDeployableServer
             ? normalizedServerDetailTab === "logs"
@@ -73850,13 +74215,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   )
                 )
               : null;
-            const secretsSection = React.createElement("section", { className: "playground-environments-section", key: "secrets" },
-              React.createElement("div", { className: "playground-environments-section-body" },
-                React.createElement("div", { className: "playground-auth-users-section-header" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Secrets")
-                ),
-                React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-auth-users-surface" },
-                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+	            const secretsSurface = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-auth-users-surface" },
+	              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                     React.createElement("div", { className: "playground-auth-users-toolbar" },
                       React.createElement("label", { className: "playground-auth-users-search" },
                         React.createElement(Search, { className: "playground-auth-users-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
@@ -73947,26 +74307,100 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                             serverSecretsSearchQuery.trim() ? "No matching secrets found." : "No secrets yet."
                           )
                   )
-                )
-              )
             );
 
-            return React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
-                serverMainTopbar,
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-                  React.createElement("div", { className: "playground-server-detail-content" },
-                    serverSaveState.error
-                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
-                      : null,
-                    descriptionSection,
-                    secretsDetailsSection,
-                    secretsSection
-                  )
-                )
-              ),
-              secretComposerModal
-            );
+	            const normalizedSecretsDetailTab = ["secrets", "general"].includes(secretsDetailTab) ? secretsDetailTab : "secrets";
+	            const secretsDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
+	              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+	                [
+	                  { id: "secrets", label: "Secrets" },
+	                  { id: "general", label: "General" },
+	                ].map((tab) =>
+	                  React.createElement("button", {
+	                      key: tab.id,
+	                      type: "button",
+	                      className: "playground-project-overview-chart-tab" + (normalizedSecretsDetailTab === tab.id ? " is-active" : ""),
+	                      onClick: () => setSecretsDetailTab(tab.id),
+	                      "aria-pressed": normalizedSecretsDetailTab === tab.id ? "true" : "false",
+	                      "aria-label": tab.label,
+	                    },
+	                    tab.label
+	                  )
+	                )
+	              )
+	            );
+	            const secretsStorageLocation = String(draftServer.location || "eur3").trim() || "eur3";
+	            const secretsTabContent = React.createElement(React.Fragment, null,
+	              secretsSurface,
+	              React.createElement("div", { className: "playground-database-storage-location-note" },
+	                React.createElement(MapPin, { width: 13, height: 13, strokeWidth: 1.8 }),
+	                "Data is stored in Location ",
+	                React.createElement("strong", null, secretsStorageLocation),
+	                "."
+	              )
+	            );
+	            const secretsGeneralTabContent = React.createElement(React.Fragment, null,
+	              descriptionSection,
+	              secretsDetailsSection
+	            );
+	            const secretsEditorTabContent = normalizedSecretsDetailTab === "secrets"
+	              ? secretsTabContent
+	              : secretsGeneralTabContent;
+	            const secretsDocumentationUrl = ${JSON.stringify(aiosOrigin)} + "/developers/libraries/secrets";
+	            const secretsEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
+	              normalizedSecretsDetailTab === "secrets" ? " is-secrets-tab" : ""
+	            );
+	            const secretsEditorScrollClassName = "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" + (
+	              normalizedSecretsDetailTab === "secrets" ? " is-secrets-tab" : ""
+	            );
+	            const secretsDetailContentClassName = "playground-server-detail-content" + (
+	              normalizedSecretsDetailTab === "secrets" ? " is-secrets-tab" : ""
+	            );
+	            const secretsMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar is-secrets-detail-navbar" },
+	              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+	                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+	                  React.createElement("input", {
+	                    type: "text",
+	                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-secrets-title-input",
+	                    value: draftServer.name || "",
+	                    placeholder: "Secrets",
+	                    "aria-label": "Secrets name",
+	                    title: draftServer.name || "Secrets",
+	                    onChange: (event) => updateServerField("name", event.target.value),
+		                    onBlur: () => {
+		                      void commitDraftServerIfDirty();
+		                    },
+			                  })
+		                )
+	              ),
+	              React.createElement("div", { className: "playground-content-nav-center" }),
+	              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-environments-action-button",
+	                  onClick: () => window.open(secretsDocumentationUrl, "_blank", "noopener,noreferrer"),
+	                },
+	                  React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("span", null, "Docs")
+	                )
+	              )
+	            );
+
+	            return React.createElement(React.Fragment, null,
+	              React.createElement("div", { className: secretsEditorMainClassName, ref: serverDetailMainRef },
+	                secretsMainTopbar,
+	                React.createElement("div", { className: secretsEditorScrollClassName },
+	                  React.createElement("div", { className: secretsDetailContentClassName },
+	                    serverSaveState.error
+	                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
+	                      : null,
+	                    secretsDetailTabs,
+	                    secretsEditorTabContent
+	                  )
+	                )
+	              ),
+	              secretComposerModal
+	            );
           }
 
           if (isAgentRuntimeServer) {
@@ -74237,219 +74671,139 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               showLegend: false,
               timescaleControl: renderServerDetailTimescaleControl(),
             });
-            const agentRuntimeDetailsSection = React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics" },
-                React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card" },
-                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                    React.createElement("div", { className: "playground-database-overview" },
-                      React.createElement("div", { className: "playground-database-overview-chart-block playground-server-detail-chart-block" },
-                        renderServerDetailChartKpis(agentRuntimeDetailKpis),
-                        renderAgentRuntimeDetailActivityChart(),
-                        React.createElement("div", { className: "playground-server-detail-fact-rows" },
-                          renderServerFactRow("ID", React.createElement("span", {
-                            className: "playground-environments-editor-fact-value is-id",
-                            title: draftServer.id || "Unsaved agent runtime",
-                          }, draftServer.id || "Unsaved agent runtime")),
-                          renderServerFactRow("Endpoint",
-                            draftServer.serviceUrl
-                              ? React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-tasks-detail-fact-button",
-                                  onClick: () => window.open(draftServer.serviceUrl, "_blank", "noopener,noreferrer"),
-                                  title: draftServer.serviceUrl,
-                                }, draftServer.serviceUrl)
-                              : React.createElement("div", { className: "playground-tasks-detail-fact-button is-empty" }, "Created after save")
-                          ),
-                          renderServerFactRow("Agent",
-                            React.createElement("div", {
-                                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell playground-tasks-detail-assignee-shell" + (serverDetailSelectPopover === "agent-runtime-agent" ? " is-open" : ""),
-                                ref: serverDetailSelectPopover === "agent-runtime-agent" ? serverDetailSelectPopoverRef : null,
-                              },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (!agentRuntimeConfig.agentId ? " is-empty" : "") + (serverDetailSelectPopover === "agent-runtime-agent" ? " is-active" : ""),
-                                onClick: () => setServerDetailSelectPopover((current) => current === "agent-runtime-agent" ? "" : "agent-runtime-agent"),
-                                title: selectedAgentRuntimeAgent?.name || agentRuntimeConfig.agentId || "Choose agent",
-                                "aria-expanded": serverDetailSelectPopover === "agent-runtime-agent" ? "true" : "false",
-                              },
-                                React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, selectedAgentRuntimeAgent?.name || agentRuntimeConfig.agentId || "Choose agent"),
-                                React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
-                              ),
-                              serverDetailSelectPopover === "agent-runtime-agent"
-                                ? React.createElement("div", { className: "tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                    React.createElement("div", { className: "tb-popup-menu-title" }, "Agent"),
-                                    availableAgentRuntimeAgentModes.length > 1
-                                      ? React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
-                                          React.createElement("div", { className: "tb-popup-nav" },
-                                            availableAgentRuntimeAgentModes.includes("agents")
-                                              ? React.createElement("button", {
-                                                  type: "button",
-                                                  className: "tb-popup-nav-button" + (activeAgentRuntimeAgentMode === "agents" ? " active" : ""),
-                                                  onClick: () => setServerAgentPickerMode("agents"),
-                                                }, "Agents")
-                                              : null,
-                                            availableAgentRuntimeAgentModes.includes("teams")
-                                              ? React.createElement("button", {
-                                                  type: "button",
-                                                  className: "tb-popup-nav-button" + (activeAgentRuntimeAgentMode === "teams" ? " active" : ""),
-                                                  onClick: () => setServerAgentPickerMode("teams"),
-                                                }, "Teams")
-                                              : null
-                                          )
-                                        )
-                                      : null,
-                                    React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent" },
-                                      serverAgentOptionsLoading
-                                        ? React.createElement("div", { className: "tb-popup-menu-inline-empty" },
-                                            React.createElement("div", { className: "tb-popup-empty-state" }, "Loading agents...")
-                                          )
-                                        : filteredAgentRuntimeAgentOptions.length > 0
-                                          ? filteredAgentRuntimeAgentOptions.map((agent) => {
-                                              const mode = getPlaygroundAgentListMode(agent);
-                                              const IconComponent = mode === "teams" ? Layers : User;
-                                              return React.createElement("button", {
-                                                  key: agent.id,
-                                                  type: "button",
-                                                  className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (agentRuntimeConfig.agentId === agent.id ? " selected" : ""),
-                                                  onClick: () => {
-                                                    updateServerAgentRuntimeField("agentId", agent.id);
-                                                    setServerDetailSelectPopover("");
-                                                  },
-                                                },
-                                                React.createElement(IconComponent, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                                React.createElement("span", { className: "tb-popup-label" }, agent.name || "Unknown"),
-                                                React.createElement("span", { className: "tb-popup-check-slot" },
-                                                  agentRuntimeConfig.agentId === agent.id
-                                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                                    : null
-                                                )
-                                              );
-                                            })
-                                          : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
-                                              React.createElement("div", { className: "tb-popup-empty-state" }, "No agents yet.")
-                                            )
-                                    )
-                                  )
-                                : null
-                            )
-                          ),
-                          renderServerFactRow("Computer",
-                            renderServerDetailSelectControl({
-                              popoverId: "agent-runtime-environment",
-                              valueLabel: draftServer.sourceEnvironmentId
-                                ? (orderedEnvironments.find((environment) => environment.id === draftServer.sourceEnvironmentId)?.name || draftServer.sourceEnvironmentId)
-                                : "None",
-                              isEmpty: !draftServer.sourceEnvironmentId,
-                              children: [
-                                renderServerDetailSelectOptionRow({
-                                  key: "agent-runtime-environment:none",
-                                  label: "None",
-                                  selected: !draftServer.sourceEnvironmentId,
-                                  onClick: () => {
-                                    updateServerField("sourceEnvironmentId", null);
-                                    setServerDetailSelectPopover("");
-                                  },
-                                }),
-                                ...orderedEnvironments.map((environment) =>
-                                  renderServerDetailSelectOptionRow({
-                                    key: "agent-runtime-environment:" + environment.id,
-                                    label: environment.name || "Untitled Computer",
-                                    selected: draftServer.sourceEnvironmentId === environment.id,
-                                    onClick: () => {
-                                      updateServerField("sourceEnvironmentId", environment.id);
-                                      setServerDetailSelectPopover("");
-                                    },
-                                  })
-                                ),
-                              ],
-                            })
-                          ),
-                          renderServerFactRow("Auth",
-                            renderServerDetailSelectControl({
-                              popoverId: "agent-runtime-auth-mode",
-                              valueLabel: draftServer.authMode === "private" ? "Private" : "Public",
-                              children: [
-                                renderServerDetailSelectOptionRow({
-                                  key: "agent-runtime-auth:public",
-                                  label: "Public",
-                                  selected: draftServer.authMode !== "private",
-                                  onClick: () => {
-                                    updateServerField("authMode", "public");
-                                    setServerDetailSelectPopover("");
-                                  },
-                                }),
-                                renderServerDetailSelectOptionRow({
-                                  key: "agent-runtime-auth:private",
-                                  label: "Private",
-                                  selected: draftServer.authMode === "private",
-                                  onClick: () => {
-                                    updateServerField("authMode", "private");
-                                    setServerDetailSelectPopover("");
-                                  },
-                                }),
-                              ],
-                            })
-                          ),
-                          renderServerFactRow("Execution",
-                            renderServerDetailSelectControl({
-                              popoverId: "agent-runtime-execution-mode",
-                              valueLabel: agentRuntimeConfig.executionMode === "sync" ? "Sync" : "Async",
-                              children: [
-                                renderServerDetailSelectOptionRow({
-                                  key: "agent-runtime-mode:async",
-                                  label: "Async",
-                                  description: "Starts a background run and poll its status later.",
-                                  selected: agentRuntimeConfig.executionMode !== "sync",
-                                  onClick: () => {
-                                    updateServerAgentRuntimeField("executionMode", "async");
-                                    setServerDetailSelectPopover("");
-                                  },
-                                }),
-                                renderServerDetailSelectOptionRow({
-                                  key: "agent-runtime-mode:sync",
-                                  label: "Sync",
-                                  description: "Waits for the run to finish before returning.",
-                                  selected: agentRuntimeConfig.executionMode === "sync",
-                                  onClick: () => {
-                                    updateServerAgentRuntimeField("executionMode", "sync");
-                                    setServerDetailSelectPopover("");
-                                  },
-                                }),
-                              ],
-                            })
-                          ),
-                          renderServerFactRow("Streaming",
-                            renderServerDetailSelectControl({
-                              popoverId: "agent-runtime-streaming",
-                              valueLabel: agentRuntimeConfig.streamingEnabled ? "Enabled" : "Disabled",
-                              children: [
-                                renderServerDetailSelectOptionRow({
-                                  key: "agent-runtime-streaming:on",
-                                  label: "Enabled",
-                                  selected: agentRuntimeConfig.streamingEnabled !== false,
-                                  onClick: () => {
-                                    updateServerAgentRuntimeField("streamingEnabled", true);
-                                    setServerDetailSelectPopover("");
-                                  },
-                                }),
-                                renderServerDetailSelectOptionRow({
-                                  key: "agent-runtime-streaming:off",
-                                  label: "Disabled",
-                                  selected: agentRuntimeConfig.streamingEnabled === false,
-                                  onClick: () => {
-                                    updateServerAgentRuntimeField("streamingEnabled", false);
-                                    setServerDetailSelectPopover("");
-                                  },
-                                }),
-                              ],
-                            })
-                          ),
-                          renderServerFactRow("Updated", React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftServer.updatedAt)))
-                        )
+            const agentRuntimeDetailsSection = React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics" },
+              React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card" },
+                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  React.createElement("div", { className: "playground-database-overview" },
+                    React.createElement("div", { className: "playground-database-overview-chart-block playground-server-detail-chart-block" },
+                      renderServerDetailChartKpis(agentRuntimeDetailKpis),
+                      renderAgentRuntimeDetailActivityChart(),
+                      React.createElement("div", { className: "playground-server-detail-fact-rows" },
+                        renderServerFactRow("ID", React.createElement("span", {
+                          className: "playground-environments-editor-fact-value is-id",
+                          title: draftServer.id || "Unsaved agent runtime",
+                        }, draftServer.id || "Unsaved agent runtime")),
+                        renderServerFactRow("Updated", React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftServer.updatedAt)))
                       )
                     )
                   )
                 )
+              )
+            );
+            const agentRuntimeSettingsRows = React.createElement("div", { className: "playground-server-detail-fact-rows" },
+              renderServerFactRow("Agent",
+                renderServerDetailSelectControl({
+                  popoverId: "agent-runtime-agent",
+                  valueLabel: selectedAgentRuntimeAgent?.name || agentRuntimeConfig.agentId || "Choose agent",
+                  isEmpty: !agentRuntimeConfig.agentId,
+                  children: [
+                    renderServerDetailSelectOptionRow({
+                      key: "agent-runtime-agent:none",
+                      label: "None",
+                      selected: !agentRuntimeConfig.agentId,
+                      onClick: () => {
+                        updateServerAgentRuntimeField("agentId", "");
+                        setServerDetailSelectPopover("");
+                      },
+                    }),
+                    ...orderedAgentRuntimeAgentOptions.map((agent) =>
+                      renderServerDetailSelectOptionRow({
+                        key: "agent-runtime-agent:" + agent.id,
+                        label: agent.name || agent.id,
+                        selected: agentRuntimeConfig.agentId === agent.id,
+                        onClick: () => {
+                          updateServerAgentRuntimeField("agentId", agent.id);
+                          setServerDetailSelectPopover("");
+                        },
+                      })
+                    ),
+                  ],
+                })
+              ),
+              renderServerFactRow("Computer",
+                renderServerDetailSelectControl({
+                  popoverId: "agent-runtime-environment",
+                  valueLabel: draftServer.sourceEnvironmentId
+                    ? (orderedEnvironments.find((environment) => environment.id === draftServer.sourceEnvironmentId)?.name || draftServer.sourceEnvironmentId)
+                    : "None",
+                  isEmpty: !draftServer.sourceEnvironmentId,
+                  children: [
+                    renderServerDetailSelectOptionRow({
+                      key: "agent-runtime-environment:none",
+                      label: "None",
+                      selected: !draftServer.sourceEnvironmentId,
+                      onClick: () => {
+                        updateServerField("sourceEnvironmentId", null);
+                        setServerDetailSelectPopover("");
+                      },
+                    }),
+                    ...orderedEnvironments.map((environment) =>
+                      renderServerDetailSelectOptionRow({
+                        key: "agent-runtime-environment:" + environment.id,
+                        label: environment.name || "Untitled Computer",
+                        selected: draftServer.sourceEnvironmentId === environment.id,
+                        onClick: () => {
+                          updateServerField("sourceEnvironmentId", environment.id);
+                          setServerDetailSelectPopover("");
+                        },
+                      })
+                    ),
+                  ],
+                })
+              ),
+              renderServerFactRow("Execution",
+                renderServerDetailSelectControl({
+                  popoverId: "agent-runtime-execution-mode",
+                  valueLabel: agentRuntimeConfig.executionMode === "sync" ? "Sync" : "Async",
+                  children: [
+                    renderServerDetailSelectOptionRow({
+                      key: "agent-runtime-mode:async",
+                      label: "Async",
+                      description: "Starts a background run and poll its status later.",
+                      selected: agentRuntimeConfig.executionMode !== "sync",
+                      onClick: () => {
+                        updateServerAgentRuntimeField("executionMode", "async");
+                        setServerDetailSelectPopover("");
+                      },
+                    }),
+                    renderServerDetailSelectOptionRow({
+                      key: "agent-runtime-mode:sync",
+                      label: "Sync",
+                      description: "Waits for the run to finish before returning.",
+                      selected: agentRuntimeConfig.executionMode === "sync",
+                      onClick: () => {
+                        updateServerAgentRuntimeField("executionMode", "sync");
+                        setServerDetailSelectPopover("");
+                      },
+                    }),
+                  ],
+                })
+              ),
+              renderServerFactRow("Streaming",
+                renderServerDetailSelectControl({
+                  popoverId: "agent-runtime-streaming",
+                  valueLabel: agentRuntimeConfig.streamingEnabled ? "Enabled" : "Disabled",
+                  children: [
+                    renderServerDetailSelectOptionRow({
+                      key: "agent-runtime-streaming:on",
+                      label: "Enabled",
+                      selected: agentRuntimeConfig.streamingEnabled !== false,
+                      onClick: () => {
+                        updateServerAgentRuntimeField("streamingEnabled", true);
+                        setServerDetailSelectPopover("");
+                      },
+                    }),
+                    renderServerDetailSelectOptionRow({
+                      key: "agent-runtime-streaming:off",
+                      label: "Disabled",
+                      selected: agentRuntimeConfig.streamingEnabled === false,
+                      onClick: () => {
+                        updateServerAgentRuntimeField("streamingEnabled", false);
+                        setServerDetailSelectPopover("");
+                      },
+                    }),
+                  ],
+                })
               )
             );
 
@@ -74557,6 +74911,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                     )
                   : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No skills selected.")
               )
+            );
+            const agentRuntimeSettingsSection = React.createElement("div", { className: "playground-environments-home-metrics playground-server-detail-metrics" },
+              React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-agent-runtime-settings-card" },
+                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  agentRuntimeSettingsRows
+                )
+              ),
+              agentRuntimeSkillsSection
             );
 
             function openAgentRuntimeRunComposer() {
@@ -74773,10 +75135,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 )
               : null;
 
-            const agentRuntimeRunsSection = React.createElement("section", { className: "playground-environments-section playground-agent-runtime-runs-section", key: "agent-runtime-runs" },
-              React.createElement("div", { className: "playground-environments-section-body" },
-                React.createElement("div", { className: "playground-tasks-detail-facts playground-auth-users-surface" },
-                  React.createElement("div", { className: "playground-auth-users-toolbar" },
+	            const agentRuntimeRunsSurface = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-auth-users-surface" },
+	              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+	                React.createElement("div", { className: "playground-auth-users-toolbar" },
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Threads"),
                     React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
                       React.createElement("button", {
@@ -74852,28 +75213,141 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                             )
                           )
                         )
-                      : React.createElement("div", { className: "playground-files-state" }, "No threads yet.")
-                )
-              )
-            );
+	                      : React.createElement("div", { className: "playground-files-state" }, "No threads yet.")
+	                )
+	            );
 
-            return React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
-                serverMainTopbar,
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-                  React.createElement("div", { className: "playground-server-detail-content" },
-                    serverSaveState.error
-                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
-                      : null,
-                    descriptionSection,
-                    agentRuntimeDetailsSection,
-                    agentRuntimeSkillsSection,
-                    agentRuntimeRunsSection
-                  )
-                )
-              ),
-              agentRuntimeRunComposerModal
-            );
+	            const normalizedAgentRuntimeDetailTab = ["general", "settings", "threads"].includes(agentRuntimeDetailTab) ? agentRuntimeDetailTab : "general";
+	            const agentRuntimeDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
+	              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+	                [
+	                  { id: "general", label: "General" },
+	                  { id: "settings", label: "Settings" },
+	                  { id: "threads", label: "Threads" },
+	                ].map((tab) =>
+	                  React.createElement("button", {
+	                      key: tab.id,
+	                      type: "button",
+	                      className: "playground-project-overview-chart-tab" + (normalizedAgentRuntimeDetailTab === tab.id ? " is-active" : ""),
+	                      onClick: () => setAgentRuntimeDetailTab(tab.id),
+	                      "aria-pressed": normalizedAgentRuntimeDetailTab === tab.id ? "true" : "false",
+	                      "aria-label": tab.label,
+	                    },
+	                    tab.label
+	                  )
+	                )
+	              )
+	            );
+	            const agentRuntimeStorageLocation = String(draftServer.location || "eur3").trim() || "eur3";
+	            const agentRuntimeThreadsTabContent = React.createElement(React.Fragment, null,
+	              agentRuntimeRunsSurface,
+	              React.createElement("div", { className: "playground-database-storage-location-note" },
+	                React.createElement(MapPin, { width: 13, height: 13, strokeWidth: 1.8 }),
+	                "Data is stored in Location ",
+	                React.createElement("strong", null, agentRuntimeStorageLocation),
+	                "."
+	              )
+	            );
+		            const agentRuntimeGeneralTabContent = React.createElement(React.Fragment, null,
+		              descriptionSection,
+		              agentRuntimeDetailsSection,
+		              functionInvokeSection,
+		              connectionsSection,
+		              serverDangerSection
+		            );
+		            const agentRuntimeSettingsTabContent = React.createElement(React.Fragment, null,
+		              agentRuntimeSettingsSection
+		            );
+		            const agentRuntimeEditorTabContent = normalizedAgentRuntimeDetailTab === "threads"
+		              ? agentRuntimeThreadsTabContent
+		              : normalizedAgentRuntimeDetailTab === "settings"
+		                ? agentRuntimeSettingsTabContent
+		              : agentRuntimeGeneralTabContent;
+	            const agentRuntimeDocumentationUrl = ${JSON.stringify(aiosOrigin)} + "/developers/libraries/agent-runtimes";
+	            const agentRuntimeEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
+	              normalizedAgentRuntimeDetailTab === "threads" ? " is-agent-runtime-threads-tab" : ""
+	            );
+	            const agentRuntimeEditorScrollClassName = "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" + (
+	              normalizedAgentRuntimeDetailTab === "threads" ? " is-agent-runtime-threads-tab" : ""
+	            );
+	            const agentRuntimeDetailContentClassName = "playground-server-detail-content" + (
+	              normalizedAgentRuntimeDetailTab === "threads" ? " is-agent-runtime-threads-tab" : ""
+	            );
+	            const agentRuntimeMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar is-agent-runtime-detail-navbar" },
+	              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+	                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+		                  React.createElement("input", {
+		                    type: "text",
+		                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agent-runtime-title-input",
+		                    value: draftServer.name || "",
+		                    placeholder: "Agent Runtime",
+		                    "aria-label": "Agent runtime name",
+		                    title: draftServer.name || "Agent Runtime",
+		                    onChange: (event) => updateServerField("name", event.target.value),
+		                    onBlur: () => {
+		                      void commitDraftServerIfDirty();
+		                    },
+		                  }),
+		                  functionDeployedServiceUrl
+		                    ? React.createElement("div", { className: "playground-server-service-url-row" },
+		                        React.createElement("span", {
+		                          className: "playground-server-service-url-value",
+		                          title: functionDeployedServiceUrl,
+		                        }, functionDeployedServiceUrl),
+		                        React.createElement("button", {
+		                          type: "button",
+		                          className: "playground-server-service-url-copy",
+		                          onClick: async () => {
+		                            const copied = await copyTextToClipboard(functionDeployedServiceUrl);
+		                            if (!copied) {
+		                              return;
+		                            }
+		                            setCopiedFunctionServiceUrl(functionDeployedServiceUrl);
+		                            window.setTimeout(() => {
+		                              setCopiedFunctionServiceUrl((currentValue) =>
+		                                currentValue === functionDeployedServiceUrl ? "" : currentValue
+		                              );
+		                            }, 3000);
+		                          },
+		                          title: copiedFunctionServiceUrl === functionDeployedServiceUrl ? "Copied" : "Copy service URL",
+		                          "aria-label": copiedFunctionServiceUrl === functionDeployedServiceUrl ? "Copied" : "Copy service URL",
+		                        },
+		                          copiedFunctionServiceUrl === functionDeployedServiceUrl
+		                            ? React.createElement(Check, { width: 12, height: 12, strokeWidth: 2 })
+		                            : React.createElement(Copy, { width: 12, height: 12, strokeWidth: 1.8 })
+		                        )
+		                      )
+		                    : null
+		                )
+	              ),
+	              React.createElement("div", { className: "playground-content-nav-center" }),
+	              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-environments-action-button",
+	                  onClick: () => window.open(agentRuntimeDocumentationUrl, "_blank", "noopener,noreferrer"),
+	                },
+	                  React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("span", null, "Docs")
+	                )
+	              )
+	            );
+
+	            return React.createElement(React.Fragment, null,
+	              React.createElement("div", { className: agentRuntimeEditorMainClassName, ref: serverDetailMainRef },
+	                agentRuntimeMainTopbar,
+	                React.createElement("div", { className: agentRuntimeEditorScrollClassName },
+	                  React.createElement("div", { className: agentRuntimeDetailContentClassName },
+	                    serverSaveState.error
+	                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
+	                      : null,
+	                    agentRuntimeDetailTabs,
+	                    agentRuntimeEditorTabContent
+	                  )
+	                )
+	              ),
+	              agentRuntimeRunComposerModal
+	            );
           }
 
           if (isAuthServer) {
@@ -75755,28 +76229,63 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                                     onClick: () => openDatabaseFieldComposer([]),
                                   },
                                     React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
-                                    React.createElement("span", null, "Add first field")
+                                    React.createElement("span", null, "Add Field")
                                   )
                                 )
                           );
-          const renderDatabaseBrowserPaneHeader = ({ title, count, onCreate, createLabel, createDisabled }) =>
-            React.createElement("div", { className: "playground-database-browser-pane-header" },
-              React.createElement("div", { className: "playground-database-browser-pane-title" },
-                React.createElement("span", null, title),
-                typeof count === "number"
-                  ? React.createElement("span", { className: "playground-database-browser-selector-count" }, String(count))
-                  : null
-              ),
-              onCreate
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "playground-database-browser-selector-action",
-                    onClick: () => void onCreate(),
-                    disabled: createDisabled,
-                    title: createLabel,
-                    "aria-label": createLabel,
-                  }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
+          const renderDatabaseBrowserActionMenu = ({ open, onToggle, onDelete, deleteLabel, disabled }) =>
+            React.createElement("div", { className: "playground-database-browser-pane-menu-shell" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-database-browser-pane-menu-button",
+                onClick: () => onToggle?.(),
+                disabled,
+                title: "More actions",
+                "aria-label": "More actions",
+              }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.9 })),
+              open
+                ? React.createElement("div", { className: "playground-database-browser-pane-menu" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-database-browser-pane-menu-item is-danger",
+                      onClick: () => void onDelete?.(),
+                      disabled,
+                    },
+                      React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.9 }),
+                      React.createElement("span", null, deleteLabel)
+                    )
+                  )
                 : null
+            );
+          const renderDatabaseBrowserPaneHeader = ({ title, count, Icon, onCreate, createLabel, createDisabled, actionMenu }) =>
+            React.createElement("div", { className: "playground-database-browser-pane-header" },
+              React.createElement("div", { className: "playground-database-browser-pane-title-row" },
+                React.createElement("div", { className: "playground-database-browser-pane-title" },
+                  Icon
+                    ? React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.9 })
+                    : null,
+                  React.createElement("span", null, title),
+                  typeof count === "number"
+                    ? React.createElement("span", { className: "playground-database-browser-selector-count" }, String(count))
+                    : null
+                ),
+                actionMenu ? renderDatabaseBrowserActionMenu(actionMenu) : null
+              ),
+              React.createElement("div", { className: "playground-database-browser-pane-action-row" },
+                onCreate
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-database-browser-add-field",
+                      onClick: () => void onCreate(),
+                      disabled: createDisabled,
+                      title: createLabel,
+                      "aria-label": createLabel,
+                    },
+                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
+                      React.createElement("span", null, createLabel)
+                    )
+                  : null
+              )
             );
           const renderDatabaseBrowserEmptyPane = (label) =>
             React.createElement("div", { className: "playground-database-browser-pane-empty" }, label);
@@ -75786,10 +76295,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 renderDatabaseBrowserPaneHeader({
                   title: "Collections",
                   count: currentDatabaseCollections.length,
+                  Icon: Layers,
                   onCreate: draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
                     ? handleCreateDatabaseCollection
                     : null,
-                  createLabel: "New collection",
+                  createLabel: "Add Collection",
                   createDisabled: !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
                 }),
                 React.createElement("div", { className: "playground-database-browser-pane-list" },
@@ -75830,11 +76340,19 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 renderDatabaseBrowserPaneHeader({
                   title: "Documents",
                   count: selectedCollection ? Number(selectedCollection.documentCount || currentDatabaseDocuments.length || 0) : currentDatabaseDocuments.length,
+                  Icon: FileText,
                   onCreate: draftDatabase.id && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID && selectedDatabaseCollectionId
                     ? handleCreateDatabaseDocument
                     : null,
-                  createLabel: "New document",
+                  createLabel: "Add Document",
                   createDisabled: !selectedDatabaseCollectionId,
+                  actionMenu: {
+                    open: databaseCollectionActionsOpen,
+                    onToggle: () => setDatabaseCollectionActionsOpen((current) => !current),
+                    onDelete: () => handleDeleteDatabaseCollection(selectedDatabaseCollectionId),
+                    deleteLabel: "Delete Collection",
+                    disabled: !selectedDatabaseCollectionId,
+                  },
                 }),
                 React.createElement("div", { className: "playground-database-browser-pane-list" },
                   documentsLoading
@@ -75862,8 +76380,20 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               React.createElement("div", { className: "playground-database-browser-pane playground-database-browser-fields-pane" },
                 React.createElement("div", { className: "playground-database-browser-fields-card" },
                   React.createElement("div", { className: "playground-database-browser-fields-header" },
-                    React.createElement("div", { className: "playground-database-browser-fields-title" }, selectedDocument?.id || "Fields"),
-                    React.createElement("div", { className: "playground-database-browser-fields-actions" },
+                    React.createElement("div", { className: "playground-database-browser-pane-title-row" },
+                      React.createElement("div", { className: "playground-database-browser-pane-title playground-database-browser-fields-title" },
+                        React.createElement(Braces, { width: 14, height: 14, strokeWidth: 1.9 }),
+                        React.createElement("span", null, selectedDocument?.id || "Document")
+                      ),
+                      renderDatabaseBrowserActionMenu({
+                        open: databaseDocumentActionsOpen,
+                        onToggle: () => setDatabaseDocumentActionsOpen((current) => !current),
+                        onDelete: () => handleDeleteDatabaseDocument(selectedDatabaseDocumentId),
+                        deleteLabel: "Delete Document",
+                        disabled: !selectedDatabaseDocumentId,
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-database-browser-pane-action-row" },
                       selectedDocument && parsedDocumentData
                         && databaseDocumentViewMode === "preview"
                         ? React.createElement("button", {
@@ -75872,7 +76402,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                             onClick: () => openDatabaseFieldComposer([]),
                           },
                             React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
-                            React.createElement("span", null, "Add field")
+                            React.createElement("span", null, "Add Field")
                           )
                         : null,
                       selectedDocument
@@ -76180,7 +76710,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	            databaseDangerSection
 	          );
 	          const databaseStorageLocation = String(draftDatabase.location || "eur3").trim() || "eur3";
-	          const databaseDataTabContent = React.createElement(React.Fragment, null,
+	          const databaseDataTabContent = React.createElement("div", { className: "playground-database-browser-tab-body" },
 	            databaseBrowserSection,
 	            React.createElement("div", { className: "playground-database-storage-location-note" },
 	              React.createElement(MapPin, { width: 13, height: 13, strokeWidth: 1.8 }),
@@ -76199,8 +76729,11 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	          const databaseEditorScrollClassName = "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" + (
 	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
 	          );
-	          const databaseDetailContentClassName = "playground-server-detail-content" + (
+	          const databaseDetailContentClassName = "playground-server-detail-content playground-database-detail-content" + (
 	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
+	          );
+	          const databaseDetailTabPanelClassName = "playground-database-detail-tab-panel " + (
+	            normalizedDatabaseDetailTab === "data" ? "is-data" : "is-general"
 	          );
 
 	          return React.createElement(React.Fragment, null,
@@ -76241,8 +76774,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   databaseSaveState.error
                     ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseSaveState.error)
                     : null,
-                  databaseDetailTabs,
-                  databaseEditorTabContent
+                  React.createElement("div", { className: "playground-database-detail-header-area" },
+                    databaseDetailTabs
+                  ),
+                  React.createElement("div", { className: databaseDetailTabPanelClassName },
+                    databaseEditorTabContent
+                  )
                 )
               )
             ),
@@ -78083,7 +78620,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	            web_app: "/developers/libraries/web-apps",
 	            function: "/developers/libraries/functions",
 	            database: "/developers/libraries/databases",
-	            agent_runtime: "/developers/libraries/agent-runtime",
+		            agent_runtime: "/developers/libraries/agent-runtimes",
 	            secrets: "/developers/libraries/secrets",
 	          };
 	          const developServerKindDocumentationUrl = ${JSON.stringify(aiosOrigin)} + (developServerKindDocumentationPathByKind[normalizedEmbeddedServerKind] || "/developers");
@@ -80110,10 +80647,17 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	        if (embeddedInResources) {
 	          const shouldShowEnvironmentCreationSetup = !isServersMode && environmentComposerOpen;
 	          const shouldShowServerCreationSetup = isServersMode && serverComposerOpen && normalizedEmbeddedServerKind;
+	          const normalizedEmbeddedDatabaseDetailTab = ["data", "general"].includes(databaseDetailTab) ? databaseDetailTab : "data";
+	          const isEmbeddedDatabaseDataTab = Boolean(isServersMode && selectedDatabaseId && !selectedServerId && normalizedEmbeddedDatabaseDetailTab === "data");
 	          const embeddedResourcesPageClassName = "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page "
 	            + (isServersMode ? "is-servers-view" : "is-computers-view")
 	            + (isServersMode && normalizedEmbeddedServerKind ? " is-develop-server-kind-page" : "")
-	            + (!isServersMode ? " is-develop-configure-page" : "");
+	            + (!isServersMode ? " is-develop-configure-page" : "")
+	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "");
+	          const resourcesDetailScrollClassName = "playground-environments-detail-scroll playground-settings-detail-scroll"
+	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "");
+	          const resourcesDetailContentClassName = "playground-resources-detail-content"
+	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "");
           return React.createElement(React.Fragment, null,
             resourcesTopNavActions,
             shouldShowServerCreationSetup
@@ -80129,8 +80673,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   renderEnvironmentsHome(renderEmbeddedResourcesOverviewSection())
                 )
               : React.createElement("section", { className: embeddedResourcesPageClassName },
-                  React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll", ref: resourcesDetailScrollRef },
-                    React.createElement("div", { className: "playground-resources-detail-content" },
+                  React.createElement("div", { className: resourcesDetailScrollClassName, ref: resourcesDetailScrollRef },
+                    React.createElement("div", { className: resourcesDetailContentClassName },
                       isServersMode
                         ? (
                             selectedServerId
