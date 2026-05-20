@@ -15,6 +15,7 @@ import {
   buildRunnerPreviewHeaders,
   buildRunnerPreviewDirectoryListUrl,
   buildRunnerPreviewHtmlDocument,
+  buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl,
   getRunnerDocumentPreviewKind,
   normalizeRunnerPreviewDirectoryEntries,
   normalizeRunnerPreviewWorkspacePath,
@@ -57,6 +58,7 @@ export interface RunnerDocumentPreviewDrawerProps {
   surface?: boolean;
   onClose?: () => void;
   onResizeStart?: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+  headerCopy?: ReactNode;
   headerActions?: ReactNode;
   showCloseButton?: boolean;
   showResizeHandle?: boolean;
@@ -129,6 +131,7 @@ export function RunnerDocumentPreviewDrawer({
   surface = false,
   onClose,
   onResizeStart,
+  headerCopy,
   headerActions,
   showCloseButton = true,
   showResizeHandle = false,
@@ -205,11 +208,16 @@ export function RunnerDocumentPreviewDrawer({
   const resolvedDirectHtmlPreviewUrl = useMemo(
     () => {
       if (typeof attachment.htmlPreviewUrl !== "string" || !attachment.htmlPreviewUrl.trim()) {
-        return "";
+        const derivedPreviewUrl = buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl(
+          attachment.previewUrl || attachment.url,
+          attachment.filename,
+          attachment.mimeType
+        );
+        return resolveRunnerPreviewAssetUrl(derivedPreviewUrl, backendUrl, attachment.id) || "";
       }
       return resolveRunnerPreviewAssetUrl(attachment.htmlPreviewUrl, backendUrl, attachment.id) || "";
     },
-    [attachment.htmlPreviewUrl, attachment.id, backendUrl]
+    [attachment.filename, attachment.htmlPreviewUrl, attachment.id, attachment.mimeType, attachment.previewUrl, attachment.url, backendUrl]
   );
   const htmlIframeSandbox = attachment.htmlSandbox === null
     ? undefined
@@ -1046,30 +1054,36 @@ export function RunnerDocumentPreviewDrawer({
           />
         ) : null}
         <div className="tb-attachment-preview-drawer-header">
-          <div className="tb-attachment-preview-drawer-header-copy">
-            {isDirectoryLikePreview ? (
-              <img
-                src={RUNNER_FOLDER_ICON_URL}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                className="tb-attachment-preview-drawer-header-icon-asset"
-              />
-            ) : (
-              <img
-                src={RUNNER_TEXT_FILE_ICON_URL}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                className="tb-attachment-preview-drawer-header-icon-asset"
-              />
-            )}
-            <div className="tb-attachment-preview-drawer-header-text">
-              <div className="tb-attachment-preview-drawer-name" title={attachment.filename}>
-                {attachment.filename}
+          {headerCopy ? (
+            <div className="tb-attachment-preview-drawer-header-copy">
+              {headerCopy}
+            </div>
+          ) : (
+            <div className="tb-attachment-preview-drawer-header-copy">
+              {isDirectoryLikePreview ? (
+                <img
+                  src={RUNNER_FOLDER_ICON_URL}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  className="tb-attachment-preview-drawer-header-icon-asset"
+                />
+              ) : (
+                <img
+                  src={RUNNER_TEXT_FILE_ICON_URL}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  className="tb-attachment-preview-drawer-header-icon-asset"
+                />
+              )}
+              <div className="tb-attachment-preview-drawer-header-text">
+                <div className="tb-attachment-preview-drawer-name" title={attachment.filename}>
+                  {attachment.filename}
+                </div>
               </div>
             </div>
-          </div>
+          )}
           {headerActions || canToggleMarkdownPreview || (showCloseButton && onClose) ? (
             <div className="tb-attachment-preview-drawer-header-actions">
               {headerActions}

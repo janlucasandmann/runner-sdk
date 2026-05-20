@@ -151,7 +151,7 @@ export function resolveRunnerPreviewAssetUrl(
     if (/^(?:blob:|data:|https?:\/\/)/i.test(normalizedUrl)) {
       return normalizedUrl;
     }
-    if (normalizedUrl.startsWith("/api/real/attachments/") || normalizedUrl.startsWith("/api/task-backlog/")) {
+    if (normalizedUrl.startsWith("/api/real/") || normalizedUrl.startsWith("/api/task-backlog/")) {
       return normalizedUrl;
     }
     if (backendUrl) {
@@ -252,6 +252,56 @@ export function inferRunnerPreviewAttachmentType(filePath: string): RunnerPrevie
   return inferRunnerPreviewMimeType(filePath).startsWith("image/") ? "image" : "document";
 }
 
+export function isRunnerPreviewHtmlFile(filename: string, mimeType?: string | null): boolean {
+  const normalizedMimeType = String(mimeType || "").trim().toLowerCase();
+  return normalizedMimeType === "text/html" || normalizedMimeType === "application/xhtml+xml" || /\.(?:html?|xhtml)$/i.test(filename);
+}
+
+function encodeRunnerPreviewPathSegments(filePath: string): string {
+  return normalizeRunnerPreviewWorkspacePath(filePath)
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+}
+
+export function buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl(
+  rawUrl?: string | null,
+  filename?: string | null,
+  mimeType?: string | null
+): string | undefined {
+  const normalizedUrl = typeof rawUrl === "string" ? rawUrl.trim() : "";
+  if (!normalizedUrl || !isRunnerPreviewHtmlFile(String(filename || ""), mimeType) || /^(?:blob:|data:)/i.test(normalizedUrl)) {
+    return undefined;
+  }
+
+  try {
+    const placeholderOrigin = "http://runner.local";
+    const parsed = new URL(normalizedUrl, placeholderOrigin);
+    const isAbsolute = /^(?:https?:)?\/\//i.test(normalizedUrl);
+
+    const environmentDownloadMatch = parsed.pathname.match(/^(.*\/environments\/[^/]+\/files)\/download\/(.+)$/);
+    if (environmentDownloadMatch) {
+      const previewPath = `${environmentDownloadMatch[1]}/preview-html/${environmentDownloadMatch[2]}`;
+      return isAbsolute ? `${parsed.origin}${previewPath}` : previewPath;
+    }
+
+    const threadFilePath = parsed.searchParams.get("path") || "";
+    if (threadFilePath && /\/threads\/[^/]+\/steps\/[^/]+\/file\/download$/.test(parsed.pathname)) {
+      const encodedPath = encodeRunnerPreviewPathSegments(threadFilePath);
+      if (!encodedPath) {
+        return undefined;
+      }
+      const previewPath = parsed.pathname.replace(/\/file\/download$/, `/file/preview-html-path/${encodedPath}`);
+      return isAbsolute ? `${parsed.origin}${previewPath}` : previewPath;
+    }
+  } catch {
+    return undefined;
+  }
+
+  return undefined;
+}
+
 export function buildRunnerPreviewDownloadUrl(
   backendUrl?: string | null,
   environmentId?: string | null,
@@ -271,6 +321,25 @@ export function buildRunnerPreviewDownloadUrl(
     .map((segment) => encodeURIComponent(segment))
     .join("/");
   return `${normalizedBackendUrl}/environments/${encodeURIComponent(environmentId)}/files/download/${encodedPath}`;
+}
+
+export function buildRunnerPreviewHtmlPreviewUrl(
+  backendUrl?: string | null,
+  environmentId?: string | null,
+  filePath?: string | null
+): string | null {
+  const normalizedBackendUrl = sanitizeRunnerPreviewBackendUrl(backendUrl);
+  const normalizedEnvironmentId = String(environmentId || "").trim();
+  const normalizedPath = normalizeRunnerPreviewWorkspacePath(filePath);
+  if (!normalizedBackendUrl || !normalizedEnvironmentId || !normalizedPath) {
+    return null;
+  }
+  const encodedPath = normalizedPath
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  return `${normalizedBackendUrl}/environments/${encodeURIComponent(normalizedEnvironmentId)}/files/preview-html/${encodedPath}`;
 }
 
 export function buildRunnerPreviewDirectoryListUrl(
@@ -401,6 +470,9 @@ export function buildRunnerPreviewAttachmentFromPath(
   const filename = getRunnerPreviewFilename(normalizedPath);
   const mimeType = inferRunnerPreviewMimeType(normalizedPath);
   const previewUrl = buildRunnerPreviewDownloadUrl(options?.backendUrl, options?.environmentId, normalizedPath) || undefined;
+  const htmlPreviewUrl = mimeType === "text/html"
+    ? buildRunnerPreviewHtmlPreviewUrl(options?.backendUrl, options?.environmentId, normalizedPath) || undefined
+    : undefined;
   return {
     id: `${options?.idPrefix || "preview"}:${options?.environmentId || "unknown"}:${normalizedPath}`,
     filename,
@@ -409,6 +481,8 @@ export function buildRunnerPreviewAttachmentFromPath(
     environmentId: options?.environmentId || undefined,
     url: previewUrl,
     previewUrl,
+    htmlPreviewUrl,
+    workspacePath: normalizedPath,
   };
 }
 

@@ -70,10 +70,14 @@ import {
   buildRunnerPreviewHeaders,
   buildRunnerPreviewAttachmentFromPath,
   buildRunnerPreviewDownloadUrl,
+  buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl,
+  buildRunnerPreviewHtmlPreviewUrl,
   getRunnerPreviewFilename,
   getRunnerPreviewHeaderValue,
+  isRunnerPreviewHtmlFile,
   isRunnerDocumentPreviewable,
   normalizeRunnerPreviewPath,
+  normalizeRunnerPreviewWorkspacePath,
   resolveRunnerPreviewAssetUrl,
   type RunnerPreviewAttachment,
 } from "./runner-document-preview.js";
@@ -6424,6 +6428,11 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
     uploadStatus?: unknown;
     url?: unknown;
     previewUrl?: unknown;
+    htmlPreviewUrl?: unknown;
+    htmlSandbox?: unknown;
+    environmentId?: unknown;
+    workspacePath?: unknown;
+    sourcePath?: unknown;
     integrationSource?: unknown;
     githubRepoFullName?: unknown;
     githubRef?: unknown;
@@ -6453,6 +6462,32 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
         attachmentId
       )
     : undefined;
+  const environmentId = typeof candidate.environmentId === "string" && candidate.environmentId.trim()
+    ? candidate.environmentId.trim()
+    : undefined;
+  const workspacePath = typeof candidate.workspacePath === "string" && candidate.workspacePath.trim()
+    ? normalizeRunnerPreviewWorkspacePath(candidate.workspacePath)
+    : typeof candidate.sourcePath === "string" && candidate.sourcePath.trim()
+      ? normalizeRunnerPreviewWorkspacePath(candidate.sourcePath)
+      : undefined;
+  const explicitHtmlPreviewUrl = typeof candidate.htmlPreviewUrl === "string" && candidate.htmlPreviewUrl.trim()
+    ? resolveAttachmentAssetUrl(candidate.htmlPreviewUrl, backendUrl, attachmentId)
+    : undefined;
+  const threadHtmlPreviewUrl = buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl(
+    typeof candidate.previewUrl === "string" && candidate.previewUrl.trim()
+      ? candidate.previewUrl
+      : typeof candidate.url === "string"
+        ? candidate.url
+        : undefined,
+    filename,
+    mimeType
+  );
+  const environmentHtmlPreviewUrl = isRunnerPreviewHtmlFile(filename, mimeType) && environmentId && workspacePath
+    ? buildRunnerPreviewHtmlPreviewUrl(backendUrl, environmentId, workspacePath) || undefined
+    : undefined;
+  const htmlPreviewUrl = explicitHtmlPreviewUrl
+    || resolveAttachmentAssetUrl(threadHtmlPreviewUrl, backendUrl, attachmentId)
+    || environmentHtmlPreviewUrl;
   return {
     id: attachmentId,
     filename,
@@ -6467,6 +6502,15 @@ function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTur
         : undefined,
     url,
     previewUrl,
+    htmlPreviewUrl,
+    htmlSandbox:
+      typeof candidate.htmlSandbox === "string"
+        ? candidate.htmlSandbox
+        : candidate.htmlSandbox === null
+          ? null
+          : undefined,
+    environmentId,
+    workspacePath,
     integrationSource:
       candidate.integrationSource === "google-drive" || candidate.integrationSource === "one-drive" || candidate.integrationSource === "github"
         ? candidate.integrationSource
