@@ -3021,6 +3021,33 @@
   flex: 0 0 auto;
 }
 
+.tb-runner-chat .tb-log-file-list-empty-state {
+  display: flex;
+  min-height: 112px;
+  padding: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.56);
+  text-align: center;
+}
+
+.tb-runner-chat .tb-log-file-list-empty-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+  opacity: 0.72;
+}
+
+.tb-runner-chat .tb-log-file-list-empty-title {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
 .tb-runner-chat .tb-log-agent-list-load-more {
   min-height: 32px;
   padding: 0 14px;

@@ -5294,12 +5294,25 @@ function isUsableListDirectoryCandidate(value?: string | null): value is string 
 
 function isListFilesCommand(command?: string): boolean {
   if (!command) return false;
+  if (isFindingFilesCommand(command)) return true;
   return [
     /(?:^|[;&|]\s*)\$?\s*(?:ls|ll)\b(?:\s|$)/i,
     /\bfind\s+(?!.*\s-exec\s)/i,
     /\brg\s+--files\b/i,
     /\bgit\s+ls-files\b/i,
   ].some((pattern) => pattern.test(command));
+}
+
+function isFindingFilesCommand(command?: string): boolean {
+  if (!command) return false;
+  return /(?:^|\n)\s*\$?\s*Finding:\s*\S+/i.test(command);
+}
+
+function extractFindingFilesPattern(command?: string): string | null {
+  if (!command) return null;
+  const match = command.match(/(?:^|\n)\s*\$?\s*Finding:\s*(.+?)(?:\r?\n|$)/i);
+  const candidate = match?.[1]?.trim();
+  return candidate || null;
 }
 
 function extractShellCdPath(command?: string): string | null {
@@ -5340,6 +5353,8 @@ function resolveListedDirectoryPath(command: string | undefined, listedPath: str
 function extractDirectoryPath(command?: string): string | null {
   if (!command) return null;
   const normalizedCommand = stripShellInlineComments(command);
+  const findingPattern = extractFindingFilesPattern(normalizedCommand);
+  if (findingPattern) return findingPattern;
   const cdPath = extractShellCdPath(normalizedCommand);
   const defaultDirectory = cdPath && cdPath.startsWith("/") ? cdPath : DEFAULT_LIST_FILES_DIRECTORY;
   const patterns = [
@@ -5535,7 +5550,101 @@ function dedupeListFileItems(items: ListFileItem[]): ListFileItem[] {
   return Array.from(byPath.values());
 }
 
+function parseStructuredListOutput(output: string): ListFileItem[] | null {
+  const buildItemFromPath = (pathOrName: string, metadata?: Record<string, unknown>): ListFileItem | null => {
+    const path = normalizeListFileName(pathOrName);
+    const name = getListFileDisplayName(path);
+    if (!name || name === "." || name === "..") return null;
+    const typeValue = String(metadata?.type || metadata?.kind || "").toLowerCase();
+    const sizeValue = metadata?.sizeBytes ?? metadata?.size ?? metadata?.bytes;
+    const sizeBytes = typeof sizeValue === "number"
+      ? sizeValue
+      : typeof sizeValue === "string"
+        ? parseListFileSizeBytes(sizeValue)
+        : null;
+    return {
+      name,
+      path,
+      type: typeValue === "directory" || typeValue === "folder" ? "folder" : "file",
+      size: sizeBytes == null ? "" : formatBytes(sizeBytes),
+      sizeBytes,
+      isHidden: isHiddenListFileName(path),
+    };
+  };
+
+  const visit = (value: unknown): ListFileItem[] | null => {
+    if (value == null) return null;
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) return null;
+      try {
+        return visit(JSON.parse(trimmed));
+      } catch {
+        return null;
+      }
+    }
+    if (Array.isArray(value)) {
+      const items = value
+        .map((entry) => {
+          if (typeof entry === "string") return buildItemFromPath(entry);
+          if (entry && typeof entry === "object") {
+            const record = entry as Record<string, unknown>;
+            const rawPath = String(record.path || record.name || record.filename || record.file || "").trim();
+            return rawPath ? buildItemFromPath(rawPath, record) : null;
+          }
+          return null;
+        })
+        .filter((item): item is ListFileItem => Boolean(item));
+      return items.length > 0 ? dedupeListFileItems(items) : null;
+    }
+    if (typeof value !== "object") return null;
+
+    const record = value as Record<string, unknown>;
+    const listCandidate = record.filenames ?? record.files ?? record.paths ?? record.matches;
+    if (Array.isArray(listCandidate)) {
+      return dedupeListFileItems(
+        listCandidate
+          .map((entry) => {
+            if (typeof entry === "string") return buildItemFromPath(entry);
+            if (entry && typeof entry === "object") {
+              const fileRecord = entry as Record<string, unknown>;
+              const rawPath = String(fileRecord.path || fileRecord.name || fileRecord.filename || fileRecord.file || "").trim();
+              return rawPath ? buildItemFromPath(rawPath, fileRecord) : null;
+            }
+            return null;
+          })
+          .filter((item): item is ListFileItem => Boolean(item))
+      );
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(record, "numFiles") ||
+      Object.prototype.hasOwnProperty.call(record, "truncated") ||
+      Object.prototype.hasOwnProperty.call(record, "durationMs")
+    ) {
+      return [];
+    }
+
+    const nestedCandidates = [record.result, record.payload, record.data, record.structuredContent, record.structured_content];
+    for (const candidate of nestedCandidates) {
+      const nested = visit(candidate);
+      if (nested) return nested;
+    }
+    return null;
+  };
+
+  return visit(output);
+}
+
 function parseListOutput(output: string): ListFileItem[] {
+  const structuredItems = parseStructuredListOutput(output);
+  if (structuredItems) {
+    return structuredItems.sort((left, right) => {
+      if (left.type !== right.type) return left.type === "folder" ? -1 : 1;
+      return left.name.localeCompare(right.name);
+    });
+  }
+
   if (!output.trim()) return [];
   const lines = output.trim().split("\n");
   const items: ListFileItem[] = [];
@@ -5663,6 +5772,7 @@ function ListFilesLogBox({
   const requestedMetadataFoldersRef = useRef<Set<string>>(new Set());
   const command = log.metadata?.command || "";
   const output = resolveCommandOutputText(log.metadata?.output, "stdout");
+  const isFindingFiles = isFindingFilesCommand(command);
   const directoryPath = extractDirectoryPath(command);
   const allItems = useMemo(() => parseListOutput(output), [output]);
   const normalizedSearchQuery = normalizeListFileSearchText(searchQuery);
@@ -5970,7 +6080,14 @@ function ListFilesLogBox({
             ) : null}
           </>
         ) : (
-          <div className="tb-log-card-empty">Folder is empty.</div>
+          isFindingFiles ? (
+            <div className="tb-log-file-list-empty-state">
+              <img src={RUNNER_TEXT_FILE_ICON_URL} alt="" className="tb-log-file-list-empty-icon" aria-hidden="true" />
+              <div className="tb-log-file-list-empty-title">No files found.</div>
+            </div>
+          ) : (
+            <div className="tb-log-card-empty">Folder is empty.</div>
+          )
         )}
       </LogPanel>
     </div>

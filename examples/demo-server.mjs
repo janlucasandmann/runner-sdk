@@ -22131,11 +22131,16 @@ const html = `<!doctype html>
 	      }
 
       .playground-server-detail-navbar.is-function-detail-navbar,
-      .playground-server-detail-navbar.is-database-detail-navbar {
+      .playground-server-detail-navbar.is-database-detail-navbar,
+      .playground-server-detail-navbar.is-auth-detail-navbar {
         align-items: flex-start;
       }
 
       .playground-server-detail-navbar .playground-database-title-input {
+        margin-bottom: 6px;
+      }
+
+      .playground-server-detail-navbar .playground-auth-title-input {
         margin-bottom: 6px;
       }
 
@@ -28847,7 +28852,18 @@ const html = `<!doctype html>
 	        overflow: hidden;
 	      }
 
+	      .playground-resources-page.is-develop-server-kind-page .playground-environments-editor-main.playground-tasks-detail-main.is-auth-users-tab {
+	        overflow: hidden;
+	      }
+
 	      .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-editor-scroll.is-database-data-tab {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        height: 100%;
+	        overflow: hidden;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-editor-scroll.is-auth-users-tab {
 	        flex: 1 1 auto;
 	        min-height: 0;
 	        height: 100%;
@@ -28861,7 +28877,20 @@ const html = `<!doctype html>
 	        gap: 12px;
 	      }
 
+	      .playground-server-detail-content.is-auth-users-tab {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        height: 100%;
+	        gap: 12px;
+	      }
+
 	      .playground-server-detail-content.is-database-data-tab .playground-database-browser-surface.playground-server-details-card {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        margin-bottom: 0;
+	      }
+
+	      .playground-server-detail-content.is-auth-users-tab .playground-auth-users-surface.playground-server-details-card {
 	        flex: 1 1 auto;
 	        min-height: 0;
 	        margin-bottom: 0;
@@ -28869,10 +28898,36 @@ const html = `<!doctype html>
 
 	      .playground-database-storage-location-note {
 	        flex: 0 0 auto;
+	        display: inline-flex;
+	        align-items: center;
+	        gap: 6px;
 	        color: rgba(255, 255, 255, 0.54);
 	        font-size: 12px;
 	        font-weight: 400;
 	        line-height: 1.45;
+	      }
+
+	      .playground-database-storage-location-note svg {
+	        flex: 0 0 auto;
+	        color: rgba(255, 255, 255, 0.48);
+	      }
+
+	      .playground-server-detail-content.is-auth-users-tab .playground-auth-users-surface .playground-tasks-detail-facts-body {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        display: flex;
+	        flex-direction: column;
+	      }
+
+	      .playground-server-detail-content.is-auth-users-tab .playground-auth-users-table-shell {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        overflow: auto;
+	      }
+
+	      .playground-server-detail-content.is-auth-users-tab .playground-auth-users-surface .playground-files-state {
+	        flex: 1 1 auto;
+	        min-height: 180px;
 	      }
 
 	      .playground-database-browser-columns {
@@ -60123,6 +60178,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [serverDetailChartTimescale, setServerDetailChartTimescale] = useState("day");
         const [databaseDetailChartTimescale, setDatabaseDetailChartTimescale] = useState("day");
         const [databaseDetailTab, setDatabaseDetailTab] = useState("data");
+        const [authDetailTab, setAuthDetailTab] = useState("users");
         const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentRenameState, setEnvironmentRenameState] = useState(null);
         const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
@@ -60962,6 +61018,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             email: true,
             external: true,
           });
+          setAuthDetailTab("users");
           setServerRuntimePreviewState({
             open: false,
             target: "",
@@ -75017,107 +75074,175 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               )
             );
 
-            const authUsersSection = React.createElement("section", { className: "playground-environments-section", key: "auth-users" },
-              React.createElement("div", { className: "playground-environments-section-body" },
-                React.createElement("div", { className: "playground-auth-users-section-header" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Users")
-                ),
-                React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-auth-users-surface" },
-                  React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                  React.createElement("div", { className: "playground-auth-users-toolbar" },
-                    React.createElement("label", { className: "playground-auth-users-search" },
-                      React.createElement(Search, { className: "playground-auth-users-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-auth-users-search-input",
-                        value: serverAuthSearchQuery,
-                        onChange: (event) => setServerAuthSearchQuery(event.target.value),
-                        placeholder: "Search by email address, phone number, or user UID",
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-auth-users-add-button",
-                        onClick: openServerAuthUserComposer,
-                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                      },
-                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Add User")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-auth-users-refresh-button",
-                        onClick: () => {
-                          if (draftServer.id) {
-                            void loadServerAuthUsers(draftServer.id, { force: true });
-                          }
-                        },
-                        disabled: authUsersLoading || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                        title: "Refresh users",
-                      }, React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }))
-                    )
+            const authUsersSurface = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-auth-users-surface" },
+              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                React.createElement("div", { className: "playground-auth-users-toolbar" },
+                  React.createElement("label", { className: "playground-auth-users-search" },
+                    React.createElement(Search, { className: "playground-auth-users-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-auth-users-search-input",
+                      value: serverAuthSearchQuery,
+                      onChange: (event) => setServerAuthSearchQuery(event.target.value),
+                      placeholder: "Search by email address, phone number, or user UID",
+                    })
                   ),
-                  serverAuthUsersState.error
-                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverAuthUsersState.error)
-                    : null,
-                  authUsersLoading
-                    ? React.createElement("div", { className: "playground-files-state" },
-                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                      )
-                    : filteredServerAuthUsers.length > 0
-                      ? React.createElement("div", { className: "playground-auth-users-table-shell" },
-                          React.createElement("table", { className: "playground-auth-users-table" },
-                            React.createElement("thead", null,
-                              React.createElement("tr", null,
-                                React.createElement("th", null, "Identifier"),
-                                React.createElement("th", null, "Provider"),
-                                React.createElement("th", null, "Created"),
-                                React.createElement("th", null, "Signed In"),
-                                React.createElement("th", null, "User UID")
-                              )
-                            ),
-                            React.createElement("tbody", null,
-                              filteredServerAuthUsers.map((user) => {
-                                const providerIds = Array.isArray(user?.providers) && user.providers.length > 0 ? user.providers : (user?.email ? ["password"] : []);
-                                return React.createElement("tr", { key: user.uid || getPlaygroundAuthUserIdentifier(user) },
-                                  React.createElement("td", { className: "playground-auth-users-cell is-identifier", title: getPlaygroundAuthUserIdentifier(user) },
-                                    getPlaygroundAuthUserIdentifier(user)
-                                  ),
-                                  React.createElement("td", { className: "playground-auth-users-cell" },
-                                    React.createElement("div", { className: "playground-auth-users-provider-list" },
-                                      providerIds.slice(0, 2).map((providerId) => renderAuthProviderPill(providerId)),
-                                      providerIds.length > 2
-                                        ? React.createElement("span", { className: "playground-auth-users-provider-more" }, "+" + String(providerIds.length - 2))
-                                        : null
-                                    )
-                                  ),
-                                  React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundExactDate(user?.createdAt)),
-                                  React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundExactDate(user?.lastLoginAt)),
-                                  React.createElement("td", { className: "playground-auth-users-cell is-uid", title: user?.uid || "—" }, user?.uid || "—")
-                                );
-                              })
+                  React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-auth-users-add-button",
+                      onClick: openServerAuthUserComposer,
+                      disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                    },
+                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Add User")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-auth-users-refresh-button",
+                      onClick: () => {
+                        if (draftServer.id) {
+                          void loadServerAuthUsers(draftServer.id, { force: true });
+                        }
+                      },
+                      disabled: authUsersLoading || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                      title: "Refresh users",
+                    }, React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  )
+                ),
+                serverAuthUsersState.error
+                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverAuthUsersState.error)
+                  : null,
+                authUsersLoading
+                  ? React.createElement("div", { className: "playground-files-state" },
+                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
+                    )
+                  : filteredServerAuthUsers.length > 0
+                    ? React.createElement("div", { className: "playground-auth-users-table-shell" },
+                        React.createElement("table", { className: "playground-auth-users-table" },
+                          React.createElement("thead", null,
+                            React.createElement("tr", null,
+                              React.createElement("th", null, "Identifier"),
+                              React.createElement("th", null, "Provider"),
+                              React.createElement("th", null, "Created"),
+                              React.createElement("th", null, "Signed In"),
+                              React.createElement("th", null, "User UID")
                             )
+                          ),
+                          React.createElement("tbody", null,
+                            filteredServerAuthUsers.map((user) => {
+                              const providerIds = Array.isArray(user?.providers) && user.providers.length > 0 ? user.providers : (user?.email ? ["password"] : []);
+                              return React.createElement("tr", { key: user.uid || getPlaygroundAuthUserIdentifier(user) },
+                                React.createElement("td", { className: "playground-auth-users-cell is-identifier", title: getPlaygroundAuthUserIdentifier(user) },
+                                  getPlaygroundAuthUserIdentifier(user)
+                                ),
+                                React.createElement("td", { className: "playground-auth-users-cell" },
+                                  React.createElement("div", { className: "playground-auth-users-provider-list" },
+                                    providerIds.slice(0, 2).map((providerId) => renderAuthProviderPill(providerId)),
+                                    providerIds.length > 2
+                                      ? React.createElement("span", { className: "playground-auth-users-provider-more" }, "+" + String(providerIds.length - 2))
+                                      : null
+                                  )
+                                ),
+                                React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundExactDate(user?.createdAt)),
+                                React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundExactDate(user?.lastLoginAt)),
+                                React.createElement("td", { className: "playground-auth-users-cell is-uid", title: user?.uid || "—" }, user?.uid || "—")
+                              );
+                            })
                           )
                         )
-                      : React.createElement("div", { className: "playground-files-state" },
-                          serverAuthSearchQuery.trim() ? "No matching users found." : "No users yet."
-                        )
+                      )
+                    : React.createElement("div", { className: "playground-files-state" },
+                        serverAuthSearchQuery.trim() ? "No matching users found." : "No users yet."
+                      )
+              )
+            );
+            const normalizedAuthDetailTab = ["users", "general"].includes(authDetailTab) ? authDetailTab : "users";
+            const authDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
+              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+                [
+                  { id: "users", label: "Users" },
+                  { id: "general", label: "General" },
+                ].map((tab) =>
+                  React.createElement("button", {
+                      key: tab.id,
+                      type: "button",
+                      className: "playground-project-overview-chart-tab" + (normalizedAuthDetailTab === tab.id ? " is-active" : ""),
+                      onClick: () => setAuthDetailTab(tab.id),
+                      "aria-pressed": normalizedAuthDetailTab === tab.id ? "true" : "false",
+                      "aria-label": tab.label,
+                    },
+                    tab.label
                   )
                 )
               )
             );
+            const authStorageLocation = String(draftServer.location || "eur3").trim() || "eur3";
+            const authUsersTabContent = React.createElement(React.Fragment, null,
+              authUsersSurface,
+              React.createElement("div", { className: "playground-database-storage-location-note" },
+                React.createElement(MapPin, { width: 13, height: 13, strokeWidth: 1.8 }),
+                "Data is stored in Location ",
+                React.createElement("strong", null, authStorageLocation),
+                "."
+              )
+            );
+            const authGeneralTabContent = React.createElement(React.Fragment, null,
+              descriptionSection,
+              authDetailsSection
+            );
+            const authEditorTabContent = normalizedAuthDetailTab === "users"
+              ? authUsersTabContent
+              : authGeneralTabContent;
+            const authDocumentationUrl = ${JSON.stringify(aiosOrigin)} + "/developers/libraries/authentication";
+            const authEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
+              normalizedAuthDetailTab === "users" ? " is-auth-users-tab" : ""
+            );
+            const authEditorScrollClassName = "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" + (
+              normalizedAuthDetailTab === "users" ? " is-auth-users-tab" : ""
+            );
+            const authDetailContentClassName = "playground-server-detail-content" + (
+              normalizedAuthDetailTab === "users" ? " is-auth-users-tab" : ""
+            );
+            const authMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar is-auth-detail-navbar" },
+              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
+                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-auth-title-input",
+                    value: draftServer.name || "",
+                    placeholder: "Authentication",
+                    "aria-label": "Authentication name",
+                    title: draftServer.name || "Authentication",
+                    onChange: (event) => updateServerField("name", event.target.value),
+                    onBlur: () => {
+                      void commitDraftServerIfDirty();
+                    },
+                  })
+                )
+              ),
+              React.createElement("div", { className: "playground-content-nav-center" }),
+              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-environments-action-button",
+                  onClick: () => window.open(authDocumentationUrl, "_blank", "noopener,noreferrer"),
+                },
+                  React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Docs")
+                )
+              )
+            );
 
-            return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
-              serverMainTopbar,
-              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-                React.createElement("div", { className: "playground-server-detail-content" },
+            return React.createElement("div", { className: authEditorMainClassName, ref: serverDetailMainRef },
+              authMainTopbar,
+              React.createElement("div", { className: authEditorScrollClassName },
+                React.createElement("div", { className: authDetailContentClassName },
                   serverSaveState.error
                     ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
                     : null,
-                  descriptionSection,
-                  authDetailsSection,
-                  authUsersSection
+                  authDetailTabs,
+                  authEditorTabContent
                 )
               )
             );
@@ -76058,7 +76183,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	          const databaseDataTabContent = React.createElement(React.Fragment, null,
 	            databaseBrowserSection,
 	            React.createElement("div", { className: "playground-database-storage-location-note" },
-	              "Data is stored in Firestore location ",
+	              React.createElement(MapPin, { width: 13, height: 13, strokeWidth: 1.8 }),
+	              "Data is stored in Location ",
 	              React.createElement("strong", null, databaseStorageLocation),
 	              "."
 	            )
