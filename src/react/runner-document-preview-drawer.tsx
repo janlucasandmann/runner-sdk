@@ -60,6 +60,8 @@ export interface RunnerDocumentPreviewDrawerProps {
   onResizeStart?: (event: ReactPointerEvent<HTMLButtonElement>) => void;
   headerCopy?: ReactNode;
   headerActions?: ReactNode;
+  headerActionsAfterPreviewToggle?: ReactNode;
+  showPreviewCodeToggle?: boolean;
   showCloseButton?: boolean;
   showResizeHandle?: boolean;
   onWorkspacePathOpen?: (path: string, options?: { isFolder?: boolean }) => void;
@@ -133,6 +135,8 @@ export function RunnerDocumentPreviewDrawer({
   onResizeStart,
   headerCopy,
   headerActions,
+  headerActionsAfterPreviewToggle,
+  showPreviewCodeToggle = true,
   showCloseButton = true,
   showResizeHandle = false,
   onWorkspacePathOpen,
@@ -189,7 +193,7 @@ export function RunnerDocumentPreviewDrawer({
     (directoryPreviewState.status !== "not-directory" || isExplicitDirectoryAttachment);
   const isDirectoryLikePreview = shouldRenderDirectoryPreview || isExplicitDirectoryAttachment;
   const activeDirectoryAbsolutePath = toAbsoluteRunnerWorkspacePath(directoryPreviewPath);
-  const canToggleMarkdownPreview = attachmentPreviewKind === "markdown";
+  const canTogglePreviewCode = showPreviewCodeToggle && (attachmentPreviewKind === "markdown" || attachmentPreviewKind === "html");
   const requestHeadersWithApiKey = useMemo(
     () => buildRunnerPreviewHeaders(requestHeaders, apiKey),
     [apiKey, requestHeaders]
@@ -380,7 +384,7 @@ export function RunnerDocumentPreviewDrawer({
       return;
     }
 
-    if (previewKind === "html" && resolvedDirectHtmlPreviewUrl) {
+    if (previewKind === "html" && resolvedDirectHtmlPreviewUrl && !previewUrl) {
       setDocumentPreviewState({
         status: "ready",
         kind: "html",
@@ -428,7 +432,7 @@ export function RunnerDocumentPreviewDrawer({
           setDocumentPreviewState({
             status: "ready",
             kind: "html",
-            text: previewDocument,
+            text: resolvedDirectHtmlPreviewUrl ? html : previewDocument,
           });
           return;
         }
@@ -1084,17 +1088,17 @@ export function RunnerDocumentPreviewDrawer({
               </div>
             </div>
           )}
-          {headerActions || canToggleMarkdownPreview || (showCloseButton && onClose) ? (
+          {headerActions || canTogglePreviewCode || headerActionsAfterPreviewToggle || (showCloseButton && onClose) ? (
             <div className="tb-attachment-preview-drawer-header-actions">
               {headerActions}
-              {canToggleMarkdownPreview ? (
+              {canTogglePreviewCode ? (
                 <button
                   type="button"
                   className={`tb-attachment-preview-drawer-action${markdownPreviewMode === "code" ? " is-active" : ""}`}
                   onClick={() => setMarkdownPreviewMode((current) => current === "code" ? "rendered" : "code")}
-                  aria-label={markdownPreviewMode === "code" ? "Show rendered Markdown" : "Show code"}
+                  aria-label={markdownPreviewMode === "code" ? "Show preview" : "Show code"}
                   aria-pressed={markdownPreviewMode === "code"}
-                  title={markdownPreviewMode === "code" ? "Show rendered Markdown" : "Show code"}
+                  title={markdownPreviewMode === "code" ? "Show preview" : "Show code"}
                 >
                   {markdownPreviewMode === "code" ? (
                     <LucideFileText className="tb-attachment-preview-drawer-action-icon" strokeWidth={2} />
@@ -1103,6 +1107,7 @@ export function RunnerDocumentPreviewDrawer({
                   )}
                 </button>
               ) : null}
+              {headerActionsAfterPreviewToggle}
               {showCloseButton && onClose ? (
                 <button
                   type="button"
@@ -1228,13 +1233,26 @@ export function RunnerDocumentPreviewDrawer({
               </div>
             )
           ) : documentPreviewState.kind === "html" && (resolvedDirectHtmlPreviewUrl || typeof documentPreviewState.text === "string" || documentPreviewUrl) ? (
-            <iframe
-              src={resolvedDirectHtmlPreviewUrl || documentPreviewUrl || undefined}
-              srcDoc={resolvedDirectHtmlPreviewUrl ? undefined : (typeof documentPreviewState.text === "string" ? documentPreviewState.text : undefined)}
-              sandbox={htmlIframeSandbox}
-              title={attachment.filename}
-              className="tb-attachment-preview-frame"
-            />
+            markdownPreviewMode === "code" && typeof documentPreviewState.text === "string" ? (
+              <div className="tb-attachment-preview-code-shell">
+                <RunnerCodeViewer
+                  content={documentPreviewState.text}
+                  filePath={attachment.filename}
+                  language="html"
+                  maxHeight={inline ? 520 : 980}
+                  showLineNumbers
+                  className="tb-log-card-code-hide-scrollbars"
+                />
+              </div>
+            ) : (
+              <iframe
+                src={resolvedDirectHtmlPreviewUrl || documentPreviewUrl || undefined}
+                srcDoc={resolvedDirectHtmlPreviewUrl ? undefined : (typeof documentPreviewState.text === "string" ? documentPreviewState.text : undefined)}
+                sandbox={htmlIframeSandbox}
+                title={attachment.filename}
+                className="tb-attachment-preview-frame"
+              />
+            )
           ) : documentPreviewState.kind === "markdown" && typeof documentPreviewState.text === "string" ? (
             markdownPreviewMode === "code" ? (
               <div className="tb-attachment-preview-code-shell">

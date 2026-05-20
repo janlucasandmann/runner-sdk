@@ -7792,6 +7792,58 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   height: 16px;
 }
 
+.tb-document-preview-actions-shell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tb-document-preview-actions-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1450;
+  width: max-content;
+  min-width: 150px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: #323232;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+}
+
+.tb-document-preview-actions-menu-item {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  text-align: left;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.tb-document-preview-actions-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.tb-document-preview-maximize-button .tb-attachment-preview-drawer-action-icon {
+  width: 14px;
+  height: 14px;
+}
+
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-body {
   position: relative;
   min-height: 0;

@@ -34,6 +34,7 @@ import {
   Mail as LucideMail,
   MessageCircle as LucideMessageCircle,
   MessageSquare as LucideMessageSquare,
+  Maximize2 as LucideMaximize2,
   Minimize2 as LucideMinimize2,
   Monitor as LucideMonitor,
   LoaderCircle as LucideLoaderCircle,
@@ -8354,6 +8355,8 @@ export function RunnerChat({
   const [localThreadId, setLocalThreadId] = useState<string | null>(threadId ?? null);
   const [attachments, setAttachments] = useState<LocalAttachment[]>([]);
   const [previewedDocumentAttachment, setPreviewedDocumentAttachment] = useState<RunnerTurnAttachment | null>(null);
+  const [isDocumentPreviewMaximized, setIsDocumentPreviewMaximized] = useState(false);
+  const [documentPreviewActionMenuOpen, setDocumentPreviewActionMenuOpen] = useState(false);
   const [selectedSubagentDetail, setSelectedSubagentDetail] = useState<RunnerSelectedSubagentDetail | null>(null);
   const [selectedDeepResearchDetail, setSelectedDeepResearchDetail] = useState<RunnerSelectedDeepResearchDetail | null>(null);
   const [selectedComputerUseDetail, setSelectedComputerUseDetail] = useState<RunnerSelectedComputerUseDetail | null>(null);
@@ -8552,6 +8555,7 @@ export function RunnerChat({
   const speechSinkGainNodeRef = useRef<GainNode | null>(null);
   const fileBrowserPreviewObjectUrlRef = useRef<string | null>(null);
   const documentPreviewResizeStateRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const documentPreviewActionMenuRef = useRef<HTMLSpanElement | null>(null);
   const mainPopupAnimationTimerRef = useRef<number | null>(null);
   const sidePopupAnimationTimerRef = useRef<number | null>(null);
   const isDrainingQueuedRunsRef = useRef(false);
@@ -9488,6 +9492,8 @@ export function RunnerChat({
 
   function closeDocumentAttachmentPreview() {
     setPreviewedDocumentAttachment(null);
+    setIsDocumentPreviewMaximized(false);
+    setDocumentPreviewActionMenuOpen(false);
   }
 
   function closeDeepResearchDetailDrawer() {
@@ -9668,7 +9674,46 @@ export function RunnerChat({
     closeDeepResearchDetailDrawer();
     closeSubagentDetailDrawer();
     closeComputerUseDetailDrawer();
-    setPreviewedDocumentAttachment((current) => (current?.id === attachment.id ? null : attachment));
+    setDocumentPreviewActionMenuOpen(false);
+    setPreviewedDocumentAttachment((current) => {
+      if (current?.id === attachment.id) {
+        setIsDocumentPreviewMaximized(false);
+        return null;
+      }
+      setIsDocumentPreviewMaximized(false);
+      return attachment;
+    });
+  }
+
+  function toggleDocumentPreviewMaximized() {
+    setDocumentPreviewActionMenuOpen(false);
+    setIsDocumentPreviewMaximized((current) => !current);
+  }
+
+  function getDocumentPreviewOpenUrl(attachment: RunnerTurnAttachment | null): string {
+    if (!attachment) {
+      return "";
+    }
+    const baseFileUrl = attachment.previewUrl || attachment.url || "";
+    const htmlPreviewUrl =
+      typeof attachment.htmlPreviewUrl === "string" && attachment.htmlPreviewUrl.trim()
+        ? attachment.htmlPreviewUrl
+        : isRunnerPreviewHtmlFile(attachment.filename, attachment.mimeType)
+          ? buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl(baseFileUrl, attachment.filename, attachment.mimeType)
+          : "";
+    return (
+      resolveRunnerPreviewAssetUrl(htmlPreviewUrl || baseFileUrl, normalizedBackendUrl, attachment.id) ||
+      resolveRunnerPreviewAssetUrl(baseFileUrl, normalizedBackendUrl, attachment.id) ||
+      ""
+    );
+  }
+
+  function copyDocumentPreviewValue(value: string) {
+    if (!value.trim() || typeof navigator === "undefined") {
+      return;
+    }
+    void navigator.clipboard?.writeText(value);
+    setDocumentPreviewActionMenuOpen(false);
   }
 
   function revokeAttachmentPreview(attachment: Pick<LocalAttachment, "previewUrl">) {
@@ -11834,17 +11879,38 @@ export function RunnerChat({
     if (typeof document === "undefined") {
       return;
     }
-    const className = "tb-runner-document-preview-active";
-    document.body.classList.toggle(className, Boolean(previewedDocumentAttachment));
+    const activeClassName = "tb-runner-document-preview-active";
+    const maximizedClassName = "tb-runner-document-preview-maximized";
+    document.body.classList.toggle(activeClassName, Boolean(previewedDocumentAttachment));
+    document.body.classList.toggle(maximizedClassName, Boolean(previewedDocumentAttachment && isDocumentPreviewMaximized));
     return () => {
-      document.body.classList.remove(className);
+      document.body.classList.remove(activeClassName);
+      document.body.classList.remove(maximizedClassName);
     };
-  }, [previewedDocumentAttachment]);
+  }, [isDocumentPreviewMaximized, previewedDocumentAttachment]);
 
   useEffect(() => {
     setDocumentPreviewDrawerWidth(null);
     documentPreviewResizeStateRef.current = null;
+    setDocumentPreviewActionMenuOpen(false);
   }, [previewedDocumentAttachment?.id]);
+
+  useEffect(() => {
+    if (!documentPreviewActionMenuOpen || typeof document === "undefined") {
+      return;
+    }
+
+    function handleDocumentPreviewActionMenuPointerDown(event: PointerEvent) {
+      const target = event.target;
+      if (target instanceof Node && documentPreviewActionMenuRef.current?.contains(target)) {
+        return;
+      }
+      setDocumentPreviewActionMenuOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handleDocumentPreviewActionMenuPointerDown);
+    return () => document.removeEventListener("pointerdown", handleDocumentPreviewActionMenuPointerDown);
+  }, [documentPreviewActionMenuOpen]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -17172,6 +17238,74 @@ export function RunnerChat({
   const showAttachFilesPopup = renderedSidePopup === "attach-files";
   const hasPortalDocumentPreview = Boolean(documentPreviewPortalTarget);
   const shouldReserveDocumentPreviewWidth = Boolean(previewedDocumentAttachment && !hasPortalDocumentPreview);
+  const previewedDocumentWorkspacePath = normalizeRunnerPreviewWorkspacePath(
+    previewedDocumentAttachment?.workspacePath || previewedDocumentAttachment?.id || ""
+  );
+  const previewedDocumentOpenUrl = getDocumentPreviewOpenUrl(previewedDocumentAttachment);
+  const documentPreviewHeaderActions = previewedDocumentAttachment ? (
+    <>
+      <span className="tb-document-preview-actions-shell" ref={documentPreviewActionMenuRef}>
+        <button
+          type="button"
+          className="tb-attachment-preview-drawer-action"
+          onClick={() => setDocumentPreviewActionMenuOpen((current) => !current)}
+          aria-label="File actions"
+          aria-expanded={documentPreviewActionMenuOpen}
+          title="File actions"
+        >
+          <LucideEllipsis className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.9} />
+        </button>
+        {documentPreviewActionMenuOpen ? (
+          <div className="tb-document-preview-actions-menu" role="menu">
+            {previewedDocumentOpenUrl ? (
+              <a
+                className="tb-document-preview-actions-menu-item"
+                href={previewedDocumentOpenUrl}
+                target="_blank"
+                rel="noreferrer"
+                role="menuitem"
+                onClick={() => setDocumentPreviewActionMenuOpen(false)}
+              >
+                Open in new tab
+              </a>
+            ) : null}
+            <button
+              type="button"
+              className="tb-document-preview-actions-menu-item"
+              role="menuitem"
+              onClick={() => copyDocumentPreviewValue(previewedDocumentAttachment.filename)}
+            >
+              Copy filename
+            </button>
+            {previewedDocumentWorkspacePath ? (
+              <button
+                type="button"
+                className="tb-document-preview-actions-menu-item"
+                role="menuitem"
+                onClick={() => copyDocumentPreviewValue(`/workspace/${previewedDocumentWorkspacePath}`)}
+              >
+                Copy path
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </span>
+      <button
+        type="button"
+        className="tb-attachment-preview-drawer-action tb-document-preview-maximize-button"
+        onClick={toggleDocumentPreviewMaximized}
+        aria-label={isDocumentPreviewMaximized ? "Exit full screen" : "Full screen"}
+        aria-pressed={isDocumentPreviewMaximized}
+        title={isDocumentPreviewMaximized ? "Exit full screen" : "Full screen"}
+      >
+        {isDocumentPreviewMaximized ? (
+          <LucideMinimize2 className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.9} />
+        ) : (
+          <LucideMaximize2 className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.9} />
+        )}
+      </button>
+    </>
+  ) : null;
   const documentAttachmentPreviewDrawerContent = previewedDocumentAttachment ? (
     <RunnerDocumentPreviewDrawer
       attachment={previewedDocumentAttachment}
@@ -17182,6 +17316,7 @@ export function RunnerChat({
       surface={hasPortalDocumentPreview}
       onClose={closeDocumentAttachmentPreview}
       onResizeStart={startDocumentPreviewResize}
+      headerActionsAfterPreviewToggle={documentPreviewHeaderActions}
       showResizeHandle={!documentPreviewPortalTarget}
     />
   ) : null;
@@ -18392,7 +18527,7 @@ export function RunnerChat({
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
       onDragEnterCapture={handleRootFileDragEnter}
       onDragOverCapture={handleRootFileDragOver}
       onDragLeaveCapture={handleRootFileDragLeave}

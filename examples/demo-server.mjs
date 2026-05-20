@@ -5002,8 +5002,21 @@ const html = `<!doctype html>
         transform: translateX(100%);
         pointer-events: none;
         transition:
+          width 280ms cubic-bezier(0.16, 1, 0.3, 1),
           transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
           opacity 220ms ease;
+      }
+
+      body.tb-runner-document-preview-maximized .playground-content-shell.is-thread-side-detail-open {
+        --playground-thread-task-detail-width: calc(100% - 6px);
+      }
+
+      body.tb-runner-document-preview-maximized .playground-content-body.is-thread-side-detail-open {
+        margin-right: 0;
+      }
+
+      body.tb-runner-document-preview-maximized .playground-thread-subagent-drawer {
+        width: calc(100% - 6px);
       }
 
       .playground-thread-subagent-drawer.is-open {
@@ -22113,12 +22126,17 @@ const html = `<!doctype html>
 	        line-height: 1.1;
 	      }
 
-      .playground-server-detail-navbar .playground-server-function-title-input {
-        margin-bottom: 6px;
+	      .playground-server-detail-navbar .playground-server-function-title-input {
+	        margin-bottom: 6px;
+	      }
+
+      .playground-server-detail-navbar.is-function-detail-navbar,
+      .playground-server-detail-navbar.is-database-detail-navbar {
+        align-items: flex-start;
       }
 
-      .playground-server-detail-navbar.is-function-detail-navbar {
-        align-items: flex-start;
+      .playground-server-detail-navbar .playground-database-title-input {
+        margin-bottom: 6px;
       }
 
 	      .playground-resource-detail-back-button {
@@ -28822,7 +28840,187 @@ const html = `<!doctype html>
 	      }
 
 	      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card {
-	        padding-top: 0;
+	        padding: 0;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-environments-editor-main.playground-tasks-detail-main.is-database-data-tab {
+	        overflow: hidden;
+	      }
+
+	      .playground-resources-page.is-develop-server-kind-page .playground-environments-detail-scroll.playground-environments-editor-scroll.is-database-data-tab {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        height: 100%;
+	        overflow: hidden;
+	      }
+
+	      .playground-server-detail-content.is-database-data-tab {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        height: 100%;
+	        gap: 12px;
+	      }
+
+	      .playground-server-detail-content.is-database-data-tab .playground-database-browser-surface.playground-server-details-card {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        margin-bottom: 0;
+	      }
+
+	      .playground-database-storage-location-note {
+	        flex: 0 0 auto;
+	        color: rgba(255, 255, 255, 0.54);
+	        font-size: 12px;
+	        font-weight: 400;
+	        line-height: 1.45;
+	      }
+
+	      .playground-database-browser-columns {
+	        display: grid;
+	        grid-template-columns: minmax(180px, 0.84fr) minmax(220px, 1fr) minmax(0, 1.7fr);
+	        min-height: min(620px, calc(100dvh - 260px));
+	        height: 100%;
+	        width: 100%;
+	      }
+
+	      .playground-database-browser-pane {
+	        min-width: 0;
+	        min-height: 0;
+	        display: flex;
+	        flex-direction: column;
+	        border-right: 1px solid rgba(255, 255, 255, 0.1);
+	      }
+
+	      .playground-database-browser-pane:last-child {
+	        border-right: 0;
+	      }
+
+	      .playground-database-browser-pane-header {
+	        flex: 0 0 auto;
+	        min-height: 44px;
+	        padding: 0 14px;
+	        display: flex;
+	        align-items: center;
+	        justify-content: space-between;
+	        gap: 10px;
+	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	      }
+
+	      .playground-database-browser-pane-title {
+	        min-width: 0;
+	        display: inline-flex;
+	        align-items: center;
+	        gap: 8px;
+	        color: rgba(255, 255, 255, 0.9);
+	        font-size: 12px;
+	        font-weight: 500;
+	        line-height: 1.3;
+	      }
+
+	      .playground-database-browser-pane-list {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        overflow: auto;
+	        padding: 8px 0;
+	      }
+
+	      .playground-database-browser-pane-row {
+	        width: 100%;
+	        min-height: 34px;
+	        padding: 0 14px;
+	        border: 0;
+	        border-radius: 0;
+	        background: transparent;
+	        color: rgba(255, 255, 255, 0.68);
+	        display: flex;
+	        align-items: center;
+	        justify-content: space-between;
+	        gap: 8px;
+	        text-align: left;
+	        cursor: pointer;
+	        transition: background-color 160ms ease, color 160ms ease;
+	      }
+
+	      .playground-database-browser-pane-row:hover,
+	      .playground-database-browser-pane-row:focus-visible {
+	        background: rgba(255, 255, 255, 0.05);
+	        color: rgba(255, 255, 255, 0.94);
+	      }
+
+	      .playground-database-browser-pane-row.is-active {
+	        background: rgba(255, 255, 255, 0.08);
+	        color: #fff;
+	      }
+
+	      .playground-database-browser-pane-row-label {
+	        min-width: 0;
+	        overflow: hidden;
+	        text-overflow: ellipsis;
+	        white-space: nowrap;
+	        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+	        font-size: 12px;
+	        line-height: 1.35;
+	      }
+
+	      .playground-database-browser-pane-row svg {
+	        flex: 0 0 auto;
+	        color: rgba(255, 255, 255, 0.48);
+	      }
+
+	      .playground-database-browser-pane-empty {
+	        padding: 14px;
+	        color: rgba(255, 255, 255, 0.5);
+	        font-size: 12px;
+	        line-height: 1.45;
+	      }
+
+	      .playground-database-browser-fields-pane .playground-database-browser-fields-card {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        height: 100%;
+	        padding: 0;
+	        gap: 0;
+	      }
+
+	      .playground-database-browser-fields-pane .playground-database-browser-fields-header {
+	        flex: 0 0 auto;
+	        min-height: 44px;
+	        padding: 0 14px;
+	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	      }
+
+	      .playground-database-browser-fields-pane .playground-database-browser-fields-body {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        overflow: auto;
+	        padding: 14px 16px;
+	      }
+
+	      .playground-database-browser-fields-pane .playground-database-browser-json-editor-shell {
+	        flex: 1 1 auto;
+	        min-height: 0;
+	        height: auto;
+	      }
+
+	      .playground-database-browser-fields-pane .playground-files-state {
+	        flex: 1 1 auto;
+	        min-height: 180px;
+	      }
+
+	      @media (max-width: 920px) {
+	        .playground-database-browser-columns {
+	          grid-template-columns: 1fr;
+	        }
+
+	        .playground-database-browser-pane {
+	          min-height: 220px;
+	          border-right: 0;
+	          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	        }
+
+	        .playground-database-browser-pane:last-child {
+	          border-bottom: 0;
+	        }
 	      }
 
 	      .playground-tasks-detail-panel.is-project-task-detail .playground-tasks-detail-facts {
@@ -38786,7 +38984,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, House, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, House, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -58414,6 +58612,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               requestHeaders,
               headerCopy: renderFilePreviewHeaderCopy(),
               headerActions: previewHeaderActions,
+              showPreviewCodeToggle: false,
               inline: true,
               onClose: closePreviewPane,
               onResizeStart: isPreviewMaximized ? undefined : startPreviewResize,
@@ -75482,6 +75681,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                               onClick: () => {
                                 setSelectedDatabaseCollectionId(collection.id);
                                 setSelectedDatabaseDocumentId("");
+                                setDatabaseDocumentViewMode("preview");
                                 setDatabaseDocumentEditorState({
                                   documentId: "",
                                   value: "{}",
@@ -75829,12 +76029,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	                || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
 	            }, "Delete database")
 	          );
-	          const normalizedDatabaseDetailTab = ["general", "data"].includes(databaseDetailTab) ? databaseDetailTab : "general";
+	          const normalizedDatabaseDetailTab = ["data", "general"].includes(databaseDetailTab) ? databaseDetailTab : "data";
 	          const databaseDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
 	            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
 	              [
-	                { id: "general", label: "General" },
 	                { id: "data", label: "Data" },
+	                { id: "general", label: "General" },
 	              ].map((tab) =>
 	                React.createElement("button", {
 	                    key: tab.id,
@@ -75854,18 +76054,37 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 	            databaseDetailsSection,
 	            databaseDangerSection
 	          );
+	          const databaseStorageLocation = String(draftDatabase.location || "eur3").trim() || "eur3";
+	          const databaseDataTabContent = React.createElement(React.Fragment, null,
+	            databaseBrowserSection,
+	            React.createElement("div", { className: "playground-database-storage-location-note" },
+	              "Data is stored in Firestore location ",
+	              React.createElement("strong", null, databaseStorageLocation),
+	              "."
+	            )
+	          );
 	          const databaseEditorTabContent = normalizedDatabaseDetailTab === "data"
-	            ? renderEditorSection("database-browser", "Data", "", databaseBrowserSection, null, false)
+	            ? databaseDataTabContent
 	            : databaseGeneralTabContent;
+	          const databaseDocumentationUrl = ${JSON.stringify(aiosOrigin)} + "/developers/libraries/databases";
+	          const databaseEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
+	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
+	          );
+	          const databaseEditorScrollClassName = "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" + (
+	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
+	          );
+	          const databaseDetailContentClassName = "playground-server-detail-content" + (
+	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
+	          );
 
 	          return React.createElement(React.Fragment, null,
-	            React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main" },
-	              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar" },
+	            React.createElement("div", { className: databaseEditorMainClassName },
+	              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar is-database-detail-navbar" },
 	                React.createElement("div", { className: "playground-environments-editor-navbar-title" },
 	                  React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
 	                    React.createElement("input", {
 	                      type: "text",
-	                      className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input",
+	                      className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-database-title-input",
                       value: draftDatabase.name || "",
                       placeholder: "Database",
                       "aria-label": "Database name",
@@ -75880,10 +76099,19 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   )
                 ),
                 React.createElement("div", { className: "playground-content-nav-center" }),
-                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
+                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => window.open(databaseDocumentationUrl, "_blank", "noopener,noreferrer"),
+                  },
+                    React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Docs")
+                  )
+                )
               ),
-              React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-                React.createElement("div", { className: "playground-server-detail-content" },
+              React.createElement("div", { className: databaseEditorScrollClassName },
+                React.createElement("div", { className: databaseDetailContentClassName },
                   databaseSaveState.error
                     ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseSaveState.error)
                     : null,
