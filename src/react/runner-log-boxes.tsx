@@ -27,6 +27,7 @@ import {
   FileText,
   Folder,
   FolderOpen,
+  FolderPlus,
   Globe,
   HardDrive,
   Images,
@@ -64,9 +65,18 @@ import {
 import { RunnerFileDiffSurface } from "./runner-file-diff-surface.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
 import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
-import { ComputerAgentsListLogBox, parseComputerAgentsListLogDetails, type ComputerAgentsListAvailableAgent } from "./runner-agents-list-log-box.js";
+import { ComputerAgentsListLogBox, parseComputerAgentsListCommandOutput, parseComputerAgentsListLogDetails, type ComputerAgentsListAgent, type ComputerAgentsListAvailableAgent } from "./runner-agents-list-log-box.js";
 import { ComputerAgentsEnvironmentsListLogBox, parseComputerAgentsEnvironmentsListLogDetails, type ComputerAgentsListAvailableEnvironment } from "./runner-environments-list-log-box.js";
 import { TaskManagementProjectsListLogBox, parseTaskManagementProjectsListLogDetails, type TaskManagementListAvailableEnvironment, type TaskManagementListAvailableProject } from "./runner-projects-list-log-box.js";
+import { AppPlatformResourcesListLogBox, parseAppPlatformResourcesListLogDetails } from "./runner-resources-list-log-box.js";
+import {
+  ComputerAgentsThreadGetLogBox,
+  ComputerAgentsThreadsListLogBox,
+  parseComputerAgentsThreadGetCommandOutput,
+  parseComputerAgentsThreadGetLogDetails,
+  parseComputerAgentsThreadsListCommandOutput,
+  parseComputerAgentsThreadsListLogDetails,
+} from "./runner-threads-list-log-box.js";
 import { GitCommitLogBox, parseGitCommitLogDetails } from "./runner-git-commit-log-box.js";
 import { GitDiffLogBox, parseGitDiffLogDetails } from "./runner-git-diff-log-box.js";
 import { GitStatusLogBox, parseGitStatusLogDetails } from "./runner-git-status-log-box.js";
@@ -3780,13 +3790,31 @@ function ComputerAgentsThreadSnapshotLogBox({
   const kind = details?.kind || "messages";
   const label = kind === "logs" ? "Thread Logs" : "Thread Messages";
   const snapshotTitle = details?.threadId || (kind === "logs" ? "Thread activity" : "Thread transcript");
+  const icon = kind === "logs"
+    ? <Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />
+    : <MessageSquare className="tb-log-card-small-icon" strokeWidth={1.5} />;
+
+  if (kind === "messages" && entries.length === 0 && !isLoading) {
+    return (
+      <div className="tb-log-card tb-log-card-thread-snapshot">
+        <div className="tb-log-card-header tb-log-card-header-static">
+          <span className="tb-log-card-icon">{icon}</span>
+          <div className="tb-log-card-header-copy">
+            <span className="tb-log-card-label">{label}</span>
+            <span className="tb-log-card-title">{`${snapshotTitle} - No thread messages were parsed.`}</span>
+          </div>
+          <div className="tb-log-card-header-right">
+            {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="tb-log-card tb-log-card-thread-snapshot">
       <LogHeader
-        icon={kind === "logs"
-          ? <Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />
-          : <MessageSquare className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        icon={icon}
         label={label}
         title={snapshotTitle}
         timeLabel={timeLabel}
@@ -3947,6 +3975,7 @@ function isReadFileCommand(command?: string): boolean {
     return true;
   }
   return [
+    /app-platform(?:\.py)?\s+files\s+read\b/i,
     /^\$?\s*read_file\b/i,
     /^reading:\s+/i,
     /sed\s+-n\s+['"][^'"]*['"]\s+/,
@@ -3955,16 +3984,63 @@ function isReadFileCommand(command?: string): boolean {
   ].some((pattern) => pattern.test(command));
 }
 
+function isMkdirCommand(command?: string): boolean {
+  if (!command) return false;
+  return /(?:^|\n|[;&|]\s*)\$?\s*mkdir\b/i.test(command);
+}
+
+function tokenizeShellLikeArguments(value: string): string[] {
+  const tokens: string[] = [];
+  const tokenPattern = /"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|([^\s]+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = tokenPattern.exec(value)) !== null) {
+    const rawToken = match[1] ?? match[2] ?? match[3] ?? "";
+    const token = rawToken.replace(/\\(["'\\\s])/g, "$1").trim();
+    if (token) {
+      tokens.push(token);
+    }
+  }
+  return tokens;
+}
+
+function extractMkdirPaths(command?: string): string[] {
+  if (!command) return [];
+  const normalizedCommand = stripShellInlineComments(command);
+  const match = normalizedCommand.match(/(?:^|\n|[;&|]\s*)\$?\s*mkdir\b\s+([^\n;|]+)/i);
+  const args = match?.[1]
+    ?.replace(/\s+\d?>&\d+[\s\S]*$/g, "")
+    ?.replace(/\s+\d?>\s*\S+[\s\S]*$/g, "")
+    ?.trim();
+  if (!args) return [];
+  return tokenizeShellLikeArguments(args)
+    .filter((token) => !token.startsWith("-"))
+    .filter((token) => !/^\d?>&\d+$/.test(token))
+    .filter((token) => token !== "mkdir");
+}
+
+function isMkdirLog(log?: RunnerLog): boolean {
+  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
+    return false;
+  }
+  const command = [log.metadata?.command, log.message]
+    .filter((value) => typeof value === "string" && value.trim().length > 0)
+    .join("\n");
+  return isMkdirCommand(command);
+}
+
 export function isReadFileLog(log?: RunnerLog): boolean {
   if (!log) return false;
-  const command = String(log.metadata?.command || "");
+  const command = [log.metadata?.command, log.message]
+    .filter((value) => typeof value === "string" && value.trim().length > 0)
+    .join("\n");
   const message = String(log.message || "");
-  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const output = resolveCommandOutputText(log.metadata?.output, "stdout");
 
   return (
     isReadFileCommand(command) ||
     /^Read:\s+/i.test(message) ||
     Boolean(log.metadata?.fileContents && typeof log.metadata.fileContents === "object") ||
+    Boolean(extractStructuredReadFilePayload(log.metadata?.output)) ||
     /"filePath"\s*:/.test(output) ||
     /"content"\s*:/.test(output)
   );
@@ -3977,6 +4053,8 @@ function extractReadFilePath(command?: string): string | null {
     return headTailPath;
   }
   const patterns = [
+    /app-platform(?:\.py)?\s+files\s+read\b[\s\S]*?\s--path\s+["']([^"']+)["']/i,
+    /app-platform(?:\.py)?\s+files\s+read\b[\s\S]*?\s--path\s+([^\s|&;>"']+)/i,
     /sed\s+-n\s+['"][^'"]*['"]\s+["']([^"']+)["']/,
     /sed\s+-n\s+['"][^'"]*['"]\s+(\S+)/,
     /\b(?:cat|less)\s+["']([^"']+)["']/,
@@ -4003,6 +4081,61 @@ function extractReadLineRange(command?: string): string | null {
   const compactTail = command.match(/tail\s+-(\d+)(?:\s|$)/);
   if (compactTail) return `last ${compactTail[1]} lines`;
   return null;
+}
+
+function normalizeReadFileFailureMessage({
+  content,
+  output,
+  stderr,
+  isError,
+}: {
+  content?: string;
+  output?: string;
+  stderr?: string;
+  isError?: boolean;
+}): string | null {
+  const candidates = [stderr, output, content]
+    .map((value) => stripRunnerSystemTags(String(value || "")).trim())
+    .filter(Boolean);
+  if (candidates.length === 0) {
+    return isError ? "failed to read file" : null;
+  }
+
+  const failurePatterns = [
+    /file appears to be binary/i,
+    /no such file or directory/i,
+    /\bis a directory\b/i,
+    /permission denied/i,
+    /operation not permitted/i,
+    /failed to read/i,
+    /cannot read/i,
+    /unable to read/i,
+    /not found/i,
+  ];
+
+  for (const candidate of candidates) {
+    const lines = candidate
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const matchedLine = lines.find((line) => failurePatterns.some((pattern) => pattern.test(line)));
+    if (matchedLine) {
+      return matchedLine.length > 180 ? `${matchedLine.slice(0, 177).trimEnd()}...` : matchedLine;
+    }
+  }
+
+  if (!isError) {
+    return null;
+  }
+
+  const fallbackLine = candidates[0]
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean);
+  if (!fallbackLine) {
+    return "failed to read file";
+  }
+  return fallbackLine.length > 180 ? `${fallbackLine.slice(0, 177).trimEnd()}...` : fallbackLine;
 }
 
 function decodeJsonStringFragment(fragment: string): string {
@@ -4217,7 +4350,7 @@ function resolveCommandOutputText(output: unknown, preferred: "stdout" | "combin
   return stripRunnerSystemTags([structured.stdout, structured.stderr].filter(Boolean).join("\n"));
 }
 
-function extractStructuredReadFilePayload(output: string): { filePath?: string; content?: string } | null {
+function extractStructuredReadFilePayload(output: unknown): { filePath?: string; content?: string } | null {
   const visit = (value: unknown): { filePath?: string; content?: string } | null => {
     if (value == null) {
       return null;
@@ -4284,6 +4417,10 @@ function extractStructuredReadFilePayload(output: string): { filePath?: string; 
   const structured = visit(output);
   if (structured) {
     return structured;
+  }
+
+  if (typeof output !== "string") {
+    return null;
   }
 
   const fallbackFilePath = extractJsonStringFieldValue(output, ["filePath", "file_path", "path"]);
@@ -4755,20 +4892,24 @@ function ReadFileLogBox({
   const [collapsed, setCollapsed] = useState(false);
   const [copied, setCopied] = useState(false);
   const command = log.metadata?.command || "";
+  const output = stripRunnerSystemTags(resolveCommandOutputText(log.metadata?.output, "stdout"));
+  const commandOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const structuredReadPayload = extractStructuredReadFilePayload(log.metadata?.output) ||
+    extractStructuredReadFilePayload(output) ||
+    extractStructuredReadFilePayload(commandOutput?.stdout || "");
   const filePath =
     normalizeRunnerFilePath(log.metadata?.filePaths?.[0] as string | undefined) ||
     normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.file_path) ||
     normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.path) ||
-    normalizeRunnerFilePath(extractStructuredReadFilePayload(stripRunnerSystemTags(String(log.metadata?.output || "")))?.filePath) ||
+    normalizeRunnerFilePath(structuredReadPayload?.filePath) ||
     normalizeRunnerFilePath(extractReadFilePath(command)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(log.message)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(command));
-  const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
-  const commandOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
-  const structuredReadPayload = extractStructuredReadFilePayload(output);
   const lineRange = extractReadLineRange(command);
   const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
   const content = stripLineNumbers(structuredReadPayload?.content ?? commandOutput?.stdout ?? output);
+  const stderr = stripRunnerSystemTags(commandOutput?.stderr || "");
+  const readFailureMessage = normalizeReadFileFailureMessage({ content, output, stderr, isError });
   const normalizedContent = content.trim().toLowerCase();
   const isImageFile = Boolean(filePath && isRunnerLogImageFilePath(filePath));
   const imagePreviewUrl = isImageFile ? buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath) : null;
@@ -4801,6 +4942,26 @@ function ReadFileLogBox({
       await copyRunnerText(content);
       setCopied(true);
     } catch {}
+  }
+
+  if (readFailureMessage) {
+    return (
+      <div className="tb-log-card">
+        <div className="tb-log-card-header tb-log-card-header-static">
+          <span className="tb-log-card-icon">
+            <ScanText className="tb-log-card-small-icon" strokeWidth={1.5} />
+          </span>
+          <div className="tb-log-card-header-copy">
+            <span className="tb-log-card-label">Read File</span>
+            <span className="tb-log-card-title">{`${filePath ? getFileName(filePath) : "file"} - ${readFailureMessage}`}</span>
+          </div>
+          <div className="tb-log-card-header-right">
+            {lineRange ? <span className="tb-log-card-pill">{lineRange}</span> : null}
+            {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (isImageReadWithoutText) {
@@ -5296,6 +5457,7 @@ function isListFilesCommand(command?: string): boolean {
   if (!command) return false;
   if (isFindingFilesCommand(command)) return true;
   return [
+    /app-platform(?:\.py)?\s+files\s+list\b/i,
     /(?:^|[;&|]\s*)\$?\s*(?:ls|ll)\b(?:\s|$)/i,
     /\bfind\s+(?!.*\s-exec\s)/i,
     /\brg\s+--files\b/i,
@@ -5409,10 +5571,12 @@ function isLikelyFileListOutput(output: string): boolean {
 }
 
 function isListFilesLog(log?: RunnerLog): boolean {
-  if (!log || log.eventType !== "command_execution") {
+  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
     return false;
   }
-  const command = String(log.metadata?.command || "");
+  const command = [log.metadata?.command, log.message]
+    .filter((value) => typeof value === "string" && value.trim().length > 0)
+    .join("\n");
   if (isListFilesCommand(command)) {
     return true;
   }
@@ -5637,6 +5801,10 @@ function parseStructuredListOutput(output: string): ListFileItem[] | null {
 }
 
 function parseListOutput(output: string): ListFileItem[] {
+  if (isNoFilesFoundListOutput(output)) {
+    return [];
+  }
+
   const structuredItems = parseStructuredListOutput(output);
   if (structuredItems) {
     return structuredItems.sort((left, right) => {
@@ -5673,6 +5841,14 @@ function parseListOutput(output: string): ListFileItem[] {
     if (left.type !== right.type) return left.type === "folder" ? -1 : 1;
     return left.name.localeCompare(right.name);
   });
+}
+
+function isNoFilesFoundListOutput(output: string): boolean {
+  const lines = stripListFileAnsiSequences(output)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return lines.length > 0 && lines.every((line) => /^No files found\.?$/i.test(line));
 }
 
 function fileKind(name: string): "image" | "video" | "audio" | "code" | "text" {
@@ -5775,6 +5951,7 @@ function ListFilesLogBox({
   const isFindingFiles = isFindingFilesCommand(command);
   const directoryPath = extractDirectoryPath(command);
   const allItems = useMemo(() => parseListOutput(output), [output]);
+  const isNoFilesFoundOutput = useMemo(() => isNoFilesFoundListOutput(output), [output]);
   const normalizedSearchQuery = normalizeListFileSearchText(searchQuery);
   const filteredItems = useMemo(() => {
     const matchingFilter = filterListFiles(allItems, filterMode);
@@ -5879,6 +6056,26 @@ function ListFilesLogBox({
     const location = getListFileLocationLabel(directoryPath, item);
     if (!location) return;
     onWorkspacePathClick(location);
+  }
+
+  if (!isError && allItems.length === 0 && (isNoFilesFoundOutput || isFindingFiles)) {
+    const emptyTitle = directoryPath ? `${directoryPath} - No files found.` : "No files found.";
+    return (
+      <div className="tb-log-card tb-log-card-agent-list tb-log-card-file-list">
+        <div className="tb-log-card-header tb-log-card-header-static">
+          <span className="tb-log-card-icon">
+            <FolderOpen className="tb-log-card-small-icon" strokeWidth={1.5} />
+          </span>
+          <div className="tb-log-card-header-copy">
+            <span className="tb-log-card-label">List Files</span>
+            <span className="tb-log-card-title">{emptyTitle}</span>
+          </div>
+          <div className="tb-log-card-header-right">
+            {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -10473,14 +10670,57 @@ function TodoListLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string
   );
 }
 
+function MkdirLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+  const command = [log.metadata?.command, log.message]
+    .filter((value) => typeof value === "string" && value.trim().length > 0)
+    .join("\n");
+  const paths = extractMkdirPaths(command);
+  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const output = resolveCommandOutputText(log.metadata?.output, "combined");
+  const stderr = stripRunnerSystemTags(parsedOutput?.stderr || "");
+  const exitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
+  const isError = Boolean((exitCode !== null && exitCode !== 0) || stderr.trim());
+  const title =
+    paths.length === 1
+      ? paths[0]
+      : paths.length > 1
+        ? `${paths.length} folders`
+        : "folder";
+  const statusText = isError
+    ? (stderr || output || "Failed to create folder.")
+    : "Directory ready";
+  const displayTitle = isError ? `${title} - ${statusText}` : title;
+
+  return (
+    <div className="tb-log-card tb-log-card-mkdir">
+      <div className="tb-log-card-header tb-log-card-header-static">
+        <span className="tb-log-card-icon">
+          <FolderPlus className="tb-log-card-small-icon" strokeWidth={1.5} />
+        </span>
+        <div className="tb-log-card-header-copy">
+          <span className="tb-log-card-label">Create Folder</span>
+          <span className="tb-log-card-title">{displayTitle}</span>
+        </div>
+        <div className="tb-log-card-header-right">
+          {timeLabel ? <span className="tb-log-card-time">{timeLabel}</span> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GenericCommandLogBox({
   log,
   timeLabel,
   onWorkspacePathClick,
+  availableAgents,
+  onAgentClick,
 }: {
   log: RunnerLog;
   timeLabel?: string;
   onWorkspacePathClick?: (path: string) => void;
+  availableAgents?: ComputerAgentsListAvailableAgent[];
+  onAgentClick?: (agent: ComputerAgentsListAgent) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -10550,6 +10790,39 @@ function GenericCommandLogBox({
       : exitCode !== null && exitCode !== 0
         ? `exit ${exitCode}`
         : undefined;
+  const computerAgentsListDetails = useMemo(() => {
+    const commandCandidates = [command, shellCommand, copyPayload].filter((value) => value.trim().length > 0);
+    const outputText = [stdout, stderr, output, rawOutput, stdoutDisplay, stderrDisplay, outputDisplay, copyPayload]
+      .filter((value) => value.trim().length > 0)
+      .join("\n");
+    for (const commandCandidate of commandCandidates) {
+      const parsedDetails = parseComputerAgentsListCommandOutput(commandCandidate, outputText);
+      if (parsedDetails) return parsedDetails;
+    }
+    return null;
+  }, [command, copyPayload, output, outputDisplay, rawOutput, shellCommand, stderr, stderrDisplay, stdout, stdoutDisplay]);
+  const computerAgentsThreadsListDetails = useMemo(() => {
+    const commandCandidates = [command, shellCommand, copyPayload].filter((value) => value.trim().length > 0);
+    const outputText = [stdout, stderr, output, rawOutput, stdoutDisplay, stderrDisplay, outputDisplay, copyPayload]
+      .filter((value) => value.trim().length > 0)
+      .join("\n");
+    for (const commandCandidate of commandCandidates) {
+      const parsedDetails = parseComputerAgentsThreadsListCommandOutput(commandCandidate, outputText);
+      if (parsedDetails) return parsedDetails;
+    }
+    return null;
+  }, [command, copyPayload, output, outputDisplay, rawOutput, shellCommand, stderr, stderrDisplay, stdout, stdoutDisplay]);
+  const computerAgentsThreadGetDetails = useMemo(() => {
+    const commandCandidates = [command, shellCommand, copyPayload].filter((value) => value.trim().length > 0);
+    const outputText = [stdout, stderr, output, rawOutput, stdoutDisplay, stderrDisplay, outputDisplay, copyPayload]
+      .filter((value) => value.trim().length > 0)
+      .join("\n");
+    for (const commandCandidate of commandCandidates) {
+      const parsedDetails = parseComputerAgentsThreadGetCommandOutput(commandCandidate, outputText);
+      if (parsedDetails) return parsedDetails;
+    }
+    return null;
+  }, [command, copyPayload, output, outputDisplay, rawOutput, shellCommand, stderr, stderrDisplay, stdout, stdoutDisplay]);
 
   useEffect(() => {
     if (!copied) return;
@@ -10562,6 +10835,37 @@ function GenericCommandLogBox({
       await copyRunnerText(copyPayload);
       setCopied(true);
     } catch {}
+  }
+
+  if (computerAgentsListDetails) {
+    return (
+      <ComputerAgentsListLogBox
+        details={computerAgentsListDetails}
+        timeLabel={timeLabel}
+        availableAgents={availableAgents}
+        onAgentClick={onAgentClick}
+      />
+    );
+  }
+
+  if (computerAgentsThreadsListDetails) {
+    return (
+      <ComputerAgentsThreadsListLogBox
+        details={computerAgentsThreadsListDetails}
+        timeLabel={timeLabel}
+        availableAgents={availableAgents}
+      />
+    );
+  }
+
+  if (computerAgentsThreadGetDetails) {
+    return (
+      <ComputerAgentsThreadGetLogBox
+        details={computerAgentsThreadGetDetails}
+        timeLabel={timeLabel}
+        availableAgents={availableAgents}
+      />
+    );
   }
 
   return (
@@ -11022,6 +11326,15 @@ export function RunnerWorkLogEntry({
     }
     if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderComputerAgentsCreateLog(log)) return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
+    const appPlatformResourcesListDetails = parseAppPlatformResourcesListLogDetails(log);
+    if (appPlatformResourcesListDetails) {
+      return (
+        <AppPlatformResourcesListLogBox
+          details={appPlatformResourcesListDetails}
+          timeLabel={timeLabel}
+        />
+      );
+    }
     const taskManagementProjectsListDetails = parseTaskManagementProjectsListLogDetails(log);
     if (taskManagementProjectsListDetails) {
       return (
@@ -11062,6 +11375,26 @@ export function RunnerWorkLogEntry({
         />
       );
     }
+    const computerAgentsThreadsListDetails = parseComputerAgentsThreadsListLogDetails(log);
+    if (computerAgentsThreadsListDetails) {
+      return (
+        <ComputerAgentsThreadsListLogBox
+          details={computerAgentsThreadsListDetails}
+          timeLabel={timeLabel}
+          availableAgents={availableAgents}
+        />
+      );
+    }
+    const computerAgentsThreadGetDetails = parseComputerAgentsThreadGetLogDetails(log);
+    if (computerAgentsThreadGetDetails) {
+      return (
+        <ComputerAgentsThreadGetLogBox
+          details={computerAgentsThreadGetDetails}
+          timeLabel={timeLabel}
+          availableAgents={availableAgents}
+        />
+      );
+    }
     if (isComputerAgentsThreadSnapshotLog(log)) return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementReleaseCreateLog(log)) return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementCommentLog(log)) return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
@@ -11079,6 +11412,9 @@ export function RunnerWorkLogEntry({
           onWorkspacePathClick={onWorkspacePathClick}
         />
       );
+    }
+    if (isMkdirLog(log)) {
+      return <MkdirLogBox log={log} timeLabel={timeLabel} />;
     }
     if (isReadFileLog(log)) {
       return (
@@ -11116,15 +11452,91 @@ export function RunnerWorkLogEntry({
     if (gitCommitDetails) return <GitCommitLogBox details={gitCommitDetails} timeLabel={timeLabel} />;
     const gitStatusDetails = parseGitStatusLogDetails(log);
     if (gitStatusDetails) return <GitStatusLogBox details={gitStatusDetails} timeLabel={timeLabel} />;
-    return <GenericCommandLogBox log={log} timeLabel={timeLabel} onWorkspacePathClick={onWorkspacePathClick} />;
+    return (
+      <GenericCommandLogBox
+        log={log}
+        timeLabel={timeLabel}
+        onWorkspacePathClick={onWorkspacePathClick}
+        availableAgents={availableAgents}
+        onAgentClick={(agent) => onAgentPreviewClick?.({ agentId: agent.id, agentName: agent.name })}
+      />
+    );
   }
 
   if (log.eventType === "mcp_tool_call") {
     if (shouldRenderComputerAgentsCreateLog(log)) {
       return <ComputerAgentsCreateLogBox log={log} timeLabel={timeLabel} />;
     }
+    const appPlatformResourcesListDetails = parseAppPlatformResourcesListLogDetails(log);
+    if (appPlatformResourcesListDetails) {
+      return (
+        <AppPlatformResourcesListLogBox
+          details={appPlatformResourcesListDetails}
+          timeLabel={timeLabel}
+        />
+      );
+    }
+    const computerAgentsListDetails = parseComputerAgentsListLogDetails(log);
+    if (computerAgentsListDetails) {
+      return (
+        <ComputerAgentsListLogBox
+          details={computerAgentsListDetails}
+          timeLabel={timeLabel}
+          availableAgents={availableAgents}
+          onAgentClick={(agent) => onAgentPreviewClick?.({ agentId: agent.id, agentName: agent.name })}
+        />
+      );
+    }
+    const computerAgentsThreadsListDetails = parseComputerAgentsThreadsListLogDetails(log);
+    if (computerAgentsThreadsListDetails) {
+      return (
+        <ComputerAgentsThreadsListLogBox
+          details={computerAgentsThreadsListDetails}
+          timeLabel={timeLabel}
+          availableAgents={availableAgents}
+        />
+      );
+    }
+    const computerAgentsThreadGetDetails = parseComputerAgentsThreadGetLogDetails(log);
+    if (computerAgentsThreadGetDetails) {
+      return (
+        <ComputerAgentsThreadGetLogBox
+          details={computerAgentsThreadGetDetails}
+          timeLabel={timeLabel}
+          availableAgents={availableAgents}
+        />
+      );
+    }
     if (isComputerAgentsThreadSnapshotLog(log)) {
       return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
+    }
+    if (isListFilesLog(log)) {
+      return (
+        <ListFilesLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+          onWorkspacePathClick={onWorkspacePathClick}
+        />
+      );
+    }
+    if (isMkdirLog(log)) {
+      return <MkdirLogBox log={log} timeLabel={timeLabel} />;
+    }
+    if (isReadFileLog(log)) {
+      return (
+        <ReadFileLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+          onPreviewDocument={onPreviewDocument}
+          onWorkspacePathClick={onWorkspacePathClick}
+        />
+      );
     }
     if (shouldRenderTaskManagementReleaseCreateLog(log)) {
       return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;

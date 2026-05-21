@@ -495,6 +495,10 @@ export const PROJECT_OVERVIEW_CSS = String.raw`
         min-height: 0;
       }
 
+      .playground-project-overview-chart-card.is-cost-empty {
+        background: #000;
+      }
+
       .playground-project-overview-integration-facts {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2231,6 +2235,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           const totals = labels.map((_, index) =>
             series.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
           );
+          if (!totals.some((value) => value > 0)) {
+            return config?.emptyContent || React.createElement("div", { className: "playground-project-overview-chart-empty" }, config?.emptyText || "No usage data in this period");
+          }
           const yMax = Math.max(1, Number(config?.yMax || Math.max(...totals, 1)));
           const gridLineCount = 4;
           const tickFormatter = typeof config?.tickFormatter === "function"
@@ -2334,6 +2341,24 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               })
               );
             }
+          );
+        }
+
+        function renderProjectOverviewCostEmptyState() {
+          return React.createElement("div", {
+            className: "playground-project-overview-chart-empty playground-auth-users-empty-state playground-configure-usage-empty-state",
+          },
+            React.createElement("img", {
+              className: "playground-auth-users-empty-state-image",
+              src: "/img/empty-state/no-agent-usage.avif",
+              alt: "",
+              "aria-hidden": "true",
+              draggable: "false",
+            }),
+            React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "No Project Cost yet"),
+            React.createElement("div", { className: "playground-auth-users-empty-state-copy" },
+              "Project costs will appear here once agents, computers, or connected resources consume compute tokens."
+            )
           );
         }
 
@@ -2798,6 +2823,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 
           const maxProjectDailyCt = Math.max(...projectThreadTimeline.map((bucket) => bucket.totalCT), 1);
           const projectTotalCt = projectThreadTimeline.reduce((sum, bucket) => sum + bucket.totalCT, 0);
+          const projectHasCostData = projectThreadTimeline.some((bucket) => bucket.totalCT > 0);
           const allOverviewResourceItems = Array.isArray(projectOverviewServerResourcesState?.items)
             ? projectOverviewServerResourcesState.items
             : [];
@@ -4350,7 +4376,9 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 		              activeProjectOverviewHomeTab === "general"
 		                ? React.createElement("div", { className: "playground-project-overview-chart-surface" },
                 React.createElement("div", { className: "playground-project-overview-chart-grid" },
-                  React.createElement("section", { className: "playground-settings-usage-chart-card playground-project-overview-chart-card" },
+                  React.createElement("section", {
+                    className: "playground-settings-usage-chart-card playground-project-overview-chart-card" + (projectOverviewChartMode === "cost" && !projectHasCostData ? " is-cost-empty" : ""),
+                  },
                     React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis" },
                       projectOverviewKpis.map((item) =>
                         React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
@@ -4429,21 +4457,24 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                             tall: true,
                             ariaLabel: "Project compute token usage by resource type",
                             emptyText: "No project compute usage yet",
+                            emptyContent: renderProjectOverviewCostEmptyState(),
                           }),
-                          React.createElement("div", {
-                            className: "playground-settings-usage-inline-legend",
-                            style: { justifyContent: "flex-start" },
-                          },
-                            projectComputeSeries.map((entry) =>
-                              React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
-                                React.createElement("span", {
-                                  className: "playground-settings-usage-legend-swatch",
-                                  style: { background: entry.color },
-                                }),
-                                React.createElement("span", null, entry.label)
+                          projectHasCostData
+                            ? React.createElement("div", {
+                                className: "playground-settings-usage-inline-legend",
+                                style: { justifyContent: "flex-start" },
+                              },
+                                projectComputeSeries.map((entry) =>
+                                  React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
+                                    React.createElement("span", {
+                                      className: "playground-settings-usage-legend-swatch",
+                                      style: { background: entry.color },
+                                    }),
+                                    React.createElement("span", null, entry.label)
+                                  )
+                                )
                               )
-                            )
-                          )
+                            : null
                         ),
                     React.createElement("div", { className: "playground-project-overview-integration-facts" },
                       projectOverviewIntegrationRows.map((row) => renderProjectOverviewIntegrationRow(row))

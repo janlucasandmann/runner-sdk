@@ -248,16 +248,120 @@ function stripAnsiControlCodes(value: string): string {
   return value.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "");
 }
 
+function getNestedRecordValue(record: Record<string, unknown>, paths: string[][]): unknown {
+  for (const path of paths) {
+    let current: unknown = record;
+    for (const segment of path) {
+      if (!isPlainRecord(current)) {
+        current = null;
+        break;
+      }
+      current = current[segment];
+    }
+    if (current != null) return current;
+  }
+  return null;
+}
+
+function getTextFromCommandValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => getTextFromCommandValue(entry))
+      .filter((entry) => entry.trim().length > 0)
+      .join("\n");
+  }
+  if (!isPlainRecord(value)) return "";
+
+  const textFields = [
+    value.text,
+    value.command,
+    value.cmd,
+    value.script,
+    value.stdout,
+    value.stderr,
+    value.output,
+    value.result,
+    value.payload,
+    value.content,
+    value.data,
+  ];
+  const nestedText = getNestedRecordValue(value, [
+    ["toolInput", "command"],
+    ["toolInput", "cmd"],
+    ["toolInput", "script"],
+    ["args", "command"],
+    ["args", "cmd"],
+    ["args", "script"],
+    ["input", "command"],
+    ["input", "cmd"],
+    ["input", "script"],
+  ]);
+  const parts = [...textFields, nestedText]
+    .map((entry) => getTextFromCommandValue(entry))
+    .filter((entry) => entry.trim().length > 0);
+  return parts.join("\n");
+}
+
+function getTextFromOutputValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => getTextFromOutputValue(entry))
+      .filter((entry) => entry.trim().length > 0)
+      .join("\n");
+  }
+  if (!isPlainRecord(value)) return "";
+
+  if (Object.prototype.hasOwnProperty.call(value, "object") && Object.prototype.hasOwnProperty.call(value, "data")) {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "";
+    }
+  }
+
+  const parts = [
+    value.text,
+    value.stdout,
+    value.stderr,
+    value.output,
+    value.result,
+    value.payload,
+    value.content,
+    value.structuredContent,
+    value.structured_content,
+    value.data,
+  ]
+    .map((entry) => getTextFromOutputValue(entry))
+    .filter((entry) => entry.trim().length > 0);
+  return parts.join("\n");
+}
+
 function getCommandOutputText(log: RunnerLog): string {
   const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
   const output = parsedOutput
     ? [parsedOutput.stdout, parsedOutput.stderr].filter((value) => value.trim().length > 0).join("\n")
-    : String(log.metadata?.output || "");
+    : [
+        getTextFromOutputValue(log.metadata?.output),
+        getTextFromOutputValue(log.metadata?.result),
+        getTextFromOutputValue(log.metadata?.error),
+      ].filter((value) => value.trim().length > 0).join("\n");
   return stripAnsiControlCodes(stripRunnerSystemTags(output));
 }
 
 function getCommandText(log: RunnerLog): string {
-  return stripRunnerSystemTags(String(log.metadata?.command || log.message || ""));
+  const command = [
+    getTextFromCommandValue(log.metadata?.command),
+    getTextFromCommandValue(log.metadata?.toolInput),
+    getTextFromCommandValue(log.metadata?.args),
+    getTextFromCommandValue(log.message),
+  ].filter((value) => value.trim().length > 0).join("\n");
+  return stripRunnerSystemTags(command);
 }
 
 function isComputerAgentsAgentsListCommand(command?: string): boolean {
@@ -578,6 +682,7 @@ function collectJsonValueCandidates(text: string): unknown[] {
   } catch {}
 
   const candidates: unknown[] = [];
+  const objectStartStack: number[] = [];
   let startIndex = -1;
   let depth = 0;
   let inString = false;
@@ -602,6 +707,7 @@ function collectJsonValueCandidates(text: string): unknown[] {
     }
 
     if (char === "{" || char === "[") {
+      if (char === "{") objectStartStack.push(index);
       if (depth === 0) startIndex = index;
       depth += 1;
       continue;
@@ -609,6 +715,15 @@ function collectJsonValueCandidates(text: string): unknown[] {
 
     if (char === "}" || char === "]") {
       if (depth <= 0) continue;
+      if (char === "}") {
+        const objectStartIndex = objectStartStack.pop();
+        if (typeof objectStartIndex === "number") {
+          const objectCandidate = text.slice(objectStartIndex, index + 1);
+          try {
+            candidates.push(JSON.parse(objectCandidate));
+          } catch {}
+        }
+      }
       depth -= 1;
       if (depth === 0 && startIndex >= 0) {
         const candidate = text.slice(startIndex, index + 1);
@@ -621,6 +736,46 @@ function collectJsonValueCandidates(text: string): unknown[] {
   }
 
   return candidates;
+}
+
+function readJsonStringFieldFromText(text: string, fieldName: string): string {
+  const matcher = new RegExp(`"${fieldName}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`, "i");
+  const match = text.match(matcher);
+  if (!match) return "";
+  try {
+    return JSON.parse(`"${match[1]}"`);
+  } catch {
+    return match[1].replace(/\\"/g, "\"").replace(/\\n/g, "\n").replace(/\\r/g, "\r").replace(/\\t/g, "\t");
+  }
+}
+
+function parseAgentRecordsFromPartialJsonText(text: string): ComputerAgentsListAgent[] {
+  const agents: ComputerAgentsListAgent[] = [];
+  const idMatcher = /"id"\s*:\s*"((?:\\.|[^"\\])*)"/gi;
+  const idMatches = Array.from(text.matchAll(idMatcher));
+  for (let index = 0; index < idMatches.length; index += 1) {
+    const match = idMatches[index];
+    const startIndex = match.index ?? -1;
+    if (startIndex < 0) continue;
+    const endIndex = idMatches[index + 1]?.index ?? text.length;
+    const recordText = text.slice(startIndex, endIndex);
+    const id = readJsonStringFieldFromText(`{${recordText}`, "id");
+    if (!id || !/^agent[_-]/i.test(id)) continue;
+    const name = readJsonStringFieldFromText(`{${recordText}`, "name");
+    const model = readJsonStringFieldFromText(`{${recordText}`, "model") || readJsonStringFieldFromText(`{${recordText}`, "modelId");
+    if (!name && !model) continue;
+    const description = readJsonStringFieldFromText(`{${recordText}`, "description");
+    const normalized = normalizeAgentRecord({
+      id,
+      name,
+      description,
+      model,
+    });
+    if (normalized) {
+      agents.push(normalized);
+    }
+  }
+  return dedupeAgents(agents);
 }
 
 function dedupeAgents(agents: ComputerAgentsListAgent[]): ComputerAgentsListAgent[] {
@@ -640,19 +795,28 @@ function parseAgentsListOutput(output: string): ComputerAgentsListAgent[] {
   for (const parsedValue of collectJsonValueCandidates(output)) {
     collectAgentsFromParsedValue(parsedValue, agents);
   }
-  return dedupeAgents(agents);
+  const dedupedAgents = dedupeAgents(agents);
+  return dedupedAgents.length > 0 ? dedupedAgents : parseAgentRecordsFromPartialJsonText(output);
+}
+
+export function parseComputerAgentsListCommandOutput(command: string, output: string): ComputerAgentsListLogDetails | null {
+  if (!isComputerAgentsAgentsListCommand(command) && !isComputerAgentsAgentsListCommand(`${command}\n${output}`)) return null;
+  const agents = parseAgentsListOutput(output);
+  return agents.length > 0 ? { agents } : null;
 }
 
 export function parseComputerAgentsListLogDetails(log: RunnerLog): ComputerAgentsListLogDetails | null {
-  if (log.eventType !== "command_execution") return null;
+  if (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call") return null;
   if (!isComputerAgentsAgentsListCommand(getCommandText(log))) return null;
-  if (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0) return null;
 
   const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const agents = parseAgentsListOutput(getCommandOutputText(log));
+  if (agents.length > 0) return { agents };
+
+  if (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0) return null;
   if (parsedOutput?.returnCodeInterpretation === "timeout" || parsedOutput?.interrupted) return null;
 
-  const agents = parseAgentsListOutput(getCommandOutputText(log));
-  return agents.length > 0 ? { agents } : null;
+  return null;
 }
 
 function getInitials(name: string): string {

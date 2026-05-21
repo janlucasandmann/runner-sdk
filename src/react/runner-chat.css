@@ -2807,6 +2807,27 @@
   width: 12%;
 }
 
+.tb-runner-chat .tb-log-card-threads-list .tb-log-agent-list-col-name {
+  width: 50%;
+}
+
+.tb-runner-chat .tb-log-card-threads-list .tb-log-agent-list-col-model {
+  width: 32%;
+}
+
+.tb-runner-chat .tb-log-card-threads-list .tb-log-agent-list-col-cost {
+  width: 18%;
+}
+
+.tb-runner-chat .tb-log-card-threads-list .tb-log-agent-list-table th:first-child,
+.tb-runner-chat .tb-log-card-threads-list .tb-log-agent-list-table td:first-child {
+  padding-right: 12px;
+}
+
+.tb-runner-chat .tb-log-card-threads-list .tb-log-agent-list-name-title {
+  padding-right: 12px;
+}
+
 .tb-runner-chat .tb-log-agent-list-table th,
 .tb-runner-chat .tb-log-agent-list-table td {
   vertical-align: middle;
@@ -2897,6 +2918,15 @@
   font-size: 11px;
   line-height: 1;
   font-weight: 500;
+}
+
+.tb-runner-chat .tb-log-card-threads-list .tb-log-agent-list-avatar,
+.tb-runner-chat .tb-log-card-thread-get .tb-log-agent-list-avatar,
+.tb-runner-chat .tb-log-card-threads-list .tb-log-agent-list-avatar-image,
+.tb-runner-chat .tb-log-card-thread-get .tb-log-agent-list-avatar-image,
+.tb-runner-chat .tb-log-card-threads-list .tb-log-agent-list-avatar-fallback,
+.tb-runner-chat .tb-log-card-thread-get .tb-log-agent-list-avatar-fallback {
+  border-radius: 999px;
 }
 
 .tb-runner-chat .tb-log-agent-list-name-copy,
@@ -3065,6 +3095,141 @@
   border-color: rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.05);
   color: white;
+}
+
+.tb-runner-chat .tb-log-card-thread-get .tb-log-card-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tb-runner-chat .tb-log-thread-get-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tb-runner-chat .tb-log-thread-get-main {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 16px 0;
+}
+
+.tb-runner-chat .tb-log-thread-get-main-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tb-runner-chat .tb-log-thread-get-title {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-thread-get-subtitle {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-thread-get-status {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.tb-runner-chat .tb-log-thread-get-agent-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px;
+  padding: 12px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tb-runner-chat .tb-log-thread-get-agent-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tb-runner-chat .tb-log-thread-get-agent-label,
+.tb-runner-chat .tb-log-thread-get-detail-label {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-thread-get-agent-name,
+.tb-runner-chat .tb-log-thread-get-detail-value {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-thread-get-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  padding: 0 16px 16px;
+}
+
+.tb-runner-chat .tb-log-thread-get-detail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+@media (max-width: 760px) {
+  .tb-runner-chat .tb-log-thread-get-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .tb-runner-chat .tb-log-thread-get-main {
+    flex-direction: column;
+  }
+
+  .tb-runner-chat .tb-log-thread-get-details-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .tb-runner-chat .tb-log-card-permission .tb-log-card-panel {
@@ -3727,6 +3892,75 @@
   border-radius: 0;
   padding: 0;
   color: rgba(255, 172, 167, 0.96);
+}
+
+.tb-runner-chat .tb-log-mkdir-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 2px 0 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.tb-runner-chat .tb-log-mkdir-panel.is-error {
+  border-color: rgba(255, 141, 135, 0.18);
+  background: rgba(255, 141, 135, 0.055);
+}
+
+.tb-runner-chat .tb-log-mkdir-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-mkdir-panel.is-error .tb-log-mkdir-status {
+  color: rgba(255, 141, 135, 0.95);
+}
+
+.tb-runner-chat .tb-log-mkdir-status-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.tb-runner-chat .tb-log-mkdir-paths {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-log-mkdir-path-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.tb-runner-chat .tb-log-mkdir-path-label {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.tb-runner-chat .tb-log-mkdir-path-value {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--tb-runner-mono-font, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tb-runner-chat .tb-log-card-code {

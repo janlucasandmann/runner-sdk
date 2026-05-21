@@ -96,6 +96,8 @@ for public_file in \
   suitastro.webp; do
   cp "repos/runner-web-sdk/img/agent-profile-pics/${public_file}" "${TMP_BUILD_DIR}/web/hosting/public/img/agent-profile-pics/${public_file}"
 done
+mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/img/empty-state"
+rsync -a "repos/runner-web-sdk/img/empty-state/" "${TMP_BUILD_DIR}/web/hosting/public/img/empty-state/"
 
 cat > "${TMP_BUILD_DIR}/.gcloudignore" <<'EOF'
 .gcloudignore
