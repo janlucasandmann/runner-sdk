@@ -57271,6 +57271,43 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }, [selectedEnvironmentId, singleSelectedEntry?.path]);
 
         useEffect(() => {
+          function handleFilesArrowNavigation(event) {
+            if (
+              event.defaultPrevented
+              || event.altKey
+              || event.ctrlKey
+              || event.metaKey
+              || event.shiftKey
+              || (event.key !== "ArrowUp" && event.key !== "ArrowDown")
+              || renamingPath
+              || toolbarPopover
+              || contextMenu
+              || fileProjectPickerState
+              || isFilesKeyboardNavigationEditableTarget(event.target)
+            ) {
+              return;
+            }
+
+            const didSelect = selectAdjacentVisibleFile(event.key === "ArrowDown" ? 1 : -1);
+            if (didSelect) {
+              event.preventDefault();
+            }
+          }
+
+          window.addEventListener("keydown", handleFilesArrowNavigation);
+          return () => window.removeEventListener("keydown", handleFilesArrowNavigation);
+        }, [
+          contentMode,
+          contextMenu,
+          fileProjectPickerState,
+          renamingPath,
+          selectedEntries,
+          selectionScopeEntries,
+          singleSelectedEntry,
+          toolbarPopover,
+        ]);
+
+        useEffect(() => {
           if (!hasSingleFilePreview || !hasPreviewPanel) {
             setIsPreviewMaximized(false);
             setIsFileChatOpen(false);
@@ -58038,6 +58075,54 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
         function navigateToPath(nextPath) {
           pushPath(nextPath, []);
+        }
+
+        function isFilesKeyboardNavigationEditableTarget(target) {
+          if (!target || typeof Element === "undefined" || !(target instanceof Element)) {
+            return false;
+          }
+          const tagName = String(target.tagName || "").toLowerCase();
+          if (["input", "textarea", "select"].includes(tagName)) {
+            return true;
+          }
+          return Boolean(target.isContentEditable || target.closest('[contenteditable="true"], .monaco-editor'));
+        }
+
+        function scrollFileEntryIntoView(path) {
+          const normalizedPath = normalizeHistoryPath(path);
+          if (!normalizedPath || typeof document === "undefined") {
+            return;
+          }
+          window.requestAnimationFrame(() => {
+            const matchingEntry = Array.from(document.querySelectorAll("[data-playground-file-path]"))
+              .find((element) => normalizeHistoryPath(element.getAttribute("data-playground-file-path") || "") === normalizedPath);
+            matchingEntry?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+          });
+        }
+
+        function selectAdjacentVisibleFile(direction) {
+          if (contentMode !== "files" || selectedEntries.length !== 1 || !singleSelectedEntry || singleSelectedEntry.isFolder) {
+            return false;
+          }
+          const normalizedCurrentPath = normalizeHistoryPath(singleSelectedEntry.path);
+          const fileEntries = selectionScopeEntries.filter((entry) => entry && !entry.isFolder);
+          const currentIndex = fileEntries.findIndex((entry) => normalizeHistoryPath(entry.path) === normalizedCurrentPath);
+          if (currentIndex < 0) {
+            return false;
+          }
+          const nextIndex = Math.max(0, Math.min(fileEntries.length - 1, currentIndex + direction));
+          if (nextIndex === currentIndex) {
+            return false;
+          }
+          const nextEntry = fileEntries[nextIndex];
+          if (!nextEntry?.path) {
+            return false;
+          }
+          setSingleSelection(nextEntry.path);
+          setContextMenu(null);
+          setToolbarPopover("");
+          scrollFileEntryIntoView(nextEntry.path);
+          return true;
         }
 
         function navigateToFilesSelection(request = null) {
@@ -59419,6 +59504,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 + (isActive ? " is-active" : "")
                 + (isDropTarget ? " is-drop-target" : "")
                 + (isDragSource ? " is-dragging" : ""),
+              "data-playground-file-path": entry.path,
               style: { paddingLeft: 12 + row.level * 18 + "px" },
               draggable: renamingPath !== entry.path,
               onClick: (event) => handleEntrySelection(entry, event),
@@ -59477,6 +59563,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 + (isActive ? " is-active" : "")
                 + (isDropTarget ? " is-drop-target" : "")
                 + (isDragSource ? " is-dragging" : ""),
+              "data-playground-file-path": entry.path,
               draggable: renamingPath !== entry.path,
               onClick: (event) => handleEntrySelection(entry, event),
               onDoubleClick: () => handleEntryDoubleClick(entry),
@@ -142519,29 +142606,45 @@ async function resolveGcloudCommand() {
     return cachedGcloudCommand;
   }
 
-  const candidates = [
+  const configuredCandidates = [
     process.env.GCLOUD_BIN,
     process.env.GCLOUD_COMMAND,
+  ].map((candidate) => String(candidate || "").trim()).filter(Boolean);
+
+  const candidates = [
+    ...configuredCandidates.filter((candidate) => candidate.includes("/")),
     "/Users/jansandmann/google-cloud-sdk/bin/gcloud",
     "/opt/homebrew/bin/gcloud",
     "/usr/local/bin/gcloud",
+    ...configuredCandidates.filter((candidate) => !candidate.includes("/")),
     "gcloud",
-  ].map((candidate) => String(candidate || "").trim()).filter(Boolean);
+  ];
 
   for (const candidate of candidates) {
-    if (!candidate.includes("/")) {
-      cachedGcloudCommand = candidate;
-      return cachedGcloudCommand;
-    }
     try {
-      await fs.access(candidate);
-      cachedGcloudCommand = candidate;
+      if (candidate.includes("/")) {
+        await fs.access(candidate);
+        cachedGcloudCommand = candidate;
+        return cachedGcloudCommand;
+      }
+      const { stdout } = await execFileAsync("/bin/zsh", [
+        "-lc",
+        `command -v ${shellSingleQuote(candidate)}`,
+      ], {
+        maxBuffer: 1024 * 16,
+      });
+      const resolved = stdout.trim().split(/\r?\n/).find(Boolean);
+      if (!resolved) {
+        continue;
+      }
+      cachedGcloudCommand = resolved;
       return cachedGcloudCommand;
-    } catch {}
+    } catch {
+      // Try the next candidate.
+    }
   }
 
-  cachedGcloudCommand = "gcloud";
-  return cachedGcloudCommand;
+  throw new Error("gcloud was not found for admin summary VM fallback.");
 }
 
 async function resolveDeploymentVm() {
