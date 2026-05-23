@@ -62,6 +62,9 @@ export interface RunnerDocumentPreviewDrawerProps {
   headerActions?: ReactNode;
   headerActionsAfterPreviewToggle?: ReactNode;
   showPreviewCodeToggle?: boolean;
+  imagePreviewInteractive?: boolean;
+  imagePreviewOverlay?: ReactNode;
+  onImagePreviewLoad?: (dimensions: { naturalWidth: number; naturalHeight: number }) => void;
   showCloseButton?: boolean;
   showResizeHandle?: boolean;
   onWorkspacePathOpen?: (path: string, options?: { isFolder?: boolean }) => void;
@@ -137,6 +140,9 @@ export function RunnerDocumentPreviewDrawer({
   headerActions,
   headerActionsAfterPreviewToggle,
   showPreviewCodeToggle = true,
+  imagePreviewInteractive = true,
+  imagePreviewOverlay,
+  onImagePreviewLoad,
   showCloseButton = true,
   showResizeHandle = false,
   onWorkspacePathOpen,
@@ -1132,6 +1138,9 @@ export function RunnerDocumentPreviewDrawer({
               fetchHeaders={requestHeadersWithApiKey}
               className={inline ? "tb-attachment-preview-image-surface" : undefined}
               imageClassName={inline ? "tb-attachment-preview-image" : undefined}
+              interactive={imagePreviewInteractive}
+              onImageLoad={onImagePreviewLoad}
+              overlay={imagePreviewOverlay}
             />
           ) : documentPreviewState.status === "loading" ? (
             <div className="tb-attachment-preview-state">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { LoaderCircle, X as LucideX } from "lucide-react";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
@@ -17,6 +17,8 @@ export interface RunnerImagePreviewSurfaceProps {
   fetchCredentials?: RequestCredentials;
   interactive?: boolean;
   onActivate?: () => void;
+  onImageLoad?: (dimensions: { naturalWidth: number; naturalHeight: number }) => void;
+  overlay?: ReactNode;
   loadStrategy?: "immediate" | "visible";
   referrerPolicy?: ReferrerPolicy;
 }
@@ -98,6 +100,8 @@ export function RunnerImagePreviewSurface({
   fetchCredentials = "same-origin",
   interactive = true,
   onActivate,
+  onImageLoad,
+  overlay,
   loadStrategy = "immediate",
   referrerPolicy,
 }: RunnerImagePreviewSurfaceProps) {
@@ -267,6 +271,12 @@ export function RunnerImagePreviewSurface({
       style={{ maxHeight }}
       loading={loadStrategy === "visible" ? "lazy" : undefined}
       referrerPolicy={referrerPolicy}
+      onLoad={(event) => {
+        onImageLoad?.({
+          naturalWidth: event.currentTarget.naturalWidth,
+          naturalHeight: event.currentTarget.naturalHeight,
+        });
+      }}
       onError={() => {
         if (
           !hasCustomFetchHeaders
@@ -311,6 +321,7 @@ export function RunnerImagePreviewSurface({
       }}
     >
       {previewContent}
+      {overlay ? <span className="tb-runner-image-preview-surface-overlay">{overlay}</span> : null}
     </button>
   ) : (
     <div
@@ -321,6 +332,7 @@ export function RunnerImagePreviewSurface({
       }}
     >
       {previewContent}
+      {overlay ? <span className="tb-runner-image-preview-surface-overlay">{overlay}</span> : null}
     </div>
   );
 

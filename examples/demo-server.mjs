@@ -9,6 +9,8 @@ import { WebSocketServer, WebSocket } from "ws";
 import { handleGithubApiRequest, isGithubApiRequestPath } from "./github-oauth-platform.mjs";
 import { PROJECT_OVERVIEW_CSS, PROJECT_OVERVIEW_SCRIPT } from "./demo-project-overview.mjs";
 import { ENVIRONMENT_CHANGES_CSS, ENVIRONMENT_CHANGES_SCRIPT } from "./demo-environment-changes.mjs";
+import { IMAGINE_PAGE_CSS, IMAGINE_PAGE_SCRIPT } from "./demo-imagine-page.mjs";
+import { IMAGINE_TEMPLATE_PAGE_CSS, IMAGINE_TEMPLATE_PAGE_SCRIPT } from "./demo-imagine-template-page.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18342,6 +18344,196 @@ const html = `<!doctype html>
         height: 100%;
       }
 
+      .playground-files-image-thread-shell {
+        min-width: 0;
+        min-height: 0;
+        flex: 1;
+        display: flex;
+        position: relative;
+        isolation: isolate;
+      }
+
+      .playground-files-image-thread-shell > .tb-runner-document-preview-host,
+      .playground-files-image-thread-shell > .tb-runner-document-preview-host-inline,
+      .playground-files-image-thread-shell > .tb-runner-document-preview-host > .tb-attachment-preview-drawer-inline,
+      .playground-files-image-thread-shell > .tb-runner-document-preview-host-inline > .tb-attachment-preview-drawer-inline {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+      }
+
+      .playground-files-image-thread-shell > .tb-runner-chat.playground-files-image-thread-composer {
+        position: absolute;
+        left: 50%;
+        bottom: 10px;
+        z-index: 12;
+        width: min(760px, calc(100% - 32px));
+        height: auto;
+        min-height: 0;
+        flex: none;
+        display: block;
+        grid-template-rows: none;
+        max-width: none;
+        transform: translateX(-50%);
+        overflow: visible;
+        background: transparent;
+        pointer-events: auto;
+      }
+
+      .playground-files-shell.is-preview-maximized .playground-files-image-thread-shell > .tb-runner-chat.playground-files-image-thread-composer {
+        width: min(860px, calc(100% - 56px));
+      }
+
+      .playground-files-image-thread-composer .tb-input-width {
+        width: 100%;
+        max-width: none;
+      }
+
+      .playground-files-image-thread-composer > :not(.tb-input-shell) {
+        display: none !important;
+      }
+
+      .playground-files-image-thread-composer .tb-input-shell {
+        width: 100%;
+        min-height: 0;
+        padding: 0;
+        margin: 0;
+        display: block;
+      }
+
+      .playground-files-image-thread-composer .task-input-box {
+        --tb-task-input-base-bg: rgba(15, 15, 15, 0.86);
+        --tb-task-input-overlay: transparent;
+      }
+
+      .playground-files-image-thread-composer .sidebar-textarea {
+        min-height: 46px;
+        padding-top: 14px;
+      }
+
+      .playground-files-image-thread-loading {
+        position: absolute;
+        left: 50%;
+        bottom: 84px;
+        z-index: 13;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(15, 15, 15, 0.86);
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+        line-height: 1;
+        transform: translateX(-50%);
+        pointer-events: none;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      }
+
+      .playground-files-image-thread-loading .is-spinning {
+        width: 13px;
+        height: 13px;
+        animation: spinner-rotate 1s linear infinite;
+      }
+
+      .playground-files-image-thread-submit .is-spinning {
+        animation: spinner-rotate 1s linear infinite;
+      }
+
+      .playground-files-preview-select-button,
+      .playground-files-image-selection-button {
+        --playground-files-control-button-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .playground-files-preview-select-button::before,
+      .playground-files-image-selection-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-files-control-button-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-files-image-selection-button.is-plain::before {
+        content: none;
+      }
+
+      .playground-files-preview-select-button > *,
+      .playground-files-image-selection-button > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-files-image-selection-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-files-image-selection-button.is-icon {
+        width: 34px;
+        padding: 0;
+      }
+
+      .playground-files-image-selection-button:disabled {
+        cursor: default;
+        color: rgba(255, 255, 255, 0.34);
+      }
+
+      .playground-files-image-mask-overlay,
+      .playground-files-image-crop-overlay {
+        width: 100%;
+        height: 100%;
+        display: block;
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .playground-files-image-mask-overlay {
+        cursor: pointer;
+      }
+
+      .playground-files-image-crop-overlay {
+        cursor: crosshair;
+      }
+
+      .playground-files-image-mask-canvas,
+      .playground-files-image-crop-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
       .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview)
         .playground-files-preview,
       .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview)
@@ -33547,6 +33739,8 @@ const html = `<!doctype html>
 
 ${PROJECT_OVERVIEW_CSS}
 ${ENVIRONMENT_CHANGES_CSS}
+${IMAGINE_TEMPLATE_PAGE_CSS}
+${IMAGINE_PAGE_CSS}
 
       .playground-agents-page .playground-environments-home-summary,
       .playground-agents-overview-page .playground-environments-home-summary,
@@ -39983,7 +40177,7 @@ ${ENVIRONMENT_CHANGES_CSS}
       import { visit as unistVisit } from "unist-util-visit";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, History, House, Image as ImageIcon, Italic, Key, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, ChevronsUpDown, CircleHelp, Clock, Cloud, Code, Code2, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitCommitHorizontal, GitFork, Globe, Grid3x3, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, Lightbulb, Link2, List, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Mic, Minimize2, Minus, Monitor, Package, Paintbrush, PanelLeftClose, PanelLeftOpen, Paperclip, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, RefreshCw, Rocket, RotateCcw, RotateCw, Search, Server, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, SquarePen, Telescope, Terminal, Trash2, Underline, Unlink, User, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
       import { RunnerClient } from "/dist/index.js";
       import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
       import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
@@ -56384,8 +56578,374 @@ ${ENVIRONMENT_CHANGES_CSS}
       }
 
 ${ENVIRONMENT_CHANGES_SCRIPT}
+${IMAGINE_TEMPLATE_PAGE_SCRIPT}
+${IMAGINE_PAGE_SCRIPT}
 
-      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, onFileChatThreadMutated, onThreadOpen, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled, onOpenEnvironmentSettings, onEnvironmentMutated, onTopNavChange }) {
+      function getPlaygroundImageMaskViewportRect(containerWidth, containerHeight, naturalWidth, naturalHeight) {
+        const safeContainerWidth = Math.max(1, Number(containerWidth) || 1);
+        const safeContainerHeight = Math.max(1, Number(containerHeight) || 1);
+        const safeNaturalWidth = Math.max(1, Number(naturalWidth) || 1);
+        const safeNaturalHeight = Math.max(1, Number(naturalHeight) || 1);
+        const scale = Math.min(safeContainerWidth / safeNaturalWidth, safeContainerHeight / safeNaturalHeight);
+        const width = safeNaturalWidth * scale;
+        const height = safeNaturalHeight * scale;
+        return {
+          x: (safeContainerWidth - width) / 2,
+          y: (safeContainerHeight - height) / 2,
+          width,
+          height,
+          scale,
+        };
+      }
+
+      function getPlaygroundImageOverlayViewportRect(canvas, naturalWidth, naturalHeight) {
+        const canvasRect = canvas?.getBoundingClientRect?.();
+        if (!canvasRect) {
+          return getPlaygroundImageMaskViewportRect(1, 1, naturalWidth, naturalHeight);
+        }
+        const fallbackRect = getPlaygroundImageMaskViewportRect(
+          canvasRect.width,
+          canvasRect.height,
+          naturalWidth,
+          naturalHeight
+        );
+        const surface = canvas.closest?.(".tb-runner-image-preview-surface");
+        const image = surface?.querySelector?.(".tb-runner-image-preview-surface-image");
+        const imageRect = image?.getBoundingClientRect?.();
+        if (
+          !imageRect
+          || imageRect.width <= 0
+          || imageRect.height <= 0
+          || !Number(naturalWidth)
+          || !Number(naturalHeight)
+        ) {
+          return fallbackRect;
+        }
+        return {
+          x: imageRect.left - canvasRect.left,
+          y: imageRect.top - canvasRect.top,
+          width: imageRect.width,
+          height: imageRect.height,
+          scale: Math.min(
+            imageRect.width / Math.max(1, Number(naturalWidth) || 1),
+            imageRect.height / Math.max(1, Number(naturalHeight) || 1)
+          ),
+        };
+      }
+
+      function drawPlaygroundImageMaskStroke(ctx, stroke, toCanvasPoint) {
+        const points = Array.isArray(stroke?.points) ? stroke.points : [];
+        if (!points.length) {
+          return;
+        }
+        const lineWidth = Math.max(2, Number(stroke?.brushSize || 1) * Number(stroke?.scale || 1));
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = "rgba(102, 166, 255, 0.86)";
+        ctx.fillStyle = "rgba(102, 166, 255, 0.72)";
+        if (points.length === 1) {
+          const point = toCanvasPoint(points[0]);
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, lineWidth / 2, 0, Math.PI * 2);
+          ctx.fill();
+          return;
+        }
+        ctx.beginPath();
+        const first = toCanvasPoint(points[0]);
+        ctx.moveTo(first.x, first.y);
+        for (let index = 1; index < points.length; index += 1) {
+          const point = toCanvasPoint(points[index]);
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.stroke();
+      }
+
+      function PlaygroundImageSelectionMaskOverlay({
+        active,
+        naturalSize,
+        strokes,
+        draftStroke,
+        brushSize,
+        onPointerStart,
+        onPointerMove,
+        onPointerEnd,
+      }) {
+        const canvasRef = useRef(null);
+
+        useEffect(() => {
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+          const rect = canvas.getBoundingClientRect();
+          const dpr = Math.max(1, window.devicePixelRatio || 1);
+          const nextWidth = Math.max(1, Math.round(rect.width * dpr));
+          const nextHeight = Math.max(1, Math.round(rect.height * dpr));
+          if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+            canvas.width = nextWidth;
+            canvas.height = nextHeight;
+          }
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.clearRect(0, 0, rect.width, rect.height);
+          if (!active) return;
+          const viewportRect = getPlaygroundImageOverlayViewportRect(
+            canvas,
+            naturalSize?.width,
+            naturalSize?.height
+          );
+          const toCanvasPoint = (point) => ({
+            x: viewportRect.x + Number(point?.x || 0) * viewportRect.scale,
+            y: viewportRect.y + Number(point?.y || 0) * viewportRect.scale,
+          });
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(viewportRect.x, viewportRect.y, viewportRect.width, viewportRect.height);
+          ctx.clip();
+          const allStrokes = [
+            ...(Array.isArray(strokes) ? strokes : []),
+            ...(draftStroke ? [draftStroke] : []),
+          ];
+          allStrokes.forEach((stroke) => {
+            drawPlaygroundImageMaskStroke(
+              ctx,
+              { ...stroke, scale: viewportRect.scale },
+              toCanvasPoint
+            );
+          });
+          ctx.restore();
+        }, [active, brushSize, draftStroke, naturalSize?.height, naturalSize?.width, strokes]);
+
+        const getNaturalPointerPoint = (event) => {
+          const canvas = canvasRef.current;
+          if (!canvas) return null;
+          const rect = canvas.getBoundingClientRect();
+          const viewportRect = getPlaygroundImageOverlayViewportRect(
+            canvas,
+            naturalSize?.width,
+            naturalSize?.height
+          );
+          const localX = event.clientX - rect.left - viewportRect.x;
+          const localY = event.clientY - rect.top - viewportRect.y;
+          if (localX < 0 || localY < 0 || localX > viewportRect.width || localY > viewportRect.height) {
+            return null;
+          }
+          return {
+            x: Math.max(0, Math.min(Number(naturalSize?.width || 1), localX / viewportRect.scale)),
+            y: Math.max(0, Math.min(Number(naturalSize?.height || 1), localY / viewportRect.scale)),
+            brushSize: Math.max(8, Number(brushSize || 42) / viewportRect.scale),
+          };
+        };
+
+        return React.createElement("span", {
+          className: "playground-files-image-mask-overlay",
+          onPointerDown: (event) => {
+            if (!active) return;
+            const point = getNaturalPointerPoint(event);
+            if (!point) return;
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            event.preventDefault();
+            onPointerStart?.(point);
+          },
+          onPointerMove: (event) => {
+            if (!active || event.buttons !== 1) return;
+            const point = getNaturalPointerPoint(event);
+            if (!point) return;
+            event.preventDefault();
+            onPointerMove?.(point);
+          },
+          onPointerUp: (event) => {
+            if (!active) return;
+            event.currentTarget.releasePointerCapture?.(event.pointerId);
+            event.preventDefault();
+            onPointerEnd?.();
+          },
+          onPointerCancel: (event) => {
+            if (!active) return;
+            event.currentTarget.releasePointerCapture?.(event.pointerId);
+            onPointerEnd?.();
+          },
+        }, React.createElement("canvas", {
+          ref: canvasRef,
+          className: "playground-files-image-mask-canvas",
+          "aria-label": "Selected image edit area",
+        }));
+      }
+
+      function PlaygroundImageCropOverlay({
+        active,
+        naturalSize,
+        cropRect,
+        draftRect,
+        dragTarget,
+        onPointerStart,
+        onPointerMove,
+        onPointerEnd,
+      }) {
+        const canvasRef = useRef(null);
+        const [cursor, setCursor] = useState("crosshair");
+
+        useEffect(() => {
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+          const rect = canvas.getBoundingClientRect();
+          const dpr = Math.max(1, window.devicePixelRatio || 1);
+          const nextWidth = Math.max(1, Math.round(rect.width * dpr));
+          const nextHeight = Math.max(1, Math.round(rect.height * dpr));
+          if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+            canvas.width = nextWidth;
+            canvas.height = nextHeight;
+          }
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.clearRect(0, 0, rect.width, rect.height);
+          if (!active) return;
+
+          const viewportRect = getPlaygroundImageOverlayViewportRect(
+            canvas,
+            naturalSize?.width,
+            naturalSize?.height
+          );
+          const normalizedCropRect = draftRect || cropRect || null;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(viewportRect.x, viewportRect.y, viewportRect.width, viewportRect.height);
+          ctx.clip();
+          ctx.fillStyle = "rgba(0, 0, 0, 0.34)";
+          ctx.fillRect(viewportRect.x, viewportRect.y, viewportRect.width, viewportRect.height);
+
+          if (normalizedCropRect && Number(normalizedCropRect.width || 0) > 0 && Number(normalizedCropRect.height || 0) > 0) {
+            const cropCanvasRect = {
+              x: viewportRect.x + Number(normalizedCropRect.x || 0) * viewportRect.scale,
+              y: viewportRect.y + Number(normalizedCropRect.y || 0) * viewportRect.scale,
+              width: Number(normalizedCropRect.width || 0) * viewportRect.scale,
+              height: Number(normalizedCropRect.height || 0) * viewportRect.scale,
+            };
+            ctx.clearRect(cropCanvasRect.x, cropCanvasRect.y, cropCanvasRect.width, cropCanvasRect.height);
+            ctx.strokeStyle = "#66a6ff";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(cropCanvasRect.x + 1, cropCanvasRect.y + 1, Math.max(0, cropCanvasRect.width - 2), Math.max(0, cropCanvasRect.height - 2));
+            ctx.fillStyle = "#66a6ff";
+            const handleSize = 7;
+            [
+              [cropCanvasRect.x, cropCanvasRect.y],
+              [cropCanvasRect.x + cropCanvasRect.width, cropCanvasRect.y],
+              [cropCanvasRect.x, cropCanvasRect.y + cropCanvasRect.height],
+              [cropCanvasRect.x + cropCanvasRect.width, cropCanvasRect.y + cropCanvasRect.height],
+            ].forEach(([x, y]) => {
+              ctx.fillRect(x - handleSize / 2, y - handleSize / 2, handleSize, handleSize);
+            });
+          }
+          ctx.restore();
+        }, [active, cropRect, draftRect, naturalSize?.height, naturalSize?.width]);
+
+        const getNaturalPointerPoint = (event, options = {}) => {
+          const canvas = canvasRef.current;
+          if (!canvas) return null;
+          const rect = canvas.getBoundingClientRect();
+          const viewportRect = getPlaygroundImageOverlayViewportRect(
+            canvas,
+            naturalSize?.width,
+            naturalSize?.height
+          );
+          const shouldClampOutside = Boolean(options.clampOutside);
+          const rawLocalX = event.clientX - rect.left - viewportRect.x;
+          const rawLocalY = event.clientY - rect.top - viewportRect.y;
+          if (
+            !shouldClampOutside
+            && (rawLocalX < 0 || rawLocalY < 0 || rawLocalX > viewportRect.width || rawLocalY > viewportRect.height)
+          ) {
+            return null;
+          }
+          const localX = Math.max(0, Math.min(viewportRect.width, rawLocalX));
+          const localY = Math.max(0, Math.min(viewportRect.height, rawLocalY));
+          return {
+            x: Math.max(0, Math.min(Number(naturalSize?.width || 1), localX / viewportRect.scale)),
+            y: Math.max(0, Math.min(Number(naturalSize?.height || 1), localY / viewportRect.scale)),
+            viewportScale: viewportRect.scale,
+          };
+        };
+
+        const getCropHitTarget = (point) => {
+          const rect = cropRect;
+          if (!rect || !point) return "new";
+          const scale = Math.max(0.0001, Number(point.viewportScale || 1));
+          const threshold = Math.max(6, 12 / scale);
+          const left = Number(rect.x || 0);
+          const top = Number(rect.y || 0);
+          const right = left + Number(rect.width || 0);
+          const bottom = top + Number(rect.height || 0);
+          const nearLeft = Math.abs(point.x - left) <= threshold && point.y >= top - threshold && point.y <= bottom + threshold;
+          const nearRight = Math.abs(point.x - right) <= threshold && point.y >= top - threshold && point.y <= bottom + threshold;
+          const nearTop = Math.abs(point.y - top) <= threshold && point.x >= left - threshold && point.x <= right + threshold;
+          const nearBottom = Math.abs(point.y - bottom) <= threshold && point.x >= left - threshold && point.x <= right + threshold;
+          if (nearLeft && nearTop) return "nw";
+          if (nearRight && nearTop) return "ne";
+          if (nearLeft && nearBottom) return "sw";
+          if (nearRight && nearBottom) return "se";
+          if (nearLeft) return "w";
+          if (nearRight) return "e";
+          if (nearTop) return "n";
+          if (nearBottom) return "s";
+          return "new";
+        };
+
+        const getCursorForTarget = (target) => {
+          const normalizedTarget = dragTarget && dragTarget !== "new" ? dragTarget : target;
+          if (normalizedTarget === "n" || normalizedTarget === "s") return "ns-resize";
+          if (normalizedTarget === "e" || normalizedTarget === "w") return "ew-resize";
+          if (normalizedTarget === "nw" || normalizedTarget === "se") return "nwse-resize";
+          if (normalizedTarget === "ne" || normalizedTarget === "sw") return "nesw-resize";
+          return "crosshair";
+        };
+
+        return React.createElement("span", {
+          className: "playground-files-image-crop-overlay",
+          style: { cursor },
+          onPointerDown: (event) => {
+            if (!active) return;
+            const point = getNaturalPointerPoint(event);
+            if (!point) return;
+            const target = getCropHitTarget(point);
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            event.preventDefault();
+            setCursor(getCursorForTarget(target));
+            onPointerStart?.(point, target);
+          },
+          onPointerMove: (event) => {
+            if (!active) return;
+            const point = getNaturalPointerPoint(event, { clampOutside: event.buttons === 1 });
+            if (!point) return;
+            if (event.buttons === 1) {
+              event.preventDefault();
+              onPointerMove?.(point);
+              return;
+            }
+            setCursor(getCursorForTarget(getCropHitTarget(point)));
+          },
+          onPointerUp: (event) => {
+            if (!active) return;
+            event.currentTarget.releasePointerCapture?.(event.pointerId);
+            event.preventDefault();
+            setCursor("crosshair");
+            onPointerEnd?.();
+          },
+          onPointerCancel: (event) => {
+            if (!active) return;
+            event.currentTarget.releasePointerCapture?.(event.pointerId);
+            setCursor("crosshair");
+            onPointerEnd?.();
+          },
+        }, React.createElement("canvas", {
+          ref: canvasRef,
+          className: "playground-files-image-crop-canvas",
+          "aria-label": "Image crop area",
+        }));
+      }
+
+      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, agents = [], onFileChatThreadMutated, onThreadOpen, onThreadStarted, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled, onOpenEnvironmentSettings, onEnvironmentMutated, onTopNavChange }) {
         const FILE_CHAT_PANEL_DEFAULT_WIDTH = 420;
         const FILES_BROWSER_RESTORE_WIDTH = 320;
         const FILES_PANE_CLOSE_THRESHOLD = 100;
@@ -56408,6 +56968,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [pathHistoryIndex, setPathHistoryIndex] = useState(0);
         const [selectedPaths, setSelectedPaths] = useState(() => new Set());
         const [selectionAnchorPath, setSelectionAnchorPath] = useState("");
+        const [previewTargetPath, setPreviewTargetPath] = useState("");
         const [expandedFolders, setExpandedFolders] = useState(() => new Set());
         const [renamingPath, setRenamingPath] = useState("");
         const [renameValue, setRenameValue] = useState("");
@@ -56437,6 +56998,20 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         const [isUploadingFiles, setIsUploadingFiles] = useState(false);
         const [isCreatingFolder, setIsCreatingFolder] = useState(false);
         const [isCreatingFile, setIsCreatingFile] = useState(false);
+        const [isStartingImagePreviewThread, setIsStartingImagePreviewThread] = useState(false);
+        const [isImageSelectionMode, setIsImageSelectionMode] = useState(false);
+        const [imageMaskStrokes, setImageMaskStrokes] = useState([]);
+        const [imageMaskRedoStrokes, setImageMaskRedoStrokes] = useState([]);
+        const [imageMaskDraftStroke, setImageMaskDraftStroke] = useState(null);
+        const [imageMaskImageSize, setImageMaskImageSize] = useState({ width: 0, height: 0 });
+        const [isImageCropMode, setIsImageCropMode] = useState(false);
+        const [imageCropRect, setImageCropRect] = useState(null);
+        const [imageCropDraftRect, setImageCropDraftRect] = useState(null);
+        const [imageCropDragTarget, setImageCropDragTarget] = useState("new");
+        const [imageCropHistory, setImageCropHistory] = useState([]);
+        const [imageCropHistoryIndex, setImageCropHistoryIndex] = useState(0);
+        const [isCroppingImage, setIsCroppingImage] = useState(false);
+        const [isSavingImageCrop, setIsSavingImageCrop] = useState(false);
         const [uploadTargetPath, setUploadTargetPath] = useState("");
         const [isExternalFileDropActive, setIsExternalFileDropActive] = useState(false);
         const [draggedPaths, setDraggedPaths] = useState([]);
@@ -56455,6 +57030,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           environmentId: "",
           action: "",
         });
+        const imageMaskStrokeIdRef = useRef(0);
+        const imageCropStartPointRef = useRef(null);
+        const imageCropDraftRectRef = useRef(null);
+        const imageCropDragStateRef = useRef(null);
 
         const loadEnvironmentFolder = useCallback(async (environmentId, folderPath = "", options = {}) => {
           const normalizedFolderPath = normalizeHistoryPath(folderPath);
@@ -56606,6 +57185,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setPathHistoryIndex(0);
           setSelectedPaths(new Set());
           setSelectionAnchorPath("");
+          setPreviewTargetPath("");
           setExpandedFolders(new Set());
           setRenamingPath("");
           setRenameValue("");
@@ -56689,6 +57269,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 setContextMenu(null);
                 setSelectedPaths(new Set());
                 setSelectionAnchorPath("");
+                setPreviewTargetPath("");
                 setRenamingPath("");
                 setRenameValue("");
                 setIsPreviewOpen(false);
@@ -57116,47 +57697,331 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
         const singleSelectedEntry = selectedEntries.length === 1 ? selectedEntries[0] : null;
         const hasFolderOnlySelection = selectedEntries.length === 1 && Boolean(singleSelectedEntry?.isFolder);
-        const singleSelectedEntryFileKind = useMemo(
-          () => (singleSelectedEntry && !singleSelectedEntry.isFolder ? getPlaygroundFileKind(singleSelectedEntry) : ""),
-          [singleSelectedEntry]
+        const selectedFileEntries = useMemo(
+          () => selectedEntries.filter((entry) => entry && !entry.isFolder),
+          [selectedEntries]
         );
+        const activePreviewEntry = useMemo(() => {
+          const normalizedPreviewPath = normalizeHistoryPath(previewTargetPath);
+          if (normalizedPreviewPath && selectedPaths.has(normalizedPreviewPath)) {
+            const node = environmentTree.nodesByPath.get(normalizedPreviewPath) || null;
+            if (node && !node.isFolder) {
+              return node;
+            }
+          }
+          if (selectedFileEntries.length === 1) {
+            return selectedFileEntries[0];
+          }
+          return selectedFileEntries[selectedFileEntries.length - 1] || null;
+        }, [environmentTree, previewTargetPath, selectedFileEntries, selectedPaths]);
+
+        useEffect(() => {
+          setIsStartingImagePreviewThread(false);
+        }, [activePreviewEntry?.path]);
+
+        const singleSelectedEntryFileKind = useMemo(
+          () => (activePreviewEntry && !activePreviewEntry.isFolder ? getPlaygroundFileKind(activePreviewEntry) : ""),
+          [activePreviewEntry]
+        );
+        const hasActiveImageMaskSelection = singleSelectedEntryFileKind === "image" && imageMaskStrokes.length > 0;
+
+        useEffect(() => {
+          setIsImageSelectionMode(false);
+          setImageMaskStrokes([]);
+          setImageMaskRedoStrokes([]);
+          setImageMaskDraftStroke(null);
+          setImageMaskImageSize({ width: 0, height: 0 });
+          setIsImageCropMode(false);
+          setImageCropRect(null);
+          setImageCropDraftRect(null);
+          setImageCropDragTarget("new");
+          setImageCropHistory((current) => {
+            revokeImageCropHistoryEntries(current);
+            return [];
+          });
+          setImageCropHistoryIndex(0);
+          setIsCroppingImage(false);
+          setIsSavingImageCrop(false);
+          imageCropStartPointRef.current = null;
+          imageCropDraftRectRef.current = null;
+          imageCropDragStateRef.current = null;
+        }, [activePreviewEntry?.path, singleSelectedEntryFileKind]);
+
+        function resetImageSelectionMode() {
+          setIsImageSelectionMode(false);
+          setImageMaskStrokes([]);
+          setImageMaskRedoStrokes([]);
+          setImageMaskDraftStroke(null);
+        }
+
+        function beginImageSelectionMode() {
+          if (singleSelectedEntryFileKind !== "image") {
+            return;
+          }
+          setToolbarPopover("");
+          resetImageCropMode();
+          setIsImageSelectionMode(true);
+          setImageMaskRedoStrokes([]);
+        }
+
+        function revokeImageCropHistoryEntries(entries) {
+          (Array.isArray(entries) ? entries : []).forEach((entry) => {
+            if (entry?.url) {
+              try {
+                URL.revokeObjectURL(entry.url);
+              } catch {}
+            }
+          });
+        }
+
+        function resetImageCropMode() {
+          setIsImageCropMode(false);
+          setImageCropRect(null);
+          setImageCropDraftRect(null);
+          setImageCropDragTarget("new");
+          setImageCropHistory((current) => {
+            revokeImageCropHistoryEntries(current);
+            return [];
+          });
+          setImageCropHistoryIndex(0);
+          setIsCroppingImage(false);
+          setIsSavingImageCrop(false);
+          imageCropStartPointRef.current = null;
+          imageCropDraftRectRef.current = null;
+          imageCropDragStateRef.current = null;
+        }
+
+        function beginImageCropMode() {
+          if (singleSelectedEntryFileKind !== "image") {
+            return;
+          }
+          setToolbarPopover("");
+          resetImageSelectionMode();
+          setIsImageCropMode(true);
+          setImageCropRect(null);
+          setImageCropDraftRect(null);
+          setImageCropDragTarget("new");
+          setImageCropHistory((current) => {
+            revokeImageCropHistoryEntries(current);
+            return [];
+          });
+          setImageCropHistoryIndex(0);
+          imageCropStartPointRef.current = null;
+          imageCropDraftRectRef.current = null;
+          imageCropDragStateRef.current = null;
+        }
+
+        function buildImageCropRect(startPoint, endPoint) {
+          const width = Math.max(1, Number(imageMaskImageSize?.width || 1));
+          const height = Math.max(1, Number(imageMaskImageSize?.height || 1));
+          const startX = Math.max(0, Math.min(width, Number(startPoint?.x || 0)));
+          const startY = Math.max(0, Math.min(height, Number(startPoint?.y || 0)));
+          const endX = Math.max(0, Math.min(width, Number(endPoint?.x || 0)));
+          const endY = Math.max(0, Math.min(height, Number(endPoint?.y || 0)));
+          const x = Math.min(startX, endX);
+          const y = Math.min(startY, endY);
+          return {
+            x,
+            y,
+            width: Math.max(0, Math.abs(endX - startX)),
+            height: Math.max(0, Math.abs(endY - startY)),
+          };
+        }
+
+        function buildImageCropRectFromDrag(point) {
+          const dragState = imageCropDragStateRef.current;
+          if (!dragState) {
+            return null;
+          }
+          if (dragState.mode === "new") {
+            return buildImageCropRect(dragState.startPoint, point);
+          }
+
+          const imageWidth = Math.max(1, Number(imageMaskImageSize?.width || 1));
+          const imageHeight = Math.max(1, Number(imageMaskImageSize?.height || 1));
+          const minSize = 8;
+          const startRect = dragState.startRect || { x: 0, y: 0, width: 0, height: 0 };
+          let left = Number(startRect.x || 0);
+          let top = Number(startRect.y || 0);
+          let right = left + Number(startRect.width || 0);
+          let bottom = top + Number(startRect.height || 0);
+          const target = String(dragState.mode || "new");
+
+          if (target.includes("w")) {
+            left = Math.max(0, Math.min(right - minSize, Number(point.x || 0)));
+          }
+          if (target.includes("e")) {
+            right = Math.min(imageWidth, Math.max(left + minSize, Number(point.x || 0)));
+          }
+          if (target.includes("n")) {
+            top = Math.max(0, Math.min(bottom - minSize, Number(point.y || 0)));
+          }
+          if (target.includes("s")) {
+            bottom = Math.min(imageHeight, Math.max(top + minSize, Number(point.y || 0)));
+          }
+
+          return {
+            x: Math.max(0, Math.min(imageWidth, left)),
+            y: Math.max(0, Math.min(imageHeight, top)),
+            width: Math.max(0, Math.min(imageWidth, right) - Math.max(0, Math.min(imageWidth, left))),
+            height: Math.max(0, Math.min(imageHeight, bottom) - Math.max(0, Math.min(imageHeight, top))),
+          };
+        }
+
+        function handleImageCropPointerStart(point, target = "new") {
+          const normalizedTarget = target && target !== "new" && imageCropRect ? String(target) : "new";
+          imageCropDragStateRef.current = {
+            mode: normalizedTarget,
+            startPoint: point,
+            startRect: normalizedTarget === "new" ? null : { ...imageCropRect },
+          };
+          setImageCropDragTarget(normalizedTarget);
+          imageCropStartPointRef.current = point;
+          const nextRect = normalizedTarget === "new"
+            ? buildImageCropRect(point, point)
+            : { ...imageCropRect };
+          imageCropDraftRectRef.current = nextRect;
+          setImageCropDraftRect(nextRect);
+          if (normalizedTarget === "new") {
+            setImageCropRect(null);
+          }
+        }
+
+        function handleImageCropPointerMove(point) {
+          if (!imageCropDragStateRef.current) return;
+          const nextRect = buildImageCropRectFromDrag(point);
+          if (!nextRect) return;
+          imageCropDraftRectRef.current = nextRect;
+          setImageCropDraftRect(nextRect);
+        }
+
+        function handleImageCropPointerEnd() {
+          const draftRect = imageCropDraftRectRef.current || imageCropDraftRect;
+          const dragState = imageCropDragStateRef.current;
+          imageCropStartPointRef.current = null;
+          imageCropDraftRectRef.current = null;
+          imageCropDragStateRef.current = null;
+          setImageCropDragTarget("new");
+          setImageCropDraftRect(null);
+          if (!draftRect || Number(draftRect.width || 0) < 8 || Number(draftRect.height || 0) < 8) {
+            if (!dragState || dragState.mode === "new") {
+              setImageCropRect(null);
+            }
+            return;
+          }
+          setImageCropRect({
+            x: Math.round(Number(draftRect.x || 0)),
+            y: Math.round(Number(draftRect.y || 0)),
+            width: Math.round(Number(draftRect.width || 0)),
+            height: Math.round(Number(draftRect.height || 0)),
+          });
+        }
+
+        function undoImageSelectionStroke() {
+          setImageMaskStrokes((current) => {
+            if (!current.length) return current;
+            const next = current.slice(0, -1);
+            const removed = current[current.length - 1];
+            setImageMaskRedoStrokes((redoCurrent) => [removed, ...redoCurrent]);
+            return next;
+          });
+          setImageMaskDraftStroke(null);
+        }
+
+        function redoImageSelectionStroke() {
+          setImageMaskRedoStrokes((current) => {
+            if (!current.length) return current;
+            const [restored, ...remaining] = current;
+            setImageMaskStrokes((strokeCurrent) => [...strokeCurrent, restored]);
+            return remaining;
+          });
+          setImageMaskDraftStroke(null);
+        }
+
+        function handleImageMaskPointerStart(point) {
+          const nextStroke = {
+            id: "mask-stroke-" + (++imageMaskStrokeIdRef.current),
+            brushSize: point.brushSize,
+            points: [{ x: point.x, y: point.y }],
+          };
+          setImageMaskDraftStroke(nextStroke);
+          setImageMaskRedoStrokes([]);
+        }
+
+        function handleImageMaskPointerMove(point) {
+          setImageMaskDraftStroke((current) => {
+            if (!current) return current;
+            const previousPoint = current.points[current.points.length - 1];
+            const distance = previousPoint
+              ? Math.hypot(Number(point.x) - Number(previousPoint.x), Number(point.y) - Number(previousPoint.y))
+              : Number.POSITIVE_INFINITY;
+            if (distance < Math.max(1.5, Number(current.brushSize || 1) * 0.04)) {
+              return current;
+            }
+            return {
+              ...current,
+              points: [...current.points, { x: point.x, y: point.y }],
+            };
+          });
+        }
+
+        function handleImageMaskPointerEnd() {
+          setImageMaskDraftStroke((current) => {
+            if (!current || !Array.isArray(current.points) || current.points.length === 0) {
+              return null;
+            }
+            setImageMaskStrokes((strokesCurrent) => [...strokesCurrent, current]);
+            return null;
+          });
+        }
+
         const canToggleDocumentPreviewMode = singleSelectedEntryFileKind === "html" || singleSelectedEntryFileKind === "markdown";
-        const hasPreviewPanel = contentMode === "files" && selectedEntries.length > 0 && isPreviewOpen && !hasFolderOnlySelection;
+        const hasPreviewPanel = contentMode === "files" && selectedEntries.length > 0 && isPreviewOpen && !hasFolderOnlySelection && Boolean(activePreviewEntry);
         const singleSelectedEntryDownloadUrl = useMemo(() => {
-          if (!singleSelectedEntry || singleSelectedEntry.isFolder || !selectedEnvironmentId) return "";
-          return buildPlaygroundEnvironmentDownloadUrl(backendUrl, selectedEnvironmentId, singleSelectedEntry.path);
-        }, [backendUrl, selectedEnvironmentId, singleSelectedEntry]);
+          if (!activePreviewEntry || activePreviewEntry.isFolder || !selectedEnvironmentId) return "";
+          return buildPlaygroundEnvironmentDownloadUrl(backendUrl, selectedEnvironmentId, activePreviewEntry.path);
+        }, [activePreviewEntry, backendUrl, selectedEnvironmentId]);
+        const activeImageCropHistoryEntry = isImageCropMode && imageCropHistoryIndex > 0
+          ? (imageCropHistory[imageCropHistoryIndex - 1] || null)
+          : null;
         const singleSelectedEntryPreviewAttachment = useMemo(() => {
-          if (!singleSelectedEntry || singleSelectedEntry.isFolder || !singleSelectedEntryDownloadUrl) {
+          if (!activePreviewEntry || activePreviewEntry.isFolder || !singleSelectedEntryDownloadUrl) {
             return null;
           }
 
-          const fileKind = getPlaygroundFileKind(singleSelectedEntry);
+          const fileKind = getPlaygroundFileKind(activePreviewEntry);
           const htmlPreviewUrl = fileKind === "html"
-            ? buildPlaygroundEnvironmentHtmlPreviewUrl(backendUrl, selectedEnvironmentId, singleSelectedEntry.path)
+            ? buildPlaygroundEnvironmentHtmlPreviewUrl(backendUrl, selectedEnvironmentId, activePreviewEntry.path)
             : undefined;
+          const previewCacheKey = String(activePreviewEntry.modifiedTime || activePreviewEntry.updatedAt || activePreviewEntry.size || "").trim();
+          const versionedDownloadUrl = previewCacheKey
+            ? singleSelectedEntryDownloadUrl + (singleSelectedEntryDownloadUrl.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(previewCacheKey)
+            : singleSelectedEntryDownloadUrl;
+          const effectivePreviewUrl = fileKind === "image" && activeImageCropHistoryEntry?.url
+            ? activeImageCropHistoryEntry.url
+            : versionedDownloadUrl;
 
           return {
-            id: "playground-files-preview:" + selectedEnvironmentId + ":" + singleSelectedEntry.path,
-            filename: singleSelectedEntry.name,
-            mimeType: getPlaygroundPreviewMimeType(singleSelectedEntry),
+            id: "playground-files-preview:" + selectedEnvironmentId + ":" + activePreviewEntry.path,
+            filename: activePreviewEntry.name,
+            mimeType: getPlaygroundPreviewMimeType(activePreviewEntry),
             type: fileKind === "image" ? "image" : "document",
-            url: singleSelectedEntryDownloadUrl,
-            previewUrl: singleSelectedEntryDownloadUrl,
+            url: effectivePreviewUrl,
+            previewUrl: effectivePreviewUrl,
             htmlPreviewUrl,
           };
-        }, [backendUrl, selectedEnvironmentId, singleSelectedEntry, singleSelectedEntryDownloadUrl]);
-        const hasSingleFilePreview = contentMode === "files" && Boolean(singleSelectedEntryPreviewAttachment && singleSelectedEntry && !singleSelectedEntry.isFolder);
+        }, [activeImageCropHistoryEntry?.url, activePreviewEntry, backendUrl, selectedEnvironmentId, singleSelectedEntryDownloadUrl]);
+        const hasSingleFilePreview = contentMode === "files" && Boolean(singleSelectedEntryPreviewAttachment && activePreviewEntry && !activePreviewEntry.isFolder);
         const hasFileChatPanel = hasPreviewPanel && hasSingleFilePreview && isFileChatOpen;
         const showBrowserMinimizeButton = hasPreviewPanel && hasSingleFilePreview;
         const isBrowserMinimized = browserPaneMode !== "expanded";
         const isSearchInventoryLoading = Boolean(searchInventoryLoadingByEnvironmentId[selectedEnvironmentId]);
         const searchSourceInventory = searchInventoryByEnvironmentId[selectedEnvironmentId] || currentInventory;
         const fileChatRunnerKey = hasSingleFilePreview
-          ? selectedEnvironmentId + "::" + singleSelectedEntry.path
+          ? selectedEnvironmentId + "::" + activePreviewEntry.path
           : "playground-files-chat";
         const fileChatSystemPrompt = useMemo(() => {
-          if (!hasSingleFilePreview || !singleSelectedEntry || !selectedEnvironmentId) {
+          if (!hasSingleFilePreview || !activePreviewEntry || !selectedEnvironmentId) {
             return "";
           }
           return [
@@ -57164,10 +58029,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             "The user is asking about a file that already exists in the current environment.",
             "Use the file below the same way you would if it were attached from the workspace.",
             "Environment ID: " + selectedEnvironmentId,
-            "File path: /" + singleSelectedEntry.path,
+            "File path: /" + activePreviewEntry.path,
             "</system>",
           ].join("\\n");
-        }, [hasSingleFilePreview, selectedEnvironmentId, singleSelectedEntry]);
+        }, [activePreviewEntry, hasSingleFilePreview, selectedEnvironmentId]);
         const contextTargetEntry = contextMenu?.targetPath ? environmentTree.nodesByPath.get(contextMenu.targetPath) || null : null;
         const contextTargetAttachmentProjectIds = useMemo(() => {
           if (!contextTargetEntry || contextTargetEntry.isFolder || !selectedEnvironmentId) {
@@ -57212,6 +58077,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setPathHistoryIndex(0);
           setSelectedPaths(new Set());
           setSelectionAnchorPath("");
+          setPreviewTargetPath("");
         }, [environmentTree, loadedFolderPaths, normalizedCurrentPath]);
 
         useEffect(() => {
@@ -57245,6 +58111,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             setSelectionAnchorPath("");
           }
           if (
+            previewTargetPath
+            && !environmentTree.nodesByPath.has(previewTargetPath)
+            && loadedFolderPaths.has(getPlaygroundEntryParentPath(previewTargetPath))
+          ) {
+            setPreviewTargetPath("");
+          }
+          if (
             renamingPath
             && !environmentTree.nodesByPath.has(renamingPath)
             && loadedFolderPaths.has(getPlaygroundEntryParentPath(renamingPath))
@@ -57252,7 +58125,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             setRenamingPath("");
             setRenameValue("");
           }
-        }, [environmentTree, loadedFolderPaths, renamingPath, selectionAnchorPath]);
+        }, [environmentTree, loadedFolderPaths, previewTargetPath, renamingPath, selectionAnchorPath]);
 
         useEffect(() => {
           if (selectedEntries.length === 0) {
@@ -57261,14 +58134,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }, [selectedEntries.length]);
 
         useEffect(() => {
-          const normalizedSelectedPath = normalizeHistoryPath(singleSelectedEntry?.path || "");
+          const normalizedSelectedPath = normalizeHistoryPath(activePreviewEntry?.path || "");
           if (normalizedSelectedPath && createdFileEditorPathRef.current === normalizedSelectedPath) {
             createdFileEditorPathRef.current = "";
             setDocumentPreviewMode("code");
             return;
           }
           setDocumentPreviewMode("preview");
-        }, [selectedEnvironmentId, singleSelectedEntry?.path]);
+        }, [activePreviewEntry?.path, selectedEnvironmentId]);
 
         useEffect(() => {
           function handleFilesArrowNavigation(event) {
@@ -57277,7 +58150,6 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               || event.altKey
               || event.ctrlKey
               || event.metaKey
-              || event.shiftKey
               || (event.key !== "ArrowUp" && event.key !== "ArrowDown")
               || renamingPath
               || toolbarPopover
@@ -57288,7 +58160,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               return;
             }
 
-            const didSelect = selectAdjacentVisibleFile(event.key === "ArrowDown" ? 1 : -1);
+            const didSelect = selectAdjacentVisibleFile(event.key === "ArrowDown" ? 1 : -1, {
+              extendSelection: Boolean(event.shiftKey),
+            });
             if (didSelect) {
               event.preventDefault();
             }
@@ -57301,8 +58175,12 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           contextMenu,
           fileProjectPickerState,
           renamingPath,
+          environmentTree,
           selectedEntries,
+          selectedPaths,
+          selectionAnchorPath,
           selectionScopeEntries,
+          previewTargetPath,
           singleSelectedEntry,
           toolbarPopover,
         ]);
@@ -57673,6 +58551,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           closeContextMenu();
           setSelectedPaths(new Set([entry.path]));
           setSelectionAnchorPath(entry.path);
+          setPreviewTargetPath(entry.path);
           setIsPreviewOpen(true);
           setIsPreviewMaximized(false);
           setIsFileChatOpen(true);
@@ -57682,6 +58561,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           setIsPreviewMaximized(false);
           setSelectedPaths(new Set());
           setSelectionAnchorPath("");
+          setPreviewTargetPath("");
           setRenamingPath("");
           setRenameValue("");
         }
@@ -58022,6 +58902,535 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           closeContextMenu();
         }
 
+        async function handleDownloadEntries(entriesToDownload) {
+          const normalizedEnvironmentId = String(selectedEnvironmentId || "").trim();
+          const fileEntries = (Array.isArray(entriesToDownload) ? entriesToDownload : [])
+            .filter((entry) => entry && !entry.isFolder);
+          if (!normalizedEnvironmentId || fileEntries.length === 0) {
+            return;
+          }
+          closeContextMenu();
+          if (fileEntries.length === 1) {
+            await handleDownloadEntry(fileEntries[0]);
+            return;
+          }
+          const sourceEntries = [];
+          const usedZipPaths = new Set();
+          const getUniqueZipPath = (entry) => {
+            const normalizedName = normalizePlaygroundZipPath(entry?.name || normalizeHistoryPath(entry?.path || "").split("/").pop() || "file") || "file";
+            if (!usedZipPaths.has(normalizedName)) {
+              usedZipPaths.add(normalizedName);
+              return normalizedName;
+            }
+            const dotIndex = normalizedName.lastIndexOf(".");
+            const baseName = dotIndex > 0 ? normalizedName.slice(0, dotIndex) : normalizedName;
+            const extension = dotIndex > 0 ? normalizedName.slice(dotIndex) : "";
+            let suffix = 2;
+            let nextPath = baseName + "-" + suffix + extension;
+            while (usedZipPaths.has(nextPath)) {
+              suffix += 1;
+              nextPath = baseName + "-" + suffix + extension;
+            }
+            usedZipPaths.add(nextPath);
+            return nextPath;
+          };
+          try {
+            for (const entry of fileEntries) {
+              const normalizedPath = normalizeHistoryPath(entry?.path || "");
+              const downloadUrl = buildPlaygroundEnvironmentDownloadUrl(backendUrl, normalizedEnvironmentId, normalizedPath);
+              if (!downloadUrl) {
+                continue;
+              }
+              const response = await fetch(downloadUrl, {
+                method: "GET",
+                headers: requestHeaders,
+              });
+              if (!response.ok) {
+                const errorText = await response.text().catch(() => "");
+                throw new Error(errorText || "Failed to download " + normalizedPath + ".");
+              }
+              sourceEntries.push({
+                path: getUniqueZipPath(entry),
+                isDirectory: false,
+                data: new Uint8Array(await response.arrayBuffer()),
+                modifiedAt: new Date(entry?.modifiedTime || entry?.createdTime || Date.now()),
+              });
+            }
+            if (sourceEntries.length > 0) {
+              const zipBlob = createPlaygroundZipBlob(sourceEntries);
+              triggerPlaygroundBlobDownload(zipBlob, "selected-files.zip");
+            }
+          } catch (error) {
+            setActionError(error instanceof Error ? error.message : "Failed to download selected files.");
+          }
+        }
+
+        async function buildThreadAttachmentForFileEntry(entry, options = {}) {
+          const normalizedEnvironmentId = String(options?.environmentId || selectedEnvironmentId || "").trim();
+          const normalizedPath = normalizeHistoryPath(entry?.path || "");
+          if (!normalizedEnvironmentId || !normalizedPath || entry?.isFolder) {
+            throw new Error("This file cannot be attached to a thread.");
+          }
+          const downloadUrl = buildPlaygroundEnvironmentDownloadUrl(backendUrl, normalizedEnvironmentId, normalizedPath);
+          const response = await fetch(downloadUrl, {
+            method: "GET",
+            headers: requestHeaders,
+          });
+          if (!response.ok) {
+            throw new Error("Failed to load " + (entry?.name || "file") + " (" + response.status + ")");
+          }
+          const blob = await response.blob();
+          const attachmentFile = new globalThis.File([blob], entry?.name || "file", {
+            type: entry?.mimeType || blob.type || "application/octet-stream",
+          });
+          return uploadFilesPageAttachment(attachmentFile, {
+            environmentId: normalizedEnvironmentId,
+            sourcePath: normalizedPath,
+          });
+        }
+
+        function drawNaturalImageMaskStroke(ctx, stroke) {
+          const points = Array.isArray(stroke?.points) ? stroke.points : [];
+          if (!points.length) return;
+          const lineWidth = Math.max(2, Number(stroke?.brushSize || 1));
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.lineWidth = lineWidth;
+          ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+          ctx.fillStyle = "rgba(0, 0, 0, 1)";
+          if (points.length === 1) {
+            const point = points[0];
+            ctx.beginPath();
+            ctx.arc(Number(point.x || 0), Number(point.y || 0), lineWidth / 2, 0, Math.PI * 2);
+            ctx.fill();
+            return;
+          }
+          ctx.beginPath();
+          ctx.moveTo(Number(points[0]?.x || 0), Number(points[0]?.y || 0));
+          for (let index = 1; index < points.length; index += 1) {
+            ctx.lineTo(Number(points[index]?.x || 0), Number(points[index]?.y || 0));
+          }
+          ctx.stroke();
+        }
+
+        function createImageSelectionMaskBlob() {
+          return new Promise((resolve, reject) => {
+            const width = Math.round(Number(imageMaskImageSize?.width || 0));
+            const height = Math.round(Number(imageMaskImageSize?.height || 0));
+            const strokes = Array.isArray(imageMaskStrokes) ? imageMaskStrokes : [];
+            if (!width || !height || !strokes.length || typeof document === "undefined") {
+              resolve(null);
+              return;
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              resolve(null);
+              return;
+            }
+            ctx.fillStyle = "rgba(0, 0, 0, 1)";
+            ctx.fillRect(0, 0, width, height);
+            ctx.globalCompositeOperation = "destination-out";
+            strokes.forEach((stroke) => drawNaturalImageMaskStroke(ctx, stroke));
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error("Failed to create image edit mask."));
+                return;
+              }
+              resolve(blob);
+            }, "image/png");
+          });
+        }
+
+        async function buildImageSelectionMaskAttachment(entry, environmentId) {
+          if (singleSelectedEntryFileKind !== "image" || !hasActiveImageMaskSelection) {
+            return null;
+          }
+          const maskBlob = await createImageSelectionMaskBlob();
+          if (!maskBlob) {
+            return null;
+          }
+          const rawBaseName = String(entry?.name || "image");
+          const lastDotIndex = rawBaseName.lastIndexOf(".");
+          const baseNameWithoutExtension = lastDotIndex > 0 ? rawBaseName.slice(0, lastDotIndex) : rawBaseName;
+          const normalizedBaseName = baseNameWithoutExtension
+            .replace(new RegExp("[^a-zA-Z0-9._-]+", "g"), "_")
+            .replace(new RegExp("^_+|_+$", "g"), "")
+            || "image";
+          const maskFilename = normalizedBaseName + "-selected-region-mask.png";
+          const maskFile = new globalThis.File([maskBlob], maskFilename, { type: "image/png" });
+          return uploadFilesPageAttachment(maskFile, {
+            environmentId,
+          });
+        }
+
+        function buildImageSelectionInpaintPrompt(entry, maskAttachment) {
+          const maskFilename = String(maskAttachment?.filename || maskAttachment?.name || "selected-region-mask.png").trim();
+          const sourcePath = normalizeHistoryPath(entry?.path || "");
+          return [
+            "<system>",
+            "The user painted a selected region on the source image before submitting this prompt.",
+            "Treat the request as an image editing/inpainting task and use the Image Generation skill.",
+            "Use the source image with --input and the selected-region mask with --mask.",
+            "Source image filename: " + String(entry?.name || "image").trim(),
+            sourcePath ? "Source image workspace path: /workspace/" + sourcePath : "",
+            maskFilename ? "Mask attachment filename: " + maskFilename : "",
+            maskFilename ? "The mask attachment is available in the thread attachments alongside the source image." : "",
+            "The mask is an OpenAI edit mask: transparent pixels mark exactly the selected area to change, and opaque pixels must be preserved.",
+            "Only change the masked region. Preserve everything outside the selected region unless the user explicitly asks otherwise.",
+            "</system>",
+          ].filter(Boolean).join("\\n");
+        }
+
+        function createImageCanvasBlob(canvas, type, quality) {
+          return new Promise((resolve, reject) => {
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error("Failed to create cropped image."));
+                return;
+              }
+              resolve(blob);
+            }, type, quality);
+          });
+        }
+
+        function loadImageElementFromBlob(blob) {
+          return new Promise((resolve, reject) => {
+            const objectUrl = URL.createObjectURL(blob);
+            const image = new Image();
+            image.onload = () => {
+              URL.revokeObjectURL(objectUrl);
+              resolve(image);
+            };
+            image.onerror = () => {
+              URL.revokeObjectURL(objectUrl);
+              reject(new Error("Failed to load image for cropping."));
+            };
+            image.src = objectUrl;
+          });
+        }
+
+        async function createCroppedImageBlob(sourceBlob, cropRect, entry) {
+          const rect = {
+            x: Math.max(0, Math.round(Number(cropRect?.x || 0))),
+            y: Math.max(0, Math.round(Number(cropRect?.y || 0))),
+            width: Math.max(1, Math.round(Number(cropRect?.width || 0))),
+            height: Math.max(1, Math.round(Number(cropRect?.height || 0))),
+          };
+          const imageSource = typeof createImageBitmap === "function"
+            ? await createImageBitmap(sourceBlob)
+            : await loadImageElementFromBlob(sourceBlob);
+          const sourceWidth = Math.max(1, Number(imageSource?.width || imageSource?.naturalWidth || imageMaskImageSize?.width || rect.width));
+          const sourceHeight = Math.max(1, Number(imageSource?.height || imageSource?.naturalHeight || imageMaskImageSize?.height || rect.height));
+          const safeX = Math.max(0, Math.min(sourceWidth - 1, rect.x));
+          const safeY = Math.max(0, Math.min(sourceHeight - 1, rect.y));
+          const safeRect = {
+            x: safeX,
+            y: safeY,
+            width: Math.max(1, Math.min(rect.width, sourceWidth - safeX)),
+            height: Math.max(1, Math.min(rect.height, sourceHeight - safeY)),
+          };
+          const canvas = document.createElement("canvas");
+          canvas.width = safeRect.width;
+          canvas.height = safeRect.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            throw new Error("Image crop canvas is unavailable.");
+          }
+          ctx.drawImage(
+            imageSource,
+            safeRect.x,
+            safeRect.y,
+            safeRect.width,
+            safeRect.height,
+            0,
+            0,
+            safeRect.width,
+            safeRect.height
+          );
+          if (typeof imageSource?.close === "function") {
+            imageSource.close();
+          }
+          const sourceType = String(sourceBlob?.type || getPlaygroundPreviewMimeType(entry) || "").toLowerCase();
+          const outputType = ["image/jpeg", "image/png", "image/webp"].includes(sourceType) ? sourceType : "image/png";
+          return createImageCanvasBlob(canvas, outputType, outputType === "image/jpeg" || outputType === "image/webp" ? 0.92 : undefined);
+        }
+
+        async function getImageCropSourceBlob() {
+          if (activeImageCropHistoryEntry?.blob) {
+            return activeImageCropHistoryEntry.blob;
+          }
+          if (!singleSelectedEntryDownloadUrl) {
+            throw new Error("No source image is available for cropping.");
+          }
+          const response = await fetch(singleSelectedEntryDownloadUrl, {
+            method: "GET",
+            headers: requestHeaders,
+            cache: "no-store",
+          });
+          if (!response.ok) {
+            throw new Error("Failed to load image for cropping (" + response.status + ").");
+          }
+          return response.blob();
+        }
+
+        async function applyImageCropToActivePreview() {
+          if (!activePreviewEntry || activePreviewEntry.isFolder || !selectedEnvironmentId || !singleSelectedEntryDownloadUrl || !imageCropRect || isCroppingImage || isSavingImageCrop) {
+            return;
+          }
+          setIsCroppingImage(true);
+          setActionError("");
+
+          try {
+            const sourceBlob = await getImageCropSourceBlob();
+            const croppedBlob = await createCroppedImageBlob(sourceBlob, imageCropRect, activePreviewEntry);
+            const croppedUrl = URL.createObjectURL(croppedBlob);
+            const nextIndex = imageCropHistoryIndex + 1;
+            setImageCropHistory((current) => {
+              const kept = current.slice(0, imageCropHistoryIndex);
+              revokeImageCropHistoryEntries(current.slice(imageCropHistoryIndex));
+              return [
+                ...kept,
+                {
+                  blob: croppedBlob,
+                  url: croppedUrl,
+                  width: Math.round(Number(imageCropRect.width || 0)),
+                  height: Math.round(Number(imageCropRect.height || 0)),
+                },
+              ];
+            });
+            setImageCropHistoryIndex(nextIndex);
+            setImageCropRect(null);
+            setImageCropDraftRect(null);
+          } catch (error) {
+            setActionError(error instanceof Error ? error.message : "Failed to crop image.");
+          } finally {
+            setIsCroppingImage(false);
+          }
+        }
+
+        async function saveImageCropToActivePreview() {
+          if (!activePreviewEntry || activePreviewEntry.isFolder || !selectedEnvironmentId || !activeImageCropHistoryEntry?.blob || isCroppingImage || isSavingImageCrop) {
+            return;
+          }
+          setIsSavingImageCrop(true);
+          setActionError("");
+
+          try {
+            const croppedBlob = activeImageCropHistoryEntry.blob;
+            const parentPath = getPlaygroundEntryParentPath(activePreviewEntry.path);
+            const formData = new FormData();
+            formData.append("file", croppedBlob, activePreviewEntry.name || "image.png");
+            formData.append("path", parentPath);
+            const uploadResponse = await fetch(
+              backendUrl + "/environments/" + encodeURIComponent(selectedEnvironmentId) + "/files/upload",
+              {
+                method: "POST",
+                headers: requestHeaders,
+                body: formData,
+              }
+            );
+            const uploadData = await uploadResponse.json().catch(() => ({}));
+            if (!uploadResponse.ok) {
+              throw new Error(uploadData?.message || uploadData?.error || "Failed to save cropped image.");
+            }
+            await refreshEnvironmentFolders(selectedEnvironmentId, [parentPath]);
+            resetImageCropMode();
+            setIsPreviewOpen(true);
+            setPreviewTargetPath(activePreviewEntry.path);
+          } catch (error) {
+            setActionError(error instanceof Error ? error.message : "Failed to save cropped image.");
+            setIsSavingImageCrop(false);
+          }
+        }
+
+        function undoImageCropHistory() {
+          setImageCropHistoryIndex((current) => Math.max(0, current - 1));
+          setImageCropRect(null);
+          setImageCropDraftRect(null);
+          imageCropStartPointRef.current = null;
+          imageCropDraftRectRef.current = null;
+          imageCropDragStateRef.current = null;
+        }
+
+        function redoImageCropHistory() {
+          setImageCropHistoryIndex((current) => Math.min(imageCropHistory.length, current + 1));
+          setImageCropRect(null);
+          setImageCropDraftRect(null);
+          imageCropStartPointRef.current = null;
+          imageCropDraftRectRef.current = null;
+          imageCropDragStateRef.current = null;
+        }
+
+        async function handleStartChatForEntries(entriesToAttach) {
+          const fileEntries = (Array.isArray(entriesToAttach) ? entriesToAttach : [])
+            .filter((entry) => entry && !entry.isFolder);
+          if (!fileEntries.length || !selectedEnvironmentId || typeof onThreadOpen !== "function") {
+            return;
+          }
+
+          closeContextMenu();
+          setActionError("");
+
+          try {
+            const attachments = [];
+            for (const entry of fileEntries) {
+              attachments.push(await buildThreadAttachmentForFileEntry(entry));
+            }
+            const headers = new Headers(requestHeaders || {});
+            headers.set("Content-Type", "application/json");
+            if (apiKey) {
+              headers.set("X-API-Key", apiKey);
+            }
+            const title = fileEntries.length === 1
+              ? "Chat with " + (fileEntries[0]?.name || "file")
+              : "Chat with " + fileEntries.length + " files";
+            const response = await fetch(backendUrl + "/threads", {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                title,
+                appId: "runner-web-sdk-demo",
+                environmentId: selectedEnvironmentId,
+                ...(agentId ? { agentId } : {}),
+                attachments,
+              }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to start chat.");
+            }
+            const threadRecord = data?.thread && typeof data.thread === "object" ? data.thread : data?.data || data;
+            const threadId = String(threadRecord?.id || data?.id || "").trim();
+            if (!threadId) {
+              throw new Error("Thread creation succeeded but no thread id was returned.");
+            }
+            onThreadOpen(threadId, threadRecord?.id ? { threadRecord } : {});
+          } catch (error) {
+            setActionError(error instanceof Error ? error.message : "Failed to start chat.");
+          }
+        }
+
+        async function generateFilesPageThreadTitle(threadId, prompt) {
+          const normalizedThreadId = String(threadId || "").trim();
+          const normalizedPrompt = String(prompt || "").trim();
+          const normalizedBackendUrl = String(backendUrl || "").trim().replace(new RegExp("/+$"), "");
+          if (!normalizedThreadId || !normalizedPrompt || !normalizedBackendUrl) {
+            return "";
+          }
+
+          const headers = new Headers(requestHeaders || {});
+          headers.set("Content-Type", "application/json");
+          if (apiKey) {
+            headers.set("X-API-Key", apiKey);
+          }
+
+          const response = await fetch(
+            normalizedBackendUrl + "/threads/" + encodeURIComponent(normalizedThreadId) + "/generate-title",
+            {
+              method: "POST",
+              headers,
+              body: JSON.stringify({ message: normalizedPrompt }),
+            }
+          );
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to generate thread title.");
+          }
+
+          const generatedTitle =
+            String(data?.thread?.title || "").trim()
+            || String(data?.title || "").trim();
+          return generatedTitle;
+        }
+
+        async function handleImagePreviewExternalRunRequest(entry, runRequest, sourceEnvironmentId = selectedEnvironmentId) {
+          const normalizedThreadId = String(runRequest?.threadId || "").trim();
+          const normalizedPrompt = String(runRequest?.prompt || runRequest?.displayPrompt || "").trim();
+          const normalizedRunEnvironmentId = String(runRequest?.environmentId || selectedEnvironmentId || "").trim();
+          const normalizedSourceEnvironmentId = String(sourceEnvironmentId || selectedEnvironmentId || "").trim();
+          if (!entry || entry.isFolder || !normalizedThreadId || !normalizedPrompt || !normalizedSourceEnvironmentId) {
+            return;
+          }
+          if (typeof onThreadStarted !== "function" && typeof onThreadOpen !== "function") {
+            return;
+          }
+
+          setIsStartingImagePreviewThread(true);
+          setActionError("");
+
+          let didRequestNavigation = false;
+          try {
+            const attachment = await buildThreadAttachmentForFileEntry(entry, {
+              environmentId: normalizedSourceEnvironmentId,
+            });
+            const maskAttachment = await buildImageSelectionMaskAttachment(entry, normalizedSourceEnvironmentId);
+            const selectionPrompt = maskAttachment
+              ? buildImageSelectionInpaintPrompt(entry, maskAttachment)
+              : "";
+            const executionPrompt = selectionPrompt
+              ? selectionPrompt + "\\n\\n" + (runRequest?.prompt || normalizedPrompt)
+              : (runRequest?.prompt || normalizedPrompt);
+            const displayPrompt = runRequest?.displayPrompt || normalizedPrompt;
+            const fallbackThreadTitle = "Chat with " + (String(entry?.name || "").trim() || "image");
+            const generatedThreadRecord = {
+              id: normalizedThreadId,
+              title: fallbackThreadTitle,
+              updatedAt: new Date().toISOString(),
+            };
+            if (typeof onFileChatThreadMutated === "function") {
+              onFileChatThreadMutated();
+            }
+            if (typeof onThreadStarted === "function") {
+              didRequestNavigation = true;
+              onThreadStarted(normalizedThreadId, {
+                threadRecord: generatedThreadRecord,
+                taskRunRequest: {
+                  ...runRequest,
+                  token: runRequest?.token || ("image-preview:" + Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                  threadId: normalizedThreadId,
+                  prompt: executionPrompt,
+                  displayPrompt,
+                  agentId: runRequest?.agentId || agentId || null,
+                  attachments: [
+                    ...(Array.isArray(runRequest?.attachments) ? runRequest.attachments : []),
+                    attachment,
+                    ...(maskAttachment ? [maskAttachment] : []),
+                  ],
+                  environmentId: normalizedRunEnvironmentId,
+                  executionStarted: false,
+                },
+              });
+            } else {
+              didRequestNavigation = true;
+              onThreadOpen(normalizedThreadId, generatedThreadRecord ? { threadRecord: generatedThreadRecord } : {});
+            }
+            void generateFilesPageThreadTitle(normalizedThreadId, displayPrompt)
+              .then((generatedTitle) => {
+                if (generatedTitle && typeof onFileChatThreadMutated === "function") {
+                  onFileChatThreadMutated();
+                }
+              })
+              .catch((titleError) => {
+                console.warn("[PlaygroundFilesPage] Failed to generate image chat title", titleError);
+              });
+            if (maskAttachment) {
+              resetImageSelectionMode();
+            }
+          } catch (error) {
+            didRequestNavigation = false;
+            setActionError(error instanceof Error ? error.message : "Failed to start image chat.");
+          } finally {
+            if (didRequestNavigation && typeof window !== "undefined") {
+              window.setTimeout(() => setIsStartingImagePreviewThread(false), 10000);
+            } else {
+              setIsStartingImagePreviewThread(false);
+            }
+          }
+        }
+
         function handleOpenSourceThread(threadId, threadRecord = null) {
           const normalizedThreadId = String(threadId || "").trim();
           if (!normalizedThreadId || typeof onThreadOpen !== "function") {
@@ -58048,6 +59457,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           const shouldOpenPreview = options.showPreview !== false;
           setSelectedPaths(next);
           setSelectionAnchorPath(normalizedPath);
+          setPreviewTargetPath(normalizedPath);
           setIsPreviewOpen(shouldOpenPreview && Boolean(normalizedPath));
         }
 
@@ -58065,6 +59475,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             .filter(Boolean);
           setSelectedPaths(new Set(normalizedSelectionPaths));
           setSelectionAnchorPath(normalizedSelectionPaths[normalizedSelectionPaths.length - 1] || "");
+          setPreviewTargetPath(normalizedSelectionPaths[normalizedSelectionPaths.length - 1] || "");
           setRenamingPath("");
           setRenameValue("");
           setToolbarPopover("");
@@ -58100,12 +59511,41 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           });
         }
 
-        function selectAdjacentVisibleFile(direction) {
-          if (contentMode !== "files" || selectedEntries.length !== 1 || !singleSelectedEntry || singleSelectedEntry.isFolder) {
+        function getOrderedSelectableFileEntries() {
+          return selectionScopeEntries.filter((entry) => entry && !entry.isFolder);
+        }
+
+        function getLastSelectedFilePath(nextSelectedPaths = selectedPaths) {
+          const normalizedPreviewPath = normalizeHistoryPath(previewTargetPath);
+          if (normalizedPreviewPath && nextSelectedPaths.has(normalizedPreviewPath)) {
+            const previewEntry = environmentTree.nodesByPath.get(normalizedPreviewPath);
+            if (previewEntry && !previewEntry.isFolder) {
+              return normalizedPreviewPath;
+            }
+          }
+          const orderedFiles = getOrderedSelectableFileEntries();
+          for (let index = orderedFiles.length - 1; index >= 0; index -= 1) {
+            const normalizedPath = normalizeHistoryPath(orderedFiles[index]?.path || "");
+            if (normalizedPath && nextSelectedPaths.has(normalizedPath)) {
+              return normalizedPath;
+            }
+          }
+          for (const value of nextSelectedPaths) {
+            const normalizedPath = normalizeHistoryPath(value);
+            const entry = normalizedPath ? environmentTree.nodesByPath.get(normalizedPath) : null;
+            if (entry && !entry.isFolder) {
+              return normalizedPath;
+            }
+          }
+          return "";
+        }
+
+        function selectAdjacentVisibleFile(direction, options = {}) {
+          if (contentMode !== "files") {
             return false;
           }
-          const normalizedCurrentPath = normalizeHistoryPath(singleSelectedEntry.path);
-          const fileEntries = selectionScopeEntries.filter((entry) => entry && !entry.isFolder);
+          const fileEntries = getOrderedSelectableFileEntries();
+          const normalizedCurrentPath = getLastSelectedFilePath() || normalizeHistoryPath(singleSelectedEntry?.path || "");
           const currentIndex = fileEntries.findIndex((entry) => normalizeHistoryPath(entry.path) === normalizedCurrentPath);
           if (currentIndex < 0) {
             return false;
@@ -58118,7 +59558,23 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (!nextEntry?.path) {
             return false;
           }
-          setSingleSelection(nextEntry.path);
+          const nextPath = normalizeHistoryPath(nextEntry.path);
+          if (options.extendSelection) {
+            const filePaths = fileEntries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean);
+            const anchorPath = normalizeHistoryPath(selectionAnchorPath || normalizedCurrentPath || nextPath);
+            const anchorIndex = filePaths.indexOf(anchorPath);
+            const targetIndex = filePaths.indexOf(nextPath);
+            if (anchorIndex < 0 || targetIndex < 0) {
+              return false;
+            }
+            const nextSelection = filePaths.slice(Math.min(anchorIndex, targetIndex), Math.max(anchorIndex, targetIndex) + 1);
+            setSelectedPaths(new Set(nextSelection));
+            setSelectionAnchorPath(anchorPath);
+            setPreviewTargetPath(nextPath);
+            setIsPreviewOpen(nextSelection.length > 0);
+          } else {
+            setSingleSelection(nextPath);
+          }
           setContextMenu(null);
           setToolbarPopover("");
           scrollFileEntryIntoView(nextEntry.path);
@@ -58150,6 +59606,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             }
             setSelectedPaths(new Set());
             setSelectionAnchorPath("");
+            setPreviewTargetPath("");
             setRenamingPath("");
             setRenameValue("");
             setIsPreviewOpen(false);
@@ -58233,32 +59690,38 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return;
           }
 
-          if (event.shiftKey && selectionAnchorPath) {
-            const orderedPaths = selectionScopeEntries.map((value) => normalizeHistoryPath(value.path));
-            const anchorIndex = orderedPaths.indexOf(selectionAnchorPath);
+          if (event.shiftKey && !entry.isFolder) {
+            const orderedPaths = getOrderedSelectableFileEntries().map((value) => normalizeHistoryPath(value.path));
+            const anchorPath = normalizeHistoryPath(selectionAnchorPath || getLastSelectedFilePath() || targetPath);
+            const resolvedAnchorIndex = orderedPaths.indexOf(anchorPath);
             const targetIndex = orderedPaths.indexOf(targetPath);
-            if (anchorIndex >= 0 && targetIndex >= 0) {
-              const nextSelection = orderedPaths.slice(Math.min(anchorIndex, targetIndex), Math.max(anchorIndex, targetIndex) + 1);
+            if (resolvedAnchorIndex >= 0 && targetIndex >= 0) {
+              const nextSelection = orderedPaths.slice(Math.min(resolvedAnchorIndex, targetIndex), Math.max(resolvedAnchorIndex, targetIndex) + 1);
               setSelectedPaths(new Set(nextSelection));
-              setSelectionAnchorPath(targetPath);
+              setSelectionAnchorPath(orderedPaths[resolvedAnchorIndex] || targetPath);
+              setPreviewTargetPath(targetPath);
               setIsPreviewOpen(nextSelection.length > 0);
               setContextMenu(null);
               return;
             }
           }
 
-          if (event.metaKey || event.ctrlKey) {
+          if ((event.metaKey || event.ctrlKey) && !entry.isFolder) {
             setSelectedPaths((current) => {
               const next = new Set(current);
               if (next.has(targetPath)) {
                 next.delete(targetPath);
+                const nextPreviewPath = getLastSelectedFilePath(next);
+                setPreviewTargetPath(nextPreviewPath);
+                setSelectionAnchorPath((currentAnchorPath) => next.has(currentAnchorPath) ? currentAnchorPath : nextPreviewPath);
               } else {
                 next.add(targetPath);
+                setPreviewTargetPath(targetPath);
+                setSelectionAnchorPath(targetPath);
               }
               setIsPreviewOpen(next.size > 0);
               return next;
             });
-            setSelectionAnchorPath(targetPath);
             setContextMenu(null);
             return;
           }
@@ -58275,6 +59738,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (entry?.path) {
             setSelectedPaths(new Set([entry.path]));
             setSelectionAnchorPath(entry.path);
+            setPreviewTargetPath(entry.path);
             setIsPreviewOpen(true);
             setIsPreviewMaximized(true);
             setIsFileChatOpen(false);
@@ -58486,11 +59950,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           });
         }
 
-        function openFileProjectPickerDialog(entry) {
-          if (!entry || entry.isFolder) {
+        function openFileProjectPickerDialog(entryOrEntries) {
+          const entries = (Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries])
+            .filter((entry) => entry && !entry.isFolder);
+          if (!entries.length) {
             return;
           }
-          const normalizedPath = normalizeHistoryPath(entry.path);
+          const normalizedPath = normalizeHistoryPath(entries[0].path);
+          const normalizedPaths = entries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean);
           const linkedProjectIds = Array.from(
             (projectAttachmentLinksByEnvironmentId[selectedEnvironmentId]?.byPath?.[normalizedPath] instanceof Set
               ? projectAttachmentLinksByEnvironmentId[selectedEnvironmentId].byPath[normalizedPath]
@@ -58501,7 +59968,10 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             || String(availableProjectFilters[0]?.id || "").trim();
           setFileProjectPickerState({
             path: normalizedPath,
-            title: entry.name || normalizedPath || "file",
+            paths: normalizedPaths,
+            title: entries.length === 1
+              ? (entries[0].name || normalizedPath || "file")
+              : (entries.length + " files"),
           });
           setFileProjectPickerValue(defaultProjectId);
           setFileProjectPickerError("");
@@ -58562,9 +60032,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             return;
           }
           const targetProject = availableProjectFilters.find((project) => project.id === normalizedProjectId) || null;
-          const entry = environmentTree.nodesByPath.get(fileProjectPickerState.path) || null;
-          if (!entry || !targetProject) {
-            setFileProjectPickerError("The selected file is no longer available.");
+          const pickerPaths = Array.isArray(fileProjectPickerState.paths) && fileProjectPickerState.paths.length
+            ? fileProjectPickerState.paths
+            : [fileProjectPickerState.path];
+          const pickerEntries = pickerPaths
+            .map((path) => environmentTree.nodesByPath.get(normalizeHistoryPath(path)) || null)
+            .filter((entry) => entry && !entry.isFolder);
+          if (!pickerEntries.length || !targetProject) {
+            setFileProjectPickerError("The selected files are no longer available.");
             return;
           }
 
@@ -58576,12 +60051,15 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           });
 
           try {
-            const uploadedAttachment = await buildProjectAttachmentForEntry(entry, targetProject);
-            const nextAttachments = mergeFilesProjectAttachmentLists(targetProject.attachments, [uploadedAttachment]);
+            const uploadedAttachments = [];
+            for (const entry of pickerEntries) {
+              uploadedAttachments.push(await buildProjectAttachmentForEntry(entry, targetProject));
+            }
+            const nextAttachments = mergeFilesProjectAttachmentLists(targetProject.attachments, uploadedAttachments);
             await persistFilesProjectAttachments(normalizedProjectId, nextAttachments);
             closeFileProjectPickerDialog();
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to add the file to the project.";
+            const errorMessage = error instanceof Error ? error.message : "Failed to add files to the project.";
             setFileProjectPickerError(errorMessage);
             setFileProjectMutationState({
               path: fileProjectPickerState.path,
@@ -58603,12 +60081,14 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (shouldSelectTarget && targetEntry && !selectedPaths.has(targetEntry.path)) {
             setSelectedPaths(new Set([targetEntry.path]));
             setSelectionAnchorPath(targetEntry.path);
+            setPreviewTargetPath(targetEntry.path);
           }
 
-          const menuWidth = targetEntry && !targetEntry.isFolder ? 264 : 232;
-          const menuHeight = targetEntry
+          const isMultiFileSelectionMenu = Boolean(options.multiFileSelection);
+          const menuWidth = isMultiFileSelectionMenu ? 232 : (targetEntry && !targetEntry.isFolder ? 264 : 232);
+          const menuHeight = isMultiFileSelectionMenu ? 204 : (targetEntry
             ? (!targetEntry.isFolder ? 336 : 240)
-            : 138;
+            : 138);
           const x = Math.min(nextX, window.innerWidth - menuWidth - 12);
           const y = Math.min(nextY, window.innerHeight - menuHeight - 12);
 
@@ -58620,6 +60100,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             x: Math.max(12, x),
             y: Math.max(12, y),
             targetPath: targetEntry ? targetEntry.path : "",
+            multiFileSelection: isMultiFileSelectionMenu,
           });
         }
 
@@ -58627,6 +60108,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           event.preventDefault();
           event.stopPropagation();
           const rect = event.currentTarget.getBoundingClientRect();
+          if (selectedFileEntries.length > 1 && entry && selectedPaths.has(normalizeHistoryPath(entry.path))) {
+            openContextMenuAt(null, rect.right - 8, rect.bottom + 8, {
+              selectTarget: false,
+              multiFileSelection: true,
+            });
+            return;
+          }
           openContextMenuAt(entry, rect.right - 8, rect.bottom + 8, { selectTarget: false });
         }
 
@@ -58846,6 +60334,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
             await refreshEnvironmentFolders(selectedEnvironmentId, [parentPath]);
             setSelectedPaths(new Set([destPath]));
             setSelectionAnchorPath(destPath);
+            setPreviewTargetPath(destPath);
           } catch (error) {
             setActionError(error instanceof Error ? error.message : "Failed to rename item.");
           }
@@ -58978,6 +60467,13 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         function handleContextMenu(event, targetEntry = null) {
           event.preventDefault();
           event.stopPropagation();
+          if (selectedFileEntries.length > 1) {
+            openContextMenuAt(null, event.clientX, event.clientY, {
+              selectTarget: false,
+              multiFileSelection: true,
+            });
+            return;
+          }
           openContextMenuAt(targetEntry, event.clientX, event.clientY);
         }
 
@@ -58991,6 +60487,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           if (!selectedPaths.has(normalizedPath)) {
             setSelectedPaths(new Set([normalizedPath]));
             setSelectionAnchorPath(normalizedPath);
+            setPreviewTargetPath(normalizedPath);
           }
           setDraggedPaths(nextDraggedPaths);
           event.dataTransfer.effectAllowed = "move";
@@ -59614,7 +61111,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }
 
         function renderFileChatSidebar() {
-          if (!hasSingleFilePreview || !singleSelectedEntry) {
+          if (!hasSingleFilePreview || !activePreviewEntry) {
             return null;
           }
 
@@ -59669,8 +61166,8 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }
 
         function getActivePreviewTitle() {
-          if (singleSelectedEntry?.name) {
-            return singleSelectedEntry.name;
+          if (activePreviewEntry?.name) {
+            return activePreviewEntry.name;
           }
           return selectedEntries.length > 0 ? selectedEntries.length + " items selected" : "Preview";
         }
@@ -59708,12 +61205,73 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }, React.createElement(PreviewSizeIcon, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 }));
         }
 
+        function renderImagePreviewThreadComposer(entry) {
+          if (!entry || entry.isFolder || singleSelectedEntryFileKind !== "image") {
+            return null;
+          }
+          const sourceEnvironmentId = String(selectedEnvironmentId || "").trim();
+          const composerAgents = (Array.isArray(agents) ? agents : [])
+            .map((agent) => ({
+              id: String(agent?.id || "").trim(),
+              name: String(agent?.name || agent?.label || "Agent").trim() || "Agent",
+              description: String(agent?.description || "").trim(),
+              isDefault: String(agent?.id || "").trim() === String(agentId || "").trim(),
+            }))
+            .filter((agent) => agent.id);
+          const composerEnvironments = (Array.isArray(environments) ? environments : [])
+            .map((environment) => ({
+              id: String(environment?.id || "").trim(),
+              name: String(environment?.name || environment?.label || "Computer").trim() || "Computer",
+              description: String(environment?.description || "").trim(),
+              isDefault: String(environment?.id || "").trim() === sourceEnvironmentId,
+            }))
+            .filter((environment) => environment.id);
+          return React.createElement(RunnerChat, {
+            key: "files-image-preview-composer:" + sourceEnvironmentId + ":" + normalizeHistoryPath(entry.path || entry.name || ""),
+            className: "playground-files-image-thread-composer" + (isStartingImagePreviewThread ? " is-starting-thread" : ""),
+            backendUrl,
+            apiKey,
+            requestHeaders,
+            appId: "runner-web-sdk-demo",
+            environmentId: sourceEnvironmentId,
+            agentId: agentId || "",
+            agents: composerAgents,
+            environments: composerEnvironments,
+            inputMode: "computer-agents",
+            placeholder: "Ask about this image",
+            autoCreateThread: true,
+            autoFocusComposer: false,
+            keepFocusOnSubmit: false,
+            showUsageInStatus: false,
+            maxAttachments: 10,
+            disabled: isStartingImagePreviewThread,
+            uploadFiles: (files) => Promise.all((Array.isArray(files) ? files : []).map((file) =>
+              uploadFilesPageAttachment(file, {
+                environmentId: selectedEnvironmentId,
+              })
+            )),
+            onEnvironmentChange: (nextEnvironmentId) => {
+              const normalizedNextEnvironmentId = String(nextEnvironmentId || "").trim();
+              if (normalizedNextEnvironmentId) {
+                setSelectedEnvironmentId(normalizedNextEnvironmentId);
+              }
+            },
+            onExternalRunRequestCreate: (runRequest) => {
+              void handleImagePreviewExternalRunRequest(entry, runRequest, sourceEnvironmentId);
+              return true;
+            },
+            onRunError: (error) => {
+              setActionError(error instanceof Error ? error.message : "Failed to start image chat.");
+            },
+          });
+        }
+
         function renderPreviewPanel() {
           if (selectedEntries.length === 0) {
             return null;
           }
 
-          if (!singleSelectedEntry) {
+          if (!activePreviewEntry) {
             const folderCount = selectedEntries.filter((entry) => entry.isFolder).length;
             const fileCount = selectedEntries.length - folderCount;
             return React.createElement("div", { className: "playground-files-preview-shell" },
@@ -59762,44 +61320,135 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
           }
 
           const shouldAutoFocusSelectedEntry = Boolean(
-            singleSelectedEntry
-            && normalizeHistoryPath(autoFocusPreviewPath) === normalizeHistoryPath(singleSelectedEntry.path)
+            activePreviewEntry
+            && normalizeHistoryPath(autoFocusPreviewPath) === normalizeHistoryPath(activePreviewEntry.path)
           );
-          const previewHeaderActions = React.createElement(React.Fragment, null,
-            canToggleDocumentPreviewMode
-              ? React.createElement("button", {
+          const previewHeaderActions = singleSelectedEntryFileKind === "image" && isImageSelectionMode
+            ? React.createElement("div", { className: "playground-files-image-selection-controls" },
+                React.createElement("button", {
                   type: "button",
-                  className: "tb-attachment-preview-drawer-action" + (documentPreviewMode === "code" ? " is-active" : ""),
-                  onClick: () => setDocumentPreviewMode((current) => current === "code" ? "preview" : "code"),
-                  title: documentPreviewMode === "code" ? "Switch to preview mode" : "Switch to code view",
-                  "aria-label": documentPreviewMode === "code" ? "Switch to preview mode" : "Switch to code view",
-                  "aria-pressed": documentPreviewMode === "code" ? "true" : "false",
-                },
-                  documentPreviewMode === "code"
-                    ? React.createElement(Eye, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })
-                    : React.createElement(Code, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })
+                  className: "playground-files-image-selection-button is-icon",
+                  onClick: undoImageSelectionStroke,
+                  disabled: imageMaskStrokes.length === 0,
+                  title: "Undo selection stroke",
+                  "aria-label": "Undo selection stroke",
+                }, React.createElement(RotateCcw, { width: 16, height: 16, strokeWidth: 1.9 })),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-image-selection-button is-icon",
+                  onClick: redoImageSelectionStroke,
+                  disabled: imageMaskRedoStrokes.length === 0,
+                  title: "Redo selection stroke",
+                  "aria-label": "Redo selection stroke",
+                }, React.createElement(RotateCw, { width: 16, height: 16, strokeWidth: 1.9 })),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-image-selection-button",
+                  onClick: resetImageSelectionMode,
+                }, "Cancel")
+              )
+            : singleSelectedEntryFileKind === "image" && isImageCropMode
+              ? React.createElement("div", { className: "playground-files-image-selection-controls" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-image-selection-button is-icon is-plain",
+                    onClick: undoImageCropHistory,
+                    disabled: imageCropHistoryIndex <= 0 || isCroppingImage || isSavingImageCrop,
+                    title: "Undo crop",
+                    "aria-label": "Undo crop",
+                  }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.9 })),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-image-selection-button is-icon is-plain",
+                    onClick: redoImageCropHistory,
+                    disabled: imageCropHistoryIndex >= imageCropHistory.length || isCroppingImage || isSavingImageCrop,
+                    title: "Redo crop",
+                    "aria-label": "Redo crop",
+                  }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.9 })),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-image-selection-button is-plain",
+                    onClick: resetImageCropMode,
+                    disabled: isCroppingImage || isSavingImageCrop,
+                  }, "Cancel"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-image-selection-button",
+                    onClick: () => void applyImageCropToActivePreview(),
+                    disabled: !imageCropRect || isCroppingImage || isSavingImageCrop,
+                  },
+                    isCroppingImage
+                      ? React.createElement(Loader2, { className: "is-spinning", width: 14, height: 14, strokeWidth: 1.9 })
+                      : React.createElement(Crop, { width: 14, height: 14, strokeWidth: 1.9 }),
+                    React.createElement("span", null, isCroppingImage ? "Cropping..." : "Apply Crop")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-image-selection-button",
+                    onClick: () => void saveImageCropToActivePreview(),
+                    disabled: imageCropHistoryIndex <= 0 || isCroppingImage || isSavingImageCrop,
+                  },
+                    isSavingImageCrop
+                      ? React.createElement(Loader2, { className: "is-spinning", width: 14, height: 14, strokeWidth: 1.9 })
+                      : React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 }),
+                    React.createElement("span", null, isSavingImageCrop ? "Saving..." : "Save")
+                  )
                 )
-              : null,
-            React.createElement("button", {
-              type: "button",
-              className: "tb-attachment-preview-drawer-action",
-              onClick: (event) => handleEntryContextMenuButtonClick(singleSelectedEntry, event),
-              title: "File actions",
-              "aria-label": "File actions",
-            }, React.createElement(Ellipsis, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })),
-            renderFilePreviewMaximizeButton()
-          );
+            : React.createElement(React.Fragment, null,
+                singleSelectedEntryFileKind === "image"
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-preview-select-button",
+                        onClick: beginImageSelectionMode,
+                        title: "Select image area",
+                      },
+                        React.createElement(LassoSelect, { width: 14, height: 14, strokeWidth: 1.9 }),
+                        React.createElement("span", null, "Select")
+                      ),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "tb-attachment-preview-drawer-action",
+                        onClick: beginImageCropMode,
+                        title: "Crop image",
+                        "aria-label": "Crop image",
+                      }, React.createElement(Crop, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 }))
+                    )
+                  : null,
+                canToggleDocumentPreviewMode
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "tb-attachment-preview-drawer-action" + (documentPreviewMode === "code" ? " is-active" : ""),
+                      onClick: () => setDocumentPreviewMode((current) => current === "code" ? "preview" : "code"),
+                      title: documentPreviewMode === "code" ? "Switch to preview mode" : "Switch to code view",
+                      "aria-label": documentPreviewMode === "code" ? "Switch to preview mode" : "Switch to code view",
+                      "aria-pressed": documentPreviewMode === "code" ? "true" : "false",
+                    },
+                      documentPreviewMode === "code"
+                        ? React.createElement(Eye, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })
+                        : React.createElement(Code, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })
+                    )
+                  : null,
+                React.createElement("button", {
+                  type: "button",
+                  className: "tb-attachment-preview-drawer-action",
+                  onClick: (event) => handleEntryContextMenuButtonClick(activePreviewEntry, event),
+                  title: "File actions",
+                  "aria-label": "File actions",
+                }, React.createElement(Ellipsis, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })),
+                renderFilePreviewMaximizeButton()
+              );
 
           if (
-            !singleSelectedEntry.isFolder
+            !activePreviewEntry.isFolder
             && (
               singleSelectedEntryFileKind === "code"
               || (canToggleDocumentPreviewMode && documentPreviewMode === "code")
             )
           ) {
             return React.createElement(PlaygroundCodeEditorPreview, {
-              key: selectedEnvironmentId + ":" + singleSelectedEntry.path,
-              entry: singleSelectedEntry,
+              key: selectedEnvironmentId + ":" + activePreviewEntry.path,
+              entry: activePreviewEntry,
               environmentId: selectedEnvironmentId,
               backendUrl,
               requestHeaders,
@@ -59811,40 +61460,82 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               onResizeStart: isPreviewMaximized ? undefined : startPreviewResize,
               onSaveSuccess: () => refreshEnvironmentFolders(
                 selectedEnvironmentId,
-                [getPlaygroundEntryParentPath(singleSelectedEntry.path)]
+                [getPlaygroundEntryParentPath(activePreviewEntry.path)]
               ),
               showCloseButton: true,
               showResizeHandle: !isPreviewMaximized,
             });
           }
 
-          if (!singleSelectedEntry.isFolder && singleSelectedEntryPreviewAttachment) {
-            return React.createElement(RunnerDocumentPreviewDrawer, {
+          if (!activePreviewEntry.isFolder && singleSelectedEntryPreviewAttachment) {
+            const previewDrawer = React.createElement(RunnerDocumentPreviewDrawer, {
               attachment: singleSelectedEntryPreviewAttachment,
               backendUrl,
               requestHeaders,
               headerCopy: renderFilePreviewHeaderCopy(),
               headerActions: previewHeaderActions,
               showPreviewCodeToggle: false,
+              imagePreviewInteractive: !isPreviewMaximized && !isImageSelectionMode && !isImageCropMode,
+              imagePreviewOverlay: singleSelectedEntryFileKind === "image" && isImageSelectionMode
+                ? React.createElement(PlaygroundImageSelectionMaskOverlay, {
+                    active: true,
+                    naturalSize: imageMaskImageSize,
+                    strokes: imageMaskStrokes,
+                    draftStroke: imageMaskDraftStroke,
+                    brushSize: 44,
+                    onPointerStart: handleImageMaskPointerStart,
+                    onPointerMove: handleImageMaskPointerMove,
+                    onPointerEnd: handleImageMaskPointerEnd,
+                  })
+                : singleSelectedEntryFileKind === "image" && isImageCropMode
+                  ? React.createElement(PlaygroundImageCropOverlay, {
+                      active: true,
+                      naturalSize: imageMaskImageSize,
+                      cropRect: imageCropRect,
+                      draftRect: imageCropDraftRect,
+                      dragTarget: imageCropDragTarget,
+                      onPointerStart: handleImageCropPointerStart,
+                      onPointerMove: handleImageCropPointerMove,
+                      onPointerEnd: handleImageCropPointerEnd,
+                    })
+                  : null,
+              onImagePreviewLoad: (dimensions) => {
+                setImageMaskImageSize({
+                  width: Math.round(Number(dimensions?.naturalWidth || 0)),
+                  height: Math.round(Number(dimensions?.naturalHeight || 0)),
+                });
+              },
               inline: true,
               onClose: closePreviewPane,
               onResizeStart: isPreviewMaximized ? undefined : startPreviewResize,
-              showCloseButton: true,
+              showCloseButton: !isImageSelectionMode && !isImageCropMode,
               showResizeHandle: !isPreviewMaximized,
             });
+            return singleSelectedEntryFileKind === "image"
+              ? React.createElement("div", { className: "playground-files-image-thread-shell" + (isImageSelectionMode ? " is-selecting-region" : "") + (isImageCropMode ? " is-cropping-image" : "") },
+                  previewDrawer,
+                  renderImagePreviewThreadComposer(activePreviewEntry),
+                  isStartingImagePreviewThread
+                    ? React.createElement("div", { className: "playground-files-image-thread-loading", "aria-live": "polite" },
+                        React.createElement(Loader2, { className: "is-spinning", strokeWidth: 1.85 }),
+                        React.createElement("span", null, "Opening thread...")
+                      )
+                    : null
+                )
+              : previewDrawer;
           }
 
-          const isFolderSelection = Boolean(singleSelectedEntry.isFolder);
+          const isFolderSelection = Boolean(activePreviewEntry.isFolder);
           const infoRows = [
-            ["Type", isFolderSelection ? "Folder" : formatPlaygroundFileTypeLabel(singleSelectedEntry)],
-            ["Modified", formatPlaygroundFileDate(singleSelectedEntry.modifiedTime)],
+            ["Type", isFolderSelection ? "Folder" : formatPlaygroundFileTypeLabel(activePreviewEntry)],
+            ["Modified", formatPlaygroundFileDate(activePreviewEntry.modifiedTime)],
             [
               "Size",
               isFolderSelection
-                ? formatPlaygroundFolderItemCount(singleSelectedEntry)
-                : formatPlaygroundFileSize(singleSelectedEntry.size),
+                ? formatPlaygroundFolderItemCount(activePreviewEntry)
+                : formatPlaygroundFileSize(activePreviewEntry.size),
             ],
-            ["Location", "/" + (getPlaygroundEntryParentPath(singleSelectedEntry.path) || "")],
+            ["Location", "/" + (getPlaygroundEntryParentPath(activePreviewEntry.path) || "")],
           ];
 
           return React.createElement("div", { className: "playground-files-preview-shell" },
@@ -59860,16 +61551,16 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
               ),
               React.createElement("div", { className: "playground-files-preview-hero" + (isFolderSelection ? " is-folder" : "") },
                 React.createElement(PlaygroundFileIcon, {
-                  entry: singleSelectedEntry,
+                  entry: activePreviewEntry,
                   size: "large",
                   className: isFolderSelection ? "playground-files-preview-folder-icon" : "",
                 })
               ),
-              React.createElement("div", { className: "playground-files-preview-name" }, singleSelectedEntry.name),
+              React.createElement("div", { className: "playground-files-preview-name" }, activePreviewEntry.name),
               React.createElement("div", { className: "playground-files-preview-meta" },
                 isFolderSelection
-                  ? formatPlaygroundFolderItemCount(singleSelectedEntry)
-                  : formatPlaygroundFileSize(singleSelectedEntry.size)
+                  ? formatPlaygroundFolderItemCount(activePreviewEntry)
+                  : formatPlaygroundFileSize(activePreviewEntry.size)
               )
             ),
             React.createElement("div", { className: "playground-files-preview-info" },
@@ -59886,7 +61577,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 ? React.createElement("button", {
                     type: "button",
                     className: "playground-files-preview-button is-primary",
-                    onClick: () => navigateToPath(singleSelectedEntry.path),
+                    onClick: () => navigateToPath(activePreviewEntry.path),
                   }, "Open Folder")
                 : singleSelectedEntryDownloadUrl
                   ? React.createElement("a", {
@@ -59903,7 +61594,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("button", {
                   type: "button",
                   className: "playground-files-preview-button",
-                  onClick: () => startRename(singleSelectedEntry),
+                  onClick: () => startRename(activePreviewEntry),
                 },
                   React.createElement(SquarePen, { width: 12, height: 12, strokeWidth: 1.8 }),
                   React.createElement("span", null, "Rename")
@@ -59911,7 +61602,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("button", {
                   type: "button",
                   className: "playground-files-preview-button is-danger",
-                  onClick: () => void handleDeleteEntries([singleSelectedEntry]),
+                  onClick: () => void handleDeleteEntries([activePreviewEntry]),
                 },
                   React.createElement(Trash2, { width: 12, height: 12, strokeWidth: 1.8 }),
                   React.createElement("span", null, "Delete")
@@ -59922,15 +61613,15 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
         }
 
         function renderFileChatEmptyState() {
-          if (!singleSelectedEntry || singleSelectedEntry.isFolder) {
+          if (!activePreviewEntry || activePreviewEntry.isFolder) {
             return null;
           }
 
           const infoRows = [
-            ["Created", formatPlaygroundFileDate(singleSelectedEntry.createdTime || singleSelectedEntry.modifiedTime)],
-            ["Modified", formatPlaygroundFileDate(singleSelectedEntry.modifiedTime)],
-            ["Size", formatPlaygroundFileSize(singleSelectedEntry.size)],
-            ["Type", formatPlaygroundFileTypeLabel(singleSelectedEntry)],
+            ["Created", formatPlaygroundFileDate(activePreviewEntry.createdTime || activePreviewEntry.modifiedTime)],
+            ["Modified", formatPlaygroundFileDate(activePreviewEntry.modifiedTime)],
+            ["Size", formatPlaygroundFileSize(activePreviewEntry.size)],
+            ["Type", formatPlaygroundFileTypeLabel(activePreviewEntry)],
           ];
 
           return React.createElement("div", { className: "playground-files-chat-empty-state" },
@@ -59948,7 +61639,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 ? React.createElement("a", {
                     className: "playground-files-preview-button is-primary",
                     href: singleSelectedEntryDownloadUrl,
-                    download: singleSelectedEntry.name,
+                    download: activePreviewEntry.name,
                   },
                     React.createElement(Download, { width: 12, height: 12, strokeWidth: 1.8 }),
                     React.createElement("span", null, "Download")
@@ -59958,7 +61649,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("button", {
                   type: "button",
                   className: "playground-files-preview-button",
-                  onClick: () => startRename(singleSelectedEntry),
+                  onClick: () => startRename(activePreviewEntry),
                 },
                   React.createElement(SquarePen, { width: 12, height: 12, strokeWidth: 1.8 }),
                   React.createElement("span", null, "Rename")
@@ -59966,7 +61657,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 React.createElement("button", {
                   type: "button",
                   className: "playground-files-preview-button is-danger",
-                  onClick: () => void handleDeleteEntries([singleSelectedEntry]),
+                  onClick: () => void handleDeleteEntries([activePreviewEntry]),
                 },
                   React.createElement(Trash2, { width: 12, height: 12, strokeWidth: 1.8 }),
                   React.createElement("span", null, "Delete")
@@ -59978,6 +61669,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
 
         function renderContextMenu() {
           if (!contextMenu) return null;
+          const isMultiFileContext = Boolean(contextMenu.multiFileSelection && selectedFileEntries.length > 1);
           const contextSelectedEntries = contextTargetEntry
             ? (
                 selectedEntries.some((entry) => normalizeHistoryPath(entry.path) === normalizeHistoryPath(contextTargetEntry.path))
@@ -59985,6 +61677,9 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                   : [contextTargetEntry]
               )
             : selectedEntries;
+          const contextSelectedFileEntries = isMultiFileContext
+            ? selectedFileEntries
+            : contextSelectedEntries.filter((entry) => entry && !entry.isFolder);
           const hasRenameAction = contextSelectedEntries.length === 1 && Boolean(contextTargetEntry);
           const canDelete = contextSelectedEntries.length > 0;
           const basePath = getMoveTargetPathForContext();
@@ -60023,7 +61718,46 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                 top: contextMenu.y + "px",
               },
             },
-              isFileContextTarget
+              isMultiFileContext
+                ? React.createElement(React.Fragment, null,
+                    React.createElement("div", { className: "playground-files-context-title" }, selectedFileEntries.length + " files selected"),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-context-item",
+                      onClick: () => void handleStartChatForEntries(contextSelectedFileEntries),
+                    },
+                      React.createElement(MessageCircle, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Start Chat")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-context-item",
+                      onClick: () => void handleDownloadEntries(contextSelectedFileEntries),
+                    },
+                      React.createElement(Download, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Download")
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-context-item",
+                      onClick: () => openFileProjectPickerDialog(contextSelectedFileEntries),
+                    },
+                      React.createElement(FolderOpen, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Add to Project")
+                    ),
+                    React.createElement("div", { className: "playground-files-context-divider" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-files-context-item is-danger",
+                        onClick: () => void handleDeleteEntries(contextSelectedFileEntries),
+                      },
+                        React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Delete")
+                      )
+                    )
+                  )
+                : null,
+              !isMultiFileContext && isFileContextTarget
                 ? React.createElement(React.Fragment, null,
                     React.createElement("div", { className: "playground-files-context-title" }, contextTargetEntry.name || "File"),
                     React.createElement("div", { className: "playground-files-context-meta" },
@@ -60127,7 +61861,7 @@ ${ENVIRONMENT_CHANGES_SCRIPT}
                       : null
                   )
                 : null,
-              !isFileContextTarget
+              !isMultiFileContext && !isFileContextTarget
                 ? React.createElement(React.Fragment, null,
                     hasRenameAction
                       ? React.createElement("button", {
@@ -119261,6 +120995,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setActivePage("calendar");
         }
 
+        function openImaginePage() {
+          setAccountMenuOpen(false);
+          setSidebarWorkspaceMode("work");
+          setActivePage("imagine");
+        }
+
         function openHelpPage() {
           setAccountMenuOpen(false);
           window.open(${JSON.stringify(aiosOrigin + "/support")}, "_blank", "noopener,noreferrer");
@@ -137369,6 +139109,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           return renderUnifiedTopNav({
             pathItems: activePage === "calendar"
               ? [{ label: "Create" }, { label: "Calendar" }]
+              : activePage === "imagine"
+                ? [{ label: "Create" }, { label: "Imagine" }]
               : [{ label: selectedThreadTitle || "Home" }],
           });
         }
@@ -139273,6 +141015,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
               onClick: hasShellAccess ? handleNewThread : handleSignInWithComputerAgents,
             },
             {
+              id: "imagine",
+              label: "Imagine",
+              Icon: Film,
+              active: activePage === "imagine",
+              onClick: openImaginePage,
+            },
+            {
               id: "projects",
               label: "Projects",
               Icon: Rocket,
@@ -139750,6 +141499,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      ? renderTasksPageNav()
 	                    : activePage === "files"
 	                      ? renderFilesPageNav()
+	                    : activePage === "imagine"
+	                      ? renderGenericPageNav()
 	                    : activePage === "calendar"
 	                      ? renderGenericPageNav()
                     : React.createElement("div", { className: "playground-content-nav" },
@@ -139994,7 +141745,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             : null
                         )
                       ),
-                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (activePage === "files" ? " is-files-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (activePage === "files" ? " is-files-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
 	                    activePage === "settings"
 	                      ? renderSettingsPage()
 	                      : activePage === "configure"
@@ -140024,6 +141775,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               initialEnvironmentId: resolvedEnvironmentId || "",
                               apiKey: effectiveApiKey,
                               agentId: resolvedPreferredAgentId || "",
+                              agents: runtimeAgents,
                               onFileChatThreadMutated: () => {
                                 void refreshThreads();
                               },
@@ -140037,6 +141789,41 @@ ${PROJECT_OVERVIEW_SCRIPT}
                                 }
                                 setThreadAgentSelectionOverride(null);
                                 setPendingThreadRunRequest(null);
+                                setThreadTaskOpenRequest(null);
+                                setActivePage("thread");
+                                setCurrentThreadId(normalizedThreadId);
+                                setContentMode("chat");
+                                setThreadListMode("threads");
+                                setChangesNavigationTarget(null);
+                                setRunnerRenderKey((current) => current + 1);
+                                void refreshThreads(undefined, normalizedThreadId);
+                              },
+                              onThreadStarted: (threadId, options = {}) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                if (options?.threadRecord?.id) {
+                                  upsertRealThreadRecord(options.threadRecord);
+                                }
+                                setThreadAgentSelectionOverride(null);
+                                if (options?.taskRunRequest?.prompt) {
+                                  setPendingThreadRunRequest({
+                                    token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                                    threadId: normalizedThreadId,
+                                    prompt: options.taskRunRequest.prompt,
+                                    displayPrompt: options.taskRunRequest.displayPrompt || null,
+                                    agentId: options.taskRunRequest.agentId || null,
+                                    agentName: options.taskRunRequest.agentName || null,
+                                    attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                                    githubRepo: options.taskRunRequest.githubRepo || null,
+                                    enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                    environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                    quotedSelection: options.taskRunRequest.quotedSelection || null,
+                                  });
+                                } else {
+                                  setPendingThreadRunRequest(null);
+                                }
                                 setThreadTaskOpenRequest(null);
                                 setActivePage("thread");
                                 setCurrentThreadId(normalizedThreadId);
@@ -140077,6 +141864,97 @@ ${PROJECT_OVERVIEW_SCRIPT}
                             })
                           : hasDemoAccess
                             ? renderDemoFeaturePage("files")
+                            : renderAuthGate()
+                      : activePage === "imagine"
+                        ? hasRealAccess
+                          ? React.createElement(PlaygroundImaginePage, {
+                              backendUrl: proxyBackendBase,
+                              apiKey: effectiveApiKey,
+                              fetchCustomSkills: computerAgentsMode ? handleFetchCustomSkills : undefined,
+                              speechToTextUrl: speechToTextUrl || "",
+                              requestHeaders,
+                              computerAgents: computerAgentsMode ? {
+                                ...demoComputerAgents,
+                                projects: {
+                                  items: runnerWorkspaceProjects,
+                                  selectedProjectId: latestInteractedProjectId || "",
+                                  onProjectChange: (nextProjectId) => {
+                                    const normalizedProjectId = String(nextProjectId || "").trim();
+                                    setLatestInteractedProjectId(normalizedProjectId);
+                                  },
+                                },
+                              } : undefined,
+                              environments: computerAgentsMode ? runtimeEnvironments.map((environment) => ({
+                                ...environment,
+                                ...(resolvedEnvironmentId && environment.id === resolvedEnvironmentId ? { isDefault: true } : {})
+                              })) : [],
+                              agents: computerAgentsMode ? runtimeAgents.map((agent) => (
+                                buildPlaygroundRunnerAgentOption(agent, resolvedTaskInputAgentId && agent.id === resolvedTaskInputAgentId ? { isDefault: true } : {})
+                              )) : [],
+                              skills: computerAgentsMode ? demoSkills : [],
+                              skillDefaults: getDemoImageGenerationSkillDefaults(),
+                              environmentId: resolvedEnvironmentId || "",
+                              agentId: resolvedTaskInputAgentId || "",
+                              onAgentChange: (nextAgentId) => {
+                                setThreadAgentSelectionOverride(String(nextAgentId || "").trim() || null);
+                              },
+                              onEnvironmentChange: (nextEnvironmentId) => {
+                                const normalizedEnvironmentId = String(nextEnvironmentId || "").trim();
+                                if (normalizedEnvironmentId) {
+                                  setEnvironmentId(normalizedEnvironmentId);
+                                }
+                              },
+                              onRequireAuth: handleSignInWithComputerAgents,
+                              onOpenPlansBudget: () => {
+                                setSidebarWorkspaceMode("configure");
+                                setActivePage("settings");
+                                setSettingsSection("costs-plans");
+                              },
+                              onThreadStarted: (threadId, options = {}) => {
+                                const normalizedThreadId = String(threadId || "").trim();
+                                if (!normalizedThreadId) {
+                                  return;
+                                }
+                                setThreadAgentSelectionOverride(null);
+                                if (options?.taskRunRequest?.prompt) {
+                                  const requestProjectId = String(options.taskRunRequest.projectId || options.projectId || "").trim();
+                                  if (requestProjectId) {
+                                    setLatestInteractedProjectId(requestProjectId);
+                                  }
+                                  setPendingThreadRunRequest({
+                                    token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                                    threadId: normalizedThreadId,
+                                    projectId: requestProjectId || null,
+                                    prompt: options.taskRunRequest.prompt,
+                                    displayPrompt: options.taskRunRequest.displayPrompt || null,
+                                    agentId: options.taskRunRequest.agentId || null,
+                                    agentName: options.taskRunRequest.agentName || null,
+                                    attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                                    githubRepo: options.taskRunRequest.githubRepo || null,
+                                    enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                    environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                    quotedSelection: options.taskRunRequest.quotedSelection || null,
+                                    slideCreationCommand: options.taskRunRequest.slideCreationCommand || null,
+                                    researchCreationCommand: options.taskRunRequest.researchCreationCommand || null,
+                                    scrapeCreationCommand: options.taskRunRequest.scrapeCreationCommand || null,
+                                    parseCreationCommand: options.taskRunRequest.parseCreationCommand || null,
+                                    adCreationCommand: options.taskRunRequest.adCreationCommand || null,
+                                  });
+                                } else {
+                                  setPendingThreadRunRequest(null);
+                                }
+                                setThreadTaskOpenRequest(null);
+                                setActivePage("thread");
+                                setCurrentThreadId(normalizedThreadId);
+                                setContentMode("chat");
+                                setThreadListMode("threads");
+                                setChangesNavigationTarget(null);
+                                setRunnerRenderKey((current) => current + 1);
+                                void refreshThreads(undefined, normalizedThreadId);
+                              },
+                            })
+                          : hasDemoAccess
+                            ? renderDemoFeaturePage("imagine")
                             : renderAuthGate()
                       : isResourcesPage
                         ? renderResourcesPage()

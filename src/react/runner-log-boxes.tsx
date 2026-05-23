@@ -43,6 +43,7 @@ import {
   Music,
   Paperclip,
   RefreshCw,
+  ScanEye,
   ScanText,
   Search,
   SlidersHorizontal,
@@ -9639,6 +9640,142 @@ function ImagePreviewLogCard({
   );
 }
 
+function isImageUnderstandingCommand(command?: string): boolean {
+  if (!command) return false;
+  return (
+    command.includes("view-image.py") ||
+    command.includes(".claude/skills/image-understanding/") ||
+    command.includes("/workspace/.scripts/view-image.py")
+  );
+}
+
+function tokenizeImageUnderstandingCommand(command: string): string[] {
+  const tokens: string[] = [];
+  const pattern = /"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|(\S+)/g;
+  let match: RegExpExecArray | null = null;
+
+  while ((match = pattern.exec(command)) !== null) {
+    const token = match[1] ?? match[2] ?? match[3] ?? "";
+    tokens.push(token.replace(/\\(["'])/g, "$1"));
+  }
+
+  return tokens;
+}
+
+function extractImageUnderstandingImagePath(command?: string): string | null {
+  if (!command) return null;
+  const token = tokenizeImageUnderstandingCommand(command)
+    .find((candidate) => isRunnerLogImageFilePath(candidate));
+  return normalizeRunnerFilePath(token) || null;
+}
+
+function resolveImageUnderstandingResultText(log: RunnerLog): string {
+  const structuredOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const outputText = stripRunnerSystemTags(
+    structuredOutput
+      ? [structuredOutput.stdout, structuredOutput.stderr].filter(Boolean).join("\n")
+      : String(log.metadata?.output || "")
+  ).trim();
+  const result = log.metadata?.result;
+
+  if (outputText) {
+    return outputText;
+  }
+  if (typeof result === "string" && result.trim()) {
+    return stripRunnerSystemTags(result).trim();
+  }
+  if (result && typeof result === "object") {
+    const record = result as Record<string, unknown>;
+    const text = record.text || record.output || record.message || record.description;
+    if (typeof text === "string" && text.trim()) {
+      return stripRunnerSystemTags(text).trim();
+    }
+  }
+  return stripRunnerSystemTags(log.message || "").replace(/^Executed:\s*/i, "").trim();
+}
+
+function ImageUnderstandingLogBox({
+  log,
+  timeLabel,
+  backendUrl,
+  environmentId,
+  requestHeaders,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+  backendUrl?: string;
+  environmentId?: string | null;
+  requestHeaders?: HeadersInit;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [imageOrientation, setImageOrientation] = useState<"landscape" | "portrait" | null>(null);
+  const command = String(log.metadata?.command || log.message || "");
+  const imagePath = extractImageUnderstandingImagePath(command);
+  const imageName = imagePath ? getFileName(imagePath) : "image";
+  const imagePreviewUrl = imagePath ? buildRunnerPreviewDownloadUrl(backendUrl, environmentId, imagePath) : null;
+  const resultText = resolveImageUnderstandingResultText(log);
+  const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  const layoutClassName = [
+    "tb-image-understanding-layout",
+    imageOrientation === "landscape" ? "is-landscape" : "",
+    imageOrientation === "portrait" ? "is-portrait" : "",
+  ].filter(Boolean).join(" ");
+
+  useEffect(() => {
+    setImageOrientation(null);
+  }, [imagePreviewUrl]);
+
+  return (
+    <div className="tb-log-card tb-log-card-image-understanding">
+      <LogHeader
+        icon={<ScanEye className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        label={`View image - ${imageName}`}
+        timeLabel={timeLabel}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
+      <LogPanel collapsed={collapsed}>
+        <div className={layoutClassName}>
+          <div className="tb-image-understanding-preview">
+            {imagePreviewUrl ? (
+              <RunnerImagePreviewSurface
+                className="tb-image-understanding-preview-surface"
+                imageClassName="tb-image-understanding-preview-image"
+                src={imagePreviewUrl}
+                alt={imageName}
+                maxHeight={360}
+                fetchHeaders={requestHeaders}
+                loadStrategy="visible"
+                onImageLoad={({ naturalWidth, naturalHeight }) => {
+                  if (naturalWidth > 0 && naturalHeight > 0) {
+                    setImageOrientation(naturalWidth > naturalHeight ? "landscape" : "portrait");
+                  }
+                }}
+              />
+            ) : (
+              <div className="tb-log-card-empty">Image preview unavailable.</div>
+            )}
+          </div>
+          <div className="tb-image-understanding-result">
+            {isError ? (
+              <div className="tb-log-card-state tb-log-card-state-error">
+                {resultText || "Image understanding failed."}
+              </div>
+            ) : resultText ? (
+              <RunnerMarkdown
+                content={resultText}
+                className="tb-message-markdown tb-message-markdown-summary tb-image-understanding-markdown"
+              />
+            ) : (
+              <div className="tb-log-card-empty">No image description returned.</div>
+            )}
+          </div>
+        </div>
+      </LogPanel>
+    </div>
+  );
+}
+
 function isImageGenerationCommand(command?: string): boolean {
   if (!command) return false;
   return command.includes(".claude/skills/image-generation/") || command.includes("generate-image.py");
@@ -11442,6 +11579,17 @@ export function RunnerWorkLogEntry({
       );
     }
     if (isDocumentParseCommand(command)) return <DocumentParseLogBox log={log} timeLabel={timeLabel} />;
+    if (isImageUnderstandingCommand(command)) {
+      return (
+        <ImageUnderstandingLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+        />
+      );
+    }
     if (isLikelyImageGenerationLog(log, command)) {
       return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
     }
